@@ -1321,6 +1321,55 @@ TEST(HasInferableTest,
       hasInferable(lookup<VarDecl>("NotPtr", AST.context()).getType()));
 }
 
+TEST(HasInferableTest,
+     CustomSmartPtrRecordTypeNotInferableIfSpecifierIsSubstitutedTypeParam) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ContainsNonInferableMethod {
+      T::CustomSmartPtr method();
+    };
+
+    struct ContainsSmartPtrType {
+      struct _Nullable CustomSmartPtr { using pointer = bool*; };
+    };
+
+    ContainsSmartPtrType::CustomSmartPtr PtrFromNonInferableMethodReturn =
+        ContainsNonInferableMethod<ContainsSmartPtrType>().method();
+  )cc");
+  const CXXMethodDecl* MethodInstantiation =
+      cast<CXXMemberCallExpr>(
+          lookup<VarDecl>("PtrFromNonInferableMethodReturn", AST.context())
+              .getInit()
+              ->IgnoreImplicit())
+          ->getMethodDecl();
+  EXPECT_FALSE(hasInferable(MethodInstantiation->getReturnType()));
+}
+
+TEST(HasInferableTest,
+     TemplateSpecializationTypeNotInferableIfSpecifierIsSubstitutedTypeParam) {
+  TestAST AST(R"cc(
+    template <typename T, typename U>
+    struct ContainsNonInferableMethod {
+      T::template AliasTemplateInTemplate<U> method();
+    };
+
+    struct ContainsAlias {
+      template <typename V>
+      using AliasTemplateInTemplate = V*;
+    };
+
+    bool* PtrFromNonInferableMethodReturn =
+        ContainsNonInferableMethod<ContainsAlias, bool>().method();
+  )cc");
+  const CXXMethodDecl* MethodInstantiation =
+      cast<CXXMemberCallExpr>(
+          lookup<VarDecl>("PtrFromNonInferableMethodReturn", AST.context())
+              .getInit()
+              ->IgnoreImplicit())
+          ->getMethodDecl();
+  EXPECT_FALSE(hasInferable(MethodInstantiation->getReturnType()));
+}
+
 TEST(HasInferableTest, ClassTemplateInstanceWithPointerTemplateArgument) {
   TestAST AST(R"cc(
     template <typename T>

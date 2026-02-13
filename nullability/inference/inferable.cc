@@ -179,6 +179,8 @@ class TemplateParamsWalker : public TypeVisitor<TemplateParamsWalker, bool> {
   bool VisitPointerType(const PointerType* T) { return true; }
   bool VisitRecordType(const RecordType* T) {
     addTemplateDeclsSeenInQualifiers(*T);
+    if (hasNestedNameSpecifierThatIsSubstitutedParamOfUnseenTemplate(*T))
+      return false;
     return assertSupportedSmartPointerType(T);
   }
   bool VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* T) {
@@ -198,6 +200,8 @@ class TemplateParamsWalker : public TypeVisitor<TemplateParamsWalker, bool> {
 
   bool VisitTemplateSpecializationType(const TemplateSpecializationType* T) {
     addTemplateDeclsSeenInQualifiers(*T);
+    if (hasNestedNameSpecifierThatIsSubstitutedParamOfUnseenTemplate(*T))
+      return false;
     if (T->isTypeAlias()) {
       TemplateDeclsSeen.insert(T->getTemplateName().getAsTemplateDecl());
       return Visit(T->getAliasedType().getTypePtr());
