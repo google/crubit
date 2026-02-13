@@ -18,6 +18,11 @@
 
 namespace crubit_test {
 
+struct TwoWords {
+  void* ptr1;
+  void* ptr2;
+};
+
 inline int32_t vector_int32_sum(std::vector<int32_t>* vec) {
   return std::accumulate(vec->begin(), vec->end(), int32_t{0});
 }
@@ -58,6 +63,23 @@ vector_get_simple_rust_movable_type() {
   return {SimpleRustMovableType(1), SimpleRustMovableType(2),
           SimpleRustMovableType(3)};
 }
+inline std::vector<char> vector_char_get() { return {'a', 'b', 'c'}; }
+
+inline std::vector<short> vector_short_get() { return {1, 2, 3}; }
+
+inline std::vector<void*> vector_void_ptr_get() {
+  static int i = 42;
+  return {&i};
+}
+
+inline std::vector<TwoWords> vector_two_words_get() {
+  return {TwoWords(), TwoWords()};
+}
+
+inline void vector_char_destroy(std::vector<char>) {}
+inline void vector_short_destroy(std::vector<short>) {}
+inline void vector_void_ptr_destroy(std::vector<void*>) {}
+inline void vector_two_words_destroy(std::vector<TwoWords>) {}
 
 inline size_t vector_size_by_value(std::vector<SimpleRustMovableType> vec) {
   // Note: the vector is destroyed after this function returns.

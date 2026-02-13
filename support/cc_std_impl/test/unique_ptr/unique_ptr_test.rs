@@ -89,6 +89,26 @@ fn test_unique_ptr_destroyed_in_rust() {
     drop(up);
 }
 
+#[gtest]
+fn test_unique_ptr_void_ptr_destroyed_in_rust() {
+    drop(test_helpers::unique_ptr_test::create_unique_ptr_void_ptr());
+}
+
+#[gtest]
+fn test_unique_ptr_short_destroyed_in_rust() {
+    drop(test_helpers::unique_ptr_test::create_unique_ptr_short());
+}
+
+#[gtest]
+fn test_unique_ptr_two_words_destroyed_in_rust() {
+    drop(test_helpers::unique_ptr_test::create_unique_ptr_two_words());
+}
+
+#[gtest]
+fn test_unique_ptr_char_destroyed_in_rust() {
+    drop(test_helpers::unique_ptr_test::create_unique_ptr_char());
+}
+
 /// Tests the behavior when a unique_ptr created in Rust is destroyed in C++.
 ///
 /// For example, ASan can flag any poor behavior here.

@@ -1091,3 +1091,47 @@ mod empty_vector {
         assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 0);
     }
 }
+
+#[gtest]
+fn test_vector_void_ptr_destroyed_in_rust() {
+    drop(cc_helper_functions::crubit_test::vector_void_ptr_get());
+}
+
+#[gtest]
+fn test_vector_short_destroyed_in_rust() {
+    drop(cc_helper_functions::crubit_test::vector_short_get());
+}
+
+#[gtest]
+fn test_vector_two_words_destroyed_in_rust() {
+    drop(cc_helper_functions::crubit_test::vector_two_words_get());
+}
+
+#[gtest]
+fn test_vector_char_destroyed_in_rust() {
+    drop(cc_helper_functions::crubit_test::vector_char_get());
+}
+
+#[gtest]
+fn test_vector_void_ptr_destroyed_in_cpp() {
+    cc_helper_functions::crubit_test::vector_void_ptr_destroy(
+        vec![<*mut ffi_11::c_void>::default()].into(),
+    );
+}
+
+#[gtest]
+fn test_vector_short_destroyed_in_cpp() {
+    cc_helper_functions::crubit_test::vector_short_destroy(vec![ffi_11::c_short::default()].into());
+}
+
+#[gtest]
+fn test_vector_two_words_destroyed_in_cpp() {
+    cc_helper_functions::crubit_test::vector_two_words_destroy(
+        vec![cc_helper_functions::crubit_test::TwoWords::default()].into(),
+    );
+}
+
+#[gtest]
+fn test_vector_char_destroyed_in_cpp() {
+    cc_helper_functions::crubit_test::vector_char_destroy(vec![ffi_11::c_char::default()].into());
+}

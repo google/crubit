@@ -10,10 +10,28 @@
 
 namespace unique_ptr_test {
 
+struct TwoWords {
+  void* ptr1;
+  void* ptr2;
+};
+
 CRUBIT_MUST_BIND inline std::unique_ptr<int> create_unique_ptr() {
   return std::make_unique<int>(1);
 }
 CRUBIT_MUST_BIND inline void destroy_unique_ptr(std::unique_ptr<int>) {}
+CRUBIT_MUST_BIND inline std::unique_ptr<char> create_unique_ptr_char() {
+  return std::make_unique<char>('a');
+}
+CRUBIT_MUST_BIND inline std::unique_ptr<short> create_unique_ptr_short() {
+  return std::make_unique<short>(static_cast<short>(1));
+}
+CRUBIT_MUST_BIND inline std::unique_ptr<void*> create_unique_ptr_void_ptr() {
+  return std::make_unique<void*>(nullptr);
+}
+CRUBIT_MUST_BIND inline std::unique_ptr<TwoWords>
+create_unique_ptr_two_words() {
+  return std::make_unique<TwoWords>();
+}
 
 struct Base {
   virtual ~Base() = default;

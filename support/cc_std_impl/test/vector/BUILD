@@ -41,6 +41,7 @@ crubit_rust_test(
     rustc_flags = ["-Zallow-features=allocator_api"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
+        "//support/ffi_11",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
     ],
