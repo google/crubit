@@ -163,6 +163,28 @@
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
                                __VA_ARGS__)
 
+// Unsafely marks a type as Rust-movable (relocatable via memcpy).
+//
+// CAUTION: this annotation is extremely `unsafe`: neither Crubit nor Clang will
+// enforce that the annotated type is actually relocatable via a simple memcpy.
+// Misapplication of this annotation *will lead to undefined behavior*.
+//
+// This annotation will make the generated Rust bindings to this type movable,
+// eliminating the need for `Ctor` or `Pin`-based bindings, and making this type
+// usable in more typical Rust contexts.
+//
+// This annotation *must not* be applied to:
+// * Self referential types
+// * Types with virtual methods (polymorphic types, those with vtables)
+// * Types with custom move operations that must be run
+// * Types that contain members with any of the above properties
+//
+// Crubit *may* attempt to enforce the above restrictions at build time with
+// hard errors, but such enforcement will be incomplete, and must not be relied
+// upon for correctness.
+#define CRUBIT_UNSAFE_MEMCPY_MOVABLE \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_memcpy_movable")
+
 // Marks a type as unsafely implementing one or more marker traits.
 //
 // This can be applied to a struct, class, or enum.

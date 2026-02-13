@@ -667,7 +667,7 @@ llvm::json::Value Record::ToJson() const {
       {"copy_constructor", copy_constructor},
       {"move_constructor", move_constructor},
       {"destructor", destructor},
-      {"is_trivial_abi", is_trivial_abi},
+      {"is_movable_via_memcpy", is_movable_via_memcpy},
       {"is_inheritable", is_inheritable},
       {"is_abstract", is_abstract},
       {"nodiscard", nodiscard},
