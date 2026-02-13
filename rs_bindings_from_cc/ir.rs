@@ -1249,6 +1249,7 @@ pub struct Record {
     // Lifetime variable names bound by this record.
     #[serde(default)]
     pub lifetime_inputs: Vec<Rc<str>>,
+    pub detected_formatter: bool,
 }
 
 impl GenericItem for Record {
@@ -1453,6 +1454,7 @@ pub struct Enum {
     pub unknown_attr: Option<Rc<str>>,
     pub enclosing_item_id: Option<ItemId>,
     pub must_bind: bool,
+    pub detected_formatter: bool,
 }
 
 impl GenericItem for Enum {
@@ -2307,6 +2309,13 @@ impl IR {
     pub fn records(&self) -> impl Iterator<Item = &Rc<Record>> {
         self.items().filter_map(|item| match item {
             Item::Record(record) => Some(record),
+            _ => None,
+        })
+    }
+
+    pub fn enums(&self) -> impl Iterator<Item = &Rc<Enum>> {
+        self.items().filter_map(|item| match item {
+            Item::Enum(enum_item) => Some(enum_item),
             _ => None,
         })
     }

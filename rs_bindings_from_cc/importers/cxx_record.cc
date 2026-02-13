@@ -1110,6 +1110,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(safety_annotation).status()));
   }
 
+  bool fmt_enabled = ictx_.IsFmtEnabledForTarget(owning_target);
   auto record = Record{
       .rs_name = Identifier(rs_name),
       .cc_name = Identifier(cc_name),
@@ -1149,6 +1150,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .child_item_ids = std::move(item_ids),
       .enclosing_item_id = *std::move(enclosing_item_id),
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
+      .detected_formatter = fmt_enabled && ictx_.DetectFormatter(*record_decl),
   };
 
   // If the align attribute was attached to the typedef decl, we should

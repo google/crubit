@@ -20,6 +20,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -54,6 +55,7 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
@@ -119,6 +121,79 @@ bool IsBuiltinFunction(const clang::Decl* decl) {
     return false;
   }
   return function->getBuiltinID() != 0;
+}
+
+bool IsTypeValueOrRefToConst(clang::QualType candidate,
+                             clang::CanQualType target) {
+  return candidate->getCanonicalTypeUnqualified() == target ||
+         (candidate->isLValueReferenceType() &&
+          candidate.getNonReferenceType().getCanonicalType() ==
+              target.withConst());
+}
+
+bool IsLvalueRefToUnqualified(clang::QualType type) {
+  return type->isLValueReferenceType() &&
+         !type.getNonReferenceType().getCanonicalType().hasQualifiers();
+}
+
+bool IsStdTemplate(const clang::TemplateDecl& decl, clang::StringRef name) {
+  const auto* class_template =
+      clang::dyn_cast<const clang::ClassTemplateDecl>(&decl);
+  return class_template != nullptr && class_template->getName() == name &&
+         class_template->isInStdNamespace();
+}
+
+bool IsCharTraitsChar(clang::QualType type) {
+  const clang::TemplateSpecializationType* specialization =
+      type->getAsNonAliasTemplateSpecializationType();
+  return specialization != nullptr &&
+         IsStdTemplate(*specialization->getTemplateName().getAsTemplateDecl(),
+                       "char_traits") &&
+         specialization->template_arguments().size() == 1 &&
+         specialization->template_arguments()[0].getAsType()->isCharType();
+}
+
+bool IsOstreamRef(clang::QualType type) {
+  if (!IsLvalueRefToUnqualified(type)) {
+    return false;
+  }
+  const clang::TemplateSpecializationType* specialization =
+      type.getNonReferenceType()->getAsNonAliasTemplateSpecializationType();
+  return specialization != nullptr &&
+         IsStdTemplate(*specialization->getTemplateName().getAsTemplateDecl(),
+                       "basic_ostream") &&
+         !specialization->template_arguments().empty() &&
+         specialization->template_arguments()[0].getAsType()->isCharType() &&
+         (specialization->template_arguments().size() == 1 ||
+          IsCharTraitsChar(
+              specialization->template_arguments()[1].getAsType()));
+}
+
+bool DetectFormatterFunction(const clang::Decl& decl,
+                             clang::CanQualType formatted_type) {
+  if (const auto* function_template_decl =
+          clang::dyn_cast<const clang::FunctionTemplateDecl>(&decl);
+      function_template_decl != nullptr) {
+    return function_template_decl->getName() == "AbslStringify" &&
+           function_template_decl->getAsFunction()->getNumParams() == 2 &&
+           IsTypeValueOrRefToConst(
+               /*candidate=*/function_template_decl->getAsFunction()
+                   ->getParamDecl(1)
+                   ->getType(),
+               /*target=*/formatted_type);
+  }
+  if (const auto* function_decl =
+          clang::dyn_cast<const clang::FunctionDecl>(&decl);
+      function_decl != nullptr) {
+    return function_decl->getOverloadedOperator() == clang::OO_LessLess &&
+           function_decl->getNumParams() == 2 &&
+           IsOstreamRef(function_decl->getParamDecl(0)->getType()) &&
+           IsTypeValueOrRefToConst(
+               /*candidate=*/function_decl->getParamDecl(1)->getType(),
+               /*target=*/formatted_type) &&
+           IsOstreamRef(function_decl->getReturnType());
+  }
+  return false;
 }
 
 }  // namespace
@@ -893,11 +968,64 @@ bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
   return filename.has_value() && filename->ends_with(".proto.h");
 }
 
-bool Importer::AreAssumedLifetimesEnabledForTarget(
-    const BazelLabel& label) const {
+bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
+                                         absl::string_view feature) const {
   if (auto i = invocation_.ir_.crubit_features.find(label);
       i != invocation_.ir_.crubit_features.end()) {
-    return i->second.contains("assume_lifetimes");
+    return i->second.contains(feature);
+  }
+  return false;
+}
+
+bool Importer::AreAssumedLifetimesEnabledForTarget(
+    const BazelLabel& label) const {
+  return IsFeatureEnabledForTarget(label, "assume_lifetimes");
+}
+
+bool Importer::IsFmtEnabledForTarget(const BazelLabel& label) const {
+  return IsFeatureEnabledForTarget(label, "fmt");
+}
+
+bool Importer::DetectFormatter(const clang::TypeDecl& decl) const {
+  clang::CanQualType type = ctx_.getCanonicalTypeDeclType(&decl);
+  return DetectFormatterForType(/*lookup=*/type, /*target=*/type);
+}
+
+bool Importer::DetectFormatterForType(clang::CanQualType lookup,
+                                      clang::CanQualType target) const {
+  if (const clang::CXXRecordDecl* record = lookup->getAsCXXRecordDecl();
+      record != nullptr) {
+    for (const clang::FriendDecl* absl_nonnull friend_decl :
+         record->friends()) {
+      const clang::NamedDecl* inner_friend = friend_decl->getFriendDecl();
+      if (inner_friend != nullptr &&
+          DetectFormatterFunction(*inner_friend, target)) {
+        return true;
+      }
+    }
+    for (const clang::CXXBaseSpecifier& base_specifier : record->bases()) {
+      clang::CanQualType base_type =
+          ctx_.getCanonicalType(base_specifier.getType());
+      if (DetectFormatterForType(/*lookup=*/base_type, /*target=*/target) ||
+          DetectFormatterForType(/*lookup=*/base_type, /*target=*/base_type)) {
+        return true;
+      }
+    }
+  }
+  const clang::Type* lookup_type = lookup.getTypePtrOrNull();
+  if (lookup_type == nullptr) {
+    return false;
+  }
+  const clang::TagDecl* lookup_decl = lookup_type->getAsTagDecl();
+  if (lookup_decl == nullptr) {
+    return false;
+  }
+  const clang::DeclContext* absl_nonnull context =
+      lookup_decl->getDeclContext()->getEnclosingNamespaceContext();
+  for (const clang::Decl* absl_nonnull decl : context->decls()) {
+    if (DetectFormatterFunction(*decl, target)) {
+      return true;
+    }
   }
   return false;
 }

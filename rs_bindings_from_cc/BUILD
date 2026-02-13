@@ -327,6 +327,7 @@ cc_library(
         "//rs_bindings_from_cc/importers:var",
         "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log",
@@ -357,6 +358,7 @@ crubit_cc_test(
         "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/functional:overload",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
     ],
 )

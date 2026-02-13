@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "absl/functional/overload.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
@@ -99,6 +100,15 @@ MATCHER_P(DocCommentIs, doc_comment, "") {
   *result_listener << "actual doc comment: '"
                    << (arg.doc_comment ? *arg.doc_comment : "<none>") << "'";
   return false;
+}
+
+MATCHER(HasDetectedFormatter, "") {
+  if (arg.detected_formatter) {
+    *result_listener << "detected_formatter is actually true";
+  } else {
+    *result_listener << "detected_formatter is actually false";
+  }
+  return arg.detected_formatter;
 }
 
 // Matches a Func that has the given mangled name.
@@ -1034,6 +1044,127 @@ TEST(ImporterTest, CrashRepro_AutoInvolvingTemplate) {
     auto Func() { return Template<int>{}; }
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+}
+
+absl::StatusOr<IR> IrFromCcWithFmt(absl::string_view program) {
+  return IrFromCc(IrFromCcOptions{
+      .extra_source_code_for_testing = program,
+      .crubit_features = {{BazelLabel{"//test:testing_target"}, {"fmt"}}}});
+}
+
+TEST(ImporterTest, DetectsFormatterAsAbslStringify) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         struct ByRef {
+                           template <typename Sink>
+                           friend void AbslStringify(Sink&, const ByRef&) {}
+                         };
+                         struct ByValue {
+                           template <typename Sink>
+                           friend void AbslStringify(Sink&, ByValue) {}
+                         };
+                         struct NoFormatter {};
+                       )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      AllOf(
+          Contains(Pointee(AllOf(RsNameIs("ByRef"), HasDetectedFormatter()))),
+          Contains(Pointee(AllOf(RsNameIs("ByValue"), HasDetectedFormatter()))),
+          Contains(Pointee(
+              AllOf(RsNameIs("NoFormatter"), Not(HasDetectedFormatter()))))));
+}
+
+TEST(ImporterTest, DetectsFormatterAsOstream) {
+  ASSERT_OK_AND_ASSIGN(  //
+      const IR ir,       //
+      IrFromCcWithFmt(R"cc(
+        namespace std {
+        template <typename T>
+        struct char_traits {};
+        template <typename T, typename Traits = char_traits<T>>
+        struct basic_ostream {};
+        using ostream = basic_ostream<char>;
+        }  // namespace std
+
+        struct ByRef {
+          friend std::ostream& operator<<(std::ostream& out, const ByRef&) {
+            return out;
+          }
+        };
+        struct ByValue {
+          friend std::ostream& operator<<(std::ostream& out, ByValue) { return out; }
+        };
+        struct NoFormatter {};
+      )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      AllOf(
+          Contains(Pointee(AllOf(RsNameIs("ByRef"), HasDetectedFormatter()))),
+          Contains(Pointee(AllOf(RsNameIs("ByValue"), HasDetectedFormatter()))),
+          Contains(Pointee(
+              AllOf(RsNameIs("NoFormatter"), Not(HasDetectedFormatter()))))));
+}
+
+TEST(ImporterTest, DetectsFormatterAsPrinterOfBase) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         struct Base {
+                           template <typename Sink>
+                           friend void AbslStringify(Sink&, const Base&) {}
+                         };
+                         struct Derived : Base {};
+                       )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      Contains(Pointee(AllOf(RsNameIs("Derived"), HasDetectedFormatter()))));
+}
+
+TEST(ImporterTest, DetectsFormatterAsPrinterInCrtpBase) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         template <typename This>
+                         struct Base {
+                           template <typename Sink>
+                           friend void AbslStringify(Sink&, const This&) {}
+                         };
+                         struct Derived : private Base<Derived> {};
+                       )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      Contains(Pointee(AllOf(RsNameIs("Derived"), HasDetectedFormatter()))));
+}
+
+TEST(ImporterTest, DetectsEnumFormatter) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         enum class Foo {
+                           kFoo,
+                         };
+                         template <typename Sink>
+                         void AbslStringify(Sink&, Foo) {}
+                       )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Enum>(),
+      Contains(Pointee(AllOf(RsNameIs("Foo"), HasDetectedFormatter()))));
+}
+
+TEST(ImporterTest, DoesNotDetectAbslStringifyMemberFunctionAsFormatter) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         struct Foo {
+                           template <typename Sink>
+                           static void AbslStringify(Sink&, const Foo&) {}
+                         };
+                       )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      Contains(Pointee(AllOf(RsNameIs("Foo"), Not(HasDetectedFormatter())))));
+}
+
+TEST(ImporterTest, DoesNotDetectOperatorLeftShiftWrongTypesAsFormatter) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         struct Foo {
+                           friend Foo& operator<<(Foo& foo, int) { return foo; }
+                         };
+                       )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      Contains(Pointee(AllOf(RsNameIs("Foo"), Not(HasDetectedFormatter())))));
 }
 
 absl::StatusOr<IR> IrFromCcWithAssumedLifetimes(absl::string_view program) {

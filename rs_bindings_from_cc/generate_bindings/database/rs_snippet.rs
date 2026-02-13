@@ -2062,6 +2062,7 @@ mod tests {
                 unknown_attr: None,
                 enclosing_item_id: None,
                 must_bind: false,
+                detected_formatter: false,
             }),
             crate_path: make_crate_path(),
         };

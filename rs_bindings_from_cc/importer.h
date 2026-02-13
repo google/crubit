@@ -16,6 +16,7 @@
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
@@ -119,6 +120,8 @@ class Importer final : public ImportContext {
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;
+  bool IsFmtEnabledForTarget(const BazelLabel& label) const override;
+  bool DetectFormatter(const clang::TypeDecl& decl) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
@@ -188,6 +191,12 @@ class Importer final : public ImportContext {
   // the template instantiation.
   CcType ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type);
+
+  bool IsFeatureEnabledForTarget(const BazelLabel& label,
+                                 absl::string_view feature) const;
+
+  bool DetectFormatterForType(clang::CanQualType lookup,
+                              clang::CanQualType target) const;
 
   // The different decl importers. Note that order matters: the first importer
   // to successfully match a decl "wins", and no other importers are tried.
