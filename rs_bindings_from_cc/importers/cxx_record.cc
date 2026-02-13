@@ -50,6 +50,7 @@
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
 namespace crubit {
 
@@ -778,6 +779,33 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   });
 }
 
+/// Returns true if a decl is inside a private section, or is inside a
+/// RecordDecl which is IsTransitivelyInPrivate.
+// TODO(okabayashi): We may need this logic in type_alias.cc for target types.
+bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
+  while (true) {
+    auto* parent =
+        llvm::dyn_cast<clang::CXXRecordDecl>(decl_to_check->getDeclContext());
+    if (parent == nullptr) {
+      return false;
+    }
+    switch (decl_to_check->getAccess()) {
+      case clang::AccessSpecifier::AS_public:
+        break;
+      case clang::AccessSpecifier::AS_none:
+        if (!parent->isClass()) {
+          break;
+        }
+        [[fallthrough]];
+      case clang::AccessSpecifier::AS_protected:
+      case clang::AccessSpecifier::AS_private:
+        return true;
+    }
+
+    decl_to_check = parent;
+  }
+}
+
 }  // namespace
 
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
@@ -822,6 +850,9 @@ bool IsKnownAttr(const clang::Attr& attr) {
 
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
+  if (IsTransitivelyInPrivate(record_decl)) {
+    return std::nullopt;
+  }
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context->isFunctionOrMethod()) {
     return std::nullopt;
