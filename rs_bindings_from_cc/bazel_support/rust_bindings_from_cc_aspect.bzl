@@ -289,20 +289,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if hasattr(ctx.rule.attr, "hdrs"):
         public_hdrs = _collect_hdrs(ctx, features)
 
-    elif ctx.rule.kind == "cc_embed_data" or ctx.rule.kind == "upb_proto_library":
+    elif ctx.rule.kind in ("cc_embed_data", "upb_proto_library"):
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
-
-    elif ctx.rule.kind == "cc_stubby_library":
-        public_hdrs = target[CcInfo].compilation_context.direct_public_headers
-        extra_rule_specific_deps = ctx.rule.attr.implicit_cc_deps
-
-        if not AdditionalRustSrcsProviderInfo in target:
-            fail("cc_stubby_library must provide AdditionalRustSrcsProviderInfo")
-
-        additional_provider = target[AdditionalRustSrcsProviderInfo]
-
-        extra_rs_srcs.extend(_get_additional_rust_srcs_from_provider(additional_provider))
-        extra_deps.extend(_get_additional_rust_deps_from_provider(additional_provider))
 
     has_public_headers = len(public_hdrs) > 0
     if not has_public_headers:
@@ -399,6 +387,7 @@ rust_bindings_from_cc_aspect = aspect(
         "_cc_lib",
         # for cc_stubby_library implicit deps
         "implicit_cc_deps",
+        "_implicit_cc_deps",
     ],
     requires = [rust_cc_proto_library_aspect],
     required_aspect_providers = [CcInfo],
