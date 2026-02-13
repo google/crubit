@@ -44,7 +44,7 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, force_all_deps_direct, allow_lto = True):
+def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, force_all_deps_direct, allow_lto = True, aliases = {}):
     """Compiles a Rust source file.
 
     Args:
@@ -57,6 +57,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
       include_coverage: (bool) Whether or not coverage information should be generated.
       force_all_deps_direct: (bool) Whether or not to force all deps to be direct.
       allow_lto: (bool, optional) Whether to allow LTO
+      aliases: (dict, optional) A dict of aliases to be passed to the rustc_compile_action.
 
     Returns:
       A DepVariantInfo provider.
@@ -103,7 +104,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             srcs = srcs,
             deps = deps.to_list(),
             proc_macro_deps = [],
-            aliases = {},
+            aliases = aliases,
             output = lib,
             metadata = rmeta,
             edition = "2018",
