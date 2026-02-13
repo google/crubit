@@ -80,6 +80,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
     )
 
     lib = ctx.actions.declare_file(lib_name)
+
     rmeta = ctx.actions.declare_file(rmeta_name)
 
     # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
