@@ -3,7 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{bail, Result};
-use crubit_abi_type::{CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
+use crubit_abi_type::{
+    CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens,
+    CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens,
+};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{BackingType, Callable, FnTrait, PassingConvention, RsTypeKind};
 use proc_macro2::TokenStream;
@@ -44,7 +47,7 @@ pub fn dyn_callable_crubit_abi_type(
             )
         },
         BackingType::AnyInvocable => {
-            let make_cpp_invoker_tokens = generate_make_cpp_invoker_tokens()?;
+            let make_cpp_invoker_tokens = generate_make_cpp_invoker_tokens(db, callable)?;
             quote! {
                 ::any_invocable::AnyInvocableAbi::<#dyn_fn_spelling>::new(
                     #on_empty_tokens,
@@ -106,7 +109,7 @@ pub fn dyn_callable_crubit_abi_type(
     })
 }
 
-/// Generates the function pointer object that DynCallable will use in operator()().
+/// Generates the function pointer object that the callable will use in operator()().
 ///
 /// This will often produce tokens of the form:
 ///
@@ -142,7 +145,7 @@ fn generate_invoker_function_pointer(
         let param_ident = &param_idents[i];
 
         match param_ty.passing_convention() {
-            PassingConvention::AbiCompatible => {
+            PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
                 arg_exprs.push(quote! { #param_ident });
             }
             PassingConvention::LayoutCompatible => {
@@ -159,23 +162,22 @@ fn generate_invoker_function_pointer(
                 let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
                 let arg_ident = format_ident!("bridge_param_{i}");
                 arg_transforms.extend(quote! {
-                unsigned char #arg_ident[#crubit_abi_type_tokens::kSize];
-                ::crubit::internal::Encode(#crubit_abi_type_expr_tokens, #arg_ident, #param_ident);
-            });
+                    unsigned char #arg_ident[#crubit_abi_type_tokens::kSize];
+                    ::crubit::internal::Encode(#crubit_abi_type_expr_tokens, #arg_ident, #param_ident);
+                });
                 arg_exprs.push(quote! { #arg_ident });
             }
             PassingConvention::Ctor => {
                 bail!("Ctor not supported");
             }
-            PassingConvention::OwnedPtr => {
-                bail!("OwnedPtr not supported");
-            }
-            PassingConvention::Void => unreachable!("parameter types cannot be void"),
+            PassingConvention::Void => bail!("parameter types cannot be void"),
         }
     }
 
     let out_param_arg = match callable.return_type.passing_convention() {
-        PassingConvention::AbiCompatible | PassingConvention::Void => None,
+        PassingConvention::AbiCompatible
+        | PassingConvention::Void
+        | PassingConvention::OwnedPtr => None,
         PassingConvention::LayoutCompatible => {
             arg_transforms.extend(quote! {
                 ::crubit::Slot<#cpp_return_type> out;
@@ -193,9 +195,6 @@ fn generate_invoker_function_pointer(
         PassingConvention::Ctor => {
             bail!("Ctor not supported");
         }
-        PassingConvention::OwnedPtr => {
-            bail!("OwnedPtr not supported");
-        }
     };
 
     let mut invoke_ffi_and_transform_to_cpp = quote! {
@@ -203,7 +202,7 @@ fn generate_invoker_function_pointer(
     };
 
     match callable.return_type.passing_convention() {
-        PassingConvention::AbiCompatible => {
+        PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
             // Return the result.
             invoke_ffi_and_transform_to_cpp = quote! {
                 return #invoke_ffi_and_transform_to_cpp
@@ -221,15 +220,12 @@ fn generate_invoker_function_pointer(
             let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
             invoke_ffi_and_transform_to_cpp.extend(quote! {
-            // Because our bridge buffer is named `out`
-            return ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens, out);
-        });
+                // Because our bridge buffer is named `out`
+                return ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens, out);
+            });
         }
         PassingConvention::Ctor => {
             bail!("Ctor not supported");
-        }
-        PassingConvention::OwnedPtr => {
-            bail!("OwnedPtr not supported");
         }
         PassingConvention::Void => {
             // No need to return anything.
@@ -251,6 +247,148 @@ fn generate_invoker_function_pointer(
 }
 
 /// Generates the `make_cpp_invoker` function for AnyInvocable.
-fn generate_make_cpp_invoker_tokens() -> Result<TokenStream> {
-    bail!("AnyInvocable is not yet supported")
+///
+/// It's a closure that takes a manager and an invoker, and produces a boxed dyn fn that uses the
+/// manager and invoker to do the actual work.
+///
+/// The produced function needs to know how to convert values to and from C++.
+fn generate_make_cpp_invoker_tokens(
+    db: &BindingsGenerator,
+    callable: &Callable,
+) -> Result<TokenStream> {
+    let param_idents =
+        (0..callable.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
+    let rust_param_types = callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
+    let rust_return_type_fragment = callable.rust_return_type_fragment(db);
+
+    let mut c_param_types = Vec::with_capacity(callable.param_types.len());
+    let mut arg_exprs = Vec::with_capacity(callable.param_types.len());
+    // We are the caller
+    for (i, param_ty) in callable.param_types.iter().enumerate() {
+        let param_ident = &param_idents[i];
+
+        match param_ty.passing_convention() {
+            PassingConvention::AbiCompatible => {
+                c_param_types.push(param_ty.to_token_stream(db));
+                arg_exprs.push(quote! { #param_ident });
+            }
+            PassingConvention::LayoutCompatible => {
+                let param_ty_tokens = param_ty.to_token_stream(db);
+                c_param_types.push(quote! { &mut #param_ty_tokens });
+                arg_exprs.push(quote! { &mut #param_ident });
+            }
+            PassingConvention::ComposablyBridged => {
+                let crubit_abi_type = db.crubit_abi_type(param_ty.clone())?;
+                let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                // For arguments that are bridge types, we encode the
+                // Rust value into a buffer and then the argument is a pointer to that buffer.
+                c_param_types.push(quote! { *const u8 });
+                arg_exprs.push(quote! {
+                    ::bridge_rust::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #param_ident)
+                        .as_ptr() as *const u8
+                });
+            }
+            PassingConvention::Ctor => {
+                bail!("Ctor not supported");
+            }
+            PassingConvention::OwnedPtr => {
+                c_param_types.push(param_ty.to_token_stream_with_owned_ptr_type(db));
+                arg_exprs.push(quote! {
+                    // SAFETY: Transmuting from a repr(transparent) struct that wraps the pointer.
+                    unsafe { ::core::mem::transmute(#param_ident) }
+                });
+            }
+            PassingConvention::Void => bail!("parameter types cannot be void"),
+        }
+    }
+
+    // What the extern "C" function should return.
+    let mut c_return_type_fragment = None;
+    // Set c_return_type_fragment, or push an out param, or nothing if void.
+    match callable.return_type.passing_convention() {
+        PassingConvention::AbiCompatible => {
+            let c_return_type = callable.return_type.to_token_stream(db);
+            c_return_type_fragment = Some(quote! { -> #c_return_type });
+        }
+        PassingConvention::Void => {}
+        PassingConvention::LayoutCompatible => {
+            let return_type_tokens = callable.return_type.to_token_stream(db);
+            c_param_types.push(quote! { *mut #return_type_tokens });
+            arg_exprs.push(quote! { &raw mut out });
+        }
+        PassingConvention::ComposablyBridged => {
+            c_param_types.push(quote! { *mut u8 });
+            arg_exprs.push(quote! { &raw mut out });
+        }
+        PassingConvention::Ctor => {
+            bail!("Ctor not supported");
+        }
+        PassingConvention::OwnedPtr => {
+            let c_return_type = callable.return_type.to_token_stream_with_owned_ptr_type(db);
+            c_return_type_fragment = Some(quote! { -> #c_return_type });
+        }
+    };
+
+    let mut invoke_ffi_and_transform_to_rust = quote! {
+        unsafe { c_invoker(managed.state.get() #(, #arg_exprs)*) }
+    };
+
+    match callable.return_type.passing_convention() {
+        PassingConvention::AbiCompatible => {
+            // invoke_ffi_and_transform_to_rust is already a trailing expr.
+        }
+        PassingConvention::LayoutCompatible => {
+            invoke_ffi_and_transform_to_rust = quote! {
+                let out = ::core::mem::MaybeUninit::uninit();
+                #invoke_ffi_and_transform_to_rust;
+                unsafe { out.assume_init() }
+            }
+        }
+        PassingConvention::ComposablyBridged => {
+            let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone())?;
+            let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+            invoke_ffi_and_transform_to_rust.extend(quote! {
+                ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |out| {
+                    #invoke_ffi_and_transform_to_rust
+                })
+            });
+        }
+        PassingConvention::Ctor => {
+            bail!("Ctor not supported");
+        }
+        PassingConvention::OwnedPtr => {
+            invoke_ffi_and_transform_to_rust = quote! {
+                // SAFETY: Transmuting to a repr(transparent) struct that wraps the pointer.
+                unsafe { ::core::mem::transmute(#invoke_ffi_and_transform_to_rust) }
+            };
+        }
+        PassingConvention::Void => {
+            // Append semicolon to the statement.
+            invoke_ffi_and_transform_to_rust = quote! {
+                #invoke_ffi_and_transform_to_rust;
+            }
+        }
+    }
+
+    let dyn_fn_spelling = callable.dyn_fn_spelling(db);
+
+    Ok(quote! {
+        |managed: ::any_invocable::ManagedState,
+         invoker: unsafe extern "C" fn()| -> ::alloc::boxed::Box<#dyn_fn_spelling> {
+            let c_invoker = unsafe {
+                ::core::mem::transmute::<
+                    unsafe extern "C" fn(),
+                    unsafe extern "C" fn(
+                        *mut ::any_invocable::TypeErasedState
+                        #( , #c_param_types )*
+                    ) #c_return_type_fragment
+                >(invoker)
+            };
+            ::alloc::boxed::Box::new(move |#( #param_idents: #rust_param_types ),*| #rust_return_type_fragment {
+                #invoke_ffi_and_transform_to_rust
+            })
+         }
+    })
 }

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/consume_absl:absl_functional
-// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: callables, custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -14,13 +14,37 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-pub mod absl_functional_internal { // Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=13
-                                   // Error while generating bindings for function 'absl_functional_internal::CallVoidVoid':
-                                   // Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<void () &&>': Failed to complete template specialization type absl::AnyInvocable<void (void) &&>: template belongs to target //_unknown_target:third_party/absl/functional/any_invocable.h, which does not support Crubit.
+extern crate alloc;
 
-    // Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=16
-    // Error while generating bindings for function 'absl_functional_internal::ReturnIntVoid':
-    // Return type is not supported: Unsupported type 'absl::AnyInvocable<int (int) const>': Failed to complete template specialization type absl::AnyInvocable<int (int) const>: template belongs to target //_unknown_target:third_party/absl/functional/any_invocable.h, which does not support Crubit.
+pub mod absl_functional_internal {
+    /// Calls the invocable and returns void.
+    ///
+    /// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=13
+    #[inline(always)]
+    pub fn CallVoidVoid(
+        f: ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIFvvOEEE(::bridge_rust::unstable_encode!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(||{ ::core::panic!("moved-from value") }),|managed: ::any_invocable::ManagedState,invoker: unsafe extern "C" fn()|->::alloc::boxed::Box<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>{ let c_invoker=unsafe{ ::core::mem::transmute::<unsafe extern "C" fn(),unsafe extern "C" fn(*mut::any_invocable::TypeErasedState)>(invoker) };::alloc::boxed::Box::new(move||{ unsafe{ c_invoker(managed.state.get()) }; }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
+        }
+    }
+
+    /// Returns an invocable that returns 42.
+    ///
+    /// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=16
+    #[inline(always)]
+    pub fn ReturnIntVoid() -> ::alloc::boxed::Box<
+        dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+            + ::core::marker::Send
+            + ::core::marker::Sync
+            + 'static,
+    > {
+        unsafe {
+            ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::core::panic!("moved-from value") }),|managed: ::any_invocable::ManagedState,invoker: unsafe extern "C" fn()|->::alloc::boxed::Box<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>{ let c_invoker=unsafe{ ::core::mem::transmute::<unsafe extern "C" fn(),unsafe extern "C" fn(*mut::any_invocable::TypeErasedState,::ffi_11::c_int)->::ffi_11::c_int>(invoker) };::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ c_invoker(managed.state.get(),param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>,|__return_abi_buffer|{ crate::detail::__rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(__return_abi_buffer,); })
+        }
+    }
 }
 
 // namespace absl_functional_internal
@@ -944,6 +968,88 @@ forward_declare::unsafe_define!(
 // Generated from: nowhere/llvm/src/libcxx/include/string_view;l=696
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with':
 // Parameter #0 is not supported: Unsupported type alias std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::value_type
+
+// Generated from: third_party/absl/functional/internal/any_invocable.h;l=407
+// Error while generating bindings for class 'absl::internal_any_invocable::CoreImpl<false, int, int>':
+// Can't generate bindings for absl::internal_any_invocable::CoreImpl<false, int, int>, because of missing required features (crubit.rs-features):
+// third_party/absl/functional/internal/any_invocable.h needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, int, int> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EiJiEEE is a template instantiation)
+// //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, int, int> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EiJiEEE is a template instantiation)
+
+// Generated from: third_party/absl/functional/internal/any_invocable.h;l=407
+// Error while generating bindings for class 'absl::internal_any_invocable::CoreImpl<false, void>':
+// Can't generate bindings for absl::internal_any_invocable::CoreImpl<false, void>, because of missing required features (crubit.rs-features):
+// third_party/absl/functional/internal/any_invocable.h needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, void> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EvJEEE is a template instantiation)
+// //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, void> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EvJEEE is a template instantiation)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIFvvOEEE(
+            f: *const ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN4absl12AnyInvocableIFvvOEEE_invoker(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        (unsafe {
+            ::core::ptr::replace(
+                f,
+                ::alloc::boxed::Box::new(|| {
+                    ::core::unreachable!("Called FnOnce after it was moved");
+                }),
+            )
+        })();
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN4absl12AnyInvocableIFvvOEEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN4absl12AnyInvocableIKFiiEEE_invoker(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN4absl12AnyInvocableIKFiiEEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+}
 
 const _: () = {
     assert!(

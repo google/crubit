@@ -404,7 +404,7 @@ pub fn generate_bindings_tokens(
                 let has_reference_param = false;
 
                 // Find records that are template instantiations of `rs_std::DynCallable`.
-                let Ok(Some(BridgeRsTypeKind::DynCallable(dyn_callable))) =
+                let Ok(Some(BridgeRsTypeKind::Callable(callable))) =
                     BridgeRsTypeKind::new(record, has_reference_param, &db)
                 else {
                     return None;
@@ -413,21 +413,21 @@ pub fn generate_bindings_tokens(
                 // The parameters shall be named `param_0`, `param_1`, etc.
                 // These names can be reused across different dyn callables, so we reuse the same vec
                 // and just grow it when we need more Idents than it currently contains.
-                while dyn_callable.param_types.len() > param_idents_buffer.len() {
+                while callable.param_types.len() > param_idents_buffer.len() {
                     param_idents_buffer.push(format_ident!("param_{}", param_idents_buffer.len()));
                 }
                 // Only take as many filled in names as we need.
-                let param_idents = &param_idents_buffer[..dyn_callable.param_types.len()];
+                let param_idents = &param_idents_buffer[..callable.param_types.len()];
 
                 // If generate_dyn_callable_cpp_thunk fails, skip. We don't need to generate a nice
                 // error because whoever uses this will also fail and generate an error at the relevant
                 // site.
-                let dyn_callable_cpp_decl =
-                    generate_dyn_callable_cpp_thunk(&db, &dyn_callable, param_idents)?;
-                let dyn_callable_rust_impl =
-                    generate_dyn_callable_rust_thunk_impl(&db, dyn_callable.clone(), param_idents)?;
+                let callable_cpp_decl =
+                    generate_dyn_callable_cpp_thunk(&db, &callable, param_idents)?;
+                let callable_rust_impl =
+                    generate_dyn_callable_rust_thunk_impl(&db, callable.clone(), param_idents)?;
 
-                Some((dyn_callable_cpp_decl, dyn_callable_rust_impl))
+                Some((callable_cpp_decl, callable_rust_impl))
             })
             .unzip();
 
@@ -602,8 +602,8 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safe
                 }
             }
             BridgeRsTypeKind::StdString { .. } => Safety::Safe,
-            BridgeRsTypeKind::DynCallable(dyn_callable) => {
-                callable_safety(db, &dyn_callable.param_types, &dyn_callable.return_type)
+            BridgeRsTypeKind::Callable(callable) => {
+                callable_safety(db, &callable.param_types, &callable.return_type)
             }
             BridgeRsTypeKind::C9Co { result_type, .. } => {
                 // A Co<T> logically produces a T, so it is unsafe iff T is unsafe.
@@ -783,6 +783,17 @@ fn generate_rs_api_impl_includes(
                     ));
                     internal_includes.insert(CcInclude::user_header(
                         "util/c9/internal/rust/co_crubit_abi.h".into(),
+                    ));
+                }
+                BridgeRsTypeKind::Callable(callable)
+                    if callable.backing_type == BackingType::AnyInvocable =>
+                {
+                    internal_includes.insert(CcInclude::SupportLibHeader(
+                        crubit_support_path_format.clone(),
+                        "bridge.h".into(),
+                    ));
+                    internal_includes.insert(CcInclude::user_header(
+                        "third_party/absl/functional/any_invocable_crubit_abi.h".into(),
                     ));
                 }
                 _ => {
@@ -1013,12 +1024,12 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
-            BridgeRsTypeKind::DynCallable(dyn_callable) => {
+            BridgeRsTypeKind::Callable(callable) => {
                 ensure!(
                     db.ir().target_crubit_features(&original_type.owning_target).contains(CrubitFeature::Callables),
                     "Callables require the `callables` feature, but target `{:?}` does not have it enabled.", original_type.owning_target,
                 );
-                generate_dyn_callable::dyn_callable_crubit_abi_type(db, &dyn_callable)
+                generate_dyn_callable::dyn_callable_crubit_abi_type(db, &callable)
             }
             BridgeRsTypeKind::C9Co { result_type, .. } => {
                 let result_type_tokens = if result_type.is_void() {
