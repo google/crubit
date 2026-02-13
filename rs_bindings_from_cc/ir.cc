@@ -681,6 +681,10 @@ llvm::json::Value Record::ToJson() const {
       {"detected_formatter", detected_formatter},
   };
 
+  if (!lifetime_inputs.empty()) {
+    record.insert({"lifetime_inputs", lifetime_inputs});
+  }
+
   return llvm::json::Object{
       {"Record", std::move(record)},
   };

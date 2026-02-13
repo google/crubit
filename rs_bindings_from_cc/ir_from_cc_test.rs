@@ -4675,3 +4675,20 @@ fn test_detects_formatter() {
         }
     );
 }
+
+#[gtest]
+fn test_assumed_lifetimes_struct_with_explicit_binding() {
+    let ir = ir_from_assumed_lifetimes_cc("struct LIFETIME_PARAMS(\"a\") S { };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+}

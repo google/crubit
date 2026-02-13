@@ -782,6 +782,9 @@ struct Record {
   bool must_bind = false;
   bool overloads_operator_delete = false;
   bool detected_formatter = false;
+
+  // Lifetime variable names bound by this record.
+  std::vector<std::string> lifetime_inputs;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)

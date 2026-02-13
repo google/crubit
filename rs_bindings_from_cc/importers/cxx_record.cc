@@ -8,6 +8,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
@@ -16,6 +17,7 @@
 #include <vector>
 
 #include "clang/Basic/SourceLocation.h"
+#include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -1110,6 +1112,24 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(safety_annotation).status()));
   }
 
+  std::vector<std::string> lifetime_inputs;
+  if (ictx_.AreAssumedLifetimesEnabledForTarget(
+          ictx_.GetOwningTarget(record_decl))) {
+    auto lifetime_inputs_or_err =
+        CollectLifetimeInputs(ictx_.sema_.getASTContext(), record_decl);
+    if (!lifetime_inputs_or_err.ok()) {
+      return unsupported(FormattedError::FromStatus(
+          std::move(lifetime_inputs_or_err).status()));
+    } else {
+      lifetime_inputs.reserve(lifetime_inputs_or_err->size());
+      absl::c_transform(*lifetime_inputs_or_err,
+                        std::back_inserter(lifetime_inputs),
+                        [](absl::string_view lifetime_view) {
+                          return std::string(lifetime_view);
+                        });
+    }
+  }
+
   bool fmt_enabled = ictx_.IsFmtEnabledForTarget(owning_target);
   auto record = Record{
       .rs_name = Identifier(rs_name),
@@ -1151,6 +1171,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .enclosing_item_id = *std::move(enclosing_item_id),
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
       .detected_formatter = fmt_enabled && ictx_.DetectFormatter(*record_decl),
+      .lifetime_inputs = std::move(lifetime_inputs),
   };
 
   // If the align attribute was attached to the typedef decl, we should
