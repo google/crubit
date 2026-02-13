@@ -10,7 +10,8 @@ use arc_anyhow::Result;
 use database::BindingsGenerator;
 use error_report::bail;
 use ir::{
-    make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, ItemId, PointerType, PointerTypeKind, IR,
+    make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, ItemId, PointerType, PointerTypeKind,
+    Record, IR,
 };
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -422,12 +423,26 @@ impl<'a> LifetimeDefaults<'a> {
         Ok(new_func)
     }
 
+    /// Transforms a record to use default lifetime rules.
+    fn add_lifetime_to_record(&mut self, record: &Record) -> Result<Record> {
+        let mut new_record = record.clone();
+        new_record.lifetime_inputs.clear();
+        self.bind_lifetime_inputs(record.enclosing_item_id)?;
+        // Rename local bindings (and remember how we've renamed them).
+        record
+            .lifetime_inputs
+            .iter()
+            .for_each(|name| new_record.lifetime_inputs.push(self.bindings.push_new_binding(name)));
+        Ok(new_record)
+    }
+
     /// Since we keep all item ids stable, we only have to deep-clone the objects that we need to
     /// change. We may need to introduce lifetime param binders whenever we see a type (but not on
     /// decls).
     fn add_lifetime_to_item(&mut self, item: &Item) -> Result<Item> {
         match item {
             Item::Func(func) => Ok(Item::Func(self.add_lifetime_to_func(func)?.into())),
+            Item::Record(record) => Ok(Item::Record(self.add_lifetime_to_record(record)?.into())),
             _ => Ok(item.clone()),
         }
     }

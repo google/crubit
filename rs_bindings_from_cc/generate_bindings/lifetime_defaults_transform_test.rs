@@ -973,9 +973,7 @@ fn test_struct_renames_multiple_shadowed_lifetime_param_in_function() -> Result<
                 ...
                 cc_name: "S",
                 ...
-                // TODO(b/454627672): these should be renamed to a_0, a_1 (but we don't currently
-                // transform records, so this is the raw input from the Clang layer).
-                lifetime_inputs: ["a", "a"],
+                lifetime_inputs: ["a_0", "a_1"],
                 ...
             }
         }
@@ -1027,9 +1025,7 @@ fn test_function_uses_top_of_renamed_lifetime_stack() -> Result<()> {
                 ...
                 cc_name: "S",
                 ...
-                // TODO(b/454627672): these should be renamed to a_0, a_1 (but we don't currently
-                // transform records, so this is the raw input from the Clang layer).
-                lifetime_inputs: ["a", "a"],
+                lifetime_inputs: ["a_0", "a_1"],
                 ...
             }
         }
