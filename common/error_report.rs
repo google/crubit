@@ -228,6 +228,9 @@ pub struct ItemName {
     pub name: Rc<str>,
     /// Unique ID per target. (E.g. the address of the AST node.)
     pub id: u64,
+    // A unique name for log aggregation purposes. For C++ items, this is a clang Unified Symbol
+    // Resolution (USR) string.
+    pub unique_name: Option<Rc<str>>,
 }
 
 pub struct ItemScope<'a> {
@@ -328,7 +331,7 @@ impl ErrorReport {
 }
 
 thread_local! {
-    static DEFAULT_ITEM: ItemName = ItemName {name: Rc::from(""), id: 0};
+    static DEFAULT_ITEM: ItemName = ItemName {name: Rc::from(""), id: 0, unique_name: None };
 }
 
 impl ErrorReporting for ErrorReport {
@@ -367,7 +370,11 @@ impl ErrorReporting for ErrorReport {
         let mut map = self.map.borrow_mut();
         match map.entry(item.id) {
             Entry::Vacant(e) => {
-                e.insert(ErrorReportEntry { name: item.name.clone(), ..Default::default() });
+                e.insert(ErrorReportEntry {
+                    name: item.name.clone(),
+                    unique_name: item.unique_name.clone(),
+                    ..Default::default()
+                });
             }
             Entry::Occupied(e) => {
                 assert_eq!(
@@ -420,6 +427,11 @@ pub struct ErrorReportEntry {
     /// (Note: can't use flagset, because it fails in recent rustc.)
     #[serde(default, skip_serializing_if = "is_default")]
     pub category: u32,
+
+    // A unique name for log aggregation purposes. For C++ items, this is a clang Unified Symbol
+    // Resolution (USR) string.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unique_name: Option<Rc<str>>,
 }
 
 fn is_default<T: Default + PartialEq>(value: &T) -> bool {
@@ -711,11 +723,15 @@ mod tests {
     fn error_report_item_name() {
         let report = ErrorReport::new();
         {
-            let _scope = ItemScope::new(&report, ItemName { name: "foo".into(), id: 1 });
+            let _scope =
+                ItemScope::new(&report, ItemName { name: "foo".into(), id: 1, unique_name: None });
             report.report(&anyhow!("error in {}", "item 1"));
         }
         {
-            let _scope = ItemScope::new(&report, ItemName { name: "bar".into(), id: 2 });
+            let _scope = ItemScope::new(
+                &report,
+                ItemName { name: "bar".into(), id: 2, unique_name: Some("abc123".into()) },
+            );
             report.report(&anyhow!("error in {}", "item 2"));
         }
 
@@ -739,6 +755,7 @@ mod tests {
                             "full_error": "error in item 2",
                         },
                     ],
+                    "unique_name": "abc123",
                 },
             ]),
         );

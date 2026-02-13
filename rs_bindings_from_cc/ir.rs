@@ -2071,7 +2071,7 @@ impl Item {
 
     fn error_item_name(&self, ir: &IR) -> error_report::ItemName {
         let name = self.debug_name(ir);
-        error_report::ItemName { name, id: self.id().as_u64() }
+        error_report::ItemName { name, id: self.id().as_u64(), unique_name: self.unique_name() }
     }
 
     pub fn error_scope<'a>(
