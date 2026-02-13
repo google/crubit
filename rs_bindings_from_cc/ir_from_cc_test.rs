@@ -4216,6 +4216,93 @@ fn test_assumed_lifetimes_function() {
 }
 
 #[gtest]
+fn test_assumed_lifetimes_function_with_explicit_binding() {
+    let ir = ir_from_assumed_lifetimes_cc("LIFETIME_PARAMS(\"a\") void f(int& $a x);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: LValueRef,
+                                lifetime: None,
+                                pointee_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false,
+                                    unknown_attr: "",
+                                    explicit_lifetimes: [],
+                                },
+                            }),
+                            is_const: false,
+                            unknown_attr: "",
+                            explicit_lifetimes: ["a"],
+                        },
+                        identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    }
+                ],
+                ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_function_with_explicit_bindings() {
+    let ir = ir_from_assumed_lifetimes_cc(
+        "LIFETIME_PARAMS(\"a\", \"b\") LIFETIME_PARAMS(\"c\", \"d\") void f(int& $a x);",
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: LValueRef,
+                                lifetime: None,
+                                pointee_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false,
+                                    unknown_attr: "",
+                                    explicit_lifetimes: [],
+                                },
+                            }),
+                            is_const: false,
+                            unknown_attr: "",
+                            explicit_lifetimes: ["a"],
+                        },
+                        identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    }
+                ],
+                ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a", "b", "c", "d"],
+                ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_assumed_lifetimes_lifetimebound_free_function() {
     let ir =
         ir_from_assumed_lifetimes_cc("int& f(int& x [[clang::lifetimebound]], int& y);").unwrap();

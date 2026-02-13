@@ -466,6 +466,8 @@ struct Func {
   // consuming end.
   std::optional<ItemId> adl_enclosing_record;
   bool must_bind = false;
+  // Lifetime variable names bound by this function.
+  std::vector<std::string> lifetime_inputs;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {

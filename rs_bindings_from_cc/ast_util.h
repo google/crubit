@@ -50,6 +50,11 @@ struct ClangLifetimeAnnotations {
   std::vector<int> lifetime_capture_by;
 };
 
+// Collects explicitly-defined lifetime input parameters from `decl` under
+// `ast_context`.
+absl::StatusOr<std::vector<absl::string_view>> CollectLifetimeInputs(
+    const clang::ASTContext& ast_context, const clang::Decl* decl);
+
 // Collects the Clang lifetimebound and lifetime_capture_by attributes from
 // `t`, assuming that `t` is the type of a member function.
 absl::StatusOr<ClangLifetimeAnnotations>

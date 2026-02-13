@@ -374,6 +374,10 @@ llvm::json::Value Func::ToJson() const {
       {"must_bind", must_bind},
   };
 
+  if (!lifetime_inputs.empty()) {
+    func.insert({"lifetime_inputs", lifetime_inputs});
+  }
+
   return llvm::json::Object{
       {"Func", std::move(func)},
   };

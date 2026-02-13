@@ -21,6 +21,7 @@
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "clang/AST/Attr.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
@@ -191,6 +192,26 @@ CollectClangLifetimeAnnotationsForMemberFunctionType(
     if (type == nullptr) break;
   }
   return annotations;
+}
+
+absl::StatusOr<std::vector<absl::string_view>> CollectLifetimeInputs(
+    const clang::ASTContext& ast_context, const clang::Decl* decl) {
+  // TODO(b/454627672): How do we reconcile multiple param binding lists
+  // (possible with forward declarations)?
+  std::vector<absl::string_view> lifetimes;
+  // In contrast with type annotations, here the syntax tree looks like
+  // (decl [($a, $b), ($c, $d)])
+  for (const auto* attr : decl->specific_attrs<clang::AnnotateAttr>()) {
+    if (attr == nullptr || attr->getAnnotation() != "lifetime_params") {
+      continue;
+    }
+    for (const auto* arg : attr->args()) {
+      CRUBIT_ASSIGN_OR_RETURN(absl::string_view lifetime,
+                              EvaluateAsStringLiteral(ast_context, arg));
+      lifetimes.push_back(lifetime);
+    }
+  }
+  return lifetimes;
 }
 
 absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(

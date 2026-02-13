@@ -359,7 +359,24 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       ictx_.GetOwningTarget(function_decl));
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
   std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes;
-  if (!assumed_lifetimes_enabled) {
+  std::vector<std::string> lifetime_inputs;
+  Errors errors;
+
+  if (assumed_lifetimes_enabled) {
+    auto lifetime_inputs_or_err =
+        CollectLifetimeInputs(ictx_.sema_.getASTContext(), function_decl);
+    if (!lifetime_inputs_or_err.ok()) {
+      errors.Add(FormattedError::FromStatus(
+          std::move(lifetime_inputs_or_err).status()));
+    } else {
+      lifetime_inputs.reserve(lifetime_inputs_or_err->size());
+      absl::c_transform(*lifetime_inputs_or_err,
+                        std::back_inserter(lifetime_inputs),
+                        [](absl::string_view lifetime_view) {
+                          return std::string(lifetime_view);
+                        });
+    }
+  } else {
     llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes_or_err =
         clang::tidy::lifetimes::GetLifetimeAnnotations(
             function_decl, *ictx_.invocation_.lifetime_context_,
@@ -395,7 +412,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   }
 
   std::vector<FuncParam> params;
-  Errors errors;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!ictx_.HasBeenAlreadySuccessfullyImported(method_decl->getParent())) {
@@ -547,10 +563,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       return_lifetimes = &lifetimes->GetReturnLifetimes();
     }
-    return_type = ictx_.ConvertQualType(
-        function_decl->getReturnType(), return_lifetimes, /*nullable=*/true,
-        ictx_.AreAssumedLifetimesEnabledForTarget(
-            ictx_.GetOwningTarget(function_decl)));
+    return_type =
+        ictx_.ConvertQualType(function_decl->getReturnType(), return_lifetimes,
+                              /*nullable=*/true, assumed_lifetimes_enabled);
     if (!return_type.ok()) {
       errors.Add(FormattedError::PrefixedStrCat(
           "Return type is not supported", return_type.status().message()));
@@ -726,6 +741,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
       .id = ictx_.GenerateItemId(function_decl),
       .enclosing_item_id = *std::move(enclosing_item_id),
+      .lifetime_inputs = std::move(lifetime_inputs),
   };
 }
 
