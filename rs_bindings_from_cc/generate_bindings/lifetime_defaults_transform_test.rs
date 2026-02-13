@@ -828,3 +828,225 @@ fn test_binding_context_pushes_fresh_names() -> Result<()> {
     assert!(!called);
     Ok(())
 }
+
+#[gtest]
+fn test_struct_binds_lifetime_param() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a") S { int& $a f(); };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_struct_does_not_shadow_unrelated_lifetime_param() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("b") S { int& $a f(); };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                lifetime_inputs: ["b"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_struct_renames_shadowed_lifetime_param_in_function() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a") S { LIFETIME_PARAMS("a") int& $a f(); };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a_0"] ... }, ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a_0"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_struct_renames_multiple_shadowed_lifetime_param_in_function() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a") T {
+        struct LIFETIME_PARAMS("a", "a") S { LIFETIME_PARAMS("a") int& $a f(); };
+      };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "T",
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                // TODO(b/454627672): these should be renamed to a_0, a_1 (but we don't currently
+                // transform records, so this is the raw input from the Clang layer).
+                lifetime_inputs: ["a", "a"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a_2"] ... }, ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a_2"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_function_uses_top_of_renamed_lifetime_stack() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a") T {
+        struct LIFETIME_PARAMS("a", "a") S { int& $a f(); };
+      };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "T",
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                // TODO(b/454627672): these should be renamed to a_0, a_1 (but we don't currently
+                // transform records, so this is the raw input from the Clang layer).
+                lifetime_inputs: ["a", "a"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a_1"] ... }, ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
+    Ok(())
+}

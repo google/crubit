@@ -9,7 +9,9 @@
 use arc_anyhow::Result;
 use database::BindingsGenerator;
 use error_report::bail;
-use ir::{make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, PointerType, PointerTypeKind, IR};
+use ir::{
+    make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, ItemId, PointerType, PointerTypeKind, IR,
+};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
@@ -101,7 +103,8 @@ impl Default for BindingContext {
     }
 }
 
-struct LifetimeDefaults {
+struct LifetimeDefaults<'a> {
+    ir: &'a IR,
     bindings: BindingContext,
 }
 
@@ -141,9 +144,9 @@ struct LifetimeResult {
     this_state: LifetimeState,
 }
 
-impl LifetimeDefaults {
-    fn new(_ir: &IR) -> Self {
-        LifetimeDefaults { bindings: BindingContext::new() }
+impl<'a> LifetimeDefaults<'a> {
+    fn new(ir: &'a IR) -> Self {
+        LifetimeDefaults { ir, bindings: BindingContext::new() }
     }
 
     /// Returns a state representing the given `lifetime`.
@@ -343,6 +346,30 @@ impl LifetimeDefaults {
         Ok(())
     }
 
+    fn bind_lifetime_inputs(&mut self, id: Option<ItemId>) -> Result<()> {
+        let item = if let Some(id) = id {
+            self.ir.find_untyped_decl(id)
+        } else {
+            return Ok(());
+        };
+        // Bind inputs from ancestors first.
+        self.bind_lifetime_inputs(item.enclosing_item_id())?;
+        match item {
+            Item::Func(func) => {
+                func.lifetime_inputs.iter().for_each(|name| {
+                    self.bindings.push_new_binding(name);
+                });
+            }
+            Item::Record(record) => {
+                record.lifetime_inputs.iter().for_each(|name| {
+                    self.bindings.push_new_binding(name);
+                });
+            }
+            _ => (),
+        };
+        Ok(())
+    }
+
     /// Transforms a function to use default lifetime rules.
     fn add_lifetime_to_func(&mut self, func: &Func) -> Result<Func> {
         let mut new_func = func.clone();
@@ -350,7 +377,11 @@ impl LifetimeDefaults {
         let mut this_state = LifetimeState::Unseen;
         let mut had_this = false;
         new_func.lifetime_inputs.clear();
-        // TODO(b/454627672): add bindings for parent item lifetimes.
+        // Note that we generate a new LifetimeDefaults per Item that we're importing, so we don't
+        // need to pop these bindings. (We *do* need to worry about unbinding names for internal
+        // binders, like function types.)
+        self.bind_lifetime_inputs(func.enclosing_item_id)?;
+        // Rename local bindings (and remember how we've renamed them).
         func.lifetime_inputs
             .iter()
             .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
