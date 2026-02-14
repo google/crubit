@@ -17,6 +17,7 @@ load(
 load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "AdditionalRustSrcsProviderInfo",
+    "DepsForBindingsConditionInfo",
     "DepsForBindingsInfo",
     "RustBindingsFromCcInfo",
     "RustToolchainHeadersInfo",
@@ -167,6 +168,26 @@ def _is_cc_proto_library(rule):
 
 def retain_proto_dot_h_headers(headers):
     return [h for h in headers if h.path.endswith("proto.h")]
+
+def _conditional_cc_and_rs_deps(ctx, deps_providers):
+    """
+    Calculates the extra conditional deps for the current target.
+
+    Args:
+        ctx: The context of the current target.
+        deps_providers: The providers of the dependencies of the current target.
+    Returns:
+        A (list[CcInfo], list[DepVariantInfo]) containing the conditional deps added directly by
+        the current target.
+    """
+    cc_infos = []
+    dep_variant_infos = []
+    for c in ctx.attr._deps_for_bindings[DepsForBindingsInfo].conditional_deps:
+        if ctx.label == c.condition:
+            cc_infos.extend(c.deps_for_cc_file)
+            dep_variant_infos.extend(c.deps_for_rs_file)
+
+    return cc_infos, dep_variant_infos
 
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # Faithless is he that says farewell when the road darkens (=Fasten the seatbelt).
@@ -353,6 +374,12 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         for dep in all_deps
         if RustBindingsFromCcInfo in dep
     ]
+
+    conditional_cc_infos, conditional_dep_variant_infos = _conditional_cc_and_rs_deps(
+        ctx,
+        binding_infos,
+    )
+
     return generate_and_compile_bindings(
         ctx,
         ctx.rule.attr,
@@ -371,7 +398,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             d.cc_info
             for d in binding_infos
             if d.cc_info
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + conditional_cc_infos,
         deps_for_rs_file = depset(
             direct = [
                 d.dep_variant_info
@@ -381,7 +408,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             transitive = [
                 d.pass_through_dep_variant_infos
                 for d in binding_infos
-            ],
+            ] + conditional_dep_variant_infos,
         ),
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
         extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx),

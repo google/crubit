@@ -53,12 +53,25 @@ GeneratedBindingsInfo = provider(
     },
 )
 
+DepsForBindingsConditionInfo = provider(
+    doc = """A provider that describes a conditional dependency rule.
+
+    If the target transitively depends on `condition`, then `deps_for_rs_file` and `deps_for_cc_file` should be
+    added to the bindings of the target.""",
+    fields = {
+        "condition": "Label",
+        "deps_for_rs_file": "list[DepVariantInfo]",
+        "deps_for_cc_file": "list[CcInfo]",
+    },
+)
+
 DepsForBindingsInfo = provider(
     doc = """A provider that serves to pass on dependencies needed when compiling the generated
           Rust and C++ files.""",
     fields = {
         "deps_for_rs_file": "list[DepVariantInfo]",
         "deps_for_cc_file": "list[CcInfo]",
+        "conditional_deps": "list[DepsForBindingsConditionInfo]",
     },
 )
 

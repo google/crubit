@@ -15,6 +15,7 @@ load(
 )
 load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "DepsForBindingsConditionInfo",
     "DepsForBindingsInfo",
 )
 
@@ -29,10 +30,16 @@ def _deps_for_bindings_impl(ctx):
         for dep in ctx.attr.deps_for_generated_rs_file
     ]
 
+    conditional_deps = [
+        dep[DepsForBindingsConditionInfo]
+        for dep in ctx.attr.conditional_deps
+    ]
+
     return [
         DepsForBindingsInfo(
             deps_for_rs_file = dep_variant_infos,
             deps_for_cc_file = [dep[CcInfo] for dep in ctx.attr.deps_for_generated_cc_file],
+            conditional_deps = conditional_deps,
         ),
     ]
 
@@ -41,11 +48,57 @@ deps_for_bindings = rule(
         "deps_for_generated_rs_file": attr.label_list(
             doc = "Rust dependencies that are needed to compile the generated _impl.rs file.",
             default = [],
+            providers = [CrateInfo, DepInfo, CcInfo],
         ),
         "deps_for_generated_cc_file": attr.label_list(
             doc = "C++ dependencies that are needed to compile the generated .cc file.",
             default = [],
+            providers = [CcInfo],
+        ),
+        "conditional_deps": attr.label_list(
+            doc = "Conditional dependencies.",
+            default = [],
+            providers = [DepsForBindingsConditionInfo],
         ),
     },
     implementation = _deps_for_bindings_impl,
+)
+
+def _conditional_deps_for_bindings_impl(ctx):
+    dep_variant_infos = [
+        DepVariantInfo(
+            crate_info = dep[CrateInfo] if CrateInfo in dep else None,
+            dep_info = dep[DepInfo] if DepInfo in dep else None,
+            cc_info = dep[CcInfo] if CcInfo in dep else None,
+            build_info = None,
+        )
+        for dep in ctx.attr.deps_for_generated_rs_file
+    ]
+
+    return [
+        DepsForBindingsConditionInfo(
+            condition = ctx.attr.condition.label,
+            deps_for_rs_file = dep_variant_infos,
+            deps_for_cc_file = [dep[CcInfo] for dep in ctx.attr.deps_for_generated_cc_file],
+        ),
+    ]
+
+conditional_deps_for_bindings = rule(
+    attrs = {
+        "condition": attr.label(
+            doc = "The target that triggers the inclusion of the dependencies.",
+            mandatory = True,
+        ),
+        "deps_for_generated_rs_file": attr.label_list(
+            doc = "Rust dependencies that are needed to compile the generated _impl.rs file.",
+            default = [],
+            providers = [CrateInfo, DepInfo, CcInfo],
+        ),
+        "deps_for_generated_cc_file": attr.label_list(
+            doc = "C++ dependencies that are needed to compile the generated .cc file.",
+            default = [],
+            providers = [CcInfo],
+        ),
+    },
+    implementation = _conditional_deps_for_bindings_impl,
 )
