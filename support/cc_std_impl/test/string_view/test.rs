@@ -154,3 +154,32 @@ fn test_invalid_utf8() {
         contains_substring("utf-8").ignoring_unicode_case()
     );
 }
+
+#[gtest]
+fn test_debug_impl() {
+    // Empty string.
+    let s = "";
+    let sv = string_view::from(s);
+    assert_eq!(format!("{sv:?}"), r#""""#);
+
+    // Null-terminated string.
+    let s = "Hello World\0";
+    let sv = string_view::from(s.as_bytes());
+    assert_eq!(format!("{sv:?}"), r#""Hello World\0""#);
+
+    // String with a double quote and a backslash.
+    let s: &[u8] = &[b'{', b'"', b',', b'\\', b'}'];
+    let sv = string_view::from(s);
+    assert_eq!(format!("{sv:?}"), r#""{\",\\}""#);
+
+    // String with mixed valid and invalid UTF-8.
+    let s: &[u8] = &[b'A', 0xf1, b'B', 0xf2, b'C', 0xf3];
+    let sv = string_view::from(s);
+    assert_eq!(format!("{sv:?}"), r#""A\xf1B\xf2C\xf3""#);
+
+    // Note: the byte 0 is a special case and is printed as "\0". All other values are formatted as
+    // "\x##".
+    let s: &[u8] = &[0, 1, 2, 3];
+    let sv = string_view::from(s);
+    assert_eq!(format!("{sv:?}"), r#""\0\x01\x02\x03""#);
+}

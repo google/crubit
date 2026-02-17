@@ -7,6 +7,7 @@ extern crate std;
 use crate::slice_ptr::get_raw_parts;
 use crate::std::raw_string_view;
 use core::ptr;
+use std::str::Utf8Chunks;
 
 #[cfg(unix)]
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
@@ -23,7 +24,6 @@ use std::os::unix::ffi::{OsStrExt, OsStringExt};
 #[repr(transparent)]
 #[doc = "CRUBIT_ANNOTATE: cpp_type=std::string_view"]
 #[doc = "CRUBIT_ANNOTATE: include_path=<string_view>"]
-#[derive(Debug)]
 pub struct string_view<'a> {
     raw: raw_string_view,
     phantom_data: core::marker::PhantomData<&'a ()>,
@@ -56,6 +56,15 @@ impl<'a> string_view<'a> {
         // `self.raw.as_raw_bytes()` provides a `*const [u8]`, correctly handling
         // empty/null cases for dereferencing to an empty slice. Thus, `&*` is safe.
         &*self.raw.as_raw_bytes()
+    }
+
+    /// Returns an [`Iterator`] over the utf-8 chunks.
+    ///
+    /// # Safety
+    ///
+    /// This method has the same safety preconditions as [`string_view::as_bytes`].
+    pub unsafe fn utf8_chunks(&self) -> Utf8Chunks<'a> {
+        unsafe { self.as_bytes() }.utf8_chunks()
     }
 
     /// Returns an owned `Vec<u8>` containing the same data as the string_view.
@@ -122,6 +131,29 @@ impl<'a> string_view<'a> {
     pub fn contains(&self, x: &u8) -> bool {
         // SAFETY: The viewed memory is not mutated during this call.
         unsafe { self.as_bytes() }.contains(x)
+    }
+}
+
+/// Presents the bytes as a normal string, with invalid UTF-8 presented as hex escape sequences.
+impl<'a> core::fmt::Debug for string_view<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        // This implementation is the same as that of ByteStr (except for the added unsafe block):
+        //   https://doc.rust-lang.org/beta/std/bstr/struct.ByteStr.html#impl-Debug-for-ByteStr
+        write!(f, "\"")?;
+        // SAFETY: we only use this as long as the Debug function executes for, and are permitted
+        // to unsafely assume that C++ will not mutate the underlying string from another thread.
+        for chunk in unsafe { self.utf8_chunks() } {
+            for c in chunk.valid().chars() {
+                match c {
+                    '\0' => write!(f, "\\0")?,
+                    '\x01'..='\x7f' => write!(f, "{}", (c as u8).escape_ascii())?,
+                    _ => write!(f, "{}", c.escape_debug())?,
+                }
+            }
+            write!(f, "{}", chunk.invalid().escape_ascii())?;
+        }
+        write!(f, "\"")?;
+        Ok(())
     }
 }
 
