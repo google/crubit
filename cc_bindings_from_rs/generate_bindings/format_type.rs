@@ -35,10 +35,7 @@ use rustc_span::symbol::Symbol;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
-pub fn format_top_level_ns_for_crate(
-    db: &dyn BindingsGenerator<'_>,
-    krate: CrateNum,
-) -> Rc<[Symbol]> {
+pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
     let mut crate_name = if krate == db.source_crate_num() {
         "self".to_string()
     } else {
@@ -55,12 +52,12 @@ pub fn format_top_level_ns_for_crate(
     }
 }
 
-pub fn format_cc_ident_symbol(db: &dyn BindingsGenerator, ident: Symbol) -> Result<Ident> {
+pub fn format_cc_ident_symbol(db: &BindingsGenerator, ident: Symbol) -> Result<Ident> {
     format_cc_ident(db, ident.as_str())
 }
 
 /// Implementation of `BindingsGenerator::format_cc_ident`.
-pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<Ident> {
+pub fn format_cc_ident(db: &BindingsGenerator, ident: &str) -> Result<Ident> {
     // TODO(b/254104998): Check whether the crate where the identifier is defined is
     // enabled for the feature. Right now if the dep enables the feature but the
     // current crate doesn't, we will escape the identifier in the dep but
@@ -74,7 +71,7 @@ pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<Ident>
 }
 
 pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     pointee: Ty<'tcx>,
     mutability: Mutability,
     pointer_sigil: TokenStream,
@@ -93,7 +90,7 @@ pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
 }
 
 pub fn format_slice_pointer_for_cc<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     slice_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
 ) -> Result<CcSnippet<'tcx>> {
@@ -119,12 +116,12 @@ pub fn format_slice_pointer_for_cc<'tcx>(
 }
 
 /// Returns a CcSnippet referencing `rs_std::StrRef` and its include path.
-pub fn format_str_ref_for_cc<'tcx>(db: &dyn BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
+pub fn format_str_ref_for_cc<'tcx>(db: &BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
     CcSnippet::with_include(quote! { rs_std::StrRef }, db.support_header("rs_std/str_ref.h"))
 }
 
 pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     referent_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
     pointer_sigil: TokenStream,
@@ -145,7 +142,7 @@ pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
 
 /// Implementation of `BindingsGenerator::format_ty_for_cc`.
 pub fn format_ty_for_cc<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
     location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
@@ -531,7 +528,7 @@ fn treat_ref_as_ptr<'tcx>(
 
 /// Returns the C++ return type.
 pub fn format_ret_ty_for_cc<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
     let output_ty = sig_mid.output();
@@ -577,7 +574,7 @@ pub struct CcParamTy<'tcx> {
 
 /// Returns the C++ parameter types.
 pub fn format_param_types_for_cc<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
 ) -> Result<Vec<CcParamTy<'tcx>>> {
@@ -602,7 +599,7 @@ pub fn format_param_types_for_cc<'tcx>(
 }
 
 fn try_ty_as_maybe_uninit<'tcx>(
-    db: &dyn BindingsGenerator<'_>,
+    db: &BindingsGenerator<'_>,
     ty: Ty<'tcx>,
 ) -> Option<GenericArg<'tcx>> {
     if let ty::TyKind::Adt(adt, substs) = ty.kind() {
@@ -615,7 +612,7 @@ fn try_ty_as_maybe_uninit<'tcx>(
 
 /// Format a supported `repr(transparent)` pointee type
 pub fn format_transparent_pointee<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<TokenStream> {
     let Some(generic_arg) = try_ty_as_maybe_uninit(db, ty) else {
@@ -636,7 +633,7 @@ type BinderWithFnSigTys<'tcx> = ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>;
 type BinderWithFnSigTys<'tcx> = ty::Binder<'tcx, ty::FnSigTys<TyCtxt<'tcx>>>;
 
 fn format_fn_ptr_for_rs<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     binder_with_fn_sig_tys: BinderWithFnSigTys<'tcx>,
     fn_header: ty::FnHeader<TyCtxt<'tcx>>,
 ) -> Result<TokenStream> {
@@ -692,10 +689,7 @@ fn format_fn_ptr_for_rs<'tcx>(
 /// than just `SomeStruct`.
 //
 // TODO(b/259724276): This function's results should be memoized.
-pub fn format_ty_for_rs<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-) -> Result<TokenStream> {
+pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
     Ok(match *ty.kind() {
         ty::TyKind::Bool
         | ty::TyKind::Float(_)
@@ -800,7 +794,7 @@ pub fn format_ty_for_rs<'tcx>(
 }
 
 pub fn format_region_as_cc_lifetime<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     region: ty::Region<'tcx>,
     prereqs: &mut CcPrerequisites,
 ) -> TokenStream {
@@ -879,10 +873,7 @@ fn layout_pointer_like(from: Layout, data_layout: &TargetDataLayout) -> bool {
 }
 
 /// Returns an error if `ty` is not pointer-like.
-pub fn ensure_ty_is_pointer_like<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-) -> Result<()> {
+pub fn ensure_ty_is_pointer_like<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<()> {
     if let ty::TyKind::Adt(adt, _) = ty.kind() {
         if !adt.repr().transparent() {
             bail!("Can't convert {ty} to a C++ pointer as it's not `repr(transparent)`");
@@ -902,7 +893,7 @@ pub fn ensure_ty_is_pointer_like<'tcx>(
 }
 
 pub fn crubit_abi_type_from_ty<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>> {
     Ok(CrubitAbiTypeWithCcPrereqs::from(match ty.kind() {
@@ -1020,7 +1011,7 @@ pub enum BridgedBuiltin {
 
 impl BridgedBuiltin {
     /// Determines if an AdtDef is for a Result or Option or neither.
-    pub fn new(db: &dyn BindingsGenerator<'_>, adt: AdtDef<'_>) -> Option<Self> {
+    pub fn new(db: &BindingsGenerator<'_>, adt: AdtDef<'_>) -> Option<Self> {
         let variant = adt.variants().iter().next()?;
 
         match db.tcx().lang_items().from_def_id(variant.def_id) {
@@ -1035,7 +1026,7 @@ impl BridgedBuiltin {
     /// Returns an error is `crubit_abi_type_from_ty` fails for any of the generic args.
     pub fn crubit_abi_type<'tcx>(
         self,
-        db: &dyn BindingsGenerator<'tcx>,
+        db: &BindingsGenerator<'tcx>,
         substs: &[GenericArg<'tcx>],
     ) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>> {
         match self {
@@ -1074,7 +1065,7 @@ impl BridgedBuiltin {
 /// Returns a CrubitAbiType for a manually annotated composable bridged ADT.
 /// May return an error is `crubit_abi_type_from_ty` fails for any of the generic args.
 fn crubit_abi_type_from_bridged_adt<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     abi_rust: Symbol,
     abi_cpp: Symbol,
     substs: &[GenericArg<'tcx>],
@@ -1108,7 +1099,7 @@ fn crubit_abi_type_from_bridged_adt<'tcx>(
 /// Returns None if the type is not manually annotated as bridged.
 /// Returns an error if getting the bridging attributes fails.
 fn is_manually_annotated_bridged_adt<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<Option<BridgedType<'tcx>>> {
     // We take a `Ty` instead of adt + substs directly so we can use `Ty` in error messages.
@@ -1191,7 +1182,7 @@ fn is_manually_annotated_bridged_adt<'tcx>(
 /// is configured. An error is returned if the type is a pointer or reference or
 /// the attribute could not be parsed or is in an invalid state.
 pub fn is_bridged_type<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<Option<BridgedType<'tcx>>> {
     match ty.kind() {

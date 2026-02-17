@@ -6,7 +6,7 @@
 
 use arc_anyhow::Result;
 use database::code_snippet::BindingsTokens;
-use database::db::Database;
+use database::db::BindingsGenerator;
 use error_report::{bail, ErrorReport, FatalErrors};
 use ffi_types::Environment;
 use generate_bindings::{generate_bindings_tokens, new_database};
@@ -43,7 +43,7 @@ impl TestDbFactory {
             fatal_errors: FatalErrors::new(),
         })
     }
-    pub fn make_db(&self) -> Database {
+    pub fn make_db(&self) -> BindingsGenerator {
         new_database(&self.ir, &self.errors, &self.fatal_errors, Environment::Production)
     }
 }

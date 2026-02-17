@@ -64,7 +64,7 @@ pub struct FullyQualifiedName {
 }
 
 fn format_ns_path_for_cc(
-    db: &dyn BindingsGenerator<'_>,
+    db: &BindingsGenerator<'_>,
     ns: &NamespaceQualifier,
 ) -> Result<TokenStream> {
     let idents =
@@ -73,7 +73,7 @@ fn format_ns_path_for_cc(
 }
 
 impl FullyQualifiedName {
-    pub fn format_for_cc(&self, db: &dyn BindingsGenerator<'_>) -> Result<TokenStream> {
+    pub fn format_for_cc(&self, db: &BindingsGenerator<'_>) -> Result<TokenStream> {
         if let Some(path) = self.unqualified.cpp_type {
             let path = format_cc_type_name(path.as_str())?;
             return Ok(path);

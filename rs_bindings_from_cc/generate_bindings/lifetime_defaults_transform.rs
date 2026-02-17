@@ -449,7 +449,7 @@ impl<'a> LifetimeDefaults<'a> {
 }
 
 /// Creates a copy of `func` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_func(db: &dyn BindingsGenerator, func: &Func) -> Result<Func> {
+pub fn lifetime_defaults_transform_func(db: &BindingsGenerator, func: &Func) -> Result<Func> {
     LifetimeDefaults::new(db.ir()).add_lifetime_to_func(func)
 }
 

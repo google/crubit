@@ -24,6 +24,8 @@
 //!   `Hash`.
 //! * Supports `#[break_cycles_with = <default-value>]`, which generates a
 //!   function that returns <default-value> if a cycle is detected.
+//! * Uses function pointers in the interior of a concrete type, instead of
+//!   `dyn Trait`.
 //!
 //! There are more substantial differences with Salsa 2022 - this was written
 //! based on Salsa 0.16. We don't need to match exactly the API, but the
@@ -41,7 +43,9 @@
 ///
 /// ```
 /// query_group! {
-///   trait QueryGroupName {
+///   // QueryGroup name is the name of the memoized query object, including
+///   // all relevant state.
+///   struct QueryGroup {
 ///     // First, all shared inputs are specified, in order.
 ///     //
 ///     // These are available to all of the memoized functions, by calling `db.some_input()`, etc.,
@@ -66,17 +70,17 @@
 ///     // parameters, and return a `Clone` return type.
 ///     //
 ///     // Each of these must be implemented in the _same module_ as a top-level function, with
-///     // the same function signature except taking `&dyn QueryGroupName` instead of `&self`.
+///     // the same function signature.
 ///     //
-///     // The functions can call methods on the `&dyn QueryGroupName` to access both the shared
-///     // inputs, as well to call other memoized functions.
+///     // The functions can call methods on the `&QueryGroup` self argument to access both
+///     // the shared inputs, as well to call other memoized functions.
 ///     //
 ///     // Inputs to the computation which change from call to call should be specified as function
 ///     // parameters. Inputs which never change can be either `#[input]` functions, or actual
 ///     // program globals.
 ///     //
-///     // When called on the `&dyn QueryGroupName` or directly on the concrete type, the functions
-///     // will be memoized, and the return value will be cached, automatically.
+///     // When called on the `&QueryGroup`, the functions will be memoized, and the return
+///     // value will be cached, automatically.
 ///     //
 ///     // Some functions may need to gracefully handle cycles, in which case they should be
 ///     // annotated with `#[break_cycles_with = <default_value>]`. This will generate a function
@@ -91,33 +95,30 @@
 ///     /// Doc comment goes here.
 ///     fn some_function(&self, arg: ArgType) -> ReturnType;
 ///   }
-///   // The concrete type for the storage of inputs and memoized values.
-///   // `query_group!` will add the required fields to this struct.
-///   struct Database;
 /// }
 ///
 /// // The non-memoized implementation of the memoized functions
-/// fn may_by_cyclic(db: &dyn QueryGroupName, arg: ArgType) -> ReturnType {
+/// fn may_by_cyclic(db: &QueryGroup, arg: ArgType) -> ReturnType {
 ///   // ...
 /// }
 ///
-/// fn some_function(db: &dyn QueryGroupName, arg: ArgType) -> ReturnType {
+/// fn some_function(db: &QueryGroup, arg: ArgType) -> ReturnType {
 ///   // ...
 /// }
 /// ```
 ///
-/// A new instance of `Database` can be created by using `Database::new(input,
+/// A new instance of `QueryGroup` can be created by using `QueryGroup::new(input,
 /// values, here)`. It will implement the trait defined above: the `#[input]`
-/// functions will return the corresponding values passed in to `Database::new`,
+/// functions will return the corresponding values passed in to `QueryGroup::new`,
 /// and the memoized functions will call the corresponding top-level functions.
 ///
 /// For example, above, one could run `let db =
-/// Database::new(InputType::default())`.
+/// QueryGroup::new(InputType::default())`.
 ///
 /// Now, if you call `db.some_function(...)`, it will either return a cached
-/// value (if one is present), or else execute `some_function(&db as &dyn
-/// QueryGroupName, ...)`, and cache and return the result. A direct call to
-/// `some_function` (instead of `db.some_function`) is not directly memoized.
+/// value (if one is present), or else execute `some_function(&db)`, and cache
+/// and return the result. A direct call to `some_function` (instead of
+/// `db.some_function`) is not directly memoized.
 ///
 /// Because the results are saved, it's very important that the functions are
 /// pure and have no side-effects. In particular, internal mutability on the
@@ -128,8 +129,8 @@
 /// * In the trait definition, all `#[input]` functions must be declared before
 ///   all (non-`#[input]`) memoized functions. The order of the input functions
 ///   is the order of their parameters in `new()`.
-/// * Every (non-`#[input]`) trait method _must_ have a matching top-level
-///   function, with `&self` replaced by `&dyn QueryGroupName`.
+/// * Every (non-`#[input]`) trait method _must_ have a matching function passed
+///   to `new()`.
 /// * Since all trait methods are memoized, their arguments must be `Clone`,
 ///   `Eq`, and `Hash`.
 ///
@@ -140,31 +141,30 @@
 ///
 /// ```
 /// query_group! {
-///   trait QueryGroupName<'a> {
+///   struct QueryGroup<'a> {
 ///     #[input]
 ///     fn some_input(&self) -> &'a InputType;
 ///     fn some_function(&self, arg: &'a ArgType) -> &'a ReturnType;
 ///   }
-///   struct Database;
 /// }
 ///
-/// fn<'a> some_function(db: &dyn QueryGroupName<'a>, arg: &'a ArgType) -> &'a ReturnType {
+/// fn<'a> some_function(db: &QueryGroup<'a>, arg: &'a ArgType) -> &'a ReturnType {
 ///   // ...
 /// }
 /// ```
 ///
-/// Note that under the hood, `struct Database` will be replaced by something
+/// Note that under the hood, `QueryGroup` will bedefined as something
 /// like:
 ///
 /// ```
-/// struct Database<'a> {...}
+/// struct QueryGroup<'a> {...}
 /// ```
 ///
 /// And so you may need to specify the lifetime in some uses.
 #[macro_export]
 macro_rules! query_group {
   (
-    $trait_vis:vis trait $trait:ident $(<$($type_param:tt),*>)?{
+    $vis:vis struct $database_struct:ident $(<$($type_param:tt),*>)?{
       $(
         // TODO(jeanpierreda): Ideally would allow putting the doc-comment first,
         // but this causes parsing ambiguity.
@@ -201,73 +201,34 @@ macro_rules! query_group {
         fn $provided_function:ident(&$provided_self:ident $(, $provided_arg:ident : $provided_arg_type:ty)* $(,)?) -> $provided_type:ty { $($provided_body:tt)* }
       )*
     }
-
-    $struct_vis:vis struct $database_struct:ident;
   ) => {
-    // First, yes, generate the trait.
-    $trait_vis trait $trait $(<$($type_param),*>)?{
-      $(
-        $(#[doc = $input_doc])*
-        fn $input_function(&self) -> $input_type { unimplemented!(concat!("input function '", stringify!($input_function), "'")) }
-      )*
-      $(
-        $(#[doc = $break_cycles_doc])*
-        fn $break_cycles_function(
-          &self,
-          $(
-            $break_cycles_arg : $break_cycles_arg_type
-          ),*
-        ) -> $break_cycles_return_type { _ = ($($break_cycles_arg),*); unimplemented!(concat!("break cycles function '", stringify!($break_cycles_function), "'")) }
-      )*
-      $(
-        $(#[doc = $function_doc])*
-        fn $function(
-          &self,
-          $(
-            $arg : $arg_type
-          ),*
-        ) -> $return_type { _ = ($($arg),*); unimplemented!(concat!("function '", stringify!($function), "'")) }
-      )*
-      $(
-        $(#[doc = $provided_doc])*
-        fn $provided_function(&$provided_self $(, $provided_arg: $provided_arg_type)*) -> $provided_type { _ = ($($provided_arg),*); unimplemented!(concat!("provided function '", stringify!($provided_function), "'")) }
-      )*
-    }
-
-    // Avoid having to repeat the `$type_param` metavariable below, since its repetition
-    // should not be zipped with other metavariable repetitions.
-    // This also avoids having to repeat out `&dyn $trait $(<$($type_param),*>)?` all over the
-    // place.
-    macro_rules! dyn_trait {
-      () => { &dyn $trait $(<$($type_param),*>)? };
-    }
-
-    // Now we can generate a database struct that contains the lookup tables.
-    $struct_vis struct $database_struct $(<$($type_param),*>)? {
+    // The database struct, which contains the lookup tables.
+    $vis struct $database_struct $(<$($type_param),*>)? {
       __unwinding_cycles: ::core::cell::Cell<u32>,
       $(
         $input_function: $input_type,
       )*
       $(
         $break_cycles_function: $crate::internal::FnAndTable<
-            fn(dyn_trait!(), $($break_cycles_arg_type),*) -> $break_cycles_return_type,
+            fn(&Self, $($break_cycles_arg_type),*) -> $break_cycles_return_type,
             ($($break_cycles_arg_type,)*),
             $break_cycles_return_type
           >,
       )*
       $(
         $function: $crate::internal::FnAndTable<
-            fn(dyn_trait!(), $($arg_type),*) -> $return_type,
+            fn(&Self, $($arg_type),*) -> $return_type,
             ($($arg_type,)*),
             $return_type
           >,
       )*
     }
 
-    // ...and an implementation of the trait.
-    impl $(<$($type_param),*>)? $trait $(<$($type_param),*>)? for $database_struct $(<$($type_param),*>)? {
+    // ...and the methods.
+    impl $(<$($type_param),*>)? $database_struct $(<$($type_param),*>)? {
       $(
-        fn $input_function(&self) -> $input_type {
+        $(#[doc = $input_doc])*
+        $vis fn $input_function(&self) -> $input_type {
           // Have to be very careful to clone whatever the top level value is.
           // In particular, if it's a reference `&T`, clone the _reference_ to get another `&T`,
           // not the referent to get a `T`, like if we just cloned `self.$input_function`.
@@ -275,7 +236,8 @@ macro_rules! query_group {
         }
       )*
       $(
-        fn $break_cycles_function(
+        $(#[doc = $break_cycles_doc])*
+        $vis fn $break_cycles_function(
           &self,
           $(
             $break_cycles_arg : $break_cycles_arg_type
@@ -286,15 +248,15 @@ macro_rules! query_group {
               $break_cycles_arg,
             )*),
             |($($break_cycles_arg,)*)| {
-              // Force the use of &dyn $trait, so that we don't rule out separate compilation later.
-              (self.$break_cycles_function.fn_ptr)(self as &dyn $trait, $($break_cycles_arg),*)
+              (self.$break_cycles_function.fn_ptr)(self, $($break_cycles_arg),*)
             },
             &self.__unwinding_cycles,
           ).unwrap_or($break_cycles_default_value)
         }
       )*
       $(
-        fn $function(
+        $(#[doc = $function_doc])*
+        $vis fn $function(
           &self,
           $(
             $arg : $arg_type
@@ -305,8 +267,7 @@ macro_rules! query_group {
               $arg,
             )*),
             |($($arg,)*)| {
-              // Force the use of &dyn $trait, so that we don't rule out separate compilation later.
-              (self.$function.fn_ptr)(self as &dyn $trait, $($arg),*)
+              (self.$function.fn_ptr)(self, $($arg),*)
             },
             &self.__unwinding_cycles,
           ).unwrap_or_else(
@@ -315,7 +276,8 @@ macro_rules! query_group {
         }
       )*
       $(
-        fn $provided_function(
+        $(#[doc = $provided_doc])*
+        $vis fn $provided_function(
           &$provided_self,
           $(
             $provided_arg : $provided_arg_type
@@ -325,12 +287,12 @@ macro_rules! query_group {
         }
       )*
     }
-    // and the new() function for initialization.
+    // And the new() functions for initialization.
     impl $(<$($type_param),*>)? $database_struct $(<$($type_param),*>)? {
-      $struct_vis fn new(
+      $vis fn new(
           $($input_function: $input_type,)*
-          $($break_cycles_function: fn(dyn_trait!(), $($break_cycles_arg_type),*) -> $break_cycles_return_type,)*
-          $($function: fn(dyn_trait!(), $($arg_type),*) -> $return_type,)*
+          $($break_cycles_function: fn(&Self, $($break_cycles_arg_type),*) -> $break_cycles_return_type,)*
+          $($function: fn(&Self, $($arg_type),*) -> $return_type,)*
       ) -> Self {
         Self {
           __unwinding_cycles: ::core::cell::Cell::new(0),
@@ -455,7 +417,7 @@ pub mod tests {
     #[gtest]
     fn test_basic_memoization() {
         crate::query_group! {
-          pub trait Add10 {
+          pub struct Add10 {
             #[input]
             /// Tracker for how many times this function is called so we can check
             /// that memoization is indeed happening. This is just for testing;
@@ -464,13 +426,12 @@ pub mod tests {
             fn call_counter(&self) -> Rc<Cell<i32>>;
             fn add10(&self, arg: i32) -> i32;
           }
-          pub struct Database;
         }
-        fn add10(db: &dyn Add10, arg: i32) -> i32 {
+        fn add10(db: &Add10, arg: i32) -> i32 {
             db.call_counter().set(db.call_counter().get() + 1);
             arg + 10
         }
-        let db = Database::new(Rc::new(Cell::new(0)), add10);
+        let db = Add10::new(Rc::new(Cell::new(0)), add10);
 
         assert_eq!(db.add10(100), 110);
         assert_eq!(db.call_counter().get(), 1);
@@ -489,25 +450,24 @@ pub mod tests {
     #[gtest]
     fn test_nonstatic_memoization() {
         crate::query_group! {
-          pub trait Add10<'a> {
+          pub struct Add10<'a> {
             #[input]
             fn call_counter(&self) -> &'a Cell<i32>;
             fn add10(&self, arg: &'a i32) -> i32;
             // non-input function with 'a in return type
             fn identity(&self, arg: &'a i32) -> &'a i32;
           }
-          pub struct Database;
         }
-        fn add10<'a>(db: &dyn Add10<'a>, arg: &'a i32) -> i32 {
+        fn add10<'a>(db: &Add10<'a>, arg: &'a i32) -> i32 {
             db.call_counter().set(db.call_counter().get() + 1);
             *arg + 10
         }
-        fn identity<'a>(db: &dyn Add10<'a>, arg: &'a i32) -> &'a i32 {
+        fn identity<'a>(db: &Add10<'a>, arg: &'a i32) -> &'a i32 {
             db.call_counter().set(db.call_counter().get() + 1);
             arg
         }
         let count = Cell::new(0);
-        let db = Database::new(&count, add10, identity);
+        let db = Add10::new(&count, add10, identity);
 
         assert_eq!(db.add10(&100), 110);
         assert_eq!(count.get(), 1);
@@ -529,54 +489,51 @@ pub mod tests {
     #[should_panic(expected = "Cycle detected: 'add10' depends on its own return value")]
     fn test_cycle() {
         crate::query_group! {
-          pub trait Add10 {
+          pub struct Add10 {
             fn add10(&self, arg: i32) -> i32;
           }
-          pub struct Database;
         }
-        fn add10(db: &dyn Add10, arg: i32) -> i32 {
+        fn add10(db: &Add10, arg: i32) -> i32 {
             db.add10(arg) // infinite recursion!
         }
-        let db = Database::new(add10);
+        let db = Add10::new(add10);
         db.add10(1);
     }
 
     #[gtest]
     fn test_break_cycles_with_option() {
         crate::query_group! {
-          pub trait Add10 {
+          pub struct Add10 {
             #[break_cycles_with = None]
             fn add10(&self, arg: i32) -> Option<i32>;
           }
-          pub struct Database;
         }
-        fn add10(db: &dyn Add10, arg: i32) -> Option<i32> {
+        fn add10(db: &Add10, arg: i32) -> Option<i32> {
             db.add10(arg)
         }
-        let db = Database::new(add10);
+        let db = Add10::new(add10);
         assert_eq!(db.add10(1), None);
     }
 
     #[gtest]
     fn test_break_cycles_with_sentinel() {
         crate::query_group! {
-          pub trait Add10 {
+          pub struct Add10 {
             #[break_cycles_with = -1]
             fn add10(&self, arg: i32) -> i32;
           }
-          pub struct Database;
         }
-        fn add10(db: &dyn Add10, arg: i32) -> i32 {
+        fn add10(db: &Add10, arg: i32) -> i32 {
             db.add10(arg)
         }
-        let db = Database::new(add10);
+        let db = Add10::new(add10);
         assert_eq!(db.add10(1), -1);
     }
 
     #[gtest]
     fn test_calls_in_cycle_are_not_memoized() {
         crate::query_group! {
-          pub trait Table {
+          pub struct Table {
             #[input]
             fn logging(&self) -> Rc<RefCell<Vec<String>>>;
 
@@ -588,7 +545,6 @@ pub mod tests {
 
             fn record(&self, name: &'static str) -> Record;
           }
-          pub struct Database;
         }
 
         #[derive(Clone)]
@@ -599,7 +555,7 @@ pub mod tests {
         }
 
         // Returns whether or not a record is unsafe, checking recursively.
-        fn is_unsafe(db: &dyn Table, name: &'static str) -> bool {
+        fn is_unsafe(db: &Table, name: &'static str) -> bool {
             let record = db.record(name);
             let outcome =
                 record.is_unsafe || record.fields.iter().any(|&field| db.is_unsafe(field));
@@ -608,7 +564,7 @@ pub mod tests {
         }
 
         // Helper function so we can refer to records by name instead of by index.
-        fn record(db: &dyn Table, name: &'static str) -> Record {
+        fn record(db: &Table, name: &'static str) -> Record {
             db.records()
                 .iter()
                 .find(|record| record.name == name)
@@ -618,7 +574,7 @@ pub mod tests {
 
         let logging = Rc::default();
 
-        let db = Database::new(
+        let db = Table::new(
             Rc::clone(&logging),
             &[
                 Record { name: "A", is_unsafe: false, fields: &["B", "Unsafe"] },
@@ -651,14 +607,13 @@ pub mod tests {
     #[gtest]
     fn test_finite_recursion() {
         crate::query_group! {
-          pub trait Add10 {
+          pub struct Add10 {
             #[input]
             fn call_counter(&self) -> Rc<Cell<i32>>;
             fn add10(&self, arg: i32) -> i32;
           }
-          pub struct Database;
         }
-        fn add10(db: &dyn Add10, arg: i32) -> i32 {
+        fn add10(db: &Add10, arg: i32) -> i32 {
             db.call_counter().set(db.call_counter().get() + 1);
             if (arg % 10) != 0 {
                 db.add10(arg - 1) + 1 // Some recursion, but not infinite!
@@ -666,7 +621,7 @@ pub mod tests {
                 arg + 10
             }
         }
-        let db = Database::new(Rc::new(Cell::new(0)), add10);
+        let db = Add10::new(Rc::new(Cell::new(0)), add10);
 
         assert_eq!(db.add10(100), 110);
         assert_eq!(db.call_counter().get(), 1);
@@ -690,18 +645,17 @@ pub mod tests {
     #[gtest]
     fn test_argless() {
         crate::query_group! {
-          pub trait Argless {
+          pub struct Argless {
             #[input]
             fn call_counter(&self) -> Rc<Cell<i32>>;
             fn argless_function(&self) -> Rc<i32>;
           }
-          pub struct Database;
         }
-        fn argless_function(db: &dyn Argless) -> Rc<i32> {
+        fn argless_function(db: &Argless) -> Rc<i32> {
             db.call_counter().set(db.call_counter().get() + 1);
             Rc::new(0)
         }
-        let db = Database::new(Rc::new(Cell::new(0)), argless_function);
+        let db = Argless::new(Rc::new(Cell::new(0)), argless_function);
 
         assert_eq!(db.call_counter().get(), 0);
         let argless_return = db.argless_function();
@@ -714,15 +668,14 @@ pub mod tests {
     #[gtest]
     fn test_provided_fn() {
         crate::query_group! {
-          pub trait Db {
+          pub struct Db {
             #[input]
             fn input_fn(&self) -> i32;
             #[provided]
             fn provided_fn(&self, x: i32) -> i32 { self.input_fn() + x }
           }
-          pub struct Database;
         }
-        let db = Database::new(42);
+        let db = Db::new(42);
         let result = db.provided_fn(10);
         expect_eq!(result, 52);
     }

@@ -278,7 +278,7 @@ pub struct ErrorReport {
     // a method call, and the methods do not call each other.
     map: RefCell<BTreeMap<u64, ErrorReportEntry>>,
     // TODO(jeanpierreda): This should really be passed around rather than mutated in the
-    // BindingsGenerator. For example, if we used a totally separate `dyn BindingsGenerator`
+    // BindingsGenerator. For example, if we used a totally separate `BindingsGenerator`
     // which is the same as the old one except that it has a different input.
     current_item: RefCell<Option<ItemName>>,
 }

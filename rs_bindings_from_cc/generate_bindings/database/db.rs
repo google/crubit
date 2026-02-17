@@ -21,13 +21,13 @@ pub fn test_again() {}
 
 #[derive(Clone)]
 pub struct CodegenFunctions {
-    pub generate_enum: fn(&dyn BindingsGenerator, Rc<Enum>) -> Result<ApiSnippets>,
-    pub generate_item: fn(&dyn BindingsGenerator, ir::Item) -> Result<ApiSnippets>,
-    pub generate_record: fn(&dyn BindingsGenerator, Rc<Record>) -> Result<ApiSnippets>,
+    pub generate_enum: fn(&BindingsGenerator, Rc<Enum>) -> Result<ApiSnippets>,
+    pub generate_item: fn(&BindingsGenerator, ir::Item) -> Result<ApiSnippets>,
+    pub generate_record: fn(&BindingsGenerator, Rc<Record>) -> Result<ApiSnippets>,
 }
 
 memoized::query_group! {
-    pub trait BindingsGenerator<'db> {
+    pub struct BindingsGenerator<'db> {
         #[input]
         fn ir(&self) -> &'db IR;
 
@@ -228,5 +228,4 @@ memoized::query_group! {
             }
         }
     }
-    pub struct Database;
 }

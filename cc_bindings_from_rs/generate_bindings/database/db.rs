@@ -23,7 +23,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 memoized::query_group! {
-  pub trait BindingsGenerator<'tcx> {
+  pub struct BindingsGenerator<'tcx> {
       #[input]
       /// Compilation context for the crate that the bindings should be generated
       /// for.
@@ -281,5 +281,4 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:local_from_trait_impls_by_argument
       fn from_trait_impls_by_argument(&self, crate_num: CrateNum) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>>;
   }
-  pub struct Database;
 }
