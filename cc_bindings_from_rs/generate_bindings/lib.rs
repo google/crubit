@@ -55,7 +55,6 @@ use query_compiler::{
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
-use rustc_middle::dep_graph::DepContext;
 use rustc_middle::metadata::{ModChild, Reexport};
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt};
@@ -1248,12 +1247,8 @@ fn generate_kythe_doc_comment(
     #[rustversion::before(2025-12-14)]
     let file_name = tcx.sess().source_map().span_to_filename(def_span).prefer_local().to_string();
     #[rustversion::since(2025-12-14)]
-    let file_name = tcx
-        .sess()
-        .source_map()
-        .span_to_filename(def_span)
-        .prefer_local_unconditionally()
-        .to_string();
+    let file_name =
+        tcx.sess.source_map().span_to_filename(def_span).prefer_local_unconditionally().to_string();
     let start = def_span.lo().0.to_string();
     let end = def_span.hi().0.to_string();
     quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
@@ -1262,11 +1257,11 @@ fn generate_kythe_doc_comment(
 fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String {
     let tcx = db.tcx();
     let def_span = tcx.def_span(def_id);
-    let rustc_span::FileLines { file, lines } =
-        match tcx.sess().source_map().span_to_lines(def_span) {
-            Ok(filelines) => filelines,
-            Err(_) => return "unknown location".to_string(),
-        };
+    let rustc_span::FileLines { file, lines } = match tcx.sess.source_map().span_to_lines(def_span)
+    {
+        Ok(filelines) => filelines,
+        Err(_) => return "unknown location".to_string(),
+    };
     #[rustversion::before(2025-12-14)]
     let file_name = file.name.prefer_local().to_string();
     #[rustversion::since(2025-12-14)]
