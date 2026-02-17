@@ -384,28 +384,6 @@ fn test_format_item_fn_static_reference() {
     )
 }
 
-// NOTE: If we gain support for references as non-parameter types, we must
-// _still_ require :experimental.
-#[test]
-fn test_format_item_fn_nested_reference() {
-    let test_src = r#"
-            #[unsafe(no_mangle)]
-            pub fn foo(_x: &&i32) {}
-        "#;
-    test_format_item_with_features(
-        test_src,
-        "foo",
-        <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
-        /* with_kythe_annotations= */ false,
-        |result| {
-            assert_eq!(
-                result.unwrap_err(),
-                "Error handling parameter #0 of type `&'__anon1 &'__anon2 i32`: Failed to format the referent of the reference type `&'__anon1 &'__anon2 i32`: Can't format `&'__anon2 i32`, because references are only supported in function parameter types, return types, and consts (b/286256327)"
-            )
-        },
-    );
-}
-
 #[test]
 fn test_format_item_fn_returned_static_reference() {
     let test_src = r#"

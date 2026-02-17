@@ -64,11 +64,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   // cc_bindings_from_rs/test/str/str.rs;l=22
   std::uint8_t const* get_str_data() const;
 
- private:
-  // Field type has been replaced with a blob of bytes: Can't format `&'static
-  // str`, because references are only supported in function parameter types,
-  // return types, and consts (b/286256327)
-  unsigned char str_field[16];
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/str/str.rs;l=10
+    rs_std::StrRef str_field;
+  };
 
  private:
   static void __crubit_field_offset_assertions();

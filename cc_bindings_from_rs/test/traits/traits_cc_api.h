@@ -94,10 +94,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   }
 
  private:
-  // Field type has been replaced with a blob of bytes: Can't format `&i32`,
-  // because references are only supported in function parameter types, return
-  // types, and consts (b/286256327)
-  unsigned char x[8];
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/traits/traits.rs;l=101
+    std::int32_t const* crubit_nonnull x;
+  };
 
  private:
   static void __crubit_field_offset_assertions();

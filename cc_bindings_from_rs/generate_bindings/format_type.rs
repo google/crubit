@@ -368,14 +368,6 @@ pub fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Ref(region, referent, mutability) => {
-            match location {
-                TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::Const => (),
-                TypeLocation::NestedBridgeable | TypeLocation::Other => bail!(
-                    "Can't format `{ty}`, because references are only supported in \
-                     function parameter types, return types, and consts (b/286256327)",
-                ),
-            };
-
             if matches!(referent.kind(), ty::TyKind::Slice(_)) {
                 check_slice_layout(db.tcx(), ty);
             }
@@ -498,32 +490,41 @@ fn treat_ref_as_ptr<'tcx>(
     ty: ty::Ty<'tcx>,
     location: TypeLocation,
 ) -> RefConvert {
-    // Parameter type references are only converted to C++ references if they are
-    // valid exclusively for the lifetime of the function.
-    //
-    // References with a more complex lifetime are converted to pointers.
-    // See crubit.rs-special-lifetimes for more details on the motivation.
-    let TypeLocation::FnParam { is_self_param, elided_is_output } = location else {
-        return RefConvert::ToRef;
-    };
-    // `self` parameters are always passed by-ref, never by pointer.
-    if is_self_param {
-        return RefConvert::ToRef;
+    match location {
+        // Parameter type references are only converted to C++ references if they are
+        // valid exclusively for the lifetime of the function.
+        //
+        // References with a more complex lifetime are converted to pointers.
+        // See crubit.rs-special-lifetimes for more details on the motivation.
+        TypeLocation::FnParam { is_self_param, elided_is_output } => {
+            // `self` parameters are always passed by-ref, never by pointer.
+            if is_self_param {
+                return RefConvert::ToRef;
+            }
+            // If this is not a reference don't convert to a pointer.
+            let ty::TyKind::Ref(region, _, _) = ty.kind() else {
+                return RefConvert::ToRef;
+            };
+            // Explicit lifetimes are always converted to pointers.
+            if !region_is_elided(tcx, *region) {
+                return RefConvert::ToPtr { is_lifetime_bound: false };
+            }
+            // Elided lifetimes are converted to pointers if the elided lifetime is captured by
+            // the output of the function.
+            if elided_is_output {
+                return RefConvert::ToPtr { is_lifetime_bound: true };
+            }
+            RefConvert::ToRef
+        }
+        TypeLocation::FnReturn | TypeLocation::Const => RefConvert::ToRef,
+
+        // References in other locations are always converted to pointers, as references are often
+        // not allowed in these locations (e.g. the target of another reference, the element type
+        // of an array, etc.).
+        TypeLocation::NestedBridgeable | TypeLocation::Other => {
+            RefConvert::ToPtr { is_lifetime_bound: false }
+        }
     }
-    // If this is not a reference don't convert to a pointer.
-    let ty::TyKind::Ref(region, _, _) = ty.kind() else {
-        return RefConvert::ToRef;
-    };
-    // Explicit lifetimes are always converted to pointers.
-    if !region_is_elided(tcx, *region) {
-        return RefConvert::ToPtr { is_lifetime_bound: false };
-    }
-    // Elided lifetimes are converted to pointers if the elided lifetime is captured by
-    // the output of the function.
-    if elided_is_output {
-        return RefConvert::ToPtr { is_lifetime_bound: true };
-    }
-    RefConvert::ToRef
 }
 
 /// Returns the C++ return type.
@@ -798,9 +799,14 @@ pub fn format_region_as_cc_lifetime<'tcx>(
     region: ty::Region<'tcx>,
     prereqs: &mut CcPrerequisites,
 ) -> TokenStream {
-    let name = region
-        .get_name(db.tcx())
-        .expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
+    let Some(name) = region.get_name(db.tcx()) else {
+        // Unnamed regions in function signatures should be de-anonymized by
+        // `liberate_and_deanonymize_late_bound_regions`.
+        //
+        // This code path should only be reached for regions outside of function signatures
+        // (fields, consts, etc.).
+        return TokenStream::new();
+    };
     let name = name
         .as_str()
         .strip_prefix('\'')

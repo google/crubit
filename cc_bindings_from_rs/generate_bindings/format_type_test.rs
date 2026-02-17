@@ -169,6 +169,11 @@ fn test_format_ty_for_cc_successes() {
             cc: "std :: int32_t * $static crubit_nonnull",
             includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
         ),
+        case!(
+            rs: "&'static &'static i32",
+            cc: "std :: int32_t const * $ static crubit_nonnull const * $ static crubit_nonnull",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+        ),
         // Slice pointers:
         case!(
             rs: "*const [i8]",
@@ -392,12 +397,6 @@ fn test_format_ty_for_cc_failures() {
             // details).
             "!", // TyKind::Never
             "The never type `!` is only supported as a return type (b/254507801)",
-        ),
-        (
-            "&'static &'static i32", // TyKind::Ref (nested reference - referent of reference)
-            "Failed to format the referent of the reference type `&'static &'static i32`: \
-             Can't format `&'static i32`, because references are only supported \
-             in function parameter types, return types, and consts (b/286256327)",
         ),
         (
             "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)

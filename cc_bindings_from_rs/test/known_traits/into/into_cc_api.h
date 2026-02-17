@@ -160,10 +160,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   explicit operator ::into::Convert();
 
  private:
-  // Field type has been replaced with a blob of bytes: Can't format `&str`,
-  // because references are only supported in function parameter types, return
-  // types, and consts (b/286256327)
-  unsigned char __field0[16];
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/known_traits/into/into.rs;l=46
+    rs_std::StrRef __field0;
+  };
 
  private:
   static void __crubit_field_offset_assertions();

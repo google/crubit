@@ -91,11 +91,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=25
   explicit operator std::int32_t();
 
- private:
-  // Field type has been replaced with a blob of bytes: Can't format `&i32`,
-  // because references are only supported in function parameter types, return
-  // types, and consts (b/286256327)
-  unsigned char field_with_lifetime[8];
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=10
+    std::int32_t const* crubit_nonnull field_with_lifetime;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -139,10 +139,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
   unsigned char field_with_drop_glue[24];
-  // Field type has been replaced with a blob of bytes: Can't format `&i32`,
-  // because references are only supported in function parameter types, return
-  // types, and consts (b/286256327)
-  unsigned char field_with_lifetime[8];
+
+ public:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=73
+    std::int32_t const* crubit_nonnull field_with_lifetime;
+  };
 
  private:
   static void __crubit_field_offset_assertions();

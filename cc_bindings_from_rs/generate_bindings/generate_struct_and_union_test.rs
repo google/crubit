@@ -724,45 +724,6 @@ fn test_format_item_struct_with_unsupported_field_type() {
     });
 }
 
-/// This test verifies how reference type fields are represented in the
-/// generated bindings.  See b/286256327.
-///
-/// In some of the past discussions we tentatively decided that the
-/// generated bindings shouldn't use C++ references in fields - instead
-/// a C++ pointer should be used.  One reason is that C++ references
-/// cannot be assigned to (i.e. rebound), and therefore C++ pointers
-/// more accurately represent the semantics of Rust fields.  The pointer
-/// type should probably use some form of C++ annotations to mark it as
-/// non-nullable.
-#[test]
-fn test_format_item_struct_with_unsupported_field_of_reference_type() {
-    let test_src = r#"
-            // `'static` lifetime can be used in a non-generic struct - this let's us
-            // test reference fieles without requiring support for generic structs.
-            pub struct NonGenericSomeStruct {
-                pub reference_field: &'static i32,
-            }
-        "#;
-    test_format_item(test_src, "NonGenericSomeStruct", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        let broken_field_msg = "Field type has been replaced with a blob of bytes: \
-                                Can't format `&'static i32`, because references \
-                                are only supported in function parameter types, \
-                                return types, and consts (b/286256327)";
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                ...
-                private:
-                    __COMMENT__ #broken_field_msg
-                    unsigned char reference_field[8];
-                ...
-            }
-        );
-    });
-}
-
 /// This test verifies that `generate_trait_thunks(..., drop_trait_id,
 /// ...).expect(...)` won't panic - the `generate_adt_core` needs to
 /// verify that formatting of the fully qualified C++ name of the struct
