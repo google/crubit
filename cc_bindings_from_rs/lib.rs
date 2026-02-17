@@ -29,7 +29,7 @@ use std::rc::Rc;
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError};
-use generate_bindings::{Database, IncludeGuard};
+use generate_bindings::{BindingsGenerator, IncludeGuard};
 use kythe_metadata::cc_embed_provenance_map;
 use run_compiler::run_compiler;
 use token_stream_printer::{
@@ -55,7 +55,7 @@ fn new_db<'tcx>(
     tcx: TyCtxt<'tcx>,
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
-) -> Database<'tcx> {
+) -> BindingsGenerator<'tcx> {
     let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
     for (crate_name, include_path) in &cmdline.crate_headers {
         let paths = crate_name_to_include_paths.entry(crate_name.as_str().into()).or_default();

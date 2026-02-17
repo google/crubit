@@ -40,10 +40,10 @@ use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
 };
 use database::{
-    AdtCoreBindings, BindingsGenerator, ExportedPath, FineGrainedFeature, FullyQualifiedName,
-    NoMoveOrAssign, PublicPaths, TypeLocation, UnqualifiedName,
+    AdtCoreBindings, ExportedPath, FineGrainedFeature, FullyQualifiedName, NoMoveOrAssign,
+    PublicPaths, TypeLocation, UnqualifiedName,
 };
-pub use database::{Database, IncludeGuard};
+pub use database::{BindingsGenerator, IncludeGuard};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -66,7 +66,7 @@ use std::iter::once;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::support_header`.
-fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
+fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
 }
 
@@ -75,7 +75,7 @@ pub struct BindingsTokens {
     pub cc_api_impl: TokenStream,
 }
 
-fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Result<TokenStream> {
+fn add_include_guard(db: &BindingsGenerator<'_>, cc_api: TokenStream) -> Result<TokenStream> {
     let metadata_block = if db.kythe_annotations() {
         quote! {
             __HASH_TOKEN__ ifdef KYTHE_IS_RUNNING __NEWLINE__
@@ -112,13 +112,13 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Res
 
 /// Wrap `repr_attrs` for use as a database function.
 fn repr_attrs_from_db(
-    db: &dyn BindingsGenerator<'_>,
+    db: &BindingsGenerator<'_>,
     def_id: DefId,
 ) -> Rc<[rustc_hir::attrs::ReprAttr]> {
     repr_attrs(db.tcx(), def_id)
 }
 
-fn source_crate_num(db: &dyn BindingsGenerator<'_>) -> CrateNum {
+fn source_crate_num(db: &BindingsGenerator<'_>) -> CrateNum {
     // This is a temporary workaround while migrating to the rmeta interface. Our old implementation
     // breaks with some rmeta files, notably proto files, due to crate renaming behavior. But our
     // new implementation relies on assuming our source is the placeholder file provided by
@@ -188,8 +188,8 @@ pub fn new_database<'db>(
     fatal_errors: Rc<dyn ReportFatalError>,
     no_thunk_name_mangling: bool,
     h_out_include_guard: IncludeGuard,
-) -> Database<'db> {
-    Database::new(
+) -> BindingsGenerator<'db> {
+    BindingsGenerator::new(
         tcx,
         source_crate_name,
         crubit_support_path_format,
@@ -229,7 +229,7 @@ pub fn new_database<'db>(
     )
 }
 
-pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
+pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
     let tcx = db.tcx();
 
     let top_comment = {
@@ -309,7 +309,7 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
 }
 
 fn crate_features(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     krate: CrateNum,
 ) -> flagset::FlagSet<crubit_feature::CrubitFeature> {
     let crate_features = db.crate_name_to_features();
@@ -322,7 +322,7 @@ fn crate_features(
 }
 
 fn check_feature_enabled_on_self_and_all_deps(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     feature: FineGrainedFeature,
 ) -> bool {
     for (_, crate_features) in db.crate_name_to_features().iter() {
@@ -334,7 +334,7 @@ fn check_feature_enabled_on_self_and_all_deps(
 }
 
 fn format_with_cc_body(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     ns: &NamespaceQualifier,
     mut tokens: TokenStream,
     attributes: Vec<TokenStream>,
@@ -370,7 +370,7 @@ fn format_with_cc_body(
 
 /// Implementation of `BindingsGenerator::public_paths_by_def_id`.
 fn public_paths_by_def_id(
-    db: &dyn BindingsGenerator<'_>,
+    db: &BindingsGenerator<'_>,
     crate_num: CrateNum,
 ) -> HashMap<DefId, PublicPaths> {
     /// This is retooled logic from rustc's `visible_parent_map` function. Except where that only
@@ -497,7 +497,7 @@ fn module_children(tcx: TyCtxt<'_>, parent: DefId) -> &[ModChild] {
     }
 }
 
-fn resolve_if_use(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Option<DefId> {
+fn resolve_if_use(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<DefId> {
     let tcx = db.tcx();
     let DefKind::Use = tcx.def_kind(def_id) else {
         return None;
@@ -513,10 +513,7 @@ fn resolve_if_use(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Option<DefId
     None
 }
 
-fn symbol_unqualified_name(
-    db: &dyn BindingsGenerator<'_>,
-    def_id: DefId,
-) -> Option<UnqualifiedName> {
+fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<UnqualifiedName> {
     let tcx = db.tcx();
     let item_name = db
         .public_paths_by_def_id(def_id.krate)
@@ -541,10 +538,7 @@ fn symbol_unqualified_name(
 }
 
 /// Implementation of `BindingsGenerator::symbol_canonical_name`.
-fn symbol_canonical_name(
-    db: &dyn BindingsGenerator<'_>,
-    def_id: DefId,
-) -> Option<FullyQualifiedName> {
+fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<FullyQualifiedName> {
     let tcx = db.tcx();
 
     // TODO: b/433286909 - We shouldn't pass DefKind::Use to this method and instead should keep what our use
@@ -623,7 +617,7 @@ fn symbol_canonical_name(
 
 /// Checks whether a definition matches a specific qualified name by matching it's definition path
 /// against `name`. Name must include the crate in it's path.
-fn matches_qualified_name(db: &dyn BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {
+fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {
     let tcx = db.tcx();
     let path = tcx.def_path(item_did);
     if path.data.len() + 1 != name.len() {
@@ -725,7 +719,7 @@ fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
 }
 
 fn generate_using<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     using_name: &Symbol,
     def_id: DefId,
 ) -> Result<CcSnippet<'tcx>> {
@@ -769,10 +763,7 @@ fn generate_using<'tcx>(
     }
 }
 
-fn generate_const<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
-    def_id: DefId,
-) -> Result<ApiSnippets<'tcx>> {
+fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
     let unsupported_consts = [
@@ -838,7 +829,7 @@ fn generate_const<'tcx>(
 }
 
 // Implementation of `BindingsGenerator::supported_traits`.
-fn supported_traits(db: &dyn BindingsGenerator<'_>) -> Rc<[DefId]> {
+fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
     let tcx = db.tcx();
     let traits = tcx
         .visible_traits()
@@ -869,7 +860,7 @@ fn supported_traits(db: &dyn BindingsGenerator<'_>) -> Rc<[DefId]> {
 }
 
 fn generate_trait<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     trait_id: DefId,
 ) -> arc_anyhow::Result<ApiSnippets<'tcx>> {
     if !db.supported_traits().contains(&trait_id) {
@@ -900,7 +891,7 @@ fn generate_trait<'tcx>(
 }
 
 fn generate_type_alias<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     using_name: &str,
 ) -> Result<CcSnippet<'tcx>> {
@@ -909,7 +900,7 @@ fn generate_type_alias<'tcx>(
 }
 
 fn create_type_alias<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     alias_name: &str,
     alias_type: Ty<'tcx>,
@@ -938,11 +929,11 @@ fn create_type_alias<'tcx>(
 
 /// Implementation of `BindingsGenerator::generate_default_ctor`.
 fn generate_default_ctor<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
     fn fallible_format_default_ctor<'tcx>(
-        db: &dyn BindingsGenerator<'tcx>,
+        db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
@@ -1008,11 +999,11 @@ fn generate_default_ctor<'tcx>(
 
 /// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
 fn generate_copy_ctor_and_assignment_operator<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
     fn fallible_format_copy_ctor_and_assignment_operator<'tcx>(
-        db: &dyn BindingsGenerator<'tcx>,
+        db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
@@ -1093,11 +1084,11 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
 /// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
 #[allow(clippy::result_large_err)]
 fn generate_move_ctor_and_assignment_operator<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
     fn fallible_format_move_ctor_and_assignment_operator<'tcx>(
-        db: &dyn BindingsGenerator<'tcx>,
+        db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
@@ -1211,7 +1202,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
 ///
 /// Will panic if `def_id` doesn't identify an ADT that can be successfully
 /// handled by `generate_adt_core`.
-fn generate_fwd_decl(db: &Database<'_>, def_id: DefId) -> TokenStream {
+fn generate_fwd_decl(db: &BindingsGenerator<'_>, def_id: DefId) -> TokenStream {
     // `generate_fwd_decl` should only be called for items from
     // `CcPrerequisites::fwd_decls` and `fwd_decls` should only contain ADTs
     // that `generate_adt_core` succeeds for.
@@ -1235,7 +1226,7 @@ fn generate_fwd_decl(db: &Database<'_>, def_id: DefId) -> TokenStream {
 }
 
 fn generate_kythe_doc_comment(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     def_id: DefId,
     doc_comment: String,
 ) -> TokenStream {
@@ -1254,7 +1245,7 @@ fn generate_kythe_doc_comment(
     quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
 }
 
-fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String {
+fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
     let tcx = db.tcx();
     let def_span = tcx.def_span(def_id);
     let rustc_span::FileLines { file, lines } = match tcx.sess.source_map().span_to_lines(def_span)
@@ -1282,7 +1273,7 @@ fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String
 /// Formats the doc comment (if any) associated with the item identified by
 /// `local_def_id`, and appends the source location at which the item is
 /// defined.
-fn generate_doc_comment(db: &dyn BindingsGenerator, def_id: DefId) -> TokenStream {
+fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
     let mut docs = db
         .tcx()
         .get_all_attrs(def_id)
@@ -1307,14 +1298,11 @@ fn generate_doc_comment(db: &dyn BindingsGenerator, def_id: DefId) -> TokenStrea
 
 /// Returns the name of the item identified by `def_id`, or "<unknown>" if
 /// the item can't be identified.
-fn item_name(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Symbol {
+fn item_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Symbol {
     db.tcx().opt_item_name(def_id).unwrap_or_else(|| Symbol::intern("<unknown>"))
 }
 
-fn item_name_for_error_report(
-    db: &dyn BindingsGenerator<'_>,
-    def_id: DefId,
-) -> error_report::ItemName {
+fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> error_report::ItemName {
     let name = format!(
         "{}::{}",
         db.tcx().crate_name(db.source_crate_num()),
@@ -1327,7 +1315,7 @@ fn item_name_for_error_report(
 
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
@@ -1361,7 +1349,7 @@ macro_rules! error_scope {
 // A helper for `generate_item`.
 // The wrapper is used to ensure that the `must_bind` annotation is enforced.
 fn generate_item_impl<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
@@ -1392,7 +1380,7 @@ fn generate_item_impl<'tcx>(
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
 fn generate_unsupported_def<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     err: Error,
 ) -> CcSnippet<'tcx> {
@@ -1442,7 +1430,7 @@ fn generate_unsupported_def<'tcx>(
 ///     #tokens
 ///     ```
 pub fn format_namespace_bound_cc_tokens(
-    db: &dyn BindingsGenerator<'_>,
+    db: &BindingsGenerator<'_>,
     iter: impl IntoIterator<Item = (Option<DefId>, NamespaceQualifier, TokenStream)>,
     tcx: TyCtxt,
 ) -> TokenStream {
@@ -1522,7 +1510,7 @@ struct FormattedItem<'tcx> {
 /// Generate bindings to supported trait implementations. An implementation is supported if both
 /// its trait and implementing type receive bindings.
 fn generate_trait_impls<'a, 'tcx>(
-    db: &'a dyn BindingsGenerator<'tcx>,
+    db: &'a BindingsGenerator<'tcx>,
 ) -> impl Iterator<Item = ApiSnippets<'tcx>> + use<'a, 'tcx> {
     let tcx = db.tcx();
     let supported_traits: Vec<DefId> = db.supported_traits().iter().copied().collect();
@@ -1640,7 +1628,7 @@ fn generate_trait_impls<'a, 'tcx>(
 }
 
 fn generate_template_specialization<'tcx>(
-    _db: &dyn BindingsGenerator<'tcx>,
+    _db: &BindingsGenerator<'tcx>,
     _specialization: TemplateSpecialization<'tcx>,
 ) -> CcSnippet<'tcx> {
     // More to come on this later.
@@ -1648,7 +1636,7 @@ fn generate_template_specialization<'tcx>(
 }
 
 fn formatted_items_in_crate<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
 ) -> impl Iterator<Item = FormattedItem<'tcx>> {
     let tcx = db.tcx();
     let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
@@ -1681,7 +1669,7 @@ fn formatted_items_in_crate<'tcx>(
 }
 
 /// Formats all public items from the Rust crate being compiled.
-fn generate_crate(db: &Database) -> Result<BindingsTokens> {
+fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     struct CcDetails {
         def_id: DefId,
         namespace: NamespaceQualifier,
