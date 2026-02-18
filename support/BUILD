@@ -14,6 +14,25 @@ exports_files(
 )
 
 rust_library(
+    name = "cref",
+    srcs = ["cref.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2021",
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_test(
+    name = "cref_test",
+    srcs = ["cref_test.rs"],
+    deps = [
+        ":cref",
+        "@crate_index//:googletest",
+    ],
+)
+
+rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
