@@ -9,6 +9,7 @@ use std::sync::LazyLock;
 use string_view_cc_apis::crubit_string_view::GetDefault;
 use string_view_cc_apis::crubit_string_view::GetHelloWorld;
 use string_view_cc_apis::crubit_string_view::GetInvalidUTF;
+use string_view_cc_apis::crubit_string_view::Identity;
 
 /// Converts a raw_string_view to a &'static str.
 ///
@@ -89,6 +90,14 @@ fn test_ffi_livetype() {
     let sv = unsafe { rsv.as_live() };
     let msg = unsafe { sv.to_str() }.unwrap_or("failed");
     assert_eq!(msg, "Hello, world!");
+}
+
+#[gtest]
+fn test_ffi_identity() {
+    let sv = GetInvalidUTF();
+    // TODO(b/485559322): use `unsafe{}` once Identity is (correctly) marked unsafe to call.
+    let sv2 = Identity(sv);
+    assert_eq!(sv.as_raw_bytes(), sv2.as_raw_bytes());
 }
 
 #[gtest]
