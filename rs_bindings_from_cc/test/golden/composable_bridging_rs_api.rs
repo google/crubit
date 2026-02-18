@@ -145,7 +145,7 @@ impl From<DefaultEnum> for ::ffi_11::c_int {
 #[inline(always)]
 pub fn ReturnsDefaultEnumInComposableBridgeType() -> crate::MyOption<crate::DefaultEnum> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<DefaultEnum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<DefaultEnum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::DefaultEnum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::DefaultEnum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(__return_abi_buffer,); })
     }
 }
 
@@ -172,7 +172,7 @@ impl From<I64Enum> for ::ffi_11::c_long {
 #[inline(always)]
 pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<I64Enum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<I64Enum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::I64Enum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::I64Enum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(__return_abi_buffer,); })
     }
 }
 
@@ -202,7 +202,7 @@ pub mod some_namespace {
 pub fn ReturnsEnumInNamespaceInComposableBridgeType(
 ) -> crate::MyOption<crate::some_namespace::EnumInNamespace> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<EnumInNamespace>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<EnumInNamespace>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::some_namespace::EnumInNamespace>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::some_namespace::EnumInNamespace>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(__return_abi_buffer,); })
     }
 }
 

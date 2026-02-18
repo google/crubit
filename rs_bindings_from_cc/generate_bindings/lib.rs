@@ -872,21 +872,6 @@ fn generate_rs_api_impl_includes(
     CppIncludes { internal_includes, ir_includes }
 }
 
-fn make_transmute_abi_type_from_item(
-    item: &impl GenericItem,
-    rs_name: &str,
-    cc_name: &str,
-    db: &BindingsGenerator,
-) -> Result<CrubitAbiType> {
-    let rust_type = rs_name
-        .parse()
-        .map_err(|e| anyhow!("Failed to parse Rust type `{rs_name}` as a TokenStream: {e}"))?;
-
-    let cpp_type = make_cpp_type_from_item(item, cc_name, db)?;
-
-    Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
-}
-
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
@@ -908,18 +893,32 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 cpp_type: cpp_tokens,
             })
         }
-        RsTypeKind::Enum { enum_, .. } => make_transmute_abi_type_from_item(
-            enum_.as_ref(),
-            enum_.rs_name.identifier.as_ref(),
-            enum_.cc_name.identifier.as_ref(),
-            db,
-        ),
-        RsTypeKind::ExistingRustType(existing_rust_type) => make_transmute_abi_type_from_item(
-            existing_rust_type.as_ref(),
-            existing_rust_type.rs_name.as_ref(),
-            existing_rust_type.cc_name.as_ref(),
-            db,
-        ),
+        RsTypeKind::Enum { enum_, crate_path } => {
+            let rs_name = make_rs_ident(enum_.rs_name.identifier.as_ref());
+            let rust_type = quote! { #crate_path #rs_name };
+
+            let cpp_type =
+                make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name.identifier.as_ref(), db)?;
+
+            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+        }
+        RsTypeKind::ExistingRustType(existing_rust_type) => {
+            // The rs_name is already fully qualified.
+            let rust_type = existing_rust_type.rs_name.as_ref().parse().map_err(|e| {
+                anyhow!(
+                    "Failed to parse Rust type `{}` as a TokenStream: {e}",
+                    existing_rust_type.rs_name
+                )
+            })?;
+
+            let cpp_type = make_cpp_type_from_item(
+                existing_rust_type.as_ref(),
+                existing_rust_type.cc_name.as_ref(),
+                db,
+            )?;
+
+            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+        }
         RsTypeKind::Primitive(primitive) => Ok(match primitive {
             Primitive::Bool => CrubitAbiType::transmute("bool", "bool"),
             Primitive::Void => bail!("values of type `void` cannot be bridged by value"),
