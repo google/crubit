@@ -117,6 +117,15 @@ def _get_additional_rust_deps(aspect_ctx):
             )
     return collections.uniq(additional_rust_deps)
 
+def _get_cc_support_deps(aspect_ctx):
+    cc_support_deps = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            cc_support_deps.extend(
+                hint[AdditionalRustSrcsProviderInfo].cc_support_deps,
+            )
+    return collections.uniq(cc_support_deps)
+
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
     label = str(ctx.label)
@@ -282,6 +291,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_rs_srcs = []
     extra_deps = []
 
+    cc_support_deps = _get_cc_support_deps(ctx)
+
     # Headers for which we will produce bindings.
     public_hdrs = []
 
@@ -371,7 +382,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             d.cc_info
             for d in binding_infos
             if d.cc_info
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + cc_support_deps,
         deps_for_rs_file = depset(
             direct = [
                 d.dep_variant_info

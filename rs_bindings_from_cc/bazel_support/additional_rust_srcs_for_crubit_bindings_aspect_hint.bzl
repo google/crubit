@@ -67,12 +67,16 @@ visibility([
     # <internal link> end
 ])
 
-def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps):
+def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cc_support_deps = []):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         namespace_path = namespace_path,
         deps = _get_additional_rust_deps_variant_info(deps),
         cc_deps = _get_additional_cc_deps_variant_info(cc_deps),
+        cc_support_deps = [
+            dep[CcInfo]
+            for dep in cc_support_deps
+        ],
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
@@ -81,6 +85,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.namespace_path,
         ctx.attr.deps,
         ctx.attr.cc_deps,
+        ctx.attr.cc_support_deps,
     )]
 
 _additional_rust_srcs_for_crubit_bindings_rule = rule(
@@ -102,6 +107,10 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             default = [],
             aspects = [rust_bindings_from_cc_aspect],
         ),
+        "cc_support_deps": attr.label_list(
+            mandatory = False,
+            default = [],
+        ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
 )
@@ -112,6 +121,7 @@ def additional_rust_srcs_for_crubit_bindings(
         namespace_path = "",
         deps = [],
         cc_deps = [],
+        cc_support_deps = [],
         **kwargs):
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
@@ -131,6 +141,10 @@ def additional_rust_srcs_for_crubit_bindings(
             deps as rust_library.
         cc_deps: List of cc_library targets whose crubit-generated bindings will be made available
             to this library target.
+        cc_support_deps: List of cc_library targets of support libraries for generated C++ code.
+            For example, C++ types that have composable bridging should define their supporting
+            Crubit ABI types here so they're available to generated code without being exposed to
+            Crubit.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
 
@@ -140,6 +154,7 @@ def additional_rust_srcs_for_crubit_bindings(
         namespace_path = namespace_path,
         deps = deps,
         cc_deps = cc_deps,
+        cc_support_deps = cc_support_deps,
         **kwargs
     )
 
