@@ -133,22 +133,28 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
     #[crubit_annotate::must_bind]
     #[must_use]
     pub fn write_fill(&mut self, count: usize, data: u8) -> usize {
-        if data.is_ascii() {
-            // Fast path for ASCII characters.
-            if !self.incomplete.is_empty() {
-                // An incomplete UTF-8 sequence never has ASCII bytes.
-                self.incomplete.clear();
-                if self.writer.write_char(char::REPLACEMENT_CHARACTER).is_err() {
-                    return 0;
-                }
-            }
-            let data = char::from_u32(data as u32).expect("ASCII character should be valid char");
+        if !data.is_ascii() {
             return iter::repeat_n(/*element=*/ data, /*count=*/ count)
-                .take_while(|c| self.writer.write_char(*c).is_ok())
+                .take_while(|byte| self.write_byte(*byte))
                 .count();
         }
+
+        // Fast path for ASCII characters.
+        if count == 0 {
+            // With nothing to write, do not flush out any incomplete UTF-8.
+            return 0;
+        }
+
+        if !self.incomplete.is_empty() {
+            // An incomplete UTF-8 sequence never has ASCII bytes.
+            self.incomplete.clear();
+            if self.writer.write_char(char::REPLACEMENT_CHARACTER).is_err() {
+                return 0;
+            }
+        }
+        let data = char::from_u32(data as u32).expect("ASCII character should be valid char");
         iter::repeat_n(/*element=*/ data, /*count=*/ count)
-            .take_while(|byte| self.write_byte(*byte))
+            .take_while(|c| self.writer.write_char(*c).is_ok())
             .count()
     }
 
@@ -231,6 +237,14 @@ mod tests {
             display_with_lossy_formatter(|f| verify_eq!(f.write_slice(&bytes), bytes.len()))
                 .to_string(),
             "hi 💖� � � � �� �� �� bye �"
+        );
+    }
+
+    #[gtest]
+    fn write_slice_empty_ok() {
+        expect_eq!(
+            display_with_lossy_formatter(|f| verify_eq!(f.write_slice(&[]), 0)).to_string(),
+            ""
         );
     }
 
@@ -389,6 +403,18 @@ mod tests {
     }
 
     #[gtest]
+    fn write_fill_ascii_empty_ok() {
+        expect_eq!(
+            display_with_lossy_formatter(|f| verify_eq!(
+                f.write_fill(/*count=*/ 0, /*data=*/ b'a'),
+                0
+            ))
+            .to_string(),
+            ""
+        );
+    }
+
+    #[gtest]
     fn write_fill_invalid_ok() {
         expect_eq!(
             display_with_lossy_formatter(|f|
@@ -396,6 +422,18 @@ mod tests {
                 verify_eq!(f.write_fill(/*count=*/ 3, /*data=*/ 240), 3))
             .to_string(),
             "��"
+        );
+    }
+
+    #[gtest]
+    fn write_fill_invalid_empty_ok() {
+        expect_eq!(
+            display_with_lossy_formatter(|f| verify_eq!(
+                f.write_fill(/*count=*/ 0, /*data=*/ 240),
+                0
+            ))
+            .to_string(),
+            ""
         );
     }
 
@@ -415,6 +453,21 @@ mod tests {
     }
 
     #[gtest]
+    fn write_incomplete_then_fill_ascii_empty_ok() {
+        expect_eq!(
+            display_with_lossy_formatter(|f| {
+                // Incomplete sequence.
+                verify_true!(f.write_byte(240))?;
+                // Still writes nothing.
+                verify_eq!(f.write_fill(/*count=*/ 0, /*data=*/ b'a'), 0)?;
+                Ok(())
+            })
+            .to_string(),
+            ""
+        );
+    }
+
+    #[gtest]
     fn write_fill_ascii_eof() -> googletest::Result<()> {
         write!(
             &mut [0u8; 3][..],
@@ -422,6 +475,19 @@ mod tests {
             display_with_lossy_formatter(|f| verify_eq!(
                 f.write_fill(/*count=*/ 4, /*data=*/ b'a'),
                 3
+            ))
+        )?;
+        Ok(())
+    }
+
+    #[gtest]
+    fn write_fill_ascii_empty_eof() -> googletest::Result<()> {
+        write!(
+            &mut [] as &mut [u8],
+            "{}",
+            display_with_lossy_formatter(|f| verify_eq!(
+                f.write_fill(/*count=*/ 0, /*data=*/ b'a'),
+                0
             ))
         )?;
         Ok(())
@@ -441,6 +507,19 @@ mod tests {
     }
 
     #[gtest]
+    fn write_fill_invalid_empty_eof() -> googletest::Result<()> {
+        write!(
+            &mut [] as &mut [u8],
+            "{}",
+            display_with_lossy_formatter(|f| verify_eq!(
+                f.write_fill(/*count=*/ 0, /*data=*/ 255),
+                0
+            ))
+        )?;
+        Ok(())
+    }
+
+    #[gtest]
     fn write_complete_then_flush_ok() {
         expect_eq!(
             display_with_lossy_formatter(|f| {
@@ -450,6 +529,11 @@ mod tests {
             .to_string(),
             "💖"
         );
+    }
+
+    #[gtest]
+    fn empty_then_flush_ok() {
+        expect_eq!(display_with_lossy_formatter(|f| { verify_true!(f.flush()) }).to_string(), "");
     }
 
     #[gtest]
