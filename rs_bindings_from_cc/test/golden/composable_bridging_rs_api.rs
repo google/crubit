@@ -176,6 +176,36 @@ pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum>
     }
 }
 
+pub mod some_namespace {
+    #[repr(transparent)]
+    #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+    ///CRUBIT_ANNOTATE: cpp_type=some_namespace :: EnumInNamespace
+    pub struct EnumInNamespace(::ffi_11::c_int);
+    impl EnumInNamespace {
+        pub const kZero: EnumInNamespace = EnumInNamespace(0);
+        pub const kOne: EnumInNamespace = EnumInNamespace(1);
+        pub const kTwo: EnumInNamespace = EnumInNamespace(2);
+    }
+    impl From<::ffi_11::c_int> for EnumInNamespace {
+        fn from(value: ::ffi_11::c_int) -> EnumInNamespace {
+            EnumInNamespace(value)
+        }
+    }
+    impl From<EnumInNamespace> for ::ffi_11::c_int {
+        fn from(value: EnumInNamespace) -> ::ffi_11::c_int {
+            value.0
+        }
+    }
+}
+
+#[inline(always)]
+pub fn ReturnsEnumInNamespaceInComposableBridgeType(
+) -> crate::MyOption<crate::some_namespace::EnumInNamespace> {
+    unsafe {
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<EnumInNamespace>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<EnumInNamespace>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(__return_abi_buffer,); })
+    }
+}
+
 // Error while generating bindings for struct 'std::integral_constant<bool, false>':
 // Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::integral_constant<bool, false> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE is a template instantiation)
@@ -984,6 +1014,9 @@ mod detail {
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
     }

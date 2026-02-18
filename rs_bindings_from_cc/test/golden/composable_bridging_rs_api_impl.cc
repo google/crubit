@@ -165,6 +165,21 @@ extern "C" void __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
 static_assert((struct MyOption<I64Enum> (*)()) &
               ::ReturnsI64EnumInComposableBridgeType);
 
+extern "C" void __rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<
+          ::crubit::TransmuteAbi<::some_namespace::EnumInNamespace>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<
+      ::crubit::TransmuteAbi<::some_namespace::EnumInNamespace>>(
+      ::crubit::TransmuteAbi<::some_namespace::EnumInNamespace>())
+      .Encode(ReturnsEnumInNamespaceInComposableBridgeType(), __return_encoder);
+}
+
+static_assert((struct MyOption<some_namespace::EnumInNamespace> (*)()) &
+              ::ReturnsEnumInNamespaceInComposableBridgeType);
+
 static_assert(
     CRUBIT_SIZEOF(
         class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==

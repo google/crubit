@@ -70,4 +70,11 @@ enum class I64Enum : __int64_t { kNegOne = -1, kZero = 0, kOne = 1 };
 
 MyOption<I64Enum> ReturnsI64EnumInComposableBridgeType();
 
+namespace some_namespace {
+enum class EnumInNamespace { kZero, kOne, kTwo };
+}
+
+MyOption<some_namespace::EnumInNamespace>
+ReturnsEnumInNamespaceInComposableBridgeType();
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMPOSABLE_BRIDGING_H_
