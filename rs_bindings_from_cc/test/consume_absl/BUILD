@@ -29,3 +29,25 @@ golden_test(
     golden_cc = "absl_functional.golden.cc",
     golden_rs = "absl_functional.golden.rs",
 )
+
+crubit_test_cc_library(
+    name = "uses_anyinvocable",
+    srcs = ["uses_anyinvocable.cc"],
+    hdrs = ["uses_anyinvocable.h"],
+    aspect_hints = ["//features:supported"],
+    deps = [
+        "@abseil-cpp//absl/functional:any_invocable",
+    ],
+)
+
+crubit_rust_test(
+    name = "uses_anyinvocable_test",
+    srcs = ["uses_anyinvocable_test.rs"],
+    cc_deps = [
+        ":uses_anyinvocable",
+        "@abseil-cpp//absl/functional:any_invocable",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
