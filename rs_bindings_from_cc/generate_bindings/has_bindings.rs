@@ -60,7 +60,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                     return Err(NoBindingsReason::Unsupported {
                         context: item.debug_name(ir),
                         error: anyhow!(
-                            "b/200067824: type definitions nested inside templated records are not yet supported"
+                            "b/485949049: type definitions nested inside templated records are not yet supported"
                         ),
                     });
                 }

@@ -674,10 +674,10 @@ forward_declare::unsafe_define!(
 // //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::reverse_iterator (error: Unsupported type alias std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator)
 
 // Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::size_type':
-// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::size_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::size_type, because it is unsupported: b/485949049: type definitions nested inside templated records are not yet supported
 
 // Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::difference_type':
-// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::difference_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::difference_type, because it is unsupported: b/485949049: type definitions nested inside templated records are not yet supported
 
 // Error while generating bindings for global variable 'std::basic_string_view<wchar_t>::npos':
 // static data members are not supported
