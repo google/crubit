@@ -7,6 +7,9 @@
 
 pub fn mut_refs(_: &mut i32, _: &mut i32) {}
 pub fn mut_ref_and_shared_refs(_: &mut i32, _: &i32, _: &i32) {}
+pub fn mut_ref_and_mut_slice(_: &mut i32, _: &mut [i32]) {}
+pub fn mut_ref_and_shared_slice(_: &mut i32, _: &[i32]) {}
+pub fn mut_ref_and_str(_: &mut i32, _: &str) {}
 
 #[derive(Copy, Clone, Default)]
 pub struct SomeStruct {

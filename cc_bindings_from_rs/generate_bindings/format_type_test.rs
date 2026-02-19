@@ -192,6 +192,16 @@ fn test_format_ty_for_cc_successes() {
             prereq_def: "SomeStruct"
 
         ),
+        case!(
+            rs: "&'static [i32]",
+            cc: "rs_std::SliceRef<const std::int32_t>",
+            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static mut [i32]",
+            cc: "rs_std::SliceRef<std::int32_t>",
+            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
         case!(
             rs: "*mut SomeStruct",
@@ -401,15 +411,7 @@ fn test_format_ty_for_cc_failures() {
         (
             "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)
             "Generic function pointers are not supported yet (b/259749023)",
-        ),
-        (
-            // Check that the failure for slices is about not being supported and not failed
-            // asserts about ABI and layout.
-            "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
-            "Failed to format the referent of the reference type `&'static [i32]`: \
-             The following Rust type is not supported yet: [i32]",
-        ),
-        (
+        ),        (
             "impl Eq", // TyKind::Alias
             "The following Rust type is not supported yet: impl Eq",
         ),

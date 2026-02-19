@@ -89,9 +89,9 @@ pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
     Ok(CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier #pointer_sigil } })
 }
 
-pub fn format_slice_pointer_for_cc<'tcx>(
+pub fn format_slice_ref_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    slice_ty: Ty<'tcx>,
+    element_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
 ) -> Result<CcSnippet<'tcx>> {
     let const_qualifier = match mutability {
@@ -100,8 +100,8 @@ pub fn format_slice_pointer_for_cc<'tcx>(
     };
 
     let CcSnippet { tokens, mut prereqs } =
-        db.format_ty_for_cc(slice_ty, TypeLocation::Other).with_context(|| {
-            format!("Failed to format the inner type of the slice type `{slice_ty}`")
+        db.format_ty_for_cc(element_ty, TypeLocation::Other).with_context(|| {
+            format!("Failed to format the element type of the slice type `{element_ty}`")
         })?;
     prereqs.includes.insert(db.support_header("rs_std/slice_ref.h"));
 
@@ -352,7 +352,7 @@ pub fn format_ty_for_cc<'tcx>(
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
             if let ty::TyKind::Slice(slice_ty) = pointee_ty.kind() {
                 check_slice_layout(db.tcx(), ty);
-                return format_slice_pointer_for_cc(db, *slice_ty, mutbl);
+                return format_slice_ref_for_cc(db, *slice_ty, mutbl);
             }
             // Early return in case we handle a transparent pointer type.
             if let Some(snippet) =
@@ -368,8 +368,9 @@ pub fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Ref(region, referent, mutability) => {
-            if matches!(referent.kind(), ty::TyKind::Slice(_)) {
+            if let ty::TyKind::Slice(element_ty) = *referent.kind() {
                 check_slice_layout(db.tcx(), ty);
+                return format_slice_ref_for_cc(db, element_ty, mutability);
             }
 
             if matches!(referent.kind(), ty::TyKind::Str) {

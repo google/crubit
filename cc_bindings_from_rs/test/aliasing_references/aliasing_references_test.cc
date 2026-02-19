@@ -4,13 +4,18 @@
 
 #include "cc_bindings_from_rs/test/aliasing_references/aliasing_references.h"
 
+#include <array>
 #include <cstdint>
 
 #include "gtest/gtest.h"
+#include "absl/types/span.h"
 
 namespace {
 
+using ::aliasing_references::mut_ref_and_mut_slice;
 using ::aliasing_references::mut_ref_and_shared_refs;
+using ::aliasing_references::mut_ref_and_shared_slice;
+using ::aliasing_references::mut_ref_and_str;
 using ::aliasing_references::mut_refs;
 using ::aliasing_references::NonFreezeType;
 using ::aliasing_references::SomeStruct;
@@ -24,6 +29,11 @@ TEST(AliasingReferencesTest, NonOverlappingMutableReferencesAreAllowed) {
   s.mut_self_and_mut_ref(x);
   s.mut_self_and_shared_ref(x);
   s.shared_self_and_mut_ref(x);
+
+  std::array<int32_t, 3> array = {1, 2, 3};
+  mut_ref_and_mut_slice(x, absl::MakeSpan(array));
+  mut_ref_and_shared_slice(x, array);
+  mut_ref_and_str(x, "foo");
 }
 
 TEST(AliasingReferencesTest, OverlappingSharedReferencesAreAllowed) {
