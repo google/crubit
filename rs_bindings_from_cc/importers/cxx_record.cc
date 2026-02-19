@@ -820,6 +820,72 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::ReentrantCapabilityAttr>(attr);
 }
 
+// Returns the name of the type if it is a known type that is not movable via
+// memcpy, or nullopt if it is not known or is movable via memcpy.
+std::optional<absl::string_view> IsKnownNonMemcpyMovableType(
+    const clang::CXXRecordDecl& record_decl) {
+  std::optional<llvm::StringRef> top_level_namespace =
+      AsTopLevelNamespace(record_decl.getDeclContext());
+
+  if (top_level_namespace == "std") {
+    llvm::StringRef name = record_decl.getName();
+    if (name == "basic_string") return "std::string";
+    if (name == "mutex") return "std::mutex";
+    if (name == "condition_variable") return "std::condition_variable";
+    if (name == "condition_variable_any") return "std::condition_variable_any";
+    if (name == "atomic_flag") return "std::atomic_flag";
+  }
+  if (top_level_namespace == "absl") {
+    llvm::StringRef name = record_decl.getName();
+    if (name == "Mutex") return "absl::Mutex";
+  }
+  return std::nullopt;
+}
+
+// Attempts to check if the given `decl` is movable via memcpy, as requested
+// by the `CRUBIT_UNSAFE_MEMCPY_MOVABLE` annotation.
+//
+// This function must only return an error if the type absolutely is not movable
+// via memcpy. It must not be conservative, as it is not possible in general to
+// determine whether a type is movable via memcpy. For example, non-trivial move
+// constructors and move assignment operators *may* not be necessary to call.
+//
+// That is, this function should strive to be *complete*, but not necessarily
+// *sound*.
+absl::Status CheckUnsafeMemcpyMovable(clang::CXXRecordDecl& decl) {
+  if (decl.isDynamicClass()) {
+    return absl::InvalidArgumentError(
+        "Dynamic classes (classes with virtual functions or bases) are not "
+        "movable via memcpy.");
+  }
+  for (const auto* field : decl.fields()) {
+    const clang::CXXRecordDecl* field_record_decl =
+        field->getType().getTypePtr()->getAsCXXRecordDecl();
+    if (!field_record_decl) {
+      continue;
+    }
+    absl::string_view field_name = field->getName();
+
+    // Do not recurse in order to avoid exponential exploration.
+    // However, a first-level field check seems useful and may catch common
+    // cases where a type is not movable via memcpy due to one of its fields.
+    if (field_record_decl->isDynamicClass()) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Fields with virtual functions or bases are not movable via "
+          "memcpy, found field: ",
+          field_name));
+    }
+
+    if (std::optional<absl::string_view> non_memcpy_movable_type =
+            IsKnownNonMemcpyMovableType(*field_record_decl)) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Fields of type ", *non_memcpy_movable_type,
+          " are not movable via memcpy, found field: ", field_name));
+    }
+  }
+  return absl::OkStatus();
+}
+
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
@@ -1112,6 +1178,24 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(safety_annotation).status()));
   }
 
+  // If the type is `canPassInRegisters`, then it is `trivial_abi`, can be
+  // passed in registers, and is movable via memcpy.
+  const bool is_trivial_abi = record_decl->canPassInRegisters();
+  const absl::StatusOr<bool> unsafe_memcpy_movable =
+      HasAnnotationWithoutArgs(*record_decl, "crubit_unsafe_memcpy_movable");
+  if (!unsafe_memcpy_movable.ok()) {
+    return unsupported(
+        FormattedError::FromStatus(std::move(unsafe_memcpy_movable).status()));
+  }
+  if (*unsafe_memcpy_movable) {
+    absl::Status bad_memcpy = CheckUnsafeMemcpyMovable(*record_decl);
+    if (!bad_memcpy.ok()) {
+      return unsupported(FormattedError::FromStatus(std::move(bad_memcpy)));
+    }
+  }
+  const bool is_movable_via_memcpy =
+      is_trivial_abi || unsafe_memcpy_movable.value_or(false);
+
   std::vector<std::string> lifetime_inputs;
   if (ictx_.AreAssumedLifetimesEnabledForTarget(
           ictx_.GetOwningTarget(record_decl))) {
@@ -1158,7 +1242,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .copy_constructor = GetCopyCtorSpecialMemberFunc(ictx_, *record_decl),
       .move_constructor = GetMoveCtorSpecialMemberFunc(ictx_, *record_decl),
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),
-      .is_trivial_abi = record_decl->canPassInRegisters(),
+      .is_movable_via_memcpy = is_movable_via_memcpy,
       .is_inheritable = !is_effectively_final,
       .is_abstract = record_decl->isAbstract(),
       .nodiscard = std::move(nodiscard),

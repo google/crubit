@@ -734,15 +734,17 @@ struct Record {
   SpecialMemberFunc move_constructor = SpecialMemberFunc::kUnavailable;
   SpecialMemberFunc destructor = SpecialMemberFunc::kUnavailable;
 
-  // Whether this type is passed by value as if it were a trivial type (the same
-  // as it would be if it were a struct in C).
+  // Whether this type is movable via a simple memcpy.
   //
   // This can be either due to language rules (it *is* a trivial type), or due
   // to the usage of a Clang attribute that forces trivial for calls:
   //
   //  * https://eel.is/c++draft/class.temporary#3
   //  * https://clang.llvm.org/docs/AttributeReference.html#trivial-abi
-  bool is_trivial_abi = false;
+  //
+  // Additionally, this can be explicitly requested by the
+  // `CRUBIT_UNSAFE_MEMCPY_MOVABLE` annotation.
+  bool is_movable_via_memcpy = false;
 
   // Whether this type can be inherited from.
   //

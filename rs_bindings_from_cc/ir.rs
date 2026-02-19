@@ -1232,7 +1232,7 @@ pub struct Record {
     pub copy_constructor: SpecialMemberFunc,
     pub move_constructor: SpecialMemberFunc,
     pub destructor: SpecialMemberFunc,
-    pub is_trivial_abi: bool,
+    pub is_movable_via_memcpy: bool,
     pub is_inheritable: bool,
     pub is_abstract: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
@@ -1287,13 +1287,12 @@ impl Record {
     /// If a type `T` is mut reference safe, it can be possed as a `&mut T`
     /// safely. Otherwise, mutable references must use `Pin<&mut T>`.
     ///
-    /// In C++, this is called "trivially relocatable". Such types can be passed
-    /// by value and have their memory directly mutated by Rust using
+    /// Such types can be passed by value and have their memory directly mutated by Rust using
     /// memcpy-like assignment/swap.
     ///
     /// Described in more detail at: docs/unpin
     pub fn is_unpin(&self) -> bool {
-        self.is_trivial_abi
+        self.is_movable_via_memcpy
     }
 
     pub fn is_union(&self) -> bool {
@@ -2459,6 +2458,7 @@ impl IR {
         self.function_name_to_functions.get(function_name).map_or([].iter(), |v| v.iter())
     }
 
+    #[track_caller]
     pub fn namespace_qualifier(&self, item: &impl GenericItem) -> NamespaceQualifier {
         self.namespace_qualifier_from_id(item.id())
     }
