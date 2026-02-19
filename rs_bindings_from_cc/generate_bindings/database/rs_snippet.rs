@@ -562,7 +562,7 @@ pub enum BridgeRsTypeKind {
     StdString {
         in_cc_std: bool,
     },
-    DynCallable(Rc<Callable>),
+    Callable(Rc<Callable>),
     /// c9::Co<T>
     C9Co {
         has_reference_param: bool,
@@ -625,7 +625,7 @@ impl BridgeRsTypeKind {
                 BridgeRsTypeKind::StdString { in_cc_std }
             }
             BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {
-                BridgeRsTypeKind::DynCallable(Rc::new(Callable {
+                BridgeRsTypeKind::Callable(Rc::new(Callable {
                     backing_type,
                     fn_trait: match fn_trait {
                         ir::FnTrait::Fn => FnTrait::Fn,
@@ -1206,8 +1206,8 @@ impl RsTypeKind {
                 BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
                 BridgeRsTypeKind::StdString { .. } => false,
-                BridgeRsTypeKind::DynCallable { .. } => {
-                    // DynCallable represents an owned function object, so it is not copyable.
+                BridgeRsTypeKind::Callable { .. } => {
+                    // Callables represent an owned function object, so they are not copyable.
                     false
                 }
                 BridgeRsTypeKind::C9Co { .. } => false,
@@ -1708,9 +1708,9 @@ impl RsTypeKind {
                             quote! { ::cc_std::std::string }
                         }
                     }
-                    BridgeRsTypeKind::DynCallable(dyn_callable) => {
-                        let dyn_callable_spelling = dyn_callable.dyn_fn_spelling(&db);
-                        quote! { ::alloc::boxed::Box<#dyn_callable_spelling> }
+                    BridgeRsTypeKind::Callable(callable) => {
+                        let callable_spelling = callable.dyn_fn_spelling(&db);
+                        quote! { ::alloc::boxed::Box<#callable_spelling> }
                     }
                     BridgeRsTypeKind::C9Co { has_reference_param, result_type, .. } => {
                         let result_type_tokens = if result_type.is_void() {
@@ -1866,7 +1866,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                             self.todo.push(t1);
                         }
                         BridgeRsTypeKind::StdString { .. } => {}
-                        BridgeRsTypeKind::DynCallable(callable) => {
+                        BridgeRsTypeKind::Callable(callable) => {
                             self.todo.push(&callable.return_type);
                             self.todo.extend(callable.param_types.iter().rev());
                         }
