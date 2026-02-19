@@ -201,6 +201,77 @@ inline void FooInt(int x) {return Foo(x);}
 inline void FooFloat(float x) {return Foo(x);}
 ```
 
+## Thread-safety {#thread_safety}
+
+WARNING: This is subtle and dangerous, and remains a work in progress. Avoid
+unless necessary.
+
+SUMMARY: To make a mutating C++ method safe to call concurrently in Rust, the
+data it accesses should be `mutable`, and the method should be wrapped in a
+method accepting `&self`.
+
+TODO(b/481405536): `mutable` should work for trivially copyable types.
+
+TODO(b/481398972): `mutable` should work for `public` fields.
+
+TODO(b/482619016): The approach described here should potentially be less
+manual.
+
+TODO(b/440403437): Safer mutably aliasing references should be an option, and
+recommended here.
+
+Many C++ types use notions of
+["thread-compatibility" and "thread-safety"](https://abseil.io/blog/20180531-regular-types#data-races-and-thread-safety-properties),
+which can be approximately defined as so:
+
+thread-compatible
+:   The type is safe to immutably alias across threads, similar to Sync
+
+thread-safe
+:   The type is safe to mutably alias across threads.
+
+Rust has no analogue to "thread-safe" in this sense: you cannot ever alias via a
+`&mut T` across threads, and aliasing via `*mut T` is not ever safe. Instead,
+Rust mutation operations that are intended to be safe to call concurrently
+across multiple threads are designed to take a `&T`.
+
+(Accordingly, sometimes `&T` is called a "shared reference" -- not a const
+reference!)
+
+In order to take a non-const method, and expose it to Rust using `&self`, the
+following steps need to be taken:
+
+1.  The class must be documented as thread-safe.
+2.  The field being mutated must be marked as `mutable`, even if it is only
+    mutated in non-const methods, so that internal mutation in Rust does not
+    cause UB.
+
+    Due to b/481398972, this field cannot be public. Due to b/481405536, the
+    class itself must not be trivially copyable.
+
+3.  The method must be manually wrapped, either in Rust or in pure C++. For
+    example:
+
+    ```c++
+    class FakeClock {
+     public:
+      // TODO($USER): Remove the destructor once b/481405536 is fixed.
+      ~FakeClock() {}
+      CRUBIT_RUST_NAME("advance_mut")
+      void Advance(int n) {
+        DoNotUseForRustOnlyAdvance(n);
+      }
+
+      CRUBIT_RUST_NAME("advance")
+      void DoNotUseForRustOnlyAdvance(int n) const {
+        mytime_ += n;
+      }
+     private:
+      // Mutable for Rust.
+      mutable int mytime_;
+    };
+    ```
+
 ## Working around blocking bugs in Crubit {#blockers}
 
 Crubit is still in development, and has bugs which can completely stop your work
