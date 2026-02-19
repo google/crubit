@@ -1235,13 +1235,21 @@ fn generate_kythe_doc_comment(
     // capture tag; it's fine to emit capture tags that never capture anything.)
     let tcx = db.tcx();
     let def_span = tcx.def_ident_span(def_id).unwrap_or_else(|| tcx.def_span(def_id));
+    let (start, end) = if def_span.is_dummy() {
+        ("0".to_string(), "0".to_string())
+    } else {
+        // We're assuming that lo and hi are in the same source file.
+        let sf = tcx.sess.source_map().lookup_source_file(def_span.lo());
+        (
+            sf.relative_position(def_span.lo()).0.to_string(),
+            sf.relative_position(def_span.hi()).0.to_string(),
+        )
+    };
     #[rustversion::before(2025-12-14)]
     let file_name = tcx.sess().source_map().span_to_filename(def_span).prefer_local().to_string();
     #[rustversion::since(2025-12-14)]
     let file_name =
         tcx.sess.source_map().span_to_filename(def_span).prefer_local_unconditionally().to_string();
-    let start = def_span.lo().0.to_string();
-    let end = def_span.hi().0.to_string();
     quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
 }
 
