@@ -55,6 +55,9 @@ impl Default for Struct {
     }
 }
 
+// Error while generating bindings for function 'Struct::AccessProtected':
+// Protected methods are not yet supported.
+
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Class
@@ -88,6 +91,9 @@ impl Default for Class {
         }
     }
 }
+
+// Error while generating bindings for function 'Class::AccessProtected':
+// Protected methods are not yet supported.
 
 mod detail {
     #[allow(unused_imports)]

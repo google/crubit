@@ -214,6 +214,10 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
 // Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
 
+// Error while generating bindings for struct 'std::integral_constant<unsigned long, 9223372036854775808UL>':
+// Can't generate bindings for std::integral_constant<unsigned long, 9223372036854775808UL>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::integral_constant<unsigned long, 9223372036854775808UL> (crate::__CcTemplateInstNSt3__u17integral_constantImLm9223372036854775808EEE is a template instantiation)
+
 // Error while generating bindings for struct 'std::iterator_traits<char32_t *>':
 // Can't generate bindings for std::iterator_traits<char32_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::iterator_traits<char32_t *> (crate::__CcTemplateInstNSt3__u15iterator_traitsIPDiEE is a template instantiation)
