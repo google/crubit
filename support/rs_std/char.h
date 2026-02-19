@@ -156,7 +156,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
 
   // See "layout tests" comments in `char_test.cc` for explanation why
   // `char32_t` is not used.
-  std::uint32_t value_ = '\0';
+  std::uint32_t value_;
 };
 
 // Definition of `char_::MAX` - it can't be defined and declared within the
