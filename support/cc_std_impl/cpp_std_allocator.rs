@@ -11,9 +11,6 @@ use core::alloc::Layout;
 use core::ffi::c_void;
 use core::ptr::NonNull;
 
-#[global_allocator]
-static ALLOCATOR: StdAllocator = StdAllocator {};
-
 pub struct StdAllocator {}
 
 unsafe impl Allocator for StdAllocator {

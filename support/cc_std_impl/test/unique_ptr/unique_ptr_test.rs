@@ -2,7 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use cc_std::std::unique_ptr;
 use googletest::prelude::*;
 use std::sync::atomic::{AtomicI32, Ordering};
 
@@ -118,26 +117,6 @@ fn test_unique_ptr_destroyed_in_cpp() {
     let mut up = test_helpers::unique_ptr_test::create_unique_ptr();
     let up = unsafe { cc_std::std::unique_ptr::new(up.release()) };
     test_helpers::unique_ptr_test::destroy_unique_ptr(up);
-}
-
-#[gtest]
-fn test_box_to_unique_ptr() {
-    let b = Box::new(InstanceCounted::new());
-    let ptr = Box::into_raw(b);
-    let up = unsafe { unique_ptr::new(ptr) };
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 1);
-    drop(up);
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 0);
-}
-
-#[gtest]
-fn test_unique_ptr_to_box() {
-    let mut up = InstanceCounted::new_unique_ptr();
-    let ptr = up.release();
-    let b = unsafe { Box::from_raw(ptr) };
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 1);
-    drop(b);
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 0);
 }
 
 #[gtest]
