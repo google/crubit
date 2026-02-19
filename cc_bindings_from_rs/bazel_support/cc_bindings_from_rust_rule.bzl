@@ -507,7 +507,7 @@ cc_bindings_from_rust_aspect = aspect(
     attr_aspects = ["deps"],
     attrs = {
         "_clang_format": attr.label(
-            default = Label("@llvm_toolchain//:clang-format"),
+            default = Label("@llvm_toolchain//:bin/clang-format"),
             executable = True,
             allow_single_file = True,
             cfg = "exec",
