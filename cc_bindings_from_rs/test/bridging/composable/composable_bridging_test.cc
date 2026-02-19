@@ -12,6 +12,8 @@
 namespace crubit {
 namespace {
 
+using ::rs_std::SliceRef;
+
 TEST(ComposableBridging, MaybeInt) {
   std::optional<int> maybe_int = composable_bridging::maybe_int();
   ASSERT_TRUE(maybe_int.has_value());
@@ -41,6 +43,25 @@ TEST(ComposableBridging, Parameters) {
   composable_bridging::assert_some_5(std::make_optional(5));
   composable_bridging::assert_some_some_5(
       std::make_optional(std::make_optional(5)));
+}
+
+TEST(ComposableBridging, NestedSlices) {
+  using ::composable_bridging::option_slice_without_first;
+  EXPECT_EQ(option_slice_without_first(std::nullopt), std::nullopt);
+  EXPECT_EQ(option_slice_without_first(
+                std::make_optional<SliceRef<const int>>({1, 2, 3})),
+            std::make_optional<SliceRef<const int>>({2, 3}));
+}
+
+TEST(ComposableBridging, NestedRefs) {
+  using ::composable_bridging::option_adds_one_to_ref;
+  EXPECT_EQ(option_adds_one_to_ref(std::nullopt), std::nullopt);
+  int x = 5;
+  std::optional<int* crubit_nonnull> y =
+      option_adds_one_to_ref(std::make_optional(&x));
+  ASSERT_TRUE(y.has_value());
+  EXPECT_EQ(*y.value(), 6);
+  EXPECT_EQ(x, 6);
 }
 
 }  // namespace

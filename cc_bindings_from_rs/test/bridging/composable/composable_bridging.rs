@@ -30,6 +30,18 @@ pub fn assert_some_some_5(x: Option<Option<i32>>) {
     assert_eq!(x, Some(Some(5)));
 }
 
+pub fn option_slice_without_first(x: Option<&[i32]>) -> Option<&[i32]> {
+    let (_first, rest) = x?.split_first()?;
+    Some(rest)
+}
+
+pub fn option_adds_one_to_ref(x: Option<&mut i32>) -> Option<&mut i32> {
+    x.map(|x| {
+        *x += 1;
+        x
+    })
+}
+
 #[crubit_annotate::cpp_bridge(
     cpp_type = "std::optional",
     bridge_abi_cpp = "crubit::OptionalAbi",
