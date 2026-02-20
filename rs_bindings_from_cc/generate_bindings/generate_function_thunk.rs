@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
+use code_gen_utils::{format_cc_ident, make_rs_ident};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
@@ -261,7 +261,7 @@ fn generate_function_assertation_for_identifier(
 ) -> Result<ThunkImpl> {
     let ir = db.ir();
 
-    let fn_ident = expect_format_cc_ident(&id.identifier);
+    let fn_ident = format_cc_ident(&id.identifier)?;
     let path_to_func = ir.namespace_qualifier(func).format_for_cc()?;
     let implementation_function = quote! { :: #path_to_func #fn_ident };
     let method_qualification;
@@ -383,7 +383,7 @@ pub fn generate_function_thunk_impl(
             quote! { operator #name }
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            let fn_ident = expect_format_cc_ident(&id.identifier);
+            let fn_ident = format_cc_ident(&id.identifier)?;
             let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
             if func.instance_method_metadata.is_some() {
                 quote! {#fn_ident}
@@ -414,8 +414,11 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
     };
 
-    let mut param_idents =
-        func.params.iter().map(|p| expect_format_cc_ident(&p.identifier.identifier)).collect_vec();
+    let mut param_idents = func
+        .params
+        .iter()
+        .map(|p| format_cc_ident(&p.identifier.identifier))
+        .collect::<Result<Vec<_>>>()?;
 
     let mut conversion_externs = quote! {};
     let mut conversion_stmts = quote! {};
@@ -428,10 +431,10 @@ pub fn generate_function_thunk_impl(
             let arg_type = db.rs_type_kind(p.type_.clone())?;
             let cpp_type = cpp_type_name::format_cpp_type(&arg_type, ir)?;
             if let RsTypeKind::BridgeType { bridge_type, .. } = arg_type.unalias() {
-                let ident = expect_format_cc_ident(&p.identifier.identifier);
+                let ident = format_cc_ident(&p.identifier.identifier)?;
                 match bridge_type {
                     BridgeRsTypeKind::BridgeVoidConverters { rust_to_cpp_converter, .. } => {
-                        let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
+                        let convert_function = format_cc_ident(rust_to_cpp_converter)?;
                         let cpp_ident = convert_ident(&ident);
                         conversion_externs.extend(quote! {
                             extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
@@ -467,7 +470,7 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let ident = expect_format_cc_ident(&p.identifier.identifier);
+            let ident = format_cc_ident(&p.identifier.identifier)?;
             let ident = if db.rs_type_kind(p.type_.clone())?.is_pointer_bridge_type() {
                 let formatted_ident = convert_ident(&ident);
                 quote! { &(#formatted_ident.val) }
@@ -528,18 +531,18 @@ pub fn generate_function_thunk_impl(
 
     let return_type_name = match return_type_kind.passing_convention() {
         PassingConvention::ComposablyBridged => {
-            param_idents.insert(0, expect_format_cc_ident("__return_abi_buffer"));
+            param_idents.insert(0, format_cc_ident("__return_abi_buffer")?);
             param_types.insert(0, quote! {unsigned char *});
             quote! { void }
         }
         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
-            param_idents.insert(0, expect_format_cc_ident("__return"));
+            param_idents.insert(0, format_cc_ident("__return")?);
             if let RsTypeKind::BridgeType {
                 bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
                 ..
             } = return_type_kind.unalias()
             {
-                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
+                let convert_function = format_cc_ident(cpp_to_rust_converter)?;
                 conversion_externs.extend(quote! {
                     extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
                 });
@@ -570,7 +573,7 @@ pub fn generate_function_thunk_impl(
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
 
-            let this_arg = expect_format_cc_ident(&this_param.identifier.identifier);
+            let this_arg = format_cc_ident(&this_param.identifier.identifier)?;
             let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
                 quote! {std::move(*#this_arg).}
             } else {
@@ -603,7 +606,7 @@ pub fn generate_function_thunk_impl(
                 ..
             } = return_type_kind.unalias()
             {
-                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
+                let convert_function = format_cc_ident(cpp_to_rust_converter)?;
                 quote! {
                     auto __original_cpp_struct = #return_expr;
                     #convert_function(&__original_cpp_struct, #out_param)
