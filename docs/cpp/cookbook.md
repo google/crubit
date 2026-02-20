@@ -247,3 +247,187 @@ To mail the CL performing this change, use <internal link>_manage: add
 > header is owned by two targets, it's preferable to move the header into a
 > third target, depended on by both. That way, functions which use types defined
 > in that header will still get bindings, in both targets.
+
+## Making backwards-compatible changes to C++ code with Rust callers {#compatibility}
+
+Because Rust does not have all the features C++ does, some changes that do not
+"usually" break a C++ caller can break a Rust caller completely. For example,
+most C++ callers will not be broken by adding a new overload to an overload set,
+but that does break Rust callers, because Rust doesn't have overloading.
+
+Most of the time, you can think of Rust users (and Crubit) as the most
+pathological possible C++ caller, relying on all the details of your API.
+(Though there are some things that are *truly* compatibility breaking.)
+
+The following attempts to be an exhaustive list of the things you might expect
+to be able to do if you only have C++ callers, but cannot do with Rust callers.
+
+### Making a type non-Rust-movable {#compatibility-non_movable}
+
+If a type is made non-Rust-movable, when it was previously Rust movable, this
+will break all but the most trivial of Rust callers.
+
+Specifically, the following operations are compatibility-breaking if the type
+was Rust-movable:
+
+* Adding a virtual method.
+* Adding a copy constructor, move constructor, or destructor, without specifying `ABSL_ATTRIBUTE_TRIVIAL_ABI`.
+* Adding a non-Rust-movable field (such as `std::string`).
+
+```c++ {.no-copy}
+struct Before {
+  int x;
+};
+struct After {
+  ~After() {}
+
+  int x;
+  std::string y;
+};
+
+Before ReturnBefore();
+After ReturnAfter();
+```
+
+```rust {.no-copy}
+#[derive(Copy, Clone)]
+struct Before {...}
+struct After {...}
+
+pub fn ReturnBefore() -> Before {...}
+pub fn ReturnAfter() -> Ctor![After] {...}
+```
+
+**Fix:** Preserve Rust-movability, as described above in
+[Making types Rust-movable](#rust_movable)
+
+```c++ {.good, .no-copy}
+class ABSL_ATTRIBUTE_TRIVIAL_ABI CompatibleAfter {
+  ~After() {}
+
+  int x;
+  std::unique_ptr<std::string> y;
+};
+```
+
+### Adding or removing virtual destructors {#compatibility-polymorphic}
+
+If a type's destructor is made virtual, or was previously virtual and now
+becomes nonvirtual, this changes how Rust callers invoke destruction. For
+example, `unique_ptr<T>` becomes `unique_ptr_dyn<T>` if `T` has a virtual
+destructor.
+
+```c++ {.no-copy}
+class Before {};
+class After {~After(){}};
+
+std::unique_ptr<Before> ReturnBefore();
+std::unique_ptr<After> ReturnAfter();
+```
+
+```rust {.no-copy}
+pub fn ReturnBefore() -> cc_std::std::unique_ptr<Before> {...}
+pub fn ReturnAfter() -> cc_std::std::unique_ptr_dyn<After> {...}
+
+let _: cc_std::std::unique_ptr<_> = ReturnAfter();  // error[E0308]: mismatched types
+```
+
+**Fix:** Migrate callers that use heap allocated types such as `unique_ptr`.
+
+```rust {.good .no-copy}
+let _: cc_std::std::unique_ptr_dyn<_> = ReturnAfter();
+```
+
+### Adding an overload {#compatibility-overload}
+
+Except for constructors and operators, adding an overload to a C++ function will
+cause it to no longer receive bindings, unless the overloads are given distinct
+names.
+
+```c++ {.no-copy}
+void Before();
+
+void After();
+void After(int);
+```
+
+```rust {.no-copy}
+pub fn Before() {...}
+// No bindings for After.
+```
+
+**Fix:** use `CRUBIT_RUST_NAME("NewName")` to specify a per-overload name.
+
+```c++ {.good .no-copy}
+void CompatibleAfter();
+
+CRUBIT_RUST_NAME("CompatibleAfterInt")
+void CompatibleAfter(int);
+```
+
+```rust {.good .no-copy}
+pub fn CompatibleAfter() {...}
+pub fn CompatibleAfterInt(_: c_int) {...}
+```
+
+### Changing types with implicit conversions {#compatibility-conversions}
+
+In C++, it is often (but not always) compatible to change from, for example,
+accepting an `int32_t` to a `int64_t`, or similar. This is not a
+compatible change in Rust, because implicit conversions do not exist.
+
+```c++ {.no-copy}
+void Before(int32_t);
+void After(int64_t);
+```
+
+```rust {.no-copy}
+pub fn Before(_: i32) {...}
+pub fn After(_: i64) {...}
+
+let x: i32 = ...;
+After(x);  // error[E0308]: mismatched types
+```
+
+**Fix:** migrate callers.
+
+```rust {.good .no-copy}
+After(x.into())
+```
+
+### Unsupported features {#compatibility-unsupported}
+
+Use of other unsupported features of C++, such as `decltype` or various
+unsupported clang attributes, will also cause breakages for Rust callers.
+
+This is an open-ended failure category, and includes, at minimum:
+
+* Changing from a concrete function to a template function
+* Changing from an ordinary class to a type alias to a template specialization
+* Unrecognized attributes
+* Types that do not have Crubit support yet
+
+For instance:
+
+```c++ {.no-copy}
+int Before(int x) {...}
+
+[[clang::very_interesting_advanced_attribute]]
+auto After(int x) -> decltype(x + std::declval<int>()) {...}
+```
+
+```rust {.no-copy}
+pub fn Before(_: c_int) -> c_int {...}
+// No bindings for After
+```
+
+**Fix:** avoid the use of these features, or wrap with Rust-only functions that
+avoid the use of these features.
+
+```c++ {.good .no-copy}
+int CompatibleAfter(int x) {return After(x);}
+```
+
+```rust {.good .no-copy}
+pub fn After(_: c_int) -> c_int {...}
+```
