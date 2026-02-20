@@ -35,6 +35,8 @@ class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
   // (e.g., `std::optional`). Otherwise, returns `std::nullopt`.
   absl::StatusOr<std::optional<BridgeType>> GetBuiltinBridgeType(
       const clang::ClassTemplateSpecializationDecl* decl);
+
+  absl::StatusOr<SafetyAnnotation> GetSafetyAnnotation(const clang::Decl& decl);
 };
 
 }  // namespace crubit
