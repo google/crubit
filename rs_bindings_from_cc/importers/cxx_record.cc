@@ -441,28 +441,6 @@ absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl& decl) {
   return result;
 }
 
-absl::StatusOr<SafetyAnnotation> GetSafetyAnnotation(const clang::Decl& decl) {
-  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
-                          GetAnnotateAttrArgs(decl, "crubit_override_unsafe"));
-  if (!args.has_value()) return SafetyAnnotation::kUnannotated;
-  if (args->size() != 1) {
-    return absl::InvalidArgumentError(
-        "`crubit_override_unsafe` annotation must have exactly one argument");
-  }
-
-  absl::StatusOr<bool> is_unsafe =
-      GetExprAsBool(*args->front(), decl.getASTContext());
-  if (!is_unsafe.ok()) {
-    return absl::InvalidArgumentError(
-        "`crubit_override_unsafe` annotation must have a bool argument");
-  }
-  if (*is_unsafe) {
-    return SafetyAnnotation::kUnsafe;
-  } else {
-    return SafetyAnnotation::kDisableUnsafe;
-  }
-}
-
 std::optional<Identifier> StringRefToOptionalIdentifier(llvm::StringRef name) {
   if (name.empty()) {
     return std::nullopt;
@@ -779,6 +757,37 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
 }
 
 }  // namespace
+
+absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
+    const clang::Decl& decl) {
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
+                          GetAnnotateAttrArgs(decl, "crubit_override_unsafe"));
+  if (args.has_value()) {
+    if (args->size() != 1) {
+      return absl::InvalidArgumentError(
+          "`crubit_override_unsafe` annotation must have exactly one argument");
+    }
+
+    absl::StatusOr<bool> is_unsafe =
+        GetExprAsBool(*args->front(), decl.getASTContext());
+    if (!is_unsafe.ok()) {
+      return absl::InvalidArgumentError(
+          "`crubit_override_unsafe` annotation must have a bool argument");
+    }
+    if (*is_unsafe) {
+      return SafetyAnnotation::kUnsafe;
+    } else {
+      return SafetyAnnotation::kDisableUnsafe;
+    }
+  }
+
+  if (decl.hasAttr<clang::PointerAttr>() &&
+      ictx_.IsUnsafeViewEnabledForTarget(ictx_.GetOwningTarget(&decl))) {
+    return SafetyAnnotation::kUnsafe;
+  }
+
+  return SafetyAnnotation::kUnannotated;
+}
 
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
     const clang::FieldDecl* field_decl) {

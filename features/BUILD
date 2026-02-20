@@ -113,6 +113,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set marking C++ classes with `[[gsl::Pointer]]` as unsafe.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "unsafe_view",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["unsafe_view"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

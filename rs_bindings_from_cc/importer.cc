@@ -986,6 +986,10 @@ bool Importer::IsFmtEnabledForTarget(const BazelLabel& label) const {
   return IsFeatureEnabledForTarget(label, "fmt");
 }
 
+bool Importer::IsUnsafeViewEnabledForTarget(const BazelLabel& label) const {
+  return IsFeatureEnabledForTarget(label, "unsafe_view");
+}
+
 bool Importer::DetectFormatter(const clang::TypeDecl& decl) const {
   clang::CanQualType type = ctx_.getCanonicalTypeDeclType(&decl);
   return DetectFormatterForType(/*lookup=*/type, /*target=*/type);

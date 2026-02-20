@@ -42,6 +42,9 @@ flagset::flags! {
 
         /// Enable experimental support for `rs_std::DynCallable` and `absl::AnyInvocable`.
         Callables,
+
+        /// Mark C++ types with `[[gsl::Pointer]]` as unsafe.
+        UnsafeView,
     }
 }
 
@@ -63,6 +66,7 @@ impl CrubitFeature {
             Self::AssumeLifetimes => "assume_lifetimes",
             Self::Fmt => "fmt",
             Self::Callables => "callables",
+            Self::UnsafeView => "unsafe_view",
         }
     }
 
@@ -81,6 +85,7 @@ impl CrubitFeature {
             Self::AssumeLifetimes => "//features:assume_lifetimes",
             Self::Fmt => "//features:fmt",
             Self::Callables => "//features:callables",
+            Self::UnsafeView => "//features:unsafe_view",
         }
     }
 }
@@ -100,6 +105,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         b"fmt" => CrubitFeature::Fmt.into(),
         b"callables" => CrubitFeature::Callables.into(),
+        b"unsafe_view" => CrubitFeature::UnsafeView.into(),
         _ => return None,
     };
     Some(features)
