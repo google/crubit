@@ -36,8 +36,6 @@ package(default_applicable_licenses = ["//:license"])
     # Add an OS to this list if Crubit either works, or at least has an
     # error message more legible than random internal build issues.
     "linux",
-    "ios",
-    "macos",
 ]]
 
 toolchain(
