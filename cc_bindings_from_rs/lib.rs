@@ -432,6 +432,12 @@ pub fn run_with_cmdline_args(cmdline: &Cmdline) -> Result<()> {
     }
 }
 
+pub fn run_rustc(args: &[String]) {
+    struct Callbacks;
+    impl rustc_driver::Callbacks for Callbacks {}
+    rustc_driver::run_compiler(args, &mut Callbacks)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
