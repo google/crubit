@@ -88,6 +88,40 @@ fn test_derive_move_and_assign_via_copy() {
 }
 
 #[gtest]
+fn test_derive_move_and_assign_via_copy_with_generics() {
+    use ::std::fmt::Debug;
+
+    // Include several bounds with both immediate and `where` clause syntax in order to ensure
+    // they're handled correctly.
+    #[derive(Copy, Clone, ::ctor::MoveAndAssignViaCopy)]
+    struct Struct<'a, 'b, T: Copy>
+    where
+        'b: 'a,
+        T: Debug,
+    {
+        #[allow(unused)]
+        slice: &'a &'b [T],
+        #[allow(unused)]
+        value: T,
+    }
+
+    fn implements_traits<T>(_: T)
+    where
+        T: for<'a> From<::ctor::RvalueReference<'a, T>>
+            + for<'a> ::ctor::CtorNew<::ctor::RvalueReference<'a, T>>
+            + for<'a> ::ctor::UnpinAssign<&'a T>
+            + for<'a> ::ctor::UnpinAssign<::ctor::RvalueReference<'a, T>>,
+    {
+    }
+
+    fn check_implements_traits<'a, 'b: 'a, T: Copy + Debug>(x: Struct<'a, 'b, T>) {
+        implements_traits(x);
+    }
+
+    check_implements_traits(Struct { slice: &[1, 2, 3].as_slice(), value: 42 });
+}
+
+#[gtest]
 fn test_recursively_pinned_unit_struct() {
     #[::ctor::recursively_pinned]
     struct S;

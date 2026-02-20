@@ -152,7 +152,7 @@ rust_test(
 
 rust_test(
     name = "ctor_proc_macros_e2e_test",
-    srcs = ["ctor_proc_macros_test.rs"],
+    srcs = ["ctor_proc_macros_e2e_test.rs"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
