@@ -337,10 +337,7 @@ pub(crate) fn ident_or_opt_ident(i: &Option<rustc_span::Ident>) -> Option<&rustc
 
 /// Returns an iterator which yields arbitrary unique names for the parameters
 /// of the function identified by `fn_def_id`.
-pub fn thunk_param_names(
-    tcx: ty::TyCtxt<'_>,
-    fn_def_id: DefId,
-) -> impl Iterator<Item = Ident> + '_ {
+fn thunk_param_names(tcx: ty::TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
     tcx.fn_arg_idents(fn_def_id).iter().enumerate().map(|(i, ident)| {
         let Some(ident) = ident_or_opt_ident(ident) else {
             return format_ident!("__param_{i}");
