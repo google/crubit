@@ -31,12 +31,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
   Color(Color&&) = default;
-  Color& operator=(Color&&) = default;
+  ::example_crate::Color& operator=(Color&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   Color(const Color&) = default;
-  Color& operator=(const Color&) = default;
+  ::example_crate::Color& operator=(const Color&) = default;
   Color(::crubit::UnsafeRelocateTag, Color&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -59,12 +59,14 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::example_crate::Color* __ret_ptr);
 }
-inline Color::Color() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::example_crate::Color::Color() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 static_assert(std::is_trivially_destructible_v<Color>);
-static_assert(std::is_trivially_move_constructible_v<Color>);
-static_assert(std::is_trivially_move_assignable_v<Color>);
-static_assert(std::is_trivially_copy_constructible_v<Color>);
-static_assert(std::is_trivially_copy_assignable_v<Color>);
+static_assert(std::is_trivially_move_constructible_v<::example_crate::Color>);
+static_assert(std::is_trivially_move_assignable_v<::example_crate::Color>);
+static_assert(std::is_trivially_copy_constructible_v<::example_crate::Color>);
+static_assert(std::is_trivially_copy_assignable_v<::example_crate::Color>);
 inline void Color::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
 }

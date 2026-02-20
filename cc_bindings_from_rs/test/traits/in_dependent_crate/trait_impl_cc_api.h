@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct() = default;
   MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
+  ::trait_impl::MyStruct& operator=(MyStruct&&) = default;
 
   // `trait_impl_golden::MyStruct` doesn't implement the `Clone` trait
   MyStruct(const MyStruct&) = delete;
@@ -76,7 +76,7 @@ NotImplemented final {
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   NotImplemented(NotImplemented&&) = delete;
-  NotImplemented& operator=(NotImplemented&&) = delete;
+  ::trait_impl::NotImplemented& operator=(NotImplemented&&) = delete;
   // `trait_impl_golden::NotImplemented` doesn't implement the `Clone` trait
   NotImplemented(const NotImplemented&) = delete;
   NotImplemented& operator=(const NotImplemented&) = delete;
@@ -101,8 +101,8 @@ static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<MyStruct>);
-static_assert(std::is_trivially_move_constructible_v<MyStruct>);
-static_assert(std::is_trivially_move_assignable_v<MyStruct>);
+static_assert(std::is_trivially_move_constructible_v<::trait_impl::MyStruct>);
+static_assert(std::is_trivially_move_assignable_v<::trait_impl::MyStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(std::int32_t,
                                    ::trait_impl::MyStruct* __ret_ptr);

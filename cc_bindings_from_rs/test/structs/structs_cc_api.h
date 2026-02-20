@@ -41,7 +41,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructFloat() = default;
   StructFloat(StructFloat&&) = default;
-  StructFloat& operator=(StructFloat&&) = default;
+  ::structs::abi_classification::StructFloat& operator=(StructFloat&&) =
+      default;
 
   // `structs_golden::abi_classification::StructFloat` doesn't implement the
   // `Clone` trait
@@ -105,7 +106,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructInteger() = default;
   StructInteger(StructInteger&&) = default;
-  StructInteger& operator=(StructInteger&&) = default;
+  ::structs::abi_classification::StructInteger& operator=(StructInteger&&) =
+      default;
 
   // `structs_golden::abi_classification::StructInteger` doesn't implement the
   // `Clone` trait
@@ -163,7 +165,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructMemory() = default;
   StructMemory(StructMemory&&) = default;
-  StructMemory& operator=(StructMemory&&) = default;
+  ::structs::abi_classification::StructMemory& operator=(StructMemory&&) =
+      default;
 
   // `structs_golden::abi_classification::StructMemory` doesn't implement the
   // `Clone` trait
@@ -227,7 +230,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~Point() = default;
   Point(Point&&) = default;
-  Point& operator=(Point&&) = default;
+  ::structs::default_repr::Point& operator=(Point&&) = default;
 
   // `structs_golden::default_repr::Point` doesn't implement the `Clone` trait
   Point(const Point&) = delete;
@@ -289,7 +292,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::structs::interior_mutability::SomeStruct& operator=(SomeStruct&&) = default;
 
   // `structs_golden::interior_mutability::SomeStruct` doesn't implement the
   // `Clone` trait
@@ -328,7 +331,8 @@ struct
   // No custom `Drop` impl and no custom "drop glue" required
   ~AField() = default;
   AField(AField&&) = default;
-  AField& operator=(AField&&) = default;
+  ::structs::keyword_named_fields_and_methods::AField& operator=(AField&&) =
+      default;
 
   // `structs_golden::keyword_named_fields_and_methods::AField` doesn't
   // implement the `Clone` trait
@@ -373,7 +377,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct& operator=(
+      SomeStruct&&) = default;
 
   // `structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct` doesn't
   // implement the `Clone` trait
@@ -420,7 +425,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Point(Point&&) = delete;
-  Point& operator=(Point&&) = delete;
+  ::structs::non_cpp_movable::Point& operator=(Point&&) = delete;
   // `structs_golden::non_cpp_movable::Point` doesn't implement the `Clone`
   // trait
   Point(const Point&) = delete;
@@ -473,7 +478,7 @@ Point final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~Point() = default;
   Point(Point&&) = default;
-  Point& operator=(Point&&) = default;
+  ::structs::repr_c::Point& operator=(Point&&) = default;
 
   // `structs_golden::repr_c::Point` doesn't implement the `Clone` trait
   Point(const Point&) = delete;
@@ -527,7 +532,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructFloat() = default;
   StructFloat(StructFloat&&) = default;
-  StructFloat& operator=(StructFloat&&) = default;
+  ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat&
+  operator=(StructFloat&&) = default;
 
   // `structs_golden::struct_by_float_passing_with_no_cc_definition::StructFloat`
   // doesn't implement the `Clone` trait
@@ -595,13 +601,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructFloat() = default;
   StructFloat(StructFloat&&) = default;
-  StructFloat& operator=(StructFloat&&) = default;
+  ::structs::struct_by_float_passing_with_no_thunk::StructFloat& operator=(
+      StructFloat&&) = default;
 
   // Clone::clone
   StructFloat(const StructFloat&);
 
   // Clone::clone_from
-  StructFloat& operator=(const StructFloat&);
+  ::structs::struct_by_float_passing_with_no_thunk::StructFloat& operator=(
+      const StructFloat&);
 
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
     memcpy(this, &value, sizeof(value));
@@ -664,7 +672,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::structs::unsupported_types::SomeStruct& operator=(SomeStruct&&) = default;
 
   // `structs_golden::unsupported_types::SomeStruct` doesn't implement the
   // `Clone` trait
@@ -721,7 +729,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~ZstFields() = default;
   ZstFields(ZstFields&&) = default;
-  ZstFields& operator=(ZstFields&&) = default;
+  ::structs::zst_fields::ZstFields& operator=(ZstFields&&) = default;
 
   // `structs_golden::zst_fields::ZstFields` doesn't implement the `Clone` trait
   ZstFields(const ZstFields&) = delete;
@@ -769,8 +777,10 @@ static_assert(
     alignof(StructFloat) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructFloat>);
-static_assert(std::is_trivially_move_constructible_v<StructFloat>);
-static_assert(std::is_trivially_move_assignable_v<StructFloat>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::abi_classification::StructFloat>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::abi_classification::StructFloat>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     float, ::structs::abi_classification::StructFloat* __ret_ptr);
@@ -818,8 +828,10 @@ static_assert(
     alignof(StructInteger) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructInteger>);
-static_assert(std::is_trivially_move_constructible_v<StructInteger>);
-static_assert(std::is_trivially_move_assignable_v<StructInteger>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::abi_classification::StructInteger>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::abi_classification::StructInteger>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, ::structs::abi_classification::StructInteger* __ret_ptr);
@@ -867,8 +879,10 @@ static_assert(
     alignof(StructMemory) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructMemory>);
-static_assert(std::is_trivially_move_constructible_v<StructMemory>);
-static_assert(std::is_trivially_move_assignable_v<StructMemory>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::abi_classification::StructMemory>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::abi_classification::StructMemory>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, ::structs::abi_classification::StructMemory* __ret_ptr);
@@ -921,8 +935,10 @@ static_assert(
     alignof(Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Point>);
-static_assert(std::is_trivially_move_constructible_v<Point>);
-static_assert(std::is_trivially_move_assignable_v<Point>);
+static_assert(
+    std::is_trivially_move_constructible_v<::structs::default_repr::Point>);
+static_assert(
+    std::is_trivially_move_assignable_v<::structs::default_repr::Point>);
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
@@ -961,12 +977,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::structs::interior_mutability::SomeStruct* __ret_ptr);
 }
-inline SomeStruct::SomeStruct() {
+inline ::structs::interior_mutability::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::interior_mutability::SomeStruct>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::interior_mutability::SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, field));
 }
@@ -981,8 +999,10 @@ static_assert(
     alignof(AField) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<AField>);
-static_assert(std::is_trivially_move_constructible_v<AField>);
-static_assert(std::is_trivially_move_assignable_v<AField>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::keyword_named_fields_and_methods::AField>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::keyword_named_fields_and_methods::AField>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_operator(
     ::structs::keyword_named_fields_and_methods::AField const&);
@@ -1008,12 +1028,15 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct* __ret_ptr);
 }
-inline SomeStruct::SomeStruct() {
+inline ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct::
+    SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, mut_const_ptr));
   static_assert(8 == offsetof(SomeStruct, const_mut_ptr));
@@ -1067,8 +1090,8 @@ static_assert(
     alignof(Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Point>);
-static_assert(std::is_trivially_move_constructible_v<Point>);
-static_assert(std::is_trivially_move_assignable_v<Point>);
+static_assert(std::is_trivially_move_constructible_v<::structs::repr_c::Point>);
+static_assert(std::is_trivially_move_assignable_v<::structs::repr_c::Point>);
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
@@ -1102,8 +1125,12 @@ static_assert(
     alignof(StructFloat) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructFloat>);
-static_assert(std::is_trivially_move_constructible_v<StructFloat>);
-static_assert(std::is_trivially_move_assignable_v<StructFloat>);
+static_assert(
+    std::is_trivially_move_constructible_v<
+        ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat>);
+static_assert(
+    std::is_trivially_move_assignable_v<
+        ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat>);
 inline void StructFloat::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructFloat, __field0));
   static_assert(8 == offsetof(StructFloat, __field1));
@@ -1165,8 +1192,10 @@ static_assert(
     alignof(StructFloat) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructFloat>);
-static_assert(std::is_trivially_move_constructible_v<StructFloat>);
-static_assert(std::is_trivially_move_assignable_v<StructFloat>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&,
@@ -1177,10 +1206,13 @@ extern "C" void __crubit_thunk_clone_ufrom(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat&,
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&);
 }
-inline StructFloat::StructFloat(const StructFloat& other) {
+inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat::
+    StructFloat(const StructFloat& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline StructFloat& StructFloat::operator=(const StructFloat& other) {
+inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat& ::
+structs::struct_by_float_passing_with_no_thunk::StructFloat::operator=(
+    const StructFloat& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }
@@ -1253,12 +1285,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::structs::unsupported_types::SomeStruct* __ret_ptr);
 }
-inline SomeStruct::SomeStruct() {
+inline ::structs::unsupported_types::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::structs::unsupported_types::SomeStruct>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::structs::unsupported_types::SomeStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     rs_std::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);
@@ -1285,8 +1319,10 @@ static_assert(
     alignof(ZstFields) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<ZstFields>);
-static_assert(std::is_trivially_move_constructible_v<ZstFields>);
-static_assert(std::is_trivially_move_assignable_v<ZstFields>);
+static_assert(
+    std::is_trivially_move_constructible_v<::structs::zst_fields::ZstFields>);
+static_assert(
+    std::is_trivially_move_assignable_v<::structs::zst_fields::ZstFields>);
 inline void ZstFields::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ZstFields, value));
 }

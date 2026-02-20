@@ -34,7 +34,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~ReprRustUnion() = default;
   ReprRustUnion(ReprRustUnion&&) = default;
-  ReprRustUnion& operator=(ReprRustUnion&&) = default;
+  ::example_crate::ReprRustUnion& operator=(ReprRustUnion&&) = default;
 
   // `example_crate_golden::ReprRustUnion` doesn't implement the `Clone` trait
   ReprRustUnion(const ReprRustUnion&) = delete;
@@ -77,12 +77,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::example_crate::ReprRustUnion* __ret_ptr);
 }
-inline ReprRustUnion::ReprRustUnion() {
+inline ::example_crate::ReprRustUnion::ReprRustUnion() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<ReprRustUnion>);
-static_assert(std::is_trivially_move_constructible_v<ReprRustUnion>);
-static_assert(std::is_trivially_move_assignable_v<ReprRustUnion>);
+static_assert(
+    std::is_trivially_move_constructible_v<::example_crate::ReprRustUnion>);
+static_assert(
+    std::is_trivially_move_assignable_v<::example_crate::ReprRustUnion>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ua(::example_crate::ReprRustUnion&,
                                       std::int32_t);

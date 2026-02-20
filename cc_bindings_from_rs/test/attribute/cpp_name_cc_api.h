@@ -36,7 +36,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Replaced() = default;
   Replaced(Replaced&&) = default;
-  Replaced& operator=(Replaced&&) = default;
+  ::cpp_name::Replaced& operator=(Replaced&&) = default;
 
   // `cpp_name_golden::Original` doesn't implement the `Clone` trait
   Replaced(const Replaced&) = delete;
@@ -68,8 +68,8 @@ static_assert(
     alignof(Replaced) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Replaced>);
-static_assert(std::is_trivially_move_constructible_v<Replaced>);
-static_assert(std::is_trivially_move_assignable_v<Replaced>);
+static_assert(std::is_trivially_move_constructible_v<::cpp_name::Replaced>);
+static_assert(std::is_trivially_move_assignable_v<::cpp_name::Replaced>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::cpp_name::Replaced* __ret_ptr);
 }

@@ -34,7 +34,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Bar() = default;
   Bar(Bar&&) = default;
-  Bar& operator=(Bar&&) = default;
+  ::uses_rust::Bar& operator=(Bar&&) = default;
 
   // `uses_rust_golden::Bar` doesn't implement the `Clone` trait
   Bar(const Bar&) = delete;
@@ -65,7 +65,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
+  ::uses_rust::Foo& operator=(Foo&&) = default;
 
   // `uses_rust_golden::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
@@ -115,7 +115,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~G() = default;
   G(G&&) = default;
-  G& operator=(G&&) = default;
+  ::uses_rust::G& operator=(G&&) = default;
 
   // `uses_rust_golden::G` doesn't implement the `Clone` trait
   G(const G&) = delete;
@@ -148,7 +148,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~InnerX() = default;
   InnerX(InnerX&&) = default;
-  InnerX& operator=(InnerX&&) = default;
+  ::uses_rust::InnerX& operator=(InnerX&&) = default;
 
   // `uses_rust_golden::InnerX` doesn't implement the `Clone` trait
   InnerX(const InnerX&) = delete;
@@ -181,7 +181,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~X1() = default;
   X1(X1&&) = default;
-  X1& operator=(X1&&) = default;
+  ::uses_rust::X1& operator=(X1&&) = default;
 
   // `uses_rust_golden::X1` doesn't implement the `Clone` trait
   X1(const X1&) = delete;
@@ -228,8 +228,8 @@ static_assert(
     alignof(Bar) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Bar>);
-static_assert(std::is_trivially_move_constructible_v<Bar>);
-static_assert(std::is_trivially_move_assignable_v<Bar>);
+static_assert(std::is_trivially_move_constructible_v<::uses_rust::Bar>);
+static_assert(std::is_trivially_move_assignable_v<::uses_rust::Bar>);
 inline void Bar::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Bar, i));
 }
@@ -240,8 +240,8 @@ static_assert(
     alignof(Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Foo>);
-static_assert(std::is_trivially_move_constructible_v<Foo>);
-static_assert(std::is_trivially_move_assignable_v<Foo>);
+static_assert(std::is_trivially_move_constructible_v<::uses_rust::Foo>);
+static_assert(std::is_trivially_move_assignable_v<::uses_rust::Foo>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::uses_rust::Foo* __ret_ptr);
 }
@@ -280,8 +280,8 @@ static_assert(
     alignof(G) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<G>);
-static_assert(std::is_trivially_move_constructible_v<G>);
-static_assert(std::is_trivially_move_assignable_v<G>);
+static_assert(std::is_trivially_move_constructible_v<::uses_rust::G>);
+static_assert(std::is_trivially_move_assignable_v<::uses_rust::G>);
 inline void G::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(G, field));
 }
@@ -296,8 +296,8 @@ static_assert(
     alignof(InnerX) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<InnerX>);
-static_assert(std::is_trivially_move_constructible_v<InnerX>);
-static_assert(std::is_trivially_move_assignable_v<InnerX>);
+static_assert(std::is_trivially_move_constructible_v<::uses_rust::InnerX>);
+static_assert(std::is_trivially_move_assignable_v<::uses_rust::InnerX>);
 inline void InnerX::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(InnerX, field));
 }
@@ -317,8 +317,8 @@ static_assert(
     alignof(X1) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<X1>);
-static_assert(std::is_trivially_move_constructible_v<X1>);
-static_assert(std::is_trivially_move_assignable_v<X1>);
+static_assert(std::is_trivially_move_constructible_v<::uses_rust::X1>);
+static_assert(std::is_trivially_move_assignable_v<::uses_rust::X1>);
 inline void X1::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(X1, x));
 }

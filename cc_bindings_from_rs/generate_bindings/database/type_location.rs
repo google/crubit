@@ -11,7 +11,11 @@ pub enum TypeLocation {
     /// foo() -> *const T`:
     /// - The top-level return type `*const T` is in the `FnReturn` location
     /// - The nested pointee type `T` is in the `Other` location
-    FnReturn,
+    FnReturn {
+        /// Whether the function is used in a constructor and our return type will be `this` in C++.
+        /// In such cases, we do not want the type to be bridged.
+        is_constructor: bool,
+    },
 
     /// The top-level parameter type.
     ///
@@ -48,7 +52,8 @@ impl TypeLocation {
     pub fn is_bridgeable(self) -> bool {
         // This match is exhaustive to force us to think about new variants when adding them.
         match self {
-            TypeLocation::FnReturn | TypeLocation::FnParam { .. } => true,
+            TypeLocation::FnReturn { is_constructor } => !is_constructor,
+            TypeLocation::FnParam { .. } => true,
             TypeLocation::Const => true,
             TypeLocation::NestedBridgeable => true,
             TypeLocation::Other => false,

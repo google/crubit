@@ -21,6 +21,7 @@ pub mod format_type;
 pub mod generate_function;
 mod generate_function_thunk;
 mod generate_struct_and_union;
+mod generate_template_specialization;
 
 use crate::format_type::{
     crubit_abi_type_from_ty, ensure_ty_is_pointer_like, format_cc_ident, format_cc_ident_symbol,
@@ -308,7 +309,7 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
     Ok(BindingsTokens { cc_api, cc_api_impl })
 }
 
-fn crate_features(
+pub(crate) fn crate_features(
     db: &BindingsGenerator,
     krate: CrateNum,
 ) -> flagset::FlagSet<crubit_feature::CrubitFeature> {
@@ -944,7 +945,7 @@ fn generate_default_ctor<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(db, trait_id, &[], &core)?;
+        } = generate_trait_thunks(db, trait_id, &[], &core, /*is_constructor=*/ true)?;
 
         let cc_struct_name = &core.cc_short_name;
         let main_api = CcSnippet::new(quote! {
@@ -960,18 +961,19 @@ fn generate_default_ctor<'tcx>(
             let mut prereqs = CcPrerequisites::default();
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
 
+            let fully_qualified_name = &core.cc_fully_qualified_name;
             // This might be the case for `#[repr(transparent)]` types.
             // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
-            // should be cetnralized with the other callsites that depend on return type ABI.
+            // should be centralized with the other callsites that depend on return type ABI.
             let ctor_impl = if is_c_abi_compatible_by_value(tcx, core.self_ty) {
                 quote! {
-                    inline #cc_struct_name::#cc_struct_name() {
+                    inline #fully_qualified_name::#cc_struct_name() {
                        *this = __crubit_internal::#thunk_name();
                     }
                 }
             } else {
                 quote! {
-                    inline #cc_struct_name::#cc_struct_name() {
+                    inline #fully_qualified_name::#cc_struct_name() {
                         __crubit_internal::#thunk_name(this);
                     }
                 }
@@ -1008,6 +1010,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let cc_struct_name = &core.cc_short_name;
+        let qualified_adt_name = &core.cc_fully_qualified_name;
 
         if is_copy(tcx, core.def_id, core.self_ty) {
             let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
@@ -1015,12 +1018,12 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
             let main_api = CcSnippet::new(quote! {
                 __NEWLINE__ __COMMENT__ #msg
                 #cc_struct_name(const #cc_struct_name&) = default;  __NEWLINE__
-                #cc_struct_name& operator=(const #cc_struct_name&) = default;
+                #qualified_adt_name& operator=(const #cc_struct_name&) = default;
             });
             let cc_details = CcSnippet::with_include(
                 quote! {
-                    static_assert(std::is_trivially_copy_constructible_v<#cc_struct_name>);
-                    static_assert(std::is_trivially_copy_assignable_v<#cc_struct_name>);
+                    static_assert(std::is_trivially_copy_constructible_v<#qualified_adt_name>);
+                    static_assert(std::is_trivially_copy_assignable_v<#qualified_adt_name>);
                 },
                 CcInclude::type_traits(),
             );
@@ -1036,12 +1039,12 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(db, trait_id, &[], &core)?;
+        } = generate_trait_thunks(db, trait_id, &[], &core, /*is_constructor=*/ true)?;
         let main_api = CcSnippet::new(quote! {
             __NEWLINE__ __COMMENT__ "Clone::clone"
             #cc_struct_name(const #cc_struct_name&); __NEWLINE__
             __NEWLINE__ __COMMENT__ "Clone::clone_from"
-            #cc_struct_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
+            #qualified_adt_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
         });
         let cc_details = {
             // `unwrap` calls are okay because `Clone` trait always has these methods.
@@ -1053,10 +1056,10 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
 
             let tokens = quote! {
                 #cc_thunk_decls
-                inline #cc_struct_name::#cc_struct_name(const #cc_struct_name& other) {
+                inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) {
                     __crubit_internal::#clone_thunk_name(other, this);
                 }
-                inline #cc_struct_name& #cc_struct_name::operator=(const #cc_struct_name& other) {
+                inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) {
                     if (this != &other) {
                         __crubit_internal::#clone_from_thunk_name(*this, other);
                     }
@@ -1093,23 +1096,24 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let adt_cc_name = &core.cc_short_name;
+        let qualified_adt_name = &core.cc_fully_qualified_name;
         if generate_struct_and_union::adt_core_bindings_needs_drop(&core, tcx) {
             let has_default_ctor = db.generate_default_ctor(core.clone()).is_ok();
             let is_unpin = core.self_ty.is_unpin(tcx, post_analysis_typing_env(tcx, core.def_id));
             if has_default_ctor && is_unpin {
                 let main_api = CcSnippet::new(quote! {
                     #adt_cc_name(#adt_cc_name&&); __NEWLINE__
-                    #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
+                    #qualified_adt_name& operator=(#adt_cc_name&&); __NEWLINE__
                 });
                 let mut prereqs = CcPrerequisites::default();
                 prereqs.includes.insert(db.support_header("internal/memswap.h"));
                 prereqs.includes.insert(CcInclude::utility()); // for `std::move`
                 let tokens = quote! {
-                    inline #adt_cc_name::#adt_cc_name(#adt_cc_name&& other)
+                    inline #qualified_adt_name::#adt_cc_name(#adt_cc_name&& other)
                             : #adt_cc_name() {
                         *this = std::move(other);
                     }
-                    inline #adt_cc_name& #adt_cc_name::operator=(#adt_cc_name&& other) {
+                    inline #qualified_adt_name& #qualified_adt_name::operator=(#adt_cc_name&& other) {
                         crubit::MemSwap(*this, other);
                         return *this;
                     }
@@ -1166,13 +1170,13 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
                 // generated C++ move constructor might need to assign `Default::default()` to the
                 // moved-from object.
                 #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
-                #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
+                #qualified_adt_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
                 __NEWLINE__
             });
             let cc_details = CcSnippet::with_include(
                 quote! {
-                    static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
-                    static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
+                    static_assert(std::is_trivially_move_constructible_v<#qualified_adt_name>);
+                    static_assert(std::is_trivially_move_assignable_v<#qualified_adt_name>);
                 },
                 CcInclude::type_traits(),
             );
@@ -1182,13 +1186,14 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     fallible_format_move_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &core.cc_short_name;
+        let qualified_adt_name = &core.cc_fully_qualified_name;
         NoMoveOrAssign {
             err,
             explicitly_deleted: ApiSnippets {
                 main_api: CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ #msg
                     #adt_cc_name(#adt_cc_name&&) = delete;  __NEWLINE__
-                    #adt_cc_name& operator=(#adt_cc_name&&) = delete;
+                    #qualified_adt_name& operator=(#adt_cc_name&&) = delete;
                 }),
                 ..Default::default()
             },
@@ -1635,14 +1640,6 @@ fn generate_trait_impls<'a, 'tcx>(
         })
 }
 
-fn generate_template_specialization<'tcx>(
-    _db: &BindingsGenerator<'tcx>,
-    _specialization: TemplateSpecialization<'tcx>,
-) -> CcSnippet<'tcx> {
-    // More to come on this later.
-    CcSnippet::new(quote! {})
-}
-
 fn formatted_items_in_crate<'tcx>(
     db: &BindingsGenerator<'tcx>,
 ) -> impl Iterator<Item = FormattedItem<'tcx>> {
@@ -1674,6 +1671,19 @@ fn formatted_items_in_crate<'tcx>(
             Some(FormattedItem { def_id, snippets, aliases })
         })
         .sorted_by_def_with(tcx, |item| item.def_id)
+}
+
+fn template_specialization_cmp<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    left: &TemplateSpecialization<'tcx>,
+    right: &TemplateSpecialization<'tcx>,
+) -> std::cmp::Ordering {
+    match (left, right) {
+        (
+            TemplateSpecialization::RsStdOption { self_ty: left_ty, .. },
+            TemplateSpecialization::RsStdOption { self_ty: right_ty, .. },
+        ) => left_ty.sort_string(tcx).cmp(&right_ty.sort_string(tcx)),
+    }
 }
 
 /// Formats all public items from the Rust crate being compiled.
@@ -1753,14 +1763,24 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         }
     };
 
-    let mut specializations = cc_details_prereqs.template_specializations;
+    let mut specializations = std::mem::take(&mut cc_details_prereqs.template_specializations);
     specializations.extend(
         main_apis.values().flat_map(|api| api.prereqs.template_specializations.iter()).cloned(),
     );
 
-    let mut specializations: HashMap<TemplateSpecialization<'_>, CcSnippet> = specializations
+    let mut specializations: HashMap<TemplateSpecialization, CcSnippet> = specializations
         .into_iter()
-        .map(|spec| (spec.clone(), generate_template_specialization(db, spec)))
+        // We sort here, so our details are added in a consistent order.
+        .sorted_unstable_by(|a, b| template_specialization_cmp(db.tcx(), a, b))
+        .map(|spec| {
+            let snippets = generate_template_specialization::generate_template_specialization(
+                db,
+                spec.clone(),
+            );
+            impls_cc_details.push(snippets.cc_details.clone().into_tokens(&mut cc_details_prereqs));
+            cc_api_impl.extend(snippets.rs_details.clone().into_tokens(&mut extern_c_decls));
+            (spec, snippets.main_api)
+        })
         .collect();
 
     // Find the order of `main_apis` that 1) meets the requirements of
@@ -1809,14 +1829,17 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                         predecessor,
                         successor: successor.clone(),
                     })
-                });
+                })
+                .collect::<Vec<_>>();
             toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
                 match (lhs_id, rhs_id) {
                     (Node::Def(lhs_id), Node::Def(rhs_id)) => {
                         stable_def_id_cmp(tcx, *lhs_id, *rhs_id)
                     }
                     // Prefer to emit specializations after defs.
-                    (Node::Specialization(_), Node::Specialization(_)) => Ordering::Equal,
+                    (Node::Specialization(left), Node::Specialization(right)) => {
+                        template_specialization_cmp(tcx, left, right)
+                    }
                     (Node::Def(_), Node::Specialization(_)) => Ordering::Less,
                     (Node::Specialization(_), Node::Def(_)) => Ordering::Greater,
                 }
@@ -1826,7 +1849,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             0,
             failed_ids.len(),
             "There are no known scenarios where CcPrerequisites::defs can form \
-                    a dependency cycle. These `DefId`s form an unexpected cycle: {}",
+                    a dependency cycle. These `Node`s form an unexpected cycle: {}",
             failed_ids.into_iter().map(|id| format!("{:?}", id)).join(",")
         );
         ordered_ids

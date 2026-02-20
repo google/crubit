@@ -36,7 +36,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   ~MyEnum();
 
   MyEnum(MyEnum&&);
-  MyEnum& operator=(MyEnum&&);
+  ::enums::repr_c::MyEnum& operator=(MyEnum&&);
 
   // `enums_golden::repr_c::MyEnum` doesn't implement the `Clone` trait
   MyEnum(const MyEnum&) = delete;
@@ -121,13 +121,15 @@ CloneActiveVariant final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~CloneActiveVariant() = default;
   CloneActiveVariant(CloneActiveVariant&&) = default;
-  CloneActiveVariant& operator=(CloneActiveVariant&&) = default;
+  ::enums::repr_c_clone_active_variant::CloneActiveVariant& operator=(
+      CloneActiveVariant&&) = default;
 
   // Clone::clone
   CloneActiveVariant(const CloneActiveVariant&);
 
   // Clone::clone_from
-  CloneActiveVariant& operator=(const CloneActiveVariant&);
+  ::enums::repr_c_clone_active_variant::CloneActiveVariant& operator=(
+      const CloneActiveVariant&);
 
   CloneActiveVariant(::crubit::UnsafeRelocateTag, CloneActiveVariant&& value) {
     memcpy(this, &value, sizeof(value));
@@ -193,13 +195,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~CloneCount() = default;
   CloneCount(CloneCount&&) = default;
-  CloneCount& operator=(CloneCount&&) = default;
+  ::enums::repr_c_clone_counter::CloneCount& operator=(CloneCount&&) = default;
 
   // Clone::clone
   CloneCount(const CloneCount&);
 
   // Clone::clone_from
-  CloneCount& operator=(const CloneCount&);
+  ::enums::repr_c_clone_counter::CloneCount& operator=(const CloneCount&);
 
   CloneCount(::crubit::UnsafeRelocateTag, CloneCount&& value) {
     memcpy(this, &value, sizeof(value));
@@ -242,7 +244,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ~DropMe();
 
   DropMe(DropMe&&);
-  DropMe& operator=(DropMe&&);
+  ::enums::repr_c_drop::DropMe& operator=(DropMe&&);
 
   // `enums_golden::repr_c_drop::DropMe` doesn't implement the `Clone` trait
   DropMe(const DropMe&) = delete;
@@ -299,13 +301,18 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::enums::repr_c::MyEnum* __ret_ptr);
 }
-inline MyEnum::MyEnum() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::enums::repr_c::MyEnum::MyEnum() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(::enums::repr_c::MyEnum&);
 }
 inline MyEnum::~MyEnum() { __crubit_internal::__crubit_thunk_drop(*this); }
-inline MyEnum::MyEnum(MyEnum&& other) : MyEnum() { *this = std::move(other); }
-inline MyEnum& MyEnum::operator=(MyEnum&& other) {
+inline ::enums::repr_c::MyEnum::MyEnum(MyEnum&& other) : MyEnum() {
+  *this = std::move(other);
+}
+inline ::enums::repr_c::MyEnum& ::enums::repr_c::MyEnum::operator=(
+    MyEnum&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -337,12 +344,15 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
 }
-inline CloneActiveVariant::CloneActiveVariant() {
+inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
+    CloneActiveVariant() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<CloneActiveVariant>);
-static_assert(std::is_trivially_move_constructible_v<CloneActiveVariant>);
-static_assert(std::is_trivially_move_assignable_v<CloneActiveVariant>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::enums::repr_c_clone_active_variant::CloneActiveVariant>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::enums::repr_c_clone_active_variant::CloneActiveVariant>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&,
@@ -353,11 +363,13 @@ extern "C" void __crubit_thunk_clone_ufrom(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant&,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&);
 }
-inline CloneActiveVariant::CloneActiveVariant(const CloneActiveVariant& other) {
+inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
+    CloneActiveVariant(const CloneActiveVariant& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline CloneActiveVariant& CloneActiveVariant::operator=(
-    const CloneActiveVariant& other) {
+inline ::enums::repr_c_clone_active_variant::CloneActiveVariant& ::enums::
+    repr_c_clone_active_variant::CloneActiveVariant::operator=(
+        const CloneActiveVariant& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }
@@ -412,12 +424,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::enums::repr_c_clone_counter::CloneCount* __ret_ptr);
 }
-inline CloneCount::CloneCount() {
+inline ::enums::repr_c_clone_counter::CloneCount::CloneCount() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<CloneCount>);
-static_assert(std::is_trivially_move_constructible_v<CloneCount>);
-static_assert(std::is_trivially_move_assignable_v<CloneCount>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::enums::repr_c_clone_counter::CloneCount>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::enums::repr_c_clone_counter::CloneCount>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::enums::repr_c_clone_counter::CloneCount const&,
@@ -428,10 +442,12 @@ extern "C" void __crubit_thunk_clone_ufrom(
     ::enums::repr_c_clone_counter::CloneCount&,
     ::enums::repr_c_clone_counter::CloneCount const&);
 }
-inline CloneCount::CloneCount(const CloneCount& other) {
+inline ::enums::repr_c_clone_counter::CloneCount::CloneCount(
+    const CloneCount& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline CloneCount& CloneCount::operator=(const CloneCount& other) {
+inline ::enums::repr_c_clone_counter::CloneCount& ::enums::
+    repr_c_clone_counter::CloneCount::operator=(const CloneCount& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }
@@ -454,13 +470,18 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::enums::repr_c_drop::DropMe* __ret_ptr);
 }
-inline DropMe::DropMe() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::enums::repr_c_drop::DropMe::DropMe() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(::enums::repr_c_drop::DropMe&);
 }
 inline DropMe::~DropMe() { __crubit_internal::__crubit_thunk_drop(*this); }
-inline DropMe::DropMe(DropMe&& other) : DropMe() { *this = std::move(other); }
-inline DropMe& DropMe::operator=(DropMe&& other) {
+inline ::enums::repr_c_drop::DropMe::DropMe(DropMe&& other) : DropMe() {
+  *this = std::move(other);
+}
+inline ::enums::repr_c_drop::DropMe& ::enums::repr_c_drop::DropMe::operator=(
+    DropMe&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }

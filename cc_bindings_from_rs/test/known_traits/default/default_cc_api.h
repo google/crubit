@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::rs_default::derived_impl::SomeStruct& operator=(SomeStruct&&) = default;
 
   // `rs_default_golden::derived_impl::SomeStruct` doesn't implement the `Clone`
   // trait
@@ -80,7 +80,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::rs_default::explicit_impl::SomeStruct& operator=(SomeStruct&&) = default;
 
   // `rs_default_golden::explicit_impl::SomeStruct` doesn't implement the
   // `Clone` trait
@@ -126,7 +126,8 @@ StructWithoutDefault final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructWithoutDefault() = default;
   StructWithoutDefault(StructWithoutDefault&&) = default;
-  StructWithoutDefault& operator=(StructWithoutDefault&&) = default;
+  ::rs_default::field_with_no_default::StructWithoutDefault& operator=(
+      StructWithoutDefault&&) = default;
 
   // `rs_default_golden::field_with_no_default::StructWithoutDefault` doesn't
   // implement the `Clone` trait
@@ -161,8 +162,8 @@ StructWithFieldWithNoDefault final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructWithFieldWithNoDefault() = default;
   StructWithFieldWithNoDefault(StructWithFieldWithNoDefault&&) = default;
-  StructWithFieldWithNoDefault& operator=(StructWithFieldWithNoDefault&&) =
-      default;
+  ::rs_default::field_with_no_default::StructWithFieldWithNoDefault& operator=(
+      StructWithFieldWithNoDefault&&) = default;
 
   // `rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault`
   // doesn't implement the `Clone` trait
@@ -209,7 +210,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::rs_default::no_impl::SomeStruct& operator=(SomeStruct&&) = default;
 
   // `rs_default_golden::no_impl::SomeStruct` doesn't implement the `Clone`
   // trait
@@ -247,7 +248,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::rs_default::transparent_struct::SomeStruct& operator=(SomeStruct&&) =
+      default;
 
   // `rs_default_golden::transparent_struct::SomeStruct` doesn't implement the
   // `Clone` trait
@@ -285,12 +287,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::rs_default::derived_impl::SomeStruct* __ret_ptr);
 }
-inline SomeStruct::SomeStruct() {
+inline ::rs_default::derived_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::rs_default::derived_impl::SomeStruct>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::rs_default::derived_impl::SomeStruct>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::derived_impl::SomeStruct*);
@@ -316,12 +320,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::rs_default::explicit_impl::SomeStruct* __ret_ptr);
 }
-inline SomeStruct::SomeStruct() {
+inline ::rs_default::explicit_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::rs_default::explicit_impl::SomeStruct>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::rs_default::explicit_impl::SomeStruct>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::explicit_impl::SomeStruct*);
@@ -348,14 +354,17 @@ extern "C" void __crubit_thunk_default(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*
         __ret_ptr);
 }
-inline StructWithFieldWithNoDefault::StructWithFieldWithNoDefault() {
+inline ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
+    StructWithFieldWithNoDefault() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<StructWithFieldWithNoDefault>);
 static_assert(
-    std::is_trivially_move_constructible_v<StructWithFieldWithNoDefault>);
+    std::is_trivially_move_constructible_v<
+        ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
 static_assert(
-    std::is_trivially_move_assignable_v<StructWithFieldWithNoDefault>);
+    std::is_trivially_move_assignable_v<
+        ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*);
@@ -374,8 +383,10 @@ static_assert(
     alignof(StructWithoutDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructWithoutDefault>);
-static_assert(std::is_trivially_move_constructible_v<StructWithoutDefault>);
-static_assert(std::is_trivially_move_assignable_v<StructWithoutDefault>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::rs_default::field_with_no_default::StructWithoutDefault>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::rs_default::field_with_no_default::StructWithoutDefault>);
 inline void StructWithoutDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithoutDefault, __field0));
 }
@@ -390,8 +401,10 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+static_assert(
+    std::is_trivially_move_constructible_v<::rs_default::no_impl::SomeStruct>);
+static_assert(
+    std::is_trivially_move_assignable_v<::rs_default::no_impl::SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, __field0));
 }
@@ -409,12 +422,14 @@ namespace __crubit_internal {
 extern "C" ::rs_default::transparent_struct::SomeStruct
 __crubit_thunk_default();
 }
-inline SomeStruct::SomeStruct() {
+inline ::rs_default::transparent_struct::SomeStruct::SomeStruct() {
   *this = __crubit_internal::__crubit_thunk_default();
 }
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::rs_default::transparent_struct::SomeStruct>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::rs_default::transparent_struct::SomeStruct>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::transparent_struct::SomeStruct const&);

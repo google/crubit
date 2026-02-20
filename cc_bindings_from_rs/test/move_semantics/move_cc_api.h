@@ -35,12 +35,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Copyable() = default;
   Copyable(Copyable&&) = default;
-  Copyable& operator=(Copyable&&) = default;
+  ::move::Copyable& operator=(Copyable&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   Copyable(const Copyable&) = default;
-  Copyable& operator=(const Copyable&) = default;
+  ::move::Copyable& operator=(const Copyable&) = default;
   Copyable(::crubit::UnsafeRelocateTag, Copyable&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -79,7 +79,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   ~Foo();
 
   Foo(Foo&&);
-  Foo& operator=(Foo&&);
+  ::move::Foo& operator=(Foo&&);
 
   // `move_golden::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
@@ -122,12 +122,14 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::move::Copyable* __ret_ptr);
 }
-inline Copyable::Copyable() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::move::Copyable::Copyable() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 static_assert(std::is_trivially_destructible_v<Copyable>);
-static_assert(std::is_trivially_move_constructible_v<Copyable>);
-static_assert(std::is_trivially_move_assignable_v<Copyable>);
-static_assert(std::is_trivially_copy_constructible_v<Copyable>);
-static_assert(std::is_trivially_copy_assignable_v<Copyable>);
+static_assert(std::is_trivially_move_constructible_v<::move::Copyable>);
+static_assert(std::is_trivially_move_assignable_v<::move::Copyable>);
+static_assert(std::is_trivially_copy_constructible_v<::move::Copyable>);
+static_assert(std::is_trivially_copy_assignable_v<::move::Copyable>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(std::uint8_t,
                                           ::move::Copyable* __ret_ptr);
@@ -158,13 +160,13 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::move::Foo* __ret_ptr);
 }
-inline Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::move::Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(::move::Foo&);
 }
 inline Foo::~Foo() { __crubit_internal::__crubit_thunk_drop(*this); }
-inline Foo::Foo(Foo&& other) : Foo() { *this = std::move(other); }
-inline Foo& Foo::operator=(Foo&& other) {
+inline ::move::Foo::Foo(Foo&& other) : Foo() { *this = std::move(other); }
+inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }

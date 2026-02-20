@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   ~FooService();
 
   FooService(FooService&&);
-  FooService& operator=(FooService&&);
+  ::rust_lib::FooService& operator=(FooService&&);
 
   // `rust_lib_golden::FooService` doesn't implement the `Clone` trait
   FooService(const FooService&) = delete;
@@ -83,7 +83,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::rust_lib::FooService* __ret_ptr);
 }
-inline FooService::FooService() {
+inline ::rust_lib::FooService::FooService() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
@@ -92,10 +92,11 @@ extern "C" void __crubit_thunk_drop(::rust_lib::FooService&);
 inline FooService::~FooService() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
-inline FooService::FooService(FooService&& other) : FooService() {
+inline ::rust_lib::FooService::FooService(FooService&& other) : FooService() {
   *this = std::move(other);
 }
-inline FooService& FooService::operator=(FooService&& other) {
+inline ::rust_lib::FooService& ::rust_lib::FooService::operator=(
+    FooService&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }

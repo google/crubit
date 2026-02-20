@@ -35,7 +35,7 @@ MyStruct final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct() = default;
   MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
+  ::trait_definition::MyStruct& operator=(MyStruct&&) = default;
 
   // `trait_definition_golden::MyStruct` doesn't implement the `Clone` trait
   MyStruct(const MyStruct&) = delete;
@@ -70,8 +70,10 @@ static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<MyStruct>);
-static_assert(std::is_trivially_move_constructible_v<MyStruct>);
-static_assert(std::is_trivially_move_assignable_v<MyStruct>);
+static_assert(
+    std::is_trivially_move_constructible_v<::trait_definition::MyStruct>);
+static_assert(
+    std::is_trivially_move_assignable_v<::trait_definition::MyStruct>);
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, y));
 }

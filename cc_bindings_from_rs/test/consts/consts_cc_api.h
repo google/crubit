@@ -69,7 +69,7 @@ TyWithAssocConsts final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~TyWithAssocConsts() = default;
   TyWithAssocConsts(TyWithAssocConsts&&) = default;
-  TyWithAssocConsts& operator=(TyWithAssocConsts&&) = default;
+  ::consts::TyWithAssocConsts& operator=(TyWithAssocConsts&&) = default;
 
   // `consts_golden::TyWithAssocConsts` doesn't implement the `Clone` trait
   TyWithAssocConsts(const TyWithAssocConsts&) = delete;
@@ -97,8 +97,9 @@ static_assert(
     alignof(TyWithAssocConsts) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<TyWithAssocConsts>);
-static_assert(std::is_trivially_move_constructible_v<TyWithAssocConsts>);
-static_assert(std::is_trivially_move_assignable_v<TyWithAssocConsts>);
+static_assert(
+    std::is_trivially_move_constructible_v<::consts::TyWithAssocConsts>);
+static_assert(std::is_trivially_move_assignable_v<::consts::TyWithAssocConsts>);
 inline void TyWithAssocConsts::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TyWithAssocConsts, __field0));
 }

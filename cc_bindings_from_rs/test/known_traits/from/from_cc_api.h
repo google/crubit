@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~NotFfiSafe() = default;
   NotFfiSafe(NotFfiSafe&&) = default;
-  NotFfiSafe& operator=(NotFfiSafe&&) = default;
+  ::from::NotFfiSafe& operator=(NotFfiSafe&&) = default;
 
   // `from_golden::NotFfiSafe` doesn't implement the `Clone` trait
   NotFfiSafe(const NotFfiSafe&) = delete;
@@ -82,7 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Opaque() = default;
   Opaque(Opaque&&) = default;
-  Opaque& operator=(Opaque&&) = default;
+  ::from::Opaque& operator=(Opaque&&) = default;
 
   // `from_golden::Opaque` doesn't implement the `Clone` trait
   Opaque(const Opaque&) = delete;
@@ -133,7 +133,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~OpaqueRef() = default;
   OpaqueRef(OpaqueRef&&) = default;
-  OpaqueRef& operator=(OpaqueRef&&) = default;
+  ::from::OpaqueRef& operator=(OpaqueRef&&) = default;
 
   // `from_golden::OpaqueRef` doesn't implement the `Clone` trait
   OpaqueRef(const OpaqueRef&) = delete;
@@ -176,8 +176,8 @@ static_assert(
     alignof(NotFfiSafe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_constructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_assignable_v<NotFfiSafe>);
+static_assert(std::is_trivially_move_constructible_v<::from::NotFfiSafe>);
+static_assert(std::is_trivially_move_assignable_v<::from::NotFfiSafe>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::from::NotFfiSafe* __ret_ptr);
 }
@@ -204,8 +204,8 @@ static_assert(
     alignof(Opaque) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Opaque>);
-static_assert(std::is_trivially_move_constructible_v<Opaque>);
-static_assert(std::is_trivially_move_assignable_v<Opaque>);
+static_assert(std::is_trivially_move_constructible_v<::from::Opaque>);
+static_assert(std::is_trivially_move_assignable_v<::from::Opaque>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(::from::Opaque*);
 }
@@ -260,8 +260,8 @@ static_assert(
     alignof(OpaqueRef) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<OpaqueRef>);
-static_assert(std::is_trivially_move_constructible_v<OpaqueRef>);
-static_assert(std::is_trivially_move_assignable_v<OpaqueRef>);
+static_assert(std::is_trivially_move_constructible_v<::from::OpaqueRef>);
+static_assert(std::is_trivially_move_assignable_v<::from::OpaqueRef>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::from::OpaqueRef* __ret_ptr);

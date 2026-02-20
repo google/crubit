@@ -47,6 +47,7 @@ pub struct AdtCoreBindings<'tcx> {
     /// Rust spelling of the ADT type - e.g.
     /// `::some_crate::some_module::SomeStruct`.
     pub rs_fully_qualified_name: TokenStream,
+    pub cc_fully_qualified_name: TokenStream,
 
     pub self_ty: Ty<'tcx>,
     pub alignment_in_bytes: u64,
@@ -56,7 +57,7 @@ pub struct AdtCoreBindings<'tcx> {
 // AdtCoreBindings are a pure (and memoized...) function of the def_id.
 impl PartialEq for AdtCoreBindings<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.def_id == other.def_id
+        self.def_id == other.def_id && self.self_ty == other.self_ty
     }
 }
 
@@ -64,6 +65,7 @@ impl Eq for AdtCoreBindings<'_> {}
 impl Hash for AdtCoreBindings<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.def_id.hash(state);
+        self.self_ty.hash(state);
     }
 }
 

@@ -40,7 +40,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Convert() = default;
   Convert(Convert&&) = default;
-  Convert& operator=(Convert&&) = default;
+  ::into::Convert& operator=(Convert&&) = default;
 
   // `into_golden::Convert` doesn't implement the `Clone` trait
   Convert(const Convert&) = delete;
@@ -91,7 +91,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~ConvertModule() = default;
   ConvertModule(ConvertModule&&) = default;
-  ConvertModule& operator=(ConvertModule&&) = default;
+  ::into::ConvertModule& operator=(ConvertModule&&) = default;
 
   // `into_golden::ConvertModule` doesn't implement the `Clone` trait
   ConvertModule(const ConvertModule&) = delete;
@@ -130,7 +130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~ConvertRef() = default;
   ConvertRef(ConvertRef&&) = default;
-  ConvertRef& operator=(ConvertRef&&) = default;
+  ::into::ConvertRef& operator=(ConvertRef&&) = default;
 
   // `into_golden::ConvertRef` doesn't implement the `Clone` trait
   ConvertRef(const ConvertRef&) = delete;
@@ -183,7 +183,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~NotFfiSafe() = default;
   NotFfiSafe(NotFfiSafe&&) = default;
-  NotFfiSafe& operator=(NotFfiSafe&&) = default;
+  ::into::NotFfiSafe& operator=(NotFfiSafe&&) = default;
 
   // `into_golden::NotFfiSafe` doesn't implement the `Clone` trait
   NotFfiSafe(const NotFfiSafe&) = delete;
@@ -209,8 +209,8 @@ static_assert(
     alignof(Convert) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Convert>);
-static_assert(std::is_trivially_move_constructible_v<Convert>);
-static_assert(std::is_trivially_move_assignable_v<Convert>);
+static_assert(std::is_trivially_move_constructible_v<::into::Convert>);
+static_assert(std::is_trivially_move_assignable_v<::into::Convert>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(::into::Convert*);
 }
@@ -251,8 +251,8 @@ static_assert(
     alignof(ConvertModule) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<ConvertModule>);
-static_assert(std::is_trivially_move_constructible_v<ConvertModule>);
-static_assert(std::is_trivially_move_assignable_v<ConvertModule>);
+static_assert(std::is_trivially_move_constructible_v<::into::ConvertModule>);
+static_assert(std::is_trivially_move_assignable_v<::into::ConvertModule>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(::into::ConvertModule*);
 }
@@ -277,8 +277,8 @@ static_assert(
     alignof(ConvertRef) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<ConvertRef>);
-static_assert(std::is_trivially_move_constructible_v<ConvertRef>);
-static_assert(std::is_trivially_move_assignable_v<ConvertRef>);
+static_assert(std::is_trivially_move_constructible_v<::into::ConvertRef>);
+static_assert(std::is_trivially_move_assignable_v<::into::ConvertRef>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::into::ConvertRef* __ret_ptr);
@@ -333,8 +333,8 @@ static_assert(
     alignof(NotFfiSafe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_constructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_assignable_v<NotFfiSafe>);
+static_assert(std::is_trivially_move_constructible_v<::into::NotFfiSafe>);
+static_assert(std::is_trivially_move_assignable_v<::into::NotFfiSafe>);
 inline void NotFfiSafe::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotFfiSafe, __field0));
 }

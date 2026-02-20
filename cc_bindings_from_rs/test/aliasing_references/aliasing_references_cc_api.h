@@ -38,7 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~NonFreezeType() = default;
   NonFreezeType(NonFreezeType&&) = default;
-  NonFreezeType& operator=(NonFreezeType&&) = default;
+  ::aliasing_references::NonFreezeType& operator=(NonFreezeType&&) = default;
 
   // `aliasing_references_golden::NonFreezeType` doesn't implement the `Clone`
   // trait
@@ -83,12 +83,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::aliasing_references::SomeStruct& operator=(SomeStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   SomeStruct(const SomeStruct&) = default;
-  SomeStruct& operator=(const SomeStruct&) = default;
+  ::aliasing_references::SomeStruct& operator=(const SomeStruct&) = default;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -154,12 +154,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::aliasing_references::NonFreezeType* __ret_ptr);
 }
-inline NonFreezeType::NonFreezeType() {
+inline ::aliasing_references::NonFreezeType::NonFreezeType() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<NonFreezeType>);
-static_assert(std::is_trivially_move_constructible_v<NonFreezeType>);
-static_assert(std::is_trivially_move_assignable_v<NonFreezeType>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::aliasing_references::NonFreezeType>);
+static_assert(
+    std::is_trivially_move_assignable_v<::aliasing_references::NonFreezeType>);
 namespace __crubit_internal {
 extern "C" std::int32_t& $(__anon1) __crubit_thunk_as_umut_uunchecked(
     ::aliasing_references::NonFreezeType const&);
@@ -193,14 +195,18 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::aliasing_references::SomeStruct* __ret_ptr);
 }
-inline SomeStruct::SomeStruct() {
+inline ::aliasing_references::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
-static_assert(std::is_trivially_copy_constructible_v<SomeStruct>);
-static_assert(std::is_trivially_copy_assignable_v<SomeStruct>);
+static_assert(
+    std::is_trivially_move_constructible_v<::aliasing_references::SomeStruct>);
+static_assert(
+    std::is_trivially_move_assignable_v<::aliasing_references::SomeStruct>);
+static_assert(
+    std::is_trivially_copy_constructible_v<::aliasing_references::SomeStruct>);
+static_assert(
+    std::is_trivially_copy_assignable_v<::aliasing_references::SomeStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uself_uand_umut_uref(
     ::aliasing_references::SomeStruct&, std::int32_t&);

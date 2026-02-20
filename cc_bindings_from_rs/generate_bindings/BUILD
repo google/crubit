@@ -21,6 +21,7 @@ rust_library(
         "generate_function.rs",
         "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
+        "generate_template_specialization.rs",
         "lib.rs",
     ],
     edition = "2021",

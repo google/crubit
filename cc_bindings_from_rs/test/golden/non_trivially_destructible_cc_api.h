@@ -37,13 +37,15 @@ NonTriviallyDestructable final {
   ~NonTriviallyDestructable();
 
   NonTriviallyDestructable(NonTriviallyDestructable&&);
-  NonTriviallyDestructable& operator=(NonTriviallyDestructable&&);
+  ::non_trivially_destructible_rust::NonTriviallyDestructable& operator=(
+      NonTriviallyDestructable&&);
 
   // Clone::clone
   NonTriviallyDestructable(const NonTriviallyDestructable&);
 
   // Clone::clone_from
-  NonTriviallyDestructable& operator=(const NonTriviallyDestructable&);
+  ::non_trivially_destructible_rust::NonTriviallyDestructable& operator=(
+      const NonTriviallyDestructable&);
 
   NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
                            NonTriviallyDestructable&& value) {
@@ -78,7 +80,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
 }
-inline NonTriviallyDestructable::NonTriviallyDestructable() {
+inline ::non_trivially_destructible_rust::NonTriviallyDestructable::
+    NonTriviallyDestructable() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
@@ -88,12 +91,13 @@ extern "C" void __crubit_thunk_drop(
 inline NonTriviallyDestructable::~NonTriviallyDestructable() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
-inline NonTriviallyDestructable::NonTriviallyDestructable(
-    NonTriviallyDestructable&& other)
+inline ::non_trivially_destructible_rust::NonTriviallyDestructable::
+    NonTriviallyDestructable(NonTriviallyDestructable&& other)
     : NonTriviallyDestructable() {
   *this = std::move(other);
 }
-inline NonTriviallyDestructable& NonTriviallyDestructable::operator=(
+inline ::non_trivially_destructible_rust::NonTriviallyDestructable& ::
+non_trivially_destructible_rust::NonTriviallyDestructable::operator=(
     NonTriviallyDestructable&& other) {
   crubit::MemSwap(*this, other);
   return *this;
@@ -108,11 +112,12 @@ extern "C" void __crubit_thunk_clone_ufrom(
     ::non_trivially_destructible_rust::NonTriviallyDestructable&,
     ::non_trivially_destructible_rust::NonTriviallyDestructable const&);
 }
-inline NonTriviallyDestructable::NonTriviallyDestructable(
-    const NonTriviallyDestructable& other) {
+inline ::non_trivially_destructible_rust::NonTriviallyDestructable::
+    NonTriviallyDestructable(const NonTriviallyDestructable& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline NonTriviallyDestructable& NonTriviallyDestructable::operator=(
+inline ::non_trivially_destructible_rust::NonTriviallyDestructable& ::
+non_trivially_destructible_rust::NonTriviallyDestructable::operator=(
     const NonTriviallyDestructable& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);

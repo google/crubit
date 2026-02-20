@@ -27,7 +27,7 @@ fn test_ty<TestFn, Expectation>(
     fn input_to_string(input: &str, preamble: &TokenStream, type_location: TypeLocation) -> String {
         let ty_tokens: TokenStream = input.parse().unwrap();
         let input = match type_location {
-            TypeLocation::FnReturn => quote! {
+            TypeLocation::FnReturn { .. } => quote! {
                 #preamble
                 pub fn test_function() -> #ty_tokens { unimplemented!() }
             },
@@ -43,7 +43,7 @@ fn test_ty<TestFn, Expectation>(
     fn get_test_function_ty<'tcx>(tcx: TyCtxt<'tcx>, type_location: TypeLocation) -> Ty<'tcx> {
         let sig_mid = get_fn_sig(tcx, find_def_id_by_name(tcx, "test_function").to_def_id());
         match type_location {
-            TypeLocation::FnReturn => sig_mid.output(),
+            TypeLocation::FnReturn { .. } => sig_mid.output(),
             TypeLocation::FnParam { .. } => sig_mid.inputs()[0],
             _ => unimplemented!(),
         }
@@ -77,15 +77,22 @@ fn test_format_ret_ty_for_cc_successes() {
             "crubit :: type_identity_t < float (float , float) > &",
         ),
     ];
-    test_ty(TypeLocation::FnReturn, &testcases, quote! {}, |desc, tcx, ty, expected| {
-        let actual = {
-            let db = bindings_db_for_tests(tcx);
-            let cc_snippet = db.format_ty_for_cc(ty, TypeLocation::FnReturn).unwrap();
-            cc_snippet.tokens.to_string()
-        };
-        let expected = expected.parse::<TokenStream>().unwrap().to_string();
-        assert_eq!(actual, expected, "{desc}");
-    });
+    test_ty(
+        TypeLocation::FnReturn { is_constructor: false },
+        &testcases,
+        quote! {},
+        |desc, tcx, ty, expected| {
+            let actual = {
+                let db = bindings_db_for_tests(tcx);
+                let cc_snippet = db
+                    .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })
+                    .unwrap();
+                cc_snippet.tokens.to_string()
+            };
+            let expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual, expected, "{desc}");
+        },
+    );
 }
 
 /// `test_format_ty_for_cc_successes` provides test coverage for cases where
@@ -454,8 +461,8 @@ fn test_format_ty_for_cc_failures() {
             "Type `std::alloc::LayoutError` comes from the `core` crate, but no `--crate-header` was specified for this crate",
         ),
         (
-            "*const Option<i8>",
-            "Failed to format the pointee of the pointer type `*const std::option::Option<i8>`: Bridged types must appear in a bridgeable type location",
+            "*const Result<i8, i8>",
+            "Failed to format the pointee of the pointer type `*const std::result::Result<i8, i8>`: Result as a bridge type is not yet supported"
         ),
     ];
     let preamble = quote! {

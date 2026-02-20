@@ -4,8 +4,9 @@
 
 use crate::{
     does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
-    format_param_types_for_cc, format_ret_ty_for_cc, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, BridgedType, BridgedTypeConversionInfo, RsSnippet,
+    format_param_types_for_cc, is_bridged_type, is_c_abi_compatible_by_value,
+    liberate_and_deanonymize_late_bound_regions, BridgedBuiltin, BridgedType,
+    BridgedTypeConversionInfo, RsSnippet, TypeLocation,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -84,10 +85,14 @@ pub fn generate_thunk_decl<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     thunk_name: &Ident,
     has_self_param: bool,
+    is_constructor: bool,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid)?.into_tokens(&mut prereqs);
+    let main_api_ret_type = db
+        .format_ty_for_cc(sig_mid.output(), TypeLocation::FnReturn { is_constructor })
+        .with_context(|| format!("Error formatting function return type `{}`", sig_mid.output()))?
+        .into_tokens(&mut prereqs);
 
     let mut thunk_params = {
         let cpp_types = format_param_types_for_cc(db, sig_mid, has_self_param)?;
@@ -133,7 +138,15 @@ pub fn generate_thunk_decl<'tcx>(
     // TODO: b/ 459482188 - The order of this check must align with the order in `cc_return_value_from_c_abi`.
     // We should centralize this logic so that the order exists in a singular location used by both
     // places.
-    let thunk_ret_type = if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
+    let thunk_ret_type = if is_constructor
+        && sig_mid
+            .output()
+            .ty_adt_def()
+            .is_some_and(|adt| matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option)))
+    {
+        thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+        quote! { void }
+    } else if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
         match briging {
             BridgedType::Legacy { .. } => {
                 thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
@@ -464,7 +477,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     })
 }
 
-fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
+pub(crate) fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
@@ -501,6 +514,7 @@ pub fn generate_thunk_impl<'tcx>(
     sig: &ty::FnSig<'tcx>,
     thunk_name: &str,
     fully_qualified_fn_name: TokenStream,
+    is_constructor: bool,
 ) -> Result<RsSnippet> {
     let tcx = db.tcx();
 
@@ -538,7 +552,6 @@ pub fn generate_thunk_impl<'tcx>(
     let fn_args: Vec<Ident> =
         param_names_and_types.into_iter().map(|(rs_name, _ty)| rs_name).collect();
     let output_is_bridged = is_bridged_type(db, sig.output())?;
-
     let thunk_return_type;
     let thunk_return_expression;
     if output_is_bridged.is_none() && is_c_abi_compatible_by_value(tcx, sig.output()) {
@@ -553,7 +566,12 @@ pub fn generate_thunk_impl<'tcx>(
         let rs_return_value_ident = format_ident!("__rs_return_value");
         thunk_return_type = quote! { () };
 
-        let return_ptr_type = if let Some(BridgedType::Composable(_)) = output_is_bridged {
+        let return_ptr_type = if is_constructor
+            && sig.output().ty_adt_def().is_some_and(|adt| {
+                matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option))
+            }) {
+            quote! { *mut core::ffi::c_void }
+        } else if let Some(BridgedType::Composable(_)) = output_is_bridged {
             // Composable bridging writes its Crubit ABI form in an unsigned char array.
             quote! { *mut core::ffi::c_uchar }
         } else {
@@ -633,6 +651,7 @@ pub fn generate_trait_thunks<'tcx>(
     // We do not support other generic args, yet.
     type_args: &[Ty<'tcx>],
     adt: &AdtCoreBindings<'tcx>,
+    is_constructor: bool,
 ) -> Result<TraitThunks<'tcx>> {
     let tcx = db.tcx();
     assert!(tcx.is_trait(trait_id));
@@ -725,6 +744,7 @@ pub fn generate_trait_thunks<'tcx>(
             &sig_mid,
             &thunk_name_cc_ident,
             /*has_self_param=*/ true,
+            is_constructor,
         )?);
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 
@@ -780,6 +800,7 @@ pub fn generate_trait_thunks<'tcx>(
                     &sig_mid,
                     &thunk_name,
                     fully_qualified_fn_name,
+                    is_constructor,
                 )?
             }
         };

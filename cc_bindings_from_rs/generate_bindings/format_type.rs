@@ -20,7 +20,9 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
-use database::code_snippet::{CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs};
+use database::code_snippet::{
+    CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
+};
 use database::BindingsGenerator;
 use database::{FineGrainedFeature, TypeLocation};
 use error_report::{anyhow, bail, ensure};
@@ -156,14 +158,14 @@ pub fn format_ty_for_cc<'tcx>(
 
     Ok(match *ty.kind() {
         ty::TyKind::Never => match location {
-            TypeLocation::FnReturn => keyword(quote! { void }),
+            TypeLocation::FnReturn { .. } => keyword(quote! { void }),
             _ => {
                 // TODO(b/254507801): Maybe translate into `crubit::Never`?
                 bail!("The never type `!` is only supported as a return type (b/254507801)");
             }
         },
         ty::TyKind::Tuple(ref types) => {
-            if types.is_empty() && matches!(location, TypeLocation::FnReturn) {
+            if types.is_empty() && matches!(location, TypeLocation::FnReturn { .. }) {
                 keyword(quote! { void })
             } else if !location.is_bridgeable() {
                 bail!("Tuple types cannot be used inside of compound data types, because std::tuple is not layout-compatible with a Rust tuple.");
@@ -282,6 +284,26 @@ pub fn format_ty_for_cc<'tcx>(
             let mut prereqs = CcPrerequisites::default();
 
             if let Some(bridged_type) = is_bridged_type(db, ty)? {
+                if !location.is_bridgeable() {
+                    if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, adt) {
+                        let arg = substs.type_at(0);
+                        let ty_tokens = db
+                            .format_ty_for_cc(arg, TypeLocation::Other)?
+                            .resolve_feature_requirements(crate::crate_features(
+                                db,
+                                db.source_crate_num(),
+                            ))?
+                            .into_tokens(&mut prereqs);
+                        prereqs.template_specializations.insert(
+                            TemplateSpecialization::RsStdOption { arg_ty: arg, self_ty: ty },
+                        );
+                        prereqs.includes.insert(db.support_header("rs_std/option.h"));
+                        return Ok(CcSnippet {
+                            tokens: quote! { rs_std::Option<#ty_tokens> },
+                            prereqs,
+                        });
+                    }
+                }
                 ensure!(
                     location.is_bridgeable(),
                     "Bridged types must appear in a bridgeable type location"
@@ -450,7 +472,9 @@ pub fn format_ty_for_cc<'tcx>(
             // top-level return types and parameter types (and pointers are used
             // in other locations).
             let ptr_or_ref_sigil = match location {
-                TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::Const => {
+                TypeLocation::FnReturn { .. }
+                | TypeLocation::FnParam { .. }
+                | TypeLocation::Const => {
                     quote! { & }
                 }
                 TypeLocation::NestedBridgeable | TypeLocation::Other => quote! { * },
@@ -517,7 +541,7 @@ fn treat_ref_as_ptr<'tcx>(
             }
             RefConvert::ToRef
         }
-        TypeLocation::FnReturn | TypeLocation::Const => RefConvert::ToRef,
+        TypeLocation::FnReturn { .. } | TypeLocation::Const => RefConvert::ToRef,
 
         // References in other locations are always converted to pointers, as references are often
         // not allowed in these locations (e.g. the target of another reference, the element type
@@ -534,7 +558,7 @@ pub fn format_ret_ty_for_cc<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
     let output_ty = sig_mid.output();
-    db.format_ty_for_cc(output_ty, TypeLocation::FnReturn)
+    db.format_ty_for_cc(output_ty, TypeLocation::FnReturn { is_constructor: false })
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
 
@@ -730,7 +754,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                 .symbol_canonical_name(adt.did())
                 .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
             let type_name = canonical_name.format_for_rs();
-            let generic_params = if substs.len() == 0 {
+            let generic_params = if substs.is_empty() {
                 quote! {}
             } else {
                 let generic_params = substs
@@ -742,7 +766,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                                 region.kind(),
                                 ty::RegionKind::ReStatic,
                                 "We should never format types with non-'static regions, as \
-                                    thunks should first call `replace_all_regions_with_static`."
+                                    thunks should first call `replace_all_regions_with_static`. {ty}",
                             );
                             Ok(quote! { 'static })
                         }
@@ -1194,6 +1218,11 @@ pub fn is_bridged_type<'tcx>(
 ) -> Result<Option<BridgedType<'tcx>>> {
     match ty.kind() {
         ty::TyKind::Ref(_, referent, _) if is_bridged_type(db, *referent)?.is_some() => {
+            if let ty::TyKind::Adt(adt, _) = referent.kind() {
+                if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
+                    return Ok(None);
+                }
+            }
             bail!(
                 "Can't format reference type `{ty}` because the referent is a bridged type. \
                     Passing bridged types by reference is not supported."

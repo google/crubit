@@ -133,15 +133,21 @@ where
     for Dependency { predecessor, successor } in deps.into_iter() {
         graph
             .get_mut(&successor)
-            .unwrap_or_else(|| panic!(
-                "`Dependency::successor` should refer to a NodeId in the `nodes` parameter. \
-                 predecessor = {predecessor:?}; successor = {successor:?}"))
+            .unwrap_or_else(|| {
+                panic!(
+                    "`Dependency::successor` should refer to a NodeId in the `nodes` parameter. \
+                 predecessor = {predecessor:?}; successor = {successor:?}"
+                )
+            })
             .count_of_predecessors += 1;
         graph
             .get_mut(&predecessor)
-            .unwrap_or_else(|| panic!(
-                "`Dependency::predecessor` should refer to a NodeId in the `nodes` parameter. \
-                 predecessor = {predecessor:?}; successor = {successor:?}"))
+            .unwrap_or_else(|| {
+                panic!(
+                    "`Dependency::predecessor` should refer to a NodeId in the `nodes` parameter. \
+                 predecessor = {predecessor:?}; successor = {successor:?}"
+                )
+            })
             .successors
             .push(successor);
     }
@@ -185,6 +191,7 @@ where
 /// Topological ordering dependency between two graph nodes.  The `predecessor`
 /// has to appear before the `successor` in `TopoSortResult::ordered`.  See the
 /// `toposort` function for more details.
+#[derive(Debug)]
 pub struct Dependency<NodeId> {
     pub predecessor: NodeId,
     pub successor: NodeId,

@@ -39,7 +39,7 @@ AliasOfExportedStruct final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~AliasOfExportedStruct() = default;
   AliasOfExportedStruct(AliasOfExportedStruct&&) = default;
-  AliasOfExportedStruct& operator=(AliasOfExportedStruct&&) = default;
+  ::uses::AliasOfExportedStruct& operator=(AliasOfExportedStruct&&) = default;
 
   // `uses_golden::AliasOfExportedStruct` doesn't implement the `Clone` trait
   AliasOfExportedStruct(const AliasOfExportedStruct&) = delete;
@@ -80,7 +80,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Original() = default;
   Original(Original&&) = default;
-  Original& operator=(Original&&) = default;
+  ::uses::Original& operator=(Original&&) = default;
 
   // `uses_golden::Original` doesn't implement the `Clone` trait
   Original(const Original&) = delete;
@@ -117,7 +117,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~OtherPublicName() = default;
   OtherPublicName(OtherPublicName&&) = default;
-  OtherPublicName& operator=(OtherPublicName&&) = default;
+  ::uses::OtherPublicName& operator=(OtherPublicName&&) = default;
 
   // `uses_golden::OtherPublicName` doesn't implement the `Clone` trait
   OtherPublicName(const OtherPublicName&) = delete;
@@ -209,8 +209,10 @@ static_assert(
     alignof(AliasOfExportedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<AliasOfExportedStruct>);
-static_assert(std::is_trivially_move_constructible_v<AliasOfExportedStruct>);
-static_assert(std::is_trivially_move_assignable_v<AliasOfExportedStruct>);
+static_assert(
+    std::is_trivially_move_constructible_v<::uses::AliasOfExportedStruct>);
+static_assert(
+    std::is_trivially_move_assignable_v<::uses::AliasOfExportedStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(std::int32_t,
                                       ::uses::AliasOfExportedStruct* __ret_ptr);
@@ -239,8 +241,8 @@ static_assert(
     alignof(Original) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Original>);
-static_assert(std::is_trivially_move_constructible_v<Original>);
-static_assert(std::is_trivially_move_assignable_v<Original>);
+static_assert(std::is_trivially_move_constructible_v<::uses::Original>);
+static_assert(std::is_trivially_move_assignable_v<::uses::Original>);
 inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, field));
 }
@@ -256,8 +258,8 @@ static_assert(
     alignof(OtherPublicName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<OtherPublicName>);
-static_assert(std::is_trivially_move_constructible_v<OtherPublicName>);
-static_assert(std::is_trivially_move_assignable_v<OtherPublicName>);
+static_assert(std::is_trivially_move_constructible_v<::uses::OtherPublicName>);
+static_assert(std::is_trivially_move_assignable_v<::uses::OtherPublicName>);
 inline void OtherPublicName::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OtherPublicName, __field0));
 }

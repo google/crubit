@@ -33,7 +33,7 @@ ReprCUnion final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~ReprCUnion() = default;
   ReprCUnion(ReprCUnion&&) = default;
-  ReprCUnion& operator=(ReprCUnion&&) = default;
+  ::example_crate::ReprCUnion& operator=(ReprCUnion&&) = default;
 
   // `example_crate_golden::ReprCUnion` doesn't implement the `Clone` trait
   ReprCUnion(const ReprCUnion&) = delete;
@@ -61,12 +61,13 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::example_crate::ReprCUnion* __ret_ptr);
 }
-inline ReprCUnion::ReprCUnion() {
+inline ::example_crate::ReprCUnion::ReprCUnion() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<ReprCUnion>);
-static_assert(std::is_trivially_move_constructible_v<ReprCUnion>);
-static_assert(std::is_trivially_move_assignable_v<ReprCUnion>);
+static_assert(
+    std::is_trivially_move_constructible_v<::example_crate::ReprCUnion>);
+static_assert(std::is_trivially_move_assignable_v<::example_crate::ReprCUnion>);
 inline void ReprCUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ReprCUnion, a));
   static_assert(0 == offsetof(ReprCUnion, b));

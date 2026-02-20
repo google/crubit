@@ -59,7 +59,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
+  ::modules::impl_in_separate_private_module::Foo& operator=(Foo&&) = default;
 
   // `modules_golden::impl_in_separate_private_module::Foo` doesn't implement
   // the `Clone` trait
@@ -151,8 +151,10 @@ static_assert(
     alignof(Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Foo>);
-static_assert(std::is_trivially_move_constructible_v<Foo>);
-static_assert(std::is_trivially_move_assignable_v<Foo>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::modules::impl_in_separate_private_module::Foo>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::modules::impl_in_separate_private_module::Foo>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);

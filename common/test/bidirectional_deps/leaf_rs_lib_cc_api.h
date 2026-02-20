@@ -34,12 +34,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsEnum() = default;
   LeafRsEnum(LeafRsEnum&&) = default;
-  LeafRsEnum& operator=(LeafRsEnum&&) = default;
+  ::leaf_rs_lib::LeafRsEnum& operator=(LeafRsEnum&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   LeafRsEnum(const LeafRsEnum&) = default;
-  LeafRsEnum& operator=(const LeafRsEnum&) = default;
+  ::leaf_rs_lib::LeafRsEnum& operator=(const LeafRsEnum&) = default;
   LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -64,12 +64,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsType() = default;
   LeafRsType(LeafRsType&&) = default;
-  LeafRsType& operator=(LeafRsType&&) = default;
+  ::leaf_rs_lib::LeafRsType& operator=(LeafRsType&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   LeafRsType(const LeafRsType&) = default;
-  LeafRsType& operator=(const LeafRsType&) = default;
+  ::leaf_rs_lib::LeafRsType& operator=(const LeafRsType&) = default;
   LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -108,10 +108,12 @@ static_assert(
     alignof(LeafRsEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<LeafRsEnum>);
-static_assert(std::is_trivially_move_constructible_v<LeafRsEnum>);
-static_assert(std::is_trivially_move_assignable_v<LeafRsEnum>);
-static_assert(std::is_trivially_copy_constructible_v<LeafRsEnum>);
-static_assert(std::is_trivially_copy_assignable_v<LeafRsEnum>);
+static_assert(
+    std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsEnum>);
+static_assert(std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsEnum>);
+static_assert(
+    std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsEnum>);
+static_assert(std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsEnum>);
 inline void LeafRsEnum::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsEnum, __opaque_blob_of_bytes));
 }
@@ -126,14 +128,16 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::leaf_rs_lib::LeafRsType* __ret_ptr);
 }
-inline LeafRsType::LeafRsType() {
+inline ::leaf_rs_lib::LeafRsType::LeafRsType() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<LeafRsType>);
-static_assert(std::is_trivially_move_constructible_v<LeafRsType>);
-static_assert(std::is_trivially_move_assignable_v<LeafRsType>);
-static_assert(std::is_trivially_copy_constructible_v<LeafRsType>);
-static_assert(std::is_trivially_copy_assignable_v<LeafRsType>);
+static_assert(
+    std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsType>);
+static_assert(std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsType>);
+static_assert(
+    std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsType>);
+static_assert(std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsType>);
 inline void LeafRsType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsType, field));
 }

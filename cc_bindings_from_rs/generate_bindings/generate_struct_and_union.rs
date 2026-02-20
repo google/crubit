@@ -414,7 +414,9 @@ fn generate_into_impls<'tcx>(
             }
             // We know that our type will always appear in FnReturn position for the `into` method.
             // If our type isn't C++-compatible, we can't generate an `into` impl.
-            let cc_ty = db.format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn).ok()?;
+            let cc_ty = db
+                .format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn { is_constructor: false })
+                .ok()?;
             Some((from_middle_ty, cc_ty, *from_impl_id))
         },
     );
@@ -432,7 +434,9 @@ fn generate_into_impls<'tcx>(
                 middle_trait_header.trait_ref.instantiate_identity().args.type_at(1);
 
             // If our type isn't Cxx compatible, we can't generate an `into` impl.
-            let cc_ty = db.format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn).ok()?;
+            let cc_ty = db
+                .format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn { is_constructor: false })
+                .ok()?;
 
             Some((into_middle_ty, cc_ty, into_impl_id))
         });
@@ -449,7 +453,14 @@ fn generate_into_impls<'tcx>(
                 method_name_to_cc_thunk_name,
                 cc_thunk_decls,
                 rs_thunk_impls: rs_details,
-            } = generate_trait_thunks(db, into_trait, &[middle_ty], core).ok()?;
+            } = generate_trait_thunks(
+                db,
+                into_trait,
+                &[middle_ty],
+                core,
+                /*is_constructor=*/ false,
+            )
+            .ok()?;
 
             let thunk_name = method_name_to_cc_thunk_name
                 .into_values()
@@ -540,7 +551,7 @@ pub fn generate_adt<'tcx>(
             method_name_to_cc_thunk_name,
             mut cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(db, drop_trait_id, &[], &core)
+        } = generate_trait_thunks(db, drop_trait_id, &[], &core, /*is_constructor=*/ false)
             .expect("`generate_adt_core` should have already validated `Drop` support");
         // Don't introduce additional feature prerequisites for the `Drop` trait impl, as this
         // will cause type generation to fail based on an API that isn't even user-accessible.
@@ -585,7 +596,7 @@ pub fn generate_adt<'tcx>(
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
 
-    let relocating_ctor_snippets = generate_relocating_ctor(db, core.clone());
+    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
 
     let tuple_struct_ctor = generate_tuple_struct_ctor(db, core.clone()).unwrap_or_default();
 
@@ -788,7 +799,7 @@ pub fn generate_adt_core<'tcx>(
     // succeeds, but this would lead to infinite recursion, so we only replicate
     // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
     // `generate_adt_core`.
-    fully_qualified_name.format_for_cc(db).with_context(|| {
+    let cc_fully_qualified_name = fully_qualified_name.format_for_cc(db).with_context(|| {
         format!("Error formatting the fully-qualified C++ name of `{cpp_name}`")
     })?;
 
@@ -840,6 +851,7 @@ pub fn generate_adt_core<'tcx>(
         keyword,
         cc_short_name: cpp_name,
         rs_fully_qualified_name,
+        cc_fully_qualified_name,
         self_ty,
         alignment_in_bytes,
         size_in_bytes,
@@ -969,7 +981,7 @@ fn generate_tuple_struct_ctor<'tcx>(
 }
 
 /// Returns the body of the C++ struct that represents the given ADT.
-fn generate_fields<'tcx>(
+pub(crate) fn generate_fields<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     cc_short_name: &Ident,
@@ -1061,7 +1073,7 @@ fn generate_fields<'tcx>(
     };
     let variants_fields: Vec<Vec<Field<'tcx>>> = match adt_def.adt_kind() {
         // Handle cases of unsupported ADTs.
-        ty::AdtKind::Enum if (!repr_attrs.contains(&rustc_hir::attrs::ReprC)) => {
+        ty::AdtKind::Enum if !is_supported_enum => {
             vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
         }
 
@@ -1074,7 +1086,14 @@ fn generate_fields<'tcx>(
                             let ty = field_def.ty(tcx, adt_generic_args);
                             let size = get_layout(tcx, ty).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
-                                if is_bridged_type(db, ty)?.is_some() {
+                                if is_bridged_type(db, ty)?.is_some()
+                                    && !ty
+                                        .ty_adt_def()
+                                        .and_then(|adt_def| BridgedBuiltin::new(db, adt_def))
+                                        .is_some_and(|builtin| {
+                                            matches!(builtin, BridgedBuiltin::Option)
+                                        })
+                                {
                                     bail!(
                                         "Field is a bridged type and might not be layout-compatible
                                     with the C++ type (b/400633609)"
@@ -1679,7 +1698,6 @@ fn generate_fields<'tcx>(
                 }
             }
         };
-
         CcSnippet {
             prereqs,
             tokens: quote! {
@@ -1693,11 +1711,10 @@ fn generate_fields<'tcx>(
 }
 
 /// Generates the `(UnsafeRelocateTag, T&&)` constructor for the given ADT.
-fn generate_relocating_ctor<'tcx>(
+pub(crate) fn generate_relocating_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
+    adt_cc_name: &Ident,
 ) -> ApiSnippets<'tcx> {
-    let adt_cc_name = &core.cc_short_name;
     let main_api = CcSnippet::with_include(
         quote! {
             #adt_cc_name(::crubit::UnsafeRelocateTag, #adt_cc_name&& value) {

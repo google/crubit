@@ -52,7 +52,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~Types() = default;
   Types(Types&&) = default;
-  Types& operator=(Types&&) = default;
+  ::primitive_types::field_types::Types& operator=(Types&&) = default;
 
   // `primitive_types_golden::field_types::Types` doesn't implement the `Clone`
   // trait
@@ -364,8 +364,8 @@ StructWithCVoidPointerMember final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructWithCVoidPointerMember() = default;
   StructWithCVoidPointerMember(StructWithCVoidPointerMember&&) = default;
-  StructWithCVoidPointerMember& operator=(StructWithCVoidPointerMember&&) =
-      default;
+  ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember& operator=(
+      StructWithCVoidPointerMember&&) = default;
 
   // `primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember`
   // doesn't implement the `Clone` trait
@@ -454,8 +454,10 @@ static_assert(
     alignof(Types) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<Types>);
-static_assert(std::is_trivially_move_constructible_v<Types>);
-static_assert(std::is_trivially_move_assignable_v<Types>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::primitive_types::field_types::Types>);
+static_assert(
+    std::is_trivially_move_assignable_v<::primitive_types::field_types::Types>);
 inline void Types::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Types, i8_func));
   static_assert(8 == offsetof(Types, c_char_func));
@@ -705,9 +707,11 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructWithCVoidPointerMember>);
 static_assert(
-    std::is_trivially_move_constructible_v<StructWithCVoidPointerMember>);
+    std::is_trivially_move_constructible_v<
+        ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
 static_assert(
-    std::is_trivially_move_assignable_v<StructWithCVoidPointerMember>);
+    std::is_trivially_move_assignable_v<
+        ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
 inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithCVoidPointerMember, ptr_const));
   static_assert(8 == offsetof(StructWithCVoidPointerMember, ptr_mut));

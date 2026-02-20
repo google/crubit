@@ -37,12 +37,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~ArrayStruct() = default;
   ArrayStruct(ArrayStruct&&) = default;
-  ArrayStruct& operator=(ArrayStruct&&) = default;
+  ::arrays::ArrayStruct& operator=(ArrayStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   ArrayStruct(const ArrayStruct&) = default;
-  ArrayStruct& operator=(const ArrayStruct&) = default;
+  ::arrays::ArrayStruct& operator=(const ArrayStruct&) = default;
   ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -71,7 +71,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   HasDrop(HasDrop&&) = delete;
-  HasDrop& operator=(HasDrop&&) = delete;
+  ::arrays::HasDrop& operator=(HasDrop&&) = delete;
   // `arrays_golden::HasDrop` doesn't implement the `Clone` trait
   HasDrop(const HasDrop&) = delete;
   HasDrop& operator=(const HasDrop&) = delete;
@@ -106,7 +106,7 @@ HasDropAndDefault final {
   ~HasDropAndDefault();
 
   HasDropAndDefault(HasDropAndDefault&&);
-  HasDropAndDefault& operator=(HasDropAndDefault&&);
+  ::arrays::HasDropAndDefault& operator=(HasDropAndDefault&&);
 
   // `arrays_golden::HasDropAndDefault` doesn't implement the `Clone` trait
   HasDropAndDefault(const HasDropAndDefault&) = delete;
@@ -231,14 +231,14 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::arrays::ArrayStruct* __ret_ptr);
 }
-inline ArrayStruct::ArrayStruct() {
+inline ::arrays::ArrayStruct::ArrayStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<ArrayStruct>);
-static_assert(std::is_trivially_move_constructible_v<ArrayStruct>);
-static_assert(std::is_trivially_move_assignable_v<ArrayStruct>);
-static_assert(std::is_trivially_copy_constructible_v<ArrayStruct>);
-static_assert(std::is_trivially_copy_assignable_v<ArrayStruct>);
+static_assert(std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
+static_assert(std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
+static_assert(std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);
+static_assert(std::is_trivially_copy_assignable_v<::arrays::ArrayStruct>);
 inline void ArrayStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ArrayStruct, array));
 }
@@ -273,7 +273,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::arrays::HasDropAndDefault* __ret_ptr);
 }
-inline HasDropAndDefault::HasDropAndDefault() {
+inline ::arrays::HasDropAndDefault::HasDropAndDefault() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
@@ -282,11 +282,11 @@ extern "C" void __crubit_thunk_drop(::arrays::HasDropAndDefault&);
 inline HasDropAndDefault::~HasDropAndDefault() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
-inline HasDropAndDefault::HasDropAndDefault(HasDropAndDefault&& other)
+inline ::arrays::HasDropAndDefault::HasDropAndDefault(HasDropAndDefault&& other)
     : HasDropAndDefault() {
   *this = std::move(other);
 }
-inline HasDropAndDefault& HasDropAndDefault::operator=(
+inline ::arrays::HasDropAndDefault& ::arrays::HasDropAndDefault::operator=(
     HasDropAndDefault&& other) {
   crubit::MemSwap(*this, other);
   return *this;

@@ -35,7 +35,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~X() = default;
   X(X&&) = default;
-  X& operator=(X&&) = default;
+  ::struct_with_conflicting_fields_and_member_functions_rust::X& operator=(
+      X&&) = default;
 
   // `struct_with_conflicting_fields_and_member_functions_rust_golden::X`
   // doesn't implement the `Clone` trait
@@ -82,8 +83,10 @@ static_assert(
     alignof(X) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<X>);
-static_assert(std::is_trivially_move_constructible_v<X>);
-static_assert(std::is_trivially_move_assignable_v<X>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::struct_with_conflicting_fields_and_member_functions_rust::X>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::struct_with_conflicting_fields_and_member_functions_rust::X>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_a(
     ::struct_with_conflicting_fields_and_member_functions_rust::X const&);

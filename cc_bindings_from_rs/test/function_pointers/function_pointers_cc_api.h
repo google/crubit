@@ -49,12 +49,12 @@ CStruct final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~CStruct() = default;
   CStruct(CStruct&&) = default;
-  CStruct& operator=(CStruct&&) = default;
+  ::function_pointers::CStruct& operator=(CStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   CStruct(const CStruct&) = default;
-  CStruct& operator=(const CStruct&) = default;
+  ::function_pointers::CStruct& operator=(const CStruct&) = default;
   CStruct(::crubit::UnsafeRelocateTag, CStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -83,12 +83,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~HasFnPtrField() = default;
   HasFnPtrField(HasFnPtrField&&) = default;
-  HasFnPtrField& operator=(HasFnPtrField&&) = default;
+  ::function_pointers::HasFnPtrField& operator=(HasFnPtrField&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   HasFnPtrField(const HasFnPtrField&) = default;
-  HasFnPtrField& operator=(const HasFnPtrField&) = default;
+  ::function_pointers::HasFnPtrField& operator=(const HasFnPtrField&) = default;
   HasFnPtrField(::crubit::UnsafeRelocateTag, HasFnPtrField&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -169,12 +169,18 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::function_pointers::CStruct* __ret_ptr);
 }
-inline CStruct::CStruct() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::function_pointers::CStruct::CStruct() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 static_assert(std::is_trivially_destructible_v<CStruct>);
-static_assert(std::is_trivially_move_constructible_v<CStruct>);
-static_assert(std::is_trivially_move_assignable_v<CStruct>);
-static_assert(std::is_trivially_copy_constructible_v<CStruct>);
-static_assert(std::is_trivially_copy_assignable_v<CStruct>);
+static_assert(
+    std::is_trivially_move_constructible_v<::function_pointers::CStruct>);
+static_assert(
+    std::is_trivially_move_assignable_v<::function_pointers::CStruct>);
+static_assert(
+    std::is_trivially_copy_constructible_v<::function_pointers::CStruct>);
+static_assert(
+    std::is_trivially_copy_assignable_v<::function_pointers::CStruct>);
 inline void CStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CStruct, field));
 }
@@ -185,10 +191,14 @@ static_assert(
     alignof(HasFnPtrField) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<HasFnPtrField>);
-static_assert(std::is_trivially_move_constructible_v<HasFnPtrField>);
-static_assert(std::is_trivially_move_assignable_v<HasFnPtrField>);
-static_assert(std::is_trivially_copy_constructible_v<HasFnPtrField>);
-static_assert(std::is_trivially_copy_assignable_v<HasFnPtrField>);
+static_assert(
+    std::is_trivially_move_constructible_v<::function_pointers::HasFnPtrField>);
+static_assert(
+    std::is_trivially_move_assignable_v<::function_pointers::HasFnPtrField>);
+static_assert(
+    std::is_trivially_copy_constructible_v<::function_pointers::HasFnPtrField>);
+static_assert(
+    std::is_trivially_copy_assignable_v<::function_pointers::HasFnPtrField>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_uadd_uten(
     ::function_pointers::HasFnPtrField* __ret_ptr);

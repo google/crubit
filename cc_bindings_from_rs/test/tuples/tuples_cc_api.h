@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~AdtHoldingFiveAndSix() = default;
   AdtHoldingFiveAndSix(AdtHoldingFiveAndSix&&) = default;
-  AdtHoldingFiveAndSix& operator=(AdtHoldingFiveAndSix&&) = default;
+  ::tuples::AdtHoldingFiveAndSix& operator=(AdtHoldingFiveAndSix&&) = default;
 
   // `tuples_golden::AdtHoldingFiveAndSix` doesn't implement the `Clone` trait
   AdtHoldingFiveAndSix(const AdtHoldingFiveAndSix&) = delete;
@@ -81,7 +81,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   NonCppMovable(NonCppMovable&&) = delete;
-  NonCppMovable& operator=(NonCppMovable&&) = delete;
+  ::tuples::NonCppMovable& operator=(NonCppMovable&&) = delete;
   // `tuples_golden::NonCppMovable` doesn't implement the `Clone` trait
   NonCppMovable(const NonCppMovable&) = delete;
   NonCppMovable& operator=(const NonCppMovable&) = delete;
@@ -110,7 +110,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   ~NontrivialDrop();
 
   NontrivialDrop(NontrivialDrop&&);
-  NontrivialDrop& operator=(NontrivialDrop&&);
+  ::tuples::NontrivialDrop& operator=(NontrivialDrop&&);
 
   // `tuples_golden::NontrivialDrop` doesn't implement the `Clone` trait
   NontrivialDrop(const NontrivialDrop&) = delete;
@@ -145,7 +145,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~TupleStruct() = default;
   TupleStruct(TupleStruct&&) = default;
-  TupleStruct& operator=(TupleStruct&&) = default;
+  ::tuples::TupleStruct& operator=(TupleStruct&&) = default;
 
   // `tuples_golden::TupleStruct` doesn't implement the `Clone` trait
   TupleStruct(const TupleStruct&) = delete;
@@ -246,8 +246,10 @@ static_assert(
     alignof(AdtHoldingFiveAndSix) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<AdtHoldingFiveAndSix>);
-static_assert(std::is_trivially_move_constructible_v<AdtHoldingFiveAndSix>);
-static_assert(std::is_trivially_move_assignable_v<AdtHoldingFiveAndSix>);
+static_assert(
+    std::is_trivially_move_constructible_v<::tuples::AdtHoldingFiveAndSix>);
+static_assert(
+    std::is_trivially_move_assignable_v<::tuples::AdtHoldingFiveAndSix>);
 inline void AdtHoldingFiveAndSix::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(AdtHoldingFiveAndSix, five));
   static_assert(4 == offsetof(AdtHoldingFiveAndSix, six));
@@ -276,7 +278,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::tuples::NontrivialDrop* __ret_ptr);
 }
-inline NontrivialDrop::NontrivialDrop() {
+inline ::tuples::NontrivialDrop::NontrivialDrop() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
@@ -285,11 +287,12 @@ extern "C" void __crubit_thunk_drop(::tuples::NontrivialDrop&);
 inline NontrivialDrop::~NontrivialDrop() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
-inline NontrivialDrop::NontrivialDrop(NontrivialDrop&& other)
+inline ::tuples::NontrivialDrop::NontrivialDrop(NontrivialDrop&& other)
     : NontrivialDrop() {
   *this = std::move(other);
 }
-inline NontrivialDrop& NontrivialDrop::operator=(NontrivialDrop&& other) {
+inline ::tuples::NontrivialDrop& ::tuples::NontrivialDrop::operator=(
+    NontrivialDrop&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -303,8 +306,8 @@ static_assert(
     alignof(TupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<TupleStruct>);
-static_assert(std::is_trivially_move_constructible_v<TupleStruct>);
-static_assert(std::is_trivially_move_assignable_v<TupleStruct>);
+static_assert(std::is_trivially_move_constructible_v<::tuples::TupleStruct>);
+static_assert(std::is_trivially_move_assignable_v<::tuples::TupleStruct>);
 inline void TupleStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStruct, tuple_field));
 }

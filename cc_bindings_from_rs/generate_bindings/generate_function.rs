@@ -878,9 +878,14 @@ pub fn generate_function<'tcx>(
         CcSnippet::default()
     } else {
         let mut prereqs = main_api_prereqs;
-        let mut thunk_decl =
-            generate_thunk_decl(db, &sig_mid, &thunk_name_cc, function_kind.has_self_param())?
-                .into_tokens(&mut prereqs);
+        let mut thunk_decl = generate_thunk_decl(
+            db,
+            &sig_mid,
+            &thunk_name_cc,
+            function_kind.has_self_param(),
+            /*is_constructor=*/ false,
+        )?
+        .into_tokens(&mut prereqs);
         if trait_ref.is_some() {
             let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num())
                 .iter()
@@ -960,7 +965,14 @@ pub fn generate_function<'tcx>(
                         )
                     })
                     .format_for_rs());
-        generate_thunk_impl(db, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
+        generate_thunk_impl(
+            db,
+            def_id,
+            &sig_mid,
+            &thunk_name,
+            fully_qualified_fn_name,
+            /*is_constructor=*/ false,
+        )?
     };
 
     Ok(ApiSnippets { main_api, cc_details, rs_details })

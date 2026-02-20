@@ -42,12 +42,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~TypeWithStr() = default;
   TypeWithStr(TypeWithStr&&) = default;
-  TypeWithStr& operator=(TypeWithStr&&) = default;
+  ::str::TypeWithStr& operator=(TypeWithStr&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TypeWithStr(const TypeWithStr&) = default;
-  TypeWithStr& operator=(const TypeWithStr&) = default;
+  ::str::TypeWithStr& operator=(const TypeWithStr&) = default;
   TypeWithStr(::crubit::UnsafeRelocateTag, TypeWithStr&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -100,14 +100,14 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::str::TypeWithStr* __ret_ptr);
 }
-inline TypeWithStr::TypeWithStr() {
+inline ::str::TypeWithStr::TypeWithStr() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<TypeWithStr>);
-static_assert(std::is_trivially_move_constructible_v<TypeWithStr>);
-static_assert(std::is_trivially_move_assignable_v<TypeWithStr>);
-static_assert(std::is_trivially_copy_constructible_v<TypeWithStr>);
-static_assert(std::is_trivially_copy_assignable_v<TypeWithStr>);
+static_assert(std::is_trivially_move_constructible_v<::str::TypeWithStr>);
+static_assert(std::is_trivially_move_assignable_v<::str::TypeWithStr>);
+static_assert(std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
+static_assert(std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::str::TypeWithStr* __ret_ptr);

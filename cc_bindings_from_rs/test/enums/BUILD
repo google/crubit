@@ -82,3 +82,36 @@ crubit_cc_test(
         "//testing/base/public:gunit_main",
     ],
 )
+
+rust_library(
+    name = "option",
+    testonly = 1,
+    srcs = ["option.rs"],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+    rustc_flags = ["-Zallow-features=rustc_attrs"],
+)
+
+golden_test(
+    name = "option_golden_test",
+    basename = "option",
+    golden_h = "option_cc_api.h",
+    golden_rs = "option_cc_api_impl.rs",
+    rust_library = "option",
+)
+
+cc_bindings_from_rust(
+    name = "option_cc_api",
+    testonly = 1,
+    crate = ":option",
+)
+
+crubit_cc_test(
+    name = "option_test",
+    srcs = ["option_test.cc"],
+    deps = [
+        ":option_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)

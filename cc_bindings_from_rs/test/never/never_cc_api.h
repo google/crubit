@@ -33,7 +33,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~NeverStruct() = default;
   NeverStruct(NeverStruct&&) = default;
-  NeverStruct& operator=(NeverStruct&&) = default;
+  ::never::NeverStruct& operator=(NeverStruct&&) = default;
 
   // `never_golden::NeverStruct` doesn't implement the `Clone` trait
   NeverStruct(const NeverStruct&) = delete;
@@ -78,12 +78,12 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::never::NeverStruct* __ret_ptr);
 }
-inline NeverStruct::NeverStruct() {
+inline ::never::NeverStruct::NeverStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<NeverStruct>);
-static_assert(std::is_trivially_move_constructible_v<NeverStruct>);
-static_assert(std::is_trivially_move_assignable_v<NeverStruct>);
+static_assert(std::is_trivially_move_constructible_v<::never::NeverStruct>);
+static_assert(std::is_trivially_move_assignable_v<::never::NeverStruct>);
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_associated_ufn_unever_ureturn();
 }

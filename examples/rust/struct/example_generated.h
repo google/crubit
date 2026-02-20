@@ -33,13 +33,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Struct() = default;
   Struct(Struct&&) = default;
-  Struct& operator=(Struct&&) = default;
+  ::example_crate::Struct& operator=(Struct&&) = default;
 
   // Clone::clone
   Struct(const Struct&);
 
   // Clone::clone_from
-  Struct& operator=(const Struct&);
+  ::example_crate::Struct& operator=(const Struct&);
 
   Struct(::crubit::UnsafeRelocateTag, Struct&& value) {
     memcpy(this, &value, sizeof(value));
@@ -63,10 +63,12 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::example_crate::Struct* __ret_ptr);
 }
-inline Struct::Struct() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::example_crate::Struct::Struct() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 static_assert(std::is_trivially_destructible_v<Struct>);
-static_assert(std::is_trivially_move_constructible_v<Struct>);
-static_assert(std::is_trivially_move_assignable_v<Struct>);
+static_assert(std::is_trivially_move_constructible_v<::example_crate::Struct>);
+static_assert(std::is_trivially_move_assignable_v<::example_crate::Struct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::example_crate::Struct const&,
                                      ::example_crate::Struct* __ret_ptr);
@@ -75,10 +77,11 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(::example_crate::Struct&,
                                            ::example_crate::Struct const&);
 }
-inline Struct::Struct(const Struct& other) {
+inline ::example_crate::Struct::Struct(const Struct& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline Struct& Struct::operator=(const Struct& other) {
+inline ::example_crate::Struct& ::example_crate::Struct::operator=(
+    const Struct& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }

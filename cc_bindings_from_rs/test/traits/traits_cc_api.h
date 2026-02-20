@@ -45,12 +45,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
+  ::traits::Foo& operator=(Foo&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   Foo(const Foo&) = default;
-  Foo& operator=(const Foo&) = default;
+  ::traits::Foo& operator=(const Foo&) = default;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -84,7 +84,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   // No custom `Drop` impl and no custom "drop glue" required
   ~LifetimeStruct() = default;
   LifetimeStruct(LifetimeStruct&&) = default;
-  LifetimeStruct& operator=(LifetimeStruct&&) = default;
+  ::traits::LifetimeStruct& operator=(LifetimeStruct&&) = default;
 
   // `traits_golden::LifetimeStruct` doesn't implement the `Clone` trait
   LifetimeStruct(const LifetimeStruct&) = delete;
@@ -123,12 +123,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct() = default;
   MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
+  ::traits::MyStruct& operator=(MyStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   MyStruct(const MyStruct&) = default;
-  MyStruct& operator=(const MyStruct&) = default;
+  ::traits::MyStruct& operator=(const MyStruct&) = default;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -159,12 +159,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct2() = default;
   MyStruct2(MyStruct2&&) = default;
-  MyStruct2& operator=(MyStruct2&&) = default;
+  ::traits::MyStruct2& operator=(MyStruct2&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   MyStruct2(const MyStruct2&) = default;
-  MyStruct2& operator=(const MyStruct2&) = default;
+  ::traits::MyStruct2& operator=(const MyStruct2&) = default;
   MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -198,12 +198,12 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::traits::Foo* __ret_ptr);
 }
-inline Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::traits::Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
 static_assert(std::is_trivially_destructible_v<Foo>);
-static_assert(std::is_trivially_move_constructible_v<Foo>);
-static_assert(std::is_trivially_move_assignable_v<Foo>);
-static_assert(std::is_trivially_copy_constructible_v<Foo>);
-static_assert(std::is_trivially_copy_assignable_v<Foo>);
+static_assert(std::is_trivially_move_constructible_v<::traits::Foo>);
+static_assert(std::is_trivially_move_assignable_v<::traits::Foo>);
+static_assert(std::is_trivially_copy_constructible_v<::traits::Foo>);
+static_assert(std::is_trivially_copy_assignable_v<::traits::Foo>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(std::int32_t, std::int32_t,
                                    ::traits::Foo* __ret_ptr);
@@ -224,8 +224,8 @@ static_assert(
     alignof(LifetimeStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<LifetimeStruct>);
-static_assert(std::is_trivially_move_constructible_v<LifetimeStruct>);
-static_assert(std::is_trivially_move_assignable_v<LifetimeStruct>);
+static_assert(std::is_trivially_move_constructible_v<::traits::LifetimeStruct>);
+static_assert(std::is_trivially_move_assignable_v<::traits::LifetimeStruct>);
 inline void LifetimeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LifetimeStruct, x));
 }
@@ -238,12 +238,14 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::traits::MyStruct* __ret_ptr);
 }
-inline MyStruct::MyStruct() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::traits::MyStruct::MyStruct() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 static_assert(std::is_trivially_destructible_v<MyStruct>);
-static_assert(std::is_trivially_move_constructible_v<MyStruct>);
-static_assert(std::is_trivially_move_assignable_v<MyStruct>);
-static_assert(std::is_trivially_copy_constructible_v<MyStruct>);
-static_assert(std::is_trivially_copy_assignable_v<MyStruct>);
+static_assert(std::is_trivially_move_constructible_v<::traits::MyStruct>);
+static_assert(std::is_trivially_move_assignable_v<::traits::MyStruct>);
+static_assert(std::is_trivially_copy_constructible_v<::traits::MyStruct>);
+static_assert(std::is_trivially_copy_assignable_v<::traits::MyStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(std::int32_t, ::traits::MyStruct* __ret_ptr);
 }
@@ -265,14 +267,14 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::traits::MyStruct2* __ret_ptr);
 }
-inline MyStruct2::MyStruct2() {
+inline ::traits::MyStruct2::MyStruct2() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<MyStruct2>);
-static_assert(std::is_trivially_move_constructible_v<MyStruct2>);
-static_assert(std::is_trivially_move_assignable_v<MyStruct2>);
-static_assert(std::is_trivially_copy_constructible_v<MyStruct2>);
-static_assert(std::is_trivially_copy_assignable_v<MyStruct2>);
+static_assert(std::is_trivially_move_constructible_v<::traits::MyStruct2>);
+static_assert(std::is_trivially_move_assignable_v<::traits::MyStruct2>);
+static_assert(std::is_trivially_copy_constructible_v<::traits::MyStruct2>);
+static_assert(std::is_trivially_copy_assignable_v<::traits::MyStruct2>);
 inline void MyStruct2::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct2, y));
 }

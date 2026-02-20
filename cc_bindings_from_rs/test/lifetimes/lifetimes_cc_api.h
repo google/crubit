@@ -37,12 +37,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructWithLifetime() = default;
   StructWithLifetime(StructWithLifetime&&) = default;
-  StructWithLifetime& operator=(StructWithLifetime&&) = default;
+  ::lifetimes::StructWithLifetime& operator=(StructWithLifetime&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   StructWithLifetime(const StructWithLifetime&) = default;
-  StructWithLifetime& operator=(const StructWithLifetime&) = default;
+  ::lifetimes::StructWithLifetime& operator=(const StructWithLifetime&) =
+      default;
   StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -118,8 +119,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   StructWithLifetimeAndDropGlue(StructWithLifetimeAndDropGlue&&) = delete;
-  StructWithLifetimeAndDropGlue& operator=(StructWithLifetimeAndDropGlue&&) =
-      delete;
+  ::lifetimes::StructWithLifetimeAndDropGlue& operator=(
+      StructWithLifetimeAndDropGlue&&) = delete;
   // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
   // `Clone` trait
   StructWithLifetimeAndDropGlue(const StructWithLifetimeAndDropGlue&) = delete;
@@ -163,10 +164,14 @@ static_assert(
     alignof(StructWithLifetime) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<StructWithLifetime>);
-static_assert(std::is_trivially_move_constructible_v<StructWithLifetime>);
-static_assert(std::is_trivially_move_assignable_v<StructWithLifetime>);
-static_assert(std::is_trivially_copy_constructible_v<StructWithLifetime>);
-static_assert(std::is_trivially_copy_assignable_v<StructWithLifetime>);
+static_assert(
+    std::is_trivially_move_constructible_v<::lifetimes::StructWithLifetime>);
+static_assert(
+    std::is_trivially_move_assignable_v<::lifetimes::StructWithLifetime>);
+static_assert(
+    std::is_trivially_copy_constructible_v<::lifetimes::StructWithLifetime>);
+static_assert(
+    std::is_trivially_copy_assignable_v<::lifetimes::StructWithLifetime>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
     std::int32_t const* $a crubit_nonnull,

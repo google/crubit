@@ -42,7 +42,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CloneNoDefault(const CloneNoDefault&);
 
   // Clone::clone_from
-  CloneNoDefault& operator=(const CloneNoDefault&);
+  ::tuple_structs::CloneNoDefault& operator=(const CloneNoDefault&);
 
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
     memcpy(this, &value, sizeof(value));
@@ -71,12 +71,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~CopyNoDefault() = default;
   CopyNoDefault(CopyNoDefault&&) = default;
-  CopyNoDefault& operator=(CopyNoDefault&&) = default;
+  ::tuple_structs::CopyNoDefault& operator=(CopyNoDefault&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   CopyNoDefault(const CopyNoDefault&) = default;
-  CopyNoDefault& operator=(const CopyNoDefault&) = default;
+  ::tuple_structs::CopyNoDefault& operator=(const CopyNoDefault&) = default;
   CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
     memcpy(this, &value, sizeof(value));
   }
@@ -111,13 +111,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~DefaultAndCloneNoUnpin() = default;
   DefaultAndCloneNoUnpin(DefaultAndCloneNoUnpin&&) = default;
-  DefaultAndCloneNoUnpin& operator=(DefaultAndCloneNoUnpin&&) = default;
+  ::tuple_structs::DefaultAndCloneNoUnpin& operator=(DefaultAndCloneNoUnpin&&) =
+      default;
 
   // Clone::clone
   DefaultAndCloneNoUnpin(const DefaultAndCloneNoUnpin&);
 
   // Clone::clone_from
-  DefaultAndCloneNoUnpin& operator=(const DefaultAndCloneNoUnpin&);
+  ::tuple_structs::DefaultAndCloneNoUnpin& operator=(
+      const DefaultAndCloneNoUnpin&);
 
   DefaultAndCloneNoUnpin(::crubit::UnsafeRelocateTag,
                          DefaultAndCloneNoUnpin&& value) {
@@ -146,7 +148,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~DefaultNoCopyNoClone() = default;
   DefaultNoCopyNoClone(DefaultNoCopyNoClone&&) = default;
-  DefaultNoCopyNoClone& operator=(DefaultNoCopyNoClone&&) = default;
+  ::tuple_structs::DefaultNoCopyNoClone& operator=(DefaultNoCopyNoClone&&) =
+      default;
 
   // `tuple_structs_golden::DefaultNoCopyNoClone` doesn't implement the `Clone`
   // trait
@@ -182,7 +185,7 @@ DontMoveMe final {
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   DontMoveMe(DontMoveMe&&) = delete;
-  DontMoveMe& operator=(DontMoveMe&&) = delete;
+  ::tuple_structs::DontMoveMe& operator=(DontMoveMe&&) = delete;
   // `tuple_structs_golden::DontMoveMe` doesn't implement the `Clone` trait
   DontMoveMe(const DontMoveMe&) = delete;
   DontMoveMe& operator=(const DontMoveMe&) = delete;
@@ -214,13 +217,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~TupleStructOnePrivateArg() = default;
   TupleStructOnePrivateArg(TupleStructOnePrivateArg&&) = default;
-  TupleStructOnePrivateArg& operator=(TupleStructOnePrivateArg&&) = default;
+  ::tuple_structs::TupleStructOnePrivateArg& operator=(
+      TupleStructOnePrivateArg&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TupleStructOnePrivateArg(const TupleStructOnePrivateArg&) = default;
-  TupleStructOnePrivateArg& operator=(const TupleStructOnePrivateArg&) =
-      default;
+  ::tuple_structs::TupleStructOnePrivateArg& operator=(
+      const TupleStructOnePrivateArg&) = default;
   TupleStructOnePrivateArg(::crubit::UnsafeRelocateTag,
                            TupleStructOnePrivateArg&& value) {
     memcpy(this, &value, sizeof(value));
@@ -268,12 +272,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~TupleStructOnePublicArg() = default;
   TupleStructOnePublicArg(TupleStructOnePublicArg&&) = default;
-  TupleStructOnePublicArg& operator=(TupleStructOnePublicArg&&) = default;
+  ::tuple_structs::TupleStructOnePublicArg& operator=(
+      TupleStructOnePublicArg&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TupleStructOnePublicArg(const TupleStructOnePublicArg&) = default;
-  TupleStructOnePublicArg& operator=(const TupleStructOnePublicArg&) = default;
+  ::tuple_structs::TupleStructOnePublicArg& operator=(
+      const TupleStructOnePublicArg&) = default;
   TupleStructOnePublicArg(::crubit::UnsafeRelocateTag,
                           TupleStructOnePublicArg&& value) {
     memcpy(this, &value, sizeof(value));
@@ -319,14 +325,14 @@ struct
   ~TupleStructOnePublicArgOnePrivateArg() = default;
   TupleStructOnePublicArgOnePrivateArg(TupleStructOnePublicArgOnePrivateArg&&) =
       default;
-  TupleStructOnePublicArgOnePrivateArg& operator=(
+  ::tuple_structs::TupleStructOnePublicArgOnePrivateArg& operator=(
       TupleStructOnePublicArgOnePrivateArg&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TupleStructOnePublicArgOnePrivateArg(
       const TupleStructOnePublicArgOnePrivateArg&) = default;
-  TupleStructOnePublicArgOnePrivateArg& operator=(
+  ::tuple_structs::TupleStructOnePublicArgOnePrivateArg& operator=(
       const TupleStructOnePublicArgOnePrivateArg&) = default;
   TupleStructOnePublicArgOnePrivateArg(
       ::crubit::UnsafeRelocateTag,
@@ -379,13 +385,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~TupleStructTwoPrivateArgs() = default;
   TupleStructTwoPrivateArgs(TupleStructTwoPrivateArgs&&) = default;
-  TupleStructTwoPrivateArgs& operator=(TupleStructTwoPrivateArgs&&) = default;
+  ::tuple_structs::TupleStructTwoPrivateArgs& operator=(
+      TupleStructTwoPrivateArgs&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TupleStructTwoPrivateArgs(const TupleStructTwoPrivateArgs&) = default;
-  TupleStructTwoPrivateArgs& operator=(const TupleStructTwoPrivateArgs&) =
-      default;
+  ::tuple_structs::TupleStructTwoPrivateArgs& operator=(
+      const TupleStructTwoPrivateArgs&) = default;
   TupleStructTwoPrivateArgs(::crubit::UnsafeRelocateTag,
                             TupleStructTwoPrivateArgs&& value) {
     memcpy(this, &value, sizeof(value));
@@ -445,13 +452,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~TupleStructTwoPublicArgs() = default;
   TupleStructTwoPublicArgs(TupleStructTwoPublicArgs&&) = default;
-  TupleStructTwoPublicArgs& operator=(TupleStructTwoPublicArgs&&) = default;
+  ::tuple_structs::TupleStructTwoPublicArgs& operator=(
+      TupleStructTwoPublicArgs&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TupleStructTwoPublicArgs(const TupleStructTwoPublicArgs&) = default;
-  TupleStructTwoPublicArgs& operator=(const TupleStructTwoPublicArgs&) =
-      default;
+  ::tuple_structs::TupleStructTwoPublicArgs& operator=(
+      const TupleStructTwoPublicArgs&) = default;
   TupleStructTwoPublicArgs(::crubit::UnsafeRelocateTag,
                            TupleStructTwoPublicArgs&& value) {
     memcpy(this, &value, sizeof(value));
@@ -510,8 +518,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   TupleStructWithCloneNoDefault(TupleStructWithCloneNoDefault&&) = delete;
-  TupleStructWithCloneNoDefault& operator=(TupleStructWithCloneNoDefault&&) =
-      delete;
+  ::tuple_structs::TupleStructWithCloneNoDefault& operator=(
+      TupleStructWithCloneNoDefault&&) = delete;
   // `tuple_structs_golden::TupleStructWithCloneNoDefault` doesn't implement the
   // `Clone` trait
   TupleStructWithCloneNoDefault(const TupleStructWithCloneNoDefault&) = delete;
@@ -565,7 +573,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   TupleStructWithCppImmovableType(TupleStructWithCppImmovableType&&) = delete;
-  TupleStructWithCppImmovableType& operator=(
+  ::tuple_structs::TupleStructWithCppImmovableType& operator=(
       TupleStructWithCppImmovableType&&) = delete;
   // `tuple_structs_golden::TupleStructWithCppImmovableType` doesn't implement
   // the `Clone` trait
@@ -634,7 +642,7 @@ struct
   ~TupleStructWithDefaultAndCloneNoUnpin() = default;
   TupleStructWithDefaultAndCloneNoUnpin(
       TupleStructWithDefaultAndCloneNoUnpin&&) = default;
-  TupleStructWithDefaultAndCloneNoUnpin& operator=(
+  ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin& operator=(
       TupleStructWithDefaultAndCloneNoUnpin&&) = default;
 
   // `tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin` doesn't
@@ -692,7 +700,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ~TupleStructWithDefaultNoCopyNoClone() = default;
   TupleStructWithDefaultNoCopyNoClone(TupleStructWithDefaultNoCopyNoClone&&) =
       default;
-  TupleStructWithDefaultNoCopyNoClone& operator=(
+  ::tuple_structs::TupleStructWithDefaultNoCopyNoClone& operator=(
       TupleStructWithDefaultNoCopyNoClone&&) = default;
 
   // `tuple_structs_golden::TupleStructWithDefaultNoCopyNoClone` doesn't
@@ -731,14 +739,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ~TupleStructWithInvalidArgumentType() = default;
   TupleStructWithInvalidArgumentType(TupleStructWithInvalidArgumentType&&) =
       default;
-  TupleStructWithInvalidArgumentType& operator=(
+  ::tuple_structs::TupleStructWithInvalidArgumentType& operator=(
       TupleStructWithInvalidArgumentType&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TupleStructWithInvalidArgumentType(
       const TupleStructWithInvalidArgumentType&) = default;
-  TupleStructWithInvalidArgumentType& operator=(
+  ::tuple_structs::TupleStructWithInvalidArgumentType& operator=(
       const TupleStructWithInvalidArgumentType&) = default;
   TupleStructWithInvalidArgumentType(
       ::crubit::UnsafeRelocateTag, TupleStructWithInvalidArgumentType&& value) {
@@ -787,7 +795,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~TupleStructWithNoDefault() = default;
   TupleStructWithNoDefault(TupleStructWithNoDefault&&) = default;
-  TupleStructWithNoDefault& operator=(TupleStructWithNoDefault&&) = default;
+  ::tuple_structs::TupleStructWithNoDefault& operator=(
+      TupleStructWithNoDefault&&) = default;
 
   // `tuple_structs_golden::TupleStructWithNoDefault` doesn't implement the
   // `Clone` trait
@@ -822,14 +831,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ~TupleStructWithNonExhaustiveCtor() = default;
   TupleStructWithNonExhaustiveCtor(TupleStructWithNonExhaustiveCtor&&) =
       default;
-  TupleStructWithNonExhaustiveCtor& operator=(
+  ::tuple_structs::TupleStructWithNonExhaustiveCtor& operator=(
       TupleStructWithNonExhaustiveCtor&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TupleStructWithNonExhaustiveCtor(const TupleStructWithNonExhaustiveCtor&) =
       default;
-  TupleStructWithNonExhaustiveCtor& operator=(
+  ::tuple_structs::TupleStructWithNonExhaustiveCtor& operator=(
       const TupleStructWithNonExhaustiveCtor&) = default;
   TupleStructWithNonExhaustiveCtor(::crubit::UnsafeRelocateTag,
                                    TupleStructWithNonExhaustiveCtor&& value) {
@@ -879,10 +888,12 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
     ::tuple_structs::CloneNoDefault&, ::tuple_structs::CloneNoDefault const&);
 }
-inline CloneNoDefault::CloneNoDefault(const CloneNoDefault& other) {
+inline ::tuple_structs::CloneNoDefault::CloneNoDefault(
+    const CloneNoDefault& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline CloneNoDefault& CloneNoDefault::operator=(const CloneNoDefault& other) {
+inline ::tuple_structs::CloneNoDefault& ::tuple_structs::CloneNoDefault::
+operator=(const CloneNoDefault& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }
@@ -898,10 +909,14 @@ static_assert(
     alignof(CopyNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<CopyNoDefault>);
-static_assert(std::is_trivially_move_constructible_v<CopyNoDefault>);
-static_assert(std::is_trivially_move_assignable_v<CopyNoDefault>);
-static_assert(std::is_trivially_copy_constructible_v<CopyNoDefault>);
-static_assert(std::is_trivially_copy_assignable_v<CopyNoDefault>);
+static_assert(
+    std::is_trivially_move_constructible_v<::tuple_structs::CopyNoDefault>);
+static_assert(
+    std::is_trivially_move_assignable_v<::tuple_structs::CopyNoDefault>);
+static_assert(
+    std::is_trivially_copy_constructible_v<::tuple_structs::CopyNoDefault>);
+static_assert(
+    std::is_trivially_copy_assignable_v<::tuple_structs::CopyNoDefault>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, ::tuple_structs::CopyNoDefault* __ret_ptr);
@@ -926,12 +941,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::DefaultAndCloneNoUnpin* __ret_ptr);
 }
-inline DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin() {
+inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<DefaultAndCloneNoUnpin>);
-static_assert(std::is_trivially_move_constructible_v<DefaultAndCloneNoUnpin>);
-static_assert(std::is_trivially_move_assignable_v<DefaultAndCloneNoUnpin>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::DefaultAndCloneNoUnpin>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::DefaultAndCloneNoUnpin>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::tuple_structs::DefaultAndCloneNoUnpin const&,
@@ -942,12 +959,12 @@ extern "C" void __crubit_thunk_clone_ufrom(
     ::tuple_structs::DefaultAndCloneNoUnpin&,
     ::tuple_structs::DefaultAndCloneNoUnpin const&);
 }
-inline DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin(
+inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin(
     const DefaultAndCloneNoUnpin& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline DefaultAndCloneNoUnpin& DefaultAndCloneNoUnpin::operator=(
-    const DefaultAndCloneNoUnpin& other) {
+inline ::tuple_structs::DefaultAndCloneNoUnpin& ::tuple_structs::
+    DefaultAndCloneNoUnpin::operator=(const DefaultAndCloneNoUnpin& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }
@@ -966,12 +983,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::DefaultNoCopyNoClone* __ret_ptr);
 }
-inline DefaultNoCopyNoClone::DefaultNoCopyNoClone() {
+inline ::tuple_structs::DefaultNoCopyNoClone::DefaultNoCopyNoClone() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<DefaultNoCopyNoClone>);
-static_assert(std::is_trivially_move_constructible_v<DefaultNoCopyNoClone>);
-static_assert(std::is_trivially_move_assignable_v<DefaultNoCopyNoClone>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::DefaultNoCopyNoClone>);
+static_assert(
+    std::is_trivially_move_assignable_v<::tuple_structs::DefaultNoCopyNoClone>);
 inline void DefaultNoCopyNoClone::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DefaultNoCopyNoClone, value));
 }
@@ -997,10 +1016,14 @@ static_assert(
     alignof(TupleStructOnePrivateArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<TupleStructOnePrivateArg>);
-static_assert(std::is_trivially_move_constructible_v<TupleStructOnePrivateArg>);
-static_assert(std::is_trivially_move_assignable_v<TupleStructOnePrivateArg>);
-static_assert(std::is_trivially_copy_constructible_v<TupleStructOnePrivateArg>);
-static_assert(std::is_trivially_copy_assignable_v<TupleStructOnePrivateArg>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructOnePrivateArg>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructOnePrivateArg>);
+static_assert(std::is_trivially_copy_constructible_v<
+              ::tuple_structs::TupleStructOnePrivateArg>);
+static_assert(std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructOnePrivateArg>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, ::tuple_structs::TupleStructOnePrivateArg* __ret_ptr);
@@ -1032,10 +1055,14 @@ static_assert(
     alignof(TupleStructOnePublicArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<TupleStructOnePublicArg>);
-static_assert(std::is_trivially_move_constructible_v<TupleStructOnePublicArg>);
-static_assert(std::is_trivially_move_assignable_v<TupleStructOnePublicArg>);
-static_assert(std::is_trivially_copy_constructible_v<TupleStructOnePublicArg>);
-static_assert(std::is_trivially_copy_assignable_v<TupleStructOnePublicArg>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructOnePublicArg>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructOnePublicArg>);
+static_assert(std::is_trivially_copy_constructible_v<
+              ::tuple_structs::TupleStructOnePublicArg>);
+static_assert(std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructOnePublicArg>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, ::tuple_structs::TupleStructOnePublicArg* __ret_ptr);
@@ -1069,13 +1096,13 @@ static_assert(
 static_assert(
     std::is_trivially_destructible_v<TupleStructOnePublicArgOnePrivateArg>);
 static_assert(std::is_trivially_move_constructible_v<
-              TupleStructOnePublicArgOnePrivateArg>);
-static_assert(
-    std::is_trivially_move_assignable_v<TupleStructOnePublicArgOnePrivateArg>);
+              ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
 static_assert(std::is_trivially_copy_constructible_v<
-              TupleStructOnePublicArgOnePrivateArg>);
-static_assert(
-    std::is_trivially_copy_assignable_v<TupleStructOnePublicArgOnePrivateArg>);
+              ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
+static_assert(std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, std::int32_t,
@@ -1113,12 +1140,14 @@ static_assert(
     alignof(TupleStructTwoPrivateArgs) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<TupleStructTwoPrivateArgs>);
-static_assert(
-    std::is_trivially_move_constructible_v<TupleStructTwoPrivateArgs>);
-static_assert(std::is_trivially_move_assignable_v<TupleStructTwoPrivateArgs>);
-static_assert(
-    std::is_trivially_copy_constructible_v<TupleStructTwoPrivateArgs>);
-static_assert(std::is_trivially_copy_assignable_v<TupleStructTwoPrivateArgs>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructTwoPrivateArgs>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructTwoPrivateArgs>);
+static_assert(std::is_trivially_copy_constructible_v<
+              ::tuple_structs::TupleStructTwoPrivateArgs>);
+static_assert(std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructTwoPrivateArgs>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, std::int32_t,
@@ -1163,10 +1192,14 @@ static_assert(
     alignof(TupleStructTwoPublicArgs) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<TupleStructTwoPublicArgs>);
-static_assert(std::is_trivially_move_constructible_v<TupleStructTwoPublicArgs>);
-static_assert(std::is_trivially_move_assignable_v<TupleStructTwoPublicArgs>);
-static_assert(std::is_trivially_copy_constructible_v<TupleStructTwoPublicArgs>);
-static_assert(std::is_trivially_copy_assignable_v<TupleStructTwoPublicArgs>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructTwoPublicArgs>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructTwoPublicArgs>);
+static_assert(std::is_trivially_copy_constructible_v<
+              ::tuple_structs::TupleStructTwoPublicArgs>);
+static_assert(std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructTwoPublicArgs>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, std::int32_t,
@@ -1304,9 +1337,9 @@ static_assert(
 static_assert(
     std::is_trivially_destructible_v<TupleStructWithDefaultAndCloneNoUnpin>);
 static_assert(std::is_trivially_move_constructible_v<
-              TupleStructWithDefaultAndCloneNoUnpin>);
-static_assert(
-    std::is_trivially_move_assignable_v<TupleStructWithDefaultAndCloneNoUnpin>);
+              ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin* __ret_ptr);
@@ -1341,9 +1374,9 @@ static_assert(
 static_assert(
     std::is_trivially_destructible_v<TupleStructWithDefaultNoCopyNoClone>);
 static_assert(std::is_trivially_move_constructible_v<
-              TupleStructWithDefaultNoCopyNoClone>);
-static_assert(
-    std::is_trivially_move_assignable_v<TupleStructWithDefaultNoCopyNoClone>);
+              ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
 inline void
 TupleStructWithDefaultNoCopyNoClone::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithDefaultNoCopyNoClone, __field0));
@@ -1358,20 +1391,20 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::TupleStructWithInvalidArgumentType* __ret_ptr);
 }
-inline TupleStructWithInvalidArgumentType::
+inline ::tuple_structs::TupleStructWithInvalidArgumentType::
     TupleStructWithInvalidArgumentType() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(
     std::is_trivially_destructible_v<TupleStructWithInvalidArgumentType>);
-static_assert(
-    std::is_trivially_move_constructible_v<TupleStructWithInvalidArgumentType>);
-static_assert(
-    std::is_trivially_move_assignable_v<TupleStructWithInvalidArgumentType>);
-static_assert(
-    std::is_trivially_copy_constructible_v<TupleStructWithInvalidArgumentType>);
-static_assert(
-    std::is_trivially_copy_assignable_v<TupleStructWithInvalidArgumentType>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructWithInvalidArgumentType>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructWithInvalidArgumentType>);
+static_assert(std::is_trivially_copy_constructible_v<
+              ::tuple_structs::TupleStructWithInvalidArgumentType>);
+static_assert(std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructWithInvalidArgumentType>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     void**, ::tuple_structs::TupleStructWithInvalidArgumentType* __ret_ptr);
@@ -1419,8 +1452,10 @@ static_assert(
     alignof(TupleStructWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(std::is_trivially_destructible_v<TupleStructWithNoDefault>);
-static_assert(std::is_trivially_move_constructible_v<TupleStructWithNoDefault>);
-static_assert(std::is_trivially_move_assignable_v<TupleStructWithNoDefault>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructWithNoDefault>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructWithNoDefault>);
 inline void TupleStructWithNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithNoDefault, __field0));
 }
@@ -1434,19 +1469,20 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::TupleStructWithNonExhaustiveCtor* __ret_ptr);
 }
-inline TupleStructWithNonExhaustiveCtor::TupleStructWithNonExhaustiveCtor() {
+inline ::tuple_structs::TupleStructWithNonExhaustiveCtor::
+    TupleStructWithNonExhaustiveCtor() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(
     std::is_trivially_destructible_v<TupleStructWithNonExhaustiveCtor>);
-static_assert(
-    std::is_trivially_move_constructible_v<TupleStructWithNonExhaustiveCtor>);
-static_assert(
-    std::is_trivially_move_assignable_v<TupleStructWithNonExhaustiveCtor>);
-static_assert(
-    std::is_trivially_copy_constructible_v<TupleStructWithNonExhaustiveCtor>);
-static_assert(
-    std::is_trivially_copy_assignable_v<TupleStructWithNonExhaustiveCtor>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
+static_assert(std::is_trivially_copy_constructible_v<
+              ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
+static_assert(std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     std::int32_t, std::int32_t,

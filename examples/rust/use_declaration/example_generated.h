@@ -33,7 +33,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Type() = default;
   Type(Type&&) = default;
-  Type& operator=(Type&&) = default;
+  ::example_crate::Type& operator=(Type&&) = default;
 
   // `example_crate_golden::Type` doesn't implement the `Clone` trait
   Type(const Type&) = delete;
@@ -73,10 +73,12 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::example_crate::Type* __ret_ptr);
 }
-inline Type::Type() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::example_crate::Type::Type() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
 static_assert(std::is_trivially_destructible_v<Type>);
-static_assert(std::is_trivially_move_constructible_v<Type>);
-static_assert(std::is_trivially_move_assignable_v<Type>);
+static_assert(std::is_trivially_move_constructible_v<::example_crate::Type>);
+static_assert(std::is_trivially_move_assignable_v<::example_crate::Type>);
 inline void Type::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Type, x));
 }
