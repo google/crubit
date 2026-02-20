@@ -625,6 +625,7 @@ impl BridgeRsTypeKind {
                 BridgeRsTypeKind::StdString { in_cc_std }
             }
             BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {
+                let target_identifier = record.owning_target.convert_to_cc_identifier();
                 BridgeRsTypeKind::DynCallable(Rc::new(Callable {
                     backing_type,
                     fn_trait: match fn_trait {
@@ -637,10 +638,16 @@ impl BridgeRsTypeKind {
                         .iter()
                         .map(|param_type| db.rs_type_kind(param_type.clone()))
                         .collect::<Result<_>>()?,
-                    // TODO(okabayashi): use something more sophisticated than the mangled name
-                    // of the class template specialization.
-                    invoker_ident: format_ident!("{}_invoker", record.rs_name.identifier.as_ref()),
-                    manager_ident: format_ident!("{}_manager", record.rs_name.identifier.as_ref()),
+                    invoker_ident: format_ident!(
+                        "__crubit_invoker_{}{}",
+                        record.rs_name.identifier.as_ref(),
+                        target_identifier,
+                    ),
+                    manager_ident: format_ident!(
+                        "__crubit_manager_{}{}",
+                        record.rs_name.identifier.as_ref(),
+                        target_identifier,
+                    ),
                 }))
             }
         };
