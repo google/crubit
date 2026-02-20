@@ -1323,7 +1323,7 @@ fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> erro
     )
     .into();
     let id = ((def_id.index.as_u32() as u64) << 32) | def_id.krate.as_u32() as u64;
-    error_report::ItemName { name, id }
+    error_report::ItemName { name, id, unique_name: None }
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.

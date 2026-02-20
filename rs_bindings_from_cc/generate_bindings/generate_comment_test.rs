@@ -154,7 +154,11 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let db = factory.make_db(Environment::Production);
     let _scope = error_report::ItemScope::new(
         db.errors(),
-        error_report::ItemName { name: "test_item".into(), id: TEST_ITEM_ID.as_u64() },
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+        },
     );
     let actual = generate_unsupported(
         &db,
@@ -182,7 +186,11 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     let db = factory.make_db(Environment::Production);
     let _scope = error_report::ItemScope::new(
         db.errors(),
-        error_report::ItemName { name: "test_item".into(), id: TEST_ITEM_ID.as_u64() },
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+        },
     );
     let actual = generate_unsupported(
         &db,
@@ -207,7 +215,11 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let db = factory.make_db(Environment::GoldenTest);
     let _scope = error_report::ItemScope::new(
         db.errors(),
-        error_report::ItemName { name: "test_item".into(), id: TEST_ITEM_ID.as_u64() },
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+        },
     );
     let actual = generate_unsupported(
         &db,
