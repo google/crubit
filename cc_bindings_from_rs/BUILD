@@ -43,6 +43,23 @@ rust_library(
 )
 
 crubit_rust_binary(
+    name = "cargo-cpp_api_from_rust",
+    srcs = ["cargo-cpp_api_from_rust.rs"],
+    # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
+    crubit_dep = False,
+    # LINT.IfChange
+    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    deps = [
+        ":cmdline",
+        ":cpp_api_from_rust_lib",
+        "//common:arc_anyhow",
+        "@crate_index//:cargo_metadata",  # v0_23
+        "@crate_index//:clap",  # v4
+    ],
+)
+
+crubit_rust_binary(
     name = "cc_bindings_from_rs",
     srcs = ["cc_bindings_from_rs.rs"],
     # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
