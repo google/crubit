@@ -132,6 +132,36 @@ impl<'a> string_view<'a> {
         // SAFETY: The viewed memory is not mutated during this call.
         unsafe { self.as_bytes() }.contains(x)
     }
+
+    /// Returns an object that implements `Display` for safely printing string views that may
+    /// contain non-Unicode data. This might perform lossy conversion, depending on the data.
+    ///
+    /// The caller should immediately pass this result to a formatting operation, and should not
+    /// hold on to the result beyond that.
+    pub fn display(&self) -> StringViewDisplay<'a> {
+        // SAFETY: We assume that the result of this function will be immediately passed to a
+        // fomatting operation, in which case this is an immediate read.
+        StringViewDisplay(unsafe { self.as_bytes() })
+    }
+}
+
+/// Helper struct that implements Display for string_view.
+///
+/// A string_view form C++ may contain non-Unicode data. This Display implementation replaces
+/// invalid UTF-8 with the Unicode replacement character (�), and is potentially lossy.
+pub struct StringViewDisplay<'a>(&'a [u8]);
+
+impl<'a> core::fmt::Display for StringViewDisplay<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use core::fmt::Write;
+        for chunk in self.0.utf8_chunks() {
+            f.write_str(chunk.valid())?;
+            if !chunk.invalid().is_empty() {
+                f.write_char(core::char::REPLACEMENT_CHARACTER)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 /// Presents the bytes as a normal string, with invalid UTF-8 presented as hex escape sequences.

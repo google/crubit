@@ -94,10 +94,10 @@ impl string {
         self.owned_cpp_string.as_ptr()
     }
 
-    /// Returns an object that implements `Display` for safely printing paths that may contain
+    /// Returns an object that implements `Display` for safely printing strings that may contain
     /// non-Unicode data. This may perform lossy conversion, depending on the underlying data.
-    pub fn display(&self) -> Display<'_> {
-        Display(self.as_slice())
+    pub fn display(&self) -> StringDisplay<'_> {
+        StringDisplay(self.as_slice())
     }
 }
 
@@ -256,9 +256,9 @@ impl<'a, Crate> forward_declare::CppCast<*mut forward_declare::Incomplete<String
 /// A string from C++ might contain non-Unicode data. This struct implements the Display trait in a
 /// way that mitigates that. It is created by the display method on `string`. This may perform lossy
 /// conversion, depending on the underlying data.
-pub struct Display<'a>(&'a [u8]);
+pub struct StringDisplay<'a>(&'a [u8]);
 
-impl<'a> core::fmt::Display for Display<'a> {
+impl<'a> core::fmt::Display for StringDisplay<'a> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         use core::fmt::Write;
         for chunk in self.0.utf8_chunks() {
