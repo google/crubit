@@ -13,9 +13,9 @@ prefer just copy-pasting something, start there.
 ## How to use Crubit {#introduction}
 
 Crubit allows you to call some Rust interfaces from C++. It supports
-[functions](functions.md) (including methods), [structs](structs.md), and even
-[enums](enums.md) as "opaque" objects. Crubit does **not** support advanced
-features like generics or dynamic dispatch with `dyn`.
+[functions](functions.md) (including methods), [structs](structs.md),
+[traits](traits.md), and even [enums](enums.md) as "opaque" objects. Crubit does
+**not** support advanced features like generics or dynamic dispatch with `dyn`.
 
 The rest of this document goes over how to create a Rust library that can be
 called from C++, and how to actually use it from C++. The quick summary is:
