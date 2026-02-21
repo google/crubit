@@ -6,6 +6,7 @@ extern crate alloc;
 extern crate std;
 
 use crate::crubit_cc_std_internal::conversion_function_helpers;
+use crate::lossy_utf8::LossyUtf8Display;
 use alloc::string::String;
 use alloc::vec::Vec;
 use bridge_rust::{transmute_abi, CrubitAbi, Decoder, Encoder};
@@ -96,10 +97,10 @@ impl string_wrapper {
         self.owned_cpp_string.as_ptr()
     }
 
-    /// Returns an object that implements `Display` for safely printing paths that may contain
-    /// non-Unicode data. This may perform lossy conversion, depending on the underlying data.
-    pub fn display(&self) -> Display<'_> {
-        Display(self.as_slice())
+    /// Returns an object that implements `Display` for safely printing strings that may contain
+    /// non-Unicode data.
+    pub fn display(&self) -> LossyUtf8Display<'_> {
+        LossyUtf8Display(self.as_slice())
     }
 }
 
@@ -250,26 +251,6 @@ impl<'a, Crate> forward_declare::CppCast<*mut forward_declare::Incomplete<String
 {
     fn cpp_cast(self) -> *mut forward_declare::Incomplete<StringSymbol, Crate> {
         self.owned_cpp_string.as_ptr() as *mut _
-    }
-}
-
-/// Helper struct for safely printing C++ string data with `format!` and `{}`.
-///
-/// A string from C++ might contain non-Unicode data. This struct implements the Display trait in a
-/// way that mitigates that. It is created by the display method on `string_wrapper`. This may perform lossy
-/// conversion, depending on the underlying data.
-pub struct Display<'a>(&'a [u8]);
-
-impl<'a> core::fmt::Display for Display<'a> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        use core::fmt::Write;
-        for chunk in self.0.utf8_chunks() {
-            f.write_str(chunk.valid())?;
-            if !chunk.invalid().is_empty() {
-                f.write_char(core::char::REPLACEMENT_CHARACTER)?;
-            }
-        }
-        Ok(())
     }
 }
 

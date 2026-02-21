@@ -4,6 +4,7 @@
 
 extern crate std;
 
+use crate::lossy_utf8::LossyUtf8Display;
 use crate::slice_ptr::get_raw_parts;
 use crate::std::raw_string_view;
 use core::ptr;
@@ -132,6 +133,17 @@ impl<'a> string_view<'a> {
     pub fn contains(&self, x: &u8) -> bool {
         // SAFETY: The viewed memory is not mutated during this call.
         unsafe { self.as_bytes() }.contains(x)
+    }
+
+    /// Returns an object that implements `Display` for safely printing string views that may
+    /// contain non-Unicode data.
+    ///
+    /// The caller should immediately pass this result to a formatting operation, and should not
+    /// hold on to the result beyond that.
+    pub fn display(&self) -> LossyUtf8Display<'a> {
+        // SAFETY: We assume that the result of this function will be immediately passed to a
+        // formatting operation, in which case this is an immediate read.
+        LossyUtf8Display(unsafe { self.as_bytes() })
     }
 }
 
