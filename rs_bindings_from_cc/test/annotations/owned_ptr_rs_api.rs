@@ -48,8 +48,22 @@ impl RawThing {
 }
 
 // Generated due to CRUBIT_OWNED_POINTEE annotation.
+///Wrapper for a C++ RawThing owned by Rust.
+///
+/// Style guide: The C++ type to which this refers should be wrapped in an `Arc` or `Mutex` if it is not already thread-safe.
+///
+/// THIS TYPE REQUIRES A MANUAL DROP IMPLEMENTATION.
+/// You MUST provide an `impl OwnedThing { pub fn DropImpl(&mut self) { /*...*/ } }` block in a separate Rust file (e.g., via `additional_rust_srcs`). Failure to do so will result in a compile-time error: `method not found in `OwnedThing``.
 #[repr(transparent)]
 pub struct OwnedThing(::core::ptr::NonNull<RawThing>);
+impl Drop for OwnedThing {
+    fn drop(&mut self) {
+        // IMPORTANT: The DropImpl method for `{}` MUST be implemented in a user-written .rs file (e.g., using `additional_rust_srcs`).
+        // Crubit cannot automatically generate the destruction logic for this type.
+        // See the struct documentation for more details.
+        self.DropImpl();
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=18
 impl From<i32> for RawThing {

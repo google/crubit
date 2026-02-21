@@ -663,11 +663,25 @@ pub fn generated_items_to_tokens<'db>(
                 };
 
                 let owned_type_def = owned_type_name.as_ref().map(|owned_type_name| {
+                    let doc_comment = format!(
+                        "Wrapper for a C++ {} owned by Rust. \n\n Style guide: The C++ type to which this refers should be wrapped in an `Arc` or `Mutex` if it is not already thread-safe. \n\n THIS TYPE REQUIRES A MANUAL DROP IMPLEMENTATION. \n You MUST provide an `impl {} {{ pub fn DropImpl(&mut self) {{ ... }} }}` block in a separate Rust file (e.g., via `additional_rust_srcs`). Failure to do so will result in a compile-time error: `method not found in `{}``.",
+                        ident, owned_type_name, owned_type_name
+                    );
                     quote! {
                         __NEWLINE__ __NEWLINE__
                         __COMMENT__ "Generated due to CRUBIT_OWNED_POINTEE annotation."
+                        #[doc = #doc_comment]
                         #[repr(transparent)]
                         pub struct #owned_type_name(::core::ptr::NonNull<#ident>);
+
+                        impl Drop for #owned_type_name {
+                            fn drop(&mut self) {
+                                __COMMENT__ "IMPORTANT: The DropImpl method for `{}` MUST be implemented in a user-written .rs file (e.g., using `additional_rust_srcs`)."
+                                __COMMENT__ "Crubit cannot automatically generate the destruction logic for this type."
+                                __COMMENT__ "See the struct documentation for more details."
+                                self.DropImpl();
+                            }
+                        }
                     }
                 });
 
