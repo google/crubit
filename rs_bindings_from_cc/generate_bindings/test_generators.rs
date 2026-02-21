@@ -7,7 +7,7 @@
 use arc_anyhow::Result;
 use database::code_snippet::BindingsTokens;
 use database::db::BindingsGenerator;
-use error_report::{bail, ErrorReport, FatalErrors};
+use error_report::{bail, ErrorReport, FatalErrors, SourceLanguage};
 use ffi_types::Environment;
 use generate_bindings::{generate_bindings_tokens, new_database};
 use ir::IR;
@@ -39,7 +39,7 @@ impl TestDbFactory {
     pub fn from_cc(cc_str: &str) -> Result<Self> {
         Ok(Self {
             ir: ir_from_cc(cc_str)?,
-            errors: ErrorReport::new(),
+            errors: ErrorReport::new(SourceLanguage::Cpp),
             fatal_errors: FatalErrors::new(),
         })
     }

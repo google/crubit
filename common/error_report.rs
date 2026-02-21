@@ -233,6 +233,12 @@ pub struct ItemName {
     pub unique_name: Option<Rc<str>>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SourceLanguage {
+    Cpp,
+    Rust,
+}
+
 pub struct ItemScope<'a> {
     report: &'a dyn ErrorReporting,
     item: ItemName,
@@ -275,8 +281,10 @@ fn hide_unstable_details(input: &str) -> String {
 }
 
 /// Errors per-item.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct ErrorReport {
+    /// The language where items are declared.
+    source_language: SourceLanguage,
     // The interior mutability / borrow_mut will never panic: it is never borrowed for longer than
     // a method call, and the methods do not call each other.
     map: RefCell<BTreeMap<u64, ErrorReportEntry>>,
@@ -302,8 +310,8 @@ where
 }
 
 impl ErrorReport {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(source_language: SourceLanguage) -> Self {
+        Self { source_language, map: Default::default(), current_item: Default::default() }
     }
 
     /// If `enable` is true, returns a pair of an `ErrorReport` and a `dyn
@@ -311,9 +319,12 @@ impl ErrorReport {
     ///
     /// If `enable` is false, returns `None` with a `dyn ErrorReporting` that
     /// will ignore errors.
-    pub fn new_rc_or_ignore(enable: bool) -> (Option<Rc<Self>>, Rc<dyn ErrorReporting>) {
+    pub fn new_rc_or_ignore(
+        enable: bool,
+        source_language: SourceLanguage,
+    ) -> (Option<Rc<Self>>, Rc<dyn ErrorReporting>) {
         if enable {
-            let this = Rc::new(Self::default());
+            let this = Rc::new(Self::new(source_language));
             (Some(this.clone()), this)
         } else {
             (None, Rc::new(IgnoreErrors))
@@ -358,7 +369,10 @@ impl ErrorReporting for ErrorReport {
             self.map
                 .borrow_mut()
                 .entry(self.current_item().id)
-                .or_default()
+                .or_insert_with(|| ErrorReportEntry {
+                    source_language: Some(self.source_language),
+                    ..Default::default()
+                })
                 .errors
                 .push(reported_error);
         }
@@ -371,6 +385,7 @@ impl ErrorReporting for ErrorReport {
         match map.entry(item.id) {
             Entry::Vacant(e) => {
                 e.insert(ErrorReportEntry {
+                    source_language: Some(self.source_language),
                     name: item.name.clone(),
                     unique_name: item.unique_name.clone(),
                     ..Default::default()
@@ -407,8 +422,14 @@ impl ErrorReporting for ErrorReport {
     }
 
     fn add_category(&self, category: Category) {
-        self.map.borrow_mut().entry(self.current_item().id).or_default().category |=
-            category as u32;
+        self.map
+            .borrow_mut()
+            .entry(self.current_item().id)
+            .or_insert_with(|| ErrorReportEntry {
+                source_language: Some(self.source_language),
+                ..Default::default()
+            })
+            .category |= category as u32;
     }
 }
 
@@ -418,6 +439,8 @@ impl ErrorReporting for ErrorReport {
 /// backwards-compatible.
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct ErrorReportEntry {
+    pub source_language: Option<SourceLanguage>,
+
     pub name: Rc<str>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub errors: Vec<FormattedError>,
@@ -638,7 +661,7 @@ mod tests {
 
     #[gtest]
     fn error_report() {
-        let report = ErrorReport::new();
+        let report = ErrorReport::new(SourceLanguage::Cpp);
         report.report(&anyhow!("abc{}", "def"));
         report.report(&anyhow!("abc{}", "123"));
         report.report(&anyhow!("error code: {}", 65535));
@@ -674,6 +697,7 @@ mod tests {
             serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
             serde_json::json!([
                 {
+                    "source_language": "Cpp",
                     "name": "",
                     "errors": [
                         {
@@ -721,7 +745,7 @@ mod tests {
 
     #[gtest]
     fn error_report_item_name() {
-        let report = ErrorReport::new();
+        let report = ErrorReport::new(SourceLanguage::Rust);
         {
             let _scope =
                 ItemScope::new(&report, ItemName { name: "foo".into(), id: 1, unique_name: None });
@@ -739,6 +763,7 @@ mod tests {
             serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
             serde_json::json!([
                 {
+                    "source_language": "Rust",
                     "name": "foo",
                     "errors": [
                         {
@@ -748,6 +773,7 @@ mod tests {
                     ],
                 },
                 {
+                    "source_language": "Rust",
                     "name": "bar",
                     "errors": [
                         {
@@ -763,7 +789,7 @@ mod tests {
 
     #[gtest]
     fn test_error_list_elements_are_reported() {
-        let report = ErrorReport::new();
+        let report = ErrorReport::new(SourceLanguage::Cpp);
         report.report(&arc_anyhow::Error::from(ErrorList::from(vec![
             anyhow!("abc{}", "def"),
             anyhow!("hijk"),
@@ -772,6 +798,7 @@ mod tests {
             serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
             serde_json::json!([
                 {
+                    "source_language": "Cpp",
                     "name": "",
                     "errors": [
                         {

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use database::code_snippet::{Bindings, FfiBindings};
-use error_report::{ErrorReport, ErrorReporting, FatalErrors};
+use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
 use ffi_types::{Environment, FfiU8Slice, FfiU8SliceBox};
 use generate_bindings::generate_bindings;
 use std::ffi::OsString;
@@ -55,7 +55,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     catch_unwind(|| {
         let mut error_report: Option<ErrorReport> = None;
         let errors: &dyn ErrorReporting = if generate_error_report {
-            error_report.insert(ErrorReport::new())
+            error_report.insert(ErrorReport::new(SourceLanguage::Cpp))
         } else {
             &error_report::IgnoreErrors
         };

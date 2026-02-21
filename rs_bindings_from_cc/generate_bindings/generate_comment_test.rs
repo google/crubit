@@ -7,7 +7,7 @@
 use arc_anyhow::Result;
 use database::code_snippet;
 use database::BindingsGenerator;
-use error_report::{ErrorReport, FatalErrors};
+use error_report::{ErrorReport, FatalErrors, SourceLanguage};
 use ffi_types::Environment;
 use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
@@ -139,7 +139,7 @@ impl TestDbFactory {
     fn new() -> Self {
         Self {
             ir: make_ir_from_items([]),
-            errors: ErrorReport::new(),
+            errors: ErrorReport::new(SourceLanguage::Cpp),
             fatal_errors: FatalErrors::new(),
         }
     }

@@ -28,7 +28,7 @@ use std::rc::Rc;
 
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
-use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError};
+use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError, SourceLanguage};
 use generate_bindings::{BindingsGenerator, IncludeGuard};
 use kythe_metadata::cc_embed_provenance_map;
 use run_compiler::run_compiler;
@@ -114,7 +114,8 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     use generate_bindings::{generate_bindings, BindingsTokens};
 
     let generate_error_report = cmdline.error_report_out.is_some();
-    let (error_report, errors) = ErrorReport::new_rc_or_ignore(generate_error_report);
+    let (error_report, errors) =
+        ErrorReport::new_rc_or_ignore(generate_error_report, SourceLanguage::Rust);
     let fatal_errors = Rc::new(FatalErrors::new());
 
     let BindingsTokens { cc_api, cc_api_impl } = {
@@ -670,6 +671,7 @@ mod tests {
         let error_report = std::fs::read_to_string(&error_report_out_path)?;
         let expected_error_report = r#"[
   {
+    "source_language": "Rust",
     "name": "test_crate::Unsupported",
     "errors": [
       {
