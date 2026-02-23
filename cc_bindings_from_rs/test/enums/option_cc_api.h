@@ -1408,7 +1408,7 @@ inline rs_std::Option<::option::CloneNoDefault>::operator std::optional<
 inline bool rs_std::Option<::option::CloneNoDefault>::has_value() noexcept {
   return *this->tag() != 0;
 }
-std::uint8_t* rs_std::Option<::option::CloneNoDefault>::tag() noexcept {
+inline std::uint8_t* rs_std::Option<::option::CloneNoDefault>::tag() noexcept {
   return reinterpret_cast<std::uint8_t*>(reinterpret_cast<char*>(this) + 0);
 }
 #endif
@@ -1518,7 +1518,7 @@ inline rs_std::Option<::option::CopyNoDefault>::operator std::optional<
 inline bool rs_std::Option<::option::CopyNoDefault>::has_value() noexcept {
   return *this->tag() != 0;
 }
-std::uint8_t* rs_std::Option<::option::CopyNoDefault>::tag() noexcept {
+inline std::uint8_t* rs_std::Option<::option::CopyNoDefault>::tag() noexcept {
   return reinterpret_cast<std::uint8_t*>(reinterpret_cast<char*>(this) + 0);
 }
 #endif
@@ -1617,7 +1617,7 @@ inline rs_std::Option<::option::HasDefault>::operator std::optional<
 inline bool rs_std::Option<::option::HasDefault>::has_value() noexcept {
   return *this->tag() != UINT64_C(9223372036854775808);
 }
-std::uint64_t* rs_std::Option<::option::HasDefault>::tag() noexcept {
+inline std::uint64_t* rs_std::Option<::option::HasDefault>::tag() noexcept {
   return reinterpret_cast<std::uint64_t*>(reinterpret_cast<char*>(this) + 0);
 }
 #endif
@@ -1703,7 +1703,7 @@ inline rs_std::Option<::option::HasNoDefault>::operator std::optional<
 inline bool rs_std::Option<::option::HasNoDefault>::has_value() noexcept {
   return *this->tag() != UINT64_C(9223372036854775808);
 }
-std::uint64_t* rs_std::Option<::option::HasNoDefault>::tag() noexcept {
+inline std::uint64_t* rs_std::Option<::option::HasNoDefault>::tag() noexcept {
   return reinterpret_cast<std::uint64_t*>(reinterpret_cast<char*>(this) + 0);
 }
 #endif
@@ -1793,7 +1793,7 @@ inline rs_std::Option<::option::HasOptions>::operator std::optional<
 inline bool rs_std::Option<::option::HasOptions>::has_value() noexcept {
   return *this->tag() != 2;
 }
-std::uint8_t* rs_std::Option<::option::HasOptions>::tag() noexcept {
+inline std::uint8_t* rs_std::Option<::option::HasOptions>::tag() noexcept {
   return reinterpret_cast<std::uint8_t*>(reinterpret_cast<char*>(this) + 0);
 }
 #endif
@@ -1883,7 +1883,7 @@ inline rs_std::Option<::option::NonMaxU8>::operator std::optional<
 inline bool rs_std::Option<::option::NonMaxU8>::has_value() noexcept {
   return *this->tag() != 251;
 }
-std::uint8_t* rs_std::Option<::option::NonMaxU8>::tag() noexcept {
+inline std::uint8_t* rs_std::Option<::option::NonMaxU8>::tag() noexcept {
   return reinterpret_cast<std::uint8_t*>(reinterpret_cast<char*>(this) + 0);
 }
 #endif
@@ -1985,7 +1985,7 @@ inline bool
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::has_value() noexcept {
   return *this->tag() != 252;
 }
-std::uint8_t*
+inline std::uint8_t*
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::tag() noexcept {
   return reinterpret_cast<std::uint8_t*>(reinterpret_cast<char*>(this) + 0);
 }
@@ -2068,7 +2068,7 @@ inline rs_std::Option<std::uint8_t>::operator std::optional<
 inline bool rs_std::Option<std::uint8_t>::has_value() noexcept {
   return *this->tag() != 0;
 }
-std::uint8_t* rs_std::Option<std::uint8_t>::tag() noexcept {
+inline std::uint8_t* rs_std::Option<std::uint8_t>::tag() noexcept {
   return reinterpret_cast<std::uint8_t*>(reinterpret_cast<char*>(this) + 0);
 }
 #endif

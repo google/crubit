@@ -392,7 +392,7 @@ fn specialize_option<'tcx>(
             #tag_type_cc* tag() noexcept;
         }),
         cc_details: CcSnippet::new(quote! {
-            #tag_type_cc* rs_std::Option<#ty_tokens>::tag() noexcept {
+            inline #tag_type_cc* rs_std::Option<#ty_tokens>::tag() noexcept {
                 return reinterpret_cast<#tag_type_cc*>(
                     reinterpret_cast<char*>(this) + #tag_offset);
             }
