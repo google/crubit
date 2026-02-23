@@ -1570,6 +1570,7 @@ fn generate_trait_impls<'a, 'tcx>(
                 .flat_map(move |(adt_cc_name, trait_def_id, impl_def_ids)| {
                     impl_def_ids
                         .iter()
+                        .copied()
                         // TODO: b/458768435 - This is technically suboptimal. We could instead only
                         // query for the impls from this crate, but the logic is complicated by
                         // supporting LOCAL_CRATE. Revisit once we've migrated to rmetas.
@@ -1635,7 +1636,7 @@ fn generate_trait_impls<'a, 'tcx>(
         })
         .map(|results_snippets| {
             results_snippets.unwrap_or_else(|(def_id, err)| {
-                generate_unsupported_def(db, *def_id, err).into_main_api()
+                generate_unsupported_def(db, def_id, err).into_main_api()
             })
         })
 }
