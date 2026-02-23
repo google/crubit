@@ -102,6 +102,20 @@ impl<'tcx> CcPrerequisites<'tcx> {
     pub fn move_defs_to_fwd_decls(&mut self) {
         self.fwd_decls.extend(std::mem::take(&mut self.defs))
     }
+
+    /// Move any definitions that appear in `ty` to the forward declarations of `prereqs`.
+    pub fn forward_declare_type(&mut self, ty: Ty<'tcx>) {
+        let mut adts = HashSet::new();
+        for arg in ty.walk() {
+            let Some(adt) = arg.as_type().and_then(|ty| ty.ty_adt_def()) else {
+                continue;
+            };
+            adts.insert(adt.did());
+        }
+
+        self.fwd_decls.extend(self.defs.intersection(&adts));
+        self.defs = self.defs.difference(&adts).cloned().collect();
+    }
 }
 
 impl<'tcx> AddAssign for CcPrerequisites<'tcx> {

@@ -632,7 +632,7 @@ pub fn generate_adt<'tcx>(
     let repr_attrs = db.repr_attrs(core.def_id);
 
     let ApiSnippets {
-        main_api: fields_main_api,
+        main_api: mut fields_main_api,
         cc_details: fields_cc_details,
         rs_details: fields_rs_details,
     } = generate_fields(
@@ -645,6 +645,8 @@ pub fn generate_adt<'tcx>(
         core.alignment_in_bytes,
         &member_function_names,
     );
+
+    fields_main_api.prereqs.forward_declare_type(core.self_ty);
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);

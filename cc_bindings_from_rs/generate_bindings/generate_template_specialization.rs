@@ -524,15 +524,8 @@ pub fn generate_template_specialization<'tcx>(
             TemplateSpecialization::RsStdOption { arg_ty, self_ty } => {
                 specialize_option(db, *arg_ty, *self_ty)
                     .map(|mut snippets| {
-                        let ty::TyKind::Adt(adt, _) = arg_ty.kind() else {
-                            return snippets;
-                        };
-                        let def_id = adt.did();
-                        if !snippets.main_api.prereqs.defs.remove(&def_id) {
-                            return snippets;
-                        }
                         // If our specialization depends on it's argument type, we need to forward declare that type.
-                        snippets.main_api.prereqs.fwd_decls.insert(def_id);
+                        snippets.main_api.prereqs.forward_declare_type(*arg_ty);
                         snippets
                     })
                     .map_err(|e| (*self_ty, e))
