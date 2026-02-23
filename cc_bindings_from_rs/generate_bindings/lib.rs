@@ -1605,7 +1605,7 @@ fn generate_trait_impls<'a, 'tcx>(
 
             let mut member_function_names = HashSet::new();
             let assoc_items: ApiSnippets = tcx
-                .associated_items(impl_def_id)
+                .associated_items(*impl_def_id)
                 .in_definition_order()
                 .flat_map(|assoc_item| {
                     generate_associated_item(db, assoc_item, &mut member_function_names)
