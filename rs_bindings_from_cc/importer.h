@@ -121,6 +121,7 @@ class Importer final : public ImportContext {
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;
   bool IsFmtEnabledForTarget(const BazelLabel& label) const override;
+  bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
   bool DetectFormatter(const clang::TypeDecl& decl) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;

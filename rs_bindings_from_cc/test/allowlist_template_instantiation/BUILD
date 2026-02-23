@@ -7,7 +7,7 @@ crubit_test_cc_library(
     name = "string_view_test_lib",
     hdrs = ["string_view_test_lib.h"],
     aspect_hints = [
-        "//features:supported",
+        "//features:unsafe_view",
     ],
 )
 

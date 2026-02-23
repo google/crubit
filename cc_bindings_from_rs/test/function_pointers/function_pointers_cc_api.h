@@ -5,7 +5,7 @@
 // Automatically @generated C++ bindings for the following Rust crate:
 // function_pointers_golden
 // Features: callables, custom_ffi_types, experimental, fmt, non_unpin_ctor,
-// std_unique_ptr, std_vector, supported, wrapper
+// std_unique_ptr, std_vector, supported, unsafe_view, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTION_POINTERS_FUNCTION_POINTERS_GOLDEN
