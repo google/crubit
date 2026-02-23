@@ -204,7 +204,8 @@ macro_rules! query_group {
   ) => {
     // The database struct, which contains the lookup tables.
     $vis struct $database_struct $(<$($type_param),*>)? {
-      __unwinding_cycles: ::core::cell::Cell<u32>,
+      pub __unwinding_cycles: ::core::cell::Cell<u32>,
+      pub __db_index: u8,
       $(
         $input_function: $input_type,
       )*
@@ -296,6 +297,7 @@ macro_rules! query_group {
       ) -> Self {
         Self {
           __unwinding_cycles: ::core::cell::Cell::new(0),
+          __db_index: $crate::internal::db_index(),
           $(
             $input_function,
           )*
@@ -313,6 +315,51 @@ macro_rules! query_group {
           )*
         }
       }
+    }
+  }
+}
+
+#[macro_export]
+macro_rules! memoized {
+  (
+    $vis:vis fn $memoized_ident:ident(
+      db: $db_type:ty
+      $(, $arg:ident : $arg_type:ty)*
+      $(,)?
+    ) -> $return_type:ty = $original_fn:ident
+  ) => {
+    mod $memoized_ident {
+      std::thread_local! {
+        /// A table off to the side -- one per db instance.
+        ///
+        /// This acts the same as if the db had a table field (or one per thread, anyway),
+        /// but doesn't require centrally registering with the db.
+        // TODO(jeanpierreda): make the `db` part of the key instead of holding it separately.
+        // Probably this means writing a new MemoizationKey trait which subsumes Hash -- that is,
+        // the `&db` gets compared using the __db_index. But this is very tricky to implement,
+        // and might add a lot more code than it saves. The real benefit isn't simplicity,
+        // but removing the double layer of RefCell / the fringe risk of crashes if memoization
+        // tables cross-reference each other.
+        pub static TABLES: ::std::cell::RefCell<::std::vec::Vec<$crate::internal::MemoizationTable<($($arg_type,)*), $return_type>>> = ::std::cell::RefCell::new(vec![Default::default()]);
+      }
+    }
+    $vis fn $memoized_ident(db: $db_type, $($arg: $arg_type),*) -> $return_type {
+      $memoized_ident::TABLES.with(|tables| {
+        let db_index = db.__db_index as usize;
+        if tables.borrow().len() <= db_index {
+          tables.borrow_mut().resize_with(db_index + 1, Default::default);
+        }
+        let table = &tables.borrow()[db_index];
+        table.internal_memoized_call(
+          ($($arg,)*),
+          |($($arg,)*)| {
+            $original_fn(db, $($arg),*)
+          },
+          &db.__unwinding_cycles,
+        ).unwrap_or_else(
+          || panic!("Cycle detected: '{}' depends on its own return value", stringify!($memoized_ident)),
+        )
+      })
     }
   }
 }
@@ -405,6 +452,11 @@ pub mod internal {
             }
             Some(return_value)
         }
+    }
+
+    pub fn db_index() -> u8 {
+        static DB_INDEX: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+        DB_INDEX.fetch_add(1, std::sync::atomic::Ordering::AcqRel)
     }
 }
 
@@ -678,5 +730,34 @@ pub mod tests {
         let db = Db::new(42);
         let result = db.provided_fn(10);
         expect_eq!(result, 52);
+    }
+
+    #[gtest]
+    fn test_separate_memoization() {
+        crate::query_group! {
+          pub struct Add10 {
+            #[input]
+            /// Tracker for how many times this function is called so we can check
+            /// that memoization is indeed happening. This is just for testing;
+            /// memoized functions in non-test code shouldn't have side effects,
+            /// and inputs in non-test code shouldn't have internal mutability.
+            fn call_counter(&self) -> Rc<Cell<i32>>;
+          }
+        }
+        fn add10_impl(db: &Add10, arg: i32) -> i32 {
+            db.call_counter().set(db.call_counter().get() + 1);
+            arg + 10
+        }
+        crate::memoized!(pub fn add10(db: &Add10, arg: i32) -> i32 = add10_impl);
+        let db = Add10::new(Rc::new(Cell::new(0)));
+
+        assert_eq!(add10(&db, 100), 110);
+        assert_eq!(db.call_counter().get(), 1);
+
+        assert_eq!(add10(&db, 100), 110);
+        assert_eq!(db.call_counter().get(), 1);
+
+        assert_eq!(add10(&db, 200), 210);
+        assert_eq!(db.call_counter().get(), 2);
     }
 }
