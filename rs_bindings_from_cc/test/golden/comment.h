@@ -9,8 +9,7 @@
 
 #pragma clang lifetime_elision
 
-// TODO(b/202933018): Re-enable once namespaces are supported
-// namespace ns {
+namespace ns {
 // a
 
 /// Foo
@@ -33,7 +32,7 @@ struct Foo final {
 
 // b
 
-// }  // namespace ns
+}  // namespace ns
 
 // c
 

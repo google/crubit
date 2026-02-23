@@ -15,68 +15,68 @@
 
 // File comment
 
-// TODO(b/202933018): Re-enable once namespaces are supported
-// namespace ns {
-// a
+pub mod ns {
+    // a
 
-/// Foo
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Foo
-pub struct Foo {
-    /// A field
-    pub i: ::ffi_11::c_int,
-    /// Another field
-    pub j: ::ffi_11::c_int,
-}
-impl !Send for Foo {}
-impl !Sync for Foo {}
-unsafe impl ::cxx::ExternType for Foo {
-    type Id = ::cxx::type_id!("Foo");
-    type Kind = ::cxx::kind::Trivial;
-}
+    /// Foo
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=ns :: Foo
+    pub struct Foo {
+        /// A field
+        pub i: ::ffi_11::c_int,
+        /// Another field
+        pub j: ::ffi_11::c_int,
+    }
+    impl !Send for Foo {}
+    impl !Sync for Foo {}
+    unsafe impl ::cxx::ExternType for Foo {
+        type Id = ::cxx::type_id!("ns :: Foo");
+        type Kind = ::cxx::kind::Trivial;
+    }
 
-impl Default for Foo {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
+    impl Default for Foo {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns3FooC1Ev(&raw mut tmp as *mut _);
+                tmp.assume_init()
+            }
         }
     }
+
+    // Error while generating bindings for constructor 'ns::Foo::Foo':
+    // Can't generate bindings for ns::Foo::Foo, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for constructor 'ns::Foo::Foo':
+    // Can't generate bindings for ns::Foo::Foo, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'ns::Foo::operator=':
+    // Can't generate bindings for ns::Foo::operator=, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'ns::Foo::operator=':
+    // Can't generate bindings for ns::Foo::operator=, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // TODO(rosica): This comment appears near fields of a struct, and
+    // is currently generated below the struct definiton on the Rust side.
+
+    // TODO(rosica): This comment appears between fields of a struct, and
+    // is currently generated below the struct definiton on the Rust side.
+
+    // TODO(rosica): This comment appears near fields of a struct, and
+    // is currently generated below the struct definiton on the Rust side.
+
+    // b
 }
 
-// Error while generating bindings for constructor 'Foo::Foo':
-// Can't generate bindings for Foo::Foo, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'Foo::Foo':
-// Can't generate bindings for Foo::Foo, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'Foo::operator=':
-// Can't generate bindings for Foo::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'Foo::operator=':
-// Can't generate bindings for Foo::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// TODO(rosica): This comment appears near fields of a struct, and
-// is currently generated below the struct definiton on the Rust side.
-
-// TODO(rosica): This comment appears between fields of a struct, and
-// is currently generated below the struct definiton on the Rust side.
-
-// TODO(rosica): This comment appears near fields of a struct, and
-// is currently generated below the struct definiton on the Rust side.
-
-// b
-
-// }  // namespace ns
+// namespace ns
 
 // c
 
@@ -178,7 +178,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN2ns3FooC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z3foov();
         pub(crate) unsafe fn __rust_thunk___ZN3BarC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsC1Ev(__this: *mut ::core::ffi::c_void);
@@ -186,12 +186,12 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Foo>() == 8);
-    assert!(::core::mem::align_of::<crate::Foo>() == 4);
-    static_assertions::assert_impl_all!(crate::Foo: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::Foo: Drop);
-    assert!(::core::mem::offset_of!(crate::Foo, i) == 0);
-    assert!(::core::mem::offset_of!(crate::Foo, j) == 4);
+    assert!(::core::mem::size_of::<crate::ns::Foo>() == 8);
+    assert!(::core::mem::align_of::<crate::ns::Foo>() == 4);
+    static_assertions::assert_impl_all!(crate::ns::Foo: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::ns::Foo: Drop);
+    assert!(::core::mem::offset_of!(crate::ns::Foo, i) == 0);
+    assert!(::core::mem::offset_of!(crate::ns::Foo, j) == 4);
     assert!(::core::mem::size_of::<crate::Bar>() == 4);
     assert!(::core::mem::align_of::<crate::Bar>() == 4);
     static_assertions::assert_impl_all!(crate::Bar: Copy,Clone);
