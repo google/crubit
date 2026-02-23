@@ -26,7 +26,9 @@ struct [[clang::annotate("crubit_internal_rust_type", "i8")]] MyI8Class final {
 };
 
 enum [[clang::annotate("crubit_internal_rust_type",
-                       "i8")]] MyI8Enum : unsigned char{kX};
+                       "i8")]] MyI8Enum : unsigned char {
+  kX
+};
 
 using MyI8Alias [[clang::annotate("crubit_internal_rust_type", "i8")]] =
     unsigned char;
@@ -56,5 +58,12 @@ struct ExistingRustTypeFieldTypes final {
 
   TooFewArgs error;
 };
+
+template <typename T>
+struct [[clang::annotate("crubit_internal_rust_type", "RustPtr")]] Ptr final {
+  T* ptr;
+};
+
+void AcceptPtrInt(Ptr<int> ptr);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CRUBIT_INTERNAL_RS_TYPE_H_

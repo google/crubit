@@ -902,14 +902,20 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
 
             Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
         }
-        RsTypeKind::ExistingRustType(existing_rust_type) => {
+        RsTypeKind::ExistingRustType { existing_rust_type, type_args } => {
             // The rs_name is already fully qualified.
-            let rust_type = existing_rust_type.rs_name.as_ref().parse().map_err(|e| {
-                anyhow!(
-                    "Failed to parse Rust type `{}` as a TokenStream: {e}",
-                    existing_rust_type.rs_name
-                )
-            })?;
+            let mut rust_type: TokenStream =
+                existing_rust_type.rs_name.as_ref().parse().map_err(|e| {
+                    anyhow!(
+                        "Failed to parse Rust type `{}` as a TokenStream: {e}",
+                        existing_rust_type.rs_name
+                    )
+                })?;
+
+            if !type_args.is_empty() {
+                let type_args = type_args.iter().map(|type_arg| type_arg.to_token_stream(db));
+                rust_type.extend(quote! { ::<#(#type_args),*> });
+            }
 
             let cpp_type = make_cpp_type_from_item(
                 existing_rust_type.as_ref(),

@@ -35,4 +35,10 @@ extern "C" void __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___Z12AcceptPtrInt3PtrIiE(Ptr<int>* ptr) {
+  AcceptPtrInt(std::move(*ptr));
+}
+
+static_assert((void (*)(Ptr<int>)) & ::AcceptPtrInt);
+
 #pragma clang diagnostic pop
