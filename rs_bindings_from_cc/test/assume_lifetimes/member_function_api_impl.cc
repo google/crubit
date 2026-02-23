@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:member_function
-// Features: assume_lifetimes, supported
+// Features: assume_lifetimes, fmt, supported
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"

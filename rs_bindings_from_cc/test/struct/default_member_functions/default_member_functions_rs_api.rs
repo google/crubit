@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions
-// Features: supported
+// Features: fmt, supported
 
 #![rustfmt::skip]
 #![feature(

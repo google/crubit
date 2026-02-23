@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/consume_absl:absl_functional
-// Features: callables, supported
+// Features: callables, fmt, supported
 
 #include "support/bridge.h"
 #include "support/internal/cxx20_backports.h"
