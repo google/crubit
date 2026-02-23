@@ -147,15 +147,23 @@ fn derive_move_and_assign_via_copy_impl(
 ) -> syn::Result<proc_macro2::TokenStream> {
     let ctor = derive_crate_name(&input)?;
     let type_name = input.ident;
+    let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {
+        // Ensure `SelfCtor` is implemented for the type regardless of fields or type parameters.
+        impl #impl_generics ::#ctor::SelfCtor for  #type_name #type_generics #where_clause {}
+
         // Move construct.
-        impl From<::#ctor::RvalueReference<'_, Self>> for #type_name {
+        impl #impl_generics From<::#ctor::RvalueReference<'_, Self>> for
+            #type_name #type_generics #where_clause
+        {
             #[inline(always)]
             fn from(this: ::#ctor::RvalueReference<'_, Self>) -> Self { *this.get_ref() }
         }
 
         // Ctor move construct.
-        impl ::#ctor::CtorNew<::#ctor::RvalueReference<'_, Self>> for #type_name {
+        impl #impl_generics ::#ctor::CtorNew<::#ctor::RvalueReference<'_, Self>> for
+            #type_name #type_generics #where_clause
+        {
             type CtorType = Self;
             type Error = ::#ctor::Infallible;
             #[inline(always)]
@@ -165,7 +173,7 @@ fn derive_move_and_assign_via_copy_impl(
         }
 
         // Copy assign.
-        impl ::#ctor::UnpinAssign<&Self> for #type_name {
+        impl #impl_generics ::#ctor::UnpinAssign<&Self> for #type_name #type_generics #where_clause {
             #[inline(always)]
             fn unpin_assign(&mut self, other: &Self) {
                 *self = *other;
@@ -173,7 +181,9 @@ fn derive_move_and_assign_via_copy_impl(
         }
 
         // Move assign.
-        impl ::#ctor::UnpinAssign<::#ctor::RvalueReference<'_, Self>> for #type_name {
+        impl #impl_generics ::#ctor::UnpinAssign<::#ctor::RvalueReference<'_, Self>> for
+            #type_name #type_generics #where_clause
+        {
             #[inline(always)]
             fn unpin_assign(&mut self, other: ::#ctor::RvalueReference<'_, Self>) {
                 *self = *other.get_ref();
@@ -339,14 +349,14 @@ fn project_method_impl(
         }
     }
 
-    let (input_impl_generics, input_ty_generics, input_where_clause) =
+    let (input_impl_generics, input_type_generics, input_where_clause) =
         input.generics.split_for_impl();
     let (_, projected_generics, _) = projected.generics.split_for_impl();
 
     Ok(quote! {
         #projected
 
-        impl #input_impl_generics #input_ident #input_ty_generics #input_where_clause {
+        impl #input_impl_generics #input_ident #input_type_generics #input_where_clause {
             #[must_use]
             pub fn #method_name<#lifetime>(self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
                 unsafe {
@@ -702,12 +712,12 @@ fn recursively_pinned_impl(
     let ctor_initialized_name = &ctor_initialized_input.ident;
     forbid_initialization(&mut input);
 
-    let (input_impl_generics, input_ty_generics, input_where_clause) =
+    let (input_impl_generics, input_type_generics, input_where_clause) =
         input.generics.split_for_impl();
 
     let drop_impl = if args.is_pinned_drop {
         quote! {
-            impl #input_impl_generics Drop for #name #input_ty_generics #input_where_clause {
+            impl #input_impl_generics Drop for #name #input_type_generics #input_where_clause {
                 fn drop(&mut self) {
                     unsafe {::#ctor::PinnedDrop::pinned_drop(::core::pin::Pin::new_unchecked(self))}
                 }
@@ -715,10 +725,10 @@ fn recursively_pinned_impl(
         }
     } else {
         quote! {
-            impl #input_impl_generics ::#ctor::macro_internal::DoNotImplDrop for #name #input_ty_generics #input_where_clause {}
+            impl #input_impl_generics ::#ctor::macro_internal::DoNotImplDrop for #name #input_type_generics #input_where_clause {}
             /// A no-op PinnedDrop that will cause an error if the user also defines PinnedDrop,
             /// due to forgetting to pass `PinnedDrop` to #[recursively_pinned(PinnedDrop)]`.
-            impl #input_impl_generics ::#ctor::PinnedDrop for #name #input_ty_generics #input_where_clause {
+            impl #input_impl_generics ::#ctor::PinnedDrop for #name #input_type_generics #input_where_clause {
                 unsafe fn pinned_drop(self: ::core::pin::Pin<&mut Self>) {}
             }
         }
@@ -728,7 +738,7 @@ fn recursively_pinned_impl(
         quote! {}
     } else {
         quote! {
-            impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
+            impl #input_impl_generics !Unpin for #name #input_type_generics #input_where_clause {}
         }
     };
 
@@ -746,8 +756,10 @@ fn recursively_pinned_impl(
         const _ : () = {
             #ctor_initialized_input
 
-            unsafe impl #input_impl_generics ::#ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {
-                type CtorInitializedFields = #ctor_initialized_name #input_ty_generics;
+            unsafe impl #input_impl_generics ::#ctor::RecursivelyPinned for
+                #name #input_type_generics #input_where_clause
+            {
+                type CtorInitializedFields = #ctor_initialized_name #input_type_generics;
             }
         };
     })
