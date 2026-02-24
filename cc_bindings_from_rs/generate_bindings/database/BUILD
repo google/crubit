@@ -2,6 +2,10 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "LLVM_UNSTABLE_ONLY",
+)
 
 package(
     default_applicable_licenses = ["//:license"],
