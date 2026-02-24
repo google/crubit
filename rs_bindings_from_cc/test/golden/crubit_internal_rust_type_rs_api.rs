@@ -85,12 +85,25 @@ impl Default for ExistingRustTypeFieldTypes {
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+// Error while generating bindings for class 'Ptr':
+// Class templates are not supported yet
+
+#[inline(always)]
+pub fn AcceptPtrInt(mut ptr: crate::RustPtr<::ffi_11::c_int>) {
+    unsafe { crate::detail::__rust_thunk___Z12AcceptPtrInt3PtrIiE(&mut ptr) }
+}
+
+// Type bindings for Ptr<int> suppressed due to being mapped to an existing Rust type (crate::RustPtr::<::ffi_11::c_int>)
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z12AcceptPtrInt3PtrIiE(
+            ptr: &mut crate::RustPtr<::ffi_11::c_int>,
         );
     }
 }
@@ -113,4 +126,6 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_enum) == 2);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_alias) == 3);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, error) == 4);
+    assert!(::core::mem::size_of::<crate::RustPtr::<::ffi_11::c_int>>() == 8);
+    assert!(::core::mem::align_of::<crate::RustPtr::<::ffi_11::c_int>>() == 8);
 };

@@ -470,7 +470,10 @@ pub enum RsTypeKind {
     /// This variant comes from the `CRUBIT_INTERNAL_RUST_TYPE` attribute macro in C++,
     /// which is used on types like `SliceRef`, `StrRef`, and C++ types generated from Rust
     /// types by cc_bindings_from_rs.
-    ExistingRustType(Rc<ExistingRustType>),
+    ExistingRustType {
+        existing_rust_type: Rc<ExistingRustType>,
+        type_args: Rc<[RsTypeKind]>,
+    },
 }
 
 /// Information about how the owned function object may be called.
@@ -827,7 +830,21 @@ impl RsTypeKind {
             });
         }
 
-        Ok(RsTypeKind::ExistingRustType(existing_rust_type))
+        let type_args = existing_rust_type
+            .type_parameters
+            .iter()
+            .map(|type_param| {
+                let rs_type_kind = db.rs_type_kind(type_param.clone())?;
+                ensure!(
+                    !rs_type_kind.is_bridge_type(),
+                    "Type parameter cannot be a bridge type: {}",
+                    rs_type_kind.display(db),
+                );
+                Ok(rs_type_kind)
+            })
+            .collect::<Result<Rc<[RsTypeKind]>>>()?;
+
+        Ok(RsTypeKind::ExistingRustType { existing_rust_type, type_args })
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -1000,7 +1017,9 @@ impl RsTypeKind {
                         require_feature(CrubitFeature::Supported, None)
                     }
                 }
-                RsTypeKind::ExistingRustType(_) => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::ExistingRustType { .. } => {
+                    require_feature(CrubitFeature::Supported, None)
+                }
             }
         }
         (missing_features, reasons.into_iter().join(", "))
@@ -1053,7 +1072,9 @@ impl RsTypeKind {
             RsTypeKind::TypeAlias { .. } => unreachable!(),
             RsTypeKind::Primitive(_) => true,
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::ExistingRustType(existing_rust_type) => existing_rust_type.is_same_abi,
+            RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
+                existing_rust_type.is_same_abi
+            }
         }
     }
 
@@ -1108,7 +1129,7 @@ impl RsTypeKind {
             RsTypeKind::TypeAlias { .. } => unreachable!(),
             RsTypeKind::Primitive(_) => true,
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::ExistingRustType(_) => true,
+            RsTypeKind::ExistingRustType { .. } => true,
         }
     }
 
@@ -1219,7 +1240,7 @@ impl RsTypeKind {
                 }
                 BridgeRsTypeKind::C9Co { .. } => false,
             },
-            RsTypeKind::ExistingRustType(_) => true,
+            RsTypeKind::ExistingRustType { .. } => true,
         }
     }
 
@@ -1417,7 +1438,7 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::BridgeType { .. } => self.to_token_stream(db),
-            RsTypeKind::ExistingRustType(_) => self.to_token_stream(db),
+            RsTypeKind::ExistingRustType { .. } => self.to_token_stream(db),
             _ => self.to_token_stream(db),
         }
     }
@@ -1677,14 +1698,18 @@ impl RsTypeKind {
             },
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
-                    BridgeRsTypeKind::BridgeVoidConverters { rust_name, .. } => {
-                        fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
-                    }
+                    BridgeRsTypeKind::BridgeVoidConverters { rust_name, .. } => fully_qualify_type(
+                        db,
+                        ir::Item::Record(original_type.clone()),
+                        rust_name,
+                        Rc::default(),
+                    ),
                     BridgeRsTypeKind::Bridge { rust_name, generic_types, .. } => {
                         let path = fully_qualify_type(
                             db,
                             ir::Item::Record(original_type.clone()),
                             rust_name,
+                            Rc::default(),
                         );
 
                         // If there are no generic types, then we're done.
@@ -1696,9 +1721,12 @@ impl RsTypeKind {
                             generic_types.iter().map(|t| t.to_token_stream(db));
                         quote! { #path < #(#generic_types_tokens),* > }
                     }
-                    BridgeRsTypeKind::ProtoMessageBridge { rust_name } => {
-                        fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
-                    }
+                    BridgeRsTypeKind::ProtoMessageBridge { rust_name } => fully_qualify_type(
+                        db,
+                        ir::Item::Record(original_type.clone()),
+                        rust_name,
+                        Rc::default(),
+                    ),
                     BridgeRsTypeKind::StdOptional(inner) => {
                         let inner = inner.to_token_stream(db);
                         quote! { ::core::option::Option< #inner > }
@@ -1734,10 +1762,11 @@ impl RsTypeKind {
                     }
                 }
             }
-            RsTypeKind::ExistingRustType(existing_rust_type) => fully_qualify_type(
+            RsTypeKind::ExistingRustType { existing_rust_type, type_args } => fully_qualify_type(
                 db,
                 ir::Item::ExistingRustType(existing_rust_type.clone()),
                 &existing_rust_type.rs_name,
+                Rc::clone(type_args),
             ),
         }
     }
@@ -1754,6 +1783,7 @@ fn fully_qualify_type<'a>(
     db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
     item: ir::Item,
     type_expression: &str,
+    type_args: Rc<[RsTypeKind]>,
 ) -> TokenStream {
     let root_crate = || {
         let target = item.defining_target().cloned().or_else(|| item.owning_target()).unwrap();
@@ -1764,13 +1794,15 @@ fn fully_qualify_type<'a>(
             quote! { :: #ident }
         }
     };
-    fully_qualify_type_impl(type_expression, root_crate)
+    fully_qualify_type_impl(db, type_expression, root_crate, type_args)
 }
 
 /// Broken out for testing :/
-fn fully_qualify_type_impl(
+fn fully_qualify_type_impl<'a>(
+    db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
     type_expression: &str,
     root_crate: impl Fn() -> TokenStream,
+    type_args: Rc<[RsTypeKind]>,
 ) -> TokenStream {
     let mut type_expression_suffix = type_expression;
     'fix: loop {
@@ -1824,12 +1856,20 @@ fn fully_qualify_type_impl(
         .map(str::trim)
         .map(make_rs_ident);
 
-    let top_level_crate = if is_absolute_path {
-        quote! {}
-    } else {
-        root_crate()
-    };
-    quote! { #prefix  #top_level_crate :: #(#name_parts)::* }
+    let type_args = type_args
+        .iter()
+        .map(|rs_type_kind| {
+            // TODO(okabayashi): Need to make sure all the types are at least layout
+            // compat.
+            rs_type_kind.to_token_stream(db)
+        })
+        .collect::<Vec<_>>();
+
+    let type_args_tokens =
+        if !type_args.is_empty() { Some(quote! { ::<#(#type_args),*> }) } else { None };
+
+    let top_level_crate = if is_absolute_path { None } else { Some(root_crate()) };
+    quote! { #prefix  #top_level_crate :: #(#name_parts)::* #type_args_tokens }
 }
 
 struct RsTypeKindIter<'ty> {
@@ -1881,7 +1921,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                             self.todo.push(result_type);
                         }
                     },
-                    RsTypeKind::ExistingRustType(_) => {}
+                    RsTypeKind::ExistingRustType { .. } => {}
                 };
                 Some(curr)
             }
@@ -1898,17 +1938,19 @@ mod tests {
     use token_stream_matchers::assert_rs_matches;
 
     fn make_existing_rust_type(name: Rc<str>, is_same_abi: bool) -> RsTypeKind {
-        RsTypeKind::ExistingRustType(Rc::new(ExistingRustType {
-            rs_name: name.clone(),
-            cc_name: "".into(),
-            unique_name: name,
-            type_parameters: Vec::new(),
-            owning_target: BazelLabel("//new/for/testing".into()),
-            size_align: None,
-            is_same_abi,
-            id: ItemId::new_for_testing(0),
-            must_bind: false,
-        }))
+        RsTypeKind::ExistingRustType {
+            existing_rust_type: Rc::new(ExistingRustType {
+                rs_name: name.clone(),
+                cc_name: "".into(),
+                unique_name: name,
+                type_parameters: Vec::new(),
+                owning_target: BazelLabel("//new/for/testing".into()),
+                size_align: None,
+                is_same_abi,
+                id: ItemId::new_for_testing(0),
+                must_bind: false,
+            }),
+        }
     }
 
     #[gtest]
@@ -1929,7 +1971,7 @@ mod tests {
             .dfs_iter()
             .map(|t| match t {
                 RsTypeKind::FuncPtr { .. } => "fn".to_string(),
-                RsTypeKind::ExistingRustType(existing_rust_type) => {
+                RsTypeKind::ExistingRustType { existing_rust_type } => {
                     existing_rust_type.rs_name.to_string()
                 }
                 _ => unreachable!("Only FuncPtr and ExistingRustType kinds are used in this test"),
@@ -2152,9 +2194,14 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_type() {
         assert_rs_matches!(
-            fully_qualify_type_impl("A", || {
-                quote! {crate}
-            }),
+            fully_qualify_type_impl(
+                EmptyDatabase,
+                "A",
+                || {
+                    quote! {crate}
+                },
+                Rc::default()
+            ),
             quote! {crate::A},
         );
     }
@@ -2162,9 +2209,14 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_i32() {
         assert_rs_matches!(
-            fully_qualify_type_impl("i32", || {
-                quote! {crate}
-            }),
+            fully_qualify_type_impl(
+                EmptyDatabase,
+                "i32",
+                || {
+                    quote! {crate}
+                },
+                Rc::default()
+            ),
             quote! {i32},
         );
     }
@@ -2172,9 +2224,14 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_ref() {
         assert_rs_matches!(
-            fully_qualify_type_impl("&mut *const X", || {
-                quote! {crate}
-            }),
+            fully_qualify_type_impl(
+                EmptyDatabase,
+                "&mut *const X",
+                || {
+                    quote! {crate}
+                },
+                Rc::default()
+            ),
             quote! {&mut *const crate::X},
         );
     }
