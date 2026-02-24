@@ -4,5 +4,13 @@
 send_cls_to('crubit-reviews');
 
 define Main {
-  reassign_to_list(mdb('crubit-team'));
+  list ExcludedReviewers = [
+    // Tyler is on the Crubit team, but primarily works on Rust upstream.
+    'tmandry',
+    // Nicholas is temporarily on loan to the Carbon team.
+    // TODO: Undo this once Nicholas is back.
+    'nicholasbishop',
+  ];
+  list Reviewers = mdb('crubit-team') - ExcludedReviewers;
+  reassign_to_list(Reviewers);
 }
