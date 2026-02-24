@@ -1,0 +1,26 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate cc_bindings_from_rs_cargo-cpp_api_from_rust.
+
+[package]
+name = "cc_bindings_from_rs_cargo-cpp_api_from_rust"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[[bin]]
+name = "cc_bindings_from_rs_cargo-cpp_api_from_rust"
+path = "../../../cc_bindings_from_rs/cargo-cpp_api_from_rust.rs"
+
+doctest = false
+
+[dependencies]
+cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline", package = "cc_bindings_from_rs_cmdline"}
+cpp_api_from_rust_lib = { path = "../../../cargo/cc_bindings_from_rs/cpp_api_from_rust_lib", package = "cc_bindings_from_rs_cpp_api_from_rust_lib"}
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
+cargo_metadata.workspace = true
+clap.workspace = true
