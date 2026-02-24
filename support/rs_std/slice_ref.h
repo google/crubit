@@ -99,6 +99,61 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
   size_t size_;
 };
 
+namespace internal {
+template <typename T>
+constexpr bool EqualImpl(SliceRef<const T> a, SliceRef<const T> b) {
+  absl::Span<const T> a_span = a.to_span();
+  absl::Span<const T> b_span = b.to_span();
+  return std::equal(a_span.begin(), a_span.end(), b_span.begin(), b_span.end());
+}
+}  // namespace internal
+
+template <typename T>
+constexpr bool operator==(SliceRef<T> a, SliceRef<T> b) {
+  return internal::EqualImpl(a, b);
+}
+template <typename T>
+constexpr bool operator==(SliceRef<const T> a, SliceRef<T> b) {
+  return internal::EqualImpl(a, b);
+}
+template <typename T>
+constexpr bool operator==(SliceRef<T> a, SliceRef<const T> b) {
+  return internal::EqualImpl(a, b);
+}
+template <typename T, typename U>
+  requires(std::convertible_to<U, SliceRef<const T>>)
+constexpr bool operator==(const U& a, SliceRef<T> b) {
+  return internal::EqualImpl(a, b);
+}
+template <typename T, typename U>
+  requires(std::convertible_to<U, SliceRef<const T>>)
+constexpr bool operator==(SliceRef<T> a, const U& b) {
+  return internal::EqualImpl(a, b);
+}
+
+template <typename T>
+constexpr bool operator!=(SliceRef<T> a, SliceRef<T> b) {
+  return !(a == b);
+}
+template <typename T>
+constexpr bool operator!=(SliceRef<const T> a, SliceRef<T> b) {
+  return !(a == b);
+}
+template <typename T>
+constexpr bool operator!=(SliceRef<T> a, SliceRef<const T> b) {
+  return !(a == b);
+}
+template <typename T, typename U>
+  requires(std::convertible_to<U, SliceRef<const T>>)
+constexpr bool operator!=(const U& a, SliceRef<T> b) {
+  return !(a == b);
+}
+template <typename T, typename U>
+  requires(std::convertible_to<U, SliceRef<const T>>)
+constexpr bool operator!=(SliceRef<T> a, const U& b) {
+  return !(a == b);
+}
+
 }  // namespace rs_std
 
 namespace crubit::internal {

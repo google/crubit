@@ -72,7 +72,7 @@ pub fn format_cc_ident(db: &BindingsGenerator, ident: &str) -> Result<Ident> {
     }
 }
 
-pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
+fn format_pointer_or_reference_ty_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
     pointee: Ty<'tcx>,
     mutability: Mutability,
@@ -91,7 +91,7 @@ pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
     Ok(CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier #pointer_sigil } })
 }
 
-pub fn format_slice_ref_for_cc<'tcx>(
+fn format_slice_ref_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
     element_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
@@ -118,11 +118,11 @@ pub fn format_slice_ref_for_cc<'tcx>(
 }
 
 /// Returns a CcSnippet referencing `rs_std::StrRef` and its include path.
-pub fn format_str_ref_for_cc<'tcx>(db: &BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
+fn format_str_ref_for_cc<'tcx>(db: &BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
     CcSnippet::with_include(quote! { rs_std::StrRef }, db.support_header("rs_std/str_ref.h"))
 }
 
-pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
+fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
     referent_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
@@ -315,13 +315,15 @@ pub fn format_ty_for_cc<'tcx>(
                     BridgedType::Composable(mut composable) => {
                         // The existance of crubit_abi_type implies that the type can fully
                         // composably bridge.
-
                         let mut tokens = composable.cpp_type.to_token_stream();
-
                         if !substs.is_empty() {
                             let mut generic_types_tokens = Vec::with_capacity(substs.len());
                             for subst in *substs {
-                                let snippet = format_ty_for_cc(db, subst.expect_ty(), location)?;
+                                let snippet = format_ty_for_cc(
+                                    db,
+                                    subst.expect_ty(),
+                                    TypeLocation::NestedBridgeable,
+                                )?;
                                 generic_types_tokens
                                     .push(snippet.into_tokens(&mut composable.prereqs));
                             }
@@ -562,7 +564,7 @@ pub fn format_ret_ty_for_cc<'tcx>(
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
 
-pub fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {
+pub(crate) fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {
     use core::ops::ControlFlow;
     use rustc_middle::ty::{Region, TyCtxt, TypeVisitor};
 
@@ -637,7 +639,7 @@ fn try_ty_as_maybe_uninit<'tcx>(
 }
 
 /// Format a supported `repr(transparent)` pointee type
-pub fn format_transparent_pointee<'tcx>(
+fn format_transparent_pointee<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<TokenStream> {
@@ -762,12 +764,13 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                     .map(|subst| match subst.kind() {
                         ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty),
                         ty::GenericArgKind::Lifetime(region) => {
-                            assert_eq!(
-                                region.kind(),
-                                ty::RegionKind::ReStatic,
-                                "We should never format types with non-'static regions, as \
-                                    thunks should first call `replace_all_regions_with_static`. {ty}",
-                            );
+                            if !region.is_static() {
+                                panic!(
+                                    "We should never format types with non-'static regions, as \
+                                    thunks should first call `replace_all_regions_with_static`. \
+                                    Found type: `{ty}`."
+                                );
+                            }
                             Ok(quote! { 'static })
                         }
                         ty::GenericArgKind::Const(_) => {
@@ -850,6 +853,7 @@ pub fn format_region_as_cc_lifetime<'tcx>(
     }
 }
 
+#[track_caller]
 pub fn format_region_as_rs_lifetime<'tcx>(
     tcx: TyCtxt<'tcx>,
     region: ty::Region<'tcx>,
@@ -1014,21 +1018,27 @@ pub fn crubit_abi_type_from_ty<'tcx>(
             }
             // Do we need to confirm that pointee is layout compatible?
             let rust_type = db.format_ty_for_rs(pointee)?;
-            let cpp_type_with_prereqs = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
+            let CcSnippet { tokens: cpp_type, prereqs } =
+                db.format_ty_for_cc(pointee, TypeLocation::Other)?;
 
             return Ok(CrubitAbiTypeWithCcPrereqs {
                 crubit_abi_type: CrubitAbiType::Ptr {
                     is_const: mutability.is_not(),
                     is_rust_slice,
                     rust_type,
-                    cpp_type: cpp_type_with_prereqs.tokens,
+                    cpp_type,
                 },
-                prereqs: cpp_type_with_prereqs.prereqs,
+                prereqs,
             });
         }
-        ty::TyKind::Ref(_region, _inner, _mutability) => {
-            // TODO(okabayashi): Support &str and &[T], and possibly other reference types.
-            bail!("Reference types are not yet supported in bridging");
+        ty::TyKind::Ref(_, _, _) => {
+            let rust_type = db.format_ty_for_rs(ty)?;
+            let CcSnippet { tokens: cpp_type, prereqs } =
+                db.format_ty_for_cc(ty, TypeLocation::Other)?;
+            return Ok(CrubitAbiTypeWithCcPrereqs {
+                crubit_abi_type: CrubitAbiType::Transmute { rust_type, cpp_type },
+                prereqs,
+            });
         }
         _ => bail!("Unsupported bridge type: {ty:?}"),
     }))
@@ -1216,30 +1226,40 @@ pub fn is_bridged_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<Option<BridgedType<'tcx>>> {
-    match ty.kind() {
-        ty::TyKind::Ref(_, referent, _) if is_bridged_type(db, *referent)?.is_some() => {
-            if let ty::TyKind::Adt(adt, _) = referent.kind() {
-                if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
-                    return Ok(None);
+    // The ABI of bridged types is lifetime-independent, and the Crubit thunks replace all
+    // lifetimes with static.
+    let ty = crate::generate_function_thunk::replace_all_regions_with_static(db.tcx(), ty);
+
+    match *ty.kind() {
+        ty::TyKind::Ref(_, referent, _) => {
+            if is_bridged_type(db, referent)?.is_some() {
+                if let ty::TyKind::Adt(adt, _) = referent.kind() {
+                    if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
+                        return Ok(None);
+                    }
                 }
+                bail!(
+                    "Can't format reference type `{ty}` because the referent is a bridged type. \
+                        Passing bridged types by reference is not supported."
+                )
             }
-            bail!(
-                "Can't format reference type `{ty}` because the referent is a bridged type. \
-                    Passing bridged types by reference is not supported."
-            )
+            Ok(None)
         }
-        ty::TyKind::RawPtr(pointee, _) if is_bridged_type(db, *pointee)?.is_some() => {
-            bail!(
-                "Can't format pointer type `{ty}` because the pointee is a bridged type. \
-                    Passing bridged types by pointer is not supported."
-            )
+        ty::TyKind::RawPtr(pointee, _) => {
+            if is_bridged_type(db, pointee)?.is_some() {
+                bail!(
+                    "Can't format pointer type `{ty}` because the pointee is a bridged type. \
+                        Passing bridged types by pointer is not supported."
+                )
+            }
+            Ok(None)
         }
         ty::TyKind::Adt(adt, substs) => {
             if let Some(bridged_type) = is_manually_annotated_bridged_adt(db, ty)? {
                 return Ok(Some(bridged_type));
             }
 
-            if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
+            if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
                 // The ADT is either a Result or an Option, which are composable bridged types.
                 let crubit_abi_type_with_cc_prereqs =
                     bridged_builtin.crubit_abi_type(db, substs)?;
@@ -1259,7 +1279,7 @@ pub fn is_bridged_type<'tcx>(
             // The ADT does not need to be bridged, but check if it has generic types that
             // need to be bridged e.g. Box<BridgedType> cannot be formated at
             // the moment. If we encounter a type like this we return an error.
-            for subst in *substs {
+            for subst in substs {
                 if let Some(ty) = subst.as_type() {
                     if is_bridged_type(db, ty)?.is_some() {
                         bail!("Can't format ADT as it has a generic type `{ty}` that is a bridged type");

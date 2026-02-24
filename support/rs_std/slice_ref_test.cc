@@ -44,9 +44,13 @@ static_assert(
 // Note: `rs_std::SliceRef` is not trivially constructible because its default
 // constructor ensures that the data pointer is not null.
 
-// `SliceRef` does on purpose not have `operator==`, because <internal link>
-// did not specify that `SliceRef` should be comparable.
-static_assert(!std::equality_comparable<rs_std::SliceRef<int>>);
+static_assert(std::equality_comparable<rs_std::SliceRef<int>>);
+static_assert(std::equality_comparable<rs_std::SliceRef<const int>>);
+static_assert(std::equality_comparable_with<rs_std::SliceRef<const int>,
+                                            rs_std::SliceRef<int>>);
+// Ensure that slices can be compared with types that are convertible to slices.
+static_assert(std::equality_comparable_with<rs_std::SliceRef<const int>,
+                                            const std::vector<int>&>);
 
 // Verify that the layout of `rs_std::SliceRef` is as expected and described in
 // `rust_builtin_type_abi_assumptions.md`. Sample a few wrapped types to make

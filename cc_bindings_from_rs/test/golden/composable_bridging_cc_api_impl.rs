@@ -41,6 +41,28 @@ unsafe extern "C" fn __crubit_thunk_maybe_uint_uslice(__ret_ptr: *mut core::ffi:
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_option_uadds_uone_uto_uref(
+    x: *const core::ffi::c_uchar,
+    __ret_ptr: *mut core::ffi::c_uchar,
+) -> () {
+    unsafe {
+        let x = unsafe {
+            ::bridge_rust::internal::decode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static mut i32>()),
+                x,
+            )
+        };
+        let __rs_return_value = ::composable_bridging_rust_golden::option_adds_one_to_ref(x);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static mut i32>()),
+                __ret_ptr as *mut core::ffi::c_uchar,
+                __rs_return_value,
+            );
+        }
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_option_uincrements(
     x: *const core::ffi::c_uchar,
     __ret_ptr: *mut core::ffi::c_uchar,
@@ -56,6 +78,28 @@ unsafe extern "C" fn __crubit_thunk_option_uincrements(
         unsafe {
             ::bridge_rust::internal::encode(
                 ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                __ret_ptr as *mut core::ffi::c_uchar,
+                __rs_return_value,
+            );
+        }
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_option_uslice_uwithout_ufirst(
+    x: *const core::ffi::c_uchar,
+    __ret_ptr: *mut core::ffi::c_uchar,
+) -> () {
+    unsafe {
+        let x = unsafe {
+            ::bridge_rust::internal::decode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static [i32]>()),
+                x,
+            )
+        };
+        let __rs_return_value = ::composable_bridging_rust_golden::option_slice_without_first(x);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static [i32]>()),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );
