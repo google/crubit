@@ -1473,6 +1473,24 @@ pub fn generate_function(
     let param_value_adjustments =
         adjust_param_types_for_trait_impl(db, &impl_kind, &mut param_types, &errors);
 
+    // Categorize the Rust-movability of the return type and parameter types.
+    for mut ty in std::iter::once(&return_type).chain(param_types.iter()) {
+        // Note that pointers and references are Unpin, so this only fires for value types.
+        if !ty.is_unpin() {
+            db.errors().add_category(error_report::Category::NonMovableByValue);
+        }
+
+        // Traverse all the way through any pointers or references to the underlying value type.
+        let mut was_ref = false;
+        while let Some(referent) = ty.referent() {
+            ty = referent;
+            was_ref = true;
+        }
+        if was_ref && !ty.is_unpin() {
+            db.errors().add_category(error_report::Category::NonMovableByRef);
+        }
+    }
+
     // TODO(b/454627672): Possibly amend the logic around lifetime binding here for
     // assume_lifetimes.
 
