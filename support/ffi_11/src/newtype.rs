@@ -48,28 +48,28 @@ macro_rules! wrapped_to_wrapped {
 /// TODO(jeanpierreda): Also define arithmetic, etc.
 macro_rules! new_integer {
     (
-      $(
         $(#[$($attr:tt)*])*
-        pub struct $IntegerType:ident($underlying:ident);)*
+        pub struct $IntegerType:ident($underlying:ident);
+        pub const fn $new_fn:ident;
     ) => {
-      $(
-        $(#[$($attr)*])*
-        #[repr(transparent)]
-        #[derive(Copy, Clone, Default, PartialOrd, Ord, PartialEq, Eq, Hash)]
-        pub struct $IntegerType($underlying);
-        $crate::newtype::new_integer!(@__from, $IntegerType, $underlying);
+      $(#[$($attr)*])*
+      #[repr(transparent)]
+      #[derive(Copy, Clone, Default, PartialOrd, Ord, PartialEq, Eq, Hash)]
+      pub struct $IntegerType($underlying);
+      $crate::newtype::new_integer!(@__from, $IntegerType, $underlying);
 
-        impl core::fmt::Debug for $IntegerType {
-          fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-            <$underlying as core::fmt::Debug>::fmt(&self.0, f)
-          }
+      pub const fn $new_fn(inner: $underlying) -> $IntegerType { $IntegerType(inner) }
+
+      impl core::fmt::Debug for $IntegerType {
+        fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+          <$underlying as core::fmt::Debug>::fmt(&self.0, f)
         }
-        impl core::fmt::Display for $IntegerType {
-          fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-            <$underlying as core::fmt::Display>::fmt(&self.0, f)
-          }
+      }
+      impl core::fmt::Display for $IntegerType {
+        fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+          <$underlying as core::fmt::Display>::fmt(&self.0, f)
         }
-      )*
+      }
     };
     // @__into: define <new integer type>.into() for all known integer types with known sizes.
     (@__from, $IntegerType:ident, u8) => {

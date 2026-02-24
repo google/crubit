@@ -52,3 +52,20 @@ fn test_cast() {
         assert_eq!(core::ffi::CStr::from_ffi_11_ptr(ffi_11_str_ptr), string);
     }
 }
+
+#[test]
+fn test_new() {
+    const _: c_float = new_c_float(0.0);
+    const _: c_double = new_c_double(0.0);
+    const _: c_char = new_c_char(0);
+    const _: c_schar = new_c_schar(0);
+    const _: c_uchar = new_c_uchar(0);
+    const _: c_short = new_c_short(0);
+    const _: c_ushort = new_c_ushort(0);
+    const _: c_int = new_c_int(0);
+    const _: c_uint = new_c_uint(0);
+    const _: c_long = new_c_long(0);
+    const _: c_ulong = new_c_ulong(0);
+    const _: c_longlong = new_c_longlong(0);
+    const _: c_ulonglong = new_c_ulonglong(0);
+}
