@@ -30,7 +30,6 @@ crubit_feature_hint(
 
 _WRAPPER_FEATURES = [
     "wrapper",
-    "non_unpin_ctor",
 ]
 
 # A feature set containing wrapper-library Crubit features, in addition to the officially supported

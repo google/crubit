@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/impl_ctor:impl_ctor
-// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: supported, wrapper
 
 #![rustfmt::skip]
 #![feature(

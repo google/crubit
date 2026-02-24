@@ -4,8 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // trait_impl_golden
-// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector,
-// supported
+// Features: supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_IMPL_GOLDEN

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:free_function
-// Features: assume_lifetimes, custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: assume_lifetimes, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]
