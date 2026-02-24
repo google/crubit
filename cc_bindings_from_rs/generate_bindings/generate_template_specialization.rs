@@ -76,7 +76,7 @@ impl<'tcx> OptionApi<'_, 'tcx> {
         let underlying_argument_ty = self.underlying_argument_ty();
         underlying_argument_ty
             .ty_adt_def()
-            .map(|adt| self.db.generate_adt_core(adt.did()).is_ok())
+            .map(|adt| self.db.adt_needs_bindings(adt.did()).is_ok())
             .unwrap_or(false)
     }
 
