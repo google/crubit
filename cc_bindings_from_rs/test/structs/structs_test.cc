@@ -93,6 +93,8 @@ TEST(StructsTest, ThunklessStructFloat) {
   EXPECT_EQ(111.0 * 222.0, test::thunkless_inspect(std::move(product)));
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern "C" {
 
 structs::struct_by_float_passing_with_no_thunk::StructFloat
@@ -107,6 +109,7 @@ float struct_by_float_passing_with_no_thunk__thunkless_inspect(
     structs::struct_by_float_passing_with_no_thunk::StructFloat);
 
 }  // extern "C"
+#pragma clang diagnostic pop
 
 TEST(StructsTest, DirectFfiThunklessStructFloat) {
   namespace test = structs::struct_by_float_passing_with_no_thunk;

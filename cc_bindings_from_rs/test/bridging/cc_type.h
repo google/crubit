@@ -12,6 +12,7 @@ struct TheCppType {
  public:
   TheCppType(int _x) : y(23432421), x(_x) {}
   int get_x() const { return x; }
+  int get_y() const { return y; }
 
  private:
   // Added this field so the type is guaranteed to have a different

@@ -264,6 +264,8 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
     let cc_api = quote! {
         __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
         __HASH_TOKEN__ pragma clang diagnostic ignored "-Wreturn-type-c-linkage" __NEWLINE__
+        __HASH_TOKEN__ pragma clang diagnostic ignored "-Wunused-private-field" __NEWLINE__
+        __HASH_TOKEN__ pragma clang diagnostic ignored "-Wdeprecated-declarations" __NEWLINE__
 
         #cc_api
 

@@ -35,12 +35,15 @@ void MainTestBody(const TypeUnderTest& s,
             TypeUnderTest::extract_int(std::move(copy)));
   EXPECT_EQ(&assignment_result, &copy);
 
-  // The next line invokes the copy assignment operator with the same lhs and
-  // rhs operands.  This is an Undefined Behavior risk if such aliasing
-  // references are passed to Rust - it needs to be short-circuited before
-  // passing such args over the FFI boundary.  The short-circuiting is detected
-  // by expecting the same, unchanged value.
+// The next line invokes the copy assignment operator with the same lhs and
+// rhs operands.  This is an Undefined Behavior risk if such aliasing
+// references are passed to Rust - it needs to be short-circuited before
+// passing such args over the FFI boundary.  The short-circuiting is detected
+// by expecting the same, unchanged value.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
   copy = copy;
+#pragma clang diagnostic pop
   EXPECT_EQ(expected_copy_assigned_value,
             TypeUnderTest::extract_int(std::move(copy)));
 }

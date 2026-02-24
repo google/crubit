@@ -12,6 +12,8 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <cstdint>
 
 namespace example_crate {
