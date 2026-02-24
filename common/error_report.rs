@@ -218,6 +218,16 @@ pub enum Category {
     ///
     /// As an example, the C++ items `struct Foo{ T* x};` and `void Foo(T* x);` are unsafe.
     Unsafe = 1 << 9,
+
+    // TODO: Sync past cramertj@'s integer constant CL to get 1 << 10.
+    //
+    /// This item is a C++ function with a return type or at least one parameter type that is
+    /// non-Rust-movable and passed by value.
+    NonMovableByValue = 1 << 11,
+
+    /// This item is a C++ function with a return type or at least one parameter type that is
+    /// non-Rust-movable and passed by (potentially nested) pointer or reference.
+    NonMovableByRef = 1 << 12,
     // TODO(b/468093766): Abstract? base classes, public inheritance
 }
 
