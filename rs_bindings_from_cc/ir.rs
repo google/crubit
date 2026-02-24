@@ -967,6 +967,11 @@ impl Func {
     pub fn is_instance_method(&self) -> bool {
         self.instance_method_metadata.is_some()
     }
+
+    pub fn defining_target<'ir>(&self, ir: &'ir IR) -> Option<&'ir BazelLabel> {
+        // There is only a defining target if we have an enclosing item and it's a record.
+        ir.find_decl::<Rc<Record>>(self.enclosing_item_id?).ok()?.defining_target()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
@@ -2004,8 +2009,9 @@ impl Item {
 
     /// Returns the target that this was defined in, if it was defined somewhere
     /// other than `owning_target()`.
-    pub fn defining_target(&self) -> Option<&BazelLabel> {
+    pub fn defining_target<'a, 'ir: 'a>(&'a self, ir: &'ir IR) -> Option<&'a BazelLabel> {
         match self {
+            Item::Func(func) => func.defining_target(ir),
             Item::Record(record) => record.defining_target(),
             _ => None,
         }
@@ -2071,7 +2077,12 @@ impl Item {
 
     fn error_item_name(&self, ir: &IR) -> error_report::ItemName {
         let name = self.debug_name(ir);
-        error_report::ItemName { name, id: self.id().as_u64(), unique_name: self.unique_name() }
+        error_report::ItemName {
+            name,
+            id: self.id().as_u64(),
+            unique_name: self.unique_name(),
+            defining_target: self.defining_target(ir).map(|BazelLabel(label)| Rc::clone(label)),
+        }
     }
 
     pub fn error_scope<'a>(

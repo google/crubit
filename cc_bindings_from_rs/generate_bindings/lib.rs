@@ -1316,14 +1316,15 @@ fn item_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Symbol {
 }
 
 fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> error_report::ItemName {
-    let name = format!(
-        "{}::{}",
-        db.tcx().crate_name(db.source_crate_num()),
-        db.tcx().def_path_str(def_id)
-    )
-    .into();
+    let crate_name = db.tcx().crate_name(def_id.krate);
+    let name = format!("{crate_name}::{}", db.tcx().def_path_str(def_id)).into();
     let id = ((def_id.index.as_u32() as u64) << 32) | def_id.krate.as_u32() as u64;
-    error_report::ItemName { name, id, unique_name: None }
+    let defining_target = if def_id.krate == db.source_crate_num() {
+        None
+    } else {
+        Some(crate_name.to_string().into())
+    };
+    error_report::ItemName { name, id, unique_name: None, defining_target }
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.

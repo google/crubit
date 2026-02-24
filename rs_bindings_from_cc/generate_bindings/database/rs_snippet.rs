@@ -1756,7 +1756,8 @@ fn fully_qualify_type<'a>(
     type_expression: &str,
 ) -> TokenStream {
     let root_crate = || {
-        let target = item.defining_target().cloned().or_else(|| item.owning_target()).unwrap();
+        let target =
+            item.defining_target(db.ir()).cloned().or_else(|| item.owning_target()).unwrap();
         if db.ir().is_current_target(&target) {
             quote! { crate }
         } else {

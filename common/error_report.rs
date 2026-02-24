@@ -231,6 +231,8 @@ pub struct ItemName {
     // A unique name for log aggregation purposes. For C++ items, this is a clang Unified Symbol
     // Resolution (USR) string.
     pub unique_name: Option<Rc<str>>,
+    /// The Bazel label or Rust crate that defines this item, if it's not the current one.
+    pub defining_target: Option<Rc<str>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -342,7 +344,12 @@ impl ErrorReport {
 }
 
 thread_local! {
-    static DEFAULT_ITEM: ItemName = ItemName {name: Rc::from(""), id: 0, unique_name: None };
+    static DEFAULT_ITEM: ItemName = ItemName {
+        name: Rc::from(""),
+        id: 0,
+        unique_name: None,
+        defining_target: None,
+    };
 }
 
 impl ErrorReporting for ErrorReport {
@@ -388,6 +395,7 @@ impl ErrorReporting for ErrorReport {
                     source_language: Some(self.source_language),
                     name: item.name.clone(),
                     unique_name: item.unique_name.clone(),
+                    defining_target: item.defining_target.clone(),
                     ..Default::default()
                 });
             }
@@ -451,10 +459,14 @@ pub struct ErrorReportEntry {
     #[serde(default, skip_serializing_if = "is_default")]
     pub category: u32,
 
-    // A unique name for log aggregation purposes. For C++ items, this is a clang Unified Symbol
-    // Resolution (USR) string.
+    /// A unique name for log aggregation purposes. For C++ items, this is a clang Unified Symbol
+    /// Resolution (USR) string.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unique_name: Option<Rc<str>>,
+
+    /// The Bazel label or Rust crate that defines this item, if it's not the current one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub defining_target: Option<Rc<str>>,
 }
 
 fn is_default<T: Default + PartialEq>(value: &T) -> bool {
@@ -747,14 +759,21 @@ mod tests {
     fn error_report_item_name() {
         let report = ErrorReport::new(SourceLanguage::Rust);
         {
-            let _scope =
-                ItemScope::new(&report, ItemName { name: "foo".into(), id: 1, unique_name: None });
+            let _scope = ItemScope::new(
+                &report,
+                ItemName { name: "foo".into(), id: 1, unique_name: None, defining_target: None },
+            );
             report.report(&anyhow!("error in {}", "item 1"));
         }
         {
             let _scope = ItemScope::new(
                 &report,
-                ItemName { name: "bar".into(), id: 2, unique_name: Some("abc123".into()) },
+                ItemName {
+                    name: "bar".into(),
+                    id: 2,
+                    unique_name: Some("abc123".into()),
+                    defining_target: Some("//other:target".into()),
+                },
             );
             report.report(&anyhow!("error in {}", "item 2"));
         }
@@ -782,6 +801,7 @@ mod tests {
                         },
                     ],
                     "unique_name": "abc123",
+                    "defining_target": "//other:target",
                 },
             ]),
         );

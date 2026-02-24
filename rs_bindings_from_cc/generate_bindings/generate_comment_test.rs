@@ -158,6 +158,7 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
             name: "test_item".into(),
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
+            defining_target: None,
         },
     );
     let actual = generate_unsupported(
@@ -190,6 +191,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
             name: "test_item".into(),
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
+            defining_target: None,
         },
     );
     let actual = generate_unsupported(
@@ -219,6 +221,7 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
             name: "test_item".into(),
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
+            defining_target: None,
         },
     );
     let actual = generate_unsupported(
