@@ -16,11 +16,11 @@
 
 pub mod absl_functional_internal { // Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=13
                                    // Error while generating bindings for function 'absl_functional_internal::CallVoidVoid':
-                                   // Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<void () &&>': Failed to complete template specialization type absl::AnyInvocable<void (void) &&>: template belongs to target //_unknown_target:third_party/absl/functional/any_invocable.h, which does not support Crubit.
+                                   // while generating bridge param 'f': Callables require the `callables` feature, but target `BazelLabel("//rs_bindings_from_cc/test/consume_absl:absl_functional")` does not have it enabled.
 
     // Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=16
     // Error while generating bindings for function 'absl_functional_internal::ReturnIntVoid':
-    // Return type is not supported: Unsupported type 'absl::AnyInvocable<int (int) const>': Failed to complete template specialization type absl::AnyInvocable<int (int) const>: template belongs to target //_unknown_target:third_party/absl/functional/any_invocable.h, which does not support Crubit.
+    // Callables require the `callables` feature, but target `BazelLabel("//rs_bindings_from_cc/test/consume_absl:absl_functional")` does not have it enabled.
 }
 
 // namespace absl_functional_internal
@@ -944,6 +944,18 @@ forward_declare::unsafe_define!(
 // Generated from: nowhere/llvm/src/libcxx/include/string_view;l=696
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with':
 // Parameter #0 is not supported: Unsupported type alias std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::value_type
+
+// Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
+// Error while generating bindings for class 'absl::internal_any_invocable::CoreImpl<false, int, int>':
+// Can't generate bindings for absl::internal_any_invocable::CoreImpl<false, int, int>, because of missing required features (crubit.rs-features):
+// third_party/absl/functional/internal/any_invocable.h needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, int, int> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EiJiEEE is a template instantiation)
+// //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, int, int> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EiJiEEE is a template instantiation)
+
+// Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
+// Error while generating bindings for class 'absl::internal_any_invocable::CoreImpl<false, void>':
+// Can't generate bindings for absl::internal_any_invocable::CoreImpl<false, void>, because of missing required features (crubit.rs-features):
+// third_party/absl/functional/internal/any_invocable.h needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, void> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EvJEEE is a template instantiation)
+// //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for absl::internal_any_invocable::CoreImpl<false, void> (crate::__CcTemplateInstN4absl22internal_any_invocable8CoreImplILb0EvJEEE is a template instantiation)
 
 const _: () = {
     assert!(
