@@ -1862,6 +1862,7 @@ pub struct ExistingRustType {
     pub cc_name: Rc<str>,
     pub unique_name: Rc<str>,
     pub type_parameters: Vec<CcType>,
+    pub type_parameter_names: Vec<Rc<str>>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
     pub is_same_abi: bool,

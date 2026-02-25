@@ -73,6 +73,7 @@ std::optional<std::vector<CcType>> GetTemplateParameters(
   }
 
   std::vector<CcType> result;
+  result.reserve(specialization_decl->getTemplateArgs().size());
   for (const auto& arg : specialization_decl->getTemplateArgs().asArray()) {
     // TODO(b/454627672): is specialization_decl the right decl to check for
     // assumed_lifetimes?
@@ -82,6 +83,28 @@ std::optional<std::vector<CcType>> GetTemplateParameters(
             ictx.GetOwningTarget(specialization_decl))));
   }
 
+  return result;
+}
+
+// Gathers all template parameter names for `decl` (if any).
+//
+// `decl` must not be null.
+std::optional<std::vector<std::string>> GetTemplateParameterNames(
+    ImportContext& ictx, const clang::Decl* decl) {
+  const auto* specialization_decl =
+      llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(decl);
+  if (!specialization_decl) {
+    return std::nullopt;
+  }
+
+  std::vector<std::string> result;
+  result.reserve(specialization_decl->getTemplateArgs().size());
+  for (const auto* template_param :
+       specialization_decl->getSpecializedTemplate()
+           ->getTemplateParameters()
+           ->asArray()) {
+    result.push_back(template_param->getDeclName().getAsString());
+  }
   return result;
 }
 
@@ -127,6 +150,8 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
 
   std::optional<std::vector<CcType>> type_parameters =
       GetTemplateParameters(ictx_, type_decl);
+  std::optional<std::vector<std::string>> type_parameter_names =
+      GetTemplateParameterNames(ictx_, type_decl);
 
   ictx_.MarkAsSuccessfullyImported(type_decl);
 
@@ -142,6 +167,8 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
       .cc_name = std::move(cc_name),
       .unique_name = ictx_.GetUniqueName(*type_decl),
       .type_parameters = type_parameters.value_or(std::vector<CcType>()),
+      .type_parameter_names =
+          type_parameter_names.value_or(std::vector<std::string>()),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),
       .is_same_abi = *is_same_abi,

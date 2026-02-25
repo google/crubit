@@ -981,6 +981,7 @@ struct ExistingRustType {
 
   // The generic/template type parameters to the C++/Rust type.
   std::vector<CcType> type_parameters;
+  std::vector<std::string> type_parameter_names;
 
   BazelLabel owning_target;
   // Size and alignment, if known.

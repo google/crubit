@@ -1904,6 +1904,7 @@ mod tests {
             cc_name: "".into(),
             unique_name: name,
             type_parameters: Vec::new(),
+            type_parameter_names: Vec::new(),
             owning_target: BazelLabel("//new/for/testing".into()),
             size_align: None,
             is_same_abi,

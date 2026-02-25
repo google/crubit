@@ -742,6 +742,55 @@ fn test_struct_with_trait_derive_annotation() {
 }
 
 #[gtest]
+fn test_crubit_internal_rust_type_annotation() {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_rust_type", "MyRustType")]]
+                MyCppType {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ExistingRustType {
+                rs_name: "MyRustType", ...
+                cc_name: "MyCppType", ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_crubit_internal_rust_type_annotation_with_template_args() {
+    let ir = ir_from_cc(
+        r#"
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "RustPtr")]]
+                CppPtr {
+              T* ptr;
+        };
+        
+        CppPtr<int> instantiate();
+        "#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ExistingRustType {
+                rs_name: "RustPtr",
+                cc_name: "CppPtr<int>", ...
+                type_parameter_names: ["T"], ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_struct_with_unsafe_annotation() {
     let ir = ir_from_cc(
         r#"

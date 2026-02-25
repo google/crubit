@@ -304,6 +304,7 @@ llvm::json::Value ExistingRustType::ToJson() const {
       {"cc_name", cc_name},
       {"unique_name", unique_name},
       {"type_parameters", type_parameters},
+      {"type_parameter_names", type_parameter_names},
       {"owning_target", owning_target},
       {"is_same_abi", is_same_abi},
       {"id", id},
