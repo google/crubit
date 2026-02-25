@@ -201,6 +201,106 @@ inline void FooInt(int x) {return Foo(x);}
 inline void FooFloat(float x) {return Foo(x);}
 ```
 
+## Thread-safety {#thread_safety}
+
+WARNING: This is subtle and dangerous, and remains a work in progress. Avoid
+unless necessary.
+
+SUMMARY: To make a mutating C++ method safe to call concurrently in Rust, the
+data it accesses should be `mutable`, and the method should be wrapped in a
+method accepting `&self`.
+
+TODO(b/481405536): `mutable` doesn't work for trivially copyable types.
+
+TODO(b/481398972): `mutable` doesn't work for `public` fields.
+
+TODO(b/482619016): The approach described here is excessively manual.
+
+TODO(b/440403437): Safer mutably aliasing references aren't mentioned here,
+because they do not yet exist.
+
+Many C++ types use notions of
+["thread-compatibility" and "thread-safety"](https://abseil.io/blog/20180531-regular-types#data-races-and-thread-safety-properties),
+which can be approximately defined as so:
+
+thread-compatible
+:   It is safe to perform `const` accesses concurrently across multiple threads,
+    similar to `Sync`.
+
+thread-safe
+:   It is safe to perform non-`const` accesses concurrently across multiple
+    threads.
+
+Rust has no analogue to "thread-safe" in this sense: you cannot ever alias via a
+`&mut T` across threads, and aliasing via `*mut T` is not ever safe, and is not
+a documented workflow for most types. Instead, Rust mutation operations that are
+intended to be safe to call concurrently across multiple threads are designed to
+take a `&T`.
+
+(Accordingly, a `&T` is a "shared reference" -- not a const reference!)
+
+In order to take a non-const method, and expose it to Rust using `&self`, the
+following steps need to be taken:
+
+1.  The class must be documented as thread-safe.
+2.  The field being mutated must be marked as `mutable`, even if it is only
+    mutated in non-const methods, so that internal mutation in Rust does not
+    cause UB.
+
+    Non `mutable` fields will not become `UnsafeCell` fields, and it is UB to
+    mutate them on a `&T`. Also, the object itself may have been created as a
+    `const` object in C++, causing UB in C++. (The concrete behavior is likely
+    to be ignored writes, or crashes.)
+
+    Due to b/481398972, this field cannot be public. Due to b/481405536, the
+    class itself must not be trivially copyable.
+
+3.  The method must be manually wrapped in something accessible via `const T&` /
+    `&self`. For example:
+
+    ```c++
+    class FakeClock {
+     public:
+      // TODO($USER): Remove the destructor once b/481405536 is fixed.
+      ~FakeClock() {}
+      CRUBIT_RUST_NAME("advance_mut")
+      void Advance(int n) {
+        DoNotUseForRustOnlyAdvance(n);
+      }
+
+      CRUBIT_RUST_NAME("advance")
+      void InternalDoNotUseForRustOnlyAdvance(int n) const {
+        mytime_ += n;
+      }
+     private:
+      // Mutable for Rust.
+      mutable int mytime_;
+    };
+    ```
+
+    You can also wrap it in Rust, but this is more dangerous, as there is no
+    enforcement that the method only modifies `mutable` fields, and requires
+    more extensive unsafe documentation and review:
+
+    ```rust {.bad}
+    impl FakeClock {
+      pub fn advance(&self, n: c_int) {
+        // SAFETY:
+        //  * `self` is a valid reference to a `FakeClock`, and `Advance`
+        //    does not borrow it for longer than `'_`
+        //  * `Advance` mutates `self`, but only mutates the `mytime_` field,
+        //    which is `mutable` in C++ (so safe even on a constant-storage
+        //    instance of `FakeClock`), and is behind an `UnsafeCell` in
+        //    the generated Rust bindings (so safe to mutate on a `&self`).
+        //  * `FakeClock` is thread-safe, so even though Rust `FakeClock` is
+        //    `Sync`, this does not form a data race.
+        unsafe {
+          FakeClock::Advance(self as *const _ as *mut _, n);
+        }
+      }
+    }
+    ```
+
 ## Working around blocking bugs in Crubit {#blockers}
 
 Crubit is still in development, and has bugs which can completely stop your work
