@@ -18,6 +18,7 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "absl_functional",
     hdrs = ["absl_functional.h"],
+    aspect_hints = ["//features:callables"],
     deps = [
         "@abseil-cpp//absl/functional:any_invocable",
     ],
@@ -28,4 +29,29 @@ golden_test(
     cc_library = "absl_functional",
     golden_cc = "absl_functional.golden.cc",
     golden_rs = "absl_functional.golden.rs",
+)
+
+crubit_test_cc_library(
+    name = "uses_anyinvocable",
+    srcs = ["uses_anyinvocable.cc"],
+    hdrs = ["uses_anyinvocable.h"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:callables",
+    ],
+    deps = [
+        "@abseil-cpp//absl/functional:any_invocable",
+    ],
+)
+
+crubit_rust_test(
+    name = "uses_anyinvocable_test",
+    srcs = ["uses_anyinvocable_test.rs"],
+    cc_deps = [
+        ":uses_anyinvocable",
+        "@abseil-cpp//absl/functional:any_invocable",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
 )
