@@ -37,4 +37,12 @@ int GetNamespacedIntVal();
 int GetCNamespacedIntVal();
 int GetInlineIntVal();
 
+enum { kAnonEnumConst = 123 };
+namespace foo {
+enum { kAnonEnumNamespacedConst = 456 };
+}
+struct StructWithAnonEnum {
+  enum { kAnonEnumInStructConst = 789 };
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_BASIC_EXTERN_H_

@@ -66,6 +66,20 @@ cc_library(
 )
 
 cc_library(
+    name = "enum_constant",
+    srcs = ["enum_constant.cc"],
+    hdrs = ["enum_constant.h"],
+    deps = [
+        "//rs_bindings_from_cc:ast_util",
+        "//rs_bindings_from_cc:cc_ir",
+        "//rs_bindings_from_cc:decl_importer",
+        "@abseil-cpp//absl/status:statusor",
+        "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "var",
     srcs = ["var.cc"],
     hdrs = ["var.h"],

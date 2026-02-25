@@ -121,8 +121,14 @@ impl Default for AlignmentRegressionTest {
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for enum 'AlignmentRegressionTest::(unnamed enum at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)':
-// Unnamed enums are not supported yet
+pub mod alignment_regression_test {
+    #[allow(unused_imports)]
+    use super::*;
+
+    pub const ok: u32 = 0;
+
+    pub const error: u32 = 1;
+}
 
 mod detail {
     #[allow(unused_imports)]

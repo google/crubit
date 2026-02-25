@@ -23,13 +23,8 @@ namespace crubit {
 
 std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   if (enum_decl->getName().empty()) {
-    // TODO(b/208945197): This corresponds to an unnamed enum declaration like
-    // `enum { kFoo = 1 }`, which only exists to provide constants into the
-    // surrounding scope and doesn't actually introduce an enum namespace. It
-    // seems like it should probably be handled with other constants.
-    return ictx_.ImportUnsupportedItem(
-        *enum_decl, std::nullopt,
-        FormattedError::Static("Unnamed enums are not supported yet"));
+    // Anonymous enums are handled by `EnumConstantDeclImporter`.
+    return std::nullopt;
   }
   absl::StatusOr<TranslatedIdentifier> enum_name =
       ictx_.GetTranslatedIdentifier(enum_decl);

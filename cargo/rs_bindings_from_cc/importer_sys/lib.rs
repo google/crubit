@@ -10,6 +10,7 @@ extern crate ast_util_sys;
 extern crate cc_ir_sys;
 extern crate class_template_sys;
 extern crate cxx_record_sys;
+extern crate enum_constant_sys;
 extern crate enum_sys;
 extern crate existing_rust_type_sys;
 extern crate friend_sys;

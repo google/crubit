@@ -39,4 +39,6 @@ enum ForwardDeclared : int;
 
 ForwardDeclared do_not_generate_bindings_for_me();
 
+enum { kAnonRed, kAnonBlue, kAnonGreen };
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_

@@ -27,6 +27,7 @@ type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetime
 class_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/class_template_sys", package = "rs_bindings_from_cc_class_template_sys"}
 cxx_record_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/cxx_record_sys", package = "rs_bindings_from_cc_cxx_record_sys"}
 enum_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/enum_sys", package = "rs_bindings_from_cc_enum_sys"}
+enum_constant_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/enum_constant_sys", package = "rs_bindings_from_cc_enum_constant_sys"}
 existing_rust_type_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/existing_rust_type_sys", package = "rs_bindings_from_cc_existing_rust_type_sys"}
 friend_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/friend_sys", package = "rs_bindings_from_cc_friend_sys"}
 function_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/function_sys", package = "rs_bindings_from_cc_function_sys"}

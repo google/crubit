@@ -370,6 +370,17 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
     const clang::DeclContext* decl_context) const {
   std::vector<clang::Decl*> result;
   for (clang::Decl* decl : decl_context->decls()) {
+    // Bubble anonymous enum constants up so that they are imported as if they
+    // were top-level constants.
+    if (const auto* enum_decl = llvm::dyn_cast<clang::EnumDecl>(decl)) {
+      if (enum_decl->getName().empty()) {
+        for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
+          result.push_back(enumerator);
+        }
+        continue;
+      }
+    }
+
     if (const auto* linkage_spec_decl =
             llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
       llvm::move(GetCanonicalChildren(linkage_spec_decl),

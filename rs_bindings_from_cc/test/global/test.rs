@@ -42,3 +42,9 @@ fn test_constexpr_and_inline_const_are_constants() {
     assert_eq!(global::foo::inline_long_long_namespaced, ffi_11::new_c_longlong(24));
     assert_eq!(global::foo::inline_bool_namespaced, true);
 }
+#[gtest]
+fn test_anonymous_enum_constants() {
+    assert_eq!(global::kAnonEnumConst, 123);
+    assert_eq!(global::foo::kAnonEnumNamespacedConst, 456);
+    assert_eq!(global::struct_with_anon_enum::kAnonEnumInStructConst, 789);
+}

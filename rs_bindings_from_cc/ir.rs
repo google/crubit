@@ -2377,6 +2377,13 @@ impl IR {
         })
     }
 
+    pub fn constants(&self) -> impl Iterator<Item = &Rc<Constant>> {
+        self.items().filter_map(|item| match item {
+            Item::Constant(constant) => Some(constant),
+            _ => None,
+        })
+    }
+
     pub fn unsupported_items(&self) -> impl Iterator<Item = &Rc<UnsupportedItem>> {
         self.items().filter_map(|item| match item {
             Item::UnsupportedItem(unsupported_item) => Some(unsupported_item),

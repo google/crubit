@@ -8,7 +8,9 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
+#include <cstddef>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
@@ -28,5 +30,13 @@ static_assert((int (*)()) & ::GetNamespacedIntVal);
 static_assert((int (*)()) & ::GetCNamespacedIntVal);
 
 static_assert((int (*)()) & ::GetInlineIntVal);
+
+static_assert(sizeof(struct StructWithAnonEnum) == 1);
+static_assert(alignof(struct StructWithAnonEnum) == 1);
+
+extern "C" void __rust_thunk___ZN18StructWithAnonEnumC1Ev(
+    struct StructWithAnonEnum* __this) {
+  crubit::construct_at(__this);
+}
 
 #pragma clang diagnostic pop

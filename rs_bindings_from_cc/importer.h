@@ -23,6 +23,7 @@
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 #include "rs_bindings_from_cc/importers/enum.h"
+#include "rs_bindings_from_cc/importers/enum_constant.h"
 #include "rs_bindings_from_cc/importers/existing_rust_type.h"
 #include "rs_bindings_from_cc/importers/friend.h"
 #include "rs_bindings_from_cc/importers/function.h"
@@ -57,6 +58,8 @@ class Importer final : public ImportContext {
         std::make_unique<ClassTemplateDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<EnumDeclImporter>(*this));
+    decl_importers_.push_back(
+        std::make_unique<EnumConstantDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<VarDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<FriendDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<FunctionDeclImporter>(*this));
