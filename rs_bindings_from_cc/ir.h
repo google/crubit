@@ -630,6 +630,24 @@ struct BridgeType {
       variant;
 };
 
+// A constant value (`constexpr` or `const` with constant initializer).
+struct Constant {
+  llvm::json::Value ToJson() const;
+
+  IntegerConstant value;
+
+  Identifier cc_name;
+  Identifier rs_name;
+  std::string unique_name;
+  ItemId id;
+  BazelLabel owning_target;
+  std::string source_loc;
+  CcType type;
+  std::optional<std::string> unknown_attr;
+  std::optional<ItemId> enclosing_item_id;
+  bool must_bind = false;
+};
+
 // A template specialization for a template record, containing information
 // including the template name (like `ns::vector` for `ns::vector<int>`) and the
 // template arguments (like [`int`, `float`] for `ns::map<int, float>`).
@@ -1034,9 +1052,9 @@ struct IR {
 
   BazelLabel current_target;
 
-  using Item = std::variant<Func, Record, IncompleteRecord, Enum, TypeAlias,
-                            GlobalVar, UnsupportedItem, Comment, Namespace,
-                            UseMod, ExistingRustType>;
+  using Item = std::variant<Func, Record, IncompleteRecord, Enum, Constant,
+                            TypeAlias, GlobalVar, UnsupportedItem, Comment,
+                            Namespace, UseMod, ExistingRustType>;
   std::vector<Item> items;
   absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids;
   // Empty string signals that the bindings should be generated in the crate

@@ -298,6 +298,26 @@ llvm::json::Value InstanceMethodMetadata::ToJson() const {
   };
 }
 
+llvm::json::Value Constant::ToJson() const {
+  llvm::json::Object constant{
+      {"value", value.ToJson()},
+      {"cc_name", cc_name},
+      {"rs_name", rs_name},
+      {"unique_name", unique_name},
+      {"id", id},
+      {"owning_target", owning_target},
+      {"source_loc", source_loc},
+      {"type", type},
+      {"unknown_attr", unknown_attr},
+      {"enclosing_item_id", enclosing_item_id},
+      {"must_bind", must_bind},
+  };
+
+  return llvm::json::Object{
+      {"Constant", std::move(constant)},
+  };
+}
+
 llvm::json::Value ExistingRustType::ToJson() const {
   llvm::json::Object override{
       {"rs_name", rs_name},

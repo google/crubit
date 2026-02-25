@@ -147,6 +147,15 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             });
         }
     }
+    // Require that the underlying type exists. Otherwise, the constant can't.
+    if let Item::Constant(constant) = &item {
+        if let Err(error) = db.rs_type_kind(constant.type_.clone()) {
+            return Err(NoBindingsReason::DependencyFailed {
+                context: constant.debug_name(ir),
+                error,
+            });
+        }
+    }
 
     // TODO(b/392882224): Records might not generated if an error occurs in generation.
     match item {
@@ -197,9 +206,11 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             }
         },
         // Other items are public.
-        Item::UnsupportedItem(_) | Item::Comment(_) | Item::Namespace(_) | Item::UseMod(_) => {
-            Ok(BindingsInfo { visibility: Visibility::Public })
-        }
+        Item::Comment(_)
+        | Item::Constant(_)
+        | Item::Namespace(_)
+        | Item::UnsupportedItem(_)
+        | Item::UseMod(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
     }
 }
 
@@ -485,7 +496,11 @@ pub fn resolve_type_names(
             Item::ExistingRustType(existing_rust_type) => {
                 insert(existing_rust_type.rs_name.clone(), ResolvedTypeName::ExplicitItem(id));
             }
-            Item::Func(_) | Item::GlobalVar(_) | Item::UnsupportedItem(_) | Item::Comment(_) => {
+            Item::Comment(_)
+            | Item::Constant(_)
+            | Item::Func(_)
+            | Item::GlobalVar(_)
+            | Item::UnsupportedItem(_) => {
                 // Not in the type namespace.
             }
         }

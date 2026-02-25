@@ -8,12 +8,13 @@ use arc_anyhow::Result;
 use code_gen_utils::{format_cc_ident, make_rs_ident};
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
-    ApiSnippets, Feature, FmtImpl, FmtTrait, GeneratedItem, Thunk, ThunkImpl,
+    integer_constant_to_token_stream, ApiSnippets, Feature, FmtImpl, FmtTrait, GeneratedItem,
+    Thunk, ThunkImpl,
 };
 use database::BindingsGenerator;
 use ir::Enum;
-use proc_macro2::{Literal, TokenStream};
-use quote::{quote, ToTokens};
+use proc_macro2::TokenStream;
+use quote::quote;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -26,37 +27,31 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
     let name = make_rs_ident(&enum_.rs_name.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
 
-    let enumerators = enum_.enumerators.iter().flatten().map(|enumerator| {
-        if let Some(unknown_attr) = &enumerator.unknown_attr {
-            let comment = format!(
-                "Omitting bindings for {ident}\nreason: crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}",
-                ident = &enumerator.identifier.identifier
-            );
-            return quote! {
-                __COMMENT__ #comment
+    let enumerators: TokenStream = enum_
+        .enumerators
+        .iter()
+        .flatten()
+        .map(|enumerator| {
+            let omitting_bindings_comment = |reason: String| {
+                let comment = format!(
+                    "Omitting bindings for {ident}\nreason: {reason}",
+                    ident = &enumerator.identifier.identifier
+                );
+                quote! {
+                    __COMMENT__ #comment
+                }
             };
-        }
-        let ident = make_rs_ident(&enumerator.identifier.identifier);
-        let mut value = if underlying_type.is_bool() {
-            if enumerator.value.wrapped_value == 0 {
-                quote! {false}
-            } else {
-                quote! {true}
+            if let Some(unknown_attr) = &enumerator.unknown_attr {
+                return omitting_bindings_comment(format!("unknown attribute(s): {unknown_attr}"));
             }
-        } else {
-            if enumerator.value.is_negative {
-                Literal::i64_unsuffixed(enumerator.value.wrapped_value as i64).into_token_stream()
-            } else {
-                Literal::u64_unsuffixed(enumerator.value.wrapped_value).into_token_stream()
-            }
-        };
-        if underlying_type.is_char() {
-            value = quote! {
-                ffi_11::c_char::new(#value as u8)
+            let ident = make_rs_ident(&enumerator.identifier.identifier);
+            let value = match integer_constant_to_token_stream(enumerator.value, &underlying_type) {
+                Ok(value) => value,
+                Err(err) => return omitting_bindings_comment(err.to_string()),
             };
-        };
-        quote! {pub const #ident: #name = #name(#value);}
-    });
+            quote! {pub const #ident: #name = #name(#value);}
+        })
+        .collect();
     let underlying_type_tokens = underlying_type.to_token_stream(db);
     let mut thunks: Vec<Thunk> = vec![];
     let mut cc_details: Vec<ThunkImpl> = vec![];
@@ -96,7 +91,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
         #[doc=#annotation]
         pub struct #name(#underlying_type_tokens);
         impl #name {
-            #(#enumerators)*
+            #enumerators
         }
         impl From<#underlying_type_tokens> for #name {
             fn from(value: #underlying_type_tokens) -> #name {

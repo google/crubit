@@ -12,7 +12,8 @@ use crubit_abi_type::{
 };
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
-    self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
+    self, integer_constant_to_token_stream, ApiSnippets, Bindings, BindingsTokens, CppDetails,
+    CppIncludes, Feature, GeneratedItem,
 };
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
@@ -162,7 +163,35 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
     })
 }
 
-fn generate_global_var(db: &BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
+fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::Constant);
+    let type_ = db.rs_type_kind(constant.type_.clone())?;
+    let value = match integer_constant_to_token_stream(constant.value, &type_) {
+        Ok(value) => value,
+        Err(e) => {
+            return Ok(ApiSnippets {
+                generated_items: HashMap::from([(
+                    constant.id,
+                    GeneratedItem::Comment { message: e.to_string().into() },
+                )]),
+                ..Default::default()
+            })
+        }
+    };
+    Ok(ApiSnippets {
+        generated_items: HashMap::from([(
+            constant.id,
+            GeneratedItem::Constant {
+                ident: make_rs_ident(&constant.rs_name.identifier),
+                type_tokens: type_.to_token_stream(db),
+                value,
+            },
+        )]),
+        ..Default::default()
+    })
+}
+
+fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Variable);
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
@@ -252,7 +281,8 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
         }
         Item::Record(record) => db.generate_record(record.clone())?,
         Item::Enum(enum_) => db.generate_enum(enum_.clone())?,
-        Item::GlobalVar(var) => generate_global_var(db, var.clone())?,
+        Item::Constant(constant) => generate_constant(db, constant)?,
+        Item::GlobalVar(var) => generate_global_var(db, var)?,
         Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias.clone())?,
         Item::UnsupportedItem(unsupported) => {
             // Categorize unsupported items directly produced from the C++ importer.

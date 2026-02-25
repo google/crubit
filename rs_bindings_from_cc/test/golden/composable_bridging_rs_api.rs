@@ -127,9 +127,9 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
 ///CRUBIT_ANNOTATE: cpp_type=DefaultEnum
 pub struct DefaultEnum(::ffi_11::c_int);
 impl DefaultEnum {
-    pub const kZero: DefaultEnum = DefaultEnum(0);
-    pub const kOne: DefaultEnum = DefaultEnum(1);
-    pub const kTwo: DefaultEnum = DefaultEnum(2);
+    pub const kZero: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(0));
+    pub const kOne: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(1));
+    pub const kTwo: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(2));
 }
 impl From<::ffi_11::c_int> for DefaultEnum {
     fn from(value: ::ffi_11::c_int) -> DefaultEnum {
@@ -154,9 +154,9 @@ pub fn ReturnsDefaultEnumInComposableBridgeType() -> crate::MyOption<crate::Defa
 ///CRUBIT_ANNOTATE: cpp_type=I64Enum
 pub struct I64Enum(::ffi_11::c_long);
 impl I64Enum {
-    pub const kNegOne: I64Enum = I64Enum(-1);
-    pub const kZero: I64Enum = I64Enum(0);
-    pub const kOne: I64Enum = I64Enum(1);
+    pub const kNegOne: I64Enum = I64Enum(::ffi_11::new_c_long(-1));
+    pub const kZero: I64Enum = I64Enum(::ffi_11::new_c_long(0));
+    pub const kOne: I64Enum = I64Enum(::ffi_11::new_c_long(1));
 }
 impl From<::ffi_11::c_long> for I64Enum {
     fn from(value: ::ffi_11::c_long) -> I64Enum {
@@ -182,9 +182,9 @@ pub mod some_namespace {
     ///CRUBIT_ANNOTATE: cpp_type=some_namespace :: EnumInNamespace
     pub struct EnumInNamespace(::ffi_11::c_int);
     impl EnumInNamespace {
-        pub const kZero: EnumInNamespace = EnumInNamespace(0);
-        pub const kOne: EnumInNamespace = EnumInNamespace(1);
-        pub const kTwo: EnumInNamespace = EnumInNamespace(2);
+        pub const kZero: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(0));
+        pub const kOne: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(1));
+        pub const kTwo: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(2));
     }
     impl From<::ffi_11::c_int> for EnumInNamespace {
         fn from(value: ::ffi_11::c_int) -> EnumInNamespace {
@@ -965,6 +965,14 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for struct 'std::placeholders::__ph<9>':
 // Can't generate bindings for std::placeholders::__ph<9>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<9> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi9EEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::ranges::views::__elements::__fn<0UL>':
+// Can't generate bindings for std::ranges::views::__elements::__fn<0UL>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::ranges::views::__elements::__fn<0UL> (crate::__CcTemplateInstNSt3__u6ranges5views10__elements4__fnILm0EEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::ranges::views::__elements::__fn<1UL>':
+// Can't generate bindings for std::ranges::views::__elements::__fn<1UL>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::ranges::views::__elements::__fn<1UL> (crate::__CcTemplateInstNSt3__u6ranges5views10__elements4__fnILm1EEE is a template instantiation)
 
 // Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
 

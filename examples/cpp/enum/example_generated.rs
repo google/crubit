@@ -19,9 +19,9 @@
 ///CRUBIT_ANNOTATE: cpp_type=Color
 pub struct Color(::ffi_11::c_uint);
 impl Color {
-    pub const kRed: Color = Color(0);
-    pub const kBlue: Color = Color(1);
-    pub const kGreen: Color = Color(2);
+    pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
+    pub const kBlue: Color = Color(::ffi_11::new_c_uint(1));
+    pub const kGreen: Color = Color(::ffi_11::new_c_uint(2));
 }
 impl From<::ffi_11::c_uint> for Color {
     fn from(value: ::ffi_11::c_uint) -> Color {

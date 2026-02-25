@@ -22,6 +22,8 @@ constexpr int kConstexprInt = 7;
 inline int inline_int = 5;
 namespace foo {
 inline int inline_int_namespaced = 5;
+inline long long inline_long_long_namespaced = 24;
+inline bool inline_bool_namespaced = true;
 }  // namespace foo
 
 // Also make sure we don't choke on templated variables.

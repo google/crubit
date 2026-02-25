@@ -1395,6 +1395,51 @@ impl Record {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct Constant {
+    pub value: IntegerConstant,
+    pub cc_name: Identifier,
+    pub rs_name: Identifier,
+    pub unique_name: Rc<str>,
+    pub id: ItemId,
+    pub owning_target: BazelLabel,
+    pub source_loc: Rc<str>,
+    pub unknown_attr: Option<Rc<str>>,
+    pub enclosing_item_id: Option<ItemId>,
+    #[serde(rename(deserialize = "type"))]
+    pub type_: CcType,
+    pub must_bind: bool,
+}
+
+impl GenericItem for Constant {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
+    }
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::GlobalVar
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        Some(self.source_loc.clone())
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        self.unknown_attr.clone()
+    }
+    fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct GlobalVar {
     pub cc_name: Identifier,
     pub rs_name: Identifier,
@@ -1903,6 +1948,7 @@ pub enum Item {
     IncompleteRecord(Rc<IncompleteRecord>),
     Record(Rc<Record>),
     Enum(Rc<Enum>),
+    Constant(Rc<Constant>),
     GlobalVar(Rc<GlobalVar>),
     TypeAlias(Rc<TypeAlias>),
     UnsupportedItem(Rc<UnsupportedItem>),
@@ -1919,6 +1965,7 @@ macro_rules! forward_item {
             Item::IncompleteRecord($item_name) => $expr,
             Item::Record($item_name) => $expr,
             Item::Enum($item_name) => $expr,
+            Item::Constant($item_name) => $expr,
             Item::GlobalVar($item_name) => $expr,
             Item::TypeAlias($item_name) => $expr,
             Item::UnsupportedItem($item_name) => $expr,
@@ -1995,6 +2042,7 @@ impl Item {
             Item::Record(record) => record.enclosing_item_id,
             Item::IncompleteRecord(record) => record.enclosing_item_id,
             Item::Enum(enum_) => enum_.enclosing_item_id,
+            Item::Constant(constant) => constant.enclosing_item_id,
             Item::GlobalVar(type_) => type_.enclosing_item_id,
             Item::Func(func) => func.enclosing_item_id,
             Item::Namespace(namespace) => namespace.enclosing_item_id,
@@ -2026,6 +2074,7 @@ impl Item {
             Item::IncompleteRecord(_) => true,
             Item::Record(_) => true,
             Item::Enum(_) => true,
+            Item::Constant(_) => false,
             Item::GlobalVar(_) => false,
             Item::TypeAlias(_) => true,
             Item::UnsupportedItem(_) => false,
@@ -2050,6 +2099,7 @@ impl Item {
             }
             Item::Record(record) => Some(record.cc_name.identifier.clone()),
             Item::Enum(enum_) => Some(enum_.cc_name.identifier.clone()),
+            Item::Constant(constant) => Some(constant.cc_name.identifier.clone()),
             Item::GlobalVar(global_var) => Some(global_var.cc_name.identifier.clone()),
             Item::TypeAlias(type_alias) => Some(type_alias.cc_name.identifier.clone()),
             Item::Namespace(namespace) => Some(namespace.cc_name.identifier.clone()),
@@ -2069,6 +2119,7 @@ impl Item {
             | Item::GlobalVar(_)
             | Item::TypeAlias(_)
             | Item::Enum(_)
+            | Item::Constant(_)
             | Item::UseMod(_)
             | Item::ExistingRustType(_) => true,
             Item::Func(_) | Item::UnsupportedItem(_) | Item::Comment(_) => false,

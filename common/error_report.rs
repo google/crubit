@@ -218,6 +218,9 @@ pub enum Category {
     ///
     /// As an example, the C++ items `struct Foo{ T* x};` and `void Foo(T* x);` are unsafe.
     Unsafe = 1 << 9,
+
+    /// This item is a constant
+    Constant = 1 << 10,
     // TODO(b/468093766): Abstract? base classes, public inheritance
 }
 

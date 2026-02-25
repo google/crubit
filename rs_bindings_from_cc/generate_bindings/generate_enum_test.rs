@@ -21,8 +21,8 @@ fn test_generate_enum_basic() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_uint);
             impl Color {
-                pub const kRed: Color = Color(5);
-                pub const kBlue: Color = Color(6);
+                pub const kRed: Color = Color(::ffi_11::new_c_uint(5));
+                pub const kBlue: Color = Color(::ffi_11::new_c_uint(6));
             }
             impl From<::ffi_11::c_uint> for Color {
                 fn from(value: ::ffi_11::c_uint) -> Color {
@@ -59,8 +59,8 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_int);
             impl Color {
-                pub const kRed: Color = Color(-5);
-                pub const kBlue: Color = Color(-4);
+                pub const kRed: Color = Color(::ffi_11::new_c_int(-5));
+                pub const kBlue: Color = Color(::ffi_11::new_c_int(-4));
             }
             impl From<::ffi_11::c_int> for Color {
                 fn from(value: ::ffi_11::c_int) -> Color {
@@ -97,11 +97,11 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_long);
             impl Color {
-                pub const kViolet: Color = Color(-9223372036854775808);
-                pub const kRed: Color = Color(-5);
-                pub const kBlue: Color = Color(-4);
-                pub const kGreen: Color = Color(3);
-                pub const kMagenta: Color = Color(9223372036854775807);
+                pub const kViolet: Color = Color(::ffi_11::new_c_long(-9223372036854775808));
+                pub const kRed: Color = Color(::ffi_11::new_c_long(-5));
+                pub const kBlue: Color = Color(::ffi_11::new_c_long(-4));
+                pub const kGreen: Color = Color(::ffi_11::new_c_long(3));
+                pub const kMagenta: Color = Color(::ffi_11::new_c_long(9223372036854775807));
             }
             impl From<::ffi_11::c_long> for Color {
                 fn from(value: ::ffi_11::c_long) -> Color {
@@ -136,9 +136,9 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_ulong);
             impl Color {
-                pub const kRed: Color = Color(0);
-                pub const kBlue: Color = Color(1);
-                pub const kLimeGreen: Color = Color(18446744073709551615);
+                pub const kRed: Color = Color(::ffi_11::new_c_ulong(0));
+                pub const kBlue: Color = Color(::ffi_11::new_c_ulong(1));
+                pub const kLimeGreen: Color = Color(::ffi_11::new_c_ulong(18446744073709551615));
             }
             impl From<::ffi_11::c_ulong> for Color {
                 fn from(value: ::ffi_11::c_ulong) -> Color {
@@ -169,11 +169,11 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_int);
             impl Color {
-                pub const kViolet: Color = Color(-2147483648);
-                pub const kRed: Color = Color(-5);
-                pub const kBlue: Color = Color(-4);
-                pub const kGreen: Color = Color(3);
-                pub const kMagenta: Color = Color(2147483647);
+                pub const kViolet: Color = Color(::ffi_11::new_c_int(-2147483648));
+                pub const kRed: Color = Color(::ffi_11::new_c_int(-5));
+                pub const kBlue: Color = Color(::ffi_11::new_c_int(-4));
+                pub const kGreen: Color = Color(::ffi_11::new_c_int(3));
+                pub const kMagenta: Color = Color(::ffi_11::new_c_int(2147483647));
             }
             impl From<::ffi_11::c_int> for Color {
                 fn from(value: ::ffi_11::c_int) -> Color {
@@ -202,9 +202,9 @@ fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_uint);
             impl Color {
-                pub const kRed: Color = Color(0);
-                pub const kBlue: Color = Color(1);
-                pub const kLimeGreen: Color = Color(4294967295);
+                pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
+                pub const kBlue: Color = Color(::ffi_11::new_c_uint(1));
+                pub const kLimeGreen: Color = Color(::ffi_11::new_c_uint(4294967295));
             }
             impl From<::ffi_11::c_uint> for Color {
                 fn from(value: ::ffi_11::c_uint) -> Color {

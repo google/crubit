@@ -11,9 +11,11 @@
 #include "absl/log/check.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/APValue.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/TypeBase.h"
 #include "llvm/Support/Casting.h"
 
 namespace crubit {
@@ -44,18 +46,11 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   // language.
   bool is_const_or_inline =
       var_decl->getType().isConstQualified() || var_decl->isInline();
-  bool might_not_export =
+  bool has_const_init =
       var_decl->isConstexpr() ||
       (is_const_or_inline && var_decl->hasConstantInitialization());
-  // TODO(b/208945197): We don't support compile-time constants yet.
-  if (might_not_export) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        FormattedError::Static(
-            "compile-time and inline constants are not supported"));
-  }
 
-  if (!var_decl->hasExternalFormalLinkage()) {
+  if (!has_const_init && !var_decl->hasExternalFormalLinkage()) {
     return std::nullopt;
   }
 
@@ -81,10 +76,48 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
+      CollectUnknownAttrs(*var_decl);
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        FormattedError::FromStatus(std::move(unknown_attr.status())));
+  }
+
   CcType type =
       ictx_.ConvertQualType(var_decl->getType(), nullptr, /*nullable=*/true,
                             ictx_.AreAssumedLifetimesEnabledForTarget(
                                 ictx_.GetOwningTarget(var_decl)));
+
+  if (has_const_init) {
+    const clang::Type& var_type = *var_decl->getType().getTypePtr();
+    if (!var_type.isBooleanType() && !var_type.isIntegerType()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          FormattedError::Static("only boolean and integer constexpr variables "
+                                 "are supported"));
+    }
+    const clang::APValue* value = var_decl->evaluateValue();
+    if (value == nullptr || !value->isInt()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          FormattedError::Static("unable to evaluate constexpr value"));
+    }
+    IntegerConstant integer_constant(value->getInt());
+    ictx_.MarkAsSuccessfullyImported(var_decl);
+    return Constant{
+        .value = std::move(integer_constant),
+        .cc_name = var_name->cc_identifier,
+        .rs_name = var_name->rs_identifier(),
+        .unique_name = ictx_.GetUniqueName(*var_decl),
+        .id = ictx_.GenerateItemId(var_decl),
+        .owning_target = ictx_.GetOwningTarget(var_decl),
+        .source_loc = ictx_.ConvertSourceLocation(var_decl->getBeginLoc()),
+        .type = std::move(type),
+        .unknown_attr = std::move(*unknown_attr),
+        .enclosing_item_id = *std::move(enclosing_item_id),
+    };
+  }
 
   // Global variables without extern "C" have different linkage, but in practice
   // all this means is that the name is mangled, not that the ABI is different.
@@ -96,14 +129,6 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   }
   if (mangled_name == var_name->rs_identifier().Ident()) {
     mangled_name = std::nullopt;
-  }
-
-  absl::StatusOr<std::optional<std::string>> unknown_attr =
-      CollectUnknownAttrs(*var_decl);
-  if (!unknown_attr.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
   }
 
   ictx_.MarkAsSuccessfullyImported(var_decl);

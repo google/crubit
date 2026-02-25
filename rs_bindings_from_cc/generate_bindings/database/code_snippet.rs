@@ -5,14 +5,17 @@
 /// Generate the final bindings, including structures for code snippet, feature
 /// gating, etc.
 use crate::db::BindingsGenerator;
-use crate::rs_snippet::RsTypeKind;
+use crate::rs_snippet::{PrimitiveName, RsTypeKind};
 use arc_anyhow::{Error, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use error_report::{anyhow, bail, ensure};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use heck::ToSnakeCase;
-use ir::{BazelLabel, GenericItem, Item, ItemId, Namespace, RecordType, UnqualifiedIdentifier, IR};
+use ir::{
+    BazelLabel, GenericItem, IntegerConstant, Item, ItemId, Namespace, RecordType,
+    UnqualifiedIdentifier, IR,
+};
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::HashMap;
@@ -204,7 +207,13 @@ pub fn required_crubit_features(
         );
     }
     match item {
-        Item::UnsupportedItem(..) => {}
+        Item::Constant(_)
+        | Item::Comment { .. }
+        | Item::GlobalVar(_)
+        | Item::ExistingRustType { .. }
+        | Item::UnsupportedItem(..)
+        | Item::UseMod { .. } => {}
+
         Item::Func(func) => {
             if func.rs_name == UnqualifiedIdentifier::Destructor {
                 // We support destructors in supported even though they use some features we
@@ -304,7 +313,6 @@ pub fn required_crubit_features(
                 &|| "".into(),
             );
         }
-        Item::GlobalVar(_) => {}
         Item::Namespace(_) => {
             require_any_feature(
                 &mut missing_features,
@@ -319,7 +327,6 @@ pub fn required_crubit_features(
                 &|| "incomplete type".into(),
             );
         }
-        Item::Comment { .. } | Item::ExistingRustType { .. } | Item::UseMod { .. } => {}
     }
     Ok(missing_features)
 }
@@ -528,6 +535,48 @@ pub fn generated_items_to_token_stream(
     let mut tokens = quote! {};
     generated_items_to_tokens(generated_items, ir, elements, &mut tokens);
     tokens
+}
+
+pub fn integer_constant_to_token_stream(
+    integer_constant: IntegerConstant,
+    underlying_type: &RsTypeKind,
+) -> Result<TokenStream> {
+    let RsTypeKind::Primitive(primitive) = *underlying_type.unalias() else {
+        bail!(
+            "integer_constant_to_token_stream called with non-primitive underlying type:\n\
+            {underlying_type:#?}\n"
+        )
+    };
+    let IntegerConstant { is_negative, wrapped_value } = integer_constant;
+    Ok(if underlying_type.is_bool() {
+        if wrapped_value == 0 {
+            quote! {false}
+        } else {
+            quote! {true}
+        }
+    } else {
+        let mut value = if is_negative {
+            Literal::i64_unsuffixed(wrapped_value as i64).into_token_stream()
+        } else {
+            Literal::u64_unsuffixed(wrapped_value).into_token_stream()
+        };
+        if underlying_type.is_char() {
+            value = quote! {
+                #value as u8
+            };
+        }
+        match PrimitiveName::from_primitive(primitive) {
+            PrimitiveName::NativeType(_) => value,
+            PrimitiveName::Ffi11Type(type_name) => {
+                // This is a bit of trickery. In order to have a standard way for the compiler to
+                // produce ffi_11 values of types which are possibly wrapped depending on the
+                // target platform, ffi_11 provides `new_c_int`, `new_c_long`, etc.
+                let new_fn_name =
+                    Ident::new(&format!("new_{type_name}"), proc_macro2::Span::call_site());
+                quote! { ::ffi_11::#new_fn_name(#value) }
+            }
+        }
+    })
 }
 
 pub fn generated_items_to_tokens(
@@ -811,6 +860,10 @@ pub fn generated_items_to_tokens(
                 pub use #mod_name::*;
             }
             .to_tokens(tokens),
+            GeneratedItem::Constant { ident, type_tokens, value } => quote! {
+                pub const #ident: #type_tokens = #value;
+            }
+            .to_tokens(tokens),
             GeneratedItem::GlobalVar { link_name, visibility, is_mut, ident, type_tokens } => {
                 let link_name_attr =
                     link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
@@ -864,6 +917,11 @@ pub fn generated_items_to_tokens(
 pub enum GeneratedItem {
     Comment {
         message: Rc<str>,
+    },
+    Constant {
+        ident: Ident,
+        type_tokens: TokenStream,
+        value: TokenStream,
     },
     Enum(TokenStream),
     Func(TokenStream),

@@ -1360,7 +1360,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 template<>
                 struct MyStruct<int> final {
                   // Doc comment of the GetValue method specialization for T=int.
-                  const int& GetValue() const { return value * 42; }
+                  const int& GetValue() const { return value; }
 
                   // Doc comment of the `value` field specialization for T=int.
                   int value;
@@ -4740,4 +4740,31 @@ fn test_assumed_lifetimes_struct_with_explicit_binding() {
             }
         }
     );
+}
+
+fn expect_constant(ir: &ir::IR) -> &ir::Constant {
+    let constant = ir.items().find_map(|item| match item {
+        Item::Constant(constant) => Some(constant),
+        _ => None,
+    });
+    let Some(constant) = constant else {
+        panic!("Expected a constant, none found in IR:\n{ir:#?}");
+    };
+    constant
+}
+
+#[gtest]
+fn test_top_level_constexpr_int() {
+    let ir = ir_from_cc("constexpr int x = 1;").unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name, "x");
+    expect_eq!(constant.value.wrapped_value, 1);
+}
+
+#[gtest]
+fn test_top_level_constexpr_bool() {
+    let ir = ir_from_cc("constexpr bool x = false;").unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name, "x");
+    expect_eq!(constant.value.wrapped_value, 0);
 }

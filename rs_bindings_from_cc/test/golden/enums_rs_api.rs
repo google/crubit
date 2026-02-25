@@ -18,9 +18,9 @@
 ///CRUBIT_ANNOTATE: cpp_type=Color
 pub struct Color(::ffi_11::c_uint);
 impl Color {
-    pub const kRed: Color = Color(0);
-    pub const kBlue: Color = Color(1);
-    pub const kGreen: Color = Color(2);
+    pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
+    pub const kBlue: Color = Color(::ffi_11::new_c_uint(1));
+    pub const kGreen: Color = Color(::ffi_11::new_c_uint(2));
 }
 impl From<::ffi_11::c_uint> for Color {
     fn from(value: ::ffi_11::c_uint) -> Color {
@@ -54,8 +54,8 @@ impl From<RenamedEnum> for ::ffi_11::c_uint {
 ///CRUBIT_ANNOTATE: cpp_type=EnumWithRenamedVariants
 pub struct EnumWithRenamedVariants(::ffi_11::c_uint);
 impl EnumWithRenamedVariants {
-    pub const FOO: EnumWithRenamedVariants = EnumWithRenamedVariants(0);
-    pub const BAR: EnumWithRenamedVariants = EnumWithRenamedVariants(1);
+    pub const FOO: EnumWithRenamedVariants = EnumWithRenamedVariants(::ffi_11::new_c_uint(0));
+    pub const BAR: EnumWithRenamedVariants = EnumWithRenamedVariants(::ffi_11::new_c_uint(1));
 }
 impl From<::ffi_11::c_uint> for EnumWithRenamedVariants {
     fn from(value: ::ffi_11::c_uint) -> EnumWithRenamedVariants {
@@ -156,8 +156,8 @@ impl From<NonEmptyBool> for bool {
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyInt
 pub struct NonEmptyInt(::ffi_11::c_uint);
 impl NonEmptyInt {
-    pub const kInt1: NonEmptyInt = NonEmptyInt(0);
-    pub const kInt2: NonEmptyInt = NonEmptyInt(4294967295);
+    pub const kInt1: NonEmptyInt = NonEmptyInt(::ffi_11::new_c_uint(0));
+    pub const kInt2: NonEmptyInt = NonEmptyInt(::ffi_11::new_c_uint(4294967295));
 }
 impl From<::ffi_11::c_uint> for NonEmptyInt {
     fn from(value: ::ffi_11::c_uint) -> NonEmptyInt {
@@ -175,8 +175,8 @@ impl From<NonEmptyInt> for ::ffi_11::c_uint {
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyChar
 pub struct NonEmptyChar(::ffi_11::c_char);
 impl NonEmptyChar {
-    pub const kChar1: NonEmptyChar = NonEmptyChar(ffi_11::c_char::new(0 as u8));
-    pub const kChar2: NonEmptyChar = NonEmptyChar(ffi_11::c_char::new(97 as u8));
+    pub const kChar1: NonEmptyChar = NonEmptyChar(::ffi_11::new_c_char(0 as u8));
+    pub const kChar2: NonEmptyChar = NonEmptyChar(::ffi_11::new_c_char(97 as u8));
 }
 impl From<::ffi_11::c_char> for NonEmptyChar {
     fn from(value: ::ffi_11::c_char) -> NonEmptyChar {
@@ -277,8 +277,8 @@ impl From<NonEmptyBoolClass> for bool {
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyIntClass
 pub struct NonEmptyIntClass(::ffi_11::c_uint);
 impl NonEmptyIntClass {
-    pub const k1: NonEmptyIntClass = NonEmptyIntClass(0);
-    pub const k2: NonEmptyIntClass = NonEmptyIntClass(4294967295);
+    pub const k1: NonEmptyIntClass = NonEmptyIntClass(::ffi_11::new_c_uint(0));
+    pub const k2: NonEmptyIntClass = NonEmptyIntClass(::ffi_11::new_c_uint(4294967295));
 }
 impl From<::ffi_11::c_uint> for NonEmptyIntClass {
     fn from(value: ::ffi_11::c_uint) -> NonEmptyIntClass {
@@ -296,8 +296,8 @@ impl From<NonEmptyIntClass> for ::ffi_11::c_uint {
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyCharClass
 pub struct NonEmptyCharClass(::ffi_11::c_char);
 impl NonEmptyCharClass {
-    pub const k1: NonEmptyCharClass = NonEmptyCharClass(ffi_11::c_char::new(0 as u8));
-    pub const k2: NonEmptyCharClass = NonEmptyCharClass(ffi_11::c_char::new(97 as u8));
+    pub const k1: NonEmptyCharClass = NonEmptyCharClass(::ffi_11::new_c_char(0 as u8));
+    pub const k2: NonEmptyCharClass = NonEmptyCharClass(::ffi_11::new_c_char(97 as u8));
 }
 impl From<::ffi_11::c_char> for NonEmptyCharClass {
     fn from(value: ::ffi_11::c_char) -> NonEmptyCharClass {
