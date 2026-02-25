@@ -532,7 +532,7 @@ impl<T> Emplace<T> for Arc<T> {
 /// This trait is implemented for all types by default. Types like `FnCtor` that
 /// exist only to construct other types should opt out via `impl !SelfCtor for ...`.
 ///
-/// Do not directly rely on this trait. Instead, use `Ctor`. `SelfCtor` is a workaround to
+/// Do not use this trait as a trait bound. Instead, use `Ctor`. `SelfCtor` is a workaround to
 /// implement specialization of `Ctor`, and will go away if we ever get a useful form of
 /// specialization.
 pub auto trait SelfCtor {}
