@@ -1131,7 +1131,7 @@ pub enum BridgeType {
         rust_name: Rc<str>,
         abi_rust: Rc<str>,
         abi_cpp: Rc<str>,
-        template_args: Rc<[TemplateArg]>,
+        template_args: Rc<[CcType]>,
     },
     StdOptional(CcType),
     StdPair(CcType, CcType),
@@ -1142,12 +1142,6 @@ pub enum BridgeType {
         return_type: CcType,
         param_types: Vec<CcType>,
     },
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-pub struct TemplateArg {
-    #[serde(rename(deserialize = "type"))]
-    pub type_: CcType,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1167,13 +1161,13 @@ pub enum TemplateSpecializationKind {
     /// std::basic_string_view<wchar_t, std::char_traits<wchar_t>>
     StdWStringView,
     /// std::vector<T, std::allocator<T>>
-    StdVector { element_type: TemplateArg },
+    StdVector { element_type: CcType },
     /// std::unique_ptr<T, std::default_delete<T>>
-    StdUniquePtr { element_type: TemplateArg },
+    StdUniquePtr { element_type: CcType },
     /// c9::Co<T>
-    C9Co { element_type: TemplateArg },
+    C9Co { element_type: CcType },
     /// absl::Span<T>
-    AbslSpan { element_type: TemplateArg },
+    AbslSpan { element_type: CcType },
     /// Some other template specialization.
     NonSpecial,
 }

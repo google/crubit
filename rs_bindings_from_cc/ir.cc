@@ -574,12 +574,6 @@ llvm::json::Value BridgeType::ToJson() const {
       variant);
 }
 
-llvm::json::Value TemplateArg::ToJson() const {
-  return llvm::json::Object{
-      {"type", type},
-  };
-}
-
 llvm::json::Value TemplateSpecialization::ToJson() const {
   return llvm::json::Object{
       {"defining_target", defining_target},

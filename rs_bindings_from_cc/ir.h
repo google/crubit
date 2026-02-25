@@ -570,13 +570,6 @@ struct SizeAlign {
   int64_t alignment;
 };
 
-// TODO: Handle non-type template parameter.
-// A template argument for a template specialization.
-struct TemplateArg {
-  CcType type;
-  llvm::json::Value ToJson() const;
-};
-
 // Present on records that are bridge types.
 struct BridgeType {
   llvm::json::Value ToJson() const;
@@ -593,7 +586,7 @@ struct BridgeType {
     std::string rust_name;
     std::string abi_rust;
     std::string abi_cpp;
-    std::vector<TemplateArg> template_args;
+    std::vector<CcType> template_args;
   };
 
   struct StdOptional {
@@ -657,16 +650,16 @@ struct TemplateSpecialization {
   struct StdStringView {};
   struct StdWStringView {};
   struct StdVector {
-    TemplateArg element_type;
+    CcType element_type;
   };
   struct StdUniquePtr {
-    TemplateArg element_type;
+    CcType element_type;
   };
   struct AbslSpan {
-    TemplateArg element_type;
+    CcType element_type;
   };
   struct C9Co {
-    TemplateArg element_type;
+    CcType element_type;
   };
   struct NonSpecial {};
 

@@ -300,7 +300,7 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
     }};
   }
   if (crubit_abi_values.has_value()) {
-    std::vector<TemplateArg> template_args;
+    std::vector<CcType> template_args;
     // If this is a template specialization, need to iterate through the
     // template args
     if (const clang::ClassTemplateSpecializationDecl* specialization_decl =
@@ -311,11 +311,11 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
         if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
           // TODO(b/454627672): is record_decl the right decl to check for
           // assumed_lifetimes?
-          template_args.emplace_back(TemplateArg{
+          template_args.emplace_back(
               ictx.ConvertQualType(template_arg.getAsType(),
                                    /*lifetimes=*/nullptr, /*nullable=*/true,
                                    ictx.AreAssumedLifetimesEnabledForTarget(
-                                       ictx.GetOwningTarget(&record_decl)))});
+                                       ictx.GetOwningTarget(&record_decl))));
         }
       }
     }
@@ -598,20 +598,19 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       return TemplateSpecialization::StdUniquePtr(
           // TODO(b/454627672): is specialization_decl the right decl to check
           // for assumed_lifetimes?
-          TemplateArg(ictx.ConvertQualType(
-              t, /*lifetimes=*/nullptr, /*nullable=*/true,
-              ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(specialization_decl)))));
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(specialization_decl))));
     } else if (templated_decl->getName() == "vector") {
       CRUBIT_ASSIGN_OR_RETURN(
           clang::QualType t,
           ParameterizedByTAndStdTraitT(ictx, specialization_decl, "allocator"));
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::StdVector(TemplateArg(ictx.ConvertQualType(
-          t, /*lifetimes=*/nullptr, /*nullable=*/true,
-          ictx.AreAssumedLifetimesEnabledForTarget(
-              ictx.GetOwningTarget(specialization_decl)))));
+      return TemplateSpecialization::StdVector(
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(specialization_decl))));
     }
   } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
@@ -620,11 +619,11 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::AbslSpan(TemplateArg(ictx.ConvertQualType(
-          t,
-          /*lifetimes=*/nullptr, /*nullable=*/true,
-          ictx.AreAssumedLifetimesEnabledForTarget(
-              ictx.GetOwningTarget(specialization_decl)))));
+      return TemplateSpecialization::AbslSpan(
+          ictx.ConvertQualType(t,
+                               /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(specialization_decl))));
     }
   } else if (top_level_namespace == "c9") {
     if (templated_decl->getName() == "Co") {
@@ -641,11 +640,11 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
         return absl::InvalidArgumentError(absl::StrCat(
             "c9::Co return type is incomplete: ", t.getAsString()));
       }
-      return TemplateSpecialization::C9Co(TemplateArg(ictx.ConvertQualType(
-          t,
-          /*lifetimes=*/nullptr, /*nullable=*/true,
-          ictx.AreAssumedLifetimesEnabledForTarget(
-              ictx.GetOwningTarget(specialization_decl)))));
+      return TemplateSpecialization::C9Co(
+          ictx.ConvertQualType(t,
+                               /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(specialization_decl))));
     }
   }
 

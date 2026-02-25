@@ -307,9 +307,9 @@ impl UniformReprTemplateType {
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         is_return_type: bool,
     ) -> Result<Option<Rc<Self>>> {
-        let type_arg = |template_arg: &TemplateArg| -> Result<RsTypeKind> {
+        let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
             // Importantly, `is_return_type` is not propagated through inner types.
-            let arg_type_kind = db.rs_type_kind(template_arg.type_.clone())?;
+            let arg_type_kind = db.rs_type_kind(template_arg.clone())?;
             ensure!(
                 !arg_type_kind.is_bridge_type(),
                 "Bridge types cannot be used as template arguments"
@@ -343,7 +343,7 @@ impl UniformReprTemplateType {
             }
             Some(TemplateSpecializationKind::AbslSpan { element_type }) => {
                 let element_type_kind = type_arg(element_type)?;
-                let is_const = element_type.type_.is_const;
+                let is_const = element_type.is_const;
                 Ok(Some(Rc::new(UniformReprTemplateType::AbslSpan {
                     is_const,
 
@@ -607,7 +607,7 @@ impl BridgeRsTypeKind {
                     abi_cpp,
                     generic_types: template_args
                         .iter()
-                        .map(|template_arg| db.rs_type_kind(template_arg.type_.clone()))
+                        .map(|template_arg| db.rs_type_kind(template_arg.clone()))
                         .collect::<Result<Rc<[RsTypeKind]>>>()?,
                 }
             }
@@ -672,7 +672,7 @@ fn new_c9_co_record(
     else {
         return Ok(None);
     };
-    let arg_type_kind = db.rs_type_kind(element_type.type_.clone())?;
+    let arg_type_kind = db.rs_type_kind(element_type.clone())?;
     if let RsTypeKind::Error { error, .. } = arg_type_kind {
         return Err(error);
     };
