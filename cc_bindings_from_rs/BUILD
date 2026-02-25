@@ -77,6 +77,25 @@ crubit_rust_binary(
     ],
 )
 
+# This target exists to add the correct [dev-dependencies] to the cargo-cpp_api_from_rust's
+# Cargo.toml.
+crubit_rust_test(
+    name = "cargo_cpp_api_from_rust_test",
+    crate = ":cargo-cpp_api_from_rust",
+    # LINT.IfChange
+    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    tags = [
+        "manual",
+        "norapid",
+        "not_run",
+        "notap",
+    ],
+    deps = [
+        "@crate_index//:tempfile",  # v3
+    ],
+)
+
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cpp_api_from_rust_lib",

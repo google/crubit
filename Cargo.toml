@@ -9,6 +9,9 @@ members = [
   "cargo/rs_bindings_from_cc/rs_bindings_from_cc",
   "support/ffi_11",
 ]
+exclude = [
+  "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust/tests/test_project"
+]
 resolver = "2"
 
 # In other crubit Cargo.toml files the version should just be specified as
