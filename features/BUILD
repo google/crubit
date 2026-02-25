@@ -43,36 +43,6 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
-# A feature set which specifically std::vector support.
-#
-# See crubit.rs-features#other
-crubit_feature_hint(
-    name = "std_vector",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES,
-    visibility = ["//visibility:public"],
-)
-
-# A feature set which specifically enables std::unique_ptr support.
-#
-# See crubit.rs-features#other
-crubit_feature_hint(
-    name = "std_unique_ptr",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["std_unique_ptr"],
-    visibility = ["//visibility:public"],
-)
-
-# A feature set which specifically enables non-`Unpin` type handling with the `ctor` crate.
-#
-# See crubit.rs-features#other
-crubit_feature_hint(
-    name = "non_unpin_ctor",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["non_unpin_ctor"],
-    visibility = ["//visibility:public"],
-)
-
 # A feature set enabling ergonomic lifetime defaults when interpreting lifetime annotations.
 #
 # See crubit.rs-features#other

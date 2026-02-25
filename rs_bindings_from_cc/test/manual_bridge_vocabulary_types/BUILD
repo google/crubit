@@ -21,7 +21,7 @@ cc_library(
     name = "unique_ptr_lib",
     hdrs = ["unique_ptr_lib.h"],
     aspect_hints = [
-        "//features:std_unique_ptr",
+        "//features:supported",
     ],
     deps = [
         ":common",
@@ -63,7 +63,7 @@ cc_library(
     name = "vector_lib",
     hdrs = ["vector_lib.h"],
     aspect_hints = [
-        "//features:std_vector",
+        "//features:supported",
     ],
     deps = [
         ":common",
