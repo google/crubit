@@ -1160,8 +1160,6 @@ impl RsTypeKind {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
-                    // `Pin`.
                     Ok(RsSnippet::new(quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>}))
                 } else {
                     Ok(RsSnippet::new(quote! { & #lifetime #mut_ self }))
@@ -1169,7 +1167,6 @@ impl RsTypeKind {
             }
             RsTypeKind::RvalueReference { referent: _, lifetime, mutability } => {
                 let lifetime = lifetime.format_for_reference();
-                // TODO(b/239661934): Add `use ::ctor::{RvalueReference, ConstRvalueReference}`.
                 match mutability {
                     Mutability::Mut => Ok(RsSnippet {
                         tokens: quote! {self: ::ctor::RvalueReference<#lifetime, Self>},
@@ -1373,17 +1370,12 @@ impl RsTypeKind {
                 let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
                 let mut tokens = quote! {& #lifetime #mut_ #referent_};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
-                    // `Pin`. This either requires deciding how to qualify pin at
-                    // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
-                    // not implementing ToTokens, but instead some other interface.)
                     tokens = quote! {::core::pin::Pin< #tokens >};
                 }
                 tokens
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
                 let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
-                // TODO(b/239661934): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
                 if mutability == &Mutability::Mut {
                     quote! {::ctor::RvalueReference<#lifetime, #referent_>}
                 } else {
@@ -1616,16 +1608,11 @@ impl RsTypeKind {
                 let referent_tokens = referent.to_token_stream(db);
                 let mut tokens = quote! {& #lifetime #mut_ #referent_tokens};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
-                    // `Pin`. This either requires deciding how to qualify pin at
-                    // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
-                    // not implementing ToTokens, but instead some other interface.)
                     tokens = quote! { ::core::pin::Pin< #tokens > };
                 }
                 tokens
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
-                // TODO(b/239661934): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
                 let referent_tokens = referent.to_token_stream(db);
                 if mutability == &Mutability::Mut {
                     quote! {::ctor::RvalueReference<#lifetime, #referent_tokens>}
