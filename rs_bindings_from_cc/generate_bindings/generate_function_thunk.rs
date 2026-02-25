@@ -355,7 +355,7 @@ pub fn generate_function_assertation(
 
 // Returns whether `func` is a copy constructor of `record_id`, assuming that `func` is a
 // constructor member function of `record_id`.
-// TODO: b/436870965 - do we need to distinguish between non-const and const ctors?
+// TODO(zarko): do we need to distinguish between non-const and const ctors? See b/436870965.
 fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
     match &func.params[..] {
     // We already know this is a constructor.

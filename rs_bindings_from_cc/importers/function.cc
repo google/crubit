@@ -323,8 +323,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         FormattedError::Static("Function declaration is considered invalid"));
   }
   // See DefineDefaultedFunction in SemaDeclCXX.cpp.
-  // TODO: b/436870965 - This is intentionally very narrow in scope (just for
-  // copy assignments) right now.
+  // TODO(zarko): This is intentionally very narrow in scope (just for
+  // copy assignments) right now. See b/436870965.
   if (auto defaulted_kind = ictx_.sema_.getDefaultedFunctionKind(function_decl);
       defaulted_kind.isSpecialMember()) {
     auto special_member_kind = defaulted_kind.asSpecialMember();
@@ -339,7 +339,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
               FakeTUScope fake_tu_scope(ictx_);
               clang::Sema::SynthesizedFunctionScope synthesized_function_scope(
                   ictx_.sema_, mutable_method);
-              // TODO: b/436870965 - Strangely, clang has this flag set on
+              // TODO(zarko): Strangely, clang has this flag set on
               // an unused implicit default operator=. Should we undo the
               // changes after running DefineImplicitCopyAssignment (i.e.,
               // delete the body and restore the flag)?
