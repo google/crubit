@@ -707,8 +707,12 @@ fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
         return None;
     }
 
-    if let Some((deprecation, _span)) = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecation{deprecation, span} => (*deprecation, *span))
-    {
+    #[rustversion::before(2026-02-25)]
+    let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecation{deprecation, span} => (*deprecation, *span));
+    #[rustversion::since(2026-02-25)]
+    let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecated{deprecation, span} => (*deprecation, *span));
+
+    if let Some((deprecation, _span)) = deprecation_attr {
         let cc_deprecated_tag = match deprecation.note {
             None => quote! {[[deprecated]]},
             Some(note_symbol) => {
