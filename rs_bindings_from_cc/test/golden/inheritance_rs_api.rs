@@ -430,6 +430,12 @@ impl Default for MethodBase1 {
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+// Error while generating bindings for function 'MethodBase1::Protected1':
+// Protected methods are not yet supported.
+
+// Error while generating bindings for function 'MethodBase1::Protected2':
+// Protected methods are not yet supported.
+
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase2
