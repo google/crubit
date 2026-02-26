@@ -21,6 +21,7 @@ bzl_library(
         ":rust_bindings_from_cc_cli_flag_aspect_hint",
         ":rust_bindings_from_cc_utils_bzl",
         "//features:crubit_feature_hint_bzl",
+        "//net/proto2/compiler/stubby/cc/build_defs:cc_stubby_rust_aspect_bzl",
         "@bazel_skylib//lib:collections",
         "@protobuf//rust/bazel:aspects_bzl",
         "@rules_cc//cc/common",
@@ -126,12 +127,25 @@ bzl_library(
 )
 
 bzl_library(
+    name = "make_additional_rust_srcs_provider_bzl",
+    srcs = ["make_additional_rust_srcs_provider.bzl"],
+    visibility =
+        package_default_visibility() + [
+        ],
+    deps = [
+        ":providers_bzl",
+        "@rules_rust//rust/private:providers_bzl",
+    ],
+)
+
+bzl_library(
     name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
     srcs = ["additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl"],
     visibility =
         package_default_visibility() + [
         ],
     deps = [
+        ":make_additional_rust_srcs_provider_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_aspect",
         "@bazel_skylib//lib:collections",
