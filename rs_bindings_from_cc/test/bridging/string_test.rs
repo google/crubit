@@ -15,7 +15,7 @@ fn test_string_type_as_function_arg() {
 
 #[gtest]
 fn test_string_type_as_return_value() {
-    let s1: cc_std::std::string =
+    let s1: cc_std::std::string_wrapper =
         unsafe { string_test_lib::CreateString("hello".as_ptr() as _, 5) };
     let s2 = cc_std::std::string::from("hello");
     assert_eq!(s1, s2);

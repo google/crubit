@@ -1700,9 +1700,9 @@ impl RsTypeKind {
                     }
                     BridgeRsTypeKind::StdString { in_cc_std } => {
                         if *in_cc_std {
-                            quote! { crate::std::string }
+                            quote! { crate::std::string_wrapper }
                         } else {
-                            quote! { ::cc_std::std::string }
+                            quote! { ::cc_std::std::string_wrapper }
                         }
                     }
                     BridgeRsTypeKind::Callable(callable) => {

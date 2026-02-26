@@ -8,7 +8,8 @@ use rstest::rstest;
 use test_helpers::cpp_std_string_test::RoundTrip;
 
 // The type should implement Send and Sync.
-static_assertions::assert_impl_all!(string : Send, Sync);
+static_assertions::assert_impl_all!(cc_std::std::string_wrapper : Send, Sync);
+static_assertions::assert_impl_all!(cc_std::std::string : Send, Sync);
 
 #[googletest::test]
 #[rstest]
@@ -99,5 +100,11 @@ fn test_display_error() {
 fn test_debug() {
     let utf8_str: string = "array".into();
     let utf8_str_formatted = format!("{:?}", utf8_str);
-    expect_that!(utf8_str_formatted, eq("cc_std::string([97, 114, 114, 97, 121])"));
+    expect_that!(utf8_str_formatted, eq("cc_std::string_wrapper([97, 114, 114, 97, 121])"));
+}
+
+#[gtest]
+fn test_string_alias() {
+    let _: cc_std::std::string = cc_std::std::string_wrapper::from("hello");
+    let _: cc_std::std::string_wrapper = cc_std::std::string::from("world");
 }
