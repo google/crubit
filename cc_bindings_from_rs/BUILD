@@ -7,7 +7,6 @@ load(
 load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
-    "LLVM_UNSTABLE_ONLY",
     "crubit_rust_binary",
     "crubit_rust_test",
     "crubit_sh_test",

@@ -6,7 +6,6 @@ load(
 )
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
-    "LLVM_UNSTABLE_ONLY",
     "crubit_rust_test",
 )
 
@@ -118,6 +117,9 @@ rust_library(
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
+    tags = [
+        "manual",
+    ],
     deps = [
         ":generate_bindings",
         "//cc_bindings_from_rs:run_compiler_test_support",
