@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <ostream>
@@ -323,8 +324,8 @@ llvm::json::Value ExistingRustType::ToJson() const {
       {"rs_name", rs_name},
       {"cc_name", cc_name},
       {"unique_name", unique_name},
-      {"type_parameters", type_parameters},
-      {"type_parameter_names", type_parameter_names},
+      {"template_args", template_args},
+      {"template_arg_names", template_arg_names},
       {"owning_target", owning_target},
       {"is_same_abi", is_same_abi},
       {"id", id},
@@ -571,6 +572,20 @@ llvm::json::Value BridgeType::ToJson() const {
                 },
             }};
           }},
+      variant);
+}
+
+llvm::json::Value TemplateArg::ToJson() const {
+  return std::visit(
+      visitor{[&](const CcType& type) {
+                return llvm::json::Object{{"Type", type.ToJson()}};
+              },
+              [&](bool bool_value) {
+                return llvm::json::Object{{"Bool", bool_value}};
+              },
+              [&](int64_t int_value) {
+                return llvm::json::Object{{"Int", int_value}};
+              }},
       variant);
 }
 

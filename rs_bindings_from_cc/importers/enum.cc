@@ -137,7 +137,6 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         .rs_name = std::string(enum_decl->getName()),
         .cc_name = enum_decl->getQualifiedNameAsString(),
         .unique_name = ictx_.GetUniqueName(*enum_decl),
-        .type_parameters = {},
         .owning_target = ictx_.GetOwningTarget(enum_decl),
         .size_align = std::nullopt,
         // To be paranoid, assume Rust proto enums are not ABI compatible.

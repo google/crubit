@@ -188,6 +188,7 @@ cc_library(
         "//rs_bindings_from_cc:decl_importer",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",

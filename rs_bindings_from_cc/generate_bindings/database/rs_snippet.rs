@@ -802,11 +802,14 @@ impl RsTypeKind {
         existing_rust_type: Rc<ExistingRustType>,
     ) -> Result<Self> {
         if existing_rust_type.rs_name.as_ref() == SLICE_REF_NAME_RS {
-            let [inner_cc_type] = &existing_rust_type.type_parameters[..] else {
+            let [template_arg] = &existing_rust_type.template_args[..] else {
                 bail!(
-                    "SliceRef has {} type parameters, expected 1",
-                    existing_rust_type.type_parameters.len()
+                    "SliceRef has {} template parameters, expected 1",
+                    existing_rust_type.template_args.len()
                 );
+            };
+            let TemplateArg::Type(inner_cc_type) = template_arg else {
+                bail!("SliceRef should have a type as its singular template argument");
             };
 
             let inner_rs_type_kind = db.rs_type_kind(inner_cc_type.clone())?;
@@ -1890,8 +1893,8 @@ mod tests {
             rs_name: name.clone(),
             cc_name: "".into(),
             unique_name: name,
-            type_parameters: Vec::new(),
-            type_parameter_names: Vec::new(),
+            template_args: Vec::new(),
+            template_arg_names: Vec::new(),
             owning_target: BazelLabel("//new/for/testing".into()),
             size_align: None,
             is_same_abi,

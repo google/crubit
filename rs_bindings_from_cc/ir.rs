@@ -1145,6 +1145,14 @@ pub enum BridgeType {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum TemplateArg {
+    Type(CcType),
+    Bool(bool),
+    Int(i64),
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TemplateSpecialization {
     /// The target containing the template definition
     pub defining_target: BazelLabel,
@@ -1900,8 +1908,8 @@ pub struct ExistingRustType {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
     pub unique_name: Rc<str>,
-    pub type_parameters: Vec<CcType>,
-    pub type_parameter_names: Vec<Rc<str>>,
+    pub template_args: Vec<TemplateArg>,
+    pub template_arg_names: Vec<Rc<str>>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
     pub is_same_abi: bool,

@@ -11,6 +11,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
@@ -60,27 +61,62 @@ absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
   return args.has_value();
 }
 
-// Gathers all instantiated template parameters for `decl` (if any) and converts
+std::string_view ArgKindToString(clang::TemplateArgument::ArgKind kind) {
+  switch (kind) {
+    case clang::TemplateArgument::Null:
+      return "Null";
+    case clang::TemplateArgument::Type:
+      return "Type";
+    case clang::TemplateArgument::Declaration:
+      return "Declaration";
+    case clang::TemplateArgument::NullPtr:
+      return "NullPtr";
+    case clang::TemplateArgument::Integral:
+      return "Integral";
+    case clang::TemplateArgument::StructuralValue:
+      return "StructuralValue";
+    case clang::TemplateArgument::Template:
+      return "Template";
+    case clang::TemplateArgument::TemplateExpansion:
+      return "TemplateExpansion";
+    case clang::TemplateArgument::Expression:
+      return "Expression";
+    case clang::TemplateArgument::Pack:
+      return "Pack";
+    default:
+      return "unknown";
+  }
+}
+
+// Gathers all instantiated template arguments for `decl` (if any) and converts
 // them to `CcType`s.
 //
 // `decl` must not be null.
-std::optional<std::vector<CcType>> GetTemplateParameters(
+absl::StatusOr<std::vector<TemplateArg>> GetTemplateArgs(
     ImportContext& ictx, const clang::Decl* decl) {
   const auto* specialization_decl =
       llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(decl);
   if (!specialization_decl) {
-    return std::nullopt;
+    return std::vector<TemplateArg>();
   }
 
-  std::vector<CcType> result;
+  std::vector<TemplateArg> result;
   result.reserve(specialization_decl->getTemplateArgs().size());
   for (const auto& arg : specialization_decl->getTemplateArgs().asArray()) {
-    // TODO(b/454627672): is specialization_decl the right decl to check for
-    // assumed_lifetimes?
-    result.push_back(ictx.ConvertQualType(
-        arg.getAsType(), /*lifetimes=*/nullptr, /*nullable=*/true,
-        ictx.AreAssumedLifetimesEnabledForTarget(
-            ictx.GetOwningTarget(specialization_decl))));
+    switch (arg.getKind()) {
+      case clang::TemplateArgument::Type:
+        // TODO(b/454627672): is specialization_decl the right decl to check for
+        // assumed_lifetimes?
+        result.push_back(TemplateArg(ictx.ConvertQualType(
+            arg.getAsType(), /*lifetimes=*/nullptr, /*nullable=*/true,
+            ictx.AreAssumedLifetimesEnabledForTarget(
+                ictx.GetOwningTarget(specialization_decl)))));
+        break;
+      default:
+        return absl::InvalidArgumentError(
+            absl::StrCat("Unsupported template argument kind: ",
+                         ArgKindToString(arg.getKind())));
+    }
   }
 
   return result;
@@ -148,8 +184,13 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
   policy.SuppressTagKeyword = true;
   std::string cc_name = cc_qualtype.getAsString(policy);
 
-  std::optional<std::vector<CcType>> type_parameters =
-      GetTemplateParameters(ictx_, type_decl);
+  absl::StatusOr<std::vector<TemplateArg>> templace_args =
+      GetTemplateArgs(ictx_, type_decl);
+  if (!templace_args.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *type_decl, std::nullopt,
+        FormattedError::FromStatus(std::move(templace_args).status()));
+  }
   std::optional<std::vector<std::string>> type_parameter_names =
       GetTemplateParameterNames(ictx_, type_decl);
 
@@ -166,8 +207,8 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
       .unique_name = ictx_.GetUniqueName(*type_decl),
-      .type_parameters = type_parameters.value_or(std::vector<CcType>()),
-      .type_parameter_names =
+      .template_args = *std::move(templace_args),
+      .template_arg_names =
           type_parameter_names.value_or(std::vector<std::string>()),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),

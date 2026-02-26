@@ -80,7 +80,6 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
           .rs_name = ProtoEnumToRustName(*decl),
           .cc_name = decl->getQualifiedNameAsString(),
           .unique_name = ictx_.GetUniqueName(*decl),
-          .type_parameters = {},
           .owning_target = ictx_.GetOwningTarget(decl),
           .size_align = std::nullopt,
           // To be paranoid, assume Rust proto enums are not ABI compatible.

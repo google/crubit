@@ -570,6 +570,14 @@ struct SizeAlign {
   int64_t alignment;
 };
 
+struct TemplateArg {
+  llvm::json::Value ToJson() const;
+
+  using Variant = std::variant<CcType, bool, int64_t>;
+
+  Variant variant;
+};
+
 // Present on records that are bridge types.
 struct BridgeType {
   llvm::json::Value ToJson() const;
@@ -990,9 +998,9 @@ struct ExistingRustType {
   std::string cc_name;
   std::string unique_name;
 
-  // The generic/template type parameters to the C++/Rust type.
-  std::vector<CcType> type_parameters;
-  std::vector<std::string> type_parameter_names;
+  // The generic/template parameters to the C++/Rust type.
+  std::vector<TemplateArg> template_args;
+  std::vector<std::string> template_arg_names;
 
   BazelLabel owning_target;
   // Size and alignment, if known.
