@@ -943,31 +943,20 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 cpp_type: cpp_tokens,
             })
         }
-        RsTypeKind::Enum { enum_, crate_path } => {
-            let rs_name = make_rs_ident(enum_.rs_name.identifier.as_ref());
-            let rust_type = quote! { #crate_path #rs_name };
-
+        RsTypeKind::Enum { ref enum_, .. } => {
             let cpp_type =
                 make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name.identifier.as_ref(), db)?;
 
-            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+            Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
-        RsTypeKind::ExistingRustType(existing_rust_type) => {
-            // The rs_name is already fully qualified.
-            let rust_type = existing_rust_type.rs_name.as_ref().parse().map_err(|e| {
-                anyhow!(
-                    "Failed to parse Rust type `{}` as a TokenStream: {e}",
-                    existing_rust_type.rs_name
-                )
-            })?;
-
+        RsTypeKind::ExistingRustType(ref existing_rust_type) => {
             let cpp_type = make_cpp_type_from_item(
                 existing_rust_type.as_ref(),
                 existing_rust_type.cc_name.as_ref(),
                 db,
             )?;
 
-            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+            Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
         RsTypeKind::Primitive(primitive) => Ok(match primitive {
             Primitive::Bool => CrubitAbiType::transmute("bool", "bool"),
@@ -1158,29 +1147,21 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 })
             }
         },
-        RsTypeKind::Record { record, crate_path, uniform_repr_template_type, .. } => {
+        RsTypeKind::Record { ref record, .. } => {
             ensure!(
                 record.is_unpin(),
                 "Type `{}` must be Rust-movable in order to memcpy through a bridge buffer. See crubit.rs/cpp/classes_and_structs#rust_movable",
                 record.cc_name
             );
 
-            let rust_type = if let Some(generic_monomorphization) = uniform_repr_template_type {
-                generic_monomorphization.to_token_stream(db)
-            } else {
-                let rs_name = make_rs_ident(record.rs_name.identifier.as_ref());
-                quote! { #crate_path #rs_name }
-            };
-
             // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
             // except that it creates an Ident instead of a TokenStream.
             code_gen_utils::check_valid_cc_name(&record.cc_name.identifier)
                 .expect("IR should only contain valid C++ types");
 
-            let cpp_type =
-                make_cpp_type_from_item(record.as_ref(), record.cc_name.identifier.as_ref(), db)?;
+            let cpp_type = make_cpp_type_from_item(record, record.cc_name.identifier.as_ref(), db)?;
 
-            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+            Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
         _ => bail!("Unsupported RsTypeKind: {}", rs_type_kind.display(db)),
     }
