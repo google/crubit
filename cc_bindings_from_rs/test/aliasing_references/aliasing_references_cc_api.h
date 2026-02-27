@@ -21,6 +21,7 @@
 #include "support/rs_std/slice_ref.h"
 #include "support/rs_std/str_ref.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -66,7 +67,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  unsigned char __field0[4];
+  std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

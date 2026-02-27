@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
@@ -52,7 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  unsigned char value[8];
+  std::array<unsigned char, 8> value;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -197,7 +198,7 @@ DontMoveMe final {
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  unsigned char value[8];
+  std::array<unsigned char, 8> value;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -771,7 +772,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Field type has been replaced with a blob of bytes: Tuple types cannot be
   // used inside of compound data types, because std::tuple is not
   // layout-compatible with a Rust tuple.
-  unsigned char __field0[8];
+  std::array<unsigned char, 8> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

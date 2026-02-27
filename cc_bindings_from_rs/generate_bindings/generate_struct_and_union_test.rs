@@ -263,7 +263,7 @@ fn test_format_item_struct_with_tuple_fields() {
             quote! {
                 {
                     ...
-                    unsigned char tuple_field[4];
+                    std::array<unsigned char, 4> tuple_field;
                     __COMMENT__ "Skipped bindings for field `empty_tuple_field`: ZST fields are not supported (b/258259459)"
                     ...
                 }
@@ -402,7 +402,7 @@ fn test_format_item_struct_fields_with_doc_comments() {
                     ...
                     private:
                         __COMMENT__ #comment_for_unsupported_field
-                        unsigned char unsupported_field[16];
+                        std::array<unsigned char, 16> unsupported_field;
                     public:
                         union {
                             __COMMENT__ #comment_for_successful_field
@@ -682,7 +682,7 @@ fn test_repr_c_union_unknown_fields() {
                         ...
                     private:
                         __COMMENT__ "Field type has been replaced with a blob of bytes: Generic types are not supported yet (b/259749095)"
-                        unsigned char z[8];
+                        std::array<unsigned char, 8> z;
                     ...
                 };
             }

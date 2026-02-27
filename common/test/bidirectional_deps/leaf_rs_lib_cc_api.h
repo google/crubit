@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -48,7 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[1];
+  std::array<unsigned char, 1> __opaque_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();

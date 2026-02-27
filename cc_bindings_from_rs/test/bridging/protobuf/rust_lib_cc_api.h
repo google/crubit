@@ -19,6 +19,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 
+#include <array>
 #include <cstddef>
 #include <utility>
 
@@ -69,7 +70,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   // Field type has been replaced with a blob of bytes: Field is a bridged type
   // and might not be layout-compatible
   //                                     with the C++ type (b/400633609)
-  unsigned char stats[8];
+  std::array<unsigned char, 8> stats;
 
  private:
   static void __crubit_field_offset_assertions();

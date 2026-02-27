@@ -1418,8 +1418,9 @@ pub(crate) fn generate_fields<'tcx>(
                         let tokens = quote! {
                             #visibility __NEWLINE__
                                 __COMMENT__ #msg
-                                unsigned char #cc_name[#size];
+                                std::array<unsigned char, #size> #cc_name;
                         };
+                        prereqs.includes.insert(CcInclude::array());
                         tokens
                     } else {
                         // TODO(b/258259459): Generate bindings for ZST fields.

@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -89,7 +90,7 @@ NotImplemented final {
   // Field type has been replaced with a blob of bytes: Type
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  unsigned char foo[24];
+  std::array<unsigned char, 24> foo;
 
  private:
   static void __crubit_field_offset_assertions();

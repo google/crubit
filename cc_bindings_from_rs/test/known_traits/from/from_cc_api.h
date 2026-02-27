@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/rs_std/str_ref.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -61,7 +62,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   // Field type has been replaced with a blob of bytes: Function pointers can't
   // have a thunk: Any calling convention other than `extern "C"` requires a
   // thunk
-  unsigned char __field0[8];
+  std::array<unsigned char, 8> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

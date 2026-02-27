@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/rs_std/char.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -306,7 +307,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  unsigned char field[4];
+  std::array<unsigned char, 4> field;
 
  private:
   static void __crubit_field_offset_assertions();

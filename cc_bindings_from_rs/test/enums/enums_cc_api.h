@@ -18,6 +18,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -50,7 +51,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     // Field type has been replaced with a blob of bytes: Type
     // `std::string::String` comes from the `alloc` crate, but no
     // `--crate-header` was specified for this crate
-    unsigned char __field0[24];
+    std::array<unsigned char, 24> __field0;
 
    public:
     std::int32_t __field1;
