@@ -17,6 +17,31 @@ cc_library(
     hdrs = ["crubit_disabled.h"],
 )
 
+crubit_rust_test(
+    name = "span_test",
+    srcs = ["span_test.rs"],
+    cc_deps = [
+        ":span_lib",
+        "@abseil-cpp//absl/types:span",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
+    name = "span_lib",
+    srcs = ["span_lib.cc"],
+    hdrs = ["span_lib.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+    deps = [
+        "//support/public:annotations",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
 cc_library(
     name = "unique_ptr_lib",
     hdrs = ["unique_ptr_lib.h"],
