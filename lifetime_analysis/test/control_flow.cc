@@ -43,7 +43,11 @@ TEST_F(LifetimeAnalysisTest, ReturnRefArgumentWithConditionalOperator) {
               LifetimesAre({{"get_lesser_of", "a, a -> a"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, ControlFlowExceptionsWithUnconditionalThrow) {
+TEST_F(LifetimeAnalysisTest, ControlFlowExceptionsWorkSometimes) {
+  // This test documents that we do understand the control flow resulting from
+  // exceptions in some limited circumstances. However, this is not true in the
+  // general case -- see the test ControlFlowExceptionsNotSupportedInGeneral --
+  // and it's a non-goal to add support for this.
   EXPECT_THAT(GetLifetimes(R"(
     int* target(int* a, int* b) {
       try {
@@ -57,7 +61,9 @@ TEST_F(LifetimeAnalysisTest, ControlFlowExceptionsWithUnconditionalThrow) {
               LifetimesAre({{"target", "a, b -> b"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, ControlFlowExceptionsWithUnknownControlFlow) {
+TEST_F(LifetimeAnalysisTest, ControlFlowExceptionsNotSupportedInGeneral) {
+  // This test documents that we do not in general treat the control flow
+  // resulting from exceptions correctly; changing this is a non-goal.
   EXPECT_THAT(GetLifetimes(R"(
     void may_throw() {
       throw 42;
@@ -71,7 +77,7 @@ TEST_F(LifetimeAnalysisTest, ControlFlowExceptionsWithUnknownControlFlow) {
       }
     }
   )"),
-              LifetimesContain({{"target", "a, a -> a"}}));
+              LifetimesContain({{"target", "a, b -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, DoublePointerWithConditionalAssignment) {
