@@ -794,6 +794,72 @@ fn test_crubit_internal_rust_type_annotation_with_template_args() {
 }
 
 #[gtest]
+fn test_crubit_internal_rust_type_annotation_with_const_generic() {
+    let ir = ir_from_cc(
+        r#"
+        namespace crubit {
+        template <typename...>
+        struct crubit_internal_rust_type_args {};
+        template <auto>
+        struct const_generic {};
+        }
+
+        struct [[clang::annotate("crubit_internal_rust_type", "MyType",
+               crubit::crubit_internal_rust_type_args<crubit::const_generic<true>, int>())]] MyType {};
+        "#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ExistingRustType {
+                rs_name: "MyType",
+                cc_name: "MyType", ...
+                template_args: [
+                  Bool(true),
+                  Type(CcType {
+                    variant: Primitive(Int), ...
+                  }),
+                ], ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_crubit_internal_rust_type_annotation_with_templates() {
+    let ir = ir_from_cc(
+        r#"
+        namespace crubit {
+        template <typename...>
+        struct crubit_internal_rust_type_args {};
+        }
+
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "MyType",
+               crubit::crubit_internal_rust_type_args<T>())]] MyType {};
+
+        MyType<int> Instantiate();
+        "#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ExistingRustType {
+                rs_name: "MyType",
+                cc_name: "MyType<int>", ...
+                template_args: [Type(CcType {
+                  variant: Primitive(Int), ...
+                })], ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_struct_with_unsafe_annotation() {
     let ir = ir_from_cc(
         r#"

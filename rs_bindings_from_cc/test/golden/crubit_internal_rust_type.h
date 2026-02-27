@@ -59,12 +59,4 @@ struct ExistingRustTypeFieldTypes final {
   TooFewArgs error;
 };
 
-template <typename T, bool B, int I>
-struct [[clang::annotate("crubit_internal_rust_type", "RustPtr")]]
-CppPtr final {
-  T* ptr;
-};
-
-CppPtr<int, true, 123> InstantiatedCppPtr();
-
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CRUBIT_INTERNAL_RS_TYPE_H_

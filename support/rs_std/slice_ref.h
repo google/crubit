@@ -25,8 +25,8 @@ namespace rs_std {
 // `rust_builtin_type_abi_assumptions.md` documents the ABI compatibility of
 // these types.
 template <typename T>
-class CRUBIT_INTERNAL_RUST_TYPE("&[]")
-    ABSL_ATTRIBUTE_TRIVIAL_ABI SliceRef final {
+class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) ABSL_ATTRIBUTE_TRIVIAL_ABI
+    SliceRef final {
  public:
   // Creates a default `SliceRef` - one that represents an empty slice.
   // To mirror slices in Rust, the data pointer is not null.
