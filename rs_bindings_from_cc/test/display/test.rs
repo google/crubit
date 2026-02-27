@@ -1,9 +1,9 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-use formattables::{
+use displayables::{
     CanAbslStringify, CanAbslStringifyAndOstream, CanAbslStringifyByFill, CanAbslStringifyByFormat,
-    CanOstream, DerivesDebug, FormattableEnum,
+    CanOstream, DisplayableEnum,
 };
 use googletest::prelude::*;
 use std::io::Write;
@@ -102,24 +102,11 @@ fn test_prefers_absl_stringify() {
 }
 
 #[gtest]
-fn test_debug_works() {
-    expect_eq!(format!("{:?}", CanAbslStringify { value: "hello".into() }), "hello");
-}
-
-#[gtest]
-fn test_impl_display_and_derive_debug() {
-    let object = DerivesDebug { display: "Display".into(), only_debug: "OnlyDebug".into() };
-
-    expect_eq!(object.to_string(), "Display");
-    expect_that!(format!("{:?}", object), contains_substring("only_debug"));
-}
-
-#[gtest]
 fn test_enum_known_works() {
-    expect_eq!(FormattableEnum::kKnown.to_string(), "Known");
+    expect_eq!(DisplayableEnum::kKnown.to_string(), "Known");
 }
 
 #[gtest]
 fn test_enum_unknown_works() {
-    expect_eq!(FormattableEnum::from(123).to_string(), "123");
+    expect_eq!(DisplayableEnum::from(123).to_string(), "123");
 }

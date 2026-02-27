@@ -282,7 +282,7 @@ fn test_generate_enum_bool_alias() -> Result<()> {
 }
 
 #[gtest]
-fn test_fmt() -> Result<()> {
+fn test_display() -> Result<()> {
     let ir = ir_from_fmt_cc(
         r#"
         enum class Enum {
@@ -297,14 +297,6 @@ fn test_fmt() -> Result<()> {
 
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
-    assert_rs_not_matches!(
-        rs_api,
-        quote! {
-            impl ::core::fmt::Debug for Enum {
-              ...
-            }
-        }
-    );
     assert_rs_matches!(
         rs_api,
         quote! {

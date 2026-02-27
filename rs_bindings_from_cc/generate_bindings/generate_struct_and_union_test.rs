@@ -1923,19 +1923,13 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
 }
 
 #[gtest]
-fn test_fmt() -> Result<()> {
+fn test_display() -> Result<()> {
     let ir = ir_from_fmt_cc(
         r#"
-        struct DisplayAndDebug {
+        struct CanDisplay {
             template <typename Sink>
-            friend void AbslStringify(Sink& sink, const DisplayAndDebug&) {
-                sink.Append("DisplayAndDebug");
-            }
-        };
-        struct [[clang::annotate("crubit_internal_trait_derive", "Debug")]] OnlyDisplay {
-            template <typename Sink>
-            friend void AbslStringify(Sink& sink, const OnlyDisplay&) {
-                sink.Append("OnlyDisplay");
+            friend void AbslStringify(Sink& sink, const CanDisplay&) {
+                sink.Append("CanDisplay");
             }
         };
     "#,
@@ -1946,31 +1940,7 @@ fn test_fmt() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl ::core::fmt::Debug for DisplayAndDebug {
-              ...
-            }
-        }
-    );
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            impl ::core::fmt::Display for DisplayAndDebug {
-              ...
-            }
-        }
-    );
-    assert_rs_not_matches!(
-        rs_api,
-        quote! {
-            impl ::core::fmt::Debug for OnlyDisplay {
-              ...
-            }
-        }
-    );
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            impl ::core::fmt::Display for OnlyDisplay {
+            impl ::core::fmt::Display for CanDisplay {
               ...
             }
         }

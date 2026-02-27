@@ -53,7 +53,7 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# A feature set enabling formatting to Rust via C++.
+# A feature set enabling bindings to Rust's `Display` trait.
 #
 # See crubit.rs-features#other
 crubit_feature_hint(

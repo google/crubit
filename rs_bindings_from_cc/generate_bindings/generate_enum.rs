@@ -8,8 +8,8 @@ use arc_anyhow::Result;
 use code_gen_utils::{format_cc_ident, make_rs_ident};
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
-    integer_constant_to_token_stream, ApiSnippets, Feature, FmtImpl, FmtTrait, GeneratedItem,
-    Thunk, ThunkImpl,
+    integer_constant_to_token_stream, ApiSnippets, DisplayImpl, Feature, GeneratedItem, Thunk,
+    ThunkImpl,
 };
 use database::BindingsGenerator;
 use ir::Enum;
@@ -75,8 +75,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
                 fmt_fn_name: fmt_fn_name.clone(),
                 param_type: fully_qualified_cc_name.clone(),
             });
-            let display_impl =
-                FmtImpl { fmt_trait: FmtTrait::Display, type_name: name.clone(), fmt_fn_name };
+            let display_impl = DisplayImpl { type_name: name.clone(), fmt_fn_name };
             quote! {
                 #display_impl
             }

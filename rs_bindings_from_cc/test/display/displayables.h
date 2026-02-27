@@ -1,8 +1,8 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_FMT_FORMATTABLES_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_FMT_FORMATTABLES_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_DISPLAY_DISPLAYABLES_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_DISPLAY_DISPLAYABLES_H_
 
 #include <cstddef>
 #include <ostream>
@@ -63,23 +63,13 @@ struct CRUBIT_MUST_BIND CanAbslStringifyAndOstream {
   }
 };
 
-struct CRUBIT_MUST_BIND CRUBIT_TRAIT_DERIVE("Debug") DerivesDebug {
-  absl::string_view display;
-  absl::string_view only_debug;
-
-  template <typename Sink>
-  friend void AbslStringify(Sink& sink, const DerivesDebug& value) {
-    sink.Append(value.display);
-  }
-};
-
-enum class CRUBIT_MUST_BIND FormattableEnum {
+enum class CRUBIT_MUST_BIND DisplayableEnum {
   kKnown = 1,
 };
 template <typename Sink>
-void AbslStringify(Sink& sink, FormattableEnum value) {
+void AbslStringify(Sink& sink, DisplayableEnum value) {
   switch (value) {
-    case FormattableEnum::kKnown:
+    case DisplayableEnum::kKnown:
       sink.Append("Known");
       break;
     default:
@@ -88,4 +78,4 @@ void AbslStringify(Sink& sink, FormattableEnum value) {
   }
 }
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_FMT_FORMATTABLES_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_DISPLAY_DISPLAYABLES_H_

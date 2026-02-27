@@ -613,7 +613,7 @@ pub fn generated_items_to_tokens(
                     cxx_impl,
                     incomplete_definition,
                     upcast_impls,
-                    fmt_impls,
+                    display_impl,
                     no_unique_address_accessors,
                     items,
                     nested_items,
@@ -701,7 +701,7 @@ pub fn generated_items_to_tokens(
                     #send_impl
                     #sync_impl
                     #cxx_impl
-                    #( #fmt_impls )*
+                    #display_impl
 
                     #incomplete_definition
 
@@ -999,7 +999,7 @@ pub struct Record {
     pub cxx_impl: Option<CxxExternTypeImpl>,
     pub incomplete_definition: Option<TokenStream>,
     pub upcast_impls: Vec<Result<UpcastImpl, String>>,
-    pub fmt_impls: Vec<FmtImpl>,
+    pub display_impl: Option<DisplayImpl>,
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
     pub items: Vec<ItemId>,
     pub nested_items: Vec<ItemId>,
@@ -1032,17 +1032,16 @@ pub enum UpcastImplBody {
 }
 
 #[derive(Clone, Debug)]
-pub struct FmtImpl {
-    pub fmt_trait: FmtTrait,
+pub struct DisplayImpl {
     pub type_name: Ident,
     pub fmt_fn_name: Ident,
 }
 
-impl ToTokens for FmtImpl {
+impl ToTokens for DisplayImpl {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Self { fmt_trait, type_name, fmt_fn_name } = self;
+        let Self { type_name, fmt_fn_name } = self;
         quote! {
-            impl #fmt_trait for #type_name {
+            impl ::core::fmt::Display for #type_name {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = ::lossy_formatter::LossyFormatter::new(f);
                     if unsafe { crate::detail::#fmt_fn_name(self, &mut f) } {
@@ -1052,22 +1051,6 @@ impl ToTokens for FmtImpl {
                     }
                 }
             }
-        }
-        .to_tokens(tokens);
-    }
-}
-
-#[derive(Clone, Debug)]
-pub enum FmtTrait {
-    Debug,
-    Display,
-}
-
-impl ToTokens for FmtTrait {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            FmtTrait::Debug => quote! { ::core::fmt::Debug },
-            FmtTrait::Display => quote! { ::core::fmt::Display },
         }
         .to_tokens(tokens);
     }
