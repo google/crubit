@@ -65,7 +65,7 @@ cc_library(
         "//visibility:public",
     ],
     deps = [
-        "//support:annotations_internal",
+        ":annotations_internal",
     ],
 )
 
