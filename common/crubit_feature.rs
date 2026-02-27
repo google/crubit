@@ -18,21 +18,9 @@ flagset::flags! {
 
         Wrapper,
 
-        /// Enable the native Rust std::vector<T> reimplementation.
-        StdVector,
-
-        /// Enable the native Rust std::unique_ptr<T> reimplementation.
-        StdUniquePtr,
-
-        /// Enable handling non-Unpin types with the `ctor` crate.
-        NonUnpinCtor,
-
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
-
-        /// Enable emitting custom ffi_11 types instead of `core::ffi` types.
-        CustomFfiTypes,
 
         /// Use ergonomic lifetime defaults when interpreting lifetime annotations.
         AssumeLifetimes,
@@ -58,11 +46,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
-            Self::StdVector => "std_vector",
-            Self::StdUniquePtr => "std_unique_ptr",
-            Self::NonUnpinCtor => "non_unpin_ctor",
             Self::Experimental => "experimental",
-            Self::CustomFfiTypes => "custom_ffi_types",
             Self::AssumeLifetimes => "assume_lifetimes",
             Self::Fmt => "fmt",
             Self::Callables => "callables",
@@ -77,11 +61,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "//features:supported",
             Self::Wrapper => "//features:wrapper",
-            Self::StdVector => "//features:std_vector",
-            Self::StdUniquePtr => "//features:std_unique_ptr",
-            Self::NonUnpinCtor => "//features:non_unpin_ctor",
             Self::Experimental => "//features:experimental",
-            Self::CustomFfiTypes => "//features:custom_ffi_types",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
             Self::Fmt => "//features:fmt",
             Self::Callables => "//features:callables",
@@ -97,11 +77,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"all" => flagset::FlagSet::<CrubitFeature>::full() - CrubitFeature::AssumeLifetimes,
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
-        b"std_vector" => CrubitFeature::StdVector.into(),
-        b"std_unique_ptr" => CrubitFeature::StdUniquePtr.into(),
-        b"non_unpin_ctor" => CrubitFeature::NonUnpinCtor.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
-        b"custom_ffi_types" => CrubitFeature::CustomFfiTypes.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         b"fmt" => CrubitFeature::Fmt.into(),
         b"callables" => CrubitFeature::Callables.into(),
@@ -208,11 +184,7 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
-                | CrubitFeature::StdVector
-                | CrubitFeature::StdUniquePtr
-                | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
-                | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -239,11 +211,7 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
-                | CrubitFeature::StdVector
-                | CrubitFeature::StdUniquePtr
-                | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
-                | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -258,11 +226,7 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
-                | CrubitFeature::StdVector
-                | CrubitFeature::StdUniquePtr
-                | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
-                | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
