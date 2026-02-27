@@ -20,11 +20,7 @@ extern crate rustc_target;
 use itertools::Itertools;
 
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes};
-
-#[rustversion::since(2025-06-25)]
-use rustc_session::config::Sysroot;
-
+use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes, Sysroot};
 use rustc_span::def_id::LocalDefId;
 use rustc_target::spec::TargetTuple;
 
@@ -280,7 +276,7 @@ fn run_compiler_for_testing_impl(
             // errors that the earlier stages might miss.  This helps ensure that the
             // test inputs are valid Rust (even if `callback` wouldn't
             // have triggered full analysis).
-            catch_unwind(AssertUnwindSafe(|| tcx_ensure_ok_analysis(&tcx)))
+            catch_unwind(AssertUnwindSafe(|| tcx.ensure_ok().analysis(())))
                 .expect("Test input compilation failed while analyzing");
             callback(tcx)
         });
@@ -291,16 +287,6 @@ fn run_compiler_for_testing_impl(
         }
         result
     });
-}
-
-#[rustversion::since(2025-01-31)]
-fn tcx_ensure_ok_analysis(tcx: &TyCtxt) {
-    tcx.ensure_ok().analysis(())
-}
-
-#[rustversion::before(2025-01-31)]
-fn tcx_ensure_ok_analysis(tcx: &TyCtxt) {
-    tcx.ensure().analysis(())
 }
 
 /// Finds the definition id of a Rust item with the specified `name`.
