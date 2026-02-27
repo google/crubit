@@ -2174,6 +2174,7 @@ fn function_signature(
         );
     }
 
+    lifetimes.retain(|lifetime| !lifetime.is_elided());
     Ok(BindingsSignature {
         lifetimes,
         params: api_params,

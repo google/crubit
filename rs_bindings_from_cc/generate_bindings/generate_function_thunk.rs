@@ -179,9 +179,11 @@ pub fn generate_function_thunk(
         }
     }
 
-    // Of the remaining lifetimes, collect them.
-    let lifetimes: Vec<_> =
-        unique_lifetimes(param_types.clone()).chain(extra_return_lifetime).collect();
+    // Of the remaining lifetimes, put them in the generic parameters.
+    let lifetimes: Vec<_> = unique_lifetimes(param_types.clone())
+        .chain(extra_return_lifetime)
+        .filter(|lifetime| !lifetime.is_elided())
+        .collect();
 
     let thunk_ident = thunk_ident(func);
 

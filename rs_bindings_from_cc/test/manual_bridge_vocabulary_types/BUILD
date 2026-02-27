@@ -25,6 +25,7 @@ crubit_rust_test(
         "@abseil-cpp//absl/types:span",
     ],
     deps = [
+        "//support:ctor",
         "@crate_index//:googletest",
     ],
 )

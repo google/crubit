@@ -195,7 +195,6 @@ pub fn unique_lifetimes<'a>(
     types
         .into_iter()
         .flat_map(|ty| ty.lifetimes())
-        .filter(|lifetime| !lifetime.is_elided())
         .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
 }
 
@@ -393,6 +392,15 @@ impl UniformReprTemplateType {
                     (false, false) => quote! { ::span::absl::RawSpanMut<#element_type_tokens> },
                 }
             }
+        }
+    }
+
+    pub fn lifetime(&self) -> Option<Lifetime> {
+        match self {
+            Self::StdVector { .. } => None,
+            Self::StdUniquePtr { .. } => None,
+            Self::AbslSpan { include_lifetime: true, .. } => Some(Lifetime::elided()),
+            Self::AbslSpan { include_lifetime: false, .. } => None,
         }
     }
 }
@@ -1322,6 +1330,7 @@ impl RsTypeKind {
             Self::Reference { lifetime, .. } | Self::RvalueReference { lifetime, .. } => {
                 Some(lifetime.clone())
             }
+            Self::Record { uniform_repr_template_type: Some(template), .. } => template.lifetime(),
             _ => None,
         }
     }
