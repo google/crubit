@@ -18,6 +18,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -104,7 +105,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  unsigned char buf[8];
+  std::array<unsigned char, 8> buf;
 
  private:
   static void __crubit_field_offset_assertions();

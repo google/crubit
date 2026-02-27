@@ -19,6 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
@@ -168,7 +169,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   // Field type has been replaced with a blob of bytes: Tuple types cannot be
   // used inside of compound data types, because std::tuple is not
   // layout-compatible with a Rust tuple.
-  unsigned char tuple_field[4];
+  std::array<unsigned char, 4> tuple_field;
   // Skipped bindings for field `empty_tuple_field`: ZST fields are not
   // supported (b/258259459)
  private:

@@ -19,6 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -51,7 +52,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     // Field type has been replaced with a blob of bytes: Type
     // `std::string::String` comes from the `alloc` crate, but no
     // `--crate-header` was specified for this crate
-    unsigned char __field0[24];
+    std::array<unsigned char, 24> __field0;
 
    public:
     std::int32_t __field1;
@@ -91,15 +92,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     D = 10002,
   };
 
- public:
-  Tag tag;
-
- public:
   union {
-    __crubit_E_struct E;
-    __crubit_A_struct A;
-    __crubit_B_struct B;
-    __crubit_C_struct C;
+    struct {
+     public:
+      Tag tag;
+
+     public:
+      union {
+        __crubit_E_struct E;
+        __crubit_A_struct A;
+        __crubit_B_struct B;
+        __crubit_C_struct C;
+      };
+    };
+    std::array<unsigned char, 40> __crubit_internal_blob_of_bytes;
   };
 
  private:
@@ -155,14 +161,19 @@ CloneActiveVariant final {
     C = 2,
   };
 
- public:
-  Tag tag;
-
- public:
   union {
-    __crubit_A_struct A;
-    __crubit_B_struct B;
-    __crubit_C_struct C;
+    struct {
+     public:
+      Tag tag;
+
+     public:
+      union {
+        __crubit_A_struct A;
+        __crubit_B_struct B;
+        __crubit_C_struct C;
+      };
+    };
+    std::array<unsigned char, 8> __crubit_internal_blob_of_bytes;
   };
 
  private:
@@ -217,12 +228,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     A = 0,
   };
 
- public:
-  Tag tag;
-
- public:
   union {
-    __crubit_A_struct A;
+    struct {
+     public:
+      Tag tag;
+
+     public:
+      union {
+        __crubit_A_struct A;
+      };
+    };
+    std::array<unsigned char, 16> __crubit_internal_blob_of_bytes;
   };
 
  private:
@@ -276,14 +292,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     C = 3,
   };
 
- public:
-  Tag tag;
-
- public:
   union {
-    __crubit_A_struct A;
-    __crubit_B_struct B;
-    __crubit_C_struct C;
+    struct {
+     public:
+      Tag tag;
+
+     public:
+      union {
+        __crubit_A_struct A;
+        __crubit_B_struct B;
+        __crubit_C_struct C;
+      };
+    };
+    std::array<unsigned char, 16> __crubit_internal_blob_of_bytes;
   };
 
  private:

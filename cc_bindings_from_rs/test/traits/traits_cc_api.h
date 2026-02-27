@@ -20,6 +20,7 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/traits.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
@@ -65,7 +66,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   // Field type has been replaced with a blob of bytes: Tuple types cannot be
   // used inside of compound data types, because std::tuple is not
   // layout-compatible with a Rust tuple.
-  unsigned char a[8];
+  std::array<unsigned char, 8> a;
 
  private:
   static void __crubit_field_offset_assertions();

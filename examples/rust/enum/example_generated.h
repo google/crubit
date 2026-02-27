@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <type_traits>
 
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[1];
+  std::array<unsigned char, 1> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -69,7 +70,7 @@ static_assert(std::is_trivially_move_assignable_v<::example_crate::Color>);
 static_assert(std::is_trivially_copy_constructible_v<::example_crate::Color>);
 static_assert(std::is_trivially_copy_assignable_v<::example_crate::Color>);
 inline void Color::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
+  static_assert(0 == offsetof(Color, __crubit_internal_blob_of_bytes));
 }
 }  // namespace example_crate
 

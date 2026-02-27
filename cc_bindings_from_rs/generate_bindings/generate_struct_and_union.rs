@@ -1026,8 +1026,8 @@ pub(crate) fn generate_fields<'tcx>(
     let err_fields = |err| {
         vec![Field {
             type_info: Err(err),
-            cc_name: format_ident!("__opaque_blob_of_bytes"),
-            rs_name: quote! { __opaque_blob_of_bytes },
+            cc_name: format_ident!("__crubit_internal_blob_of_bytes"),
+            rs_name: quote! { __crubit_internal_blob_of_bytes },
             is_public: false,
             index: 0,
             offset: 0,
@@ -1049,11 +1049,8 @@ pub(crate) fn generate_fields<'tcx>(
         }
     };
 
-    // Used for generating enum bindings.
-    let is_supported_enum = adt_def.is_enum() && repr_attrs.contains(&rustc_hir::attrs::ReprC);
-
-    let tag_size_with_padding =
-        if is_supported_enum { get_tag_size_with_padding(layout) } else { 0 };
+    let is_repr_c_enum = adt_def.is_enum() && repr_attrs.contains(&rustc_hir::attrs::ReprC);
+    let tag_size_with_padding = if is_repr_c_enum { get_tag_size_with_padding(layout) } else { 0 };
 
     let variant_sizes = match layout_variants {
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
@@ -1075,7 +1072,7 @@ pub(crate) fn generate_fields<'tcx>(
     };
     let variants_fields: Vec<Vec<Field<'tcx>>> = match adt_def.adt_kind() {
         // Handle cases of unsupported ADTs.
-        ty::AdtKind::Enum if !is_supported_enum => {
+        ty::AdtKind::Enum if !is_repr_c_enum => {
             vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
         }
 
@@ -1182,7 +1179,7 @@ pub(crate) fn generate_fields<'tcx>(
                             // `def_span`.
                             variants_fields[variant_index][index].offset = offset.bytes();
 
-                            if is_supported_enum {
+                            if is_repr_c_enum {
                                 // Find the offset for the variant, and take it into
                                 // account.
                                 variants_fields[variant_index][index].offset -=
@@ -1243,7 +1240,7 @@ pub(crate) fn generate_fields<'tcx>(
             }
             ty::AdtKind::Enum => {
                 // Check if each variant has the tag (and appropriate padding) in the front.
-                if !is_supported_enum {
+                if !is_repr_c_enum {
                     variants_fields
                         .iter()
                         .flatten()
@@ -1301,7 +1298,7 @@ pub(crate) fn generate_fields<'tcx>(
         )
     };
 
-    let rs_details: RsSnippet = if is_supported_enum {
+    let rs_details: RsSnippet = if is_repr_c_enum {
         // Offsets for enums is an experimental feature.
         // TODO(b/355642210): Add these assertions once they're not
         // experiemtnal. let adt_rs_name =
@@ -1418,8 +1415,9 @@ pub(crate) fn generate_fields<'tcx>(
                         let tokens = quote! {
                             #visibility __NEWLINE__
                                 __COMMENT__ #msg
-                                unsigned char #cc_name[#size];
+                                std::array<unsigned char, #size> #cc_name;
                         };
+                        prereqs.includes.insert(CcInclude::array());
                         tokens
                     } else {
                         // TODO(b/258259459): Generate bindings for ZST fields.
@@ -1528,7 +1526,7 @@ pub(crate) fn generate_fields<'tcx>(
                     .map(|field| get_field_tokens(field, &mut prereqs, &mut current_visibility))
                     .collect()
             }
-            ty::AdtKind::Enum if !is_supported_enum => variants_fields
+            ty::AdtKind::Enum if !is_repr_c_enum => variants_fields
                 .into_iter()
                 .flatten()
                 .map(|field| get_field_tokens(field, &mut prereqs, &mut Default::default()))
@@ -1692,11 +1690,18 @@ pub(crate) fn generate_fields<'tcx>(
                 };
 
                 // Combine everything together.
+                prereqs.includes.insert(CcInclude::array());
+                let adt_size = Literal::u64_unsuffixed(layout.size().bytes());
                 quote! {
                     #variant_structs __NEWLINE__
                     #tag_enum __NEWLINE__
-                    public: Tag tag; __NEWLINE__
-                    #variants_union
+                    union {
+                        struct {
+                            public: Tag tag; __NEWLINE__
+                            #variants_union
+                        };
+                        std::array<unsigned char, #adt_size> __crubit_internal_blob_of_bytes;
+                    };
                 }
             }
         };

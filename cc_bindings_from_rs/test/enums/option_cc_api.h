@@ -22,6 +22,7 @@
 #include "support/rs_std/option.h"
 #include "support/rs_std/str_ref.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -126,7 +127,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   // Field type has been replaced with a blob of bytes: Type
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  unsigned char foo[24];
+  std::array<unsigned char, 24> foo;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -168,7 +169,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   // Field type has been replaced with a blob of bytes: Type
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  unsigned char foo[24];
+  std::array<unsigned char, 24> foo;
 
  public:
   union {
@@ -247,7 +248,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   // Field type has been replaced with a blob of bytes: Failed to format type
   // for the definition of `option_golden::Unit`: Zero-sized types (ZSTs) are
   // not supported (b/258259459)
-  unsigned char val[1];
+  std::array<unsigned char, 1> val;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -303,7 +304,7 @@ struct rs_std::Option<::option::CloneNoDefault> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[2];
+  std::array<unsigned char, 2> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -390,7 +391,7 @@ struct rs_std::Option<::option::CopyNoDefault> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[2];
+  std::array<unsigned char, 2> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -473,7 +474,7 @@ struct rs_std::Option<::option::HasDefault> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[24];
+  std::array<unsigned char, 24> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -560,7 +561,7 @@ struct rs_std::Option<::option::HasNoDefault> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[32];
+  std::array<unsigned char, 32> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -652,7 +653,7 @@ struct rs_std::Option<::option::HasOptions> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[4];
+  std::array<unsigned char, 4> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -696,7 +697,7 @@ struct rs_std::Option<::option::NonMaxU8> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[1];
+  std::array<unsigned char, 1> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -743,7 +744,7 @@ struct rs_std::Option<rs_std::Option<::option::NonMaxU8>> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[1];
+  std::array<unsigned char, 1> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -785,7 +786,7 @@ struct rs_std::Option<std::uint8_t> {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  unsigned char __opaque_blob_of_bytes[2];
+  std::array<unsigned char, 2> __crubit_internal_blob_of_bytes;
 
  private:
   static void __crubit_field_offset_assertions();

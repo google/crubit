@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -140,7 +141,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Field type has been replaced with a blob of bytes: Type
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  unsigned char field_with_drop_glue[24];
+  std::array<unsigned char, 24> field_with_drop_glue;
 
  public:
   union {
