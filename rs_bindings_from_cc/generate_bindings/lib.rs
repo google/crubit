@@ -20,6 +20,7 @@ use database::rs_snippet::{
     BridgeRsTypeKind, Callable, FnTrait, Mutability, PassingConvention, RsTypeKind, RustPtrKind,
     Safety,
 };
+use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
@@ -40,8 +41,6 @@ use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
-use dyn_format::Format;
-
 mod generate_dyn_callable;
 
 /// Deserializes IR from `json` and generates bindings source code.
@@ -54,6 +53,8 @@ pub fn generate_bindings(
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
     environment: Environment,
+    kythe_annotations: bool,
+    kythe_default_corpus: &str,
 ) -> Result<Bindings> {
     let ir = deserialize_ir(json).with_context(|| {
         let ir_string = String::from_utf8_lossy(json);
@@ -69,6 +70,7 @@ pub fn generate_bindings(
         errors,
         fatal_errors,
         environment,
+        kythe_annotations,
     )?;
     let rs_api = {
         let rustfmt_exe_path =
@@ -82,7 +84,7 @@ pub fn generate_bindings(
             rustfmt_exe_path.map(|path| RustfmtConfig::new(path, rustfmt_config_path));
         rs_tokens_to_formatted_string(rs_api, rustfmt_config.as_ref())?
     };
-    let rs_api_impl = {
+    let rs_api_impl: String = {
         let clang_format_exe_path = if clang_format_exe_path.is_empty() {
             None
         } else {
@@ -365,12 +367,14 @@ pub fn new_database<'db>(
     errors: &'db dyn ErrorReporting,
     fatal_errors: &'db dyn ReportFatalError,
     environment: Environment,
+    kythe_annotations: bool,
 ) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         ir,
         errors,
         fatal_errors,
         environment,
+        kythe_annotations,
         CodegenFunctions {
             generate_enum: generate_enum::generate_enum,
             generate_item,
@@ -402,8 +406,9 @@ pub fn generate_bindings_tokens(
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
     environment: Environment,
+    kythe_annotations: bool,
 ) -> Result<BindingsTokens> {
-    let db = new_database(ir, errors, fatal_errors, environment);
+    let db = new_database(ir, errors, fatal_errors, environment, kythe_annotations);
     let mut snippets = ApiSnippets::default();
 
     // For #![rustfmt::skip].

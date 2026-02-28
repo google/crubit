@@ -42,6 +42,8 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     rustfmt_config_path: FfiU8Slice,
     generate_error_report: bool,
     environment: Environment,
+    kythe_annotations: bool,
+    kythe_default_corpus: FfiU8Slice,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
     let crubit_support_path_format: &str =
@@ -52,6 +54,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         std::str::from_utf8(rustfmt_exe_path.as_slice()).unwrap().into();
     let rustfmt_config_path: OsString =
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
+    let kythe_default_corpus: &str = std::str::from_utf8(kythe_default_corpus.as_slice()).unwrap();
     catch_unwind(|| {
         let mut error_report: Option<ErrorReport> = None;
         let errors: &dyn ErrorReporting = if generate_error_report {
@@ -69,6 +72,8 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
             errors,
             &fatal_errors,
             environment,
+            kythe_annotations,
+            kythe_default_corpus,
         )
         .unwrap();
         FfiBindings {

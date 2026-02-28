@@ -89,7 +89,8 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                  .extra_instantiations = requested_instantiations,
                  .crubit_features = args.target_to_features,
                  .driver_path = args.driver_path,
-                 .do_not_bind_allowlist = std::move(do_not_bind_allowlist)}));
+                 .do_not_bind_allowlist = std::move(do_not_bind_allowlist),
+                 .kythe_annotations = args.kythe_annotations}));
 
   if (!args.instantiations_out.empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";
@@ -101,7 +102,8 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       GenerateBindings(ir, args.crubit_support_path_format,
                        args.clang_format_exe_path, args.rustfmt_exe_path,
                        args.rustfmt_config_path, generate_error_report,
-                       args.environment));
+                       args.environment, args.kythe_annotations,
+                       args.kythe_default_corpus));
 
   absl::flat_hash_map<Identifier, Identifier> instantiations;
   std::optional<const Namespace*> ns =

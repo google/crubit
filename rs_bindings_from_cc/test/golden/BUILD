@@ -79,13 +79,18 @@ rust_bindings_from_cc_cli_flag(
     flags = "--generate_source_location_in_doc_comment=False",
 )
 
+rust_bindings_from_cc_cli_flag(
+    name = "enable_kythe_annotations",
+    flags = "--kythe_annotations=True",
+)
+
 [cc_library(
     name = name + "_cc",
     hdrs = [name + ".h"],
     aspect_hints = [
         "//features:supported",
         ":disable_source_location_in_doc_comment",
-    ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []),
+    ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []) + ([":enable_kythe_annotations"] if name.endswith("_annotations") else []),
     deps = [
         ((d + "_cc") if d in TESTS else d)
         for d in (DEPS[name] if name in DEPS else [])

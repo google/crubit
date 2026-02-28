@@ -51,6 +51,9 @@ struct IrFromCcOptions final {
   // Not an argument, just here to prevent the options struct from being
   // copied/moved with nontrivial lifetime implications.
   NonCopyable do_not_copy = {};
+
+  // Record additional source information for Kythe annotations.
+  bool kythe_annotations = false;
 };
 
 static_assert(std::is_aggregate_v<IrFromCcOptions>);

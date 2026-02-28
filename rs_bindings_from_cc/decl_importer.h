@@ -38,13 +38,15 @@ class Invocation {
       const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets,
       std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist,
       absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
-          crubit_features)
+          crubit_features,
+      bool kythe_annotations)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
                           clang::tidy::lifetimes::LifetimeAnnotationContext>()),
         do_not_bind_allowlist_(std::move(do_not_bind_allowlist)),
-        header_targets_(header_targets) {
+        header_targets_(header_targets),
+        kythe_annotations_(kythe_annotations) {
     // Caller should verify that the inputs are non-empty.
     CHECK(!public_headers_.empty());
     CHECK(!header_targets_.empty());
@@ -77,8 +79,14 @@ class Invocation {
   // The main output of the import process
   IR ir_;
 
+  // Returns whether to record extra location information for Kythe annotations.
+  bool kythe_annotations() const { return kythe_annotations_; }
+
  private:
   const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets_;
+
+  // Whether to record extra location information for Kythe annotations.
+  bool kythe_annotations_;
 };
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to

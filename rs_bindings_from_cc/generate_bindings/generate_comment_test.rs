@@ -144,7 +144,13 @@ impl TestDbFactory {
         }
     }
     fn make_db(&self, environment: Environment) -> BindingsGenerator {
-        new_database(&self.ir, &self.errors, &self.fatal_errors, environment)
+        new_database(
+            &self.ir,
+            &self.errors,
+            &self.fatal_errors,
+            environment,
+            /*kythe_annotations=*/ false,
+        )
     }
 }
 

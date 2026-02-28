@@ -36,6 +36,8 @@ struct CmdlineArgs {
   std::string error_report_out;
   bool do_nothing = true;
   Environment environment = Environment::Production;
+  bool kythe_annotations = false;
+  std::string kythe_default_corpus;
 
   std::vector<HeaderName> public_headers;
   absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets;

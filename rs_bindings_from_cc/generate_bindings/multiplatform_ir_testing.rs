@@ -14,7 +14,13 @@ pub fn ir_from_cc(header: &str) -> Result<IR> {
 }
 
 pub fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
-    ir_testing::ir_from_cc_dependency(test_platform(), header, dep_header, None)
+    ir_testing::ir_from_cc_dependency(
+        test_platform(),
+        header,
+        dep_header,
+        None,
+        /*kythe_annotations=*/ false,
+    )
 }
 
 pub fn ir_record(name: &str) -> Record {
@@ -29,6 +35,7 @@ pub fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
         &full_program,
         "// empty header",
         Some("assume_lifetimes"),
+        /*kythe_annotations=*/ false,
     )
 }
 
@@ -38,5 +45,6 @@ pub fn ir_from_fmt_cc(program: &str) -> Result<IR> {
         program,
         "// empty header",
         Some("fmt"),
+        /*kythe_annotations=*/ false,
     )
 }

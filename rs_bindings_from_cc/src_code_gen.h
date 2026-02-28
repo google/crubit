@@ -29,7 +29,8 @@ absl::StatusOr<Bindings> GenerateBindings(
     const IR& ir, absl::string_view crubit_support_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
-    Environment environment);
+    Environment environment, bool kythe_annotations,
+    absl::string_view kythe_default_corpus);
 
 }  // namespace crubit
 

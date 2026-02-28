@@ -45,6 +45,10 @@ memoized::query_group! {
         fn environment(&self) -> Environment;
 
         #[input]
+        /// Feature flag enabling Kythe annotations
+        fn kythe_annotations(&self) -> bool;
+
+        #[input]
         fn codegen_functions(&self) -> CodegenFunctions;
 
         #[break_cycles_with = Safety::Safe]

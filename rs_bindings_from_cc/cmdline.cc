@@ -119,6 +119,11 @@ ABSL_FLAG(bool, generate_source_location_in_doc_comment, true,
                         ? "production"
                         : "golden_test");
     });
+ABSL_FLAG(bool, kythe_annotations, false,
+          "Emit extra source information for generating cross-references.");
+
+ABSL_FLAG(std::string, kythe_default_corpus, "corpus",
+          "Default corpus to use for Kythe vnames.");
 
 namespace crubit {
 
@@ -231,6 +236,8 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .rustfmt_config_path = absl::GetFlag(FLAGS_rustfmt_config_path),
       .error_report_out = absl::GetFlag(FLAGS_error_report_out),
       .do_nothing = absl::GetFlag(FLAGS_do_nothing),
+      .kythe_annotations = absl::GetFlag(FLAGS_kythe_annotations),
+      .kythe_default_corpus = absl::GetFlag(FLAGS_kythe_default_corpus),
       .public_headers = PublicHeaders(),
       .extra_rs_srcs = absl::GetFlag(FLAGS_extra_rs_srcs),
       .srcs_to_scan_for_instantiations =

@@ -27,6 +27,7 @@ fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
         header,
         dep_header,
         None,
+        /*kythe_annotations=*/ false,
     )
 }
 
@@ -38,6 +39,7 @@ fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
         &full_program,
         "// empty header",
         Some("assume_lifetimes"),
+        /*kythe_annotations=*/ false,
     )
 }
 
@@ -47,6 +49,7 @@ fn ir_from_fmt_cc(program: &str) -> Result<IR> {
         program,
         "// empty header",
         Some("fmt"),
+        /*kythe_annotations=*/ false,
     )
 }
 

@@ -29,7 +29,8 @@ extern "C" FfiBindings GenerateBindingsImpl(
     FfiU8Slice json, FfiU8Slice crubit_support_path_format,
     FfiU8Slice clang_format_exe_path, FfiU8Slice rustfmt_exe_path,
     FfiU8Slice rustfmt_config_path, bool generate_error_report,
-    Environment environment);
+    Environment environment, bool kythe_annotations,
+    FfiU8Slice kythe_default_corpus);
 
 // Creates `Bindings` instance from copied data from `ffi_bindings`.
 static absl::StatusOr<Bindings> MakeBindingsFromFfiBindings(
@@ -63,12 +64,14 @@ absl::StatusOr<Bindings> GenerateBindings(
     const IR& ir, absl::string_view crubit_support_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
-    Environment environment) {
+    Environment environment, bool kythe_annotations,
+    absl::string_view kythe_default_corpus) {
   std::string json = llvm::formatv("{0}", ir.ToJson());
   FfiBindings ffi_bindings = GenerateBindingsImpl(
       MakeFfiU8Slice(json), MakeFfiU8Slice(crubit_support_path_format),
       MakeFfiU8Slice(clang_format_exe_path), MakeFfiU8Slice(rustfmt_exe_path),
-      MakeFfiU8Slice(rustfmt_config_path), generate_error_report, environment);
+      MakeFfiU8Slice(rustfmt_config_path), generate_error_report, environment,
+      kythe_annotations, MakeFfiU8Slice(kythe_default_corpus));
   CRUBIT_ASSIGN_OR_RETURN(Bindings bindings,
                           MakeBindingsFromFfiBindings(ffi_bindings));
   FreeFfiBindings(ffi_bindings);

@@ -21,6 +21,24 @@ pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
         &error_report::IgnoreErrors,
         &fatal_errors,
         Environment::Production,
+        /*kythe_annotations=*/ false,
+    )?;
+    let fatal = fatal_errors.take_string();
+    if !fatal.is_empty() {
+        bail!("Fatal errors:{}", fatal)
+    }
+    Ok(tokens)
+}
+
+pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<BindingsTokens> {
+    let fatal_errors = FatalErrors::new();
+    let tokens = generate_bindings_tokens(
+        &ir,
+        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
+        &error_report::IgnoreErrors,
+        &fatal_errors,
+        Environment::Production,
+        /*kythe_annotations=*/ true,
     )?;
     let fatal = fatal_errors.take_string();
     if !fatal.is_empty() {
@@ -44,6 +62,12 @@ impl TestDbFactory {
         })
     }
     pub fn make_db(&self) -> BindingsGenerator {
-        new_database(&self.ir, &self.errors, &self.fatal_errors, Environment::Production)
+        new_database(
+            &self.ir,
+            &self.errors,
+            &self.fatal_errors,
+            Environment::Production,
+            /*kythe_annotations=*/ false,
+        )
     }
 }

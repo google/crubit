@@ -26,7 +26,8 @@ static constexpr absl::string_view kDependencyHeaderName =
 // This is intended to be called from Rust tests.
 extern "C" FfiU8SliceBox json_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
-    FfiU8Slice dependency_header_source, FfiU8Slice extra_feature) {
+    FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
+    bool kythe_annotations) {
   absl::flat_hash_set<std::string> features = {"supported"};
   if (extra_feature.size > 0) {
     features.insert(std::string(StringViewFromFfiU8Slice(extra_feature)));
@@ -50,6 +51,7 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
       .crubit_features = {{BazelLabel{std::string(kDependencyTarget)},
                            features},
                           {BazelLabel{"//test:testing_target"}, features}},
+      .kythe_annotations = kythe_annotations,
   });
 
   // TODO(forster): For now it is good enough to just exit: We are just
