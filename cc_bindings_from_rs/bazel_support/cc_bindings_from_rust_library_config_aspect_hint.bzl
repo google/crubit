@@ -51,7 +51,7 @@ which affects the tool behavior when generating the C++ binding for the Rust tar
 """,
 )
 
-def crate_name_to_library_config(aspect_ctx):
+def crate_name_to_library_config(aspect_hints, deps):
     """Returns the configuration for `cc_bindings_from_rust`.
 
     Args:
@@ -61,17 +61,17 @@ def crate_name_to_library_config(aspect_ctx):
         A map from crate name to the configuration for `cc_bindings_from_rust`.
     """
     crate_config_map = {}
-    for hint in aspect_ctx.rule.attr.aspect_hints:
+    for hint in aspect_hints:
         if CcBindingsFromRustLibraryConfigInfo in hint:
             crate_config_map["self"] = hint[CcBindingsFromRustLibraryConfigInfo]
-    for dep in aspect_ctx.rule.attr.deps:
+    for dep in deps:
         if CcBindingsFromRustInfo in dep:
             rust_info = dep[CcBindingsFromRustInfo]
             if rust_info.configuration:
                 crate_config_map[dep.label.name] = rust_info.configuration
     return crate_config_map
 
-def get_additional_cc_hdrs_and_srcs(aspect_ctx):
+def get_additional_cc_hdrs_and_srcs(aspect_hints):
     """Returns any additional C++ headers and sources that should be compiled with the generated bindings.
 
     Args:
@@ -82,7 +82,7 @@ def get_additional_cc_hdrs_and_srcs(aspect_ctx):
     """
     additional_cc_hdrs = []
     additional_cc_srcs = []
-    for hint in aspect_ctx.rule.attr.aspect_hints:
+    for hint in aspect_hints:
         if CcBindingsFromRustLibraryConfigInfo in hint:
             for target in hint[CcBindingsFromRustLibraryConfigInfo].extra_cc_hdrs:
                 additional_cc_hdrs.extend(target.files.to_list())

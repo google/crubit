@@ -385,14 +385,18 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     let input = config::Input::Str {
         name: rustc_span::FileName::Custom("lib.rs".into()),
         // This tells rustc to load our crate from it's rmeta.
-        input: format!(
-            r#"
+        input: if crate_name == "std" {
+            "fn main() {}".to_string()
+        } else {
+            format!(
+                r#"
 extern crate r#{};
 
 fn main() {{}}
 "#,
-            crate_name
-        ),
+                crate_name
+            )
+        },
     };
     let config = construct_config(
         input,
