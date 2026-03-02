@@ -708,8 +708,10 @@ fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     }
 
     #[rustversion::before(2026-02-25)]
+    #[allow(deprecated)]
     let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecation{deprecation, span} => (*deprecation, *span));
     #[rustversion::since(2026-02-25)]
+    #[allow(deprecated)]
     let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecated{deprecation, span} => (*deprecation, *span));
 
     if let Some((deprecation, _span)) = deprecation_attr {
@@ -1293,6 +1295,7 @@ fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
 /// `local_def_id`, and appends the source location at which the item is
 /// defined.
 fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
+    #[allow(deprecated)]
     let mut docs = db
         .tcx()
         .get_all_attrs(def_id)
@@ -1383,7 +1386,7 @@ fn generate_item_impl<'tcx>(
         DefKind::Fn => db.generate_function(def_id).map(Some),
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
-        DefKind::Const => generate_const(db, def_id).map(Some),
+        DefKind::Const { .. } => generate_const(db, def_id).map(Some),
         DefKind::Trait => generate_trait(db, def_id).map(Some),
         DefKind::Impl { .. } => Ok(None), // Handled by `generate_adt`
         DefKind::Mod => Ok(None),         // Handled by `generate_crate`

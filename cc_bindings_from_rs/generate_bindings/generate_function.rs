@@ -416,6 +416,7 @@ fn export_name_and_no_mangle_attrs_of<'tcx>(
 ) -> (Option<Symbol>, bool) {
     let mut export_name: Option<Symbol> = None;
     let mut no_mangle = false;
+    #[allow(deprecated)]
     for attr in tcx.get_all_attrs(def_id) {
         match attr {
             hir::Attribute::Parsed(AttributeKind::ExportName { name, .. }) => {
@@ -435,6 +436,7 @@ pub(crate) struct MustUseAttr {
 }
 
 pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<MustUseAttr> {
+    #[allow(deprecated)]
     for attr in tcx.get_all_attrs(def_id) {
         if let hir::Attribute::Parsed(AttributeKind::MustUse { reason, .. }) = attr {
             return Some(MustUseAttr { reason: *reason });

@@ -318,6 +318,10 @@ pub enum BridgingAttrs {
 // Ideally we could call https://github.com/rust-lang/rust/blob/2aaa62b89d22b570e560731b03e3d2d6f5c3bbce/compiler/rustc_metadata/src/rmeta/encoder.rs#L937 directly, but that method is not publicly available.
 // It does not suffice to call `tcx.has_attrs` on our DefId because that will call `get_all_attrs` under the hood and panic if given an unsupported DefId.
 pub fn supports_attrs(def_kind: DefKind) -> bool {
+    // Const and AssocConst switch between unit variant and struct variant in nightly 2026-03-01. We
+    // use a struct variant to cover both cases and supress the warning on versions where it's a
+    // unit variant.
+    #[allow(clippy::unneeded_struct_pattern)]
     match def_kind {
         DefKind::Mod
         | DefKind::Struct
@@ -330,10 +334,10 @@ pub fn supports_attrs(def_kind: DefKind) -> bool {
         | DefKind::TraitAlias
         | DefKind::AssocTy
         | DefKind::Fn
-        | DefKind::Const
+        | DefKind::Const { .. }
         | DefKind::Static { nested: false, .. }
         | DefKind::AssocFn
-        | DefKind::AssocConst
+        | DefKind::AssocConst { .. }
         | DefKind::Macro(_)
         | DefKind::Field
         | DefKind::Impl { .. }
@@ -370,6 +374,10 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
         //   right: Ctor
         return Ok(crubit_attrs);
     }
+    // This method has been deprecated to direct folks towards `find_attr!`. But our use case is not
+    // met by `find_attr!`. There are no plans to remove the `get_all_attrs` method, so we silence
+    // the warning here.
+    #[allow(deprecated)]
     for attr in tcx.get_all_attrs(did) {
         let Some(comment) = attr.doc_str() else { continue };
         let Some((_, key_value)) = comment.as_str().split_once("CRUBIT_ANNOTATE:") else {

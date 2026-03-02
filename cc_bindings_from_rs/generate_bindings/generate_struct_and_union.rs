@@ -208,7 +208,7 @@ fn generate_cpp_enum<'tcx>(
             if !is_supported_associated_item(tcx, assoc_item.def_id) {
                 return None;
             }
-            let ty::AssocKind::Const { name } = assoc_item.kind else {
+            let ty::AssocKind::Const { name, .. } = assoc_item.kind else {
                 db.fatal_errors().report(&format!(
                     "C++ enums can only have `const`s as public items, found: {:?}",
                     assoc_item.kind
@@ -900,6 +900,7 @@ fn generate_tuple_struct_ctor<'tcx>(
         return None;
     }
 
+    #[allow(deprecated)]
     if tcx
         .get_all_attrs(core.def_id)
         .iter()
