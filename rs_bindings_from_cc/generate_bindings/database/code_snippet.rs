@@ -210,7 +210,6 @@ pub fn required_crubit_features(
         Item::Constant(_)
         | Item::Comment { .. }
         | Item::GlobalVar(_)
-        | Item::ExistingRustType { .. }
         | Item::UnsupportedItem(..)
         | Item::UseMod { .. } => {}
 
@@ -298,7 +297,7 @@ pub fn required_crubit_features(
                 }
             }
         }
-        Item::Record(_) | Item::TypeAlias(_) | Item::Enum(_) => {
+        Item::Record(_) | Item::TypeAlias(_) | Item::Enum(_) | Item::ExistingRustType(_) => {
             require_rs_type_kind(
                 &mut missing_features,
                 // We use from_item_raw here because required_crubit_features is itself called
