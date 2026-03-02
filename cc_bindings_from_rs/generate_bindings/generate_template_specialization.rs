@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::generate_function_thunk::replace_all_regions_with_static;
-use crate::generate_struct_and_union::{
-    generate_fields, generate_relocating_ctor, scalar_value_to_string,
-};
+use crate::generate_struct_and_union::{generate_relocating_ctor, scalar_value_to_string};
 use arc_anyhow::Result;
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, TemplateSpecialization};
@@ -325,23 +323,10 @@ fn specialize_option<'tcx>(
         .resolve_feature_requirements(crate::crate_features(db, db.source_crate_num()))?
         .into_tokens(&mut prereqs);
     let layout = get_layout(tcx, self_ty).expect("We've already checked this layout is valid");
-    let size = layout.size().bytes();
-    let member_fields_names = HashSet::new();
     let ty::TyKind::Adt(adt, _) = self_ty.kind() else {
         unreachable!("Option<T> must be an ADT");
     };
     let needs_drop = self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
-    let fields = generate_fields(
-        db,
-        self_ty,
-        &format_ident!("Option"),
-        &quote! { Option<#ty_tokens> },
-        &[],
-        size,
-        layout.align().abi.bytes(),
-        &member_fields_names,
-    );
-    let fields_main_api = fields.main_api.into_tokens(&mut prereqs);
     let name = escape_non_identifier_chars(&format!("{}", self_ty));
 
     let OptionVariantIndices { some_idx, none_idx } = get_option_variant_indices(tcx, *adt);
@@ -393,8 +378,7 @@ fn specialize_option<'tcx>(
         }),
         cc_details: CcSnippet::new(quote! {
             inline #tag_type_cc* rs_std::Option<#ty_tokens>::tag() noexcept {
-                return reinterpret_cast<#tag_type_cc*>(
-                    reinterpret_cast<char*>(this) + #tag_offset);
+                return reinterpret_cast<#tag_type_cc*>(storage_ + #tag_offset);
             }
         }),
         ..Default::default()
@@ -421,8 +405,7 @@ fn specialize_option<'tcx>(
                 none_val: quote! { #none_discr_val },
                 write_some_to_tag: quote! { *this->tag() = #some_discr_val; },
                 some_ptr_val: quote! {
-                    reinterpret_cast<#ty_tokens*>(
-                        reinterpret_cast<char*>(this) + #payload_offset)
+                    reinterpret_cast<#ty_tokens*>(storage_ + #payload_offset)
                 },
                 tag_type_cc: tag_type_cc.clone(),
             }
@@ -439,7 +422,7 @@ fn specialize_option<'tcx>(
                 tag_method,
                 none_val: quote! { #none_relative_val },
                 some_ptr_val: quote! {
-                    reinterpret_cast<#ty_tokens*>(this)
+                    reinterpret_cast<#ty_tokens*>(storage_)
                 },
                 // With a niche, the Some variant is implicitly encoded. We don't need to write out
                 // a discriminant value. It is accomplished by writing a value to the Some payload.
@@ -452,11 +435,12 @@ fn specialize_option<'tcx>(
         unreachable!("Option<T> must be an ADT");
     };
     let arg_ty_for_rs = db.format_ty_for_rs(arg_ty)?;
+    let rs_fully_qualified_name = quote! { std::option::Option<#arg_ty_for_rs> };
     let core = Rc::new(database::AdtCoreBindings {
         def_id: adt.did(),
         keyword: quote! { struct },
         cc_short_name: format_ident!("Option"),
-        rs_fully_qualified_name: quote! { std::option::Option<#arg_ty_for_rs> },
+        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
         cc_fully_qualified_name: quote! { rs_std::Option<#ty_tokens> },
         self_ty,
         alignment_in_bytes: layout.align().abi.bytes(),
@@ -483,15 +467,24 @@ fn specialize_option<'tcx>(
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
     let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+    let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let internal_rust_type_string = rs_fully_qualified_name.to_string();
+    // TODO(cramertj): Consider standardizing the `storage_` field with other representations in
+    // `generate_adt`.
     let main_api_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
         __HASH_TOKEN__ define #guard_name __NEWLINE__
         template<> __NEWLINE__
-        struct rs_std::Option<#ty_tokens> { __NEWLINE__
+        struct alignas(#align_literal)
+        CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
+        rs_std::Option<#ty_tokens> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
 
-            #fields_main_api __NEWLINE__
+         private:
+          unsigned char storage_[#size_literal];
+            __NEWLINE__
         }; __NEWLINE__
 
         __HASH_TOKEN__ endif __NEWLINE__

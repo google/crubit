@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![allow(internal_features)]
 #![feature(rustc_attrs)]
 
 #[rustc_layout_scalar_valid_range_end(250)]
@@ -21,6 +22,7 @@ pub struct HasOptions {
 
 impl HasOptions {
     pub fn new(value: u8) -> Self {
+        assert!(value <= 250);
         unsafe {
             HasOptions {
                 niche: Some(NonMaxU8(value)),
@@ -31,6 +33,7 @@ impl HasOptions {
     }
 
     pub fn with_option(value: Option<u8>) -> Self {
+        assert!(value.map(|v| v <= 250).unwrap_or(true));
         unsafe {
             HasOptions {
                 niche: value.map(|v| NonMaxU8(v)),
