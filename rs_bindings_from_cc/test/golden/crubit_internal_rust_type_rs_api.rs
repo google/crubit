@@ -13,6 +13,15 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
+pub mod crubit { // Error while generating bindings for class 'crubit::crubit_internal_rust_type_args':
+                 // Class templates are not supported yet
+
+    // Error while generating bindings for class 'crubit::const_generic':
+    // Class templates are not supported yet
+}
+
+// namespace crubit
+
 // Type bindings for MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
 
 // Note that this is potentially visited, even if the original declaration is
@@ -85,14 +94,66 @@ impl Default for ExistingRustTypeFieldTypes {
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for class 'CppPtr':
+// Error while generating bindings for class 'Ptr':
 // Class templates are not supported yet
 
-// Error while generating bindings for function 'InstantiatedCppPtr':
-// Return type is not supported: Unsupported type 'CppPtr<int, true, 123>': Failed to create bindings for template specialization type CppPtr<int, true, 123>: Unsupported template argument kind: Integral
+#[inline(always)]
+pub fn AcceptPtrInt(mut ptr: crate::RustPtr<::ffi_11::c_int>) {
+    unsafe { crate::detail::__rust_thunk___Z12AcceptPtrInt3PtrIiE(&mut ptr) }
+}
 
-// Error while generating bindings for struct 'CppPtr':
-// Unsupported template argument kind: Integral
+// Error while generating bindings for class 'CppTypeWithTemplateArgs':
+// Class templates are not supported yet
+
+#[inline(always)]
+pub fn AcceptCppTypeWithTemplateArgs(
+    mut cpp_type: crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(&mut cpp_type)
+    }
+}
+
+// Error while generating bindings for class 'ConvertPtrs':
+// Class templates are not supported yet
+
+#[inline(always)]
+pub fn AcceptReordered(mut x: crate::RustTypeReordered<f32, ::ffi_11::c_int>) {
+    unsafe { crate::detail::__rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(&mut x) }
+}
+
+// Error while generating bindings for class 'WithDefault':
+// Class templates are not supported yet
+
+#[inline(always)]
+pub fn AcceptWithDefault(mut x: crate::RustTypeWithDefault<f32, ::ffi_11::c_int>) {
+    unsafe { crate::detail::__rust_thunk___Z17AcceptWithDefault11WithDefaultIfiE(&mut x) }
+}
+
+// Error while generating bindings for class 'MyContainer':
+// Class templates are not supported yet
+
+#[inline(always)]
+pub fn AcceptSpecialized(
+    mut a: crate::MyRustContainer<::ffi_11::c_int>,
+    mut b: crate::MyRustContainerVoid,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(&mut a, &mut b)
+    }
+}
+
+// Type bindings for Ptr<int> suppressed due to being mapped to an existing Rust type (crate::RustPtr::<::ffi_11::c_int>)
+
+// Type bindings for CppTypeWithTemplateArgs<int, float, true> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithReorderedGenerics::<::ffi_11::c_int,f32,true>)
+
+// Type bindings for ConvertPtrs<float, int> suppressed due to being mapped to an existing Rust type (crate::RustTypeReordered::<f32,::ffi_11::c_int>)
+
+// Type bindings for WithDefault<float> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithDefault::<f32,::ffi_11::c_int>)
+
+// Type bindings for MyContainer<int> suppressed due to being mapped to an existing Rust type (crate::MyRustContainer::<::ffi_11::c_int>)
+
+// Type bindings for MyContainer<void> suppressed due to being mapped to an existing Rust type (crate::MyRustContainerVoid)
 
 mod detail {
     #[allow(unused_imports)]
@@ -100,6 +161,22 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z12AcceptPtrInt3PtrIiE(
+            ptr: &mut crate::RustPtr<::ffi_11::c_int>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(
+            cpp_type: &mut crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(
+            x: &mut crate::RustTypeReordered<f32, ::ffi_11::c_int>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z17AcceptWithDefault11WithDefaultIfiE(
+            x: &mut crate::RustTypeWithDefault<f32, ::ffi_11::c_int>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(
+            a: &mut crate::MyRustContainer<::ffi_11::c_int>,
+            b: &mut crate::MyRustContainerVoid,
         );
     }
 }
@@ -122,4 +199,22 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_enum) == 2);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_alias) == 3);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, error) == 4);
+    assert!(::core::mem::size_of::<crate::RustPtr::<::ffi_11::c_int>>() == 8);
+    assert!(::core::mem::align_of::<crate::RustPtr::<::ffi_11::c_int>>() == 8);
+    assert!(
+        ::core::mem::size_of::<crate::RustTypeWithReorderedGenerics::<::ffi_11::c_int, f32, true>>(
+        ) == 16
+    );
+    assert!(
+        ::core::mem::align_of::<crate::RustTypeWithReorderedGenerics::<::ffi_11::c_int, f32, true>>(
+        ) == 8
+    );
+    assert!(::core::mem::size_of::<crate::RustTypeReordered::<f32, ::ffi_11::c_int>>() == 1);
+    assert!(::core::mem::align_of::<crate::RustTypeReordered::<f32, ::ffi_11::c_int>>() == 1);
+    assert!(::core::mem::size_of::<crate::RustTypeWithDefault::<f32, ::ffi_11::c_int>>() == 1);
+    assert!(::core::mem::align_of::<crate::RustTypeWithDefault::<f32, ::ffi_11::c_int>>() == 1);
+    assert!(::core::mem::size_of::<crate::MyRustContainer::<::ffi_11::c_int>>() == 1);
+    assert!(::core::mem::align_of::<crate::MyRustContainer::<::ffi_11::c_int>>() == 1);
+    assert!(::core::mem::size_of::<crate::MyRustContainerVoid>() == 1);
+    assert!(::core::mem::align_of::<crate::MyRustContainerVoid>() == 1);
 };
