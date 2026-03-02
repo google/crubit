@@ -98,6 +98,8 @@ TEST(TypeAliasEnum, AliasEnum);
 using ns::ExampleEnum;
 TEST(UsingEnum, ExampleEnum);
 
+TEST(DeclTypeBool, decltype(true || false));
+
 struct CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Struct final {
   signed char x;
 };

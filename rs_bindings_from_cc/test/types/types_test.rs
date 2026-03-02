@@ -133,6 +133,8 @@ type_is!(
     TypeAliasEnum => types_nonptr::AliasEnum,
     UsingEnum => types_nonptr::ns::ExampleEnum,
 
+    DeclTypeBool => bool,
+
     ExistingRustTypeStruct => i8,
     ExistingRustTypeClass => i8,
     ExistingRustTypeEnum => i8,

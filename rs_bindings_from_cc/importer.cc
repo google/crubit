@@ -1620,6 +1620,9 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     CHECK(deduced_type->isDeduced());
     return ConvertQualType(deduced_type->getDeducedType(), lifetimes,
                            /*nullable=*/true, assume_lifetimes);
+  } else if (const auto* decltype_type = type->getAs<clang::DecltypeType>()) {
+    return ConvertQualType(decltype_type->getUnderlyingType(), lifetimes,
+                           /*nullable=*/true, assume_lifetimes);
   }
 
   return absl::UnimplementedError(absl::StrCat(

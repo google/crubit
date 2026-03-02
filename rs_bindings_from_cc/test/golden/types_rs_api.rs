@@ -14,10 +14,10 @@
 #![deny(warnings)]
 
 // Error while generating bindings for type alias 'PtrDiff':
-// Can't generate bindings for PtrDiff due to missing bindings for its dependency: Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported clang::Type class 'Decltype'
+// Can't generate bindings for PtrDiff due to missing bindings for its dependency: Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported type '__ptrdiff_t': Unsupported clang::Type class 'PredefinedSugar'
 
 // Error while generating bindings for type alias 'Size':
-// Can't generate bindings for Size due to missing bindings for its dependency: Unsupported type 'decltype(sizeof (0))': Unsupported clang::Type class 'Decltype'
+// Can't generate bindings for Size due to missing bindings for its dependency: Unsupported type 'decltype(sizeof (0))': Unsupported type '__size_t': Unsupported clang::Type class 'PredefinedSugar'
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
