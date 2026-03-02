@@ -13,6 +13,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
+/// Generated from: rs_bindings_from_cc/test/golden/function_annotations.h;l=8[355,377]
 #[inline(always)]
 pub fn function_returning_int() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z22function_returning_intv() }

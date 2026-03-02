@@ -131,7 +131,9 @@ class Importer final : public ImportContext {
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
       const clang::NamedDecl* named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl* decl) const override;
-  std::string ConvertSourceLocation(clang::SourceLocation loc) const override;
+  std::string ConvertSourceLocation(
+      clang::SourceLocation loc,
+      clang::DeclarationNameInfo* name_info) const override;
   CcType ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,

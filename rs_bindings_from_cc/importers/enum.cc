@@ -154,7 +154,8 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .unique_name = ictx_.GetUniqueName(*enum_decl),
       .id = ictx_.GenerateItemId(enum_decl),
       .owning_target = std::move(owning_target),
-      .source_loc = ictx_.ConvertSourceLocation(enum_decl->getBeginLoc()),
+      .source_loc =
+          ictx_.ConvertSourceLocation(enum_decl->getBeginLoc(), nullptr),
       .underlying_type = *std::move(type),
       .enumerators = enum_decl->isCompleteDefinition()
                          ? std::make_optional(std::move(enumerators))

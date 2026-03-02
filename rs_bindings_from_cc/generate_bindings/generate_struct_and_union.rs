@@ -301,7 +301,13 @@ fn field_definition(
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
     let doc_comment = match &field_rs_type_kind {
-        Ok(_) => generate_doc_comment(field.doc_comment.as_deref(), None, None, db.environment()),
+        Ok(_) => generate_doc_comment(
+            field.doc_comment.as_deref(),
+            None,
+            None,
+            db.environment(),
+            db.kythe_annotations(),
+        ),
         Err(msg) => {
             use std::fmt::Write;
 
@@ -314,7 +320,13 @@ fn field_definition(
                 &mut new_text,
                 "Reason for representing this field as a blob of bytes:\n{msg:#}"
             );
-            generate_doc_comment(Some(new_text.as_str()), None, None, db.environment())
+            generate_doc_comment(
+                Some(new_text.as_str()),
+                None,
+                None,
+                db.environment(),
+                db.kythe_annotations(),
+            )
         }
     };
     let visibility = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
@@ -672,6 +684,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
             record_safety.unsafe_reason().as_deref(),
             Some(&record.source_loc),
             db.environment(),
+            db.kythe_annotations(),
         ),
         derive_attr: generate_derives(&record),
         recursively_pinned_attr,
@@ -872,7 +885,13 @@ fn cc_struct_no_unique_address_impl(
         no_unique_address_accessors.push(NoUniqueAddressAccessor {
             doc_comment: if field.size == 0 {
                 // These fields are not generated at all, so they need to be documented here.
-                generate_doc_comment(field.doc_comment.as_deref(), None, None, db.environment())
+                generate_doc_comment(
+                    field.doc_comment.as_deref(),
+                    None,
+                    None,
+                    db.environment(),
+                    db.kythe_annotations(),
+                )
             } else {
                 // all other fields already have a doc-comment at the point they were defined.
                 None

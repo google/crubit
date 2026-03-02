@@ -23,6 +23,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
@@ -226,9 +227,10 @@ class ImportContext {
   virtual std::optional<std::string> GetComment(
       const clang::Decl* decl) const = 0;
 
-  // Converts a Clang source location to IR.
+  // Converts a Clang source location to IR. `name_info` may be null.
   virtual std::string ConvertSourceLocation(
-      clang::SourceLocation loc) const = 0;
+      clang::SourceLocation loc,
+      clang::DeclarationNameInfo* name_info) const = 0;
 
   // Converts the Clang type `qual_type` into an equivalent `CcType`.
   // Lifetimes for the type can optionally be specified using `lifetimes` (pass

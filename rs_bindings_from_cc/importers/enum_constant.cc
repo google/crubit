@@ -71,8 +71,8 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
       .unique_name = ictx_.GetUniqueName(*enum_constant_decl),
       .id = ictx_.GenerateItemId(enum_constant_decl),
       .owning_target = ictx_.GetOwningTarget(enum_constant_decl),
-      .source_loc =
-          ictx_.ConvertSourceLocation(enum_constant_decl->getBeginLoc()),
+      .source_loc = ictx_.ConvertSourceLocation(
+          enum_constant_decl->getBeginLoc(), nullptr),
       .type = *std::move(type),
       .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),

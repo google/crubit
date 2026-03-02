@@ -1651,6 +1651,7 @@ pub fn generate_function(
         generate_func_safety_doc(db, &func, &impl_kind, &param_idents, &param_types).as_deref(),
         Some(&func.source_loc),
         db.environment(),
+        db.kythe_annotations(),
     );
     let api_func: TokenStream;
     let function_id: FunctionId;

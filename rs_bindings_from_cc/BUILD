@@ -345,6 +345,7 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:index",
+        "@llvm-project//clang:lex",
         "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],

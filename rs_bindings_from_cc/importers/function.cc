@@ -715,6 +715,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK_OK(return_type);
 
+  auto name_info = function_decl->getNameInfo();
   return Func{
       .cc_name = translated_name->cc_identifier,
       .rs_name = translated_name->rs_identifier(),
@@ -738,7 +739,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,
       .safety_annotation = safety_annotation,
-      .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
+      .source_loc =
+          ictx_.ConvertSourceLocation(function_decl->getBeginLoc(), &name_info),
       .id = ictx_.GenerateItemId(function_decl),
       .enclosing_item_id = *std::move(enclosing_item_id),
       .lifetime_inputs = std::move(lifetime_inputs),

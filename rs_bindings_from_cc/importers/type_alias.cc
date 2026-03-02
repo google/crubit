@@ -189,7 +189,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       .doc_comment = ictx_.GetComment(decl),
       .unknown_attr = std::move(*unknown_attr),
       .underlying_type = *underlying_type,
-      .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc()),
+      .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc(), nullptr),
       .enclosing_item_id = *std::move(enclosing_item_id),
   };
 }

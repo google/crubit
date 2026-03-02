@@ -112,7 +112,8 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
         .unique_name = ictx_.GetUniqueName(*var_decl),
         .id = ictx_.GenerateItemId(var_decl),
         .owning_target = ictx_.GetOwningTarget(var_decl),
-        .source_loc = ictx_.ConvertSourceLocation(var_decl->getBeginLoc()),
+        .source_loc =
+            ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr),
         .type = std::move(type),
         .unknown_attr = std::move(*unknown_attr),
         .enclosing_item_id = *std::move(enclosing_item_id),
@@ -138,7 +139,8 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
       .unique_name = ictx_.GetUniqueName(*var_decl),
       .id = ictx_.GenerateItemId(var_decl),
       .owning_target = ictx_.GetOwningTarget(var_decl),
-      .source_loc = ictx_.ConvertSourceLocation(var_decl->getBeginLoc()),
+      .source_loc =
+          ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr),
       .mangled_name = mangled_name,
       .type = std::move(type),
       .unknown_attr = std::move(*unknown_attr),

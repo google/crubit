@@ -153,6 +153,7 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
             None,
             Some(&type_alias.source_loc),
             db.environment(),
+            db.kythe_annotations(),
         ),
         visibility: db.type_visibility(&type_alias.owning_target, rs_type_kind).unwrap_or_default(),
         ident: make_rs_ident(&type_alias.rs_name.identifier),

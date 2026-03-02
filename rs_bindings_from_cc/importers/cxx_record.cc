@@ -1151,7 +1151,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .doc_comment = std::move(doc_comment),
       .bridge_type = std::move(bridge_type),
       .owned_ptr_type = *std::move(owned_ptr_type),
-      .source_loc = ictx_.ConvertSourceLocation(source_loc),
+      .source_loc = ictx_.ConvertSourceLocation(source_loc, nullptr),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),
       .size_align =

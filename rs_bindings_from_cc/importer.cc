@@ -65,6 +65,7 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
+#include "clang/Lex/Lexer.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
@@ -1127,7 +1128,8 @@ IR::Item Importer::ImportUnsupportedItem(
           clang::dyn_cast<clang::NamedDecl>(&original_decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
-  std::string source_loc = ConvertSourceLocation(original_decl.getBeginLoc());
+  std::string source_loc =
+      ConvertSourceLocation(original_decl.getBeginLoc(), nullptr);
   return UnsupportedItem{
       .name = name,
       .unique_name = GetUniqueName(original_decl),
@@ -1170,7 +1172,9 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
   return cleaned_comment_text;
 }
 
-std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
+std::string Importer::ConvertSourceLocation(
+    clang::SourceLocation loc, clang::DeclarationNameInfo* name_info) const {
+  bool kythe_annotations = invocation_.kythe_annotations();
   auto& sm = ctx_.getSourceManager();
   // For macros: https://clang.llvm.org/doxygen/SourceManager_8h.html:
   // Spelling location: where the macro is originally defined.
@@ -1182,10 +1186,13 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   // number to avoid wrong links while generated files have not caught up.
   constexpr absl::string_view kGeneratedFrom = "Generated from";
   constexpr absl::string_view kExpandedAt = "Expanded at";
-  constexpr auto kSourceLocationFunc =
-      [](absl::string_view origin, absl::string_view filename, uint32_t line) {
-        return absl::Substitute("$0: $1;l=$2", origin, filename, line);
-      };
+  constexpr auto kSourceLocationFunc = [](bool kythe_annotations,
+                                          absl::string_view origin,
+                                          absl::string_view filename,
+                                          uint32_t line, uint32_t begin,
+                                          int32_t end) {
+    return absl::Substitute("$0: $1;l=$2", origin, filename, line);
+  };
   constexpr absl::string_view kSourceLocUnknown = "<unknown location>";
   std::string spelling_loc_str;
   if (absl::string_view spelling_filename =
@@ -1197,8 +1204,20 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
     if (absl::StartsWith(spelling_filename, "./")) {
       spelling_filename = spelling_filename.substr(2);
     }
-    spelling_loc_str =
-        kSourceLocationFunc(kGeneratedFrom, spelling_filename, spelling_line);
+    // This gets us most of the way there, but getting it right in generality
+    // is tricky (see ClangRangeFinder::RangeForNameInfo for details).
+    uint32_t spelling_begin = 0, spelling_end = 0;
+    if (kythe_annotations && name_info != nullptr) {
+      auto tr =
+          clang::CharSourceRange::getTokenRange(name_info->getSourceRange());
+      auto sr =
+          clang::Lexer::getAsCharRange(tr, sm, ctx_.getLangOpts()).getAsRange();
+      spelling_begin = sm.getFileOffset(sr.getBegin());
+      spelling_end = sm.getFileOffset(sr.getEnd());
+    }
+    spelling_loc_str = kSourceLocationFunc(kythe_annotations, kGeneratedFrom,
+                                           spelling_filename, spelling_line,
+                                           spelling_begin, spelling_end);
   }
   if (!loc.isMacroID()) {
     return spelling_loc_str;
@@ -1215,7 +1234,8 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
       expansion_filename = expansion_filename.substr(2);
     }
     expansion_loc_str =
-        kSourceLocationFunc(kExpandedAt, expansion_filename, expansion_line);
+        kSourceLocationFunc(kythe_annotations, kExpandedAt, expansion_filename,
+                            expansion_line, 0, 0);
   }
   return absl::StrCat(spelling_loc_str, "\n", expansion_loc_str);
 }

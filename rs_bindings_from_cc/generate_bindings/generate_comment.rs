@@ -68,10 +68,17 @@ pub fn generate_doc_comment(
     safety: Option<&str>,
     source_loc: Option<&str>,
     environment: Environment,
+    kythe_annotations: bool,
 ) -> Option<DocCommentAttr> {
     let source_loc = match environment {
         Environment::Production => source_loc,
-        Environment::GoldenTest => None,
+        Environment::GoldenTest => {
+            if kythe_annotations {
+                source_loc
+            } else {
+                None
+            }
+        }
     };
 
     // If a safety doc is provided, append a "# Safety" section to `comment`.
