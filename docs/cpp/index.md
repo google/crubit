@@ -71,7 +71,7 @@ require `experimental`, for experimental features of Crubit.
 
 Note that having Rust callers does constrain library evolution. Certain changes
 cannot be made in C++ without breaking Rust callers, unless care is taken.
-<internal link>
+crubit.rs/cookbook#compatibility
 
 ### Look at the generated bindings {#examine}
 
