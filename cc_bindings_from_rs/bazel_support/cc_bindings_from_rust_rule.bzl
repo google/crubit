@@ -712,9 +712,9 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
 
     dep_bindings_infos = _get_dep_bindings_infos(ctx.attr)
 
+    config = crate_name_to_library_config(aspect_hints = [], deps = deps)
     if ctx.attr.cpp_namespace:
         config["self"] = struct(namespace = ctx.attr.cpp_namespace)
-    config = config | crate_name_to_library_config(aspect_hints = [], deps = deps)
     bindings_info, features, config, output_depset = _generate_bindings(
         ctx,
         dep_bindings_infos = dep_bindings_infos,
