@@ -1926,6 +1926,14 @@ fn function_signature(
         );
     }
 
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(&func.owning_target)
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+
+    // TODO(b/454627672): is it worth caching this?
+    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
+
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
     let mut thunk_prepare = quote! {};
@@ -2000,7 +2008,8 @@ fn function_signature(
         }
     }
 
-    let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types).collect();
+    let mut lifetimes: Vec<Lifetime> =
+        unique_lifetimes(&*param_types, &func.lifetime_inputs).collect();
 
     let mut quoted_return_type = None;
 

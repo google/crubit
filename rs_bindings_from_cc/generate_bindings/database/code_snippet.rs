@@ -308,6 +308,7 @@ pub fn required_crubit_features(
                     item.clone(),
                     /*have_reference_param=*/ false,
                     /*is_return_type=*/ true,
+                    /*lifetimes=*/ &[],
                 )?,
                 &|| "".into(),
             );

@@ -82,3 +82,15 @@ golden_test(
     golden_cc = "string_view_api_impl.cc",
     golden_rs = "string_view_rs_api.rs",
 )
+
+crubit_rust_test(
+    name = "string_view_test",
+    srcs = ["string_view_test.rs"],
+    cc_deps = [
+        ":string_view",
+        "//support/cc_std",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

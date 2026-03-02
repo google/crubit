@@ -175,6 +175,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                 item.clone(),
                 /*have_reference_param=*/ false,
                 /*is_return_type=*/ true,
+                /*lifetimes=*/ &[],
             ) {
                 Ok(rs_type_kind) => {
                     if matches!(item, Item::TypeAlias(_)) && rs_type_kind.unalias().is_bridge_type()

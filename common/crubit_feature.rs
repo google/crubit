@@ -73,7 +73,6 @@ impl CrubitFeature {
 /// Returns the set of features named by this short name.
 pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
     let features = match name {
-        // TODO(b/454627672): return AssumeLifetimes to `all` once it can build the goldens.
         b"all" => flagset::FlagSet::<CrubitFeature>::full() - CrubitFeature::AssumeLifetimes,
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),

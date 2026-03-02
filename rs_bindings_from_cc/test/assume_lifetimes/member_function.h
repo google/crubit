@@ -7,7 +7,7 @@
 
 struct S {
   const int& int_accessor() const { return int_field; }
-
+  
   int int_field;
 };
 

@@ -189,6 +189,12 @@ pub fn rs_type_kind_with_lifetime_elision(
                 return Err(error);
             }
 
+            let lifetimes: Vec<Lifetime> = if lifetime_options.assume_lifetimes {
+                ty.explicit_lifetimes.iter().map(|lt| Lifetime::new(lt)).collect::<Vec<_>>()
+            } else {
+                vec![]
+            };
+
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
             // course we can't call `rs_type_kind` here, and instead reuse the raw construction
             // logic.
@@ -197,6 +203,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 item.clone(),
                 lifetime_options.have_reference_param,
                 lifetime_options.is_return_type,
+                &lifetimes,
             )
         }
         CcTypeVariant::Error(e) => {
