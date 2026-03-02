@@ -5,6 +5,7 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
+    "cpp_api_from_rust_toolchain_bindings",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
@@ -236,4 +237,27 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//:__subpackages__"],
     deps = [":lossy_formatter_cc"],
+)
+
+cpp_api_from_rust_toolchain_bindings(
+    name = "rs_core",
+    cpp_namespace = "rs_core",
+    crate_name = "core",
+)
+
+cpp_api_from_rust_toolchain_bindings(
+    name = "rs_alloc",
+    cpp_namespace = "rs_alloc",
+    crate_name = "alloc",
+    deps = [":rs_core"],
+)
+
+cpp_api_from_rust_toolchain_bindings(
+    name = "rs_std",
+    cpp_namespace = "rs_std",
+    crate_name = "std",
+    deps = [
+        ":rs_alloc",
+        ":rs_core",
+    ],
 )
