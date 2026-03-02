@@ -69,6 +69,10 @@ The `supported` aspect hint indicates that a library target supports Rust
 callers via Crubit, using the stable features. Other functions and classes might
 require `experimental`, for experimental features of Crubit.
 
+Note that having Rust callers does constrain library evolution. Certain changes
+cannot be made in C++ without breaking Rust callers, unless care is taken.
+<internal link>
+
 ### Look at the generated bindings {#examine}
 
 To examine the generated C++ bindings for the target, you can run the following
