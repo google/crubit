@@ -468,6 +468,7 @@ struct Func {
   bool must_bind = false;
   // Lifetime variable names bound by this function.
   std::vector<std::string> lifetime_inputs;
+  bool is_implicit;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
@@ -502,6 +503,10 @@ struct Field {
   bool is_no_unique_address;  // True if the field is [[no_unique_address]].
   bool is_bitfield;           // True if the field is a bitfield.
   bool is_inheritable;        // True if the field is inheritable.
+
+  /// True if the field has an in-class initializer, e.g.
+  /// struct Foo { int x = 1; };
+  bool has_in_class_initializer;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Field& f) {

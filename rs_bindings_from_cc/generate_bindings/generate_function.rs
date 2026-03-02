@@ -816,6 +816,39 @@ fn api_func_shape_for_constructor(
     match func.params.len() {
         0 => panic!("Missing `__this` parameter in a constructor: {:?}", func),
         1 => {
+            // Default constructor.
+            match func.safety_annotation {
+                SafetyAnnotation::DisableUnsafe => {
+                    // The default constructor has been marked safe, the user now carries the
+                    // burden of ensuring it's actually safe.
+                }
+                SafetyAnnotation::Unsafe => {
+                    errors.add(anyhow!("Rust Default implementations cannot be unsafe."));
+                    return None;
+                }
+                SafetyAnnotation::Unannotated => {
+                    // Check if the record is default initialized.
+                    let rs_type_kind = db
+                        .rs_type_kind(CcType {
+                            variant: CcTypeVariant::Decl(record.id),
+                            is_const: false,
+                            unknown_attr: "".into(),
+                            explicit_lifetimes: Vec::new(),
+                        })
+                        .map_err(|e| errors.add(e))
+                        .ok()?;
+                    if !db.is_default_initialized(rs_type_kind).map_err(|e| errors.add(e)).ok()? {
+                        // This type does not init the memory for all publicly accessible fields by default.
+                        let err = if func.is_implicit {
+                            anyhow!("The implicit default constructor will leave some fields uninitialized.")
+                        } else {
+                            anyhow!("The default constructor must be marked CRUBIT_UNSAFE_MARK_SAFE to guarantee that the fields that do not initialized themselves are initialized in the function.")
+                        };
+                        errors.add(err);
+                        return None;
+                    }
+                }
+            }
             let func_name = make_rs_ident("default");
             let impl_kind = ImplKind::new_trait(
                 TraitName::Default,

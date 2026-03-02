@@ -164,6 +164,12 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_type_names
         fn resolve_type_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>>;
 
+        /// Returns whether the given type ensures that the memory for all publicly accessible
+        /// fields is initialized.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:is_default_initialized
+        fn is_default_initialized(&self, rs_type_kind: RsTypeKind) -> Result<bool>;
+
         #[provided]
         /// Returns the generated bindings for the given enum.
         ///
