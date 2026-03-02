@@ -64,3 +64,21 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_test_cc_library(
+    name = "string_view",
+    srcs = ["string_view.cc"],
+    hdrs = ["string_view.h"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:assume_lifetimes",
+    ],
+)
+
+golden_test(
+    name = "string_view_golden_test",
+    basename = "string_view",
+    cc_library = "string_view",
+    golden_cc = "string_view_api_impl.cc",
+    golden_rs = "string_view_rs_api.rs",
+)
