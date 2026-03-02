@@ -6,6 +6,7 @@ use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{Mutability, RsTypeKind};
 use googletest::{expect_eq, gtest};
+use ir_matchers::assert_ir_matches;
 use ir_testing::{retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
 use quote::quote;
@@ -1353,6 +1354,126 @@ fn test_existing_rust_type_assert_incomplete() -> Result<()> {
         rs_api,
         quote! {
         const _: () = { ... ::core::mem::align_of::<i32>() ... }}
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_reordered_template_args() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            namespace crubit {
+            template <typename...>
+            struct crubit_internal_rust_type_args {};
+            }
+
+            template <typename T, typename U>
+            struct [[clang::annotate("crubit_internal_rust_type", "RustTwoArgs", crubit::crubit_internal_rust_type_args<T, U>())]] TwoArgs {};
+
+            template <typename T, typename U>
+            using Reordered = TwoArgs<U, T>;
+            
+            void AcceptReordered(Reordered<int, float> x);
+        "#,
+    )?;
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+           ExistingRustType {
+               rs_name: "RustTwoArgs", ...
+               template_args: [
+                   Type(CcType {
+                       variant: Primitive(Float),
+                       ...
+                   }),
+                   Type(CcType {
+                       variant: Primitive(Int),
+                       ...
+                   }),
+               ],
+               ...
+           }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_default_template_args() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            namespace crubit {
+            template <typename...>
+            struct crubit_internal_rust_type_args {};
+            }
+
+            template <typename T, typename U = int>
+            struct [[clang::annotate("crubit_internal_rust_type", "RustTypeWithDefault", crubit::crubit_internal_rust_type_args<T, U>())]] WithDefault {};
+
+            void AcceptWithDefault(WithDefault<float> x);
+        "#,
+    )?;
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+           ExistingRustType {
+               rs_name: "RustTypeWithDefault", ...
+               template_args: [
+                   Type(CcType {
+                       variant: Primitive(Float),
+                       ...
+                   }),
+                   Type(CcType {
+                       variant: Primitive(Int),
+                       ...
+                   }),
+               ],
+               ...
+           }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_specialized_template_args() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            namespace crubit {
+            template <typename...>
+            struct crubit_internal_rust_type_args {};
+            }
+            template <typename T>
+            struct [[clang::annotate("crubit_internal_rust_type", "RustContainer", crubit::crubit_internal_rust_type_args<T>())]] Container {};
+
+            template <>
+            struct [[clang::annotate("crubit_internal_rust_type", "RustVoidContainer", crubit::crubit_internal_rust_type_args<>())]] Container<void> {};
+
+            void AcceptSpecialized(Container<float> a, Container<void> b);
+        "#,
+    )?;
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+           ExistingRustType(ExistingRustType {
+               rs_name: "RustContainer", ...
+               template_args: [
+                   Type(CcType {
+                       variant: Primitive(Float),
+                       ...
+                   })
+               ],
+               ...
+           }), ...
+           ExistingRustType(ExistingRustType {
+               rs_name: "RustVoidContainer", ...
+               template_args: [],
+               ...
+           })
+        }
     );
     Ok(())
 }

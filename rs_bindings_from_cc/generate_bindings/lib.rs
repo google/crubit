@@ -954,7 +954,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
-        RsTypeKind::ExistingRustType(ref existing_rust_type) => {
+        RsTypeKind::ExistingRustType { ref existing_rust_type, .. } => {
             let cpp_type = make_cpp_type_from_item(
                 existing_rust_type.as_ref(),
                 existing_rust_type.cc_name.as_ref(),

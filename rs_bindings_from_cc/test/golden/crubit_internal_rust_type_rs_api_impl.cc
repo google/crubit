@@ -35,4 +35,41 @@ extern "C" void __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___Z12AcceptPtrInt3PtrIiE(Ptr<int>* ptr) {
+  AcceptPtrInt(std::move(*ptr));
+}
+
+static_assert((void (*)(Ptr<int>)) & ::AcceptPtrInt);
+
+extern "C" void
+__rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(
+    CppTypeWithTemplateArgs<int, float, true>* cpp_type) {
+  AcceptCppTypeWithTemplateArgs(std::move(*cpp_type));
+}
+
+static_assert((void (*)(CppTypeWithTemplateArgs<int, float, true>)) &
+              ::AcceptCppTypeWithTemplateArgs);
+
+extern "C" void __rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(
+    ConvertPtrs<float, int>* x) {
+  AcceptReordered(std::move(*x));
+}
+
+static_assert((void (*)(ConvertPtrs<float, int>)) & ::AcceptReordered);
+
+extern "C" void __rust_thunk___Z17AcceptWithDefault11WithDefaultIfiE(
+    WithDefault<float>* x) {
+  AcceptWithDefault(std::move(*x));
+}
+
+static_assert((void (*)(WithDefault<float>)) & ::AcceptWithDefault);
+
+extern "C" void __rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(
+    MyContainer<int>* a, MyContainer<void>* b) {
+  AcceptSpecialized(std::move(*a), std::move(*b));
+}
+
+static_assert((void (*)(MyContainer<int>, MyContainer<void>)) &
+              ::AcceptSpecialized);
+
 #pragma clang diagnostic pop

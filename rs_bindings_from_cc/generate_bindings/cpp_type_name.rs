@@ -124,7 +124,7 @@ pub fn format_cpp_type_inner(
         }
         RsTypeKind::Primitive(primitive) => Ok(quote! { #primitive }),
         RsTypeKind::BridgeType { original_type, .. } => cpp_type_name_for_record(original_type, ir),
-        RsTypeKind::ExistingRustType(existing_rust_type) => tagless_cpp_type_name_for_item(
+        RsTypeKind::ExistingRustType { existing_rust_type, .. } => tagless_cpp_type_name_for_item(
             &Item::ExistingRustType(Rc::clone(existing_rust_type)),
             ir,
         ),

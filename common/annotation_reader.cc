@@ -106,6 +106,10 @@ static absl::Status InconsistentAnnotationsError(
 static absl::Status CheckExpressionsAreSameConstant(
     const clang::Expr& expr1, const clang::Expr& expr2,
     absl::string_view annotation_name, const clang::ASTContext& ast_context) {
+  if (expr1.getType() != expr2.getType()) {
+    return InconsistentAnnotationsError(annotation_name);
+  }
+
   clang::Expr::EvalResult eval_result_1, eval_result_2;
   if (!expr1.EvaluateAsConstantExpr(eval_result_1, ast_context) ||
       !expr2.EvaluateAsConstantExpr(eval_result_2, ast_context)) {
@@ -122,9 +126,10 @@ static absl::Status CheckExpressionsAreSameConstant(
   }
 
   auto must_be_int_or_string_error = [annotation_name]() {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Arguments of `", annotation_name,
-        "` annotation must be of integral type or string literals."));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Arguments of `", annotation_name,
+                     "` annotation must be of integral type, string literal, "
+                     "or constructor."));
   };
 
   switch (value1.getKind()) {
@@ -132,6 +137,10 @@ static absl::Status CheckExpressionsAreSameConstant(
       if (value1.getInt() != value2.getInt()) {
         return InconsistentAnnotationsError(annotation_name);
       }
+      break;
+    case clang::APValue::Struct:
+      // Structs only appear when we use them for their type info, they
+      // are all empty though.
       break;
     case clang::APValue::LValue: {
       CRUBIT_ASSIGN_OR_RETURN(

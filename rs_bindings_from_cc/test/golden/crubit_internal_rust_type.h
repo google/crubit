@@ -7,6 +7,13 @@
 
 #pragma clang lifetime_elision
 
+namespace crubit {
+template <typename...>
+struct crubit_internal_rust_type_args {};
+template <auto>
+struct const_generic {};
+}  // namespace crubit
+
 // These types should be suppressed due to the rust type override, as should
 // any methods they have.
 
@@ -59,12 +66,53 @@ struct ExistingRustTypeFieldTypes final {
   TooFewArgs error;
 };
 
-template <typename T, bool B, int I>
-struct [[clang::annotate("crubit_internal_rust_type", "RustPtr")]]
-CppPtr final {
+template <typename T>
+struct [[clang::annotate("crubit_internal_rust_type", "RustPtr",
+                         crubit::crubit_internal_rust_type_args<T>())]]
+Ptr final {
   T* ptr;
 };
 
-CppPtr<int, true, 123> InstantiatedCppPtr();
+void AcceptPtrInt(Ptr<int> ptr);
+
+template <typename T, typename U, bool B>
+struct [[clang::annotate(
+    "crubit_internal_rust_type", "RustTypeWithReorderedGenerics",
+    crubit::crubit_internal_rust_type_args<T, U, crubit::const_generic<B>>())]]
+CppTypeWithTemplateArgs final {
+  T* t;
+  U* u;
+};
+
+void AcceptCppTypeWithTemplateArgs(
+    CppTypeWithTemplateArgs<int, float, true> cpp_type);
+
+template <typename T, typename U>
+struct [[clang::annotate("crubit_internal_rust_type", "RustTypeReordered",
+                         crubit::crubit_internal_rust_type_args<T, U>())]]
+ConvertPtrs {};
+
+template <typename T, typename U>
+using Reordered = ConvertPtrs<U, T>;
+
+void AcceptReordered(Reordered<int, float> x);
+
+template <typename T, typename U = int>
+struct [[clang::annotate("crubit_internal_rust_type", "RustTypeWithDefault",
+                         crubit::crubit_internal_rust_type_args<T, U>())]]
+WithDefault {};
+
+void AcceptWithDefault(WithDefault<float> x);
+
+template <typename T>
+struct [[clang::annotate("crubit_internal_rust_type", "MyRustContainer",
+                         crubit::crubit_internal_rust_type_args<T>())]]
+MyContainer {};
+
+template <>
+struct [[clang::annotate("crubit_internal_rust_type", "MyRustContainerVoid")]]
+MyContainer<void> {};
+
+void AcceptSpecialized(MyContainer<int> a, MyContainer<void> b);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CRUBIT_INTERNAL_RS_TYPE_H_
