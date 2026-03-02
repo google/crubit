@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <ostream>
 
+#include "absl/strings/has_ostream_operator.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "support/annotations.h"
@@ -77,5 +78,31 @@ void AbslStringify(Sink& sink, DisplayableEnum value) {
       break;
   }
 }
+
+template <typename T>
+struct CRUBIT_OVERRIDE_DISPLAY(absl::HasOstreamOperator<T>::value) Templated {
+  T value;
+};
+template <typename Sink, typename T>
+void AbslStringify(Sink& sink, const Templated<T>& value) {
+  absl::Format(&sink, "%v", absl::FormatStreamed(value.value));
+}
+
+struct NotDisplayable {};
+struct CRUBIT_MUST_BIND TemplatedStringView : Templated<absl::string_view> {
+  explicit TemplatedStringView(absl::string_view v) : Templated{v} {}
+};
+struct CRUBIT_MUST_BIND TemplatedNotDisplayable : Templated<NotDisplayable> {
+  TemplatedNotDisplayable() = default;
+};
+
+struct CRUBIT_MUST_BIND CRUBIT_OVERRIDE_DISPLAY(false) DisplayInRust {
+  absl::string_view cc_value;
+  absl::string_view rust_value;
+  template <typename Sink>
+  friend void AbslStringify(Sink& sink, const DisplayInRust& value) {
+    sink.Append(value.cc_value);
+  }
+};
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_DISPLAY_DISPLAYABLES_H_

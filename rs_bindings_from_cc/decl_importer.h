@@ -191,21 +191,15 @@ class ImportContext {
 
   // Returns whether the given `decl`'s type has a detectable formatter.
   //
-  // For a type `T`, finds:
-  // * `template <typename Sink> void AbslStringify(Sink&, const T&)`
-  // * `template <typename Sink> void AbslStringify(Sink&, T)`
-  // * `std::ostream& operator<<(std::ostream&, const T&)`
-  // * `std::ostream& operator<<(std::ostream&, T)`
+  // Either finds the `CRUBIT_OVERRIDE_DISPLAY` annotation or attempts to infer
+  // formatability, per the documentation of `CRUBIT_OVERRIDE_DISPLAY`.
   //
-  // in any of the following:
-  // * `T`'s namespace
-  // * `T`'s friends
-  // * `T`'s bases' friends
-  //
-  // and recurses on the bases of `T`. e.g., if `T` inherits from `B`, then
-  // include both `AbslStringify(Sink&, T)` and `AbslStringify(Sink&, B)` in
-  // `B`.
-  virtual bool DetectFormatter(const clang::TypeDecl& decl) const = 0;
+  // Fails if `CRUBIT_OVERRIDE_DISPLAY` is:
+  // * declared inconsistently.
+  // * declared with no or more than one argument.
+  // * declared with a non-bool value.
+  virtual absl::StatusOr<bool> DetectFormatter(
+      const clang::TypeDecl& decl) const = 0;
 
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //

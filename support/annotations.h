@@ -331,4 +331,59 @@
 #define CRUBIT_OWNED_POINTEE(name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_owned_pointee", name)
 
+// Overrides the `Display` binding detection for a type to true or false.
+//
+// If detected: binds to Rust's `Display` trait, preferring `AbslStringify` over
+// `std::ostream&` `operator<<` but requiring either.
+//
+// By default, infers a type `T`'s formatability based on one of:
+// * `template <typename Sink> void AbslStringify(Sink&, const T&)`
+// * `template <typename Sink> void AbslStringify(Sink&, T)`
+// * `std::ostream& operator<<(std::ostream&, const T&)`
+// * `std::ostream& operator<<(std::ostream&, T)`
+// * This annotation on `T`'s bases
+//
+// in any of the following:
+// * `T`'s namespace
+// * `T`'s friends
+// * `T`'s bases' namespace and friends
+//
+// and recurses on the bases of `T`. e.g., if `T` inherits from `B`, then
+// looks for both `AbslStringify(Sink&, T)` and `AbslStringify(Sink&, B)` in
+// `B`.
+//
+// However, default inference does *not* handle all cases, including:
+// * Other function or function template signatures e.g.,
+//   ```c++
+//   template <typename Sink, typename T>
+//   void AbslStringify(Sink&, const Foo<T>&);
+//
+//   template <typename T>
+//   struct Bar {
+//     template <
+//         typename U = T,
+//         typename = std::enable_if_t<absl::HasOstreamOperator<U>::value>>
+//     friend std::ostream& operator<<(std::ostream&, const Bar&);
+//   };
+//
+//   template <typename T>
+//   struct Baz {
+//     friend std::ostream& operator<<(std::ostream&, const Bar&)
+//     requires(absl::HasOstreamOperator<T>::value);
+//   };
+//
+//   struct Qux {
+//     template <typename T, typename Traits>
+//     friend std::basic_ostream<T, Traits>& operator<<(
+//         std::basic_ostream<T, Traits>&, const Qux&);
+//   };
+//   ```
+// * Formattable but non-public bases
+// * Deleted functions
+//
+// TODO: b/274965650 - Only works for the `fmt` Crubit feature. Once launched,
+// remove this TODO.
+#define CRUBIT_OVERRIDE_DISPLAY(should_bind) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_override_display", should_bind)
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

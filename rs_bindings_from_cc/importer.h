@@ -125,7 +125,8 @@ class Importer final : public ImportContext {
       const BazelLabel& label) const override;
   bool IsFmtEnabledForTarget(const BazelLabel& label) const override;
   bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
-  bool DetectFormatter(const clang::TypeDecl& decl) const override;
+  absl::StatusOr<bool> DetectFormatter(
+      const clang::TypeDecl& decl) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
@@ -201,8 +202,11 @@ class Importer final : public ImportContext {
   bool IsFeatureEnabledForTarget(const BazelLabel& label,
                                  absl::string_view feature) const;
 
-  bool DetectFormatterForType(clang::CanQualType lookup,
-                              clang::CanQualType target) const;
+  absl::StatusOr<std::optional<bool>> GetCrubitOverrideDisplayAnnotation(
+      const clang::TypeDecl& decl) const;
+
+  absl::StatusOr<std::optional<bool>> DetectFormatterForType(
+      clang::CanQualType lookup, clang::CanQualType target) const;
 
   // The different decl importers. Note that order matters: the first importer
   // to successfully match a decl "wins", and no other importers are tried.

@@ -71,6 +71,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/Regex.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 namespace {
@@ -1002,13 +1003,59 @@ bool Importer::IsUnsafeViewEnabledForTarget(const BazelLabel& label) const {
   return IsFeatureEnabledForTarget(label, "unsafe_view");
 }
 
-bool Importer::DetectFormatter(const clang::TypeDecl& decl) const {
+absl::StatusOr<bool> Importer::DetectFormatter(
+    const clang::TypeDecl& decl) const {
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<bool> override_display,
+                          GetCrubitOverrideDisplayAnnotation(decl));
+  if (override_display.has_value()) {
+    return *override_display;
+  }
   clang::CanQualType type = ctx_.getCanonicalTypeDeclType(&decl);
-  return DetectFormatterForType(/*lookup=*/type, /*target=*/type);
+  CRUBIT_ASSIGN_OR_RETURN(
+      std::optional<bool> found,
+      DetectFormatterForType(/*lookup=*/type, /*target=*/type));
+  return found.value_or(false);
 }
 
-bool Importer::DetectFormatterForType(clang::CanQualType lookup,
-                                      clang::CanQualType target) const {
+absl::StatusOr<std::optional<bool>>
+Importer::GetCrubitOverrideDisplayAnnotation(
+    const clang::TypeDecl& decl) const {
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
+                          GetAnnotateAttrArgs(decl, "crubit_override_display"));
+  if (!args.has_value()) {
+    return std::nullopt;
+  }
+  if (args->size() != 1) {
+    return absl::InvalidArgumentError(
+        "crubit_override_display annotation must have exactly one argument");
+  }
+  CRUBIT_ASSIGN_OR_RETURN(bool result, GetExprAsBool(*args->front(), ctx_));
+  return result;
+}
+
+absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
+    clang::CanQualType lookup, clang::CanQualType target) const {
+  const clang::Type* lookup_type = lookup.getTypePtrOrNull();
+  const clang::Type* target_type = target.getTypePtrOrNull();
+  if (lookup_type == nullptr) {
+    std::string error_message;
+    llvm::raw_string_ostream os(error_message);
+    os << "unexpectedly null lookup type, while finding formatter for ";
+    if (target_type == nullptr) {
+      os << "(also unexpected) null type";
+    } else {
+      target_type->dump(os, ctx_);
+    }
+    return absl::InternalError(error_message);
+  }
+  if (target_type == nullptr) {
+    std::string error_message;
+    llvm::raw_string_ostream os(error_message);
+    os << "unexpectedly null target type, while finding its formatter in ";
+    lookup_type->dump(os, ctx_);
+    return absl::InternalError(error_message);
+  }
+
   if (const clang::CXXRecordDecl* record = lookup->getAsCXXRecordDecl();
       record != nullptr) {
     for (const clang::FriendDecl* absl_nonnull friend_decl :
@@ -1022,19 +1069,35 @@ bool Importer::DetectFormatterForType(clang::CanQualType lookup,
     for (const clang::CXXBaseSpecifier& base_specifier : record->bases()) {
       clang::CanQualType base_type =
           ctx_.getCanonicalType(base_specifier.getType());
-      if (DetectFormatterForType(/*lookup=*/base_type, /*target=*/target) ||
-          DetectFormatterForType(/*lookup=*/base_type, /*target=*/base_type)) {
-        return true;
+      CRUBIT_ASSIGN_OR_RETURN(
+          std::optional<bool> detected_for_target_in_base,
+          DetectFormatterForType(/*lookup=*/base_type, /*target=*/target));
+      if (detected_for_target_in_base.has_value()) {
+        return *detected_for_target_in_base;
+      }
+
+      auto* base_decl = base_specifier.getType()->getAsTagDecl();
+      if (base_decl == nullptr) {
+        std::string error_message;
+        llvm::raw_string_ostream os(error_message);
+        os << "base ";
+        base_specifier.getType()->dump(os, ctx_);
+        os << " of ";
+        record->dump(os);
+        os << " unexpectedly not a TagDecl, while finding formatter for ";
+        target_type->dump(os, ctx_);
+        return absl::InternalError(error_message);
+      }
+      CRUBIT_ASSIGN_OR_RETURN(bool detected_for_base,
+                              DetectFormatter(*base_decl));
+      if (detected_for_base) {
+        return detected_for_base;
       }
     }
   }
-  const clang::Type* lookup_type = lookup.getTypePtrOrNull();
-  if (lookup_type == nullptr) {
-    return false;
-  }
   const clang::TagDecl* lookup_decl = lookup_type->getAsTagDecl();
   if (lookup_decl == nullptr) {
-    return false;
+    return std::nullopt;
   }
   const clang::DeclContext* absl_nonnull context =
       lookup_decl->getDeclContext()->getEnclosingNamespaceContext();
@@ -1043,7 +1106,7 @@ bool Importer::DetectFormatterForType(clang::CanQualType lookup,
       return true;
     }
   }
-  return false;
+  return std::nullopt;
 }
 
 bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {

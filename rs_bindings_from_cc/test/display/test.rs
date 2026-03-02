@@ -1,11 +1,14 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+use cc_std::std::raw_string_view;
 use displayables::{
     CanAbslStringify, CanAbslStringifyAndOstream, CanAbslStringifyByFill, CanAbslStringifyByFormat,
-    CanOstream, DisplayableEnum,
+    CanOstream, DisplayInRust, DisplayableEnum, TemplatedNotDisplayable, TemplatedStringView,
 };
 use googletest::prelude::*;
+use static_assertions::assert_not_impl_any;
+use std::fmt::Display;
 use std::io::Write;
 
 #[gtest]
@@ -109,4 +112,18 @@ fn test_enum_known_works() {
 #[gtest]
 fn test_enum_unknown_works() {
     expect_eq!(DisplayableEnum::from(123).to_string(), "123");
+}
+
+#[gtest]
+fn test_crubit_override_display_true() {
+    expect_eq!(TemplatedStringView::from(raw_string_view::from("hello")).to_string(), "hello");
+}
+
+#[gtest]
+fn test_crubit_override_display_false() {
+    assert_not_impl_any!(TemplatedNotDisplayable: Display);
+    expect_eq!(
+        DisplayInRust { cc_value: "bad".into(), rust_value: "good".into() }.to_string(),
+        "good"
+    );
 }

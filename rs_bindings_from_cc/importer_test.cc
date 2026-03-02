@@ -34,6 +34,7 @@ using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Pointee;
+using ::testing::Property;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 using ::testing::VariantWith;
@@ -1165,6 +1166,116 @@ TEST(ImporterTest, DoesNotDetectOperatorLeftShiftWrongTypesAsFormatter) {
   EXPECT_THAT(
       ir.get_items_if<Record>(),
       Contains(Pointee(AllOf(RsNameIs("Foo"), Not(HasDetectedFormatter())))));
+}
+
+TEST(ImporterTest, OverridesDisplayForRecord) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithFmt(R"cc(
+        template <bool>
+        struct enable_if {};
+
+        template <>
+        struct enable_if<true> {
+          using type = void;
+        };
+
+        template <bool b>
+        using enable_if_t = typename enable_if<b>::type;
+
+        template <bool b>
+        struct [[clang::annotate("crubit_override_display", b)]]
+        MaybeFormattable {
+          // Use SFINAE so that `AbslStringify` isn't as easily detectable.
+          template <typename Sink, bool sfinae_b = b>
+          friend enable_if_t<sfinae_b> AbslStringify(Sink& sink,
+                                                     const MaybeFormattable&) {}
+        };
+        struct NotFormattable : MaybeFormattable<false> {};
+        struct Formattable : MaybeFormattable<true> {};
+      )cc"));
+  EXPECT_THAT(ir.get_items_if<Record>(),
+              AllOf(Contains(Pointee(AllOf(RsNameIs("NotFormattable"),
+                                           Not(HasDetectedFormatter())))),
+                    Contains(Pointee(AllOf(RsNameIs("Formattable"),
+                                           HasDetectedFormatter())))));
+}
+
+TEST(ImporterTest, OverridesDisplayForEnum) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithFmt(R"cc(
+        namespace std {
+        template <typename T, typename Traits>
+        struct basic_ostream {};
+        }  // namespace std
+
+        enum class [[clang::annotate("crubit_override_display", true)]] Foo {
+          kFoo,
+        };
+        // Make this generic so that `operator<<` isn't as easily detectable.
+        template <typename T, typename Traits>
+        auto& operator<<(std::basic_ostream<T, Traits>& out, Foo) {
+          return out;
+        }
+      )cc"));
+  EXPECT_THAT(
+      ir.get_items_if<Enum>(),
+      Contains(Pointee(AllOf(RsNameIs("Foo"), HasDetectedFormatter()))));
+}
+
+TEST(ImporterTest, OverrideDisplayInconsistent) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         struct [[clang::annotate("crubit_override_display",
+                                                  true)]] Inconsistent;
+                         struct [[clang::annotate("crubit_override_display", false)]] Inconsistent {};
+                       )cc"));
+  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+              ElementsAre(Pointee(
+                  AllOf(UnsupportedItemNameIs("Inconsistent"),
+                        Field("errors", &UnsupportedItem::errors,
+                              ElementsAre(Property(
+                                  &FormattedError::message,
+                                  HasSubstr("crubit_override_display"))))))));
+}
+
+TEST(ImporterTest, OverrideDisplayMissingArgs) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
+                         struct [[clang::annotate("crubit_override_display")]]
+                         MissingArgs {};
+                       )cc"));
+  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+              ElementsAre(Pointee(
+                  AllOf(UnsupportedItemNameIs("MissingArgs"),
+                        Field("errors", &UnsupportedItem::errors,
+                              ElementsAre(Property(&FormattedError::message,
+                                                   HasSubstr("argument"))))))));
+}
+
+TEST(ImporterTest, OverrideDisplayMultipleArgs) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithFmt(R"cc(
+        struct [[clang::annotate("crubit_override_display", true, false)]]
+        MultipleArgs {};
+      )cc"));
+  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+              ElementsAre(Pointee(
+                  AllOf(UnsupportedItemNameIs("MultipleArgs"),
+                        Field("errors", &UnsupportedItem::errors,
+                              ElementsAre(Property(&FormattedError::message,
+                                                   HasSubstr("argument"))))))));
+}
+
+TEST(ImporterTest, OverrideDisplayWrongArgType) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithFmt(R"cc(
+        struct [[clang::annotate("crubit_override_display", "foo")]]
+        WrongArgType {};
+      )cc"));
+  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+              ElementsAre(Pointee(
+                  AllOf(UnsupportedItemNameIs("WrongArgType"),
+                        Field("errors", &UnsupportedItem::errors,
+                              ElementsAre(Property(&FormattedError::message,
+                                                   HasSubstr("bool"))))))));
 }
 
 absl::StatusOr<IR> IrFromCcWithAssumedLifetimes(absl::string_view program) {

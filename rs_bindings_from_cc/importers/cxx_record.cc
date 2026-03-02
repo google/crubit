@@ -1139,6 +1139,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   bool fmt_enabled = ictx_.IsFmtEnabledForTarget(owning_target);
+  absl::StatusOr<bool> detected_formatter = false;
+  if (fmt_enabled) {
+    detected_formatter = ictx_.DetectFormatter(*record_decl);
+    if (!detected_formatter.ok()) {
+      return unsupported(
+          FormattedError::FromStatus(std::move(detected_formatter).status()));
+    }
+  }
+
   auto record = Record{
       .rs_name = Identifier(rs_name),
       .cc_name = Identifier(cc_name),
@@ -1178,7 +1187,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .child_item_ids = std::move(item_ids),
       .enclosing_item_id = *std::move(enclosing_item_id),
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
-      .detected_formatter = fmt_enabled && ictx_.DetectFormatter(*record_decl),
+      .detected_formatter = *detected_formatter,
       .lifetime_inputs = std::move(lifetime_inputs),
   };
 
