@@ -219,30 +219,30 @@ llvm::json::Value Operator::ToJson() const {
   };
 }
 
-static std::string SpecialNameToString(SpecialName special_name) {
-  switch (special_name) {
-    case SpecialName::kDestructor:
-      return "Destructor";
-    case SpecialName::kConstructor:
-      return "Constructor";
-  }
-}
-
 llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier) {
-  if (auto* id = std::get_if<Identifier>(&unqualified_identifier)) {
-    return llvm::json::Object{
-        {"Identifier", *id},
-    };
-  } else if (auto* op = std::get_if<Operator>(&unqualified_identifier)) {
-    return llvm::json::Object{
-        {"Operator", *op},
-    };
-  } else {
-    SpecialName special_name = std::get<SpecialName>(unqualified_identifier);
-    return llvm::json::Object{
-        {SpecialNameToString(special_name), nullptr},
-    };
-  }
+  return std::visit(visitor{
+                        [&](const Identifier& id) {
+                          return llvm::json::Object{
+                              {"Identifier", id},
+                          };
+                        },
+                        [&](const Operator& op) {
+                          return llvm::json::Object{
+                              {"Operator", op},
+                          };
+                        },
+                        [&](const Constructor& constructor) {
+                          return llvm::json::Object{
+                              {"Constructor", nullptr},
+                          };
+                        },
+                        [&](const Destructor& destructor) {
+                          return llvm::json::Object{
+                              {"Destructor", nullptr},
+                          };
+                        },
+                    },
+                    unqualified_identifier);
 }
 
 llvm::json::Value FuncParam::ToJson() const {
@@ -258,10 +258,6 @@ llvm::json::Value FuncParam::ToJson() const {
     object.insert({"clang_lifetimebound", clang_lifetimebound});
   }
   return object;
-}
-
-std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
-  return o << SpecialNameToString(special_name);
 }
 
 UnqualifiedIdentifier& TranslatedUnqualifiedIdentifier::rs_identifier() {

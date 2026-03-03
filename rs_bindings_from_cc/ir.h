@@ -381,12 +381,8 @@ inline std::ostream& operator<<(std::ostream& o, const FuncParam& param) {
   return o << std::string(llvm::formatv("{0:2}", param.ToJson()));
 }
 
-enum SpecialName {
-  kDestructor,
-  kConstructor,
-};
-
-std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
+struct Constructor {};
+struct Destructor {};
 
 // A generalized notion of identifier, or an "Unqualified Identifier" in C++
 // jargon: https://en.cppreference.com/w/cpp/language/identifiers
@@ -394,7 +390,8 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 // Note that constructors are given a separate variant, so that we can treat
 // them differently. After all, they are not invoked or defined like normal
 // functions.
-using UnqualifiedIdentifier = std::variant<Identifier, Operator, SpecialName>;
+using UnqualifiedIdentifier =
+    std::variant<Identifier, Operator, Constructor, Destructor>;
 llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier);
 
 struct TranslatedUnqualifiedIdentifier {

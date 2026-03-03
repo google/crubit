@@ -1831,12 +1831,12 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     }
     case clang::DeclarationName::CXXConstructorName:
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = SpecialName::kConstructor,
+          .cc_identifier = Constructor{},
           .crubit_rust_name = crubit_rust_name,
       };
     case clang::DeclarationName::CXXDestructorName:
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = SpecialName::kDestructor,
+          .cc_identifier = Destructor{},
           .crubit_rust_name = crubit_rust_name,
       };
     case clang::DeclarationName::CXXOperatorName:
