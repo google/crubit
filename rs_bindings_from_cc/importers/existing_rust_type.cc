@@ -36,7 +36,8 @@ absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
       std::optional<AnnotateArgs> args,
       GetAnnotateAttrArgs(*decl, "crubit_internal_rust_type"));
   if (!args.has_value()) return std::nullopt;
-  if (args->size() != 1) {
+  if (args->size() != 1 && args->size() != 2) {
+    // A second argument is allowed for forwards compatibility with b/483408552.
     return absl::InvalidArgumentError(
         "The `crubit_internal_rust_type` attribute requires a single "
         "string literal "

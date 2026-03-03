@@ -61,10 +61,11 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureArgNotIntegralOrString) {
 
   auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
 
-  ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Arguments of `foo` annotation must be of "
-                                 "integral type or string literals")));
+  ASSERT_THAT(
+      GetAnnotateAttrArgs(var, "foo"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Arguments of `foo` annotation must be of integral "
+                         "type, string literal, or constructor")));
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrSuccessConsistentAnnotations) {
