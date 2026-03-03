@@ -1708,6 +1708,7 @@ pub struct UnsupportedItem {
     pub source_loc: Option<Rc<str>>,
     pub id: ItemId,
     pub must_bind: bool,
+    pub defining_target: Option<BazelLabel>,
 
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
     /// memoized result of converting `errors`.
@@ -1726,7 +1727,7 @@ impl GenericItem for UnsupportedItem {
         None
     }
     fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
-        None
+        self.defining_target.as_ref()
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         // Note: name is supposed to be populated with the `debug_name()` of the unsupported item.
@@ -1765,6 +1766,7 @@ impl UnsupportedItem {
             id: item.id(),
             cause: IgnoredField(cause.map(|e| OnceCell::from(vec![e])).unwrap_or_default()),
             must_bind,
+            defining_target: item.defining_target(ir).cloned(),
         }
     }
 
