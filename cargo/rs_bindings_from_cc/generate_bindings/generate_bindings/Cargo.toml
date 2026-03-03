@@ -34,6 +34,7 @@ dyn_format = { path = "../../../../cargo/common/dyn_format"}
 error_report = { path = "../../../../cargo/common/error_report"}
 errors = { path = "../../../../cargo/common/errors"}
 ffi_types = { path = "../../../../cargo/common/ffi_types"}
+kythe_metadata = { path = "../../../../cargo/common/kythe_metadata"}
 token_stream_printer = { path = "../../../../cargo/common/token_stream_printer"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}

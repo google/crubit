@@ -29,6 +29,7 @@ use generate_struct_and_union::generate_incomplete_record;
 use heck::ToSnakeCase;
 use ir::*;
 use itertools::Itertools;
+use kythe_metadata::rs_embed_provenance_map;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
@@ -38,7 +39,8 @@ use std::fmt::Write;
 use std::path::Path;
 use std::rc::Rc;
 use token_stream_printer::{
-    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
+    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string,
+    rs_tokens_to_formatted_string_with_provenance, RustfmtConfig,
 };
 
 mod generate_dyn_callable;
@@ -72,7 +74,10 @@ pub fn generate_bindings(
         environment,
         kythe_annotations,
     )?;
-    let rs_api = {
+
+    let top_level_comment = generate_top_level_comment(&ir, environment);
+
+    let rs_api: String = {
         let rustfmt_exe_path =
             if rustfmt_exe_path.is_empty() { None } else { Some(Path::new(rustfmt_exe_path)) };
         let rustfmt_config_path = if rustfmt_config_path.is_empty() {
@@ -82,7 +87,22 @@ pub fn generate_bindings(
         };
         let rustfmt_config =
             rustfmt_exe_path.map(|path| RustfmtConfig::new(path, rustfmt_config_path));
-        rs_tokens_to_formatted_string(rs_api, rustfmt_config.as_ref())?
+        // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
+        // be needed when `@generated` comment/keyword is present...
+        let adjust_rs_api = |rs_api: String| -> String {
+            format!(
+                "{top_level_comment}\n\
+                #![rustfmt::skip]\n\
+                {rs_api}"
+            )
+        };
+        if kythe_annotations {
+            let (rs_api, provenance_map) =
+                rs_tokens_to_formatted_string_with_provenance(rs_api, rustfmt_config.as_ref())?;
+            rs_embed_provenance_map(&provenance_map, kythe_default_corpus, adjust_rs_api(rs_api))
+        } else {
+            adjust_rs_api(rs_tokens_to_formatted_string(rs_api, rustfmt_config.as_ref())?)
+        }
     };
     let rs_api_impl: String = {
         let clang_format_exe_path = if clang_format_exe_path.is_empty() {
@@ -92,16 +112,6 @@ pub fn generate_bindings(
         };
         cc_tokens_to_formatted_string(rs_api_impl, clang_format_exe_path)?
     };
-
-    let top_level_comment = generate_top_level_comment(&ir, environment);
-    // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
-    // be needed when `@generated` comment/keyword is present...
-    let rs_api = format!(
-        "{top_level_comment}\n\
-        #![rustfmt::skip]\n\
-        {rs_api}"
-    );
-
     let rs_api_impl = format!(
         "{top_level_comment}\n\
         {rs_api_impl}"

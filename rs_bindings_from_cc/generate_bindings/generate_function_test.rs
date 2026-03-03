@@ -10,9 +10,13 @@ use generate_function_thunk::thunk_ident;
 use googletest::prelude::{assert_that, contains_substring, gtest, OrFail as _};
 use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{retrieve_func, with_lifetime_macros};
-use multiplatform_ir_testing::{ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_dependency};
+use multiplatform_ir_testing::{
+    ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_annotated, ir_from_cc_dependency,
+};
 use quote::quote;
-use test_generators::generate_bindings_tokens_for_test;
+use test_generators::{
+    generate_bindings_tokens_for_test, generate_bindings_tokens_for_test_with_annotations,
+};
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
@@ -340,6 +344,32 @@ fn test_doc_comment_func() -> Result<()> {
             #[doc = " Doc Comment\n with two lines\n \n Generated from: ir_from_cc_virtual_header.h;l=6"]
             #[inline(always)]
             pub fn func
+        }
+    );
+
+    Ok(())
+}
+
+#[gtest]
+fn test_doc_comment_func_with_annotations() -> Result<()> {
+    let ir = ir_from_cc_annotated(
+        "
+    // Doc Comment
+    // with two lines
+    int func();",
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test_with_annotations(ir)?.rs_api;
+    dbg!(&rs_api);
+    assert_rs_matches!(
+        rs_api,
+        // leading space is intentional so there is a space between /// and the text of the
+        // comment
+        quote! {
+            __CAPTURE_TAG__ "ir_from_cc_virtual_header.h" "87" "91"
+            #[doc = " Doc Comment\n with two lines\n \n Generated from: ir_from_cc_virtual_header.h;l=6[87,91]"]
+            #[inline(always)]
+            pub fn __CAPTURE_BEGIN__ func __CAPTURE_END__
         }
     );
 

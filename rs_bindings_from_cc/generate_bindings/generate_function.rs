@@ -15,7 +15,7 @@ use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
 use flagset::FlagSet;
-use generate_comment::generate_doc_comment;
+use generate_comment::{generate_doc_comment, parse_extended_source_loc};
 use generate_function_thunk::{
     generate_function_assertation, generate_function_thunk, generate_function_thunk_impl,
     thunk_ident,
@@ -1637,9 +1637,15 @@ pub fn generate_function(
             quote! {}
         };
 
+        let bracketed_func_name = if db.kythe_annotations() {
+            quote! { __CAPTURE_BEGIN__ #func_name __CAPTURE_END__ }
+        } else {
+            quote! { #func_name }
+        };
+
         quote! {
             #[inline(always)]
-            #pub_ #unsafe_ fn #func_name #fn_generic_params(
+            #pub_ #unsafe_ fn #bracketed_func_name #fn_generic_params(
                     #( #api_params ),* ) #arrow #function_return_type #where_clause {
                 #func_body
             }
@@ -1653,12 +1659,23 @@ pub fn generate_function(
         db.environment(),
         db.kythe_annotations(),
     );
+    // Check to see if we can get precise location information. If it's not available, emit a stub
+    // capture tag so we don't ascribe definitions to the wrong location.
+    let capture_tags = if db.kythe_annotations() {
+        if let Some((file_name, start, end)) = parse_extended_source_loc(&func.source_loc) {
+            quote! { __CAPTURE_TAG__ #file_name #start #end }
+        } else {
+            quote! { __CAPTURE_TAG__ "" "0" "0" }
+        }
+    } else {
+        quote! {}
+    };
     let api_func: TokenStream;
     let function_id: FunctionId;
     let mut member_functions_map = HashMap::new();
     match impl_kind {
         ImplKind::None { .. } => {
-            api_func = quote! { #unimplemented_trait_def #doc_comment #api_func_def };
+            api_func = quote! { #unimplemented_trait_def #capture_tags #doc_comment #api_func_def };
             function_id = FunctionId {
                 self_type: None,
                 function_path: syn::parse2(quote! { #namespace_qualifier #func_name }).unwrap(),
@@ -1670,7 +1687,7 @@ pub fn generate_function(
             );
             member_functions_map.insert(
                 derived_record.as_deref().unwrap_or(record.as_ref()).id,
-                vec![quote! { #unsatisfied_where_clause #doc_comment #api_func_def }],
+                vec![quote! { #unsatisfied_where_clause #capture_tags #doc_comment #api_func_def }],
             );
             api_func = quote! {
                 #unimplemented_trait_def

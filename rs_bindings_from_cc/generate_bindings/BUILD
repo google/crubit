@@ -52,6 +52,7 @@ rust_library(
         "//common:error_report",
         "//common:errors",
         "//common:ffi_types",
+        "//common:kythe_metadata",
         "//common:token_stream_printer",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
@@ -220,8 +221,10 @@ rust_library(
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:itertools",  # v0_13
+        "@crate_index//:once_cell",  # v1
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
+        "@crate_index//:regex",  # v1
     ],
 )
 

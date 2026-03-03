@@ -85,6 +85,25 @@ pub fn rs_tokens_to_formatted_string(
     Ok(tokens_string)
 }
 
+/// Like `tokens_to_string` but also runs the result through `rustfmt` and returns provenance.
+pub fn rs_tokens_to_formatted_string_with_provenance(
+    tokens: TokenStream,
+    config: Option<&RustfmtConfig>,
+) -> Result<(String, SubstringProvenanceMap)> {
+    let (mut tokens_string, provenance_map) = tokens_to_string_with_provenance(tokens)?;
+    // NOTE: This is a terrible hack. `rustfmt` became more strict about appearances of `...`
+    // (the `DotDotDot` token) at some point in the past. This is not a precise or general
+    // solution, but rewriting this token to a comment produces formattable code in some cases,
+    // making test failure messages better.
+    tokens_string = tokens_string.replace("...", "/*...*/");
+    if let Some(config) = config {
+        tokens_string = rustfmt(tokens_string.clone(), config).with_context(|| {
+            format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}")
+        })?;
+    }
+    Ok((tokens_string, provenance_map))
+}
+
 /// Like `rs_tokens_to_formatted_string`, but always using a Crubit-internal,
 /// default rustfmt config.  This should only be called by tests - product code
 /// should support custom `rustfmt.toml` and take the path to `rustfmt` binary
@@ -150,7 +169,7 @@ pub struct GeneratedOffsetsWithProvenance {
 
 type GeneratedOffsetsProvenanceMap = HashMap<usize, GeneratedOffsetsWithProvenance>;
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct SubstringWithProvenance {
     /// The substring to match. Empty `substring` values indicate a useless record.
     pub substring: String,
@@ -166,7 +185,7 @@ pub struct SubstringWithProvenance {
 
 pub type SubstringProvenanceMap = HashMap<usize, SubstringWithProvenance>;
 
-#[derive(Default, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct FormattedOffsetsWithProvenance {
     /// The formatted offset start for this substring.
     pub formatted_start: usize,

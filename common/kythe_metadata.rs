@@ -32,6 +32,17 @@ pub struct KytheMetadataRule {
     pub source_vname: KytheMetadataVName,
 }
 
+/// Given a `provenance_map` and a Rust `source_file` that has possibly been formatted, embed the
+/// provenance map in the source file with adjusted offsets. Use `default_corpus` if no other corpus
+/// applies.
+pub fn rs_embed_provenance_map(
+    provenance_map: &SubstringProvenanceMap,
+    default_corpus: &str,
+    source_file: String,
+) -> String {
+    embed_provenance_map(provenance_map, default_corpus, "/// Generated from:", "c++", source_file)
+}
+
 /// Given a `provenance_map` and a C++ `header` that has possibly been formatted, embed the
 /// provenance map in the header with adjusted offsets. Use `default_corpus` if no other corpus
 /// applies.
@@ -40,12 +51,26 @@ pub fn cc_embed_provenance_map(
     default_corpus: &str,
     mut header: String,
 ) -> String {
+    embed_provenance_map(provenance_map, default_corpus, "// Generated from:", "rust", header)
+}
+
+/// Given a `provenance_map` and `text` that has possibly been formatted, embed the provenance map
+/// in the text with adjusted offsets. Use `default_corpus` if no other corpus applies. `pattern`
+/// should appear after each entry in the `provenance_map` (and is used to determine how formatting
+/// changed the text). `source_language` should be the Kythe language name for the original source
+/// language.
+fn embed_provenance_map(
+    provenance_map: &SubstringProvenanceMap,
+    default_corpus: &str,
+    pattern: &str,
+    source_language: &str,
+    mut text: String,
+) -> String {
     // NB: the formatter might break the line after the colon.
-    let fixed_map =
-        fix_provenance_map_postformatting(&header, "// Generated from:", provenance_map);
+    let fixed_map = fix_provenance_map_postformatting(&text, pattern, provenance_map);
     let mut sorted_map: Vec<_> = fixed_map.values().collect();
     sorted_map.sort_unstable();
-    header.push_str("\n// This file contains Kythe metadata. ");
+    text.push_str("\n// This file contains Kythe metadata. ");
     let mut metas = Vec::new();
     for entry in sorted_map {
         // TODO: b/460420108, check for a valid path here (and possibly apply vname remapping
@@ -64,15 +89,15 @@ pub fn cc_embed_provenance_map(
                 source_vname: KytheMetadataVName {
                     corpus: default_corpus.to_owned(),
                     path: entry.original_path.clone(),
-                    language: "rust".to_owned(),
+                    language: source_language.to_owned(),
                 },
             });
         }
     }
     let meta = KytheMetadata { typ: "kythe0".to_owned(), meta: metas };
-    BASE64_STANDARD.encode_string(serde_json::to_vec(&meta).unwrap(), &mut header);
-    header.push('\n');
-    header
+    BASE64_STANDARD.encode_string(serde_json::to_vec(&meta).unwrap(), &mut text);
+    text.push('\n');
+    text
 }
 
 #[cfg(test)]

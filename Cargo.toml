@@ -28,6 +28,7 @@ googletest = "0.14"
 heck = "0.5"
 itertools = "0.13"
 indenter = "0.3"
+once_cell = "1.21.3"
 phf = { version = "0.11", features = [ "macros" ] }
 proc-macro2 = "1"
 quote = "1"

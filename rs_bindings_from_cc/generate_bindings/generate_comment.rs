@@ -8,6 +8,8 @@ use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
 use database::BindingsGenerator;
 use ffi_types::Environment;
 use ir::{Comment, GenericItem, Item, UnsupportedItem, IR};
+use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::rc::Rc;
@@ -61,6 +63,21 @@ pub fn generate_top_level_comment(ir: &IR, environment: Environment) -> String {
         result.push('\n');
     }
     result
+}
+
+static SOURCE_LOC_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"([^;]+);l=\d+\[(\d+),(\d+)\]").unwrap());
+
+pub fn parse_extended_source_loc(source_loc: &str) -> Option<(&str, &str, &str)> {
+    if !source_loc.starts_with("Generated from: ") {
+        // We don't currently support macro positions.
+        return None;
+    }
+    let captures = SOURCE_LOC_RE.captures_iter(source_loc).last()?;
+    let file = captures.get(1)?.as_str();
+    let offset = captures.get(2)?.as_str();
+    let end_offset = captures.get(3)?.as_str();
+    Some((file, offset, end_offset))
 }
 
 pub fn generate_doc_comment(

@@ -13,6 +13,10 @@ pub fn ir_from_cc(header: &str) -> Result<IR> {
     ir_testing::ir_from_cc(test_platform(), header)
 }
 
+pub fn ir_from_cc_annotated(header: &str) -> Result<IR> {
+    ir_testing::ir_from_cc_annotated(test_platform(), header)
+}
+
 pub fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
     ir_testing::ir_from_cc_dependency(
         test_platform(),
