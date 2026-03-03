@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/inheritance:inherited_methods
-// Features: callables, experimental, fmt, supported, unsafe_view, wrapper
+// Features: assume_lifetimes, callables, experimental, fmt, supported, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(
@@ -17,7 +17,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(dead_code, unused_mut, unused_unsafe)]
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=10
@@ -67,12 +67,12 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Base"), crate::Base);
 impl Base {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
-    pub fn has_bindings<'a>(&'a self) -> bool {
+    pub fn has_bindings<'__this>(&'__this self) -> bool {
         unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
-    pub fn no_bindings<'error, 'a>(&'a self, __param_0: ::ctor::Ctor![crate::Nonmovable])
+    pub fn no_bindings<'error, '__this>(&'__this self, __param_0: ::ctor::Ctor![crate::Nonmovable])
     where
         &'error (): BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable,
     {
@@ -118,14 +118,14 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Deri
 impl Derived {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
-    pub fn has_bindings<'a>(&'a self) -> bool {
+    pub fn has_bindings<'__this>(&'__this self) -> bool {
         unsafe {
             crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(oops::Upcast::<_>::upcast(self))
         }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
-    pub fn no_bindings<'error, 'a>(&'a self, __param_0: ::ctor::Ctor![crate::Nonmovable])
+    pub fn no_bindings<'error, '__this>(&'__this self, __param_0: ::ctor::Ctor![crate::Nonmovable])
     where
         &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
     {
@@ -166,8 +166,8 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN4BaseC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZNK4Base12has_bindingsEv<'a>(
-            __this: &'a crate::Base,
+        pub(crate) unsafe fn __rust_thunk___ZNK4Base12has_bindingsEv<'__this>(
+            __this: &'__this crate::Base,
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
     }

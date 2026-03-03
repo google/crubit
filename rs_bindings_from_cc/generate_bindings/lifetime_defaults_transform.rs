@@ -250,10 +250,12 @@ impl<'a> LifetimeDefaults<'a> {
                         .collect();
                     return new_ty;
                 }
-                // If there is no viable inferred lifetime, there is nothing to do.
-                if lifetime_hint.is_empty() {
-                    return new_ty;
-                }
+                // If there is no viable inferred lifetime, we need to downgrade this to a raw
+                // pointer. We can at least mark it non-null. (An argument could be made about
+                // doing this later on provided we have a fuller treatement of safe/unsafe types
+                // selected by the presence of lifetime inputs.)
+                let kind =
+                    if lifetime_hint.is_empty() { PointerTypeKind::NonNull } else { pty.kind };
                 let pointee_type = self.add_lifetime_to_output_type(
                     lifetime_hint,
                     new_bindings,
@@ -261,6 +263,7 @@ impl<'a> LifetimeDefaults<'a> {
                 );
                 new_ty.variant = CcTypeVariant::Pointer(PointerType {
                     pointee_type: pointee_type.into(),
+                    kind,
                     ..pty.clone()
                 });
                 new_ty.explicit_lifetimes = lifetime_hint.clone();

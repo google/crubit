@@ -16,7 +16,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(dead_code, unused_mut, unused_unsafe)]
 #![deny(warnings)]
 
 /// The same as Derived from inheritance.h, but in a different build target.

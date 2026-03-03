@@ -34,4 +34,10 @@ extern "C" int const* __rust_thunk___ZNK1S12int_accessorEv(
 
 static_assert((int const& (S::*)() const) & ::S::int_accessor);
 
+extern "C" struct S* __rust_thunk___ZN1S2meEv(struct S* __this) {
+  return std::addressof(__this->me());
+}
+
+static_assert((struct S & (S::*)()) & ::S::me);
+
 #pragma clang diagnostic pop

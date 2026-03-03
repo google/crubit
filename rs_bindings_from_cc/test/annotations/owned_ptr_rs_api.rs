@@ -11,7 +11,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(dead_code, unused_mut, unused_unsafe)]
 #![deny(warnings)]
 
 /// An example of a C++ struct that supports ownership via the raw pointer.

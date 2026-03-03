@@ -11,7 +11,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(dead_code, unused_mut, unused_unsafe)]
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=8
@@ -32,6 +32,16 @@ impl S {
     #[inline(always)]
     pub fn int_accessor<'__this>(&'__this self) -> &'__this ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK1S12int_accessorEv(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    ///
+    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=10
+    #[inline(always)]
+    pub unsafe fn me(__this: *mut Self) -> *mut crate::S {
+        crate::detail::__rust_thunk___ZN1S2meEv(__this)
     }
 }
 
@@ -55,6 +65,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZNK1S12int_accessorEv<'__this>(
             __this: &'__this crate::S,
         ) -> &'__this ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN1S2meEv(__this: *mut crate::S) -> *mut crate::S;
     }
 }
 

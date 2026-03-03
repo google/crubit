@@ -7,8 +7,9 @@
 
 struct S {
   const int& int_accessor() const { return int_field; }
+  S& me() { return *this; }
 
-  int int_field;
+  int int_field = 42;
 };
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ASSUME_LIFETIMES_FREE_FUNCTION_H_
