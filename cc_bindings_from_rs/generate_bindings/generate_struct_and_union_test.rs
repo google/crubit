@@ -273,6 +273,24 @@ fn test_format_item_struct_with_tuple_fields() {
 }
 
 #[test]
+fn test_format_item_enum_with_one_byte_size() {
+    let test_src = r#"
+            #[derive(Clone, Copy)]
+            pub enum StringType {
+                Literal,
+                NotLiteral,
+            }
+        "#;
+    // The input above used to crash (tag size is 8 bytes - size of an `usize`, but
+    // the ADT size is only 1 byte).  This test just makes sure that this input no
+    // longer triggers a crash (i.e. there is intentionally no other
+    // verification).
+    test_format_item(test_src, "StringType", |result| {
+        result.unwrap().unwrap();
+    });
+}
+
+#[test]
 fn test_format_item_unsupported_struct_with_name_that_is_reserved_keyword() {
     let test_src = r#"
             #[allow(non_camel_case_types)]

@@ -30,19 +30,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   // Default::default
   Color();
 
-  // Error generating bindings for `example_crate_golden::Color::Red` defined at
-  // examples/rust/enum/example.rs;l=8: Constructing
-  // enum variants with no payload is not supported yet: b/487357254
+  // Generated from:
+  // examples/rust/enum/example.rs;l=8
+  static Color MakeRed();
 
-  // Error generating bindings for `example_crate_golden::Color::Blue` defined
-  // at examples/rust/enum/example.rs;l=9:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Generated from:
+  // examples/rust/enum/example.rs;l=9
+  static Color MakeBlue();
 
-  // Error generating bindings for `example_crate_golden::Color::Green` defined
-  // at examples/rust/enum/example.rs;l=10:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Generated from:
+  // examples/rust/enum/example.rs;l=10
+  static Color MakeGreen();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
@@ -63,6 +61,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   std::array<unsigned char, 1> __opaque_blob_of_bytes;
 
  private:
+  struct PrivateBytesTag {};
+  constexpr Color(PrivateBytesTag, std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
   static void __crubit_field_offset_assertions();
 };
 
@@ -78,6 +81,14 @@ extern "C" void __crubit_thunk_default(::example_crate::Color* __ret_ptr);
 inline ::example_crate::Color::Color() {
   __crubit_internal::__crubit_thunk_default(this);
 }
+// `static` constructor
+inline Color Color::MakeRed() { return Color(PrivateBytesTag{}, {0}); }
+
+// `static` constructor
+inline Color Color::MakeBlue() { return Color(PrivateBytesTag{}, {1}); }
+
+// `static` constructor
+inline Color Color::MakeGreen() { return Color(PrivateBytesTag{}, {2}); }
 static_assert(std::is_trivially_destructible_v<Color>);
 static_assert(std::is_trivially_move_constructible_v<::example_crate::Color>);
 static_assert(std::is_trivially_move_assignable_v<::example_crate::Color>);

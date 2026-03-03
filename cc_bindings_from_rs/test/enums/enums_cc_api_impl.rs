@@ -133,3 +133,35 @@ extern "C" fn __crubit_thunk_drop(
 ) {
     unsafe { __self.assume_init_drop() };
 }
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_int::IntReprEnumWithNoPayload>() == 4);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_int::IntReprEnumWithNoPayload>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uno_upayload1(
+    __self: &'static ::enums_golden::repr_int::IntReprEnumWithNoPayload,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::IntReprEnumWithNoPayload::is_no_payload1(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uno_upayload2(
+    __self: &'static ::enums_golden::repr_int::IntReprEnumWithNoPayload,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::IntReprEnumWithNoPayload::is_no_payload2(__self) }
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_rust::RustReprEnumWithNoPayload>() == 1);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_rust::RustReprEnumWithNoPayload>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_uvariant_unumber(
+    __self: &'static ::enums_golden::repr_rust::RustReprEnumWithNoPayload,
+) -> i32 {
+    unsafe { ::enums_golden::repr_rust::RustReprEnumWithNoPayload::get_variant_number(__self) }
+}
+const _: () = assert!(
+    ::std::mem::size_of::<::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant>() == 4
+);

@@ -33,29 +33,21 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   // `leaf_rs_lib_golden::LeafRsEnum` doesn't implement the `Default` trait
   LeafRsEnum() = delete;
 
-  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KUnknown`
-  // defined at
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=22:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Generated from:
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=22
+  static LeafRsEnum MakeKUnknown();
 
-  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KValue1`
-  // defined at
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=23:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Generated from:
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=23
+  static LeafRsEnum MakeKValue1();
 
-  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KValue2`
-  // defined at
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=24:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Generated from:
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=24
+  static LeafRsEnum MakeKValue2();
 
-  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KValue3`
-  // defined at
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=25:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Generated from:
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=25
+  static LeafRsEnum MakeKValue3();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsEnum() = default;
@@ -74,6 +66,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
   std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr LeafRsEnum(PrivateBytesTag, std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
 
  private:
   static void __crubit_field_offset_assertions();
@@ -133,6 +130,26 @@ static_assert(
 static_assert(
     alignof(LeafRsEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline LeafRsEnum LeafRsEnum::MakeKUnknown() {
+  return LeafRsEnum(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline LeafRsEnum LeafRsEnum::MakeKValue1() {
+  return LeafRsEnum(PrivateBytesTag{}, {1});
+}
+
+// `static` constructor
+inline LeafRsEnum LeafRsEnum::MakeKValue2() {
+  return LeafRsEnum(PrivateBytesTag{}, {2});
+}
+
+// `static` constructor
+inline LeafRsEnum LeafRsEnum::MakeKValue3() {
+  return LeafRsEnum(PrivateBytesTag{}, {3});
+}
 static_assert(std::is_trivially_destructible_v<LeafRsEnum>);
 static_assert(
     std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsEnum>);

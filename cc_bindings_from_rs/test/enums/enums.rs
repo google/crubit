@@ -110,3 +110,52 @@ pub mod repr_c_clone_active_variant {
         matches!(e, CloneActiveVariant::C(_))
     }
 }
+
+pub mod repr_rust {
+    /// Doc comment of RustReprEnumWithNoPayload.
+    pub enum RustReprEnumWithNoPayload {
+        /// Doc comment of Variant1.
+        Variant1,
+        Variant2,
+        Variant3,
+    }
+
+    impl RustReprEnumWithNoPayload {
+        pub fn get_variant_number(&self) -> i32 {
+            match self {
+                Self::Variant1 => 1,
+                Self::Variant2 => 2,
+                Self::Variant3 => 3,
+            }
+        }
+    }
+
+    pub enum RustReprWithSingleNoPayloadVariant {
+        SingleVariant,
+    }
+
+    pub enum RustReprWithSingleTuplePayloadVariant {
+        SingleVariant(i32),
+    }
+}
+
+pub mod repr_int {
+    /// Two `NoPayloadX` variants to test that the tag is correctly set
+    /// (`NoPayload1` should have a tag of 0 and therefore `NoPayload2` is a
+    /// slightly better test for things like encoding the tag value with the
+    /// proper endianness, especially given that the tag is 4 bytes wide).
+    #[repr(u32)]
+    pub enum IntReprEnumWithNoPayload {
+        NoPayload1,
+        NoPayload2 = 1234,
+    }
+
+    impl IntReprEnumWithNoPayload {
+        pub fn is_no_payload1(&self) -> bool {
+            matches!(self, Self::NoPayload1)
+        }
+        pub fn is_no_payload2(&self) -> bool {
+            matches!(self, Self::NoPayload2)
+        }
+    }
+}

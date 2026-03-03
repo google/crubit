@@ -1,7 +1,6 @@
 # C++ bindings for Rust `enum`s
 
-A Rust `enum` is mapped to an opaque C++ type. C++ code cannot create a specific
-variant, but can call functions accepting or returning an `enum`.
+A Rust `enum` is mapped to an opaque C++ type.
 
 To receive C++ bindings, the `enum` must be movable in C++. See
 [Movable Types](movable_types.md).
@@ -48,3 +47,19 @@ cannot be used to represent a Rust `enum`. Instead, the C++ bindings are a
 
 To receive C++ bindings, the `enum` must be movable in C++. See
 [Movable Types](movable_types.md).
+
+## Constructing Rust enums from C++
+
+C++ bindings for Rust `enum`s provide a `static` `Make<variant name>` method for
+each of `enum` variants. These methods can be used to construct an `enum` value
+with the corresponding variant.
+
+<!-- TODO(b/487356976): When implemented add an example based on the
+tuple-constructor (it seems better than NoPayload examples). -->
+
+> NOTE: The following bugs track future work in this area:
+>
+> *   b/487356976: Constructing variants with a tuple payload
+> *   b/487357254: Constructing variants with a struct payload
+> *   b/487399481: Constructing "no payload" variants of `#[repr(C)]` enums
+> *   b/489085607: Bindings for constructing enums should be `constexpr`

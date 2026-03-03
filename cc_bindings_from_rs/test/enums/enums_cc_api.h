@@ -46,8 +46,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::F` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=14:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
+  // cl/877428937)
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::Z` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=15:
@@ -56,8 +56,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::G` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=16:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
+  // cl/877428937)
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::B` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=17:
@@ -71,8 +71,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::D` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=19:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
+  // cl/877428937)
 
   // Drop::drop
   ~MyEnum();
@@ -321,8 +321,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Error generating bindings for `enums_golden::repr_c_drop::DropMe::Q`
   // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=34:
-  // Constructing enum variants with no payload is not supported yet:
-  // b/487357254
+  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
+  // cl/877428937)
 
   // Error generating bindings for `enums_golden::repr_c_drop::DropMe::C`
   // defined at
@@ -379,6 +379,193 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 }  // namespace enums::repr_c_drop
+
+namespace enums::repr_int {
+
+//  Two `NoPayloadX` variants to test that the tag is correctly set
+//  (`NoPayload1` should have a tag of 0 and therefore `NoPayload2` is a
+//  slightly better test for things like encoding the tag value with the
+//  proper endianness, especially given that the tag is 4 bytes wide).
+//
+// Generated from:
+// cc_bindings_from_rs/test/enums/enums.rs;l=148
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: repr_int :: IntReprEnumWithNoPayload") alignas(4)
+    [[clang::trivial_abi]] IntReprEnumWithNoPayload final {
+ public:
+  // `enums_golden::repr_int::IntReprEnumWithNoPayload` doesn't implement the
+  // `Default` trait
+  IntReprEnumWithNoPayload() = delete;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=149
+  static IntReprEnumWithNoPayload MakeNoPayload1();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=150
+  static IntReprEnumWithNoPayload MakeNoPayload2();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~IntReprEnumWithNoPayload() = default;
+  IntReprEnumWithNoPayload(IntReprEnumWithNoPayload&&) = default;
+  ::enums::repr_int::IntReprEnumWithNoPayload& operator=(
+      IntReprEnumWithNoPayload&&) = default;
+
+  // `enums_golden::repr_int::IntReprEnumWithNoPayload` doesn't implement the
+  // `Clone` trait
+  IntReprEnumWithNoPayload(const IntReprEnumWithNoPayload&) = delete;
+  IntReprEnumWithNoPayload& operator=(const IntReprEnumWithNoPayload&) = delete;
+  IntReprEnumWithNoPayload(::crubit::UnsafeRelocateTag,
+                           IntReprEnumWithNoPayload&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=154
+  bool is_no_payload1() const;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=157
+  bool is_no_payload2() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  std::array<unsigned char, 4> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr IntReprEnumWithNoPayload(PrivateBytesTag,
+                                     std::array<unsigned char, 4> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace enums::repr_int
+
+namespace enums::repr_rust {
+
+//  Doc comment of RustReprEnumWithNoPayload.
+//
+// Generated from:
+// cc_bindings_from_rs/test/enums/enums.rs;l=116
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: repr_rust :: RustReprEnumWithNoPayload") alignas(1)
+    [[clang::trivial_abi]] RustReprEnumWithNoPayload final {
+ public:
+  // `enums_golden::repr_rust::RustReprEnumWithNoPayload` doesn't implement the
+  // `Default` trait
+  RustReprEnumWithNoPayload() = delete;
+
+  //  Doc comment of Variant1.
+  //
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=118
+  static RustReprEnumWithNoPayload MakeVariant1();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=119
+  static RustReprEnumWithNoPayload MakeVariant2();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=120
+  static RustReprEnumWithNoPayload MakeVariant3();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~RustReprEnumWithNoPayload() = default;
+  RustReprEnumWithNoPayload(RustReprEnumWithNoPayload&&) = default;
+  ::enums::repr_rust::RustReprEnumWithNoPayload& operator=(
+      RustReprEnumWithNoPayload&&) = default;
+
+  // `enums_golden::repr_rust::RustReprEnumWithNoPayload` doesn't implement the
+  // `Clone` trait
+  RustReprEnumWithNoPayload(const RustReprEnumWithNoPayload&) = delete;
+  RustReprEnumWithNoPayload& operator=(const RustReprEnumWithNoPayload&) =
+      delete;
+  RustReprEnumWithNoPayload(::crubit::UnsafeRelocateTag,
+                            RustReprEnumWithNoPayload&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=124
+  std::int32_t get_variant_number() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr RustReprEnumWithNoPayload(PrivateBytesTag,
+                                      std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Error generating bindings for
+// `enums_golden::repr_rust::RustReprWithSingleNoPayloadVariant` defined at
+// cc_bindings_from_rs/test/enums/enums.rs;l=133:
+// Zero-sized types (ZSTs) are not supported (b/258259459)
+
+// Generated from:
+// cc_bindings_from_rs/test/enums/enums.rs;l=137
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: repr_rust :: "
+    "RustReprWithSingleTuplePayloadVariant") alignas(4) [[clang::trivial_abi]]
+RustReprWithSingleTuplePayloadVariant final {
+ public:
+  // `enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant` doesn't
+  // implement the `Default` trait
+  RustReprWithSingleTuplePayloadVariant() = delete;
+
+  // Error generating bindings for
+  // `enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant::SingleVariant`
+  // defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=138:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~RustReprWithSingleTuplePayloadVariant() = default;
+  RustReprWithSingleTuplePayloadVariant(
+      RustReprWithSingleTuplePayloadVariant&&) = default;
+  ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant& operator=(
+      RustReprWithSingleTuplePayloadVariant&&) = default;
+
+  // `enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant` doesn't
+  // implement the `Clone` trait
+  RustReprWithSingleTuplePayloadVariant(
+      const RustReprWithSingleTuplePayloadVariant&) = delete;
+  RustReprWithSingleTuplePayloadVariant& operator=(
+      const RustReprWithSingleTuplePayloadVariant&) = delete;
+  RustReprWithSingleTuplePayloadVariant(
+      ::crubit::UnsafeRelocateTag,
+      RustReprWithSingleTuplePayloadVariant&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  std::array<unsigned char, 4> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr RustReprWithSingleTuplePayloadVariant(
+      PrivateBytesTag, std::array<unsigned char, 4> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace enums::repr_rust
 
 namespace enums::repr_c {
 
@@ -584,6 +771,111 @@ inline void DropMe::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DropMe::__crubit_C_struct, p));
 }
 }  // namespace enums::repr_c_drop
+
+namespace enums::repr_int {
+
+static_assert(
+    sizeof(IntReprEnumWithNoPayload) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(IntReprEnumWithNoPayload) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline IntReprEnumWithNoPayload IntReprEnumWithNoPayload::MakeNoPayload1() {
+  return IntReprEnumWithNoPayload(PrivateBytesTag{}, {0, 0, 0, 0});
+}
+
+// `static` constructor
+inline IntReprEnumWithNoPayload IntReprEnumWithNoPayload::MakeNoPayload2() {
+  return IntReprEnumWithNoPayload(PrivateBytesTag{}, {210, 4, 0, 0});
+}
+static_assert(std::is_trivially_destructible_v<IntReprEnumWithNoPayload>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::enums::repr_int::IntReprEnumWithNoPayload>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::enums::repr_int::IntReprEnumWithNoPayload>);
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_uno_upayload1(
+    ::enums::repr_int::IntReprEnumWithNoPayload const&);
+}
+inline bool IntReprEnumWithNoPayload::is_no_payload1() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_is_uno_upayload1(self);
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_uno_upayload2(
+    ::enums::repr_int::IntReprEnumWithNoPayload const&);
+}
+inline bool IntReprEnumWithNoPayload::is_no_payload2() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_is_uno_upayload2(self);
+}
+inline void IntReprEnumWithNoPayload::__crubit_field_offset_assertions() {
+  static_assert(0 ==
+                offsetof(IntReprEnumWithNoPayload, __opaque_blob_of_bytes));
+}
+}  // namespace enums::repr_int
+
+namespace enums::repr_rust {
+
+static_assert(
+    sizeof(RustReprEnumWithNoPayload) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(RustReprEnumWithNoPayload) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline RustReprEnumWithNoPayload RustReprEnumWithNoPayload::MakeVariant1() {
+  return RustReprEnumWithNoPayload(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline RustReprEnumWithNoPayload RustReprEnumWithNoPayload::MakeVariant2() {
+  return RustReprEnumWithNoPayload(PrivateBytesTag{}, {1});
+}
+
+// `static` constructor
+inline RustReprEnumWithNoPayload RustReprEnumWithNoPayload::MakeVariant3() {
+  return RustReprEnumWithNoPayload(PrivateBytesTag{}, {2});
+}
+static_assert(std::is_trivially_destructible_v<RustReprEnumWithNoPayload>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::enums::repr_rust::RustReprEnumWithNoPayload>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::enums::repr_rust::RustReprEnumWithNoPayload>);
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_get_uvariant_unumber(
+    ::enums::repr_rust::RustReprEnumWithNoPayload const&);
+}
+inline std::int32_t RustReprEnumWithNoPayload::get_variant_number() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_get_uvariant_unumber(self);
+}
+inline void RustReprEnumWithNoPayload::__crubit_field_offset_assertions() {
+  static_assert(0 ==
+                offsetof(RustReprEnumWithNoPayload, __opaque_blob_of_bytes));
+}
+static_assert(
+    sizeof(RustReprWithSingleTuplePayloadVariant) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(RustReprWithSingleTuplePayloadVariant) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    std::is_trivially_destructible_v<RustReprWithSingleTuplePayloadVariant>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant>);
+static_assert(std::is_trivially_move_assignable_v<
+              ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant>);
+inline void
+RustReprWithSingleTuplePayloadVariant::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(RustReprWithSingleTuplePayloadVariant,
+                              __opaque_blob_of_bytes));
+}
+}  // namespace enums::repr_rust
 
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN

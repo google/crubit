@@ -17,6 +17,8 @@ using enums::repr_c_clone_active_variant::is_b;
 using enums::repr_c_clone_active_variant::is_c;
 using enums::repr_c_clone_counter::CloneCount;
 using enums::repr_c_drop::DropMe;
+using enums::repr_int::IntReprEnumWithNoPayload;
+using enums::repr_rust::RustReprEnumWithNoPayload;
 
 TEST(EnumsTest, TestDefault) {
   MyEnum e;
@@ -96,6 +98,17 @@ TEST(EnumsTest, TestCloneActiveVariant) {
   // And back to A
   CloneActiveVariant a2 = c;
   EXPECT_TRUE(is_a(a2));
+}
+
+TEST(EnumsTest, TestRustReprEnumNoPayloadCtor) {
+  EXPECT_EQ(RustReprEnumWithNoPayload::MakeVariant1().get_variant_number(), 1);
+  EXPECT_EQ(RustReprEnumWithNoPayload::MakeVariant2().get_variant_number(), 2);
+  EXPECT_EQ(RustReprEnumWithNoPayload::MakeVariant3().get_variant_number(), 3);
+}
+
+TEST(EnumsTest, TestIntReprEnumNoPayloadCtor) {
+  EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload1().is_no_payload1());
+  EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload2().is_no_payload2());
 }
 
 }  // namespace
