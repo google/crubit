@@ -44,7 +44,7 @@ use database::{
     AdtCoreBindings, ExportedPath, FineGrainedFeature, FullyQualifiedName, NoMoveOrAssign,
     PublicPaths, TypeLocation, UnqualifiedName,
 };
-pub use database::{BindingsGenerator, IncludeGuard};
+pub use database::{BindingsGenerator, CopyCtorStyle, IncludeGuard, MoveCtorStyle};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -218,6 +218,9 @@ pub fn new_database<'db>(
         format_top_level_ns_for_crate,
         format_type::format_ty_for_cc,
         format_type::format_ty_for_rs,
+        has_default_ctor,
+        has_copy_ctor_and_assignment_operator,
+        has_move_ctor_and_assignment_operator,
         generate_default_ctor,
         generate_copy_ctor_and_assignment_operator,
         generate_move_ctor_and_assignment_operator,
@@ -936,6 +939,14 @@ fn create_type_alias<'tcx>(
     Ok(CcSnippet { prereqs: main_api_prereqs, tokens })
 }
 
+fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'tcx>) -> bool {
+    let tcx = db.tcx();
+    let trait_id = tcx
+        .get_diagnostic_item(sym::Default)
+        .expect("Couldn't find lang item `core::default::Default`");
+    does_type_implement_trait(tcx, self_ty, trait_id, [])
+}
+
 /// Implementation of `BindingsGenerator::generate_default_ctor`.
 fn generate_default_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1007,6 +1018,22 @@ fn generate_default_ctor<'tcx>(
     })
 }
 
+fn has_copy_ctor_and_assignment_operator<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    self_ty: Ty<'tcx>,
+) -> Option<CopyCtorStyle> {
+    let tcx = db.tcx();
+    let trait_id = tcx.lang_items().clone_trait().expect("Can't find the `Clone` trait");
+    if is_copy(tcx, def_id, self_ty) {
+        Some(CopyCtorStyle::Copy)
+    } else if does_type_implement_trait(tcx, self_ty, trait_id, []) {
+        Some(CopyCtorStyle::Clone)
+    } else {
+        None
+    }
+}
+
 /// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
 fn generate_copy_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1020,63 +1047,78 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
         let cc_struct_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
 
-        if is_copy(tcx, core.def_id, core.self_ty) {
-            let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
-                       and assignment operator.";
-            let main_api = CcSnippet::new(quote! {
-                __NEWLINE__ __COMMENT__ #msg
-                #cc_struct_name(const #cc_struct_name&) = default;  __NEWLINE__
-                #qualified_adt_name& operator=(const #cc_struct_name&) = default;
-            });
-            let cc_details = CcSnippet::with_include(
-                quote! {
-                    static_assert(std::is_trivially_copy_constructible_v<#qualified_adt_name>);
-                    static_assert(std::is_trivially_copy_assignable_v<#qualified_adt_name>);
-                },
-                CcInclude::type_traits(),
-            );
+        match db.has_copy_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+            Some(CopyCtorStyle::Copy) => {
+                let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
+                        and assignment operator.";
+                let main_api = CcSnippet::new(quote! {
+                    __NEWLINE__ __COMMENT__ #msg
+                    #cc_struct_name(const #cc_struct_name&) = default;  __NEWLINE__
+                    #qualified_adt_name& operator=(const #cc_struct_name&) = default;
+                });
+                let cc_details = CcSnippet::with_include(
+                    quote! {
+                        static_assert(std::is_trivially_copy_constructible_v<#qualified_adt_name>);
+                        static_assert(std::is_trivially_copy_assignable_v<#qualified_adt_name>);
+                    },
+                    CcInclude::type_traits(),
+                );
 
-            return Ok(ApiSnippets { main_api, cc_details, rs_details: RsSnippet::default() });
+                Ok(ApiSnippets { main_api, cc_details, rs_details: RsSnippet::default() })
+            }
+            Some(CopyCtorStyle::Clone) => {
+                let trait_id = tcx
+                    .lang_items()
+                    .clone_trait()
+                    .ok_or_else(|| anyhow!("Can't find the `Clone` trait"))?;
+                let TraitThunks {
+                    method_name_to_cc_thunk_name,
+                    cc_thunk_decls,
+                    rs_thunk_impls: rs_details,
+                } = generate_trait_thunks(db, trait_id, &[], &core, /*is_constructor=*/ true)?;
+                let main_api = CcSnippet::new(quote! {
+                    __NEWLINE__ __COMMENT__ "Clone::clone"
+                    #cc_struct_name(const #cc_struct_name&); __NEWLINE__
+                    __NEWLINE__ __COMMENT__ "Clone::clone_from"
+                    #qualified_adt_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
+                });
+                let cc_details = {
+                    // `unwrap` calls are okay because `Clone` trait always has these methods.
+                    let clone_thunk_name = method_name_to_cc_thunk_name.get(&sym::clone).unwrap();
+                    let clone_from_thunk_name =
+                        method_name_to_cc_thunk_name.get(&sym::clone_from).unwrap();
+
+                    let mut prereqs = CcPrerequisites::default();
+                    let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
+
+                    let tokens = quote! {
+                        #cc_thunk_decls
+                        inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) {
+                            __crubit_internal::#clone_thunk_name(other, this);
+                        }
+                        inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) {
+                            if (this != &other) {
+                                __crubit_internal::#clone_from_thunk_name(*this, other);
+                            }
+                            return *this;
+                        }
+                    };
+                    CcSnippet { tokens, prereqs }
+                };
+                Ok(ApiSnippets { main_api, cc_details, rs_details })
+            }
+            None => {
+                let display_name = db
+                    .symbol_canonical_name(core.def_id)
+                    .map(|canon| {
+                        let parts =
+                            canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
+                        parts.join("::")
+                    })
+                    .unwrap_or_else(|| format!("{}", core.self_ty));
+                bail!("`{display_name}` doesn't implement the `Clone` trait");
+            }
         }
-
-        let trait_id = tcx
-            .lang_items()
-            .clone_trait()
-            .ok_or_else(|| anyhow!("Can't find the `Clone` trait"))?;
-        let TraitThunks {
-            method_name_to_cc_thunk_name,
-            cc_thunk_decls,
-            rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(db, trait_id, &[], &core, /*is_constructor=*/ true)?;
-        let main_api = CcSnippet::new(quote! {
-            __NEWLINE__ __COMMENT__ "Clone::clone"
-            #cc_struct_name(const #cc_struct_name&); __NEWLINE__
-            __NEWLINE__ __COMMENT__ "Clone::clone_from"
-            #qualified_adt_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
-        });
-        let cc_details = {
-            // `unwrap` calls are okay because `Clone` trait always has these methods.
-            let clone_thunk_name = method_name_to_cc_thunk_name.get(&sym::clone).unwrap();
-            let clone_from_thunk_name = method_name_to_cc_thunk_name.get(&sym::clone_from).unwrap();
-
-            let mut prereqs = CcPrerequisites::default();
-            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-
-            let tokens = quote! {
-                #cc_thunk_decls
-                inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) {
-                    __crubit_internal::#clone_thunk_name(other, this);
-                }
-                inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) {
-                    if (this != &other) {
-                        __crubit_internal::#clone_from_thunk_name(*this, other);
-                    }
-                    return *this;
-                }
-            };
-            CcSnippet { tokens, prereqs }
-        };
-        Ok(ApiSnippets { main_api, cc_details, rs_details })
     }
     fallible_format_copy_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
@@ -1092,6 +1134,28 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
     })
 }
 
+fn has_move_ctor_and_assignment_operator<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    self_ty: Ty<'tcx>,
+) -> Option<MoveCtorStyle> {
+    let tcx = db.tcx();
+    let typing_env = post_analysis_typing_env(tcx, def_id);
+    // If our type has no drop glue we can use the default move constructor and assignment operator.
+    if !self_ty.needs_drop(tcx, typing_env) {
+        return Some(MoveCtorStyle::Default);
+    }
+    let has_default_ctor = db.has_default_ctor(self_ty);
+    let is_unpin = self_ty.is_unpin(tcx, typing_env);
+    if has_default_ctor && is_unpin {
+        Some(MoveCtorStyle::MemSwap)
+    } else if db.has_copy_ctor_and_assignment_operator(def_id, self_ty).is_some() {
+        Some(MoveCtorStyle::Copy)
+    } else {
+        None
+    }
+}
+
 /// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
 #[allow(clippy::result_large_err)]
 fn generate_move_ctor_and_assignment_operator<'tcx>(
@@ -1105,10 +1169,18 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
         let tcx = db.tcx();
         let adt_cc_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
-        if generate_struct_and_union::adt_core_bindings_needs_drop(&core, tcx) {
-            let has_default_ctor = db.generate_default_ctor(core.clone()).is_ok();
-            let is_unpin = core.self_ty.is_unpin(tcx, post_analysis_typing_env(tcx, core.def_id));
-            if has_default_ctor && is_unpin {
+        match db.has_move_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+            // We rely on the copy constructor and assignment operator to handle the move
+            // operations.
+            Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),
+            None => {
+                bail!(
+                    "C++ move operations are unavailable for this type. See \
+                    http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
+                    movable."
+                );
+            }
+            Some(MoveCtorStyle::MemSwap) => {
                 let main_api = CcSnippet::new(quote! {
                     #adt_cc_name(#adt_cc_name&&); __NEWLINE__
                     #qualified_adt_name& operator=(#adt_cc_name&&); __NEWLINE__
@@ -1128,67 +1200,50 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
                 };
                 let cc_details = CcSnippet { tokens, prereqs };
                 Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
-            } else if db.generate_copy_ctor_and_assignment_operator(core).is_ok() {
-                // The class will have a custom copy constructor and copy assignment operator
-                // and *no* move constructor nor move assignment operator. This
-                // way, when a move is requested, a copy is performed instead
-                // (this is okay, this is what happens if a copyable pre-C++11
-                // class is compiled in C++11 mode and moved).
-                //
-                // We can't use the `=default` move constructor, because it is elementwise and
-                // semantically incorrect.  We can't `=delete` the move constructor because it
-                // would make `SomeStruct(MakeSomeStruct())` select the deleted move constructor
-                // and fail to compile.
-                Ok(ApiSnippets::default())
-            } else {
-                bail!(
-                    "C++ move operations are unavailable for this type. See \
-                    http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
-                    movable."
-                );
             }
-        } else {
-            let main_api = CcSnippet::new(quote! {
-                // The generated bindings have to follow Rust move semantics:
-                // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
-                //   that "Every type must be ready for it to be blindly memcopied to somewhere
-                //   else in memory")
-                // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
-                //   it.
-                //
-                // The generated C++ bindings below match the required semantics because they:
-                // * Generate trivial` C++ move constructor and move assignment operator. Per
-                //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
-                //   move constructor is a constructor that performs the same action as the trivial
-                //   copy constructor, that is, makes a copy of the object representation as if by
-                //   std::memmove."
-                // * Generate trivial C++ destructor.
-                //
-                // In particular, note that the following C++ code and Rust code are exactly
-                // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
-                // whereas in C++, it's only prohibited by convention):
-                // * C++, assumming trivial move constructor and trivial destructor:
-                //   `auto x = std::move(y);`
-                // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
-                //   `let x = y;`
-                //
-                // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
-                // glue, then extra care should be taken to ensure the C++ destructor can handle
-                // the moved-from object in a way that meets Rust move semantics.  For example, the
-                // generated C++ move constructor might need to assign `Default::default()` to the
-                // moved-from object.
-                #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
-                #qualified_adt_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
-                __NEWLINE__
-            });
-            let cc_details = CcSnippet::with_include(
-                quote! {
-                    static_assert(std::is_trivially_move_constructible_v<#qualified_adt_name>);
-                    static_assert(std::is_trivially_move_assignable_v<#qualified_adt_name>);
-                },
-                CcInclude::type_traits(),
-            );
-            Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
+            Some(MoveCtorStyle::Default) => {
+                let main_api = CcSnippet::new(quote! {
+                    // The generated bindings have to follow Rust move semantics:
+                    // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
+                    //   that "Every type must be ready for it to be blindly memcopied to somewhere
+                    //   else in memory")
+                    // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
+                    //   it.
+                    //
+                    // The generated C++ bindings below match the required semantics because they:
+                    // * Generate trivial` C++ move constructor and move assignment operator. Per
+                    //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
+                    //   move constructor is a constructor that performs the same action as the trivial
+                    //   copy constructor, that is, makes a copy of the object representation as if by
+                    //   std::memmove."
+                    // * Generate trivial C++ destructor.
+                    //
+                    // In particular, note that the following C++ code and Rust code are exactly
+                    // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
+                    // whereas in C++, it's only prohibited by convention):
+                    // * C++, assumming trivial move constructor and trivial destructor:
+                    //   `auto x = std::move(y);`
+                    // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
+                    //   `let x = y;`
+                    //
+                    // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
+                    // glue, then extra care should be taken to ensure the C++ destructor can handle
+                    // the moved-from object in a way that meets Rust move semantics.  For example, the
+                    // generated C++ move constructor might need to assign `Default::default()` to the
+                    // moved-from object.
+                    #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
+                    #qualified_adt_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
+                    __NEWLINE__
+                });
+                let cc_details = CcSnippet::with_include(
+                    quote! {
+                        static_assert(std::is_trivially_move_constructible_v<#qualified_adt_name>);
+                        static_assert(std::is_trivially_move_assignable_v<#qualified_adt_name>);
+                    },
+                    CcInclude::type_traits(),
+                );
+                Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
+            }
         }
     }
     fallible_format_move_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {

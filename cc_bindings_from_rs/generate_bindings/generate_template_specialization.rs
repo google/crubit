@@ -34,47 +34,22 @@ struct OptionApi<'a, 'tcx> {
 }
 
 impl<'tcx> OptionApi<'_, 'tcx> {
-    // Remove wrapper Option<T> indirection.
-    fn underlying_argument_ty(&self) -> Ty<'tcx> {
-        fn underlying_argument_ty<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
-            let ty::TyKind::Adt(adt, subst) = ty.kind() else {
-                return ty;
-            };
-            let Some(variant) = adt.variants().iter().next() else {
-                return ty;
-            };
-            use rustc_hir::LangItem;
-            match db.tcx().lang_items().from_def_id(variant.def_id) {
-                Some(LangItem::OptionSome | LangItem::OptionNone) => {
-                    underlying_argument_ty(db, subst.type_at(0))
-                }
-                _ => ty,
-            }
-        }
-        underlying_argument_ty(self.db, self.arg_ty_rs)
-    }
-
     fn has_move_ctor(&self) -> bool {
-        let underlying_argument_ty = self.underlying_argument_ty();
-
-        underlying_argument_ty
+        self.arg_ty_rs
             .ty_adt_def()
             .map(|adt| {
-                self.db
-                    .generate_adt_core(adt.did())
-                    .and_then(|core| {
-                        self.db.generate_move_ctor_and_assignment_operator(core).map_err(|e| e.err)
-                    })
-                    .is_ok()
+                self.db.has_move_ctor_and_assignment_operator(adt.did(), self.arg_ty_rs).is_some()
             })
             .unwrap_or(false)
     }
 
     fn has_relocating_ctor(&self) -> bool {
-        let underlying_argument_ty = self.underlying_argument_ty();
-        underlying_argument_ty
+        self.arg_ty_rs
             .ty_adt_def()
-            .map(|adt| self.db.adt_needs_bindings(adt.did()).is_ok())
+            .map(|adt| {
+                crate::BridgedBuiltin::new(self.db, adt).is_some()
+                    || self.db.adt_needs_bindings(adt.did()).is_ok()
+            })
             .unwrap_or(false)
     }
 

@@ -6,7 +6,7 @@ extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::adt_core_bindings::{AdtCoreBindings, NoMoveOrAssign};
+use crate::adt_core_bindings::{AdtCoreBindings, CopyCtorStyle, MoveCtorStyle, NoMoveOrAssign};
 use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
@@ -193,6 +193,33 @@ memoized::query_group! {
           &self,
           ty: Ty<'tcx>
       ) -> Result<TokenStream>;
+
+      /// Returns true if the type has a default constructor.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_default_ctor
+      fn has_default_ctor(&self, self_ty: Ty<'tcx>) -> bool;
+
+      /// Returns the style of copy constructor and assignment operator for the given type, if available.
+      ///
+      /// `def_id` is used to determine the typing env of `self_ty`.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_copy_ctor_and_assignment_operator
+      fn has_copy_ctor_and_assignment_operator(
+          &self,
+          def_id: DefId,
+          self_ty: Ty<'tcx>,
+      ) -> Option<CopyCtorStyle>;
+
+      /// Returns the style of move constructor and assignment operator for the given type, if available.
+      ///
+      /// `def_id` is used to determine the typing env of `self_ty`.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_move_ctor_and_assignment_operator
+      fn has_move_ctor_and_assignment_operator(
+          &self,
+          def_id: DefId,
+          self_ty: Ty<'tcx>,
+      ) -> Option<MoveCtorStyle>;
 
       /// Generates a default constructor for an ADT if possible (i.e. if the `Default`
       /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
