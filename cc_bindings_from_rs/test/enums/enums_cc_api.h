@@ -34,6 +34,46 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Default::default
   MyEnum();
 
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::E` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=12:
+  // Type `std::string::String` comes from the `alloc` crate, but no
+  // `--crate-header` was specified for this crate
+
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::A` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=13:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::F` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=14:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::Z` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=15:
+  // Tuple types cannot be used inside of compound data types, because
+  // std::tuple is not layout-compatible with a Rust tuple.
+
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::G` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=16:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::B` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=17:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::C` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=18:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c::MyEnum::D` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=19:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
   // Drop::drop
   ~MyEnum();
 
@@ -120,6 +160,24 @@ CloneActiveVariant final {
   // Default::default
   CloneActiveVariant();
 
+  // Error generating bindings for
+  // `enums_golden::repr_c_clone_active_variant::CloneActiveVariant::A` defined
+  // at cc_bindings_from_rs/test/enums/enums.rs;l=80:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // Error generating bindings for
+  // `enums_golden::repr_c_clone_active_variant::CloneActiveVariant::B` defined
+  // at cc_bindings_from_rs/test/enums/enums.rs;l=81:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // Error generating bindings for
+  // `enums_golden::repr_c_clone_active_variant::CloneActiveVariant::C` defined
+  // at cc_bindings_from_rs/test/enums/enums.rs;l=82:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~CloneActiveVariant() = default;
   CloneActiveVariant(CloneActiveVariant&&) = default;
@@ -194,6 +252,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   CloneCount();
 
+  // Error generating bindings for
+  // `enums_golden::repr_c_clone_counter::CloneCount::A` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=56:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~CloneCount() = default;
   CloneCount(CloneCount&&) = default;
@@ -241,6 +305,30 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  public:
   // Default::default
   DropMe();
+
+  // Error generating bindings for `enums_golden::repr_c_drop::DropMe::A`
+  // defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=32:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c_drop::DropMe::B`
+  // defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=33:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c_drop::DropMe::Q`
+  // defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=34:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
+  // Error generating bindings for `enums_golden::repr_c_drop::DropMe::C`
+  // defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=35:
+  // Constructing enum variants with payload is unsupported: b/487356976,
+  // b/487357254
 
   // Drop::drop
   ~DropMe();

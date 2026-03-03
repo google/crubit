@@ -30,6 +30,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   // Default::default
   Color();
 
+  // Error generating bindings for `example_crate_golden::Color::Red` defined at
+  // examples/rust/enum/example.rs;l=8: Constructing
+  // enum variants with no payload is not supported yet: b/487357254
+
+  // Error generating bindings for `example_crate_golden::Color::Blue` defined
+  // at examples/rust/enum/example.rs;l=9:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
+  // Error generating bindings for `example_crate_golden::Color::Green` defined
+  // at examples/rust/enum/example.rs;l=10:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
   Color(Color&&) = default;

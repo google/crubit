@@ -27,8 +27,6 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
-use rustc_hir::attrs::AttributeKind;
-use rustc_hir::Attribute;
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind, TypeFlags};
@@ -598,9 +596,9 @@ pub fn generate_adt<'tcx>(
 
     let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
 
-    let tuple_struct_ctor = generate_tuple_struct_ctor(db, core.clone()).unwrap_or_default();
-
     let mut member_function_names = HashSet::<String>::new();
+    let adt_based_ctors = generate_adt_based_ctors(db, core.clone());
+
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
         .iter()
@@ -618,7 +616,7 @@ pub fn generate_adt<'tcx>(
         rs_details: public_functions_rs_details,
     } = [
         default_ctor_snippets,
-        tuple_struct_ctor,
+        adt_based_ctors,
         destructor_snippets,
         move_ctor_and_assignment_snippets,
         copy_ctor_and_assignment_snippets,
@@ -886,43 +884,72 @@ fn anonymous_field_ident(index: usize) -> Ident {
     format_ident!("__field{index}")
 }
 
-fn generate_tuple_struct_ctor<'tcx>(
+/// Generates C++ bindings that are equivalent to using Rust constructors.
+///
+/// For example:
+/// * `MyTupleStruct(1,2,3)` is exposed as a C++ constructor that takes field values as arguments.
+/// * crubit.rs-enum-ctor-name-and-shape discusses provoding bindings for
+///   `MyEnum::NoPayloadVariant` (b/487399481) and
+///   `MyEnum::TuplePayloadVariant(1, 2, 3)` (b/487356976)
+fn generate_adt_based_ctors<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> Option<ApiSnippets<'tcx>> {
-    let tcx = db.tcx();
-    let TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
+) -> ApiSnippets<'tcx> {
+    let TyKind::Adt(adt_def, _) = core.self_ty.kind() else {
         panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.self_ty)
     };
 
-    if !adt_def.has_ctor() {
-        // If this is not a struct with a constructor, don't generate a C++ constructor.
-        return None;
-    }
+    // Silently suppress errors for synthesized constructors (e.g. a tuple struct constructor
+    // doesn't really correspond to an explicit Rust API, so we don't report errors about
+    // generating bindings for such "API").
+    let should_suppress_errors =
+        matches!(adt_def.adt_kind(), ty::AdtKind::Struct | ty::AdtKind::Union);
 
-    #[allow(deprecated)]
-    if tcx
-        .get_all_attrs(core.def_id)
+    adt_def
+        .variants()
         .iter()
-        .any(|attr| matches!(attr, Attribute::Parsed(AttributeKind::NonExhaustive(_))))
-    {
+        .map(|variant| {
+            generate_variant_ctor(db, core.clone(), variant).unwrap_or_else(|err| {
+                if should_suppress_errors {
+                    Default::default()
+                } else {
+                    generate_unsupported_def(db, variant.def_id, err).into_main_api()
+                }
+            })
+        })
+        .collect()
+}
+
+fn generate_variant_ctor<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
+    variant: &'tcx ty::VariantDef,
+) -> Result<ApiSnippets<'tcx>> {
+    let tcx = db.tcx();
+
+    if variant.is_field_list_non_exhaustive() {
         // If the definition is marked #[non_exhaustive], don't generate a C++ constructor.
         // #[non_exhaustive] tuple structs do not have a public synthesized constructor.
-        return None;
+        bail!("`#[non_exhaustive]` structs don't get public constructors");
     }
+
+    let TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
+        panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.self_ty)
+    };
 
     let default_trait_id = tcx.get_diagnostic_item(sym::Default).expect("Default trait not found");
     let clone_trait_id = tcx.lang_items().copy_trait().expect("Copy trait not found");
     let unpin_trait_id = tcx.lang_items().unpin_trait().expect("Unpin trait not found");
 
-    let field_tys = variant_fields_iter(core.self_ty)
-        .next()
-        .expect("Tuple structs must have one variant")
-        .map(|IndexedVariantField { field_def, .. }| {
+    let field_tys = variant
+        .fields
+        .iter()
+        .map(|field_def| {
             if field_def.vis != ty::Visibility::Public {
-                // If our synthesized constructor would have a non public visibility, don't generate it as
-                // we can't mirror that visibility in C++.
-                return None;
+                // If our synthesized constructor would have a non public
+                // visibility, don't generate it as we can't mirror that
+                // visibility in C++.
+                bail!("Field `{}` is not public", field_def.name)
             }
             let ty = field_def.ty(tcx, adt_generic_args);
 
@@ -933,26 +960,18 @@ fn generate_tuple_struct_ctor<'tcx>(
             let is_movable_in_cpp = (is_default && is_unpin) || is_clone;
             if !is_movable_in_cpp {
                 // If one of our fields isn't movable in C++, we can't generate a C++ constructor.
-                return None;
+                bail!("Field `{}` is not movable in C++", field_def.name)
             }
 
-            Some(ty)
+            Ok(ty)
         })
-        .collect::<Option<Vec<_>>>()?;
-
-    let explicit = (field_tys.len() == 1).then_some(quote! { explicit });
-
-    let mut main_api_prereqs = CcPrerequisites::default();
-    let adt_cc_name = &core.cc_short_name;
-    let initializer_list = (0..field_tys.len()).map(|i| {
-        let cc_name = anonymous_field_ident(i);
-        quote! { #cc_name ( std::move ( #cc_name ) ) }
-    });
+        .collect::<Result<Vec<_>>>()?;
 
     // If we fail to convert a field type, don't generate a constructor.
     // Our uncovertible fields will be replaced by a blob of bytes that we do not want to appear
     // in our API, so opt to avoid presenting a constructor for types that contain a blob of
     // bytes.
+    let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_params = field_tys
         .into_iter()
         .enumerate()
@@ -962,25 +981,47 @@ fn generate_tuple_struct_ctor<'tcx>(
             let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
             Ok(quote! { #cpp_type #cc_name })
         })
-        .collect::<Result<Vec<TokenStream>>>()
-        .ok()?;
+        .collect::<Result<Vec<TokenStream>>>()?;
 
     let mut prereqs = main_api_prereqs.clone();
     prereqs.move_defs_to_fwd_decls();
 
-    Some(ApiSnippets {
-        main_api: CcSnippet {
-            prereqs,
-            tokens: quote! {
-              __NEWLINE__ __COMMENT__ "Synthesized tuple constructor"
-              #explicit #adt_cc_name (
-                  #( #main_api_params ),*
-              ) : #( #initializer_list ),* { }
-              __NEWLINE__
-            },
-        },
-        ..Default::default()
-    })
+    let adt_cc_name = &core.cc_short_name;
+    match adt_def.adt_kind() {
+        ty::AdtKind::Struct => {
+            if variant.ctor_def_id().is_none() {
+                // If this is not a struct with a constructor, don't generate a C++ constructor.
+                bail!("Internal error that should be suppressed in `generate_adt_based_ctors`");
+            };
+            let explicit = (main_api_params.len() == 1).then_some(quote! { explicit });
+            let initializer_list = (0..main_api_params.len()).map(|i| {
+                let cc_name = anonymous_field_ident(i);
+                quote! { #cc_name ( std::move ( #cc_name ) ) }
+            });
+            Ok(ApiSnippets {
+                main_api: CcSnippet {
+                    prereqs,
+                    tokens: quote! {
+                    __NEWLINE__ __COMMENT__ "Synthesized tuple constructor"
+                    #explicit #adt_cc_name (
+                        #( #main_api_params ),*
+                    ) : #( #initializer_list ),* { }
+                    __NEWLINE__
+                    },
+                },
+                ..Default::default()
+            })
+        }
+        ty::AdtKind::Enum => {
+            ensure!(
+                main_api_params.is_empty(),
+                "Constructing enum variants with payload is unsupported: b/487356976, b/487357254",
+            );
+
+            bail!("Constructing enum variants with no payload is not supported yet: b/487357254")
+        }
+        ty::AdtKind::Union => bail!("Crubit doesn't provide bindings for constructing unions"),
+    }
 }
 
 /// Returns the body of the C++ struct that represents the given ADT.

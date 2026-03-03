@@ -33,6 +33,30 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   // `leaf_rs_lib_golden::LeafRsEnum` doesn't implement the `Default` trait
   LeafRsEnum() = delete;
 
+  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KUnknown`
+  // defined at
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=22:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
+  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KValue1`
+  // defined at
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=23:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
+  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KValue2`
+  // defined at
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=24:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
+  // Error generating bindings for `leaf_rs_lib_golden::LeafRsEnum::KValue3`
+  // defined at
+  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=25:
+  // Constructing enum variants with no payload is not supported yet:
+  // b/487357254
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsEnum() = default;
   LeafRsEnum(LeafRsEnum&&) = default;
