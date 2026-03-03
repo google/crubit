@@ -17,5 +17,6 @@ bazel test \
   --config=llvm-unstable \
   --test_strategy=local \
   --test_env=WRITE_GOLDENS=1 \
+  --cache_test_results=no \
   -k \
   $TESTS_TO_RUN
