@@ -107,14 +107,15 @@ fn get_field_rs_type_kind_for_layout(
     if field.is_no_unique_address {
         bail!("`[[no_unique_address]]` attribute was present.");
     }
+    let ir = db.ir();
     match &field.unknown_attr {
         Err(e) => bail!("{e}"),
         Ok(None) => (),
         Ok(Some(unknown_attr)) => {
             // Both the template definition and its instantiation should enable experimental
             // features.
-            for target in record.defining_target().into_iter().chain([&record.owning_target]) {
-                let enabled_features = db.ir().target_crubit_features(target);
+            for target in record.defining_target(ir).into_iter().chain([&record.owning_target]) {
+                let enabled_features = ir.target_crubit_features(target);
                 ensure!(
                     enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
                     "crubit.rs/errors/unknown_attribute: unknown field attributes are only \
@@ -134,8 +135,8 @@ fn get_field_rs_type_kind_for_layout(
         bail!("Bridge-by-value types are not supported in struct fields.")
     }
 
-    for target in record.defining_target().into_iter().chain([&record.owning_target]) {
-        let enabled_features = db.ir().target_crubit_features(target);
+    for target in record.defining_target(ir).into_iter().chain([&record.owning_target]) {
+        let enabled_features = ir.target_crubit_features(target);
         let (missing_features, reason) = type_kind.required_crubit_features(db, enabled_features);
         ensure!(
             missing_features.is_empty(),
@@ -150,8 +151,8 @@ fn get_field_rs_type_kind_for_layout(
     //
     // Users can still work around this with accessor functions.
     if record.should_implement_drop() && !record.is_union() && needs_manually_drop(&type_kind) {
-        for target in record.defining_target().into_iter().chain([&record.owning_target]) {
-            let enabled_features = db.ir().target_crubit_features(target);
+        for target in record.defining_target(ir).into_iter().chain([&record.owning_target]) {
+            let enabled_features = ir.target_crubit_features(target);
             ensure!(
                 enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
                 "nontrivial fields would be destroyed in the wrong order"
@@ -609,7 +610,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     // Both the template definition and its instantiation should enable experimental
     // features.
     let mut crubit_features = ir.target_crubit_features(&record.owning_target);
-    if let Some(defining_target) = record.defining_target() {
+    if let Some(defining_target) = record.defining_target(ir) {
         crubit_features |= ir.target_crubit_features(defining_target);
     }
     let mut upcast_impls = vec![];

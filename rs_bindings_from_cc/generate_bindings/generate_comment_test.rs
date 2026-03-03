@@ -116,6 +116,9 @@ impl ir::GenericItem for TestItem {
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         "test_item".into()
     }

@@ -1022,12 +1022,13 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 bail!("Void pointer bridge types are not allowed within composable bridging")
             }
             BridgeRsTypeKind::ProtoMessageBridge { .. } => {
+                let ir = db.ir();
                 let target =
-                    original_type.defining_target().unwrap_or(&original_type.owning_target);
+                    original_type.defining_target(ir).unwrap_or(&original_type.owning_target);
                 let rust_abi_path =
-                    make_rust_abi_path_from_str("ProtoMessageRustBridge", db.ir(), target);
+                    make_rust_abi_path_from_str("ProtoMessageRustBridge", ir, target);
 
-                let cpp_namespace_qualifier = db.ir().namespace_qualifier(original_type.as_ref());
+                let cpp_namespace_qualifier = ir.namespace_qualifier(original_type.as_ref());
 
                 // Rust message types are exported to crate root, but we need the full namespace for the C++ ABI.
                 let merged_cpp_abi_path = cpp_namespace_qualifier.parts().join("::")
@@ -1038,16 +1039,17 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                     proto_message_rust_bridge: rust_abi_path,
                     rust_proto_path: make_rust_abi_path_from_str(
                         original_type.rs_name.identifier.as_ref(),
-                        db.ir(),
+                        ir,
                         target,
                     ),
                     cpp_proto_path: make_cpp_abi_path_from_str(&merged_cpp_abi_path)?,
                 })
             }
             BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
+                let ir = db.ir();
                 let target =
-                    original_type.defining_target().unwrap_or(&original_type.owning_target);
-                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, db.ir(), target);
+                    original_type.defining_target(ir).unwrap_or(&original_type.owning_target);
+                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, ir, target);
 
                 let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
 

@@ -737,7 +737,7 @@ impl RsTypeKind {
         // the forward declaration.
         if let RsTypeKind::Record { record, .. } = &underlying_type {
             if record.owning_target != type_alias.owning_target
-                && record.defining_target() != Some(&type_alias.owning_target)
+                && record.defining_target(ir) != Some(&type_alias.owning_target)
             {
                 return Ok(underlying_type);
             }

@@ -30,6 +30,11 @@ pub trait GenericItem {
     /// The Bazel target which owns the bindings for this item.
     fn owning_target(&self) -> Option<BazelLabel>;
 
+    /// Returns the target that this item was defined in, if it was defined somewhere other than
+    /// `owning_target()`. This may be `Some` for class template specializations and their member
+    /// functions and is `None` otherwise.
+    fn defining_target<'a>(&'a self, ir: &'a IR) -> Option<&'a BazelLabel>;
+
     /// The name of the item, readable by programmers.
     ///
     /// For example, `void Foo();` should have name `Foo`.
@@ -65,6 +70,9 @@ where
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         (**self).owning_target()
+    }
+    fn defining_target<'a>(&'a self, ir: &'a IR) -> Option<&'a BazelLabel> {
+        (**self).defining_target(ir)
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         (**self).debug_name(ir)
@@ -910,6 +918,10 @@ impl GenericItem for Func {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
+    fn defining_target<'a>(&'a self, ir: &'a IR) -> Option<&'a BazelLabel> {
+        // There is only a defining target if we have an enclosing item and it's a record.
+        ir.find_decl::<Rc<Record>>(self.enclosing_item_id?).ok()?.defining_target(ir)
+    }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         let mut name = ir.namespace_qualifier(self).format_for_cc_debug();
         let record_name = || -> Option<Rc<str>> {
@@ -966,11 +978,6 @@ impl GenericItem for Func {
 impl Func {
     pub fn is_instance_method(&self) -> bool {
         self.instance_method_metadata.is_some()
-    }
-
-    pub fn defining_target<'ir>(&self, ir: &'ir IR) -> Option<&'ir BazelLabel> {
-        // There is only a defining target if we have an enclosing item and it's a record.
-        ir.find_decl::<Rc<Record>>(self.enclosing_item_id?).ok()?.defining_target()
     }
 }
 
@@ -1047,6 +1054,9 @@ impl GenericItem for IncompleteRecord {
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
+    }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
@@ -1269,6 +1279,9 @@ impl GenericItem for Record {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        self.template_specialization.as_ref().map(|ts| &ts.defining_target)
+    }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
             .into()
@@ -1389,10 +1402,6 @@ impl Record {
             }) | None
         )
     }
-
-    pub fn defining_target(&self) -> Option<&BazelLabel> {
-        self.template_specialization.as_ref().map(|ts| &ts.defining_target)
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1421,6 +1430,9 @@ impl GenericItem for Constant {
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
+    }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
@@ -1467,6 +1479,9 @@ impl GenericItem for GlobalVar {
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
+    }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
@@ -1518,6 +1533,9 @@ impl GenericItem for Enum {
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
+    }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
@@ -1572,6 +1590,9 @@ impl GenericItem for TypeAlias {
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
+    }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
@@ -1704,6 +1725,9 @@ impl GenericItem for UnsupportedItem {
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         // Note: name is supposed to be populated with the `debug_name()` of the unsupported item.
         self.name.clone()
@@ -1803,6 +1827,9 @@ impl GenericItem for Comment {
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         "<comment>".into()
     }
@@ -1848,6 +1875,9 @@ impl GenericItem for Namespace {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
+    }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
             .into()
@@ -1883,6 +1913,9 @@ impl GenericItem for UseMod {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
+        None
+    }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
         None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
@@ -1926,6 +1959,9 @@ impl GenericItem for ExistingRustType {
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
+    }
+    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
+        None
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name).into()
@@ -2001,6 +2037,13 @@ impl GenericItem for Item {
             }
         }
     }
+    fn defining_target<'a>(&'a self, ir: &'a IR) -> Option<&'a BazelLabel> {
+        forward_item! {
+            match self {
+                _(x) => x.defining_target(ir)
+            }
+        }
+    }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         forward_item! {
             match self {
@@ -2055,16 +2098,6 @@ impl Item {
             }
             Item::UseMod(..) => None,
             Item::ExistingRustType(..) => None,
-        }
-    }
-
-    /// Returns the target that this was defined in, if it was defined somewhere
-    /// other than `owning_target()`.
-    pub fn defining_target<'a, 'ir: 'a>(&'a self, ir: &'ir IR) -> Option<&'a BazelLabel> {
-        match self {
-            Item::Func(func) => func.defining_target(ir),
-            Item::Record(record) => record.defining_target(),
-            _ => None,
         }
     }
 
