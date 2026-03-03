@@ -223,7 +223,7 @@ impl<'a> LifetimeDefaults<'a> {
                 LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen }
             }
             CcTypeVariant::Pointer(pty)
-                if (is_this && (is_constructor || pty.pointee_type.is_const))
+                if (is_this && pty.pointee_type.is_const)
                     || pty.kind == PointerTypeKind::LValueRef =>
             {
                 let LifetimeResult { ty: pointee_type, .. } = self.add_lifetime_to_input_type(

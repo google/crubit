@@ -190,12 +190,21 @@ impl ToTokens for CratePath {
 
 pub fn unique_lifetimes<'a>(
     types: impl IntoIterator<Item = &'a RsTypeKind> + 'a,
+    assumed_inputs: &Vec<Rc<str>>,
 ) -> impl Iterator<Item = Lifetime> + 'a {
     let mut unordered_lifetimes = HashSet::new();
+    let mut saved_assumed_inputs: Vec<Lifetime> = Vec::new();
+    for lt in assumed_inputs {
+        let rs_lt = Lifetime::new(lt);
+        if unordered_lifetimes.insert(rs_lt.clone()) {
+            saved_assumed_inputs.push(rs_lt);
+        }
+    }
     types
         .into_iter()
         .flat_map(|ty| ty.lifetimes())
         .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
+        .chain(saved_assumed_inputs)
 }
 
 pub fn format_generic_params<'a, T: ToTokens>(
@@ -294,6 +303,10 @@ pub enum UniformReprTemplateType {
         include_lifetime: bool,
         element_type: RsTypeKind,
     },
+    /// cc_std::string_view<'a>
+    StdStringView {
+        lifetime: Lifetime,
+    },
 }
 
 impl UniformReprTemplateType {
@@ -305,6 +318,7 @@ impl UniformReprTemplateType {
         db: &BindingsGenerator,
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         is_return_type: bool,
+        lifetimes: &[Lifetime],
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
             // Importantly, `is_return_type` is not propagated through inner types.
@@ -355,6 +369,11 @@ impl UniformReprTemplateType {
                     element_type: element_type_kind,
                 })))
             }
+            Some(TemplateSpecializationKind::StdStringView) if lifetimes.len() == 1 => {
+                Ok(Some(Rc::new(UniformReprTemplateType::StdStringView {
+                    lifetime: lifetimes[0].clone(),
+                })))
+            }
             Some(
                 TemplateSpecializationKind::StdStringView
                 | TemplateSpecializationKind::StdWStringView
@@ -392,6 +411,10 @@ impl UniformReprTemplateType {
                     (false, false) => quote! { ::span::absl::RawSpanMut<#element_type_tokens> },
                 }
             }
+            Self::StdStringView { lifetime } => {
+                // nb: shows up when we don't use a type alias
+                quote! { ::cc_std::std::string_view<#lifetime> }
+            }
         }
     }
 
@@ -401,6 +424,7 @@ impl UniformReprTemplateType {
             Self::StdUniquePtr { .. } => None,
             Self::AbslSpan { include_lifetime: true, .. } => Some(Lifetime::elided()),
             Self::AbslSpan { include_lifetime: false, .. } => None,
+            Self::StdStringView { lifetime } => Some(lifetime.clone()),
         }
     }
 }
@@ -467,6 +491,7 @@ pub enum RsTypeKind {
         type_alias: Rc<TypeAlias>,
         underlying_type: Rc<RsTypeKind>,
         crate_path: Rc<CratePath>,
+        lifetimes: Vec<Lifetime>,
     },
     Primitive(Primitive),
     /// Types that require custom logic to translate.
@@ -703,16 +728,17 @@ impl RsTypeKind {
         item: Item,
         has_reference_param: bool,
         is_return_type: bool,
+        lifetimes: &[Lifetime],
     ) -> Result<Self> {
         match item {
             Item::IncompleteRecord(incomplete_record) => {
                 RsTypeKind::new_incomplete_record(db, incomplete_record)
             }
             Item::Record(record) => {
-                RsTypeKind::new_record(db, record, has_reference_param, is_return_type)
+                RsTypeKind::new_record(db, record, has_reference_param, is_return_type, lifetimes)
             }
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
-            Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias),
+            Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias, lifetimes),
             Item::ExistingRustType(existing_rust_type) => {
                 RsTypeKind::new_existing_rust_type(db, existing_rust_type)
             }
@@ -720,7 +746,11 @@ impl RsTypeKind {
         }
     }
 
-    fn new_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
+    fn new_type_alias(
+        db: &BindingsGenerator,
+        type_alias: Rc<TypeAlias>,
+        lifetimes: &[Lifetime],
+    ) -> Result<Self> {
         let ir = db.ir();
         let underlying_type = db.rs_type_kind(type_alias.underlying_type.clone())?;
         // Note: we don't need to call `.unalias()` for these checks, because we already checked
@@ -751,6 +781,7 @@ impl RsTypeKind {
             type_alias,
             crate_path,
             underlying_type: Rc::new(underlying_type),
+            lifetimes: lifetimes.to_vec(),
         })
     }
 
@@ -759,6 +790,7 @@ impl RsTypeKind {
         record: Rc<Record>,
         has_reference_param: bool,
         is_return_type: bool,
+        lifetimes: &[Lifetime],
     ) -> Result<Self> {
         let ir = db.ir();
         if let Some(bridge_type) = BridgeRsTypeKind::new(&record, has_reference_param, db)? {
@@ -770,11 +802,13 @@ impl RsTypeKind {
             ir.namespace_qualifier(&record),
             rs_imported_crate_name(&record.owning_target, ir),
         ));
+
         Ok(RsTypeKind::Record {
             uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
                 record.template_specialization.as_ref().map(|ts| &ts.kind),
                 is_return_type,
+                lifetimes,
             )?,
             owned_ptr_type: record.owned_ptr_type.clone(),
             record,
@@ -1667,9 +1701,34 @@ impl RsTypeKind {
                 let ident = make_rs_ident(&enum_.rs_name.identifier);
                 quote! { #crate_path #ident }
             }
-            RsTypeKind::TypeAlias { type_alias, crate_path, .. } => {
-                let ident = make_rs_ident(&type_alias.rs_name.identifier);
-                quote! { #crate_path #ident }
+            RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
+                let mut ident = make_rs_ident(&type_alias.rs_name.identifier);
+                let mut crate_path = crate_path.clone();
+                // Check to see if the underlying type is a special template specialization kind
+                // that we need to use an alternate name for if lifetimes are provided.
+                if !lifetimes.is_empty()
+                    && let RsTypeKind::Record { record, .. } = self.unalias()
+                    && matches!(
+                        record.template_specialization,
+                        Some(TemplateSpecialization {
+                            kind: TemplateSpecializationKind::StdStringView,
+                            ..
+                        })
+                    )
+                {
+                    // Use the custom `string_view` implementation.
+                    ident = make_rs_ident("string_view");
+                    // Remove `__u`.
+                    let mut new_crate_path: CratePath = (*crate_path).clone();
+                    new_crate_path.namespace_qualifier.namespaces.pop();
+                    crate_path = Rc::new(new_crate_path);
+                };
+                let lts = if lifetimes.is_empty() {
+                    quote! {}
+                } else {
+                    quote! { <#( #lifetimes ),* > }
+                };
+                quote! { #crate_path #ident #lts }
             }
             RsTypeKind::Primitive(primitive) => {
                 PrimitiveName::from_primitive(*primitive).to_token_stream()
@@ -2137,6 +2196,7 @@ mod tests {
             }),
             underlying_type: Rc::new(make_incomplete_record()),
             crate_path: make_crate_path(),
+            lifetimes: vec![],
         };
 
         expect_that!(alias_incomplete_record.allowed_behind_single_element_ptr(), eq(true));

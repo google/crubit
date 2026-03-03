@@ -608,13 +608,13 @@ fn test_this_lifetime_applied_for_constructor() -> Result<()> {
                 return_type: CcType { ... variant: Primitive(Void) ... }, ...
                 params: [
                     FuncParam {
-                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        type_: CcType { ... explicit_lifetimes: [] ... },
                         identifier: "__this", ...
                     }
                 ],
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this"],
+                lifetime_inputs: [],
                 ...
             }
         }
@@ -646,7 +646,9 @@ fn test_this_lifetime_annotation_applied_for_constructor() -> Result<()> {
                 ],
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["a"],
+                // TODO(zarko): Either `a` should be a lifetime input here or we should remove the
+                // explicit_lifetime from `this` above.
+                lifetime_inputs: [],
                 ...
             }
         }
@@ -672,7 +674,8 @@ fn test_param_lifetime_inferred_for_constructor() -> Result<()> {
                 return_type: CcType { ... variant: Primitive(Void) ... }, ...
                 params: [
                     FuncParam {
-                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        // TODO(zarko): __this should possibly have an explicit lifetime set.
+                        type_: CcType { ... explicit_lifetimes: [] ... },
                         identifier: "__this", ...
                     },
                     FuncParam {
@@ -682,7 +685,8 @@ fn test_param_lifetime_inferred_for_constructor() -> Result<()> {
                 ],
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this", "i1"],
+                // TODO(zarko): __this should possibly be a lifetime_input.
+                lifetime_inputs: ["i1"],
                 ...
             }
         }
