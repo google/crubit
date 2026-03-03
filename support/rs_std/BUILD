@@ -200,6 +200,17 @@ cc_library(
     deps = [],
 )
 
+cc_library(
+    name = "result",
+    hdrs = ["result.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [],
+)
+
 rust_library(
     name = "lossy_formatter",
     srcs = ["lossy_formatter.rs"],
