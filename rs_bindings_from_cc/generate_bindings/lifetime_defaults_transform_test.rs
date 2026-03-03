@@ -1046,3 +1046,109 @@ fn test_function_uses_top_of_renamed_lifetime_stack() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_string_view_alias_detected() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      namespace std {
+        template<typename T> struct char_traits {};
+        template<typename T, typename Traits> struct basic_string_view {};
+        using string_view = basic_string_view<char, char_traits<char>>;
+      }
+      void f(std::string_view sv);
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["sv"] ... },
+                       identifier: "sv", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["sv"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_string_view_annotated_alias_detected() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      namespace std {
+        template<typename T> struct char_traits {};
+        template<typename T, typename Traits> struct basic_string_view {};
+        using string_view = basic_string_view<char, char_traits<char>>;
+      }
+      void f(std::string_view $a sv);
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                       identifier: "sv", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_string_view_assumed_output_lifetime_matches_input() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      namespace std {
+        template<typename T> struct char_traits {};
+        template<typename T, typename Traits> struct basic_string_view {};
+        using string_view = basic_string_view<char, char_traits<char>>;
+      }
+      std::string_view f(std::string_view sv);
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["sv"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["sv"] ... },
+                       identifier: "sv", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["sv"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}

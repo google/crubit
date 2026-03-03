@@ -109,12 +109,8 @@ struct LifetimeDefaults<'a> {
     bindings: BindingContext,
 }
 
-// TODO: b/454627672 - It appears that `int& f(int& $a i1)` drops `$a` entirely (before we even get
-// the IR to transform). Same with `int& $a f(int& i1)`, and `int& $a f(int& $a i1, int& i2). Is
-// something trying to be more helpful than we expect earlier on?
-
 /// Used to keep track of the state we're in when ascribing lifetimes.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum LifetimeState {
     /// No lifetimes have been seen.
     Unseen,
@@ -175,6 +171,32 @@ impl<'a> LifetimeDefaults<'a> {
         }
     }
 
+    fn decl_binds_lifetimes(&mut self, id: &ItemId) -> bool {
+        match self.ir.find_untyped_decl(*id) {
+            // TODO(zarko): Here, we look for the explicit renaming we do in type_alias.cc. What
+            // we actually want to do is recursively check ta.underlying_type (since anyone's free
+            // to invent their own aliases for string_view). More generally, a type alias can bind
+            // and apply arbitrary lifetimes.
+            Item::TypeAlias(ta) if ta.rs_name == "raw_string_view" => true,
+            // We seem to lose the typedef sugar if it's annotated.
+            Item::Record(rc)
+                if matches!(
+                    **rc,
+                    Record {
+                        template_specialization: Some(ir::TemplateSpecialization {
+                            kind: ir::TemplateSpecializationKind::StdStringView,
+                            ..
+                        }),
+                        ..
+                    }
+                ) =>
+            {
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// Adds lifetimes to a type in input position. Returns the new type paired with a LifetimeState
     /// describing the lifetimes we encountered and a list of any lifetimes we had to bind.
     /// `name_hint` is used to name the lifetime parameter when we need to make one.
@@ -188,6 +210,18 @@ impl<'a> LifetimeDefaults<'a> {
         ty: &CcType,
     ) -> LifetimeResult {
         match &ty.variant {
+            CcTypeVariant::Decl(d) if self.decl_binds_lifetimes(d) => {
+                let mut state =
+                    self.get_state_for_annotated_lifetime(&ty.explicit_lifetimes, new_bindings);
+                if state == LifetimeState::Unseen {
+                    let lifetime = self.bindings.push_fresh_binding(name_hint);
+                    new_bindings.push(lifetime.clone());
+                    state = LifetimeState::Single(lifetime);
+                }
+                let mut new_ty = ty.clone();
+                new_ty.explicit_lifetimes = self.get_lifetime_for_state(&state);
+                LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen }
+            }
             CcTypeVariant::Pointer(pty)
                 if (is_this && (is_constructor || pty.pointee_type.is_const))
                     || pty.kind == PointerTypeKind::LValueRef =>
@@ -236,6 +270,27 @@ impl<'a> LifetimeDefaults<'a> {
         ty: &CcType,
     ) -> CcType {
         match &ty.variant {
+            CcTypeVariant::Decl(d) if self.decl_binds_lifetimes(d) => {
+                let mut new_ty = ty.clone();
+                // If there's a previously-annotated lifetime, use that.
+                if !ty.explicit_lifetimes.is_empty() {
+                    new_ty.explicit_lifetimes = ty
+                        .explicit_lifetimes
+                        .iter()
+                        .map(|l| {
+                            self.bindings
+                                .get_or_push_new_binding(l, |name| new_bindings.push(name.clone()))
+                        })
+                        .collect();
+                    return new_ty;
+                }
+                // If there is no viable inferred lifetime, there is nothing to do.
+                if lifetime_hint.is_empty() {
+                    return new_ty;
+                }
+                new_ty.explicit_lifetimes = lifetime_hint.clone();
+                new_ty
+            }
             CcTypeVariant::Pointer(pty) if pty.kind == PointerTypeKind::LValueRef => {
                 let mut new_ty = ty.clone();
                 // If there's a previously-annotated lifetime, use that.
