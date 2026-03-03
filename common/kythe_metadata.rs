@@ -7,29 +7,29 @@ use serde::{Deserialize, Serialize};
 use token_stream_printer::{fix_provenance_map_postformatting, SubstringProvenanceMap};
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
-struct KytheMetadata {
+pub struct KytheMetadata {
     #[serde(rename = "type")]
     typ: String,
-    meta: Vec<KytheMetadataRule>,
+    pub meta: Vec<KytheMetadataRule>,
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
-struct KytheMetadataVName {
-    corpus: String,
-    path: String,
-    language: String,
+pub struct KytheMetadataVName {
+    pub corpus: String,
+    pub path: String,
+    pub language: String,
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
-struct KytheMetadataRule {
+pub struct KytheMetadataRule {
     #[serde(rename = "type")]
-    typ: String,
-    source_begin: usize,
-    source_end: usize,
-    target_begin: usize,
-    target_end: usize,
-    edge: String,
-    source_vname: KytheMetadataVName,
+    pub typ: String,
+    pub source_begin: usize,
+    pub source_end: usize,
+    pub target_begin: usize,
+    pub target_end: usize,
+    pub edge: String,
+    pub source_vname: KytheMetadataVName,
 }
 
 /// Given a `provenance_map` and a C++ `header` that has possibly been formatted, embed the
