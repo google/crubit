@@ -53,7 +53,7 @@ def _llvm_loader_repository(repository_ctx):
             executable = False,
         )
 
-LLVM_COMMIT_SHA = "d8474abfc1e7c3856b85b088f1133ae2e90da3d0"
+LLVM_COMMIT_SHA = "9a1c63230b8ad3f19cb624f0d283f7df10957ab7"
 
 def llvm_loader_repository_dependencies():
     # This *declares* the dependency, but it won't actually be *downloaded* unless it's used.
