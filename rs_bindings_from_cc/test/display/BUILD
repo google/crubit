@@ -1,3 +1,4 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -6,9 +7,12 @@ load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
 )
-load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
+load(
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    "golden_test",
+)
 
-crubit_test_cc_library(
+cc_library(
     name = "displayables",
     hdrs = ["displayables.h"],
     aspect_hints = [
@@ -29,6 +33,14 @@ additional_rust_srcs_for_crubit_bindings(
     aspect_hints = [
         "//features:fmt",
     ],
+)
+
+golden_test(
+    name = "displayables_golden_test",
+    basename = "displayables",
+    cc_library = "displayables",
+    golden_cc = "displayables_api_impl.cc",
+    golden_rs = "displayables_api.rs",
 )
 
 crubit_rust_test(
