@@ -2567,7 +2567,7 @@ impl IR {
                     enclosing_item_id = None;
                 }
                 item => {
-                    panic!("Expected namespace or parent record, found enclosing item {item:?}: {item:#?}");
+                    panic!("Expected namespace or parent record, found enclosing item: {item:#?}");
                 }
             }
         }
