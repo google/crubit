@@ -126,7 +126,7 @@ static_assert(alignof(struct TemplatedStringView) == 8);
 
 extern "C" void
 __rust_thunk___ZN19TemplatedStringViewC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(
-    struct TemplatedStringView* __this, absl::string_view* v) {
+    struct TemplatedStringView* __this, std::__u::string_view* v) {
   crubit::construct_at(__this, std::move(*v));
 }
 
@@ -154,13 +154,5 @@ extern "C" void __rust_thunk___ZN13DisplayInRustC1Ev(
     struct DisplayInRust* __this) {
   crubit::construct_at(__this);
 }
-
-static_assert(
-    CRUBIT_SIZEOF(
-        class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    16);
-static_assert(
-    alignof(class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    8);
 
 #pragma clang diagnostic pop

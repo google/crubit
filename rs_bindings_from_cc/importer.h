@@ -103,7 +103,7 @@ class Importer final : public ImportContext {
   // GetItemIdsInSourceOrder.
   struct DeclItems {
     std::vector<const clang::RawComment*> comments = {};
-    std::vector<std::pair<const clang::Decl*, ItemId>> canonical_children = {};
+    std::vector<std::pair<clang::Decl*, ItemId>> canonical_children = {};
   };
 
   // This is intended to only be used to abstract shared behavior between
@@ -151,6 +151,9 @@ class Importer final : public ImportContext {
     (void)GetDeclItem(CanonicalizeDecl(decl));
     return HasBeenAlreadySuccessfullyImported(decl);
   }
+
+  clang::TypedefNameDecl* GetTemplateSpecializationAlias(
+      clang::Decl* decl) const override;
 
  private:
   class SourceOrderKey;

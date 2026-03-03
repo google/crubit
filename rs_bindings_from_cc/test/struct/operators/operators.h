@@ -234,4 +234,12 @@ struct OperandForeign {};
 inline bool operator==(foreign::ForeignType, OperandForeign) { return true; }
 inline bool operator==(OperandForeign, foreign::ForeignType) { return true; }
 
+struct OperandAlias {};
+inline bool operator==(const foreign::Alias, const OperandAlias&) {
+  return true;
+}
+inline bool operator==(const OperandAlias&, const foreign::Alias) {
+  return true;
+}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_

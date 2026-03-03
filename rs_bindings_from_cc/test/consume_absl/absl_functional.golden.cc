@@ -86,12 +86,4 @@ extern "C" void __rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(
 static_assert((class absl::AnyInvocable<int(int) const> (*)()) &
               ::absl_functional_internal::ReturnIntVoid);
 
-static_assert(
-    CRUBIT_SIZEOF(
-        class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    16);
-static_assert(
-    alignof(class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    8);
-
 #pragma clang diagnostic pop

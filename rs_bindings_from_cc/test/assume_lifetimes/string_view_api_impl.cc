@@ -50,34 +50,23 @@ static_assert((std::__u::string_view (*)(std::__u::string_view,
 
 extern "C" void
 __rust_thunk___Z29explicit_lifetime_string_viewNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
-    class std::basic_string_view<char, std::char_traits<char>>* x) {
+    std::__u::string_view* x) {
   explicit_lifetime_string_view(std::move(*x));
 }
 
-static_assert(
-    (void (*)(class std::basic_string_view<char, std::char_traits<char>>)) &
-    ::explicit_lifetime_string_view);
+static_assert((void (*)(std::__u::string_view)) &
+              ::explicit_lifetime_string_view);
 
 extern "C" void
 __rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(
-    std::__u::string_view* __return,
-    class std::basic_string_view<char, std::char_traits<char>>* x,
-    class std::basic_string_view<char, std::char_traits<char>>* y) {
+    std::__u::string_view* __return, std::__u::string_view* x,
+    std::__u::string_view* y) {
   new (__return) auto(
       unambiguous_string_view_return_annotated(std::move(*x), std::move(*y)));
 }
 
-static_assert((std::__u::string_view (*)(
-                  class std::basic_string_view<char, std::char_traits<char>>,
-                  class std::basic_string_view<char, std::char_traits<char>>)) &
+static_assert((std::__u::string_view (*)(std::__u::string_view,
+                                         std::__u::string_view)) &
               ::unambiguous_string_view_return_annotated);
-
-static_assert(
-    CRUBIT_SIZEOF(
-        class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    16);
-static_assert(
-    alignof(class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    8);
 
 #pragma clang diagnostic pop
