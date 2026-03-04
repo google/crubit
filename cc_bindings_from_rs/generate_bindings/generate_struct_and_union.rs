@@ -10,7 +10,9 @@ extern crate rustc_span;
 use crate::format_cc_ident;
 use crate::format_type::CcParamTy;
 use crate::generate_doc_comment;
-use crate::generate_function::{generate_thunk_call, Param, ThunkSelfParameter};
+use crate::generate_function::{
+    format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
+};
 use crate::{
     crate_features, generate_const, generate_deprecated_tag, generate_must_use_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
@@ -290,17 +292,18 @@ pub(crate) fn generate_associated_item<'tcx>(
     }
     crate::error_scope!(db, def_id);
     let result = match assoc_item.kind {
-        ty::AssocKind::Fn { .. } => {
-            let result = db.generate_function(def_id);
-            if result.is_ok() {
-                let unqualified_name = db
-                    .symbol_unqualified_name(def_id)
-                    .expect("Associated item should have an unqualified name: {def_id:?}");
-                let cpp_name = unqualified_name.cpp_name.to_string();
-                member_function_names.insert(cpp_name);
-            }
-            result
-        }
+        ty::AssocKind::Fn { .. } => db.generate_function(def_id).and_then(|binding| {
+            let unqualified_name = db
+                .symbol_unqualified_name(def_id)
+                .expect("Associated item should have an unqualified name: {def_id:?}");
+            let cpp_name = unqualified_name.cpp_name.to_string();
+            let was_inserted = member_function_names.insert(cpp_name.clone());
+            assert!(
+                was_inserted, // Bindings for Rust/user-named items are given priority.
+                "Unexpected (user-named 'members' are handled first) naming conflict: {cpp_name}",
+            );
+            Ok(binding)
+        }),
         ty::AssocKind::Const { .. } => {
             if tcx.trait_impl_of_assoc(def_id).is_some() {
                 // Associated constants are not yet supported on traits
@@ -597,8 +600,6 @@ pub fn generate_adt<'tcx>(
     let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
 
     let mut member_function_names = HashSet::<String>::new();
-    let adt_based_ctors = generate_adt_based_ctors(db, core.clone(), &mut member_function_names);
-
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
         .iter()
@@ -608,6 +609,7 @@ pub fn generate_adt<'tcx>(
         .flat_map(|assoc_item| generate_associated_item(db, assoc_item, &mut member_function_names))
         .collect();
 
+    let adt_based_ctors = generate_adt_based_ctors(db, core.clone(), &mut member_function_names);
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
 
     let ApiSnippets {
@@ -1008,13 +1010,13 @@ fn generate_variant_ctor<'tcx>(
     let mut prereqs = main_api_prereqs.clone();
     prereqs.move_defs_to_fwd_decls();
 
+    let Some(ctor_def_id) = variant.ctor_def_id() else {
+        bail!("Constructing non-tuple, struct-like enum variants is not supported: b/487357254");
+    };
+
     let adt_cc_name = &core.cc_short_name;
     match adt_def.adt_kind() {
         ty::AdtKind::Struct => {
-            if variant.ctor_def_id().is_none() {
-                // If this is not a struct with a constructor, don't generate a C++ constructor.
-                bail!("Internal error that should be suppressed in `generate_adt_based_ctors`");
-            };
             let explicit = (main_api_params.len() == 1).then_some(quote! { explicit });
             let initializer_list = (0..main_api_params.len()).map(|i| {
                 let cc_name = anonymous_field_ident(i);
@@ -1035,10 +1037,21 @@ fn generate_variant_ctor<'tcx>(
             })
         }
         ty::AdtKind::Enum => {
-            ensure!(
-                main_api_params.is_empty(),
-                "Constructing enum variants with payload is unsupported: b/487356976, b/487357254",
-            );
+            let method_name = format_variant_ctor_cc_name(variant.name.as_str());
+            if member_function_names.contains(&method_name) {
+                bail!("Conflicting member function name: {method_name}");
+            }
+            let mut mark_method_name_as_used = || {
+                let was_inserted = member_function_names.insert(method_name.clone());
+                assert!(was_inserted, "Conflicting names rejected earlier (above)");
+            };
+            if !main_api_params.is_empty() {
+                let result = db.generate_function(ctor_def_id);
+                if result.is_ok() {
+                    mark_method_name_as_used();
+                }
+                return result;
+            }
             let discr = core
                 .self_ty
                 .discriminant_for_variant(tcx, variant_index)
@@ -1094,10 +1107,9 @@ fn generate_variant_ctor<'tcx>(
             } else {
                 quote! { constexpr }
             };
-            let method_name = format_cc_ident(db, &format!("Make{}", variant.name.as_str()))?;
-            let was_inserted = member_function_names.insert(method_name.to_string());
-            assert!(was_inserted, "No conflicts expected for 'constructor' names: {method_name}");
             let doc_comment = generate_doc_comment(db, variant.def_id);
+            let method_name = format_cc_ident(db, &method_name)?;
+            mark_method_name_as_used();
             Ok(ApiSnippets {
                 main_api: CcSnippet {
                     prereqs,

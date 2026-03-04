@@ -54,11 +54,13 @@ C++ bindings for Rust `enum`s provide a `static` `Make<variant name>` method for
 each of `enum` variants. These methods can be used to construct an `enum` value
 with the corresponding variant.
 
-<!-- TODO(b/487356976): When implemented add an example based on the
-tuple-constructor (it seems better than NoPayload examples). -->
+### Example
 
-> NOTE: The following bugs track future work in this area:
->
-> *   b/487356976: Constructing variants with a tuple payload
-> *   b/487357254: Constructing variants with a struct payload
-> *   b/489085607: Bindings for constructing enums should be `constexpr`
+TODO(b/489757240): Add an example.
+
+## Known issues
+
+The following bugs track future work in this area:
+
+*   b/487357254: Constructing variants with a struct payload
+*   b/489085607: Bindings for constructing enums should be `constexpr`

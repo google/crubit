@@ -112,20 +112,38 @@ pub mod repr_c_clone_active_variant {
 }
 
 pub mod repr_rust {
-    /// Doc comment of RustReprEnumWithNoPayload.
-    pub enum RustReprEnumWithNoPayload {
+    /// Doc comment of RustReprEnum.
+    pub enum RustReprEnum {
         /// Doc comment of Variant1.
         Variant1,
         Variant2,
         Variant3,
+        TuplePayloadVariant(i32, i32),
+        StructPayloadVariant {
+            x: i32,
+            y: i32,
+        },
     }
 
-    impl RustReprEnumWithNoPayload {
+    impl RustReprEnum {
         pub fn get_variant_number(&self) -> i32 {
             match self {
                 Self::Variant1 => 1,
                 Self::Variant2 => 2,
                 Self::Variant3 => 3,
+                Self::TuplePayloadVariant(_, _) => 4,
+                Self::StructPayloadVariant { .. } => 5,
+            }
+        }
+
+        pub fn is_tuple_payload_variant(&self) -> bool {
+            matches!(self, Self::TuplePayloadVariant(_, _))
+        }
+
+        pub fn get_first_item_from_tuple_payload(&self) -> i32 {
+            match self {
+                Self::TuplePayloadVariant(i, _) => *i,
+                _ => panic!("Not a tuple payload"),
             }
         }
     }
@@ -136,6 +154,28 @@ pub mod repr_rust {
 
     pub enum RustReprWithSingleTuplePayloadVariant {
         SingleVariant(i32),
+    }
+
+    pub enum RustReprWithNamingConflictBetweenCtorsAndMethods {
+        NoPayloadVariant,
+        TuplePayloadVariant(i32),
+        StructPayloadVariant { x: i32 },
+    }
+
+    #[allow(non_snake_case)] // Need to replicate C++ names of variant constructors.
+    impl RustReprWithNamingConflictBetweenCtorsAndMethods {
+        /// Presence of this function tests the scenario where `MakeNoPayloadVariant` is a name of:
+        /// 1. A static method (here/below).
+        /// 2. An auto-generated factory/constructor static method
+        pub fn MakeNoPayloadVariant() -> Self {
+            Self::NoPayloadVariant
+        }
+        pub fn MakeTuplePayloadVariant(i: i32) -> Self {
+            Self::TuplePayloadVariant(i)
+        }
+        pub fn MakeStructPayloadVariant(x: i32) -> Self {
+            Self::StructPayloadVariant { x }
+        }
     }
 }
 

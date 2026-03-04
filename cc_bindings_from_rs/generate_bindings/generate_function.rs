@@ -35,26 +35,39 @@ use rustc_span::symbol::Symbol;
 use std::collections::BTreeSet;
 
 #[derive(Debug, Eq, PartialEq)]
-enum FunctionKind {
+enum FunctionKind<'tcx> {
     /// Free function (i.e. not a method).
     Free,
 
     /// Non-method associated function (i.e. the first parameter is not named `self`).
-    AssociatedFn,
+    AssociatedFn { self_ty: Ty<'tcx> },
 
     /// Instance method taking `self` by value (i.e. `self: Self`).
-    MethodTakingSelfByValue,
+    MethodTakingSelfByValue { self_ty: Ty<'tcx> },
 
     /// Instance method taking `self` by reference (i.e. `&self` or `&mut
     /// self`).
-    MethodTakingSelfByRef,
+    MethodTakingSelfByRef { self_ty: Ty<'tcx> },
 }
 
-impl FunctionKind {
+impl<'tcx> FunctionKind<'tcx> {
+    /// Whether the function takes `self` as a parameter.
+    /// Note that this is distinct from whether `self_ty` is present.
     fn has_self_param(&self) -> bool {
+        use FunctionKind::*;
         match self {
-            FunctionKind::MethodTakingSelfByValue | FunctionKind::MethodTakingSelfByRef => true,
-            FunctionKind::Free | FunctionKind::AssociatedFn => false,
+            MethodTakingSelfByValue { .. } | MethodTakingSelfByRef { .. } => true,
+            Free | AssociatedFn { .. } => false,
+        }
+    }
+
+    /// `Self` type (present both for static and instance methods).
+    fn self_ty(&self) -> Option<Ty<'tcx>> {
+        match self {
+            FunctionKind::AssociatedFn { self_ty }
+            | FunctionKind::MethodTakingSelfByValue { self_ty }
+            | FunctionKind::MethodTakingSelfByRef { self_ty } => Some(*self_ty),
+            FunctionKind::Free => None,
         }
     }
 }
@@ -378,36 +391,39 @@ fn cc_return_value_from_c_abi<'tcx>(
 fn function_kind<'tcx>(
     tcx: TyCtxt<'tcx>,
     def_id: DefId,
-    self_ty: Option<Ty<'tcx>>,
-    param_types: &[Ty<'tcx>],
-) -> Result<FunctionKind> {
+    sig: &ty::FnSig<'tcx>,
+) -> Result<FunctionKind<'tcx>> {
     match tcx.def_kind(def_id) {
-        DefKind::Fn => return Ok(FunctionKind::Free),
-        DefKind::AssocFn => {}
-        other => panic!("Unexpected HIR node kind: {other:?}"),
-    }
-    if !tcx.associated_item(def_id).is_method() {
-        return Ok(FunctionKind::AssociatedFn);
-    }
-    let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
-    if param_types[0] == self_ty {
-        return Ok(FunctionKind::MethodTakingSelfByValue);
-    }
-    match param_types[0].kind() {
-        ty::TyKind::Ref(_, referent_ty, _) if *referent_ty == self_ty => {
-            Ok(FunctionKind::MethodTakingSelfByRef)
+        DefKind::Fn => Ok(FunctionKind::Free),
+        DefKind::AssocFn => {
+            let self_ty = self_ty_of_method(tcx, def_id);
+            if !tcx.associated_item(def_id).is_method() {
+                return Ok(FunctionKind::AssociatedFn { self_ty });
+            }
+            let param_types = sig.inputs();
+            if param_types[0] == self_ty {
+                return Ok(FunctionKind::MethodTakingSelfByValue { self_ty });
+            }
+            match param_types[0].kind() {
+                ty::TyKind::Ref(_, referent_ty, _) if *referent_ty == self_ty => {
+                    return Ok(FunctionKind::MethodTakingSelfByRef { self_ty })
+                }
+                _ => bail!("Unsupported `self` type `{}`", param_types[0]),
+            }
         }
-        _ => bail!("Unsupported `self` type `{}`", param_types[0]),
+        DefKind::Ctor { .. } => Ok(FunctionKind::AssociatedFn { self_ty: sig.output() }),
+        other => panic!("Unexpected HIR node kind: {other:?}"),
     }
 }
 
-fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<Ty<'tcx>> {
+fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
     #[rustversion::before(2025-07-29)]
-    let impl_id = tcx.impl_of_method(def_id)?;
+    let impl_id = tcx.impl_of_method(def_id);
     #[rustversion::since(2025-07-29)]
-    let impl_id = tcx.impl_of_assoc(def_id)?;
+    let impl_id = tcx.impl_of_assoc(def_id);
 
-    Some(tcx.type_of(impl_id).instantiate_identity())
+    let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
+    tcx.type_of(impl_id).instantiate_identity()
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
@@ -656,6 +672,31 @@ pub(crate) fn generate_thunk_call<'tcx>(
     Ok(CcSnippet { prereqs, tokens })
 }
 
+pub(crate) fn fn_arg_idents(tcx: TyCtxt, def_id: DefId) -> Vec<Option<rustc_span::Ident>> {
+    match tcx.def_kind(def_id) {
+        DefKind::Ctor { .. } => {
+            vec![None; get_fn_sig(tcx, def_id).inputs().len()]
+        }
+        _ => tcx.fn_arg_idents(def_id).iter().cloned().collect_vec(),
+    }
+}
+
+pub(crate) fn format_variant_ctor_cc_name(variant_name: &str) -> String {
+    format!("Make{variant_name}")
+}
+
+fn get_function_cc_name(db: &BindingsGenerator, def_id: DefId) -> Result<Ident> {
+    let unqualified_fn_name = db
+        .symbol_unqualified_name(def_id)
+        .unwrap_or_else(|| panic!("`generate_function` called on unnamed function {def_id:?}"));
+    let cc_name = unqualified_fn_name.cpp_name.as_str();
+    match db.tcx().def_kind(def_id) {
+        DefKind::Ctor { .. } => format_cc_ident(db, &format_variant_ctor_cc_name(cc_name)),
+        _ => format_cc_ident(db, cc_name),
+    }
+    .context("Error formatting function name")
+}
+
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -674,8 +715,8 @@ pub fn generate_function<'tcx>(
         .impl_of_assoc(def_id)
         .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
         .map(|trait_ref| trait_ref.instantiate_identity());
-    let self_ty = self_ty_of_method(tcx, def_id);
-    let function_kind = function_kind(tcx, def_id, self_ty, sig_mid.inputs())?;
+    let function_kind = function_kind(tcx, def_id, &sig_mid)?;
+    let self_ty = function_kind.self_ty();
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
     let (export_name, has_no_mangle) = export_name_and_no_mangle_attrs_of(tcx, def_id);
     let has_export_name = export_name.is_some();
@@ -687,8 +728,7 @@ pub fn generate_function<'tcx>(
         .symbol_unqualified_name(def_id)
         .unwrap_or_else(|| panic!("`generate_function` called on unnamed function {def_id:?}"));
     let unqualified_rust_fn_name = unqualified_fn_name.rs_name;
-    let main_api_fn_name = format_cc_ident(db, unqualified_fn_name.cpp_name.as_str())
-        .context("Error formatting function name")?;
+    let main_api_fn_name = get_function_cc_name(db, def_id)?;
     let bracketed_decl_name = if db.kythe_annotations() {
         quote! { __CAPTURE_BEGIN__ #main_api_fn_name __CAPTURE_END__ }
     } else {
@@ -699,16 +739,17 @@ pub fn generate_function<'tcx>(
     let main_api_ret_type = format_ret_ty_for_cc(db, &sig_mid)?.into_tokens(&mut main_api_prereqs);
 
     let params = {
-        let names = tcx.fn_arg_idents(def_id).iter();
+        let names = fn_arg_idents(tcx, def_id);
         let cpp_types = format_param_types_for_cc(db, &sig_mid, function_kind.has_self_param())?;
         names
+            .into_iter()
             .enumerate()
             .zip(sig_mid.inputs())
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
                 // TODO(jeanpierreda): deduplicate this with thunk_param_names.
                 let mut cc_name = None;
-                if let Some(ident) = ident_or_opt_ident(name) {
+                if let Some(ident) = ident_or_opt_ident(&name) {
                     if ident.name.as_str() != "_" {
                         if let Ok(name) = format_cc_ident(db, ident.name.as_str()) {
                             cc_name = Some(name);
@@ -725,20 +766,20 @@ pub fn generate_function<'tcx>(
             .collect_vec()
     };
 
-    let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue if is_copy(tcx, def_id, params[0].ty));
+    let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue { .. } if is_copy(tcx, def_id, params[0].ty));
     let mut method_qualifiers = quote! {};
     if trait_ref.is_none() {
         match function_kind {
-            FunctionKind::Free | FunctionKind::AssociatedFn => {}
-            FunctionKind::MethodTakingSelfByValue => {
-                let self_ty = params[0].ty;
+            FunctionKind::Free | FunctionKind::AssociatedFn { .. } => {}
+            FunctionKind::MethodTakingSelfByValue { self_ty } => {
+                assert_eq!(self_ty, params[0].ty);
                 method_qualifiers = if is_copy(tcx, def_id, self_ty) {
                     quote! { const }
                 } else {
                     quote! { && }
                 };
             }
-            FunctionKind::MethodTakingSelfByRef => {
+            FunctionKind::MethodTakingSelfByRef { .. } => {
                 let ty::TyKind::Ref(region, _, mutability) = *params[0].ty.kind() else {
                     panic!("Expecting TyKind::Ref for MethodKind...Self...Ref")
                 };
@@ -824,7 +865,9 @@ pub fn generate_function<'tcx>(
         let mut prereqs = main_api_prereqs.clone();
         prereqs.move_defs_to_fwd_decls();
 
-        let static_ = if function_kind == FunctionKind::AssociatedFn || thunk_self.is_trait_method {
+        let static_ = if matches!(function_kind, FunctionKind::AssociatedFn { .. })
+            || thunk_self.is_trait_method
+        {
             quote! { static }
         } else {
             quote! {}
