@@ -1,0 +1,4 @@
+[submodule "crubit"]
+	path = crubit
+	url = https://github.com/google/crubit/
+	branch = main

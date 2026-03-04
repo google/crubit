@@ -1,0 +1,154 @@
+name: Crubit Nightly Test Matrix
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  update-and-generate:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+          ref: test-matrix
+
+      - name: Update Crubit Submodule
+        run: |
+          git submodule update --init --remote crubit
+
+      - name: Fetch Versions and Generate Matrix
+        id: set-matrix
+        run: |
+          # Fetch and format the versions into a JSON object
+          VERSIONS=$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/rustc-dev.json | \
+            jq -c 'del(.last_available) | keys | sort | reverse | to_entries | {include: [.[] | {version: ("nightly-" + .value), id: .key}]}')
+          
+          # Write to file for repo persistence
+          echo "$VERSIONS" > matrix.json
+          
+          # Set output for the next job
+          echo "matrix=$VERSIONS" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Updates
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add crubit matrix.json
+          if git diff --staged --quiet; then
+            echo "No changes detected."
+          else
+            git commit -m "chore: update crubit and matrix.json"
+            git push origin test-matrix
+          fi
+
+  build:
+    needs: update-and-generate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.update-and-generate.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+          ref: test-matrix
+
+      - name: Install Rust Toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.version }}
+          components: "rust-src, rustc-dev, llvm-tools-preview"
+
+      - name: Build Binary
+        env:
+          RUSTUP_TOOLCHAIN: ${{ matrix.version }}
+          RUSTFLAGS: -Awarnings
+        run: |
+          cd crubit
+          cargo check --bin cc_bindings_from_rs
+
+      - name: Create Badge JSON
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          COLOR="brightgreen"
+          MESSAGE="passing"
+          if [ "$STATUS" != "success" ]; then
+            COLOR="red"
+            MESSAGE="failing"
+          fi
+          echo "{\"schemaVersion\": 1, \"label\": \"${{ matrix.version }}\", \"message\": \"$MESSAGE\", \"color\": \"$COLOR\"}" > nightly-${{ matrix.id }}.json
+
+      - name: Upload JSON Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: badge-${{ matrix.id }}
+          path: nightly-${{ matrix.id }}.json
+
+  upload-badges:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: test-matrix
+
+      - name: Download all JSON artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: badges_temp
+          pattern: badge-*
+          merge-multiple: true
+
+      - name: Push JSONs to target branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          mv badges_temp/*.json .
+          git add *.json
+          
+          if git diff --staged --quiet; then
+            echo "No changes in badges."
+          else
+            git commit -m "chore: update status badges"
+            git push origin test-matrix
+          fi
+
+  notify-failures:
+    needs: build
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: test-matrix
+      - name: Report failure in issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEAM_HANDLE: "@google/crubit-readers"
+        run: |
+          TITLE="🚨 Nightly Test Matrix Failure: $(date +'%Y-%m-%d')"
+          
+          BODY="Attention $TEAM_HANDLE: The nightly test matrix has failed.
+
+          **Run Details:** [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+          gh issue create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --label "bug,automated-report"
