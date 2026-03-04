@@ -80,5 +80,36 @@ TEST(PointerNullabilityTest, OnePointerGuaranteedNonnull) {
   )cc"));
 }
 
+// The check cannot reason about integer inequalities, so does not know that the
+// loop has at least one iteration.
+TEST(PointerNullabilityTest, DereferencePointerSetInLoop) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target() {
+      int* _Nullable p = nullptr;
+      int x = 0;
+      for (int i = 0; i < 10; ++i) {
+        p = &x;
+      }
+      *p = 1;  // [[unsafe]]
+    }
+  )cc"));
+}
+
+// A do-while loop makes it clear there's at least one iteration.
+TEST(PointerNullabilityTest, DereferencePointerSetInDoWhileLoop) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target() {
+      int* _Nullable p = nullptr;
+      int x = 0;
+      int i = 0;
+      do {
+        p = &x;
+        ++i;
+      } while (i < 10);
+      *p = 1;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
