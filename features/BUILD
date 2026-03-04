@@ -102,6 +102,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set where  C++ default constructors are checked to fully initialize all public fields.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "check_default_initialized",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["check_default_initialized"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

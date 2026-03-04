@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // tuples_golden
-// Features: assume_lifetimes, callables, experimental, fmt, supported, unsafe_view, wrapper
+// Features: assume_lifetimes, callables, check_default_initialized, experimental, fmt, supported, unsafe_view, wrapper
 
 #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]

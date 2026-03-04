@@ -36,6 +36,9 @@ flagset::flags! {
 
         /// Mark C++ types with `[[gsl::Pointer]]` as unsafe.
         UnsafeView,
+
+        /// C++ default constructors are checked to fully initialize all public fields.
+        CheckDefaultInitialized,
     }
 }
 
@@ -55,6 +58,7 @@ impl CrubitFeature {
             Self::Fmt => "fmt",
             Self::Callables => "callables",
             Self::UnsafeView => "unsafe_view",
+            Self::CheckDefaultInitialized => "check_default_initialized",
         }
     }
 
@@ -71,6 +75,9 @@ impl CrubitFeature {
             Self::Fmt => "//features:fmt",
             Self::Callables => "//features:callables",
             Self::UnsafeView => "//features:unsafe_view",
+            Self::CheckDefaultInitialized => {
+                "//features:check_default_initialized"
+            }
         }
     }
 }
@@ -88,6 +95,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"fmt" => CrubitFeature::Fmt.into(),
         b"callables" => CrubitFeature::Callables.into(),
         b"unsafe_view" => CrubitFeature::UnsafeView.into(),
+        b"check_default_initialized" => CrubitFeature::CheckDefaultInitialized.into(),
         _ => return None,
     };
     Some(features)
@@ -201,6 +209,7 @@ mod tests {
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::CheckDefaultInitialized
         );
     }
 
@@ -229,6 +238,7 @@ mod tests {
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::CheckDefaultInitialized
         );
     }
 
@@ -245,6 +255,7 @@ mod tests {
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::CheckDefaultInitialized
         );
     }
 
@@ -262,6 +273,7 @@ mod tests {
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::CheckDefaultInitialized
         );
     }
 }

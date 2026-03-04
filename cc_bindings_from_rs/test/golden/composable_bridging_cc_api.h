@@ -4,8 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // composable_bridging_rust_golden
-// Features: assume_lifetimes, callables, experimental, fmt, supported,
-// unsafe_view, wrapper
+// Features: assume_lifetimes, callables, check_default_initialized,
+// experimental, fmt, supported, unsafe_view, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_COMPOSABLE_BRIDGING_RUST_GOLDEN
