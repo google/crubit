@@ -12,6 +12,12 @@ fn test_return_value() {
     assert_eq!(return_underlying(i), 42);
 }
 
+#[gtest]
+fn test_return_alias() {
+    use type_alias::return_alias;
+    assert_eq!(return_alias(42), 42);
+}
+
 /// Vector aliases are not supported (yet???).
 #[gtest]
 fn test_vector_alias() {
