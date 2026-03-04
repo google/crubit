@@ -124,7 +124,8 @@ fn test_unique_ptr_with_virtual_destructor() {
     let mut p = test_helpers::unique_ptr_test::create_virtual_base();
     assert_eq!(
         std::any::Any::type_id(&p),
-        std::any::TypeId::of::<cc_std::std::unique_ptr_dyn<test_helpers::unique_ptr_test::Base>>()
+        std::any::TypeId::of::<cc_std::std::virtual_unique_ptr<test_helpers::unique_ptr_test::Base>>(
+        )
     );
     unsafe {
         assert!(test_helpers::unique_ptr_test::Base::is_derived(
@@ -141,7 +142,7 @@ fn test_unique_ptr_with_custom_delete() {
     assert_eq!(
         std::any::Any::type_id(&p),
         std::any::TypeId::of::<
-            cc_std::std::unique_ptr_dyn<test_helpers::unique_ptr_test::CustomDelete>,
+            cc_std::std::virtual_unique_ptr<test_helpers::unique_ptr_test::CustomDelete>,
         >()
     );
     drop(p);

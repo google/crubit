@@ -393,7 +393,7 @@ impl UniformReprTemplateType {
             Self::StdUniquePtr { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 if element_type.overloads_operator_delete() {
-                    quote! { ::cc_std::std::unique_ptr_dyn::<#element_type_tokens> }
+                    quote! { ::cc_std::std::virtual_unique_ptr::<#element_type_tokens> }
                 } else {
                     quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
                 }

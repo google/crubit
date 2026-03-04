@@ -135,7 +135,7 @@ fn test_composable_bridge_with_enum_inside() {
 }
 
 #[gtest]
-fn test_composable_bridge_with_unique_ptr_dyn() {
+fn test_composable_bridge_with_virtual_destructor() {
     let statusor = composable_bridging_lib::MakeStatusOrWithVirtualDestructor();
     assert!(statusor.is_ok());
 

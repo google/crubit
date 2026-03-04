@@ -13,7 +13,7 @@ pub use operator::Delete;
 /// C++. This is analogous to `Pin<Box<T>>`.
 ///
 /// If the class has a virtual destructor and is not the most-derived class, or if it overloads
-/// `operator delete`, it is UB to use `unique_ptr`. Instead, use [`unique_ptr_dyn`].
+/// `operator delete`, it is UB to use `unique_ptr`. Instead, use [`virtual_unique_ptr`].
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct unique_ptr<T: Sized> {
@@ -106,26 +106,30 @@ impl<T> Drop for unique_ptr<T> {
     }
 }
 
-/// A smart pointer that owns and manages another object of type `T` via a
-/// pointer, ABI-compatible with `std::unique_ptr` using default deleter from
-/// C++. This is analogous to `Pin<Box<T>>`.
+/// Legacy alias for [`virtual_unique_ptr`].
+pub type unique_ptr_dyn<T> = virtual_unique_ptr<T>;
+
+/// A smart pointer that owns and manages a polymorphic object with base class `T`.
+///
+/// This type is ABI-compatible with C++'s `std::unique_ptr<T>`, where `T` is a base class with a
+/// virtual destructor.
 #[allow(non_snake_case)]
 #[repr(C)]
-pub struct unique_ptr_dyn<T: Sized + Delete> {
+pub struct virtual_unique_ptr<T: Sized + Delete> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
-    // 2. If `ptr` is not null, it is exclusively owned by this `unique_ptr_dyn`.
+    // 2. If `ptr` is not null, it is exclusively owned by this `virtual_unique_ptr`.
     // 3. the pointee is pinned.
     ptr: *mut T,
 }
 
-// SAFETY: unique_ptr_dyn exclusively owns `T` and adds no additional constraints on sending the
+// SAFETY: virtual_unique_ptr exclusively owns `T` and adds no additional constraints on sending the
 // pointer.
-unsafe impl<T: Sized + Delete + Send> Send for unique_ptr_dyn<T> {}
+unsafe impl<T: Sized + Delete + Send> Send for virtual_unique_ptr<T> {}
 
 // This is _not_ Sync for the same reason as unique_ptr.
 
-impl<T: Sized + Delete> unique_ptr_dyn<T> {
+impl<T: Sized + Delete> virtual_unique_ptr<T> {
     /// Takes ownership of the provided raw pointer to a polymorphic type.
     ///
     /// If `T` doesn't implement `Delete`, use [`unique_ptr`] instead.
@@ -164,7 +168,7 @@ impl<T: Sized + Delete> unique_ptr_dyn<T> {
     }
 }
 
-impl<T: Delete> Drop for unique_ptr_dyn<T> {
+impl<T: Delete> Drop for virtual_unique_ptr<T> {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
             unsafe {

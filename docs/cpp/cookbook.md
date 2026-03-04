@@ -415,7 +415,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI CompatibleAfter {
 
 If a type's destructor is made virtual, or was previously virtual and now
 becomes nonvirtual, this changes how Rust callers invoke destruction. For
-example, `unique_ptr<T>` becomes `unique_ptr_dyn<T>` if `T` has a virtual
+example, `unique_ptr<T>` becomes `virtual_unique_ptr<T>` if `T` has a virtual
 destructor.
 
 ```c++ {.no-copy}
@@ -428,7 +428,7 @@ std::unique_ptr<After> ReturnAfter();
 
 ```rust {.no-copy}
 pub fn ReturnBefore() -> cc_std::std::unique_ptr<Before> {...}
-pub fn ReturnAfter() -> cc_std::std::unique_ptr_dyn<After> {...}
+pub fn ReturnAfter() -> cc_std::std::virtual_unique_ptr<After> {...}
 
 let _: cc_std::std::unique_ptr<_> = ReturnAfter();  // error[E0308]: mismatched types
 ```
@@ -436,7 +436,7 @@ let _: cc_std::std::unique_ptr<_> = ReturnAfter();  // error[E0308]: mismatched 
 **Fix:** Migrate callers that use heap allocated types such as `unique_ptr`.
 
 ```rust {.good .no-copy}
-let _: cc_std::std::unique_ptr_dyn<_> = ReturnAfter();
+let _: cc_std::std::virtual_unique_ptr<_> = ReturnAfter();
 ```
 
 ### Adding an overload {#compatibility-overload}

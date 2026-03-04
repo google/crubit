@@ -7,7 +7,7 @@
 /// In particular, this is used for types with virtual destructors or overloaded
 /// `operator delete`.
 ///
-/// To safely use this trait, use `cc_std::std::unique_ptr_dyn`, which represents a
+/// To safely use this trait, use `cc_std::std::virtual_unique_ptr`, which represents a
 /// C++ unique_ptr for a `T` that requires `delete`.
 ///
 /// # Safety
@@ -16,6 +16,10 @@
 ///
 /// (Generally speaking, this trait should only be implemented by automatically generated
 /// FFI code generation.)
+#[diagnostic::on_unimplemented(
+    note = "`Delete` is only implemented by C++ base classes with virtual destructors",
+    note = "See https://crubit.rs/errors/delete for more information"
+)]
 pub unsafe trait Delete {
     /// Deletes the object pointed to by `p`, as if by C++ `delete p`.
     ///
