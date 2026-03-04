@@ -130,7 +130,7 @@ jobs:
 
   notify-failures:
     needs: build
-    if: failure()
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch
