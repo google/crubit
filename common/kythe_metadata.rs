@@ -49,7 +49,7 @@ pub fn rs_embed_provenance_map(
 pub fn cc_embed_provenance_map(
     provenance_map: &SubstringProvenanceMap,
     default_corpus: &str,
-    mut header: String,
+    header: String,
 ) -> String {
     embed_provenance_map(provenance_map, default_corpus, "// Generated from:", "rust", header)
 }

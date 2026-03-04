@@ -15,7 +15,6 @@ use query_compiler::{get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
 use rustc_abi::VariantIdx;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt};
-use std::collections::HashSet;
 use std::rc::Rc;
 
 struct OptionApi<'a, 'tcx> {

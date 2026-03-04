@@ -1166,7 +1166,6 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
         db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
-        let tcx = db.tcx();
         let adt_cc_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
         match db.has_move_ctor_and_assignment_operator(core.def_id, core.self_ty) {
