@@ -386,13 +386,11 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         name: rustc_span::FileName::Custom("lib.rs".into()),
         // This tells rustc to load our crate from it's rmeta.
         input: if crate_name == "std" {
-            "fn main() {}".to_string()
+            "".to_string()
         } else {
             format!(
                 r#"
 extern crate r#{};
-
-fn main() {{}}
 "#,
                 crate_name
             )
@@ -401,6 +399,10 @@ fn main() {{}}
     let config = construct_config(
         input,
         config::Options {
+            // Specifying we only want `.rlib` removes some compatibility checks for metadata
+            // related to codegen that we don't want to invoke during binding generation
+            // (i.e. panicking etc)
+            crate_types: vec![config::CrateType::Rlib],
             externs,
             sysroot,
             target_triple,
