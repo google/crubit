@@ -993,10 +993,6 @@ bool Importer::AreAssumedLifetimesEnabledForTarget(
   return IsFeatureEnabledForTarget(label, "assume_lifetimes");
 }
 
-bool Importer::IsFmtEnabledForTarget(const BazelLabel& label) const {
-  return IsFeatureEnabledForTarget(label, "fmt");
-}
-
 bool Importer::IsUnsafeViewEnabledForTarget(const BazelLabel& label) const {
   return IsFeatureEnabledForTarget(label, "unsafe_view");
 }

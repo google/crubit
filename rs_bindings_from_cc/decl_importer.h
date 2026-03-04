@@ -182,9 +182,6 @@ class ImportContext {
   virtual bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const = 0;
 
-  // Returns true iff `label` has opted in to formatter detection.
-  virtual bool IsFmtEnabledForTarget(const BazelLabel& label) const = 0;
-
   // Returns true iff `label` has opted in to marking classes with
   // `[[gsl::Pointer]]` as unsafe.
   virtual bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const = 0;

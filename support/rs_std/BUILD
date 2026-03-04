@@ -236,7 +236,6 @@ crubit_rust_test(
 
 cc_bindings_from_rust(
     name = "lossy_formatter_cc",
-    aspect_hints = ["//features:fmt"],
     compatible_with = ["//buildenv/target:non_prod"],
     crate = ":lossy_formatter",
 )
@@ -244,7 +243,6 @@ cc_bindings_from_rust(
 cc_library(
     name = "lossy_formatter_for_bindings",
     hdrs = ["lossy_formatter_for_bindings.h"],
-    aspect_hints = ["//features:fmt"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//:__subpackages__"],
     deps = [":lossy_formatter_cc"],
