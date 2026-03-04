@@ -10,7 +10,11 @@
 namespace clang::tidy::nullability {
 namespace {
 
-// TODO(b/233582219): Implement diagnosis of unreachable program points
+// The following examples involve unreachable code, in the eye of the analyzer,
+// since `x` is `_Nonnull` (assumes no contract violations at runtime).
+// NOTE: We don't emit diagnostics in unreachable code. The analyzer's
+// environment will have unsatisfiable flow conditions, which allow the analyzer
+// to prove anything, and is less reliable.
 TEST(PointerNullabilityTest, NonNullPtrImplicitCastToBool) {
   // x
   EXPECT_TRUE(checkDiagnostics(R"cc(
@@ -67,34 +71,34 @@ TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
   )cc"));
 }
 
-// TODO(b/233582219): Fix false negatives. Casting the pointer to boolean is
-// evidence of the author considering null a possibility, hence the unnannotated
-// pointer should be considered nullable and emit warnings where it fails or is
-// not null checked.
+// We don't promote an unknown pointer to nullable based on a null check. The
+// pointer could still be non-null, but with a defensive/redundant check. Thus,
+// we don't warn before the null check, or after the join point, in the
+// following examples.
 TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
   // x
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* x) {
-      *x;  // false-negative
+      *x;
       if (x) {
         *x;
       } else {
         *x;  // [[unsafe]]
       }
-      *x;  // false-negative
+      *x;
     }
   )cc"));
 
   // !x
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* x) {
-      *x;  // false-negative
+      *x;
       if (!x) {
         *x;  // [[unsafe]]
       } else {
         *x;
       }
-      *x;  // false-negative
+      *x;
     }
   )cc"));
 }

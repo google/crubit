@@ -784,9 +784,6 @@ static BoolValue* absl_nullable processPointerComparison(
   return nullptr;
 }
 
-// TODO(b/233582219): Implement promotion of nullability for initially
-// unknown pointers when there is evidence that it is nullable, for example
-// when the pointer is compared to nullptr, or cast to boolean.
 static void transferNullCheckComparison(
     const BinaryOperator* absl_nonnull BinaryOp,
     const MatchFinder::MatchResult& Result,

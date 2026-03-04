@@ -91,8 +91,12 @@ TEST void unknownNotEqualsUnknown(int *X, int *Y) {
 }
 
 // nonnull vs nullptr
-// TODO(b/233582219): Implement diagnosis of unreachable program points
-TEST void nonnullEqualsNullptr(int *_Nonnull X) {
+// NOTE: The following examples involve unreachable code, in the eye of the
+// analyzer, since `X` is `_Nonnull` (assumes no contract violations at
+// runtime). For unreachable code, the analyzer's environment will have
+// unsatisfiable flow conditions, which allow the analyzer to prove anything,
+// including that the value nullability is nonnull.
+TEST void nonnullEqualsNullptr(int* _Nonnull X) {
   nonnull(X);
   if (X == nullptr) {
     nonnull(X);  // unreachable
@@ -276,43 +280,45 @@ TEST void unknownNotEqualsNullable(int *_Nullable X, int *Y) {
 }
 
 // unknown vs nullptr
-// TODO(b/233582219): The pointer is compared to nullptr,
-// hence the unannotated pointer should be considered nullable.
-TEST void unknownEqualsNullptr(int *X) {
-  unknown(X);  // TODO: nullable
+// NOTE: We don't promote an unknown pointer to nullable based on a null check.
+// The pointer could still be non-null, but with a defensive/redundant check.
+// Thus, the pointer is still unknown before the null check, or after the join
+// point, in the following examples.
+TEST void unknownEqualsNullptr(int* X) {
+  unknown(X);
   if (X == nullptr) {
     nullable(X);
   } else {
     nonnull(X);
   }
-  unknown(X);  // TODO: nullable
+  unknown(X);
 }
 TEST void nullptrEqualsUnknown(int *X) {
-  unknown(X);  // TODO: nullable
+  unknown(X);
   if (nullptr == X) {
     nullable(X);
   } else {
     nonnull(X);
   }
-  unknown(X);  // TODO: nullable
+  unknown(X);
 }
 TEST void unknownNotEqualsNullptr(int *X) {
-  unknown(X);  // TODO: nullable
+  unknown(X);
   if (X != nullptr) {
     nonnull(X);
   } else {
     nullable(X);
   }
-  unknown(X);  // TODO: nullable
+  unknown(X);
 }
 TEST void nullptrNotEqualsUnknown(int *X) {
-  unknown(X);  // TODO: nullable
+  unknown(X);
   if (nullptr != X) {
     nonnull(X);
   } else {
     nullable(X);
   }
-  unknown(X);  // TODO: nullable
+  unknown(X);
 }
 
 // unknown vs nonnull
