@@ -43,6 +43,16 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
+# Explicitly disables assume_lifetimes for a target.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "no_assume_lifetimes",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["no_assume_lifetimes"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set enabling ergonomic lifetime defaults when interpreting lifetime annotations.
 #
 # See crubit.rs-features#other

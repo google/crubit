@@ -224,6 +224,7 @@ impl raw_string_view {
     /// # Safety
     ///
     /// Behavior is undefined if the `raw_string_view` has an invalid pointer.
+    #[allow(unused_unsafe)] // raw_string_view::{begin, end}
     pub unsafe fn len(&self) -> usize {
         // TODO(b/249376862): use size(), which does not have the soundness issue below.
         // let size = unsafe {raw_string_view::size(&sv)};
@@ -261,6 +262,7 @@ impl raw_string_view {
 }
 
 /// Equivalent to `as_raw_bytes()`.
+#[allow(unused_unsafe)] // raw_string_view::data(&sv)
 impl From<raw_string_view> for *const [u8] {
     fn from(sv: raw_string_view) -> Self {
         // SAFETY: `&sv` is a valid pointer. `data()` does not dereference the

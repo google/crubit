@@ -11,7 +11,10 @@ cc_library(
     name = "methods_qualifiers",
     srcs = ["methods_qualifiers.cc"],
     hdrs = ["methods_qualifiers.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = [
+        "//features:experimental",
+        "//features:no_assume_lifetimes",
+    ],
 )
 
 golden_test(

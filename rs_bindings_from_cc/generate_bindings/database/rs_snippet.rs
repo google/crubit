@@ -305,6 +305,7 @@ pub enum UniformReprTemplateType {
     },
     /// cc_std::string_view<'a>
     StdStringView {
+        in_cc_std: bool,
         lifetime: Lifetime,
     },
 }
@@ -319,6 +320,7 @@ impl UniformReprTemplateType {
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         is_return_type: bool,
         lifetimes: &[Lifetime],
+        in_cc_std: bool,
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
             // Importantly, `is_return_type` is not propagated through inner types.
@@ -371,6 +373,7 @@ impl UniformReprTemplateType {
             }
             Some(TemplateSpecializationKind::StdStringView) if lifetimes.len() == 1 => {
                 Ok(Some(Rc::new(UniformReprTemplateType::StdStringView {
+                    in_cc_std,
                     lifetime: lifetimes[0].clone(),
                 })))
             }
@@ -411,9 +414,13 @@ impl UniformReprTemplateType {
                     (false, false) => quote! { ::span::absl::RawSpanMut<#element_type_tokens> },
                 }
             }
-            Self::StdStringView { lifetime } => {
+            Self::StdStringView { in_cc_std, lifetime } => {
                 // nb: shows up when we don't use a type alias
-                quote! { ::cc_std::std::string_view<#lifetime> }
+                if *in_cc_std {
+                    quote! { crate::std::string_view<#lifetime> }
+                } else {
+                    quote! { ::cc_std::std::string_view<#lifetime> }
+                }
             }
         }
     }
@@ -424,7 +431,7 @@ impl UniformReprTemplateType {
             Self::StdUniquePtr { .. } => None,
             Self::AbslSpan { include_lifetime: true, .. } => Some(Lifetime::elided()),
             Self::AbslSpan { include_lifetime: false, .. } => None,
-            Self::StdStringView { lifetime } => Some(lifetime.clone()),
+            Self::StdStringView { lifetime, .. } => Some(lifetime.clone()),
         }
     }
 }
@@ -803,12 +810,16 @@ impl RsTypeKind {
             rs_imported_crate_name(&record.owning_target, ir),
         ));
 
+        let in_cc_std = db.ir().is_current_target(&record.owning_target)
+            && record.owning_target.target_name_escaped() == "cc_std";
+
         Ok(RsTypeKind::Record {
             uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
                 record.template_specialization.as_ref().map(|ts| &ts.kind),
                 is_return_type,
                 lifetimes,
+                in_cc_std,
             )?,
             owned_ptr_type: record.owned_ptr_type.clone(),
             record,

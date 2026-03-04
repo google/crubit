@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/type_alias_access_rule:type_alias_access_rule
-// Features: callables, experimental, fmt, supported, unsafe_view, wrapper
+// Features: assume_lifetimes, callables, experimental, fmt, supported, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]

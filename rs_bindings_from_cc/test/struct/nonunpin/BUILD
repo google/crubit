@@ -27,7 +27,10 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "nonunpin_experimental",
     hdrs = ["nonunpin.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = [
+        "//features:experimental",
+        "//features:no_assume_lifetimes",
+    ],
     deps = ["@abseil-cpp//absl/log:check"],
 )
 

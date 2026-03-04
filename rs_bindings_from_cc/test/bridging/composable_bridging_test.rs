@@ -60,8 +60,8 @@ fn test_properly_greet_stuff() {
 
 #[gtest]
 fn test_string_view_by_value() {
-    fn live(value: cc_std::std::raw_string_view) -> &'static [u8] {
-        unsafe { &*value.as_raw_bytes() }
+    fn live(value: cc_std::std::string_view<'static>) -> &'static [u8] {
+        unsafe { &*value.as_bytes() }
     }
     expect_eq!(live(StringViewByValue("Hello".into())), b"Hello");
 }

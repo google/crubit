@@ -25,6 +25,9 @@ flagset::flags! {
         /// Use ergonomic lifetime defaults when interpreting lifetime annotations.
         AssumeLifetimes,
 
+        /// Disable AssumeLifetimes (useful for :experimental).
+        NoAssumeLifetimes,
+
         /// Enable formatting to Rust via C++.
         Fmt,
 
@@ -48,6 +51,7 @@ impl CrubitFeature {
             Self::Wrapper => "wrapper",
             Self::Experimental => "experimental",
             Self::AssumeLifetimes => "assume_lifetimes",
+            Self::NoAssumeLifetimes => "no_assume_lifetimes",
             Self::Fmt => "fmt",
             Self::Callables => "callables",
             Self::UnsafeView => "unsafe_view",
@@ -63,6 +67,7 @@ impl CrubitFeature {
             Self::Wrapper => "//features:wrapper",
             Self::Experimental => "//features:experimental",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
+            Self::NoAssumeLifetimes => "//features:no_assume_lifetimes",
             Self::Fmt => "//features:fmt",
             Self::Callables => "//features:callables",
             Self::UnsafeView => "//features:unsafe_view",
@@ -74,11 +79,12 @@ impl CrubitFeature {
 pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
     let features = match name {
         // TODO(b/454627672): return AssumeLifetimes to `all` once it can build the goldens.
-        b"all" => flagset::FlagSet::<CrubitFeature>::full() - CrubitFeature::AssumeLifetimes,
+        b"all" => flagset::FlagSet::<CrubitFeature>::full() - CrubitFeature::NoAssumeLifetimes,
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
+        b"no_assume_lifetimes" => CrubitFeature::NoAssumeLifetimes.into(),
         b"fmt" => CrubitFeature::Fmt.into(),
         b"callables" => CrubitFeature::Callables.into(),
         b"unsafe_view" => CrubitFeature::UnsafeView.into(),
@@ -158,6 +164,12 @@ impl<'de> Deserialize<'de> for SerializedCrubitFeatures {
                     result |= flags;
                 }
 
+                if result.contains(CrubitFeature::NoAssumeLifetimes) {
+                    result -= CrubitFeature::AssumeLifetimes;
+                }
+
+                result -= CrubitFeature::NoAssumeLifetimes;
+
                 Ok(SerializedCrubitFeatures(result))
             }
         }
@@ -185,6 +197,7 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::Experimental
+                | CrubitFeature::AssumeLifetimes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -212,6 +225,7 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::Experimental
+                | CrubitFeature::AssumeLifetimes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -222,6 +236,24 @@ mod tests {
     fn test_serialized_crubit_features_all_overlapping() {
         let SerializedCrubitFeatures(features) =
             serde_json::from_str("[\"all\", \"supported\", \"experimental\"]").unwrap();
+        assert_eq!(
+            features,
+            CrubitFeature::Supported
+                | CrubitFeature::Wrapper
+                | CrubitFeature::Experimental
+                | CrubitFeature::AssumeLifetimes
+                | CrubitFeature::Fmt
+                | CrubitFeature::Callables
+                | CrubitFeature::UnsafeView
+        );
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_features_all_overlapping_no_assume_lifetimes() {
+        let SerializedCrubitFeatures(features) = serde_json::from_str(
+            "[\"all\", \"supported\", \"experimental\", \"no_assume_lifetimes\"]",
+        )
+        .unwrap();
         assert_eq!(
             features,
             CrubitFeature::Supported
