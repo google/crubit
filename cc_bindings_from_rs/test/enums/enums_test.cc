@@ -46,6 +46,11 @@ TEST(EnumsTest, TestModification) {
   EXPECT_EQ(e.B.i, false);
 }
 
+TEST(EnumsTest, TestConstruction) {
+  MyEnum e = MyEnum::MakeF();
+  EXPECT_EQ(e.tag, MyEnum::Tag::F);
+}
+
 TEST(EnumsTest, TestDrop) {
   // See the drop implementation in the Rust file, basically, we increment
   // the value of C.p by 1 when the enum is dropped and C is the active

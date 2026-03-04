@@ -1039,40 +1039,53 @@ fn generate_variant_ctor<'tcx>(
                 main_api_params.is_empty(),
                 "Constructing enum variants with payload is unsupported: b/487356976, b/487357254",
             );
-            ensure!(
-                get_enum_kind(db, core.self_ty) == Some(EnumKind::OpaqueBlobOfBytes),
-                "Constructors of #[repr(C)] enums don't work (see b/487399481 and cl/877428937)",
-            );
-
-            let tag_offset = {
-                let layout = get_layout(tcx, core.self_ty).expect("Should verify layout earlier");
-                use rustc_abi::Variants::*;
-                let tag_field = match layout.variants() {
-                    Empty => unreachable!("Uninhabited types should be rejected earlier"),
-                    Single { .. } => unreachable!("Single+NoPayload=ZST get rejected earlier"),
-                    Multiple { tag_field, .. } => tag_field,
-                };
-                layout.fields().offset(tag_field.as_usize()).bytes() as usize
-            };
-            let adt_size = core.size_in_bytes as usize;
-            let (tag_value, tag_size): (u128, usize) = {
-                let ty::util::Discr { val, ty } = core
-                    .self_ty
-                    .discriminant_for_variant(tcx, variant_index)
-                    .expect("Invalid VariantIdx");
-                let (size, _signed) = ty.int_size_and_signed(tcx);
-                let size = size.bytes() as usize;
-                let size = size.min(adt_size - tag_offset);
-                (val, size)
-            };
-            let tag_bytes = match tcx.sess.target.endian {
-                Endian::Little => &tag_value.to_le_bytes()[..tag_size],
-                Endian::Big => &tag_value.to_be_bytes()[std::mem::size_of::<u128>() - tag_size..],
-            };
-            let bytes = {
-                let mut bytes = vec![0; adt_size];
-                bytes[tag_offset..tag_offset + tag_bytes.len()].copy_from_slice(tag_bytes);
-                bytes.into_iter().map(Literal::u8_unsuffixed).collect_vec()
+            let discr = core
+                .self_ty
+                .discriminant_for_variant(tcx, variant_index)
+                .expect("Invalid VariantIdx");
+            let (discr_size, _signed) = discr.ty.int_size_and_signed(tcx);
+            let enum_kind = get_enum_kind(db, core.self_ty).expect("AtdKindEnum implied EnumKind");
+            let body = match enum_kind {
+                EnumKind::ReprC => {
+                    let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(discr.val, discr_size);
+                    let tag_literal =
+                        scalar_value_to_string(tcx, Scalar::Int(scalar_int), *discr.ty.kind())
+                            .expect("tag to be a valid scalar constant")
+                            .parse::<TokenStream>()
+                            .expect("tag string to consist of valid scalar tokens");
+                    quote! {
+                        return #adt_cc_name(PrivateTagCtorTag{}, Tag { #tag_literal });
+                    }
+                }
+                EnumKind::OpaqueBlobOfBytes => {
+                    let tag_offset = {
+                        let layout =
+                            get_layout(tcx, core.self_ty).expect("Should verify layout earlier");
+                        use rustc_abi::Variants::*;
+                        let tag_field = match layout.variants() {
+                            Empty => unreachable!("Uninhabited types should be rejected earlier"),
+                            Single { .. } => unreachable!("Single+NoPayload=ZST=rejected earlier"),
+                            Multiple { tag_field, .. } => tag_field,
+                        };
+                        layout.fields().offset(tag_field.as_usize()).bytes() as usize
+                    };
+                    let adt_size = core.size_in_bytes as usize;
+                    let discr_bytesize = (adt_size - tag_offset).min(discr_size.bytes() as usize);
+                    let tag_bytes = match tcx.sess.target.endian {
+                        Endian::Little => &discr.val.to_le_bytes()[..discr_bytesize],
+                        Endian::Big => {
+                            &discr.val.to_be_bytes()[std::mem::size_of::<u128>() - discr_bytesize..]
+                        }
+                    };
+                    let bytes = {
+                        let mut bytes = vec![0; adt_size];
+                        bytes[tag_offset..tag_offset + tag_bytes.len()].copy_from_slice(tag_bytes);
+                        bytes.into_iter().map(Literal::u8_unsuffixed).collect_vec()
+                    };
+                    quote! {
+                        return #adt_cc_name(PrivateBytesTag{}, { #( #bytes ),* });
+                    }
+                }
             };
             let method_name = format_cc_ident(db, &format!("Make{}", variant.name.as_str()))?;
             let was_inserted = member_function_names.insert(method_name.to_string());
@@ -1090,9 +1103,7 @@ fn generate_variant_ctor<'tcx>(
                 cc_details: CcSnippet::new(quote! {
                     __NEWLINE__
                     __COMMENT__ "`static` constructor"
-                    inline #adt_cc_name #adt_cc_name::#method_name() {
-                        return #adt_cc_name(PrivateBytesTag{}, { #( #bytes ),* });
-                    }
+                    inline #adt_cc_name #adt_cc_name::#method_name() { #body }
                     __NEWLINE__
                 }),
                 ..Default::default()
@@ -1832,6 +1843,12 @@ pub(crate) fn generate_fields<'tcx>(
                     constexpr #cc_short_name(PrivateBytesTag,
                                              std::array<unsigned char, #adt_size> bytes)
                         : __opaque_blob_of_bytes(bytes) {}
+            },
+            Some(EnumKind::ReprC) => quote! {
+                private:
+                    struct PrivateTagCtorTag {};
+                    constexpr #cc_short_name(PrivateTagCtorTag, Tag tag)
+                        : tag(tag) {}
             },
             _ => quote! {},
         };

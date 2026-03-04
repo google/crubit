@@ -44,20 +44,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Constructing enum variants with payload is unsupported: b/487356976,
   // b/487357254
 
-  // Error generating bindings for `enums_golden::repr_c::MyEnum::F` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=14:
-  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
-  // cl/877428937)
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=14
+  static MyEnum MakeF();
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::Z` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=15:
   // Tuple types cannot be used inside of compound data types, because
   // std::tuple is not layout-compatible with a Rust tuple.
 
-  // Error generating bindings for `enums_golden::repr_c::MyEnum::G` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=16:
-  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
-  // cl/877428937)
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=16
+  static MyEnum MakeG();
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::B` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=17:
@@ -69,10 +67,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Constructing enum variants with payload is unsupported: b/487356976,
   // b/487357254
 
-  // Error generating bindings for `enums_golden::repr_c::MyEnum::D` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=19:
-  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
-  // cl/877428937)
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=19
+  static MyEnum MakeD();
 
   // Drop::drop
   ~MyEnum();
@@ -141,6 +138,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     __crubit_B_struct B;
     __crubit_C_struct C;
   };
+
+ private:
+  struct PrivateTagCtorTag {};
+  constexpr MyEnum(PrivateTagCtorTag, Tag tag) : tag(tag) {}
 
  private:
   static void __crubit_field_offset_assertions();
@@ -224,6 +225,10 @@ CloneActiveVariant final {
   };
 
  private:
+  struct PrivateTagCtorTag {};
+  constexpr CloneActiveVariant(PrivateTagCtorTag, Tag tag) : tag(tag) {}
+
+ private:
   static void __crubit_field_offset_assertions();
 };
 
@@ -290,6 +295,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   };
 
  private:
+  struct PrivateTagCtorTag {};
+  constexpr CloneCount(PrivateTagCtorTag, Tag tag) : tag(tag) {}
+
+ private:
   static void __crubit_field_offset_assertions();
 };
 
@@ -318,11 +327,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Constructing enum variants with payload is unsupported: b/487356976,
   // b/487357254
 
-  // Error generating bindings for `enums_golden::repr_c_drop::DropMe::Q`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=34:
-  // Constructors of #[repr(C)] enums don't work (see b/487399481 and
-  // cl/877428937)
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=34
+  static DropMe MakeQ();
 
   // Error generating bindings for `enums_golden::repr_c_drop::DropMe::C`
   // defined at
@@ -373,6 +380,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     __crubit_B_struct B;
     __crubit_C_struct C;
   };
+
+ private:
+  struct PrivateTagCtorTag {};
+  constexpr DropMe(PrivateTagCtorTag, Tag tag) : tag(tag) {}
 
  private:
   static void __crubit_field_offset_assertions();
@@ -581,6 +592,20 @@ extern "C" void __crubit_thunk_default(::enums::repr_c::MyEnum* __ret_ptr);
 inline ::enums::repr_c::MyEnum::MyEnum() {
   __crubit_internal::__crubit_thunk_default(this);
 }
+// `static` constructor
+inline MyEnum MyEnum::MakeF() {
+  return MyEnum(PrivateTagCtorTag{}, Tag{INT64_C(2)});
+}
+
+// `static` constructor
+inline MyEnum MyEnum::MakeG() {
+  return MyEnum(PrivateTagCtorTag{}, Tag{INT64_C(4)});
+}
+
+// `static` constructor
+inline MyEnum MyEnum::MakeD() {
+  return MyEnum(PrivateTagCtorTag{}, Tag{INT64_C(10002)});
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(::enums::repr_c::MyEnum&);
 }
@@ -749,6 +774,10 @@ extern "C" void __crubit_thunk_default(::enums::repr_c_drop::DropMe* __ret_ptr);
 }
 inline ::enums::repr_c_drop::DropMe::DropMe() {
   __crubit_internal::__crubit_thunk_default(this);
+}
+// `static` constructor
+inline DropMe DropMe::MakeQ() {
+  return DropMe(PrivateTagCtorTag{}, Tag{INT64_C(2)});
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(::enums::repr_c_drop::DropMe&);

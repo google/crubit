@@ -61,5 +61,4 @@ tuple-constructor (it seems better than NoPayload examples). -->
 >
 > *   b/487356976: Constructing variants with a tuple payload
 > *   b/487357254: Constructing variants with a struct payload
-> *   b/487399481: Constructing "no payload" variants of `#[repr(C)]` enums
 > *   b/489085607: Bindings for constructing enums should be `constexpr`
