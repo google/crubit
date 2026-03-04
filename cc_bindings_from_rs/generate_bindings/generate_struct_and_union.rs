@@ -1087,6 +1087,13 @@ fn generate_variant_ctor<'tcx>(
                     }
                 }
             };
+            let constexpr = if adt_core_bindings_needs_drop(&core, tcx) {
+                // TODO(b/489085607): If we can make destructor `constexpr` (see bug for ideas)
+                // then `constexpr` *here* can be used unconditionally.
+                quote! {}
+            } else {
+                quote! { constexpr }
+            };
             let method_name = format_cc_ident(db, &format!("Make{}", variant.name.as_str()))?;
             let was_inserted = member_function_names.insert(method_name.to_string());
             assert!(was_inserted, "No conflicts expected for 'constructor' names: {method_name}");
@@ -1096,14 +1103,14 @@ fn generate_variant_ctor<'tcx>(
                     prereqs,
                     tokens: quote! {
                         __NEWLINE__ #doc_comment
-                        static #adt_cc_name #method_name();
+                        static #constexpr #adt_cc_name #method_name();
                         __NEWLINE__
                     },
                 },
                 cc_details: CcSnippet::new(quote! {
                     __NEWLINE__
                     __COMMENT__ "`static` constructor"
-                    inline #adt_cc_name #adt_cc_name::#method_name() { #body }
+                    inline #constexpr #adt_cc_name #adt_cc_name::#method_name() { #body }
                     __NEWLINE__
                 }),
                 ..Default::default()

@@ -35,19 +35,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
 
   // Generated from:
   // common/test/bidirectional_deps/leaf_rs_lib.rs;l=22
-  static LeafRsEnum MakeKUnknown();
+  static constexpr LeafRsEnum MakeKUnknown();
 
   // Generated from:
   // common/test/bidirectional_deps/leaf_rs_lib.rs;l=23
-  static LeafRsEnum MakeKValue1();
+  static constexpr LeafRsEnum MakeKValue1();
 
   // Generated from:
   // common/test/bidirectional_deps/leaf_rs_lib.rs;l=24
-  static LeafRsEnum MakeKValue2();
+  static constexpr LeafRsEnum MakeKValue2();
 
   // Generated from:
   // common/test/bidirectional_deps/leaf_rs_lib.rs;l=25
-  static LeafRsEnum MakeKValue3();
+  static constexpr LeafRsEnum MakeKValue3();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsEnum() = default;
@@ -132,22 +132,22 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
-inline LeafRsEnum LeafRsEnum::MakeKUnknown() {
+inline constexpr LeafRsEnum LeafRsEnum::MakeKUnknown() {
   return LeafRsEnum(PrivateBytesTag{}, {0});
 }
 
 // `static` constructor
-inline LeafRsEnum LeafRsEnum::MakeKValue1() {
+inline constexpr LeafRsEnum LeafRsEnum::MakeKValue1() {
   return LeafRsEnum(PrivateBytesTag{}, {1});
 }
 
 // `static` constructor
-inline LeafRsEnum LeafRsEnum::MakeKValue2() {
+inline constexpr LeafRsEnum LeafRsEnum::MakeKValue2() {
   return LeafRsEnum(PrivateBytesTag{}, {2});
 }
 
 // `static` constructor
-inline LeafRsEnum LeafRsEnum::MakeKValue3() {
+inline constexpr LeafRsEnum LeafRsEnum::MakeKValue3() {
   return LeafRsEnum(PrivateBytesTag{}, {3});
 }
 static_assert(std::is_trivially_destructible_v<LeafRsEnum>);

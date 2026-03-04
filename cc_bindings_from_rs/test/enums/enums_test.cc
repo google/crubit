@@ -47,6 +47,8 @@ TEST(EnumsTest, TestModification) {
 }
 
 TEST(EnumsTest, TestConstruction) {
+  // TODO(b/489085607): Make `e` `constexpr` once `constexpr` constructors are
+  // supported even for types with drop glue.
   MyEnum e = MyEnum::MakeF();
   EXPECT_EQ(e.tag, MyEnum::Tag::F);
 }
@@ -106,7 +108,11 @@ TEST(EnumsTest, TestCloneActiveVariant) {
 }
 
 TEST(EnumsTest, TestRustReprEnumNoPayloadCtor) {
-  EXPECT_EQ(RustReprEnumWithNoPayload::MakeVariant1().get_variant_number(), 1);
+  // `constexpr` below is load-bearing - it is used to verify that aspect of the
+  // generated bindings.
+  constexpr auto e1 = RustReprEnumWithNoPayload::MakeVariant1();
+  EXPECT_EQ(e1.get_variant_number(), 1);
+
   EXPECT_EQ(RustReprEnumWithNoPayload::MakeVariant2().get_variant_number(), 2);
   EXPECT_EQ(RustReprEnumWithNoPayload::MakeVariant3().get_variant_number(), 3);
 }

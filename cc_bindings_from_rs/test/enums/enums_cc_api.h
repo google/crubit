@@ -410,11 +410,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=149
-  static IntReprEnumWithNoPayload MakeNoPayload1();
+  static constexpr IntReprEnumWithNoPayload MakeNoPayload1();
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=150
-  static IntReprEnumWithNoPayload MakeNoPayload2();
+  static constexpr IntReprEnumWithNoPayload MakeNoPayload2();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~IntReprEnumWithNoPayload() = default;
@@ -474,15 +474,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   //
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=118
-  static RustReprEnumWithNoPayload MakeVariant1();
+  static constexpr RustReprEnumWithNoPayload MakeVariant1();
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=119
-  static RustReprEnumWithNoPayload MakeVariant2();
+  static constexpr RustReprEnumWithNoPayload MakeVariant2();
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=120
-  static RustReprEnumWithNoPayload MakeVariant3();
+  static constexpr RustReprEnumWithNoPayload MakeVariant3();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~RustReprEnumWithNoPayload() = default;
@@ -811,12 +811,14 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
-inline IntReprEnumWithNoPayload IntReprEnumWithNoPayload::MakeNoPayload1() {
+inline constexpr IntReprEnumWithNoPayload
+IntReprEnumWithNoPayload::MakeNoPayload1() {
   return IntReprEnumWithNoPayload(PrivateBytesTag{}, {0, 0, 0, 0});
 }
 
 // `static` constructor
-inline IntReprEnumWithNoPayload IntReprEnumWithNoPayload::MakeNoPayload2() {
+inline constexpr IntReprEnumWithNoPayload
+IntReprEnumWithNoPayload::MakeNoPayload2() {
   return IntReprEnumWithNoPayload(PrivateBytesTag{}, {210, 4, 0, 0});
 }
 static_assert(std::is_trivially_destructible_v<IntReprEnumWithNoPayload>);
@@ -857,17 +859,20 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
-inline RustReprEnumWithNoPayload RustReprEnumWithNoPayload::MakeVariant1() {
+inline constexpr RustReprEnumWithNoPayload
+RustReprEnumWithNoPayload::MakeVariant1() {
   return RustReprEnumWithNoPayload(PrivateBytesTag{}, {0});
 }
 
 // `static` constructor
-inline RustReprEnumWithNoPayload RustReprEnumWithNoPayload::MakeVariant2() {
+inline constexpr RustReprEnumWithNoPayload
+RustReprEnumWithNoPayload::MakeVariant2() {
   return RustReprEnumWithNoPayload(PrivateBytesTag{}, {1});
 }
 
 // `static` constructor
-inline RustReprEnumWithNoPayload RustReprEnumWithNoPayload::MakeVariant3() {
+inline constexpr RustReprEnumWithNoPayload
+RustReprEnumWithNoPayload::MakeVariant3() {
   return RustReprEnumWithNoPayload(PrivateBytesTag{}, {2});
 }
 static_assert(std::is_trivially_destructible_v<RustReprEnumWithNoPayload>);

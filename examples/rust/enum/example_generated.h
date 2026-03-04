@@ -32,15 +32,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
 
   // Generated from:
   // examples/rust/enum/example.rs;l=8
-  static Color MakeRed();
+  static constexpr Color MakeRed();
 
   // Generated from:
   // examples/rust/enum/example.rs;l=9
-  static Color MakeBlue();
+  static constexpr Color MakeBlue();
 
   // Generated from:
   // examples/rust/enum/example.rs;l=10
-  static Color MakeGreen();
+  static constexpr Color MakeGreen();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
@@ -82,13 +82,19 @@ inline ::example_crate::Color::Color() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 // `static` constructor
-inline Color Color::MakeRed() { return Color(PrivateBytesTag{}, {0}); }
+inline constexpr Color Color::MakeRed() {
+  return Color(PrivateBytesTag{}, {0});
+}
 
 // `static` constructor
-inline Color Color::MakeBlue() { return Color(PrivateBytesTag{}, {1}); }
+inline constexpr Color Color::MakeBlue() {
+  return Color(PrivateBytesTag{}, {1});
+}
 
 // `static` constructor
-inline Color Color::MakeGreen() { return Color(PrivateBytesTag{}, {2}); }
+inline constexpr Color Color::MakeGreen() {
+  return Color(PrivateBytesTag{}, {2});
+}
 static_assert(std::is_trivially_destructible_v<Color>);
 static_assert(std::is_trivially_move_constructible_v<::example_crate::Color>);
 static_assert(std::is_trivially_move_assignable_v<::example_crate::Color>);
