@@ -56,7 +56,24 @@ with the corresponding variant.
 
 ### Example
 
-TODO(b/489757240): Add an example.
+Given the following Rust crate:
+
+```
+{{ #include ../../examples/rust/enum_with_payload/example.rs }}
+```
+<!--  class:Color -->
+
+
+Crubit will generate the following bindings:
+
+<!-- TODO(b/487357254): Add an example for StructPayloadVariant constructors
+once available. -->
+
+```
+{{ #include ../../examples/rust/enum_with_payload/example_generated.h }}
+```
+<!--  snippet:comment,block function:MakeRgb -->
+
 
 ## Known issues
 
