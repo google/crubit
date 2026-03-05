@@ -1047,24 +1047,20 @@ TEST(ImporterTest, CrashRepro_AutoInvolvingTemplate) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 }
 
-absl::StatusOr<IR> IrFromCcWithFmt(absl::string_view program) {
-  return IrFromCc(IrFromCcOptions{
-      .extra_source_code_for_testing = program,
-      .crubit_features = {{BazelLabel{"//test:testing_target"}, {"fmt"}}}});
-}
-
 TEST(ImporterTest, DetectsFormatterAsAbslStringify) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         struct ByRef {
-                           template <typename Sink>
-                           friend void AbslStringify(Sink&, const ByRef&) {}
-                         };
-                         struct ByValue {
-                           template <typename Sink>
-                           friend void AbslStringify(Sink&, ByValue) {}
-                         };
-                         struct NoFormatter {};
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCc({R"cc(
+                               struct ByRef {
+                                 template <typename Sink>
+                                 friend void AbslStringify(Sink&,
+                                                           const ByRef&) {}
+                               };
+                               struct ByValue {
+                                 template <typename Sink>
+                                 friend void AbslStringify(Sink&, ByValue) {}
+                               };
+                               struct NoFormatter {};
+                             )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Record>(),
       AllOf(
@@ -1075,27 +1071,28 @@ TEST(ImporterTest, DetectsFormatterAsAbslStringify) {
 }
 
 TEST(ImporterTest, DetectsFormatterAsOstream) {
-  ASSERT_OK_AND_ASSIGN(  //
-      const IR ir,       //
-      IrFromCcWithFmt(R"cc(
-        namespace std {
-        template <typename T>
-        struct char_traits {};
-        template <typename T, typename Traits = char_traits<T>>
-        struct basic_ostream {};
-        using ostream = basic_ostream<char>;
-        }  // namespace std
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir,
+      IrFromCc(  //
+          {R"cc(
+             namespace std {
+             template <typename T>
+             struct char_traits {};
+             template <typename T, typename Traits = char_traits<T>>
+             struct basic_ostream {};
+             using ostream = basic_ostream<char>;
+             }  // namespace std
 
-        struct ByRef {
-          friend std::ostream& operator<<(std::ostream& out, const ByRef&) {
-            return out;
-          }
-        };
-        struct ByValue {
-          friend std::ostream& operator<<(std::ostream& out, ByValue) { return out; }
-        };
-        struct NoFormatter {};
-      )cc"));
+             struct ByRef {
+               friend std::ostream& operator<<(std::ostream& out, const ByRef&) {
+                 return out;
+               }
+             };
+             struct ByValue {
+               friend std::ostream& operator<<(std::ostream& out, ByValue) { return out; }
+             };
+             struct NoFormatter {};
+           )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Record>(),
       AllOf(
@@ -1106,63 +1103,71 @@ TEST(ImporterTest, DetectsFormatterAsOstream) {
 }
 
 TEST(ImporterTest, DetectsFormatterAsPrinterOfBase) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         struct Base {
-                           template <typename Sink>
-                           friend void AbslStringify(Sink&, const Base&) {}
-                         };
-                         struct Derived : Base {};
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCc({R"cc(
+                               struct Base {
+                                 template <typename Sink>
+                                 friend void AbslStringify(Sink&, const Base&) {
+                                 }
+                               };
+                               struct Derived : Base {};
+                             )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Record>(),
       Contains(Pointee(AllOf(RsNameIs("Derived"), HasDetectedFormatter()))));
 }
 
 TEST(ImporterTest, DetectsFormatterAsPrinterInCrtpBase) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         template <typename This>
-                         struct Base {
-                           template <typename Sink>
-                           friend void AbslStringify(Sink&, const This&) {}
-                         };
-                         struct Derived : private Base<Derived> {};
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCc({R"cc(
+                               template <typename This>
+                               struct Base {
+                                 template <typename Sink>
+                                 friend void AbslStringify(Sink&, const This&) {
+                                 }
+                               };
+                               struct Derived : private Base<Derived> {};
+                             )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Record>(),
       Contains(Pointee(AllOf(RsNameIs("Derived"), HasDetectedFormatter()))));
 }
 
 TEST(ImporterTest, DetectsEnumFormatter) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         enum class Foo {
-                           kFoo,
-                         };
-                         template <typename Sink>
-                         void AbslStringify(Sink&, Foo) {}
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({R"cc(
+                                                enum class Foo {
+                                                  kFoo,
+                                                };
+                                                template <typename Sink>
+                                                void AbslStringify(Sink&, Foo) {
+                                                }
+                                              )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Enum>(),
       Contains(Pointee(AllOf(RsNameIs("Foo"), HasDetectedFormatter()))));
 }
 
 TEST(ImporterTest, DoesNotDetectAbslStringifyMemberFunctionAsFormatter) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         struct Foo {
-                           template <typename Sink>
-                           static void AbslStringify(Sink&, const Foo&) {}
-                         };
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCc({R"cc(
+                               struct Foo {
+                                 template <typename Sink>
+                                 static void AbslStringify(Sink&, const Foo&) {}
+                               };
+                             )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Record>(),
       Contains(Pointee(AllOf(RsNameIs("Foo"), Not(HasDetectedFormatter())))));
 }
 
 TEST(ImporterTest, DoesNotDetectOperatorLeftShiftWrongTypesAsFormatter) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         struct Foo {
-                           friend Foo& operator<<(Foo& foo, int) { return foo; }
-                         };
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(  //
+      const IR ir,       //
+      IrFromCc({R"cc(
+                  struct Foo {
+                    friend Foo& operator<<(Foo& foo, int) { return foo; }
+                  };
+                )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Record>(),
       Contains(Pointee(AllOf(RsNameIs("Foo"), Not(HasDetectedFormatter())))));
@@ -1170,29 +1175,31 @@ TEST(ImporterTest, DoesNotDetectOperatorLeftShiftWrongTypesAsFormatter) {
 
 TEST(ImporterTest, OverridesDisplayForRecord) {
   ASSERT_OK_AND_ASSIGN(
-      const IR ir, IrFromCcWithFmt(R"cc(
-        template <bool>
-        struct enable_if {};
+      const IR ir,
+      IrFromCc({R"cc(
+                  template <bool>
+                  struct enable_if {};
 
-        template <>
-        struct enable_if<true> {
-          using type = void;
-        };
+                  template <>
+                  struct enable_if<true> {
+                    using type = void;
+                  };
 
-        template <bool b>
-        using enable_if_t = typename enable_if<b>::type;
+                  template <bool b>
+                  using enable_if_t = typename enable_if<b>::type;
 
-        template <bool b>
-        struct [[clang::annotate("crubit_override_display", b)]]
-        MaybeFormattable {
-          // Use SFINAE so that `AbslStringify` isn't as easily detectable.
-          template <typename Sink, bool sfinae_b = b>
-          friend enable_if_t<sfinae_b> AbslStringify(Sink& sink,
-                                                     const MaybeFormattable&) {}
-        };
-        struct NotFormattable : MaybeFormattable<false> {};
-        struct Formattable : MaybeFormattable<true> {};
-      )cc"));
+                  template <bool b>
+                  struct [[clang::annotate("crubit_override_display", b)]]
+                  MaybeFormattable {
+                    // Use SFINAE so that `AbslStringify` isn't as easily
+                    // detectable.
+                    template <typename Sink, bool sfinae_b = b>
+                    friend enable_if_t<sfinae_b> AbslStringify(
+                        Sink& sink, const MaybeFormattable&) {}
+                  };
+                  struct NotFormattable : MaybeFormattable<false> {};
+                  struct Formattable : MaybeFormattable<true> {};
+                )cc"}));
   EXPECT_THAT(ir.get_items_if<Record>(),
               AllOf(Contains(Pointee(AllOf(RsNameIs("NotFormattable"),
                                            Not(HasDetectedFormatter())))),
@@ -1202,32 +1209,38 @@ TEST(ImporterTest, OverridesDisplayForRecord) {
 
 TEST(ImporterTest, OverridesDisplayForEnum) {
   ASSERT_OK_AND_ASSIGN(
-      const IR ir, IrFromCcWithFmt(R"cc(
-        namespace std {
-        template <typename T, typename Traits>
-        struct basic_ostream {};
-        }  // namespace std
+      const IR ir,
+      IrFromCc({R"cc(
+                  namespace std {
+                  template <typename T, typename Traits>
+                  struct basic_ostream {};
+                  }  // namespace std
 
-        enum class [[clang::annotate("crubit_override_display", true)]] Foo {
-          kFoo,
-        };
-        // Make this generic so that `operator<<` isn't as easily detectable.
-        template <typename T, typename Traits>
-        auto& operator<<(std::basic_ostream<T, Traits>& out, Foo) {
-          return out;
-        }
-      )cc"));
+                  enum class [[clang::annotate("crubit_override_display",
+                                               true)]] Foo {
+                    kFoo,
+                  };
+                  // Make this generic so that `operator<<` isn't as easily
+                  // detectable.
+                  template <typename T, typename Traits>
+                  auto& operator<<(std::basic_ostream<T, Traits>& out, Foo) {
+                    return out;
+                  }
+                )cc"}));
   EXPECT_THAT(
       ir.get_items_if<Enum>(),
       Contains(Pointee(AllOf(RsNameIs("Foo"), HasDetectedFormatter()))));
 }
 
 TEST(ImporterTest, OverrideDisplayInconsistent) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         struct [[clang::annotate("crubit_override_display",
-                                                  true)]] Inconsistent;
-                         struct [[clang::annotate("crubit_override_display", false)]] Inconsistent {};
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir,  //
+      IrFromCc(     //
+          {R"cc(
+             struct [[clang::annotate("crubit_override_display",
+                                      true)]] Inconsistent;
+             struct [[clang::annotate("crubit_override_display", false)]] Inconsistent {};
+           )cc"}));
   EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
               ElementsAre(Pointee(
                   AllOf(UnsupportedItemNameIs("Inconsistent"),
@@ -1238,10 +1251,12 @@ TEST(ImporterTest, OverrideDisplayInconsistent) {
 }
 
 TEST(ImporterTest, OverrideDisplayMissingArgs) {
-  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithFmt(R"cc(
-                         struct [[clang::annotate("crubit_override_display")]]
-                         MissingArgs {};
-                       )cc"));
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir,
+      IrFromCc({R"cc(
+                  struct [[clang::annotate("crubit_override_display")]]
+                  MissingArgs {};
+                )cc"}));
   EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
               ElementsAre(Pointee(
                   AllOf(UnsupportedItemNameIs("MissingArgs"),
@@ -1251,11 +1266,12 @@ TEST(ImporterTest, OverrideDisplayMissingArgs) {
 }
 
 TEST(ImporterTest, OverrideDisplayMultipleArgs) {
-  ASSERT_OK_AND_ASSIGN(
-      const IR ir, IrFromCcWithFmt(R"cc(
-        struct [[clang::annotate("crubit_override_display", true, false)]]
-        MultipleArgs {};
-      )cc"));
+  ASSERT_OK_AND_ASSIGN(const IR ir,
+                       IrFromCc({R"cc(
+                                   struct [[clang::annotate(
+                                       "crubit_override_display", true, false)]]
+                                   MultipleArgs {};
+                                 )cc"}));
   EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
               ElementsAre(Pointee(
                   AllOf(UnsupportedItemNameIs("MultipleArgs"),
@@ -1266,10 +1282,11 @@ TEST(ImporterTest, OverrideDisplayMultipleArgs) {
 
 TEST(ImporterTest, OverrideDisplayWrongArgType) {
   ASSERT_OK_AND_ASSIGN(
-      const IR ir, IrFromCcWithFmt(R"cc(
-        struct [[clang::annotate("crubit_override_display", "foo")]]
-        WrongArgType {};
-      )cc"));
+      const IR ir,
+      IrFromCc({R"cc(
+                  struct [[clang::annotate("crubit_override_display", "foo")]]
+                  WrongArgType {};
+                )cc"}));
   EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
               ElementsAre(Pointee(
                   AllOf(UnsupportedItemNameIs("WrongArgType"),

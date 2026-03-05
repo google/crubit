@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/constructors:constructors
-// Features: assume_lifetimes, callables, check_default_initialized, experimental, fmt, supported, unsafe_view, wrapper
+// Features: assume_lifetimes, callables, check_default_initialized, experimental, supported, unsafe_view, wrapper
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"

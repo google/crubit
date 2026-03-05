@@ -626,9 +626,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         api_snippets.cc_details.push(thunk_impl);
         operator_delete_impl = Some(delete);
     }
-    let display_impl = if crubit_features.contains(crubit_feature::CrubitFeature::Fmt)
-        && record.detected_formatter
-    {
+    let display_impl = if record.detected_formatter {
         let fmt_fn_name = make_rs_ident(&format!(
             "__crubit_fmt__{type_name}_{odr_suffix}",
             type_name = record.mangled_cc_name,

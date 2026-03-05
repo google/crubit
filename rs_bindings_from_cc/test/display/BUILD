@@ -17,7 +17,7 @@ cc_library(
     hdrs = ["displayables.h"],
     aspect_hints = [
         ":displayables_rs",
-        "//features:fmt",
+        "//features:supported",
     ],
     deps = [
         "//support:annotations",
@@ -30,9 +30,6 @@ cc_library(
 additional_rust_srcs_for_crubit_bindings(
     name = "displayables_rs",
     srcs = ["displayables.rs"],
-    aspect_hints = [
-        "//features:fmt",
-    ],
 )
 
 golden_test(

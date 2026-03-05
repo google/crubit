@@ -146,14 +146,10 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(enum_decl);
-  bool fmt_enabled = ictx_.IsFmtEnabledForTarget(owning_target);
-  absl::StatusOr<bool> detected_formatter = false;
-  if (fmt_enabled) {
-    detected_formatter = ictx_.DetectFormatter(*enum_decl);
-    if (!detected_formatter.ok()) {
-      return unsupported(
-          FormattedError::FromStatus(std::move(detected_formatter).status()));
-    }
+  absl::StatusOr<bool> detected_formatter = ictx_.DetectFormatter(*enum_decl);
+  if (!detected_formatter.ok()) {
+    return unsupported(
+        FormattedError::FromStatus(std::move(detected_formatter).status()));
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);

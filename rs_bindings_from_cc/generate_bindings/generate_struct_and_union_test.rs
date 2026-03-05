@@ -8,7 +8,7 @@ use database::code_snippet::BindingsTokens;
 use generate_struct_and_union::generate_derives;
 use googletest::prelude::gtest;
 use ir_testing::with_lifetime_macros;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_from_fmt_cc, ir_record};
+use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record};
 use proc_macro2::TokenStream;
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
@@ -1924,7 +1924,7 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
 
 #[gtest]
 fn test_display() -> Result<()> {
-    let ir = ir_from_fmt_cc(
+    let ir = ir_from_cc(
         r#"
         struct CanDisplay {
             template <typename Sink>

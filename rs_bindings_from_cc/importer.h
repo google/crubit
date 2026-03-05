@@ -123,7 +123,6 @@ class Importer final : public ImportContext {
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;
-  bool IsFmtEnabledForTarget(const BazelLabel& label) const override;
   bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
   absl::StatusOr<bool> DetectFormatter(
       const clang::TypeDecl& decl) const override;

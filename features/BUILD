@@ -63,16 +63,6 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# A feature set enabling bindings to Rust's `Display` trait.
-#
-# See crubit.rs-features#other
-crubit_feature_hint(
-    name = "fmt",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["fmt"],
-    visibility = ["//visibility:public"],
-)
-
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #

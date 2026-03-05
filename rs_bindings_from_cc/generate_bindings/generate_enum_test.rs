@@ -4,7 +4,7 @@
 
 use arc_anyhow::Result;
 use googletest::prelude::gtest;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_fmt_cc};
+use multiplatform_ir_testing::ir_from_cc;
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
 use token_stream_matchers::{assert_rs_matches, assert_rs_not_matches};
@@ -283,7 +283,7 @@ fn test_generate_enum_bool_alias() -> Result<()> {
 
 #[gtest]
 fn test_display() -> Result<()> {
-    let ir = ir_from_fmt_cc(
+    let ir = ir_from_cc(
         r#"
         enum class Enum {
             kEnum,

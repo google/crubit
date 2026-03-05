@@ -6,7 +6,6 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{format_cc_ident, make_rs_ident};
-use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     integer_constant_to_token_stream, ApiSnippets, DisplayImpl, Feature, GeneratedItem, Thunk,
     ThunkImpl,
@@ -55,33 +54,29 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
     let underlying_type_tokens = underlying_type.to_token_stream(db);
     let mut thunks: Vec<Thunk> = vec![];
     let mut cc_details: Vec<ThunkImpl> = vec![];
-    let display_impl: TokenStream =
-        if db.ir().target_crubit_features(&enum_.owning_target).contains(CrubitFeature::Fmt)
-            && enum_.detected_formatter
-        {
-            let fmt_fn_name = make_rs_ident(&format!(
-                "__crubit_fmt__{type_name}_{odr_suffix}",
-                type_name = enum_.cc_name,
-                odr_suffix = enum_.owning_target.convert_to_cc_identifier(),
-            ));
-            let crate_root_path = db.ir().crate_root_path_tokens();
-            let namespace_qualifier = db.ir().namespace_qualifier(&enum_).format_for_rs();
-            let qualified_name = {
-                quote! { #crate_root_path:: #namespace_qualifier #name }
-            };
-            thunks
-                .push(Thunk::Fmt { fmt_fn_name: fmt_fn_name.clone(), param_type: qualified_name });
-            cc_details.push(ThunkImpl::Fmt {
-                fmt_fn_name: fmt_fn_name.clone(),
-                param_type: fully_qualified_cc_name.clone(),
-            });
-            let display_impl = DisplayImpl { type_name: name.clone(), fmt_fn_name };
-            quote! {
-                #display_impl
-            }
-        } else {
-            quote! {}
+    let display_impl: TokenStream = if enum_.detected_formatter {
+        let fmt_fn_name = make_rs_ident(&format!(
+            "__crubit_fmt__{type_name}_{odr_suffix}",
+            type_name = enum_.cc_name,
+            odr_suffix = enum_.owning_target.convert_to_cc_identifier(),
+        ));
+        let crate_root_path = db.ir().crate_root_path_tokens();
+        let namespace_qualifier = db.ir().namespace_qualifier(&enum_).format_for_rs();
+        let qualified_name = {
+            quote! { #crate_root_path:: #namespace_qualifier #name }
         };
+        thunks.push(Thunk::Fmt { fmt_fn_name: fmt_fn_name.clone(), param_type: qualified_name });
+        cc_details.push(ThunkImpl::Fmt {
+            fmt_fn_name: fmt_fn_name.clone(),
+            param_type: fully_qualified_cc_name.clone(),
+        });
+        let display_impl = DisplayImpl { type_name: name.clone(), fmt_fn_name };
+        quote! {
+            #display_impl
+        }
+    } else {
+        quote! {}
+    };
 
     let annotation = format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}");
     let item = quote! {
