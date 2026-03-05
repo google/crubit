@@ -29,6 +29,7 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
@@ -37,6 +38,7 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/SmallString.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
@@ -318,8 +320,23 @@ inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
 // out-of-band.
 class IntegerConstant {
  public:
+  static absl::StatusOr<IntegerConstant> FromAPValue(
+      const llvm::APSInt& value) {
+    if (value.getSignificantBits() > 64) {
+      llvm::SmallString<128> value_str;
+      value.toString(value_str);
+      return absl::InvalidArgumentError(absl::StrCat(
+          "value is too large to fit in 64 bits: ", value_str.c_str()));
+    }
+    return IntegerConstant(value);
+  }
+
+  IntegerConstant(const IntegerConstant& other) = default;
+  IntegerConstant& operator=(const IntegerConstant& other) = default;
+  llvm::json::Value ToJson() const;
+
+ private:
   explicit IntegerConstant(const llvm::APSInt& value) {
-    CHECK_LE(value.getSignificantBits(), 64);
     is_negative_ = value < 0;
     // TODO: double-check that the following is correct to adapt for
     // https://github.com/llvm/llvm-project/commit/0a89825a289d149195be390003424adad026067f
@@ -328,12 +345,7 @@ class IntegerConstant {
     wrapped_value_ = static_cast<uint64_t>(
         value.isSigned() ? value.getSExtValue() : value.getZExtValue());
   }
-  IntegerConstant(const IntegerConstant& other) = default;
-  IntegerConstant& operator=(const IntegerConstant& other) = default;
 
-  llvm::json::Value ToJson() const;
-
- private:
   // value < 0
   bool is_negative_;
 

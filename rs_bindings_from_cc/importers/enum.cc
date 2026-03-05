@@ -95,9 +95,14 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
           FormattedError::FromStatus(std::move(unknown_attr.status())));
     }
 
+    absl::StatusOr<IntegerConstant> value =
+        IntegerConstant::FromAPValue(enumerator->getInitVal());
+    if (!value.ok()) {
+      return unsupported(FormattedError::FromStatus(std::move(value.status())));
+    }
     enumerators.push_back(Enumerator{
         .identifier = (*enumerator_name).rs_identifier(),
-        .value = IntegerConstant(enumerator->getInitVal()),
+        .value = std::move(*value),
         .unknown_attr = std::move(*unknown_attr),
     });
   }

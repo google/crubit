@@ -64,8 +64,15 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_constant_decl);
+  absl::StatusOr<IntegerConstant> value =
+      IntegerConstant::FromAPValue(enum_constant_decl->getInitVal());
+  if (!value.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *enum_constant_decl, std::nullopt,
+        FormattedError::FromStatus(std::move(value.status())));
+  }
   return Constant{
-      .value = IntegerConstant(enum_constant_decl->getInitVal()),
+      .value = std::move(*value),
       .cc_name = enumerator_name->cc_identifier,
       .rs_name = enumerator_name->rs_identifier(),
       .unique_name = ictx_.GetUniqueName(*enum_constant_decl),

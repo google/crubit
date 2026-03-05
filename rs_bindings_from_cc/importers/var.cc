@@ -103,10 +103,16 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
           *var_decl, std::nullopt,
           FormattedError::Static("unable to evaluate constexpr value"));
     }
-    IntegerConstant integer_constant(value->getInt());
+    absl::StatusOr<IntegerConstant> integer_constant =
+        IntegerConstant::FromAPValue(value->getInt());
+    if (!integer_constant.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          FormattedError::FromStatus(std::move(integer_constant.status())));
+    }
     ictx_.MarkAsSuccessfullyImported(var_decl);
     return Constant{
-        .value = std::move(integer_constant),
+        .value = std::move(*integer_constant),
         .cc_name = var_name->cc_identifier,
         .rs_name = var_name->rs_identifier(),
         .unique_name = ictx_.GetUniqueName(*var_decl),
