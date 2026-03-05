@@ -7,8 +7,6 @@
 
 namespace {
 
-TEST(CoreBindingsTest, AtomicBoolExists) {
-  core::sync::atomic::AtomicBool unused;
-}
+TEST(CoreBindingsTest, DurationExists) { core::time::Duration unused; }
 
 }  // namespace
