@@ -1,0 +1,28 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+name: Scheduled Test Matrix
+
+on:
+  schedule:
+    # This example runs every day at 12:20 AM UTC
+    - cron: '20 0 * * *'
+  workflow_dispatch: # Allows you to test it manually
+
+jobs:
+  trigger-other-branch:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # Required to trigger workflows
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # submodules: true ensures the submodule folder exists to be updated
+          submodules: true
+          # fetch-depth: 0 ensures we have history to push back
+          fetch-depth: 0
+      - name: Trigger Workflow on Target Branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run nightly.yaml --ref test-matrix
