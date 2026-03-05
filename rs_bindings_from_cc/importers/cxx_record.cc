@@ -346,7 +346,7 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
                             GetExprAsStringLiteral(*arg, ast_context));
     absl::string_view trait;
     TraitImplPolarity polarity;
-    if (derived_trait.starts_with("!")) {
+    if (derived_trait.starts_with('!')) {
       trait = derived_trait.substr(1);
       polarity = TraitImplPolarity::kNegative;
     } else {
