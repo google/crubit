@@ -38,19 +38,13 @@ use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
 pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
-    let mut crate_name = if krate == db.source_crate_num() {
-        "self".to_string()
-    } else {
-        db.tcx().crate_name(krate).to_string()
-    };
-    // TODO: b/475830072 - Replace with a less brittle solution.
-    if crate_name == "alloc" {
-        crate_name = "std".to_string();
-    }
-    if let Some(namespaces) = db.crate_name_to_namespace().get(crate_name.as_str()) {
+    let mut crate_name = db.tcx().crate_name(krate);
+    let crate_needle_name =
+        if krate == db.source_crate_num() { "self" } else { crate_name.as_str() };
+    if let Some(namespaces) = db.crate_name_to_namespace().get(crate_needle_name) {
         namespaces.split("::").map(Symbol::intern).collect()
     } else {
-        Rc::from([db.tcx().crate_name(krate)])
+        Rc::from([crate_name])
     }
 }
 
@@ -347,7 +341,10 @@ pub fn format_ty_for_cc<'tcx>(
                 if def_id.krate == db.source_crate_num() {
                     prereqs.defs.insert(def_id);
                 } else {
-                    let other_crate_name = tcx.crate_name(def_id.krate);
+                    let canonical_name = db
+                        .symbol_canonical_name(def_id)
+                        .ok_or_else(|| anyhow!("Failed to generate canonical name for `{ty}`"))?;
+                    let other_crate_name = canonical_name.krate;
                     let crate_name_to_include_paths = db.crate_name_to_include_paths();
                     let includes = crate_name_to_include_paths
                         .get(other_crate_name.as_str())

@@ -595,10 +595,6 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         .map(|source_crate_name| Symbol::intern(source_crate_name.as_ref()))
         .unwrap_or_else(|| tcx.crate_name(def_id.krate));
 
-    // TODO: b/475830072 - Replace with a less brittle solution.
-    if krate.as_str() == "alloc" {
-        krate = Symbol::intern("std");
-    }
     if krate.as_str() == "polars_plan"
         && matches!(unqualified.rs_name.as_str(), "date_range" | "time_range")
     {
@@ -614,10 +610,22 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         }
     }
 
-    let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
-    let cpp_ns_path = NamespaceQualifier::new(full_path_strs);
-    let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
+    // Checks for a list of known clang builtin macros and renames their namespaces to avoid
+    // collisions. Generating a namespace with the same name as a macro causes the namespace to
+    // expand during preprocessing, producing an ill-formed program.
+    fn rename_clang_builtin_macros(ns: Rc<str>) -> Rc<str> {
+        let builtin_macros: HashSet<&str> =
+            ["unix", "linux", "WIN32", "WINNT", "WIN64", "spirv", "sun"].into_iter().collect();
+        if builtin_macros.contains(ns.as_ref()) {
+            return Rc::from(format!("rs_{}", ns.as_ref()));
+        }
+        ns
+    }
 
+    let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
+    let cpp_ns_path =
+        NamespaceQualifier::new(full_path_strs.into_iter().map(rename_clang_builtin_macros));
+    let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
     Some(FullyQualifiedName { krate, cpp_top_level_ns, cpp_ns_path, rs_mod_path, unqualified })
 }
 

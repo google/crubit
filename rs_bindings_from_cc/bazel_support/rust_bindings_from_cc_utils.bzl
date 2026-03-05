@@ -201,6 +201,7 @@ def generate_and_compile_bindings(
             crate_key = crate_name,
             headers = public_hdrs,
             features = [],
+            configuration = None,
         ),
     ]
 
