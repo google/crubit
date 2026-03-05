@@ -58,16 +58,26 @@ crubit_rust_test(
 )
 
 crubit_test_cc_library(
+    name = "foreign_lib",
+    hdrs = ["foreign_lib.h"],
+    aspect_hints = ["//features:experimental"],
+)
+
+crubit_test_cc_library(
     name = "operators",
     srcs = ["operators.cc"],
     hdrs = ["operators.h"],
     aspect_hints = ["//features:experimental"],
+    deps = [":foreign_lib"],
 )
 
 crubit_rust_test(
     name = "operators_test",
     srcs = ["operators_test.rs"],
-    cc_deps = [":operators"],
+    cc_deps = [
+        ":foreign_lib",
+        ":operators",
+    ],
     deps = [
         "//support:ctor",
         "@crate_index//:googletest",

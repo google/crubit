@@ -315,3 +315,11 @@ fn test_many_operators_shr_assign() {
     s1 >>= s2;
     assert_eq!(0, s1.i);
 }
+
+#[gtest]
+fn test_foreign_eq() {
+    let s1 = OperandForeign::default();
+    let s2 = foreign_lib::foreign::ForeignType::default();
+    assert!(s1 == s2);
+    assert!(s2 == s1);
+}

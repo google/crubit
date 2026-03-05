@@ -1810,13 +1810,13 @@ pub fn generate_function(
                 _ => None,
             };
 
-            let record_qualifier = ir.namespace_qualifier(&trait_record).format_for_rs();
-            let full_record_qualifier = if Some(trait_record.id) == func.enclosing_item_id {
+            let qualified_record_name = if Some(trait_record.id) == func.enclosing_item_id {
                 // If the method is defined in the record, then the record qualifier is not
                 // needed for better readability.
-                quote! {}
+                quote! { #record_name }
             } else {
-                quote! { crate :: #record_qualifier }
+                let t = db.rs_type_kind((&*trait_record).into())?;
+                t.to_token_stream(db)
             };
             let (trait_name_without_trait_record, impl_for) = match impl_for {
                 ImplFor::T => (
@@ -1825,7 +1825,7 @@ pub fn generate_function(
                         &trait_name,
                         Some(&trait_record),
                     ),
-                    quote! { #full_record_qualifier #record_name },
+                    qualified_record_name,
                 ),
                 ImplFor::RefT => (
                     trait_name_to_token_stream(db, &trait_name),
@@ -1842,6 +1842,7 @@ pub fn generate_function(
                 }
                 #extra_items
             };
+            let record_qualifier = ir.namespace_qualifier(&trait_record).format_for_rs();
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: {
