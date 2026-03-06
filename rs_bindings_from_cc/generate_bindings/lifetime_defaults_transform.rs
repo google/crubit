@@ -94,6 +94,7 @@ impl BindingContext {
     pub fn new() -> Self {
         let mut ctx = BindingContext { bindings: HashMap::new(), names: HashSet::new() };
         ctx.push_new_binding(&Rc::from("static"));
+        ctx.push_new_binding(&Rc::from("unknown"));
         ctx
     }
 }
@@ -154,9 +155,16 @@ impl<'a> LifetimeDefaults<'a> {
     ) -> LifetimeState {
         match lifetime {
             [] => LifetimeState::Unseen,
-            [id] => LifetimeState::Single(
-                self.bindings.get_or_push_new_binding(id, |name| new_bindings.push(name.clone())),
-            ),
+            [id] => {
+                let binding = self
+                    .bindings
+                    .get_or_push_new_binding(id, |name| new_bindings.push(name.clone()));
+                if binding.as_ref() == "unknown" {
+                    LifetimeState::Unknown
+                } else {
+                    LifetimeState::Single(binding)
+                }
+            }
             // TODO(b/454627672): multiple variables.
             _ => LifetimeState::Unknown,
         }

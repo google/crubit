@@ -53,6 +53,7 @@ pub fn with_full_lifetime_macros() -> String {
         result.push_str(&format!("#define ${} $({})\n", l, l));
     }
     result.push_str("#define $static $(static)\n");
+    result.push_str("#define $unknown $(unknown)\n");
     result
 }
 

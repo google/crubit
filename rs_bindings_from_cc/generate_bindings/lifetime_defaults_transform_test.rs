@@ -176,6 +176,37 @@ fn test_unique_lifetime_returned_for_single_ref() -> Result<()> {
 }
 
 #[gtest]
+fn test_unknown_lifetime_inhibits_default_lifetimes() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      int& f(int& $unknown i1);
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: [] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: [] ... },
+                        identifier: "i1", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_no_lifetime_returned_for_distinct_ref_parameters() -> Result<()> {
     let ir = ir_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
@@ -775,12 +806,17 @@ fn test_param_lifetimebound_to_this_in_constructor_explicit_lifetime() -> Result
 }
 
 #[gtest]
-fn test_binding_context_has_static() -> Result<()> {
+fn test_binding_context_has_builtin_lifetimes() -> Result<()> {
     let mut ctx = BindingContext::new();
     let mut called = false;
     assert_eq!(
         ctx.get_or_push_new_binding(&Rc::from("static"), |_| called = true),
         "static".into()
+    );
+    assert!(!called);
+    assert_eq!(
+        ctx.get_or_push_new_binding(&Rc::from("unknown"), |_| called = true),
+        "unknown".into()
     );
     assert!(!called);
     Ok(())
@@ -861,6 +897,44 @@ fn test_struct_binds_lifetime_param() -> Result<()> {
                 cc_name: "f",
                 rs_name: "f", ...
                 return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                lifetime_params: [],
+                ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_struct_shadows_unknown_lifetime_param() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("unknown") S { int& $unknown f(); };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                lifetime_inputs: ["unknown_0"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["unknown_0"] ... }, ...
                 lifetime_params: [],
                 ...
                 lifetime_inputs: [],
