@@ -4,8 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // struct_with_conflicting_fields_and_member_functions_rust_golden
-// Features: assume_lifetimes, callables, check_default_initialized,
-// experimental, fmt, supported, unsafe_view, wrapper
+// Features: assume_lifetimes, assume_this_lifetimes, callables,
+// check_default_initialized, experimental, fmt, supported, unsafe_view, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN

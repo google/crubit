@@ -1311,6 +1311,7 @@ fn rs_type_kinds_for_func(
         .enumerate()
         .filter_map(|(i, param)| {
             let mut param_type = param.type_.clone();
+            let mut infer_param_lifetimes = infer_lifetimes;
             if i == 0 && func.is_instance_method() {
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.
@@ -1322,7 +1323,12 @@ fn rs_type_kinds_for_func(
                         to be a `this` pointer, got:\n{param_type:?}",
                     )
                 };
-                if infer_lifetimes || lifetime.is_some() {
+                if db.ir()
+                    .target_crubit_features(&func.owning_target)
+                    .contains(crubit_feature::CrubitFeature::AssumeThisLifetime) {
+                    infer_param_lifetimes = true;
+                }
+                if infer_param_lifetimes || lifetime.is_some() {
                     match kind {
                         PointerTypeKind::LValueRef | PointerTypeKind::RValueRef => {}
                         // Fixup pointer-like `this` values to instead be reference-like.
@@ -1330,7 +1336,6 @@ fn rs_type_kinds_for_func(
                             *kind = PointerTypeKind::LValueRef;
                         }
                         PointerTypeKind::Owned => unreachable!("owned pointers require an annotation on the pointer, but there's nowhere to put an annotation for the `this` pointer")
-
                     }
                 }
             }
@@ -1338,7 +1343,7 @@ fn rs_type_kinds_for_func(
                 db.rs_type_kind_with_lifetime_elision(
                     param_type,
                     LifetimeOptions {
-                        infer_lifetimes,
+                        infer_lifetimes: infer_param_lifetimes,
                         is_return_type: false,
 
                         // Only interesting for the return type.

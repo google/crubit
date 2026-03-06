@@ -25,6 +25,10 @@ flagset::flags! {
         /// Use ergonomic lifetime defaults when interpreting lifetime annotations.
         AssumeLifetimes,
 
+        /// Unconditionally assume that the `this` pointer is a reference, even in the absence of
+        /// a lifetime annotation or other justification.
+        AssumeThisLifetime,
+
         /// Disable AssumeLifetimes (useful for :experimental).
         NoAssumeLifetimes,
 
@@ -54,6 +58,7 @@ impl CrubitFeature {
             Self::Wrapper => "wrapper",
             Self::Experimental => "experimental",
             Self::AssumeLifetimes => "assume_lifetimes",
+            Self::AssumeThisLifetime => "assume_this_lifetimes",
             Self::NoAssumeLifetimes => "no_assume_lifetimes",
             Self::Fmt => "fmt",
             Self::Callables => "callables",
@@ -71,6 +76,7 @@ impl CrubitFeature {
             Self::Wrapper => "//features:wrapper",
             Self::Experimental => "//features:experimental",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
+            Self::AssumeThisLifetime => "//features:assume_lifetimes",   // XXX assume_this_lifetimes
             Self::NoAssumeLifetimes => "//features:no_assume_lifetimes",
             Self::Fmt => "//features:fmt",
             Self::Callables => "//features:callables",
@@ -91,6 +97,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"wrapper" => CrubitFeature::Wrapper.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
+        b"assume_this_lifetimes" => CrubitFeature::AssumeLifetimes.into(),  // XXX AssumeThisLifetime
         b"no_assume_lifetimes" => CrubitFeature::NoAssumeLifetimes.into(),
         b"fmt" => CrubitFeature::Fmt.into(),
         b"callables" => CrubitFeature::Callables.into(),
@@ -206,6 +213,7 @@ mod tests {
                 | CrubitFeature::Wrapper
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
+                | CrubitFeature::AssumeThisLifetime
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -235,6 +243,7 @@ mod tests {
                 | CrubitFeature::Wrapper
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
+                | CrubitFeature::AssumeThisLifetime
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -252,6 +261,7 @@ mod tests {
                 | CrubitFeature::Wrapper
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
+                | CrubitFeature::AssumeThisLifetime
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -270,6 +280,7 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::Experimental
+                | CrubitFeature::AssumeThisLifetime
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView

@@ -231,7 +231,7 @@ impl<'a> LifetimeDefaults<'a> {
                 LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen }
             }
             CcTypeVariant::Pointer(pty)
-                if (is_this && pty.pointee_type.is_const)
+                if (is_this /*&& pty.pointee_type.is_const*/)
                     || pty.kind == PointerTypeKind::LValueRef =>
             {
                 let LifetimeResult { ty: pointee_type, .. } = self.add_lifetime_to_input_type(
@@ -454,12 +454,13 @@ impl<'a> LifetimeDefaults<'a> {
             .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
         self.lower_clang_annotations(&mut new_func)?;
         new_func.params.iter_mut().enumerate().for_each(|(ix, param)| {
-            let is_this = ix == 0 && &*param.identifier.identifier == "__this";
+            let is_constructor = func.cc_name == ir::UnqualifiedIdentifier::Constructor;
+            let is_this = ix == 0 && &*param.identifier.identifier == "__this" && !is_constructor;
             had_this |= is_this;
             let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
                 self.add_lifetime_to_input_type(
                     is_this,
-                    func.cc_name == ir::UnqualifiedIdentifier::Constructor,
+                    is_constructor,
                     Some(&param.identifier.identifier),
                     &mut new_func.lifetime_inputs,
                     &param.type_,
