@@ -10,6 +10,42 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
+const _: () = assert!(::std::mem::size_of::<::traits_golden::AssociatedTypeStruct>() == 32);
+const _: () = assert!(::std::mem::align_of::<::traits_golden::AssociatedTypeStruct>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::traits_golden::AssociatedTypeStruct as ::core::default::Default>::default();
+        (__ret_ptr as *mut ::traits_golden::AssociatedTypeStruct).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_drop(
+    __self: &'static mut ::core::mem::MaybeUninit<::traits_golden::AssociatedTypeStruct>,
+) {
+    unsafe { __self.assume_init_drop() };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_clone(
+    __self: &'static ::traits_golden::AssociatedTypeStruct,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::traits_golden::AssociatedTypeStruct as ::core::clone::Clone>::clone(__self);
+        (__ret_ptr as *mut ::traits_golden::AssociatedTypeStruct).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+    __self: &'static mut ::traits_golden::AssociatedTypeStruct,
+    source: &'static ::traits_golden::AssociatedTypeStruct,
+) -> () {
+    unsafe {
+        <::traits_golden::AssociatedTypeStruct as ::core::clone::Clone>::clone_from(__self, source)
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::traits_golden::Foo>() == 8);
 const _: () = assert!(::std::mem::align_of::<::traits_golden::Foo>() == 4);
 #[unsafe(no_mangle)]
@@ -165,5 +201,13 @@ unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
         <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::function_do_something(
             __self,
         )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
+    __self: &'static ::traits_golden::AssociatedTypeStruct,
+) -> i32 {
+    unsafe {
+        <::traits_golden::AssociatedTypeStruct as::traits_golden::AssociatedTypeTrait>::get_my_assoc_type(__self)
     }
 }

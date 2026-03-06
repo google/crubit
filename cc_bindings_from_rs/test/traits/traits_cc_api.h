@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include "support/annotations_internal.h"
+#include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/traits.h"
@@ -28,6 +29,56 @@
 #include <utility>
 
 namespace traits {
+
+// Generated from:
+// cc_bindings_from_rs/test/traits/traits.rs;l=152
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: traits_golden :: AssociatedTypeStruct") alignas(8)
+    [[clang::trivial_abi]] AssociatedTypeStruct final {
+ public:
+  // Default::default
+  AssociatedTypeStruct();
+
+  // Drop::drop
+  ~AssociatedTypeStruct();
+
+  AssociatedTypeStruct(AssociatedTypeStruct&&);
+  ::traits::AssociatedTypeStruct& operator=(AssociatedTypeStruct&&);
+
+  // Clone::clone
+  AssociatedTypeStruct(const AssociatedTypeStruct&);
+
+  // Clone::clone_from
+  ::traits::AssociatedTypeStruct& operator=(const AssociatedTypeStruct&);
+
+  AssociatedTypeStruct(::crubit::UnsafeRelocateTag,
+                       AssociatedTypeStruct&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+ private:
+  // Field type has been replaced with a blob of bytes: Type
+  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
+  // was specified for this crate
+  std::array<unsigned char, 24> a;
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/traits/traits.rs;l=153
+    std::int32_t b;
+  };
+  unsigned char __padding0[4];
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Generated from:
+// cc_bindings_from_rs/test/traits/traits.rs;l=141
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: AssociatedTypeTrait")
+    AssociatedTypeTrait {
+  template <typename T>
+  using impl = rs_std::impl<T, AssociatedTypeTrait>;
+};
 
 // Generated from:
 // cc_bindings_from_rs/test/traits/traits.rs;l=20
@@ -192,6 +243,58 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyTrait") MyTrait {
   using impl = rs_std::impl<T, MyTrait>;
 };
 
+static_assert(
+    sizeof(AssociatedTypeStruct) == 32,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(AssociatedTypeStruct) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_default(
+    ::traits::AssociatedTypeStruct* __ret_ptr);
+}
+inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_drop(::traits::AssociatedTypeStruct&);
+}
+inline AssociatedTypeStruct::~AssociatedTypeStruct() {
+  __crubit_internal::__crubit_thunk_drop(*this);
+}
+inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
+    AssociatedTypeStruct&& other)
+    : AssociatedTypeStruct() {
+  *this = std::move(other);
+}
+inline ::traits::AssociatedTypeStruct& ::traits::AssociatedTypeStruct::
+operator=(AssociatedTypeStruct&& other) {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone(::traits::AssociatedTypeStruct const&,
+                                     ::traits::AssociatedTypeStruct* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone_ufrom(
+    ::traits::AssociatedTypeStruct&, ::traits::AssociatedTypeStruct const&);
+}
+inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
+    const AssociatedTypeStruct& other) {
+  __crubit_internal::__crubit_thunk_clone(other, this);
+}
+inline ::traits::AssociatedTypeStruct& ::traits::AssociatedTypeStruct::
+operator=(const AssociatedTypeStruct& other) {
+  if (this != &other) {
+    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+  }
+  return *this;
+}
+inline void AssociatedTypeStruct::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(AssociatedTypeStruct, a));
+  static_assert(24 == offsetof(AssociatedTypeStruct, b));
+}
 static_assert(
     sizeof(Foo) == 8,
     "Verify that ADT layout didn't change since this header got generated");
@@ -359,6 +462,33 @@ struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
   // cc_bindings_from_rs/test/traits/traits.rs;l=109
   static std::int32_t const& $(__anon1)
       function_do_something(::traits::LifetimeStruct const& self);
+};
+
+template <>
+struct rs_std::impl<::traits::AssociatedTypeStruct,
+                    ::traits::AssociatedTypeTrait> {
+  static constexpr bool kIsImplemented = true;
+  using MyAssocType CRUBIT_INTERNAL_RUST_TYPE(
+      "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
+      "AssociatedTypeTrait>::MyAssocType") = std::int32_t;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=159
+  static std::int32_t get_my_assoc_type(
+      ::traits::AssociatedTypeStruct const& self);
+
+  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
+  // traits_golden::AssociatedTypeTrait>::UnsupportedAssocType` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=164:
+  // Type `std::string::String` comes from the `alloc` crate, but no
+  // `--crate-header` was specified for this crate
+
+  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
+  // traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=165:
+  // Error formatting function return type `std::string::String`: Type
+  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
+  // was specified for this crate
 };
 
 namespace traits {
@@ -536,6 +666,20 @@ inline std::int32_t const& $(
     function_do_something(::traits::LifetimeStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(self);
+}
+
+namespace traits {
+namespace __crubit_internal {
+extern "C" std::int32_t
+__crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
+    ::traits::AssociatedTypeStruct const&);
+}
+}  // namespace traits
+inline std::int32_t
+rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
+    get_my_assoc_type(::traits::AssociatedTypeStruct const& self) {
+  return traits::__crubit_internal::
+      __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(self);
 }
 
 #pragma clang diagnostic pop

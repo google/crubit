@@ -137,3 +137,32 @@ impl MyTrait for MyStruct2 {
         x.a
     }
 }
+
+pub trait AssociatedTypeTrait {
+    type MyAssocType;
+
+    type UnsupportedAssocType;
+
+    fn get_my_assoc_type(&self) -> Self::MyAssocType;
+
+    fn get_unsupported_assoc_type(&self) -> Self::UnsupportedAssocType;
+}
+
+#[derive(Default, Clone)]
+pub struct AssociatedTypeStruct {
+    b: i32,
+    a: String,
+}
+
+impl AssociatedTypeTrait for AssociatedTypeStruct {
+    type MyAssocType = i32;
+    fn get_my_assoc_type(&self) -> i32 {
+        self.b
+    }
+
+    // These should not receive bindings because String is unsupported.
+    type UnsupportedAssocType = String;
+    fn get_unsupported_assoc_type(&self) -> String {
+        self.a.clone()
+    }
+}

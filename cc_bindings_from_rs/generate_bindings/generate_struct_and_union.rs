@@ -307,10 +307,31 @@ pub(crate) fn generate_associated_item<'tcx>(
         ty::AssocKind::Const { .. } => generate_const(db, def_id),
         // TODO: b/405132277 - Rust does not support inherent associated types, but should support
         // associated types when adding traits.
-        ty::AssocKind::Type { .. } => Err(anyhow!(
-            "Associated types are not yet supported, found {:?}. See b/405132277.",
-            assoc_item.opt_name()
-        )),
+        ty::AssocKind::Type { .. } => {
+            assoc_item
+                .opt_name()
+                .zip(tcx.trait_impl_of_assoc(def_id))
+                .ok_or(anyhow!("Associated types with no name are not supported."))
+                .and_then(|(name, impl_id)| {
+                    let trait_ref = tcx.impl_trait_header(impl_id).trait_ref.instantiate_identity();
+                    let trait_rs_name = db
+                        .symbol_canonical_name(trait_ref.def_id)
+                        .expect("Trait impl should have a canonical name.")
+                        .format_for_rs();
+                    // The first argument of a trait ref is the self type.
+                    let self_ty = trait_ref.args.type_at(0);
+                    let alias_type = tcx.type_of(def_id).instantiate_identity();
+                    let rs_type_spelling = format!("<{} as {}>::{}", self_ty, trait_rs_name, name);
+                    crate::create_type_alias_with_rs_type(
+                        db,
+                        def_id,
+                        &rs_type_spelling,
+                        name.as_str(),
+                        alias_type,
+                    )
+                    .map(|snippet| snippet.into_main_api())
+                })
+        }
     };
     let result = result.and_then(|snippet| {
         snippet.resolve_feature_requirements(crate_features(db, db.source_crate_num()))

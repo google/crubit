@@ -30,3 +30,13 @@ TEST(TraitsTest, MyStructMethods) {
 
   EXPECT_EQ(do_something(s), 42);
 }
+
+TEST(TraitsTest, AssociatedTypeStruct) {
+  traits::AssociatedTypeStruct s;
+  static_assert(std::is_same_v<traits::AssociatedTypeTrait::impl<
+                                   traits::AssociatedTypeStruct>::MyAssocType,
+                               int>);
+  EXPECT_EQ(traits::AssociatedTypeTrait::impl<
+                traits::AssociatedTypeStruct>::get_my_assoc_type(s),
+            0);
+}

@@ -925,16 +925,25 @@ fn create_type_alias<'tcx>(
     alias_name: &str,
     alias_type: Ty<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
+    let fully_qualified_name = db
+        .symbol_canonical_name(def_id)
+        .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", def_id))?;
+    let rs_type = format!("{}", fully_qualified_name.format_for_rs());
+    create_type_alias_with_rs_type(db, def_id, &rs_type, alias_name, alias_type)
+}
+
+pub(crate) fn create_type_alias_with_rs_type<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    rs_type: &str,
+    alias_name: &str,
+    alias_type: Ty<'tcx>,
+) -> Result<CcSnippet<'tcx>> {
     let cc_bindings = db.format_ty_for_cc(alias_type, TypeLocation::Other)?;
     let mut main_api_prereqs = CcPrerequisites::default();
     let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
 
     let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
-
-    let fully_qualified_name = db
-        .symbol_canonical_name(def_id)
-        .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", def_id))?;
-    let rs_type = format!("{}", fully_qualified_name.format_for_rs());
 
     main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
