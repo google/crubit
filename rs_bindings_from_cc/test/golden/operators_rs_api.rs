@@ -21,6 +21,8 @@ pub struct AddableConstMember {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableConstMember {}
 impl !Sync for AddableConstMember {}
@@ -70,6 +72,8 @@ pub struct AddableNonConstMember {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableNonConstMember {}
 impl !Sync for AddableNonConstMember {}
@@ -119,6 +123,8 @@ pub struct AddableFriend {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableFriend {}
 impl !Sync for AddableFriend {}
@@ -166,6 +172,8 @@ impl Default for AddableFriend {
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByConstRef
 pub struct AddableFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableFreeByConstRef {}
 impl !Sync for AddableFreeByConstRef {}
@@ -208,6 +216,8 @@ impl Default for AddableFreeByConstRef {
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByMutRef
 pub struct AddableFreeByMutRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableFreeByMutRef {}
 impl !Sync for AddableFreeByMutRef {}
@@ -250,6 +260,8 @@ impl Default for AddableFreeByMutRef {
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByValue
 pub struct AddableFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableFreeByValue {}
 impl !Sync for AddableFreeByValue {}
@@ -292,6 +304,8 @@ impl Default for AddableFreeByValue {
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByRValueRef
 pub struct AddableFreeByRValueRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableFreeByRValueRef {}
 impl !Sync for AddableFreeByRValueRef {}
@@ -363,6 +377,8 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
 ///CRUBIT_ANNOTATE: cpp_type=Overloaded
 pub struct Overloaded {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Overloaded {}
 impl !Sync for Overloaded {}
@@ -413,6 +429,8 @@ impl Default for Overloaded {
 ///CRUBIT_ANNOTATE: cpp_type=IncompatibleLHS
 pub struct IncompatibleLHS {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for IncompatibleLHS {}
 impl !Sync for IncompatibleLHS {}
@@ -464,6 +482,8 @@ pub struct AddableReturnsVoid {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableReturnsVoid {}
 impl !Sync for AddableReturnsVoid {}
@@ -513,6 +533,8 @@ pub struct AddableConstMemberNonunpin {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddableConstMemberNonunpin {}
 impl !Sync for AddableConstMemberNonunpin {}
@@ -562,6 +584,8 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberInt
 pub struct AddAssignMemberInt {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignMemberInt {}
 impl !Sync for AddAssignMemberInt {}
@@ -613,6 +637,8 @@ impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberByConstRef
 pub struct AddAssignMemberByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignMemberByConstRef {}
 impl !Sync for AddAssignMemberByConstRef {}
@@ -660,6 +686,8 @@ impl Default for AddAssignMemberByConstRef {
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByConstRef
 pub struct AddAssignFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignFreeByConstRef {}
 impl !Sync for AddAssignFreeByConstRef {}
@@ -711,6 +739,8 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByValue
 pub struct AddAssignFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignFreeByValue {}
 impl !Sync for AddAssignFreeByValue {}
@@ -758,6 +788,8 @@ impl Default for AddAssignFreeByValue {
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByConstRef
 pub struct AddAssignFriendByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignFriendByConstRef {}
 impl !Sync for AddAssignFriendByConstRef {}
@@ -809,6 +841,8 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByValue
 pub struct AddAssignFriendByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignFriendByValue {}
 impl !Sync for AddAssignFriendByValue {}
@@ -856,6 +890,8 @@ impl Default for AddAssignFriendByValue {
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedConstMember
 pub struct AddAssignProhibitedConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignProhibitedConstMember {}
 impl !Sync for AddAssignProhibitedConstMember {}
@@ -918,6 +954,8 @@ where
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedFriendConstLhs
 pub struct AddAssignProhibitedFriendConstLhs {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AddAssignProhibitedFriendConstLhs {}
 impl !Sync for AddAssignProhibitedFriendConstLhs {}
@@ -966,6 +1004,8 @@ impl Default for AddAssignProhibitedFriendConstLhs {
 ///CRUBIT_ANNOTATE: cpp_type=ManyOperators
 pub struct ManyOperators {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for ManyOperators {}
 impl !Sync for ManyOperators {}

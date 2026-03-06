@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=Foo
 pub struct Foo {
     pub foo: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
@@ -46,6 +48,8 @@ pub mod foo {
     ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar
     pub struct Bar {
         pub bar: ::ffi_11::c_int,
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
@@ -74,6 +78,8 @@ pub mod foo {
         ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar :: Baz
         pub struct Baz {
             pub baz: ::ffi_11::c_int,
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for Baz {}
         impl !Sync for Baz {}
@@ -107,6 +113,8 @@ pub struct already_snake_case {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for already_snake_case {}
 impl !Sync for already_snake_case {}
@@ -141,6 +149,8 @@ pub struct ConflictingSnakeCaseNames {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for ConflictingSnakeCaseNames {}
 impl !Sync for ConflictingSnakeCaseNames {}
@@ -175,6 +185,8 @@ pub struct ConflictingSnakeCaseNames_ {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for ConflictingSnakeCaseNames_ {}
 impl !Sync for ConflictingSnakeCaseNames_ {}
@@ -204,6 +216,8 @@ impl Default for ConflictingSnakeCaseNames_ {
 ///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems
 pub struct OnlyOneHasNestedItems {
     pub i: crate::only_one_has_nested_items::Inner,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for OnlyOneHasNestedItems {}
 impl !Sync for OnlyOneHasNestedItems {}
@@ -232,6 +246,8 @@ pub mod only_one_has_nested_items {
     ///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
@@ -259,6 +275,8 @@ pub mod only_one_has_nested_items {
 ///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems_
 pub struct OnlyOneHasNestedItems_ {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for OnlyOneHasNestedItems_ {}
 impl !Sync for OnlyOneHasNestedItems_ {}
@@ -292,6 +310,8 @@ pub struct SameNameAsNamespace {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SameNameAsNamespace {}
 impl !Sync for SameNameAsNamespace {}
@@ -322,6 +342,8 @@ pub mod same_name_as_namespace {
     ///CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Foo
     pub struct Foo {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
@@ -348,6 +370,8 @@ pub mod same_name_as_namespace {
     ///CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Bar
     pub struct Bar {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
@@ -385,6 +409,8 @@ pub mod no_longer_top_level {
         /// Reason for representing this field as a blob of bytes:
         /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for already_snake_case {}
     impl !Sync for already_snake_case {}
@@ -421,6 +447,8 @@ pub mod no_longer_top_level {
         /// Reason for representing this field as a blob of bytes:
         /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for ConflictingSnakeCaseNames {}
     impl !Sync for ConflictingSnakeCaseNames {}
@@ -455,6 +483,8 @@ pub mod no_longer_top_level {
         /// Reason for representing this field as a blob of bytes:
         /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for ConflictingSnakeCaseNames_ {}
     impl !Sync for ConflictingSnakeCaseNames_ {}
@@ -482,6 +512,8 @@ pub mod no_longer_top_level {
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems
     pub struct OnlyOneHasNestedItems {
         pub i: crate::no_longer_top_level::only_one_has_nested_items::Inner,
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for OnlyOneHasNestedItems {}
     impl !Sync for OnlyOneHasNestedItems {}
@@ -512,6 +544,8 @@ pub mod no_longer_top_level {
         ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems :: Inner
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
@@ -537,6 +571,8 @@ pub mod no_longer_top_level {
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems_
     pub struct OnlyOneHasNestedItems_ {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for OnlyOneHasNestedItems_ {}
     impl !Sync for OnlyOneHasNestedItems_ {}
@@ -572,6 +608,8 @@ pub mod no_longer_top_level {
         /// Reason for representing this field as a blob of bytes:
         /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for SameNameAsNamespace {}
     impl !Sync for SameNameAsNamespace {}
@@ -604,6 +642,8 @@ pub mod no_longer_top_level {
         ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Foo
         pub struct Foo {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for Foo {}
         impl !Sync for Foo {}
@@ -628,6 +668,8 @@ pub mod no_longer_top_level {
         ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Bar
         pub struct Bar {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for Bar {}
         impl !Sync for Bar {}
@@ -659,6 +701,8 @@ pub mod no_longer_top_level {
 ///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared
 pub struct ContainsForwardDeclared {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for ContainsForwardDeclared {}
 impl !Sync for ContainsForwardDeclared {}

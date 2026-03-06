@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase
 pub struct PolymorphicBase {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for PolymorphicBase {}
 impl !Sync for PolymorphicBase {}
@@ -70,6 +72,8 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase {
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2
 pub struct PolymorphicBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for PolymorphicBase2 {}
 impl !Sync for PolymorphicBase2 {}
@@ -128,6 +132,8 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicDerived
 pub struct PolymorphicDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for PolymorphicDerived {}
 impl !Sync for PolymorphicDerived {}

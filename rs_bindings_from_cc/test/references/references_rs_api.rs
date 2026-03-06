@@ -20,6 +20,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithPtrConstructor
 pub struct TypeWithPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TypeWithPtrConstructor {}
 impl !Sync for TypeWithPtrConstructor {}
@@ -53,6 +55,8 @@ where
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithNonNullPtrConstructor
 pub struct TypeWithNonNullPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TypeWithNonNullPtrConstructor {}
 impl !Sync for TypeWithNonNullPtrConstructor {}
@@ -86,6 +90,8 @@ where
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithReferenceConstructor
 pub struct TypeWithReferenceConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TypeWithReferenceConstructor {}
 impl !Sync for TypeWithReferenceConstructor {}

@@ -33,6 +33,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=ABICompatible
 pub struct ABICompatible {
     pub x: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for ABICompatible {}
 impl !Sync for ABICompatible {}
@@ -63,6 +65,8 @@ pub struct LayoutCompatible {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) private_: [::core::mem::MaybeUninit<u8>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for LayoutCompatible {}
 impl !Sync for LayoutCompatible {}
@@ -550,6 +554,8 @@ pub struct __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}
 impl !Sync for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}

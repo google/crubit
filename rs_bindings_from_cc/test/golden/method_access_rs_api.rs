@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=Struct
 pub struct Struct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Struct {}
 impl !Sync for Struct {}
@@ -60,6 +62,8 @@ impl Default for Struct {
 ///CRUBIT_ANNOTATE: cpp_type=Class
 pub struct Class {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Class {}
 impl !Sync for Class {}

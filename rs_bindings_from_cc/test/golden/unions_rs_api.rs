@@ -22,6 +22,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
 pub union EmptyUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for EmptyUnion {}
 impl !Sync for EmptyUnion {}
@@ -65,6 +67,8 @@ impl Default for EmptyUnion {
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
@@ -100,6 +104,8 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 ///CRUBIT_ANNOTATE: cpp_type=UnionToRename
 pub union RenamedUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for RenamedUnion {}
 impl !Sync for RenamedUnion {}
@@ -142,6 +148,8 @@ impl Default for RenamedUnion {
 ///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
@@ -178,6 +186,8 @@ pub union NonEmptyUnion {
     pub char_field: ::ffi_11::c_char,
     pub int_field: ::ffi_11::c_int,
     pub long_long_field: ::ffi_11::c_longlong,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NonEmptyUnion {}
 impl !Sync for NonEmptyUnion {}
@@ -225,6 +235,8 @@ impl Default for NonEmptyUnion {
 pub union NonCopyUnion {
     pub trivial_member: bool,
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NonCopyUnion {}
 impl !Sync for NonCopyUnion {}
@@ -243,6 +255,8 @@ pub union NonCopyUnion2 {
     pub trivial_member: bool,
     pub nontrivial_member:
         ::core::mem::ManuallyDrop<crate::TriviallyCopyableButNontriviallyDestructible>,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NonCopyUnion2 {}
 impl !Sync for NonCopyUnion2 {}
@@ -282,6 +296,8 @@ pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
     pub(crate) constant_array_field_not_yet_supported: [::core::mem::MaybeUninit<u8>; 42],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for UnionWithOpaqueField {}
 impl !Sync for UnionWithOpaqueField {}
@@ -324,6 +340,8 @@ impl Default for UnionWithOpaqueField {
 ///CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable
 pub struct TrivialButInheritable {
     pub x: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TrivialButInheritable {}
 impl !Sync for TrivialButInheritable {}
@@ -370,6 +388,8 @@ impl Default for TrivialButInheritable {
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable
 pub union UnionWithInheritable {
     pub t: crate::TrivialButInheritable,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for UnionWithInheritable {}
 impl !Sync for UnionWithInheritable {}
@@ -416,6 +436,8 @@ impl Default for UnionWithInheritable {
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnion
 pub union TypedefUnion {
     pub trivial_member: bool,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TypedefUnion {}
 impl !Sync for TypedefUnion {}
@@ -462,6 +484,8 @@ impl Default for TypedefUnion {
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable
 pub union TypedefUnionWithInheritable {
     pub t: crate::TrivialButInheritable,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TypedefUnionWithInheritable {}
 impl !Sync for TypedefUnionWithInheritable {}

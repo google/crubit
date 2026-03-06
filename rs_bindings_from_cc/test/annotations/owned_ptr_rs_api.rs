@@ -27,6 +27,8 @@
 pub struct RawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for RawThing {}
 impl !Sync for RawThing {}

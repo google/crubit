@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=ForwardDeclaredStruct
 pub struct ForwardDeclaredStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for ForwardDeclaredStruct {}
 impl !Sync for ForwardDeclaredStruct {}

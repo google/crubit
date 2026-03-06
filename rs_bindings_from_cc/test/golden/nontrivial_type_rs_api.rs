@@ -24,6 +24,8 @@
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
@@ -188,6 +190,8 @@ impl ::ctor::PinnedDrop for Nontrivial {
 pub struct NontrivialInline {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NontrivialInline {}
 impl !Sync for NontrivialInline {}
@@ -303,6 +307,8 @@ pub struct NontrivialMembers {
     /// Reason for representing this field as a blob of bytes:
     /// nontrivial fields would be destroyed in the wrong order
     pub(crate) nontrivial_member: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NontrivialMembers {}
 impl !Sync for NontrivialMembers {}
@@ -358,6 +364,8 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 pub struct NontrivialUnpin {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NontrivialUnpin {}
 impl !Sync for NontrivialUnpin {}
@@ -546,6 +554,8 @@ pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::Nontr
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NontrivialByValue {}
 impl !Sync for NontrivialByValue {}
@@ -612,6 +622,8 @@ where
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}

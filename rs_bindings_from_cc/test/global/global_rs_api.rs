@@ -97,6 +97,8 @@ pub mod foo {
 ///CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum
 pub struct StructWithAnonEnum {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithAnonEnum {}
 impl !Sync for StructWithAnonEnum {}

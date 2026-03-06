@@ -24,6 +24,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
@@ -133,6 +135,8 @@ pub struct FieldTypeTestStruct {
     /// //rs_bindings_from_cc/test/golden:types_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
     pub(crate) forward_declared_ptr_field: [::core::mem::MaybeUninit<u8>; 8],
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for FieldTypeTestStruct {}
 impl !Sync for FieldTypeTestStruct {}

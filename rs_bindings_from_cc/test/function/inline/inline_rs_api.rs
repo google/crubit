@@ -29,6 +29,8 @@ pub fn hello_world_inline() -> ::ffi_11::c_int {
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}

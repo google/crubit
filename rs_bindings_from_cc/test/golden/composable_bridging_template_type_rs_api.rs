@@ -32,6 +32,8 @@ pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
 ///CRUBIT_ANNOTATE: cpp_type=Value < int >
 pub(crate) struct __CcTemplateInst5ValueIiE {
     pub value: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for __CcTemplateInst5ValueIiE {}
 impl !Sync for __CcTemplateInst5ValueIiE {}

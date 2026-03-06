@@ -19,6 +19,8 @@ pub mod ns {
     ///CRUBIT_ANNOTATE: cpp_type=ns :: X
     pub struct X {
         pub f: ::ffi_11::c_int,
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for X {}
     impl !Sync for X {}

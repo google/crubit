@@ -21,6 +21,8 @@
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub value: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}

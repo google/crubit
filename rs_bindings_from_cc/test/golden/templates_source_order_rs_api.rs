@@ -21,6 +21,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=TopLevel
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TopLevel {}
 impl !Sync for TopLevel {}
@@ -82,6 +84,8 @@ pub mod test_namespace_bindings {
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}

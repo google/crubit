@@ -20,6 +20,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=UnpinStructWithRefQualifiedMethods
 pub struct UnpinStructWithRefQualifiedMethods {
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for UnpinStructWithRefQualifiedMethods {}
 impl !Sync for UnpinStructWithRefQualifiedMethods {}

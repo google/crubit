@@ -23,6 +23,8 @@ pub mod test_namespace_bindings {
         /// Reason for representing this field as a blob of bytes:
         /// Types of non-public C++ fields can be elided away
         pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for SomeClass {}
     impl !Sync for SomeClass {}

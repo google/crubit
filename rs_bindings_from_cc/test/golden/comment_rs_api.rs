@@ -27,6 +27,8 @@ pub mod ns {
         pub i: ::ffi_11::c_int,
         /// Another field
         pub j: ::ffi_11::c_int,
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
@@ -92,6 +94,8 @@ pub fn foo() {
 ///CRUBIT_ANNOTATE: cpp_type=Bar
 pub struct Bar {
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Bar {}
 impl !Sync for Bar {}
@@ -135,6 +139,8 @@ impl Default for Bar {
 ///CRUBIT_ANNOTATE: cpp_type=HasNoComments
 pub struct HasNoComments {
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for HasNoComments {}
 impl !Sync for HasNoComments {}

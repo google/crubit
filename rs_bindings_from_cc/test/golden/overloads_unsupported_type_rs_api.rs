@@ -22,6 +22,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=SomeClass
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SomeClass {}
 impl !Sync for SomeClass {}
