@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/constructors:constructors
-// Features: assume_lifetimes, callables, check_default_initialized, experimental, fmt, supported, unsafe_view, wrapper
+// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, fmt, supported, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -40,7 +40,7 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=12
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithUserProvidedConstructors {
     #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &'__param_0 Self) {
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN34StructWithUserProvidedConstructorsaSERKS_(
                 self, __param_0,
@@ -370,7 +370,7 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=61
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithInlineConstructors {
     #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &'__param_0 Self) {
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN28StructWithInlineConstructorsaSERKS_(self, __param_0);
         }
@@ -456,7 +456,7 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=70
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstructors {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &'__param_0 Self) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN29StructWithDeletedConstructorsaSERKS_(self, __param_0);
         }
@@ -487,7 +487,7 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=78
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstructors {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &'__param_0 Self) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN29StructWithPrivateConstructorsaSERKS_(self, __param_0);
         }
@@ -580,7 +580,7 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NonTrivialStructWithCo
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=99
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NonTrivialStructWithConstructors {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &'__param_0 Self) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsaSERKS_(
                 self, __param_0,
@@ -638,7 +638,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int,)> for NonTrivialStructWithConstructors {
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=104
 impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
     #[inline(always)]
-    unsafe fn pinned_drop(self: ::core::pin::Pin<&mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev(self)
     }
 }
@@ -648,11 +648,12 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN34StructWithUserProvidedConstructorsaSERKS_<
+            '__this,
             '__param_0,
         >(
-            __this: &mut crate::StructWithUserProvidedConstructors,
+            __this: &'__this mut crate::StructWithUserProvidedConstructors,
             __param_0: &'__param_0 crate::StructWithUserProvidedConstructors,
-        ) -> &'__param_0 mut crate::StructWithUserProvidedConstructors;
+        ) -> &'__this mut crate::StructWithUserProvidedConstructors;
         #[link_name = "_ZN34StructWithUserProvidedConstructorsC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN34StructWithUserProvidedConstructorsC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -696,10 +697,13 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             other: &'other crate::OtherSimpleStruct,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsaSERKS_<'__param_0>(
-            __this: &mut crate::StructWithInlineConstructors,
+        pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsaSERKS_<
+            '__this,
+            '__param_0,
+        >(
+            __this: &'__this mut crate::StructWithInlineConstructors,
             __param_0: &'__param_0 crate::StructWithInlineConstructors,
-        ) -> &'__param_0 mut crate::StructWithInlineConstructors;
+        ) -> &'__this mut crate::StructWithInlineConstructors;
         pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -711,14 +715,20 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             i: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN29StructWithDeletedConstructorsaSERKS_<'__param_0>(
-            __this: ::core::pin::Pin<&mut crate::StructWithDeletedConstructors>,
+        pub(crate) unsafe fn __rust_thunk___ZN29StructWithDeletedConstructorsaSERKS_<
+            '__this,
+            '__param_0,
+        >(
+            __this: ::core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>,
             __param_0: &'__param_0 crate::StructWithDeletedConstructors,
-        ) -> ::core::pin::Pin<&'__param_0 mut crate::StructWithDeletedConstructors>;
-        pub(crate) unsafe fn __rust_thunk___ZN29StructWithPrivateConstructorsaSERKS_<'__param_0>(
-            __this: ::core::pin::Pin<&mut crate::StructWithPrivateConstructors>,
+        ) -> ::core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>;
+        pub(crate) unsafe fn __rust_thunk___ZN29StructWithPrivateConstructorsaSERKS_<
+            '__this,
+            '__param_0,
+        >(
+            __this: ::core::pin::Pin<&'__this mut crate::StructWithPrivateConstructors>,
             __param_0: &'__param_0 crate::StructWithPrivateConstructors,
-        ) -> ::core::pin::Pin<&'__param_0 mut crate::StructWithPrivateConstructors>;
+        ) -> ::core::pin::Pin<&'__this mut crate::StructWithPrivateConstructors>;
         pub(crate) unsafe fn __rust_thunk___ZN41StructWithExplicitlyDefaultedConstructorsC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -729,11 +739,12 @@ mod detail {
             __param_0: &'__param_0 crate::NonTrivialStructWithConstructors,
         );
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsaSERKS_<
+            '__this,
             '__param_0,
         >(
-            __this: ::core::pin::Pin<&mut crate::NonTrivialStructWithConstructors>,
+            __this: ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
             __param_0: &'__param_0 crate::NonTrivialStructWithConstructors,
-        ) -> ::core::pin::Pin<&'__param_0 mut crate::NonTrivialStructWithConstructors>;
+        ) -> ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>;
         #[link_name = "_ZN32NonTrivialStructWithConstructorsC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -744,8 +755,8 @@ mod detail {
             __param_0: ::ffi_11::c_int,
         );
         #[link_name = "_ZN32NonTrivialStructWithConstructorsD1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev(
-            __this: ::core::pin::Pin<&mut crate::NonTrivialStructWithConstructors>,
+        pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
         );
     }
 }

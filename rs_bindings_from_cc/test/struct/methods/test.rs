@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use googletest::prelude::*;
-use methods::*;
+use googletest::gtest;
+use methods::{InstanceMethods, SomeClass};
 
 #[gtest]
 fn test_instance_const_method() {
@@ -29,6 +29,25 @@ fn test_inline_instance_nonconst_method() {
     let mut s = InstanceMethods { int_field: 123 };
     s.inline_set_int_field(457);
     assert_eq!(457, s.int_field);
+}
+
+#[gtest]
+fn test_takes_and_returns_ref() {
+    let mut s = InstanceMethods { int_field: 123 };
+    let mut input = 456;
+    let output_ptr: *mut i32 = unsafe { s.takes_and_returns_ref(&raw mut input) };
+    assert_eq!(456, unsafe { *output_ptr });
+}
+
+#[gtest]
+fn test_ref_qualifiers() {
+    let mut s = InstanceMethods { int_field: 123 };
+    s.ref_qualified();
+    // NOTE: in the future when custom self types are supported, this should require an
+    // explicit rvalue reference.
+    s.rvalue_qualified();
+    let s_ref = &s;
+    s_ref.const_ref_qualified();
 }
 
 #[gtest]
