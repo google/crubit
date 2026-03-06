@@ -106,7 +106,6 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
     };
     Ok(ApiSnippets {
         generated_items: HashMap::from([(enum_.id, GeneratedItem::Enum(item))]),
-        features: Feature::register_tool.into(),
         thunks,
         cc_details,
         ..Default::default()

@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:enums_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]

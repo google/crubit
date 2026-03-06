@@ -7,13 +7,7 @@
 // Features: callables, check_default_initialized, experimental, fmt, supported, unsafe_view, wrapper
 
 #![rustfmt::skip]
-#![feature(
-    allocator_api,
-    arbitrary_self_types,
-    cfg_sanitize,
-    custom_inner_attributes,
-    negative_impls
-)]
+#![feature(arbitrary_self_types, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]

@@ -424,9 +424,12 @@ pub fn generate_bindings_tokens(
 
     // For #![rustfmt::skip].
     snippets.features |= Feature::custom_inner_attributes;
-    // For the `vector` in `cc_std`.
-    snippets.features |= Feature::allocator_api;
-    snippets.features |= Feature::cfg_sanitize;
+
+    if ir.current_target().target_name() == "cc_std" {
+        // For the `vector` in `cc_std`.
+        snippets.features |= Feature::allocator_api;
+        snippets.features |= Feature::cfg_sanitize;
+    }
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item = ir.find_untyped_decl(*top_level_item_id);

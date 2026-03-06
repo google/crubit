@@ -1317,7 +1317,6 @@ flagset::flags! {
         custom_inner_attributes,
         impl_trait_in_assoc_type,
         negative_impls,
-        register_tool,
         // <internal link> end
     }
 }
@@ -1331,7 +1330,6 @@ impl ToTokens for Feature {
             Feature::custom_inner_attributes => quote! { custom_inner_attributes },
             Feature::impl_trait_in_assoc_type => quote! { impl_trait_in_assoc_type },
             Feature::negative_impls => quote! { negative_impls },
-            Feature::register_tool => quote! { register_tool },
         }
         .to_tokens(tokens);
     }

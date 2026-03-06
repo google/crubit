@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:function_annotations_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]
+#![feature(custom_inner_attributes)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -28,4 +28,4 @@ mod detail {
     }
 }
 
-// This file contains Kythe metadata. eyJ0eXBlIjoia3l0aGUwIiwibWV0YSI6W3sidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjM1NSwic291cmNlX2VuZCI6Mzc3LCJ0YXJnZXRfYmVnaW4iOjUxMywidGFyZ2V0X2VuZCI6NTM1LCJlZGdlIjoiL2t5dGhlL2VkZ2UvaW1wdXRlcyIsInNvdXJjZV92bmFtZSI6eyJjb3JwdXMiOiJjb3JwdXMiLCJwYXRoIjoidGhpcmRfcGFydHkvY3J1Yml0L3JzX2JpbmRpbmdzX2Zyb21fY2MvdGVzdC9nb2xkZW4vZnVuY3Rpb25fYW5ub3RhdGlvbnMuaCIsImxhbmd1YWdlIjoiYysrIn19XX0=
+// This file contains Kythe metadata. eyJ0eXBlIjoia3l0aGUwIiwibWV0YSI6W3sidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjM1NSwic291cmNlX2VuZCI6Mzc3LCJ0YXJnZXRfYmVnaW4iOjQ4NCwidGFyZ2V0X2VuZCI6NTA2LCJlZGdlIjoiL2t5dGhlL2VkZ2UvaW1wdXRlcyIsInNvdXJjZV92bmFtZSI6eyJjb3JwdXMiOiJjb3JwdXMiLCJwYXRoIjoidGhpcmRfcGFydHkvY3J1Yml0L3JzX2JpbmRpbmdzX2Zyb21fY2MvdGVzdC9nb2xkZW4vZnVuY3Rpb25fYW5ub3RhdGlvbnMuaCIsImxhbmd1YWdlIjoiYysrIn19XX0=
