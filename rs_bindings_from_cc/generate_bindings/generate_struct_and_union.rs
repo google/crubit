@@ -852,7 +852,7 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
     };
 
     Ok(ThunkImpl::LayoutAssertion {
-        tag_kind: if record.is_anon_record_with_typedef { None } else { Some(record.record_type) },
+        tag_kind: if record.is_canonical_alias { None } else { Some(record.record_type) },
         namespace_qualifier,
         record_ident: record.cc_name.identifier.clone(),
         sizeof_impl,
