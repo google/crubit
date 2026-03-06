@@ -4,8 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // consts_golden
-// Features: assume_lifetimes, callables, check_default_initialized,
-// experimental, fmt, supported, unsafe_view, wrapper
+// Features: assume_lifetimes, assume_this_lifetimes, callables,
+// check_default_initialized, experimental, fmt, supported, unsafe_view, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_CONSTS_CONSTS_GOLDEN

@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 
-#pragma clang lifetime_elision
-
 class SomeClass final {
  public:
   static SomeClass static_factory_method(int int_var_initial_value);
@@ -30,6 +28,10 @@ struct InstanceMethods final {
 
   inline int inline_get_int_field() const { return int_field; }
   inline void inline_set_int_field(int new_value) { int_field = new_value; }
+  inline int& takes_and_returns_ref(int& input_ref) { return input_ref; }
+  inline void ref_qualified() & {}
+  inline void const_ref_qualified() const& {}
+  inline void rvalue_qualified() && {}
 
   int int_field;
 };

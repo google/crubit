@@ -63,6 +63,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling the `this` pointer to be interpreted as a reference.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "assume_this_lifetimes",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["assume_this_lifetimes"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set enabling bindings to Rust's `Display` trait.
 #
 # See crubit.rs-features#other
