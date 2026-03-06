@@ -18,8 +18,7 @@ use std::os::unix::ffi::{OsStrExt, OsStringExt};
 ///
 /// # Invariants
 ///
-/// * The contained raw_string_view is valid for lifetime `'a`.
-/// * This does **not** make any guarantees about mutable aliasing.
+/// The contained raw_string_view is valid and will be immutable for lifetime `'a`.
 #[allow(non_camel_case_types)]
 #[repr(transparent)]
 #[doc = "CRUBIT_ANNOTATE: cpp_type=std::string_view"]
@@ -44,49 +43,28 @@ impl<'a> string_view<'a> {
     }
 
     ///  Returns a Rust byte slice referring to the string_view's data.
-    ///
-    /// # Safety
-    ///
-    /// The viewed memory must NOT be mutated by any C++ code during `'a`.
-    /// The returned `&'a [u8]` requires this immutability. While C++ `std::string_view`
-    /// itself provides read-only access, the C++ code owning the viewed data must
-    /// not modify it via other aliases for the duration of `'a`.
-    pub unsafe fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &'a [u8] {
         // SAFETY (internal dereference): The method's SAFETY contract (see above) ensures
         // `self.raw` points to memory that is valid and immutable for lifetime `'a`.
         // `self.raw.as_raw_bytes()` provides a `*const [u8]`, correctly handling
         // empty/null cases for dereferencing to an empty slice. Thus, `&*` is safe.
-        &*self.raw.as_raw_bytes()
+        unsafe { &*self.raw.as_raw_bytes() }
     }
 
     /// Returns an [`Iterator`] over the utf-8 chunks.
-    ///
-    /// # Safety
-    ///
-    /// This method has the same safety preconditions as [`string_view::as_bytes`].
-    pub unsafe fn utf8_chunks(&self) -> Utf8Chunks<'a> {
-        unsafe { self.as_bytes() }.utf8_chunks()
+    pub fn utf8_chunks(&self) -> Utf8Chunks<'a> {
+        self.as_bytes().utf8_chunks()
     }
 
     /// Returns an owned `Vec<u8>` containing the same data as the string_view.
     pub fn to_vec(&self) -> std::vec::Vec<u8> {
-        // SAFETY: the string is valid, and if it is mutably aliased, we do not use any aliases
-        // here.
-        unsafe { std::vec::Vec::from(&*self.raw.as_raw_bytes()) }
+        std::vec::Vec::from(self.as_bytes())
     }
 
     /// Returns an OsStr referring to the string_view's data.
-    ///
-    /// # Safety
-    ///
-    /// The viewed memory must NOT be mutated by any C++ code during `'a`.
-    /// The returned `ffi::OsStr` requires this immutability. While C++ `std::string_view`
-    /// itself provides read-only access, the C++ code owning the viewed data must
-    /// not modify it via other aliases for the duration of `'a`.
     #[cfg(unix)]
-    pub unsafe fn as_os_str(&self) -> &'a std::ffi::OsStr {
-        // SAFETY: we forward the safety contract upward.
-        unsafe { std::ffi::OsStr::from_bytes(self.as_bytes()) }
+    pub fn as_os_str(&self) -> &'a std::ffi::OsStr {
+        std::ffi::OsStr::from_bytes(self.as_bytes())
     }
 
     /// Returns an owned Rust OsString containing the same data as the string_view.
@@ -106,44 +84,33 @@ impl<'a> string_view<'a> {
 
     /// Perform UTF-8 validation and returns a &str view of the underlying C++ string if validation
     /// succeeds. Returns an Utf8Error otherwise.
-    ///
-    /// # Safety
-    ///
-    /// The viewed memory must NOT be mutated by any C++ code during lifetime `'a`.
-    /// The returned `&'a str` (on `Ok`) requires this immutability. While C++
-    /// `std::string_view` itself provides read-only access, the C++ code owning the
-    /// viewed data must not modify it via other aliases for the duration of `'a`.
-    pub unsafe fn to_str(&self) -> Result<&'a str, core::str::Utf8Error> {
-        // SAFETY (internal dereference in map):
-        // The method's main SAFETY contract (see above) ensures `self.raw` points to
-        // memory that is valid and immutable for `'a`. `self.raw.to_str()` (itself unsafe)
-        // attempts UTF-8 conversion, yielding a `*const str` if valid. Dereferencing
-        // this pointer via `&*s` is safe given the outer contract and successful UTF-8 check.
-        self.raw.to_str().map(|s| &*s)
+    pub fn to_str(&self) -> Result<&'a str, core::str::Utf8Error> {
+        str::from_utf8(self.as_bytes())
     }
 
     /// Perform UTF-8 validation and returns an owned String. Returns an Utf8Error otherwise.
     pub fn to_string(&self) -> Result<std::string::String, core::str::Utf8Error> {
-        // SAFETY: The memory is valid and will not be mutated during this short borrow, as
-        // we do not call into any C++ code that might mutably alias the string.
-        unsafe { self.raw.to_str().map(|s| (*s).into()) }
+        self.to_str().map(std::string::String::from)
     }
 
     pub fn contains(&self, x: &u8) -> bool {
-        // SAFETY: The viewed memory is not mutated during this call.
-        unsafe { self.as_bytes() }.contains(x)
+        self.as_bytes().contains(x)
+    }
+}
+
+impl<'a> AsRef<[u8]> for string_view<'a> {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
     }
 }
 
 /// Presents the bytes as a normal string, with invalid UTF-8 presented as hex escape sequences.
 impl<'a> core::fmt::Debug for string_view<'a> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        // This implementation is the same as that of ByteStr (except for the added unsafe block):
+        // This implementation is the same as that of ByteStr:
         //   https://doc.rust-lang.org/beta/std/bstr/struct.ByteStr.html#impl-Debug-for-ByteStr
         write!(f, "\"")?;
-        // SAFETY: we only use this as long as the Debug function executes for, and are permitted
-        // to unsafely assume that C++ will not mutate the underlying string from another thread.
-        for chunk in unsafe { self.utf8_chunks() } {
+        for chunk in self.utf8_chunks() {
             for c in chunk.valid().chars() {
                 match c {
                     '\0' => write!(f, "\\0")?,
