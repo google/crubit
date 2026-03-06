@@ -89,6 +89,17 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
         (__ret_ptr as *mut ::traits_golden::MyStruct2).write(__rs_return_value);
     }
 }
+const _: () = assert!(::std::mem::size_of::<::traits_golden::StructWithAssociatedConst>() == 4);
+const _: () = assert!(::std::mem::align_of::<::traits_golden::StructWithAssociatedConst>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::traits_golden::StructWithAssociatedConst as ::core::default::Default>::default();
+        (__ret_ptr as *mut ::traits_golden::StructWithAssociatedConst).write(__rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::traits_golden::StructWithAssociatedConst, x) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething(
     __self: &'static ::traits_golden::MyStruct,

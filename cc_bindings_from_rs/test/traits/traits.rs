@@ -166,3 +166,20 @@ impl AssociatedTypeTrait for AssociatedTypeStruct {
         self.a.clone()
     }
 }
+
+pub trait TraitWithAssociatedConst {
+    const CONST_INT: i32;
+
+    const CONST_STRUCT: Self;
+}
+
+#[derive(Default, Clone, Copy)]
+pub struct StructWithAssociatedConst {
+    pub x: i32,
+}
+
+impl TraitWithAssociatedConst for StructWithAssociatedConst {
+    const CONST_INT: i32 = 10;
+
+    const CONST_STRUCT: Self = Self { x: 10 };
+}

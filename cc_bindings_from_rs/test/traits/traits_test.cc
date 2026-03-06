@@ -40,3 +40,8 @@ TEST(TraitsTest, AssociatedTypeStruct) {
                 traits::AssociatedTypeStruct>::get_my_assoc_type(s),
             0);
 }
+
+TEST(TraitsTest, AssociatedConst) {
+  static_assert(traits::TraitWithAssociatedConst::impl<
+                    traits::StructWithAssociatedConst>::CONST_INT == 10);
+}

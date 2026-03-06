@@ -243,6 +243,48 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyTrait") MyTrait {
   using impl = rs_std::impl<T, MyTrait>;
 };
 
+// Generated from:
+// cc_bindings_from_rs/test/traits/traits.rs;l=177
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: traits_golden :: StructWithAssociatedConst") alignas(4)
+    [[clang::trivial_abi]] StructWithAssociatedConst final {
+ public:
+  // Default::default
+  StructWithAssociatedConst();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructWithAssociatedConst() = default;
+  StructWithAssociatedConst(StructWithAssociatedConst&&) = default;
+  ::traits::StructWithAssociatedConst& operator=(StructWithAssociatedConst&&) =
+      default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  StructWithAssociatedConst(const StructWithAssociatedConst&) = default;
+  ::traits::StructWithAssociatedConst& operator=(
+      const StructWithAssociatedConst&) = default;
+  StructWithAssociatedConst(::crubit::UnsafeRelocateTag,
+                            StructWithAssociatedConst&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/traits/traits.rs;l=178
+    std::int32_t x;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Generated from:
+// cc_bindings_from_rs/test/traits/traits.rs;l=170
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
+    TraitWithAssociatedConst {
+  template <typename T>
+  using impl = rs_std::impl<T, TraitWithAssociatedConst>;
+};
+
 static_assert(
     sizeof(AssociatedTypeStruct) == 32,
     "Verify that ADT layout didn't change since this header got generated");
@@ -384,6 +426,31 @@ static_assert(std::is_trivially_copy_assignable_v<::traits::MyStruct2>);
 inline void MyStruct2::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct2, y));
 }
+static_assert(
+    sizeof(StructWithAssociatedConst) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(StructWithAssociatedConst) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_default(
+    ::traits::StructWithAssociatedConst* __ret_ptr);
+}
+inline ::traits::StructWithAssociatedConst::StructWithAssociatedConst() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
+static_assert(std::is_trivially_destructible_v<StructWithAssociatedConst>);
+static_assert(std::is_trivially_move_constructible_v<
+              ::traits::StructWithAssociatedConst>);
+static_assert(
+    std::is_trivially_move_assignable_v<::traits::StructWithAssociatedConst>);
+static_assert(std::is_trivially_copy_constructible_v<
+              ::traits::StructWithAssociatedConst>);
+static_assert(
+    std::is_trivially_copy_assignable_v<::traits::StructWithAssociatedConst>);
+inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(StructWithAssociatedConst, x));
+}
 }  // namespace traits
 
 template <>
@@ -489,6 +556,18 @@ struct rs_std::impl<::traits::AssociatedTypeStruct,
   // Error formatting function return type `std::string::String`: Type
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
+};
+
+template <>
+struct rs_std::impl<::traits::StructWithAssociatedConst,
+                    ::traits::TraitWithAssociatedConst> {
+  static constexpr bool kIsImplemented = true;
+  static constexpr std::int32_t CONST_INT = INT32_C(10);
+
+  // Error generating bindings for `<traits_golden::StructWithAssociatedConst as
+  // traits_golden::TraitWithAssociatedConst>::CONST_STRUCT` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=184:
+  // Unsupported constant type: traits_golden::StructWithAssociatedConst
 };
 
 namespace traits {
