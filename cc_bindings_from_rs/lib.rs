@@ -7,12 +7,14 @@
 
 extern crate rustc_driver;
 extern crate rustc_errors;
+extern crate rustc_hir;
 extern crate rustc_interface;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
 
+use rustc_hir::attrs::AttributeKind;
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::{
     self as config, CodegenOptions, ErrorOutputType, OptionsTargetModifiers, Sysroot,
@@ -382,19 +384,59 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         bail!("--source-crate-name must be provided when using rmetas")
     };
 
+    let mut crate_attrs = Vec::new();
+
+    let probe_input = config::Input::Str {
+        name: rustc_span::FileName::Custom("probe.rs".into()),
+        input: format!("#![no_std]\n#![no_core]\nextern crate r#{};", crate_name),
+    };
+    let probe_config = construct_config(
+        probe_input,
+        config::Options {
+            crate_types: vec![config::CrateType::Rlib],
+            externs: externs.clone(),
+            sysroot: sysroot.clone(),
+            target_triple: target_triple.clone(),
+            search_paths: search_paths.clone(),
+            cg: cg.clone(),
+            unstable_opts: unstable_opts.clone(),
+            ..Default::default()
+        },
+    );
+    rustc_interface::run_compiler(probe_config, |compiler| {
+        let krate = rustc_interface::passes::parse(&compiler.sess);
+        rustc_interface::create_and_enter_global_ctxt(compiler, krate, |tcx| {
+            let _ = tcx.resolver_for_lowering();
+            let Some(cnum) = tcx
+                .used_crates(())
+                .iter()
+                .find(|&&cnum| tcx.crate_name(cnum).as_str() == crate_name)
+            else {
+                // If we can't load the metadata for the crate, we won't be able to generate
+                // bindings for it and we'll generate the relevant error below.
+                return;
+            };
+            if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd(_)) {
+                crate_attrs.push("#![no_std]");
+            }
+            if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore(_)) {
+                crate_attrs.extend([
+                    "#![allow(internal_features)]",
+                    "#![feature(no_core)]",
+                    "#![no_core]",
+                ]);
+            }
+        });
+    });
+
+    let mut input_str = crate_attrs.join("\n");
+    if crate_name != "std" {
+        input_str.push_str(&format!("\n\nextern crate r#{};\n", crate_name));
+    }
+
     let input = config::Input::Str {
         name: rustc_span::FileName::Custom("lib.rs".into()),
-        // This tells rustc to load our crate from it's rmeta.
-        input: if crate_name == "std" {
-            "".to_string()
-        } else {
-            format!(
-                r#"
-extern crate r#{};
-"#,
-                crate_name
-            )
-        },
+        input: input_str,
     };
     let config = construct_config(
         input,
