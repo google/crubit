@@ -22,6 +22,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=CompatibleType
 pub struct CompatibleType {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for CompatibleType {}
 impl !Sync for CompatibleType {}

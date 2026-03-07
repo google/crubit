@@ -20,6 +20,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
@@ -50,6 +52,8 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 ///CRUBIT_ANNOTATE: cpp_type=Base
 pub struct Base {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Base {}
 impl !Sync for Base {}
@@ -101,6 +105,8 @@ pub trait BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable {}
 ///CRUBIT_ANNOTATE: cpp_type=Derived
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}

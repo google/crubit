@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=DifferentScope
 pub struct DifferentScope {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for DifferentScope {}
 impl !Sync for DifferentScope {}
@@ -76,6 +78,8 @@ pub mod test_namespace_bindings {
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateParam
     pub struct TemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for TemplateParam {}
     impl !Sync for TemplateParam {}
@@ -216,6 +220,8 @@ pub mod private_classes {
     ///CRUBIT_ANNOTATE: cpp_type=private_classes :: HasPrivateType
     pub struct HasPrivateType {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for HasPrivateType {}
     impl !Sync for HasPrivateType {}

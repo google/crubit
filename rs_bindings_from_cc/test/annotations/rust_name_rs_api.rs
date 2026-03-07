@@ -28,6 +28,8 @@ pub mod crubit {
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName
         pub struct StructNewName {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for StructNewName {}
         impl !Sync for StructNewName {}
@@ -57,6 +59,8 @@ pub mod crubit {
         pub struct SomeStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub field_new_name: ::ffi_11::c_int,
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for SomeStruct {}
         impl !Sync for SomeStruct {}

@@ -27,6 +27,8 @@ pub mod foo {
         ///CRUBIT_ANNOTATE: cpp_type=foo :: inline1 :: MyStruct
         pub struct MyStruct {
             pub value: ::ffi_11::c_int,
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for MyStruct {}
         impl !Sync for MyStruct {}

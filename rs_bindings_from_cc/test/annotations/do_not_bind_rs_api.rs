@@ -22,6 +22,8 @@ pub mod crubit {
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToBoundOverload
         pub struct ArgumentToBoundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for ArgumentToBoundOverload {}
         impl !Sync for ArgumentToBoundOverload {}
@@ -50,6 +52,8 @@ pub mod crubit {
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToUnboundOverload
         pub struct ArgumentToUnboundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for ArgumentToUnboundOverload {}
         impl !Sync for ArgumentToUnboundOverload {}
@@ -90,6 +94,8 @@ pub mod crubit {
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor
         pub struct StructWithDoNotBindConstructor {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for StructWithDoNotBindConstructor {}
         impl !Sync for StructWithDoNotBindConstructor {}
@@ -127,6 +133,8 @@ pub mod crubit {
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod
         pub struct StructWithDoNotBindMethod {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for StructWithDoNotBindMethod {}
         impl !Sync for StructWithDoNotBindMethod {}

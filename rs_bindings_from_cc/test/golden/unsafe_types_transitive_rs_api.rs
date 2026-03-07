@@ -23,6 +23,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=PublicPointer
 pub struct PublicPointer {
     pub p: *mut ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for PublicPointer {}
 impl !Sync for PublicPointer {}
@@ -50,6 +52,8 @@ pub struct PrivatePointer {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for PrivatePointer {}
 impl !Sync for PrivatePointer {}
@@ -85,6 +89,8 @@ pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
 pub struct TransitivePublicPointer {
     pub r#pub: crate::PublicPointer,
     pub r#priv: crate::PrivatePointer,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TransitivePublicPointer {}
 impl !Sync for TransitivePublicPointer {}
@@ -114,6 +120,8 @@ impl Default for TransitivePublicPointer {
 pub union Union {
     pub i: ::ffi_11::c_int,
     pub f: f32,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Union {}
 impl !Sync for Union {}

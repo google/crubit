@@ -22,6 +22,8 @@ pub struct DestructionOrderRecorder {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for DestructionOrderRecorder {}
 impl !Sync for DestructionOrderRecorder {}
@@ -135,6 +137,8 @@ pub struct FieldDestructionOrderTester {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field3_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for FieldDestructionOrderTester {}
 impl !Sync for FieldDestructionOrderTester {}

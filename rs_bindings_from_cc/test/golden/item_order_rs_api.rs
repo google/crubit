@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=FirstStruct
 pub struct FirstStruct {
     pub field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for FirstStruct {}
 impl !Sync for FirstStruct {}
@@ -65,6 +67,8 @@ pub fn first_func() -> ::ffi_11::c_int {
 ///CRUBIT_ANNOTATE: cpp_type=SecondStruct
 pub struct SecondStruct {
     pub field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SecondStruct {}
 impl !Sync for SecondStruct {}

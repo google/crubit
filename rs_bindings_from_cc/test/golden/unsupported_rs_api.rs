@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=TrivialCustomType
 pub struct TrivialCustomType {
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TrivialCustomType {}
 impl !Sync for TrivialCustomType {}
@@ -67,6 +69,8 @@ impl Default for TrivialCustomType {
 pub struct NontrivialCustomType {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NontrivialCustomType {}
 impl !Sync for NontrivialCustomType {}

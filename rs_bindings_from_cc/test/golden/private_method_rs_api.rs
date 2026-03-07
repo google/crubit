@@ -21,6 +21,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=Outer
 pub struct Outer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Outer {}
 impl !Sync for Outer {}

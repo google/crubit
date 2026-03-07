@@ -23,6 +23,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=CannotUpcastInCrubit
 pub struct CannotUpcastInCrubit {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for CannotUpcastInCrubit {}
 impl !Sync for CannotUpcastInCrubit {}

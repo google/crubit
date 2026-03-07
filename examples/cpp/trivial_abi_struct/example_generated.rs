@@ -24,6 +24,8 @@
 pub struct Position {
     pub x: ::ffi_11::c_int,
     pub y: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Position {}
 impl !Sync for Position {}

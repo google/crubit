@@ -23,6 +23,8 @@ pub struct RustDerived {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) rust_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for RustDerived {}
 impl !Sync for RustDerived {}
