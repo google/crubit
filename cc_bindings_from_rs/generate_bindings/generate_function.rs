@@ -29,7 +29,7 @@ use quote::quote;
 use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::{self, Ty, TyCtxt};
+use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use std::collections::BTreeSet;
@@ -697,6 +697,54 @@ fn get_function_cc_name(db: &BindingsGenerator, def_id: DefId) -> Result<Ident> 
     .context("Error formatting function name")
 }
 
+fn format_trait_ref_for_cc<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_ref: &TraitRef<'tcx>,
+) -> Result<CcSnippet<'tcx>> {
+    let trait_name = db
+        .symbol_canonical_name(trait_ref.def_id)
+        .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
+        .expect("Generated trait method for a trait with an invalid cc name");
+    let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
+    let mut prereqs = CcPrerequisites::default();
+    let tokens = if trait_args.peek().is_none() {
+        quote! { #trait_name }
+    } else {
+        let arg_tokens = trait_args
+            .map(|ty_arg| {
+                Ok(db.format_ty_for_cc(ty_arg, TypeLocation::Other)?.into_tokens(&mut prereqs))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        quote! { #trait_name<#(#arg_tokens),*> }
+    };
+    Ok(CcSnippet { prereqs, tokens })
+}
+
+fn format_trait_ref_for_rs<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_ref: &TraitRef<'tcx>,
+) -> Result<TokenStream> {
+    let trait_name = db
+        .symbol_canonical_name(trait_ref.def_id)
+        .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
+        .expect("Generated trait method for a trait with an invalid rs name");
+    let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
+    if trait_args.peek().is_none() {
+        Ok(quote! { #trait_name })
+    } else {
+        let arg_tokens = trait_args
+            .map(|ty_arg| {
+                let static_ty_arg = crate::generate_function_thunk::replace_all_regions_with_static(
+                    db.tcx(),
+                    ty_arg,
+                );
+                db.format_ty_for_rs(static_ty_arg)
+            })
+            .collect::<Result<Vec<_>>>()?;
+        Ok(quote! { #trait_name<#(#arg_tokens),*> })
+    }
+}
+
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -946,15 +994,14 @@ pub fn generate_function<'tcx>(
         let decl_name = trait_ref
             .as_ref()
             .map(|trait_ref| {
-                let trait_name = db
-                    .symbol_canonical_name(trait_ref.def_id)
-                    .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
-                    .expect("Generated trait method for a trait with an invalid rust name");
                 let struct_name = struct_name
                     .as_ref()
                     .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
                     .expect("Generated trait method for an ADT with an invalid rust name");
-                quote! { rs_std :: impl <#struct_name, #trait_name> :: #bracketed_decl_name }
+                let trait_name_with_args = format_trait_ref_for_cc(db, trait_ref)
+                    .expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.")
+                    .into_tokens(&mut prereqs);
+                quote! { rs_std :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
             })
             .or_else(|| {
                 struct_name.as_ref().map(|fully_qualified_name| {
@@ -993,7 +1040,8 @@ pub fn generate_function<'tcx>(
                     .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
                     .expect("Generated trait method for an ADT with an invalid rust name");
                 let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
-                quote! { <#struct_name as #trait_name>::#fn_name }
+                let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref).expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.");
+                quote! { <#struct_name as #trait_name_with_args>::#fn_name }
         })
         // Inherent method
         .or_else(|| struct_name.as_ref().map(|struct_name| {

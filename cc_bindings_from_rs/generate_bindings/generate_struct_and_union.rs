@@ -38,7 +38,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
 
-fn has_type_or_const_vars() -> TypeFlags {
+pub(crate) fn has_type_or_const_vars() -> TypeFlags {
     TypeFlags::HAS_TY_PARAM
         | TypeFlags::HAS_CT_PARAM
         | TypeFlags::HAS_TY_INFER

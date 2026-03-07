@@ -36,10 +36,6 @@ trait DoesNotBind {
     fn do_something(&self) -> i32;
 }
 
-pub trait GenericTrait<T> {
-    fn generic_do_something(&self) -> T;
-}
-
 pub trait LifetimeTrait<'a> {
     fn trait_do_something(&'a self) -> &'a i32;
 
@@ -87,12 +83,6 @@ impl DifferentTraitSameName for MyStruct {
 
 impl DoesNotBind for MyStruct {
     fn do_something(&self) -> i32 {
-        self.x
-    }
-}
-
-impl GenericTrait<i32> for MyStruct {
-    fn generic_do_something(&self) -> i32 {
         self.x
     }
 }

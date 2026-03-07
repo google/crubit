@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "cc_bindings_from_rs/test/traits/traits.h"
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 template <typename T>

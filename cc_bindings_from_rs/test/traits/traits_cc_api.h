@@ -31,7 +31,7 @@
 namespace traits {
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=152
+// cc_bindings_from_rs/test/traits/traits.rs;l=142
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: traits_golden :: AssociatedTypeStruct") alignas(8)
     [[clang::trivial_abi]] AssociatedTypeStruct final {
@@ -63,7 +63,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   std::array<unsigned char, 24> a;
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/traits.rs;l=153
+    // cc_bindings_from_rs/test/traits/traits.rs;l=143
     std::int32_t b;
   };
   unsigned char __padding0[4];
@@ -73,7 +73,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=141
+// cc_bindings_from_rs/test/traits/traits.rs;l=131
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: AssociatedTypeTrait")
     AssociatedTypeTrait {
   template <typename T>
@@ -123,12 +123,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `traits_golden::GenericTrait` defined at
-// cc_bindings_from_rs/test/traits/traits.rs;l=39:
-// Trait is not yet supported
-
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=100
+// cc_bindings_from_rs/test/traits/traits.rs;l=90
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
     8) [[clang::trivial_abi]] LifetimeStruct final {
  public:
@@ -150,7 +146,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/traits.rs;l=101
+    // cc_bindings_from_rs/test/traits/traits.rs;l=91
     std::int32_t const* crubit_nonnull x;
   };
 
@@ -159,7 +155,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=43
+// cc_bindings_from_rs/test/traits/traits.rs;l=39
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeTrait")
     LifetimeTrait {
   template <typename T>
@@ -167,7 +163,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeTrait")
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=50
+// cc_bindings_from_rs/test/traits/traits.rs;l=46
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
     [[clang::trivial_abi]] MyStruct final {
  public:
@@ -188,13 +184,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=55
+  // cc_bindings_from_rs/test/traits/traits.rs;l=51
   static ::traits::MyStruct new_(std::int32_t x);
 
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/traits.rs;l=51
+    // cc_bindings_from_rs/test/traits/traits.rs;l=47
     std::int32_t x;
   };
 
@@ -203,7 +199,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=115
+// cc_bindings_from_rs/test/traits/traits.rs;l=105
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
     [[clang::trivial_abi]] MyStruct2 final {
  public:
@@ -226,7 +222,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/traits.rs;l=116
+    // cc_bindings_from_rs/test/traits/traits.rs;l=106
     std::int32_t y;
   };
 
@@ -244,7 +240,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyTrait") MyTrait {
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=177
+// cc_bindings_from_rs/test/traits/traits.rs;l=167
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: traits_golden :: StructWithAssociatedConst") alignas(4)
     [[clang::trivial_abi]] StructWithAssociatedConst final {
@@ -269,7 +265,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/traits.rs;l=178
+    // cc_bindings_from_rs/test/traits/traits.rs;l=168
     std::int32_t x;
   };
 
@@ -278,7 +274,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=170
+// cc_bindings_from_rs/test/traits/traits.rs;l=160
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
     TraitWithAssociatedConst {
   template <typename T>
@@ -458,24 +454,24 @@ struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=61
+  // cc_bindings_from_rs/test/traits/traits.rs;l=57
   static std::int32_t do_something(::traits::MyStruct const& self);
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=65
+  // cc_bindings_from_rs/test/traits/traits.rs;l=61
   static std::int32_t consume_self(::traits::MyStruct self);
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=69
+  // cc_bindings_from_rs/test/traits/traits.rs;l=65
   static ::traits::MyStruct const& $(__anon1)
       return_self(::traits::MyStruct const& self);
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=73
+  // cc_bindings_from_rs/test/traits/traits.rs;l=69
   static std::int32_t no_self();
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=77
+  // cc_bindings_from_rs/test/traits/traits.rs;l=73
   static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
       ::traits::MyStruct const& self, ::traits::Foo x);
 };
@@ -485,24 +481,24 @@ struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=120
+  // cc_bindings_from_rs/test/traits/traits.rs;l=110
   static std::int32_t do_something(::traits::MyStruct2 const& self);
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=124
+  // cc_bindings_from_rs/test/traits/traits.rs;l=114
   static std::int32_t consume_self(::traits::MyStruct2 self);
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=128
+  // cc_bindings_from_rs/test/traits/traits.rs;l=118
   static ::traits::MyStruct2 const& $(__anon1)
       return_self(::traits::MyStruct2 const& self);
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=132
+  // cc_bindings_from_rs/test/traits/traits.rs;l=122
   static std::int32_t no_self();
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=136
+  // cc_bindings_from_rs/test/traits/traits.rs;l=126
   static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
       ::traits::MyStruct2 const& self, ::traits::Foo x);
 };
@@ -512,7 +508,7 @@ struct rs_std::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
   static constexpr bool kIsImplemented = true;
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=83
+  // cc_bindings_from_rs/test/traits/traits.rs;l=79
   static std::int32_t do_something(::traits::MyStruct const& self);
 };
 
@@ -521,12 +517,12 @@ struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
   static constexpr bool kIsImplemented = true;
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=105
+  // cc_bindings_from_rs/test/traits/traits.rs;l=95
   static std::int32_t const& $a
   trait_do_something(::traits::LifetimeStruct const& self);
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=109
+  // cc_bindings_from_rs/test/traits/traits.rs;l=99
   static std::int32_t const& $(__anon1)
       function_do_something(::traits::LifetimeStruct const& self);
 };
@@ -540,19 +536,19 @@ struct rs_std::impl<::traits::AssociatedTypeStruct,
       "AssociatedTypeTrait>::MyAssocType") = std::int32_t;
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=159
+  // cc_bindings_from_rs/test/traits/traits.rs;l=149
   static std::int32_t get_my_assoc_type(
       ::traits::AssociatedTypeStruct const& self);
 
   // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
   // traits_golden::AssociatedTypeTrait>::UnsupportedAssocType` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=164:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=154:
   // Type `std::string::String` comes from the `alloc` crate, but no
   // `--crate-header` was specified for this crate
 
   // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
   // traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=165:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=155:
   // Error formatting function return type `std::string::String`: Type
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
@@ -566,7 +562,7 @@ struct rs_std::impl<::traits::StructWithAssociatedConst,
 
   // Error generating bindings for `<traits_golden::StructWithAssociatedConst as
   // traits_golden::TraitWithAssociatedConst>::CONST_STRUCT` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=184:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=174:
   // Unsupported constant type: traits_golden::StructWithAssociatedConst
 };
 

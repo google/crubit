@@ -50,3 +50,37 @@ crubit_cc_test(
         "//testing/base/public:gunit_main",
     ],
 )
+
+rust_library(
+    name = "generic_traits",
+    srcs = ["generic_traits.rs"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+)
+
+cc_bindings_from_rust(
+    name = "generic_traits_cc_api",
+    testonly = 1,
+    crate = ":generic_traits",
+)
+
+golden_test(
+    name = "generic_traits_golden_test",
+    basename = "generic_traits",
+    golden_h = "generic_traits_cc_api.h",
+    golden_rs = "generic_traits_cc_api_impl.rs",
+    rust_library = "generic_traits",
+)
+
+crubit_cc_test(
+    name = "generic_traits_test",
+    srcs = ["generic_traits_test.cc"],
+    deps = [
+        ":generic_traits_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)
