@@ -203,6 +203,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
       A tuple of (GeneratedBindingsInfo, features, current_config, output_depset).
     """
     h_out_file = ctx.actions.declare_file(basename + ".h")
+    cpp_out_file = ctx.actions.declare_file(basename + ".cpp")
     rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
 
     if ctx.label in [Label(x) for x in ctx.attr._verbose_log_targets[BuildSettingInfo].value]:
@@ -212,6 +213,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
 
     crubit_args = ctx.actions.args()
     crubit_args.add("--h-out", h_out_file)
+    crubit_args.add("--cpp-out", cpp_out_file)
     crubit_args.add("--rs-out", rs_out_file)
     crubit_args.add("--h-out-include-guard", _target_name_to_include_guard(label))
 
@@ -234,7 +236,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
     for feature in features:
         crubit_args.add("--crate-feature", "self=" + feature)
 
-    outputs = [h_out_file, rs_out_file]
+    outputs = [h_out_file, cpp_out_file, rs_out_file]
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
         error_report_output = ctx.actions.declare_file(basename + "_cc_api_error_report.json")
         crubit_args.add(
@@ -296,18 +298,23 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
 
     generated_bindings_info = GeneratedBindingsInfo(
         h_file = h_out_file,
+        cc_file = cpp_out_file,
         rust_file = rs_out_file,
     )
     output_depset = [x for x in outputs if x != None]
 
     return generated_bindings_info, features, current_config, output_depset
 
-def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, cc_infos):
+def _make_cc_info_for_h_out_file(ctx, feature_configuration, h_out_file, cc_out_file, extra_cc_hdrs, extra_cc_srcs, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
 
     Args:
       ctx: The rule context.
+      feature_configuration: The features enabled for the bindings.
       h_out_file: The generated "..._cc_api.h" header file
+      cc_out_file: The generated "..._cc_api.cpp" source file
+      extra_cc_hdrs: Additional headers to compile with the generated bindings.
+      extra_cc_srcs: Additional sources to compile with the generated bindings.
       cc_infos: cc_infos for dependencies of the h_out_file - should include both:
           1) the target `crate` and
           2) the compiled Rust glue crate (`..._cc_api_impl.rs` file).
@@ -320,17 +327,13 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
         for dep in ctx.attr._cc_deps_for_bindings
     ] + cc_infos)
     cc_toolchain = find_cpp_toolchain(ctx)
-    feature_configuration = cc_common.configure_features(
-        ctx = ctx,
-        cc_toolchain = cc_toolchain,
-    )
 
     (compilation_context, compilation_outputs) = cc_common.compile(
         name = ctx.label.name,
         actions = ctx.actions,
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        srcs = extra_cc_srcs,
+        srcs = [cc_out_file] + extra_cc_srcs,
         public_hdrs = [h_out_file] + extra_cc_hdrs,
         compilation_contexts = [cc_info.compilation_context],
     )
@@ -400,6 +403,8 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ["layering_check"],
     )
 
     dep_info, build_info, linkstamps = collect_deps(
@@ -493,7 +498,9 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     cc_info = _make_cc_info_for_h_out_file(
         ctx,
+        feature_configuration,
         bindings_info.h_file,
+        bindings_info.cc_file,
         extra_cc_hdrs,
         extra_cc_srcs,
         cc_infos = [target[CcInfo], dep_variant_info.cc_info] + [

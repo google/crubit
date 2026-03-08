@@ -14,9 +14,10 @@ source module gbash_unit.sh
 readonly STDERR_PATH="${TEST_TMPDIR}/stderr.txt"
 readonly STDOUT_PATH="${TEST_TMPDIR}/stdout.txt"
 readonly H_OUT_PATH="${TEST_TMPDIR}/cc_api.h"
+readonly CPP_OUT_PATH="${TEST_TMPDIR}/cc_api.cpp"
 readonly RS_OUT_PATH="${TEST_TMPDIR}/cc_api_impl.rs"
 function delete_all_test_outputs() {
-  rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH" "$TARGET_JSON_PATH"
+  rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$CPP_OUT_PATH" "$RS_OUT_PATH" "$TARGET_JSON_PATH"
 }
 
 readonly CC_BINDINGS_FROM_RS_PATH="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs"
@@ -51,6 +52,7 @@ function test::happy_path() {
   EXPECT_SUCCEED \
     "\"$CC_BINDINGS_FROM_RS_PATH\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=${H_OUT_PATH}\" \
+        \"--cpp-out=${CPP_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
         \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \
@@ -64,6 +66,7 @@ function test::happy_path() {
 
   EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"
   EXPECT_STR_EMPTY "$(cat $STDERR_PATH)"
+  EXPECT_STR_EMPTY "$(cat $CPP_OUT_PATH)"
 
   EXPECT_FILE_NOT_EMPTY "${H_OUT_PATH}"
   EXPECT_SUCCEED \
@@ -181,6 +184,7 @@ function test::rustc_warnings_are_silenced() {
   EXPECT_SUCCEED \
     "\"$CC_BINDINGS_FROM_RS_PATH\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=${H_OUT_PATH}\" \
+        \"--cpp-out=${CPP_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
         \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \

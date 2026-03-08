@@ -140,12 +140,15 @@ def _header_generation_test_impl(ctx):
 
     # Verify that `CcBindingsFromRust` generates:
     # 1) `generated_header` ("..._cc_api.h")
-    # 2) `generated_impl` ("..._cc_api_impl.rs")
+    # 2) `generated_cpp` ("..._cc_api.cpp")
+    # 3) `generated_impl` ("..._cc_api_impl.rs")
     generated_outputs = generate_action.outputs.to_list()
-    asserts.equals(env, 2, len(generated_outputs))
+    asserts.equals(env, 3, len(generated_outputs))
     generated_header = generated_outputs[0]
     asserts.equals(env, "rusty_lib.h", generated_header.basename)
-    generated_impl = generated_outputs[1]
+    generated_cpp = generated_outputs[1]
+    asserts.equals(env, "rusty_lib.cpp", generated_cpp.basename)
+    generated_impl = generated_outputs[2]
     asserts.equals(env, "rusty_lib_cc_api_impl.rs", generated_impl.basename)
 
     [rustc_action] = [action for action in _find_actions_by_mnemonic(env, "Rustc") if generated_impl.path in [input.path for input in action.inputs.to_list()]]

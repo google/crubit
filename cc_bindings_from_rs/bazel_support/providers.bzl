@@ -22,6 +22,7 @@ GeneratedBindingsInfo = provider(
     doc = "A provider that contains the generated C++ and Rust files.",
     fields = {
         "h_file": "The generated C++ header file.",
+        "cc_file": "The generated C++ source file.",
         "rust_file": "The generated Rust source file.",
     },
 )
