@@ -906,6 +906,7 @@ pub struct Func {
     // Lifetime variable names bound by this function.
     #[serde(default)]
     pub lifetime_inputs: Vec<Rc<str>>,
+    pub is_implicit: bool,
 }
 
 impl GenericItem for Func {
@@ -1009,6 +1010,8 @@ pub struct Field {
     // TODO(kinuko): Consider removing this, it is a duplicate of the same information
     // in `Record`.
     pub is_inheritable: bool,
+
+    pub has_in_class_initializer: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

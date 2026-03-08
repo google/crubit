@@ -394,6 +394,7 @@ llvm::json::Value Func::ToJson() const {
       {"enclosing_item_id", enclosing_item_id},
       {"adl_enclosing_record", adl_enclosing_record},
       {"must_bind", must_bind},
+      {"is_implicit", is_implicit},
   };
 
   if (!lifetime_inputs.empty()) {
@@ -433,6 +434,7 @@ llvm::json::Value Field::ToJson() const {
       {"is_no_unique_address", is_no_unique_address},
       {"is_bitfield", is_bitfield},
       {"is_inheritable", is_inheritable},
+      {"has_in_class_initializer", has_in_class_initializer},
   };
 }
 

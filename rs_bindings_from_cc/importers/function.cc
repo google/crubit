@@ -744,6 +744,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .id = ictx_.GenerateItemId(function_decl),
       .enclosing_item_id = *std::move(enclosing_item_id),
       .lifetime_inputs = std::move(lifetime_inputs),
+      .is_implicit = function_decl->isImplicit(),
   };
 }
 

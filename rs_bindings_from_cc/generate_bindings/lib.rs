@@ -18,7 +18,7 @@ use database::code_snippet::{
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
     BridgeRsTypeKind, Callable, FnTrait, Mutability, PassingConvention, RsTypeKind, RustPtrKind,
-    Safety,
+    Safety, UniformReprTemplateType,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -404,6 +404,7 @@ pub fn new_database<'db>(
         crubit_abi_type,
         has_bindings::type_target_restriction,
         has_bindings::resolve_type_names,
+        is_default_initialized,
     )
 }
 
@@ -1524,4 +1525,75 @@ fn make_cpp_type_from_item(
         .parse::<TokenStream>()
         .map_err(|e| anyhow!("Failed to parse C++ name `{cc_name}`: {e}"))?;
     Ok(quote! { :: #(#namespace_parts::)* #cpp_type })
+}
+
+fn is_default_initialized(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<bool> {
+    let result = match rs_type_kind.unalias() {
+        RsTypeKind::Error { .. } => false,
+        RsTypeKind::Pointer { kind, .. } => match kind {
+            RustPtrKind::CcPtr(_) => {
+                // C++ pointers are not default initialized.
+                false
+            }
+            RustPtrKind::Slice => {
+                // Slice comes from rs_std::SliceRef, which has a safe default constructor.
+                true
+            }
+        },
+        RsTypeKind::Reference { .. }
+        | RsTypeKind::RvalueReference { .. }
+        | RsTypeKind::FuncPtr { .. }
+        | RsTypeKind::IncompleteRecord { .. } => false,
+        RsTypeKind::Record { record, uniform_repr_template_type, owned_ptr_type, .. } => {
+            // Owned pointer types are transparent wrappers around a pointer, so they have the same
+            // initialization semantics (no initialization) as a pointer.
+            if owned_ptr_type.is_some() {
+                return Ok(false);
+            }
+            if let Some(uniform_repr_template_type) = uniform_repr_template_type {
+                // Exhaustive matching in case we add more.
+                return match uniform_repr_template_type.as_ref() {
+                    UniformReprTemplateType::StdVector { .. } => Ok(true),
+                    UniformReprTemplateType::StdUniquePtr { .. } => Ok(true),
+                    UniformReprTemplateType::AbslSpan { .. } => Ok(true),
+                };
+            }
+
+            // TODO(okabayashi): Do we have a default constructor that's marked as
+            // CRUBIT_UNSAFE_MARK_SAFE?
+
+            // If we don't, then we need to check that all fields are default initialized.
+            for field in &record.fields {
+                if field.access != AccessSpecifier::Public {
+                    // mapped to [MaybeUninit<u8>; N] so we don't care, go next.
+                    continue;
+                }
+
+                if field.has_in_class_initializer {
+                    // Default initialized, go next.
+                    continue;
+                }
+
+                if db.is_default_initialized(db.rs_type_kind(field.type_.clone())?)? {
+                    // The type is default initialized, go next.
+                    continue;
+                }
+
+                // None of the default initialization checks worked, by itself this record will
+                // contain publicly accessible uninitialized memory.
+                return Ok(false);
+            }
+
+            true
+        }
+        RsTypeKind::Enum { .. } => false,
+        RsTypeKind::TypeAlias { .. } => unreachable!("called .unalias() above"),
+        RsTypeKind::Primitive(_) => false,
+        RsTypeKind::BridgeType { .. } => bail!("BridgeType should not be default initialized"),
+        RsTypeKind::ExistingRustType(_existing_rust_type) => {
+            // I don't really know
+            false
+        }
+    };
+    Ok(result)
 }
