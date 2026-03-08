@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // stdlib_golden
-// Features: supported
+// Features: fmt, supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_STDLIB_STDLIB_GOLDEN
