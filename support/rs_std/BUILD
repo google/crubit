@@ -75,6 +75,7 @@ cc_library(
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
+        "//storage/googlesql/safesql:__subpackages__",
         "//visibility:public",
     ],
 
