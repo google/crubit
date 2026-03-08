@@ -192,3 +192,21 @@ fn test_debug_impl() {
     let sv = string_view::from(s);
     assert_eq!(format!("{sv:?}"), r#""\0\x01\x02\x03""#);
 }
+
+#[gtest]
+fn test_display_impl() {
+    // Empty string.
+    let s = "";
+    let sv = string_view::from(s);
+    assert_eq!(format!("{}", sv.display()), "");
+
+    // Valid UTF-8.
+    let s = "Hello World";
+    let sv = string_view::from(s);
+    assert_eq!(format!("{}", sv.display()), "Hello World");
+
+    // Invalid UTF-8.
+    let s: &[u8] = &[b'A', 0xf1, b'B', 0xf2, b'C'];
+    let sv = string_view::from(s);
+    assert_eq!(format!("{}", sv.display()), "A�B�C");
+}
