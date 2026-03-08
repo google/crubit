@@ -7,6 +7,7 @@ projection. See <internal link> and <internal link> for
 more context.
 """
 
+load("//net/proto2/compiler/stubby/cc/build_defs:cc_stubby_rust_aspect.bzl", "rust_stubby_aspect")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
@@ -406,8 +407,8 @@ rust_bindings_from_cc_aspect = aspect(
         "implicit_cc_deps",
         "implicit_rust_deps",
     ],
-    requires = [rust_cc_proto_library_aspect],
-    required_aspect_providers = [CcInfo],
+    requires = [rust_cc_proto_library_aspect, rust_stubby_aspect],
+    required_aspect_providers = [[CcInfo], [AdditionalRustSrcsProviderInfo]],
     attrs = bindings_attrs | {
         "_std": attr.label(
             default = "//support/public:cc_std",
