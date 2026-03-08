@@ -38,7 +38,7 @@ use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
 pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
-    let mut crate_name = db.tcx().crate_name(krate);
+    let crate_name = db.tcx().crate_name(krate);
     let crate_needle_name =
         if krate == db.source_crate_num() { "self" } else { crate_name.as_str() };
     if let Some(namespaces) = db.crate_name_to_namespace().get(crate_needle_name) {
