@@ -85,15 +85,6 @@ impl Default for ExistingRustTypeFieldTypes {
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for class 'CppPtr':
-// Class templates are not supported yet
-
-// Error while generating bindings for function 'InstantiatedCppPtr':
-// Return type is not supported: Unsupported type 'CppPtr<int, true, 123>': Failed to create bindings for template specialization type CppPtr<int, true, 123>: Unsupported template argument kind: Integral
-
-// Error while generating bindings for struct 'CppPtr':
-// Unsupported template argument kind: Integral
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

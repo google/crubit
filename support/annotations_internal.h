@@ -18,11 +18,19 @@
 #define CRUBIT_INTERNAL_ANNOTATE_TYPE(...)
 #endif
 
+namespace crubit {
+template <typename...>
+struct crubit_internal_rust_type_args {};
+
+template <auto>
+struct const_generic {};
+}  // namespace crubit
+
 // Unsafe: disables bindings, and reinterprets all uses of this type as `t`.
 //
 // This attribute completely disables automated bindings for the type which it
 // appertains to. All uses of that type are replaced with uses of `t`, which
-// must be a rust type which exists and is guaranteed to be available by that
+// must be a Rust type which exists and is guaranteed to be available by that
 // name.
 //
 // This can be applied to a struct, class, or enum.
@@ -51,8 +59,10 @@
 //
 // SAFETY:
 //   If the type is not layout-compatible with `t`, the behavior is undefined.
-#define CRUBIT_INTERNAL_RUST_TYPE(t) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_rust_type", t)
+#define CRUBIT_INTERNAL_RUST_TYPE(t, ...) \
+  CRUBIT_INTERNAL_ANNOTATE(               \
+      "crubit_internal_rust_type", t,     \
+      crubit::crubit_internal_rust_type_args<__VA_ARGS__>())
 
 // Unsafe: forces a type to be treated as C abi compatible with its rust
 // equivalent.
