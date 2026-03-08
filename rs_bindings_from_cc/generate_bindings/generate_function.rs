@@ -1080,14 +1080,12 @@ fn generate_func_body(
             ..
         }
         | ImplKind::Struct { is_renamed_unpin_constructor: true, .. } => {
-            // SAFETY: A user-defined constructor is not guaranteed to
-            // initialize all the fields. To make the `assume_init()` call
-            // below safe, the memory is zero-initialized first. This is a
-            // bit safer, because zero-initialized memory represents a valid
-            // value for the currently supported field types (this may
-            // change once the bindings generator starts supporting
-            // reference fields). TODO(b/213243309): Double-check if
-            // zero-initialization is desirable here.
+            // SAFETY: Constructors are guaranteed to run all subobject constructors, but primitive
+            // fields are not necessarily initialized. By zeroing the memory first, we ensure that
+            // all primitives are initialized to zero. All C++ primitives, when mapped to Rust
+            // primitives, can accept a zero value (pointers, floats, bools, ints, etc.). One
+            // notable exception is C++ references, but those cannot be default-initialized, so
+            // we don't need to worry about them.
             Ok(quote! {
                 #thunk_prepare
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
