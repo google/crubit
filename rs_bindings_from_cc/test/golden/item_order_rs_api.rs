@@ -37,24 +37,6 @@ impl Default for FirstStruct {
     }
 }
 
-// Error while generating bindings for constructor 'FirstStruct::FirstStruct':
-// Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'FirstStruct::FirstStruct':
-// Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'FirstStruct::operator=':
-// Can't generate bindings for FirstStruct::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'FirstStruct::operator=':
-// Can't generate bindings for FirstStruct::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
-
 #[inline(always)]
 pub fn first_func() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
@@ -83,24 +65,6 @@ impl Default for SecondStruct {
         }
     }
 }
-
-// Error while generating bindings for constructor 'SecondStruct::SecondStruct':
-// Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'SecondStruct::SecondStruct':
-// Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'SecondStruct::operator=':
-// Can't generate bindings for SecondStruct::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'SecondStruct::operator=':
-// Can't generate bindings for SecondStruct::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
 pub fn second_func() -> ::ffi_11::c_int {

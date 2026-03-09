@@ -37,24 +37,6 @@ impl Default for DifferentScope {
     }
 }
 
-// Error while generating bindings for constructor 'DifferentScope::DifferentScope':
-// Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'DifferentScope::DifferentScope':
-// Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'DifferentScope::operator=':
-// Can't generate bindings for DifferentScope::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'DifferentScope::operator=':
-// Can't generate bindings for DifferentScope::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __param_0 (parameter #1): references are not supported)
-
 pub mod test_namespace_bindings {
     // Error while generating bindings for class 'test_namespace_bindings::MyTemplate':
     // Class templates are not supported yet
@@ -96,24 +78,6 @@ pub mod test_namespace_bindings {
             }
         }
     }
-
-    // Error while generating bindings for constructor 'test_namespace_bindings::TemplateParam::TemplateParam':
-    // Can't generate bindings for test_namespace_bindings::TemplateParam::TemplateParam, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for test_namespace_bindings::TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for constructor 'test_namespace_bindings::TemplateParam::TemplateParam':
-    // Can't generate bindings for test_namespace_bindings::TemplateParam::TemplateParam, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for test_namespace_bindings::TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'test_namespace_bindings::TemplateParam::operator=':
-    // Can't generate bindings for test_namespace_bindings::TemplateParam::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for test_namespace_bindings::TemplateParam::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for test_namespace_bindings::TemplateParam::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'test_namespace_bindings::TemplateParam::operator=':
-    // Can't generate bindings for test_namespace_bindings::TemplateParam::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for test_namespace_bindings::TemplateParam::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for test_namespace_bindings::TemplateParam::operator= (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for type alias 'test_namespace_bindings::TemplateWithStructTemplateParam':
     // Can't generate bindings for test_namespace_bindings::TemplateWithStructTemplateParam, because of missing required features (crubit.rs-features):
@@ -223,24 +187,6 @@ pub mod private_classes {
         type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
         type Kind = ::cxx::kind::Trivial;
     }
-
-    // Error while generating bindings for constructor 'private_classes::HasPrivateType::HasPrivateType':
-    // Can't generate bindings for private_classes::HasPrivateType::HasPrivateType, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for constructor 'private_classes::HasPrivateType::HasPrivateType':
-    // Can't generate bindings for private_classes::HasPrivateType::HasPrivateType, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'private_classes::HasPrivateType::operator=':
-    // Can't generate bindings for private_classes::HasPrivateType::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'private_classes::HasPrivateType::operator=':
-    // Can't generate bindings for private_classes::HasPrivateType::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::operator= (the type of __param_0 (parameter #1): references are not supported)
 }
 
 // namespace private_classes

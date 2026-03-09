@@ -40,24 +40,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // Error while generating bindings for constructor 'test_namespace_bindings::S::S':
-    // Can't generate bindings for test_namespace_bindings::S::S, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings::S::S (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for constructor 'test_namespace_bindings::S::S':
-    // Can't generate bindings for test_namespace_bindings::S::S, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings::S::S (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'test_namespace_bindings::S::operator=':
-    // Can't generate bindings for test_namespace_bindings::S::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings::S::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings::S::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'test_namespace_bindings::S::operator=':
-    // Can't generate bindings for test_namespace_bindings::S::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings::S::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings::S::operator= (the type of __param_0 (parameter #1): references are not supported)
-
     /// Free comment inside namespace
     #[inline(always)]
     pub fn f(mut s: crate::test_namespace_bindings::S) -> ::ffi_11::c_int {
@@ -135,24 +117,6 @@ pub mod test_namespace_bindings_reopened {
             }
         }
 
-        // Error while generating bindings for constructor 'test_namespace_bindings_reopened::inner::S::S':
-        // Can't generate bindings for test_namespace_bindings_reopened::inner::S::S, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_reopened::inner::S::S (the type of __param_0 (parameter #1): references are not supported)
-
-        // Error while generating bindings for constructor 'test_namespace_bindings_reopened::inner::S::S':
-        // Can't generate bindings for test_namespace_bindings_reopened::inner::S::S, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_reopened::inner::S::S (the type of __param_0 (parameter #1): references are not supported)
-
-        // Error while generating bindings for function 'test_namespace_bindings_reopened::inner::S::operator=':
-        // Can't generate bindings for test_namespace_bindings_reopened::inner::S::operator=, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_reopened::inner::S::operator= (return type: references are not supported)
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_reopened::inner::S::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-        // Error while generating bindings for function 'test_namespace_bindings_reopened::inner::S::operator=':
-        // Can't generate bindings for test_namespace_bindings_reopened::inner::S::operator=, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_reopened::inner::S::operator= (return type: references are not supported)
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_reopened::inner::S::operator= (the type of __param_0 (parameter #1): references are not supported)
-
         #[inline(always)]
         pub fn z(mut s: crate::test_namespace_bindings_reopened::inner::S) {
             unsafe {
@@ -195,24 +159,6 @@ pub mod test_namespace_bindings_inline {
                 }
             }
         }
-
-        // Error while generating bindings for constructor 'test_namespace_bindings_inline::inner::StructInInlineNamespace::StructInInlineNamespace':
-        // Can't generate bindings for test_namespace_bindings_inline::inner::StructInInlineNamespace::StructInInlineNamespace, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_inline::inner::StructInInlineNamespace::StructInInlineNamespace (the type of __param_0 (parameter #1): references are not supported)
-
-        // Error while generating bindings for constructor 'test_namespace_bindings_inline::inner::StructInInlineNamespace::StructInInlineNamespace':
-        // Can't generate bindings for test_namespace_bindings_inline::inner::StructInInlineNamespace::StructInInlineNamespace, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_inline::inner::StructInInlineNamespace::StructInInlineNamespace (the type of __param_0 (parameter #1): references are not supported)
-
-        // Error while generating bindings for function 'test_namespace_bindings_inline::inner::StructInInlineNamespace::operator=':
-        // Can't generate bindings for test_namespace_bindings_inline::inner::StructInInlineNamespace::operator=, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_inline::inner::StructInInlineNamespace::operator= (return type: references are not supported)
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_inline::inner::StructInInlineNamespace::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-        // Error while generating bindings for function 'test_namespace_bindings_inline::inner::StructInInlineNamespace::operator=':
-        // Can't generate bindings for test_namespace_bindings_inline::inner::StructInInlineNamespace::operator=, because of missing required features (crubit.rs-features):
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_inline::inner::StructInInlineNamespace::operator= (return type: references are not supported)
-        // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for test_namespace_bindings_inline::inner::StructInInlineNamespace::operator= (the type of __param_0 (parameter #1): references are not supported)
     }
     #[allow(unused_imports)]
     pub use inner::*;

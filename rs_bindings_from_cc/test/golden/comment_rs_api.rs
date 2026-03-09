@@ -46,24 +46,6 @@ pub mod ns {
         }
     }
 
-    // Error while generating bindings for constructor 'ns::Foo::Foo':
-    // Can't generate bindings for ns::Foo::Foo, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for constructor 'ns::Foo::Foo':
-    // Can't generate bindings for ns::Foo::Foo, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'ns::Foo::operator=':
-    // Can't generate bindings for ns::Foo::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-    // Error while generating bindings for function 'ns::Foo::operator=':
-    // Can't generate bindings for ns::Foo::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for ns::Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
-
     // TODO(rosica): This comment appears near fields of a struct, and
     // is currently generated below the struct definiton on the Rust side.
 
@@ -111,24 +93,6 @@ impl Default for Bar {
     }
 }
 
-// Error while generating bindings for constructor 'Bar::Bar':
-// Can't generate bindings for Bar::Bar, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'Bar::Bar':
-// Can't generate bindings for Bar::Bar, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'Bar::operator=':
-// Can't generate bindings for Bar::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'Bar::operator=':
-// Can't generate bindings for Bar::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __param_0 (parameter #1): references are not supported)
-
 /// d
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -153,24 +117,6 @@ impl Default for HasNoComments {
         }
     }
 }
-
-// Error while generating bindings for constructor 'HasNoComments::HasNoComments':
-// Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'HasNoComments::HasNoComments':
-// Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasNoComments::operator=':
-// Can't generate bindings for HasNoComments::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasNoComments::operator=':
-// Can't generate bindings for HasNoComments::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // e
 

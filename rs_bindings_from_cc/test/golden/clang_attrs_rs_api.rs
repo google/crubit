@@ -37,24 +37,6 @@ impl Default for HasCustomAlignment {
     }
 }
 
-// Error while generating bindings for constructor 'HasCustomAlignment::HasCustomAlignment':
-// Can't generate bindings for HasCustomAlignment::HasCustomAlignment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::HasCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'HasCustomAlignment::HasCustomAlignment':
-// Can't generate bindings for HasCustomAlignment::HasCustomAlignment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::HasCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasCustomAlignment::operator=':
-// Can't generate bindings for HasCustomAlignment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasCustomAlignment::operator=':
-// Can't generate bindings for HasCustomAlignment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::operator= (the type of __param_0 (parameter #1): references are not supported)
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasFieldWithCustomAlignment
@@ -80,24 +62,6 @@ impl Default for HasFieldWithCustomAlignment {
         }
     }
 }
-
-// Error while generating bindings for constructor 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Can't generate bindings for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Can't generate bindings for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasFieldWithCustomAlignment::operator=':
-// Can't generate bindings for HasFieldWithCustomAlignment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasFieldWithCustomAlignment::operator=':
-// Can't generate bindings for HasFieldWithCustomAlignment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(64))]
@@ -125,24 +89,6 @@ impl Default for InheritsFromBaseWithCustomAlignment {
     }
 }
 
-// Error while generating bindings for constructor 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Can't generate bindings for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Can't generate bindings for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'InheritsFromBaseWithCustomAlignment::operator=':
-// Can't generate bindings for InheritsFromBaseWithCustomAlignment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'InheritsFromBaseWithCustomAlignment::operator=':
-// Can't generate bindings for InheritsFromBaseWithCustomAlignment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::operator= (the type of __param_0 (parameter #1): references are not supported)
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(64))]
 ///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr
@@ -168,24 +114,6 @@ impl Default for HasCustomAlignmentWithGnuAttr {
         }
     }
 }
-
-// Error while generating bindings for constructor 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Can't generate bindings for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for constructor 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Can't generate bindings for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasCustomAlignmentWithGnuAttr::operator=':
-// Can't generate bindings for HasCustomAlignmentWithGnuAttr::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-// Error while generating bindings for function 'HasCustomAlignmentWithGnuAttr::operator=':
-// Can't generate bindings for HasCustomAlignmentWithGnuAttr::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 pub mod template_with_preferred_name { // Error while generating bindings for class 'template_with_preferred_name::SomeTemplate':
                                        // Class templates are not supported yet

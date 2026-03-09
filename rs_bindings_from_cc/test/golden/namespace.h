@@ -5,7 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
 
-#pragma clang lifetime_elision
 
 namespace test_namespace_bindings {
 struct S final {

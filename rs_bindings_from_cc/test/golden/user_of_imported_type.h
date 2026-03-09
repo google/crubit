@@ -7,8 +7,6 @@
 
 #include "rs_bindings_from_cc/test/golden/trivial_type.h"
 
-#pragma clang lifetime_elision
-
 ns::Trivial UsesImportedType(ns::Trivial t);
 
 struct UserOfImportedType final {
