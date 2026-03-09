@@ -106,9 +106,6 @@ impl<T> Drop for unique_ptr<T> {
     }
 }
 
-/// Legacy alias for [`virtual_unique_ptr`].
-pub type unique_ptr_dyn<T> = virtual_unique_ptr<T>;
-
 /// A smart pointer that owns and manages a polymorphic object with base class `T`.
 ///
 /// This type is ABI-compatible with C++'s `std::unique_ptr<T>`, where `T` is a base class with a
