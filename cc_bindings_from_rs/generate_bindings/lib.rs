@@ -1705,6 +1705,14 @@ fn generate_trait_impls<'a, 'tcx>(
                         if arg.flags().contains(has_type_or_const_vars()) {
                             return Err((impl_def_id, anyhow!("Implementation of traits must specify all types to receive bindings.")));
                         }
+                        if arg.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
+                            return Err((
+                                impl_def_id,
+                                anyhow!(
+                                    "b/491106325 - isize and usize types are not yet supported as trait type arguments."
+                                ),
+                            ));
+                        }
                         db.format_ty_for_cc(arg, TypeLocation::Other)
                             .map(|snippet| snippet.into_tokens(&mut prereqs))
                             .map_err(|err| (impl_def_id, err))
