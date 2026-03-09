@@ -589,7 +589,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     // to include the `_rust_proto` suffix, but the rmeta file contains the unsuffixed crate name.
     // If we're naming a symbol from our source crate, use the source crate name as the krate name
     // to resolve any renaming issues.
-    let mut krate = (def_id.krate == db.source_crate_num())
+    let krate = (def_id.krate == db.source_crate_num())
         .then_some(())
         .and_then(|_| db.source_crate_name())
         .map(|source_crate_name| Symbol::intern(source_crate_name.as_ref()))
