@@ -230,10 +230,7 @@ impl<'a> LifetimeDefaults<'a> {
                 new_ty.explicit_lifetimes = self.get_lifetime_for_state(&state);
                 LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen }
             }
-            CcTypeVariant::Pointer(pty)
-                if (is_this && pty.pointee_type.is_const)
-                    || pty.kind == PointerTypeKind::LValueRef =>
-            {
+            CcTypeVariant::Pointer(pty) if is_this || pty.kind == PointerTypeKind::LValueRef => {
                 let LifetimeResult { ty: pointee_type, .. } = self.add_lifetime_to_input_type(
                     false,
                     false,
@@ -454,12 +451,16 @@ impl<'a> LifetimeDefaults<'a> {
             .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
         self.lower_clang_annotations(&mut new_func)?;
         new_func.params.iter_mut().enumerate().for_each(|(ix, param)| {
-            let is_this = ix == 0 && &*param.identifier.identifier == "__this";
+            let is_constructor = func.cc_name == ir::UnqualifiedIdentifier::Constructor;
+            // `this` in a constructor is strange. The !is_constructor restriction fixes some
+            // situations where we would bind a `'__this` in a constructor and then not use it
+            // (because the actual `__this` is a void*).
+            let is_this = ix == 0 && &*param.identifier.identifier == "__this" && !is_constructor;
             had_this |= is_this;
             let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
                 self.add_lifetime_to_input_type(
                     is_this,
-                    func.cc_name == ir::UnqualifiedIdentifier::Constructor,
+                    is_constructor,
                     Some(&param.identifier.identifier),
                     &mut new_func.lifetime_inputs,
                     &param.type_,

@@ -14,10 +14,7 @@ fn my_test() {
 #[gtest]
 fn self_reference_test() {
     let mut s = member_function::S::default();
-    unsafe {
-        let s_ptr: *mut member_function::S =
-            member_function::S::me(&mut s as *mut member_function::S);
-        let int_field = (*s_ptr).int_accessor();
-        assert_eq!(*int_field, 42);
-    }
+    let s_ref: &mut member_function::S = member_function::S::me(&mut s);
+    let int_field = s_ref.int_accessor();
+    assert_eq!(*int_field, 42);
 }
