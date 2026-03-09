@@ -401,5 +401,31 @@ TEST(PointerNullabilityTest, FieldWithLoopInBetweenDefinitionAndUse) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, LSCBug) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* GetLocal();
+
+    int* GetFromSomething(int*);
+
+    struct S {
+      int* field;
+    };
+
+    void target(int branches, bool b) {
+      int* local = GetLocal();
+
+      for (int i = 0; i < 4; ++i) {
+        if (b) {
+          local = GetFromSomething(local);
+        }
+      }
+
+      S s{local};
+      *local;
+      *s.field;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
