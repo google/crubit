@@ -6,9 +6,16 @@
 #include <iostream>
 
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 // The generated bindings are in a header at the same path as the
 // `example_crate` rust_library, with a `.h` suffix.
 #include "examples/rust/trait/example_crate.h"
+
+template <typename T>
+  requires(rs_std::where_v<T, example_crate::MyTrait>)
+uint32_t add_with_2(T const& self) {
+  return example_crate::MyTrait::impl<T>::add_with(self, 2);
+}
 
 int main(int argc, char* argv[]) {
   // The generated bindings are in a namespace with the same name as the

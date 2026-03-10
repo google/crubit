@@ -39,6 +39,7 @@
     *   [Cpp Enums](/docs/rust/cpp_enums.md)
     *   [Type Aliases](/docs/rust/type_aliases.md)
     *   [`use` Declarations](/docs/rust/use_declarations.md)
+    *   [Traits](/docs/rust/traits.md)
     *   <hr> [Movable types](/docs/rust/movable_types.md)
 
 *   Design {.cnav-collapsed-by-default}

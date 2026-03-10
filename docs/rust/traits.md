@@ -1,18 +1,11 @@
 # C++ bindings for Rust traits
 
-Rust traits and trait implementations are mapped into a template struct and
-template struct specialization respectively.
+Crubit allows C++ callers to invoke Rust trait implementations. For each `trait
+SomeTrait`, Crubit generates a matching C++ `struct MyTrait`. To call a trait
+method `SomeTrait::some_fn` implemented by `SomeType`, C++ callers can use
+`SomeTrait::impl<SomeType>::some_fn(args...)`.
 
-Today only a subset of trait functionality is supported:
-
-*   Generic traits are not supported.
-*   Blanket Implementations are not supported.
-*   Only associated functions of the trait receive bindings today.
-*   The same constraints required for a top-level function to receive bindings
-    apply to trait functions (each parameter and return type receives bindings
-    etc.).
-
-## Example.
+## Example
 
 Given the following Rust crate:
 
@@ -22,22 +15,49 @@ Given the following Rust crate:
 <!--  -->
 
 
-Crubit will generate three bindings. A template struct for `MyTrait`:
+You can call the trait from C++ using the following code:
 
 ```
-{{ #include ../../examples/rust/trait/example_generated.h }}
+{{ #include ../../examples/rust/trait/main.cc }}
 ```
-<!--  class:MyTrait -->
+<!--  function:main -->
 
 
-A struct for `MyStruct`:
+Each trait has an associated `impl` member which is generic upon the `Self` type
+of the trait implementation, and which provides all of the associated types,
+consts, and functions.
+
+## Checking if a trait is implemented
+
+C++ users can check if a trait implementation is available using
+`rs_std::where_v<T, SomeTrait>`. This is useful when writing templated C++
+functions, as it can be used with `requires` (or `enable_if`) to specify that a
+particular trait is implemented by a type parameter. For example:
 
 ```
-{{ #include ../../examples/rust/trait/example_generated.h }}
+{{ #include ../../examples/rust/trait/main.cc }}
 ```
-<!--  class:MyStruct -->
+<!--  function:add_with_two -->
 
 
+## Limitations
+
+Some trait implementations will not receive bindings:
+
+*   Trait implementations with generic parameters (e.g. `impl<T> ...`) will not
+    receive bindings.
+    *   For example, an implementation `impl<U> TwoArgs<i32, U> for MyStruct`
+        will not receive bindings because the `impl` has a type parameter (`U`).
+    *   This also means that blanket impls (e.g. `impl<T> Trait for T`) are not
+        supported.
+*   Traits with `const` parameters (e.g. `trait T<const V: usize>`) do not yet
+    not receive bindings.
+*   Trait methods will not receive bindings if their parameter or return types
+    are not yet supported by Crubit.
+
+## How does it work?
+
+Under the hood, Crubit will generate three bindings from the example Rust crate.
 A template specialization for `impl MyTrait for MyStruct`:
 
 ```
@@ -46,39 +66,27 @@ A template specialization for `impl MyTrait for MyStruct`:
 <!--  class:impl -->
 
 
-We can see an example of how we call our generated trait methods:
+Our generated `rs_std::impl` specialization is an implementation detail of
+binding generation. It holds the actual thunks that call into rust to implement
+our trait, but they should be accessed through our template struct `MyTrait`:
 
 ```
-{{ #include ../../examples/rust/trait/main.cc }}
+{{ #include ../../examples/rust/trait/example_generated.h }}
 ```
-<!--  function:main -->
+<!--  class:MyTrait -->
 
 
-Each bound trait provides its implementations via the `impl` member, which
-selects the generated specialization (if one exists). We can call our trait
-method using the `Trait::impl<Args...>::trait_method(args...)` syntax mirroring
-Rust's fully qualified method dispatch.
+Each struct generated for a Rust trait has the `impl` member that provides
+access to the generated `rs_std::impl`. This is the preferred way to reference
+the generated `rs_std::impl`.
 
-## What about when a trait isn't implemented?
+Finally, a struct for `MyStruct`:
 
-Our example so far, rather conveniently, only calls trait implementations that
-exist. But what about when a trait implementation doesn't exist? We're just as
-free to write `MyTrait::impl<uint32_t>::add_with(...)` despite there being no
-`impl MyTrait for i32` in Rust.
-
-In such a situation, we generate a fresh instantiation of our `MyTrait` template
-devoid of any methods. This will cause a compilation error. If we're writing our
-own templated code and we want to check that our a template argument `T`
-implements a trait, we can use `rs_std::where`.
-
-We can write a templated function that requires our trait implementation:
-
-```cpp
-template <typename T>
-  requires(rs_std::where_v<T, example_crate::MyTrait>)
-uint32_t add_with_2(T const& self) {
-  return example_crate::MyTrait::impl<T>::add_with(self, 2);
-}
 ```
+{{ #include ../../examples/rust/trait/example_generated.h }}
+```
+<!--  class:MyStruct -->
 
-A constexpr expression is also available as `rs_std::where_v`.
+
+Our struct is generated normally and exists purely so we have something to
+implement our trait for.
