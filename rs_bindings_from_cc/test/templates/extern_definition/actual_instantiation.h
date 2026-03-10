@@ -7,7 +7,6 @@
 
 #include "rs_bindings_from_cc/test/templates/extern_definition/extern_definition.h"
 
-#pragma clang lifetime_elision
 
 namespace actual_instantiation_ns {
 

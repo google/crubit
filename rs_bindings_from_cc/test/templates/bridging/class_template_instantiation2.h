@@ -7,7 +7,6 @@
 
 #include "rs_bindings_from_cc/test/templates/bridging/class_template_definition.h"
 
-#pragma clang lifetime_elision
 
 inline int GetValue(const MyTemplate<int>& t) { return t.value(); }
 

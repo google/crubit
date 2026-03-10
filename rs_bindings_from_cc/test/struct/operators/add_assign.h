@@ -7,7 +7,6 @@
 
 #include <cstdint>
 
-#pragma clang lifetime_elision
 
 struct AddAssignMemberInt final {
   int operator+=(int rhs) {

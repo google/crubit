@@ -7,7 +7,6 @@
 
 #include <stdint.h>
 
-#pragma clang lifetime_elision
 
 // A struct that is passed in a non-default way in the swiftcall calling
 // convention.

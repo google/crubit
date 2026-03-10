@@ -7,7 +7,6 @@
 
 #include <stdint.h>
 
-#pragma clang lifetime_elision
 
 template <int multiplier>
 class MyTemplate final {

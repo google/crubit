@@ -6,7 +6,6 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_UPCAST_H_
 #include <stddef.h>
 
-#pragma clang lifetime_elision
 
 class Base0 {};
 

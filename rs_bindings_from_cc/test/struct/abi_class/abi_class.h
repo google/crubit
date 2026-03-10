@@ -5,7 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_ABI_CLASS_ABI_CLASS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_ABI_CLASS_ABI_CLASS_H_
 
-#pragma clang lifetime_elision
 
 // These are regression tests for b/270384825
 //

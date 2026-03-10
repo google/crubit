@@ -7,7 +7,6 @@
 
 #include "rs_bindings_from_cc/test/struct/operators/foreign_lib.h"
 
-#pragma clang lifetime_elision
 
 struct TestStruct1 final {
   int i;

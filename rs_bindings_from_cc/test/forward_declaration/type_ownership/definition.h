@@ -7,7 +7,6 @@
 
 #include "rs_bindings_from_cc/test/forward_declaration/type_ownership/forward_declaration.h"
 
-#pragma clang lifetime_elision
 
 struct ForwardDeclaredStruct final {};
 

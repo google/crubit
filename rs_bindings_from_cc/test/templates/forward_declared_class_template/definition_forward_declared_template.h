@@ -7,7 +7,6 @@
 
 #include "rs_bindings_from_cc/test/templates/forward_declared_class_template/use_forward_declared_template.h"
 
-#pragma clang lifetime_elision
 
 template <typename T>
 struct ForwardDeclaredTemplateStruct final {};

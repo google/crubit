@@ -7,7 +7,6 @@
 
 #include <cstring>
 
-#pragma clang lifetime_elision
 
 // Use `inline` to force a thunk to be generated so we can test that it
 // compiles.

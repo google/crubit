@@ -5,7 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_INFERRED_LIFETIMES_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_INFERRED_LIFETIMES_H_
 
-#pragma clang lifetime_elision
 
 // Not a template, so that it isn't visible to the bindings generator.
 // We're just here to save typing.

@@ -5,7 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_NO_INSTANTIATION_IN_TEMPLATE_TARGET_TEMPLATE_WITHOUT_INSTANTIATION_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_NO_INSTANTIATION_IN_TEMPLATE_TARGET_TEMPLATE_WITHOUT_INSTANTIATION_H_
 
-#pragma clang lifetime_elision
 
 // This template is not instantiated anywhere in this header file
 // (this is what the test scenario exercised here cares about).

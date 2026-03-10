@@ -6,7 +6,6 @@
 
 #include "support/annotations.h"
 
-#pragma clang lifetime_elision
 
 struct BitwiseNotAsRustNot {
   CRUBIT_RUST_NAME("!")
