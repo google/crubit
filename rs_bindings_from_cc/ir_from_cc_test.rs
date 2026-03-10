@@ -1258,7 +1258,7 @@ fn test_typedef_duplicate() -> Result<()> {
 #[gtest]
 fn test_typedef_of_full_template_specialization() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             namespace test_namespace_bindings {
                 // Doc comment of MyStruct template.
                 template <typename T>
@@ -1354,7 +1354,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
 #[gtest]
 fn test_typedef_for_explicit_template_specialization() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             namespace test_namespace_bindings {
                 template <typename T>
                 struct MyStruct final {};
@@ -1429,7 +1429,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
 #[gtest]
 fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             struct MyStruct {
               void MyMethod() {}
@@ -1466,7 +1466,7 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
 #[gtest]
 fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             struct MyStruct {
               void MyMethod();
@@ -1532,7 +1532,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
 #[gtest]
 fn test_templates_inheritance() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             class BaseTemplate {
              protected:
@@ -1581,7 +1581,7 @@ fn test_aliased_class_template_instantiated_in_header() -> Result<()> {
     // that is present in the header. We should not corrupt the AST by
     // instantiating again.
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             struct MyTemplate {
                 const T& GetValue() { return field; }
@@ -1615,7 +1615,7 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
     // Similar to `test_aliased_class_template_instantiated_in_header`, but doesn't
     // instantiate all members.
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             struct MyTemplate {
                 const T& GetValue() { return field; }
@@ -1646,7 +1646,7 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
 #[gtest]
 fn test_subst_template_type_parm_pack_type() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename... TArgs>
             struct MyStruct {
                 static int GetSum(TArgs... my_args) { return (0 + ... + my_args); }
@@ -1691,8 +1691,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
 #[gtest]
 fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
-
+        r#"
             template <typename T>
             struct MyStruct { T value; };
 
@@ -1793,7 +1792,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
 #[gtest]
 fn test_fully_instantiated_template_in_public_field() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             struct MyTemplate { T field; };
 
@@ -1844,7 +1843,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
 #[gtest]
 fn test_fully_instantiated_template_in_private_field() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             struct MyTemplate { T field; };
 
@@ -1891,7 +1890,7 @@ fn test_fully_instantiated_template_in_private_field() -> Result<()> {
 #[gtest]
 fn test_template_with_decltype_and_with_auto() -> Result<()> {
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T1, typename T2>
             struct MyTemplate {
                 static decltype(auto) TemplatedAdd(T1 a, T2 b) { return a + b; }
@@ -2045,7 +2044,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
 fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
     // See also the `test_template_in_dependency_and_alias_in_current_target` test.
     let ir = {
-        let dependency_src = r#" #pragma clang lifetime_elision
+        let dependency_src = r#"
                 template <typename T>
                 struct MyTemplate {
                     T GetValue();
@@ -2053,7 +2052,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
                 };
                 using MyAliasOfTemplate = MyTemplate<int>;
                 struct StructInDependency {}; "#;
-        let current_target_src = r#" #pragma clang lifetime_elision
+        let current_target_src = r#"
                 /* no references to MyTemplate or MyAliasOfTemplate */
                 struct StructInCurrentTarget {}; "#;
         ir_from_cc_dependency(current_target_src, dependency_src)?
@@ -2156,14 +2155,14 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
 fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
     // See also the `test_template_and_alias_are_both_in_dependency` test.
     let ir = {
-        let dependency_src = r#" #pragma clang lifetime_elision
+        let dependency_src = r#"
                 template <typename T>
                 struct MyTemplate {
                     T GetValue();
                     T field;
                 };
                 struct StructInDependency{}; "#;
-        let current_target_src = r#" #pragma clang lifetime_elision
+        let current_target_src = r#"
                 using MyAliasOfTemplate = MyTemplate<int>;
                 struct StructInCurrentTarget{}; "#;
         ir_from_cc_dependency(current_target_src, dependency_src)?
@@ -3135,7 +3134,7 @@ fn test_operator_names() {
         r#"
         // TOOD(b/208377928): Use #include <stddef.h> instead of declaring `size_t` ourselves...
         using size_t = unsigned long;
-        #pragma clang lifetime_elision
+
         struct SomeStruct {
           // There is an implicit/default `oparator=` hidden here as well.
           void* operator new(size_t size);

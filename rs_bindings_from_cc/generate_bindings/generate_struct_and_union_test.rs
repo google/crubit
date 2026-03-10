@@ -28,7 +28,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
                     T GetValue() { return field; }
                     T field;
                 }; "#;
-        let current_target_src = r#" #pragma clang lifetime_elision
+        let current_target_src = r#"
                 using MyAliasOfTemplate = MyTemplate<int>; "#;
         ir_from_cc_dependency(current_target_src, dependency_src)?
     };
@@ -95,7 +95,7 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
     // See also an end-to-end test in the `test/templates/out_of_line_definition`
     // directory.
     let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             template <typename T>
             class MyTemplate final {
              public:
@@ -150,7 +150,6 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
 fn test_simple_struct() -> Result<()> {
     let ir = ir_from_cc(
         r#"
-        #pragma clang lifetime_elision
         struct SomeStruct final {
             ~SomeStruct() {}
             int public_int;
@@ -218,7 +217,6 @@ fn test_simple_struct() -> Result<()> {
 fn test_struct_vs_class() -> Result<()> {
     let ir = ir_from_cc(
         r#"
-        #pragma clang lifetime_elision
         struct SomeStruct final {
             SomeStruct() {}
             int field;
@@ -252,7 +250,6 @@ fn test_struct_vs_class() -> Result<()> {
 fn test_struct_vs_typedefed_struct() -> Result<()> {
     let ir = ir_from_cc(
         r#"
-        #pragma clang lifetime_elision
         struct SomeStruct final {
           int x;
         } __attribute__((aligned(16)));
@@ -1031,7 +1028,6 @@ fn test_doc_comment_record() -> Result<()> {
 fn test_basic_union() -> Result<()> {
     let ir = ir_from_cc(
         r#"
-        #pragma clang lifetime_elision
         union SomeUnion {
             int some_field;
             long long some_bigger_field;
@@ -1328,7 +1324,6 @@ fn test_union_field_with_nontrivial_destructor() -> Result<()> {
 fn test_union_with_constructors() -> Result<()> {
     let ir = ir_from_cc(
         r#"
-        #pragma clang lifetime_elision
         union UnionWithDefaultConstructors {
             int a;
         };
@@ -1492,7 +1487,7 @@ fn test_aligned_attr() {
 #[gtest]
 fn test_forward_declared() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct ForwardDeclared;"#,
     )?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -1509,7 +1504,7 @@ fn test_forward_declared() -> Result<()> {
 #[gtest]
 fn test_private_struct_not_present() -> Result<()> {
     let ir = ir_from_cc(&with_lifetime_macros(
-        r#"#pragma clang lifetime_elision
+        r#"
         template <typename T> class MyTemplate {};
         class HasPrivateType {
          private:
@@ -1599,7 +1594,7 @@ fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result
 #[gtest]
 fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             namespace test_namespace_bindings {
                 template <typename T>
                 struct MyTemplate final {

@@ -397,7 +397,7 @@ fn test_impl_drop_trivial() -> Result<()> {
 #[gtest]
 fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct DefaultedConstructor final {
             DefaultedConstructor() = default;
         };"#,
@@ -439,7 +439,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
     // annotating the whole C++ struct with a lifetime, so maybe the
     // example below is not fully realistic/accurate...).
     let ir = ir_from_cc(&with_lifetime_macros(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct Foo final {
             Foo(const int& $a i) $a;
         };"#,
@@ -486,7 +486,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
 #[gtest]
 fn test_impl_default_non_trivial_struct() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct NonTrivialStructWithConstructors final {
             NonTrivialStructWithConstructors();
             ~NonTrivialStructWithConstructors();  // Non-trivial
@@ -718,7 +718,7 @@ fn test_impl_eq_for_free_function_different_types() -> Result<()> {
 #[gtest]
 fn test_impl_eq_for_free_function_by_value() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final { int i; };
         bool operator==(SomeStruct lhs, SomeStruct rhs) {
             return lhs.i == rhs.i;
@@ -769,7 +769,7 @@ fn test_impl_ne_for_free_function_different_types() -> Result<()> {
 #[gtest]
 fn test_impl_ne_for_free_function_by_value() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final { int i; };
         bool operator!=(SomeStruct lhs, SomeStruct rhs) {
             return lhs.i != rhs.i;
@@ -823,7 +823,7 @@ fn test_impl_eq_ne_for_free_function_different_types() -> Result<()> {
 #[gtest]
 fn test_impl_eq_ne_for_free_function_by_value() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final { int i; };
         bool operator==(SomeStruct lhs, SomeStruct rhs) {
             return lhs.i == rhs.i;
@@ -945,7 +945,7 @@ fn test_impl_lt_for_free_function() -> Result<()> {
 #[gtest]
 fn test_impl_lt_for_free_function_by_value() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final { int i; };
         bool operator==(SomeStruct lhs, SomeStruct rhs) {
             return lhs.i == rhs.i;
@@ -1067,10 +1067,9 @@ fn test_assign_nonreference_return() -> Result<()> {
 #[gtest]
 fn test_impl_eq_non_const_member_function() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final {
-            bool operator==(const SomeStruct& other) /* no `const` here */
-;
+            bool operator==(const SomeStruct& other) /* no `const` here */;
         };"#,
     )?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -1081,7 +1080,7 @@ fn test_impl_eq_non_const_member_function() -> Result<()> {
 #[gtest]
 fn test_impl_lt_different_operands() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct1 final {
             int i;
         };
@@ -1103,14 +1102,13 @@ fn test_impl_lt_different_operands() -> Result<()> {
 #[gtest]
 fn test_impl_lt_non_const_member_function() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
                 return i == other.i;
             }
             int i;
-bool operator<(const SomeStruct& other) /* no `const` here */
-;
+            bool operator<(const SomeStruct& other) /* no `const` here */;
         };"#,
     )?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -1121,7 +1119,7 @@ bool operator<(const SomeStruct& other) /* no `const` here */
 #[gtest]
 fn test_impl_lt_rhs_by_value() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
                 return i == other.i;
@@ -1138,7 +1136,7 @@ fn test_impl_lt_rhs_by_value() -> Result<()> {
 #[gtest]
 fn test_impl_lt_missing_eq_impl() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct SomeStruct final {
             inline bool operator<(const SomeStruct& other) const {
                 return i < other.i;
@@ -1407,8 +1405,8 @@ fn test_nonunpin_drop() -> Result<()> {
 #[gtest]
 fn test_nonunpin_0_arg_constructor() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
-// This type must be `!Unpin`.
+        r#"
+        // This type must be `!Unpin`.
         struct HasConstructor {
             explicit HasConstructor() {}
             ~HasConstructor();
@@ -1441,8 +1439,8 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
 #[gtest]
 fn test_nonunpin_1_arg_constructor() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
-// This type must be `!Unpin`.
+        r#"
+        // This type must be `!Unpin`.
         struct HasConstructor {
             explicit HasConstructor(unsigned char input) {}
             ~HasConstructor();
@@ -1475,8 +1473,8 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
 #[gtest]
 fn test_nonunpin_2_arg_constructor() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
-// This type must be `!Unpin`.
+        r#"
+        // This type must be `!Unpin`.
         struct HasConstructor {
             explicit HasConstructor(unsigned char input1, signed char input2) {}
             ~HasConstructor();
@@ -1637,7 +1635,7 @@ fn test_nonunpin_const_return() -> Result<()> {
 #[gtest]
 fn test_unpin_by_value_param() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct Trivial final {
           int trivial_field;
         };
@@ -1675,7 +1673,7 @@ fn test_unpin_by_value_param() -> Result<()> {
 #[gtest]
 fn test_unpin_by_value_return() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+        r#"
         struct Trivial final {
           int trivial_field;
         };
@@ -1833,8 +1831,8 @@ fn test_nonunpin_return_assign() -> Result<()> {
 #[gtest]
 fn test_nonunpin_param() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
-// This type must be `!Unpin`.
+        r#"
+        // This type must be `!Unpin`.
         struct Nontrivial {
             Nontrivial(Nontrivial&&);
             ~Nontrivial();
@@ -1869,8 +1867,8 @@ fn test_nonunpin_param() -> Result<()> {
 #[gtest]
 fn test_nonmovable_param() -> Result<()> {
     let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
-// This type must be `!Unpin` and non-move constructible.
+        r#"
+        // This type must be `!Unpin` and non-move constructible.
         struct Nonmovable {
             Nonmovable(Nonmovable&&) = delete;
         };

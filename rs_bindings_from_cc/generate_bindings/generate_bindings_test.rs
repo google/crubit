@@ -1253,7 +1253,7 @@ fn test_default_crubit_features_disabled_variadic_function() -> Result<()> {
 #[gtest]
 fn test_existing_rust_type_assert() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             // Broken class: uses i32 but has size 1.
             // (These asserts would fail if this were compiled.)
             class [[clang::annotate("crubit_internal_rust_type", "i32")]] Class final {};"#,
@@ -1279,7 +1279,7 @@ fn test_existing_rust_type_assert() -> Result<()> {
 #[gtest]
 fn test_existing_rust_type_c_abi_incompatible() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             // Broken class: uses i32 but has size 1.
             // (These asserts would fail if this were compiled.)
             class [[clang::annotate("crubit_internal_rust_type", "i8")]] MyI8 {unsigned char field;};
@@ -1306,7 +1306,7 @@ fn test_existing_rust_type_c_abi_incompatible() -> Result<()> {
 #[gtest]
 fn test_existing_rust_type_c_abi_compatible() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             class
                 [[clang::annotate("crubit_internal_rust_type", "i8")]]
                 [[clang::annotate("crubit_internal_same_abi")]]
@@ -1335,7 +1335,7 @@ fn test_existing_rust_type_c_abi_compatible() -> Result<()> {
 #[gtest]
 fn test_existing_rust_type_assert_incomplete() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
-        r#" #pragma clang lifetime_elision
+        r#"
             // Broken class: uses i32 but has size 1.
             // (These asserts would fail if this were compiled.)
             class [[clang::annotate("crubit_internal_rust_type", "i32")]] Incomplete;
