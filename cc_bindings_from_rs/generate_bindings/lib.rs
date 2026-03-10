@@ -762,7 +762,7 @@ fn generate_using<'tcx>(
             let using_name_ident =
                 format_cc_ident(db, using_name.as_str()).context("Error formatting using name")?;
 
-            prereqs.defs.insert(def_id);
+            prereqs.depend_on_def(db, def_id)?;
             let tokens = if using_name_ident.to_string() == main_api_fn_name.to_string() {
                 quote! { using #formatted_fully_qualified_fn_name; }
             } else {
@@ -1727,25 +1727,7 @@ fn generate_trait_impls<'a, 'tcx>(
 
                 let trait_name_with_args = quote! { #trait_name #type_args };
 
-                if trait_def_id.krate == db.source_crate_num() {
-                    prereqs.defs.insert(trait_def_id);
-                } else {
-                    let other_crate_name = tcx.crate_name(trait_def_id.krate);
-                    let crate_name_to_include_paths = db.crate_name_to_include_paths();
-                    let includes = crate_name_to_include_paths
-                        .get(other_crate_name.as_str())
-                        .ok_or_else(|| {
-                            let trait_name = tcx.def_path_str(trait_def_id);
-                            (
-                                impl_def_id,
-                                anyhow!(
-                                    "Trait `{trait_name}` comes from the `{other_crate_name}` crate, \
-                                    but no `--crate-header` was specified for this crate"
-                                ),
-                            )
-                        })?;
-                    prereqs.includes.extend(includes.iter().cloned());
-                }
+                prereqs.depend_on_def(db, trait_def_id).map_err(|err| (impl_def_id, err))?;
 
                 let mut member_function_names = HashSet::new();
                 let assoc_items: ApiSnippets = tcx

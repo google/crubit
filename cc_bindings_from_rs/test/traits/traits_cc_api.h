@@ -57,7 +57,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
  private:
-  // Field type has been replaced with a blob of bytes: Type
+  // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
   std::array<unsigned char, 24> a;
@@ -543,13 +543,13 @@ struct rs_std::impl<::traits::AssociatedTypeStruct,
   // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
   // traits_golden::AssociatedTypeTrait>::UnsupportedAssocType` defined at
   // cc_bindings_from_rs/test/traits/traits.rs;l=154:
-  // Type `std::string::String` comes from the `alloc` crate, but no
+  // Definition `std::string::String` comes from the `alloc` crate, but no
   // `--crate-header` was specified for this crate
 
   // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
   // traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type` defined at
   // cc_bindings_from_rs/test/traits/traits.rs;l=155:
-  // Error formatting function return type `std::string::String`: Type
+  // Error formatting function return type `std::string::String`: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
 };

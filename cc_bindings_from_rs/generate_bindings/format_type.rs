@@ -338,24 +338,7 @@ pub fn format_ty_for_cc<'tcx>(
                     "Not a public or a supported reexported type (b/262052635)."
                 );
 
-                if def_id.krate == db.source_crate_num() {
-                    prereqs.defs.insert(def_id);
-                } else {
-                    let canonical_name = db
-                        .symbol_canonical_name(def_id)
-                        .ok_or_else(|| anyhow!("Failed to generate canonical name for `{ty}`"))?;
-                    let other_crate_name = canonical_name.krate;
-                    let crate_name_to_include_paths = db.crate_name_to_include_paths();
-                    let includes = crate_name_to_include_paths
-                        .get(other_crate_name.as_str())
-                        .ok_or_else(|| {
-                            anyhow!(
-                                "Type `{ty}` comes from the `{other_crate_name}` crate, \
-                                 but no `--crate-header` was specified for this crate"
-                            )
-                        })?;
-                    prereqs.includes.extend(includes.iter().cloned());
-                }
+                prereqs.depend_on_def(db, def_id)?;
 
                 // Verify if definition of `ty` can be succesfully imported and bail otherwise.
                 db.generate_adt_core(def_id).with_context(|| {

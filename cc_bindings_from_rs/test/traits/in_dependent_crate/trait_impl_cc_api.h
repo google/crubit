@@ -87,7 +87,7 @@ NotImplemented final {
   }
 
  private:
-  // Field type has been replaced with a blob of bytes: Type
+  // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
   std::array<unsigned char, 24> foo;

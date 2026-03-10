@@ -7,7 +7,7 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::FineGrainedFeature;
-use arc_anyhow::Result;
+use arc_anyhow::{anyhow, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
 use error_report::bail;
@@ -115,6 +115,39 @@ impl<'tcx> CcPrerequisites<'tcx> {
 
         self.fwd_decls.extend(self.defs.intersection(&adts));
         self.defs = self.defs.difference(&adts).cloned().collect();
+    }
+
+    /// Include the definition as a prequisite. For a local definition, this is adding it to the
+    ///`defs` set. For a foreign definition, an include path for the foreign crate must be available
+    /// or this will fail.
+    pub fn depend_on_def(
+        &mut self,
+        db: &crate::BindingsGenerator<'tcx>,
+        def_id: DefId,
+    ) -> Result<()> {
+        // Local definitions can be immediately added to the `defs` set.
+        if def_id.krate == db.source_crate_num() {
+            self.defs.insert(def_id);
+            return Ok(());
+        }
+
+        let canonical_name = db.symbol_canonical_name(def_id).ok_or_else(|| {
+            let tcx = db.tcx();
+            anyhow!("Failed to generate canonical name for `{}`", tcx.def_path_str(def_id))
+        })?;
+        let other_crate_name = canonical_name.krate;
+        let crate_name_to_include_paths = db.crate_name_to_include_paths();
+        let includes =
+            crate_name_to_include_paths.get(other_crate_name.as_str()).ok_or_else(|| {
+                let tcx = db.tcx();
+                anyhow!(
+                    "Definition `{}` comes from the `{other_crate_name}` crate, \
+                     but no `--crate-header` was specified for this crate",
+                    tcx.def_path_str(def_id)
+                )
+            })?;
+        self.includes.extend(includes.iter().cloned());
+        Ok(())
     }
 }
 

@@ -138,7 +138,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
 
  private:
-  // Field type has been replaced with a blob of bytes: Type
+  // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
   std::array<unsigned char, 24> field_with_drop_glue;

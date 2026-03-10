@@ -5,7 +5,7 @@
 #![feature(rustc_private)]
 
 use code_gen_utils::format_cc_includes;
-use database::{BindingsGenerator, TypeLocation};
+use database::TypeLocation;
 use generate_bindings::generate_function::get_fn_sig;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -450,7 +450,7 @@ fn test_format_ty_for_cc_failures() {
         ),
         (
             "std::cmp::Ordering",
-            "Type `std::cmp::Ordering` comes from the `core` crate, \
+            "Definition `std::cmp::Ordering` comes from the `core` crate, \
              but no `--crate-header` was specified for this crate",
         ),
         (
@@ -458,7 +458,7 @@ fn test_format_ty_for_cc_failures() {
             // to test them via a test crate that we control (rather than testing via
             // implementation details of the std crate).
             "core::alloc::LayoutError",
-            "Type `std::alloc::LayoutError` comes from the `core` crate, but no `--crate-header` was specified for this crate",
+            "Definition `std::alloc::LayoutError` comes from the `core` crate, but no `--crate-header` was specified for this crate",
         ),
         (
             "*const Result<i8, i8>",

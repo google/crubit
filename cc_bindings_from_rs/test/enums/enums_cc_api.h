@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
   // Error generating bindings for `enums_golden::repr_c::MyEnum::E` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=12:
-  // Type `std::string::String` comes from the `alloc` crate, but no
+  // Definition `std::string::String` comes from the `alloc` crate, but no
   // `--crate-header` was specified for this crate
 
   // Generated from:
@@ -86,7 +86,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   }
   struct alignas(0) __crubit_E_struct {
    private:
-    // Field type has been replaced with a blob of bytes: Type
+    // Field type has been replaced with a blob of bytes: Definition
     // `std::string::String` comes from the `alloc` crate, but no
     // `--crate-header` was specified for this crate
     std::array<unsigned char, 24> __field0;

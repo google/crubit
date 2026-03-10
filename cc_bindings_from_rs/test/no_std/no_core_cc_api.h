@@ -57,7 +57,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
   rs_std::StrRef s() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
  private:
-  // Field type has been replaced with a blob of bytes: Type
+  // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
   std::array<unsigned char, 24> s_;

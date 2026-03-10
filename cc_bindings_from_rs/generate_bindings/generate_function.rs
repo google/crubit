@@ -1033,9 +1033,6 @@ pub fn generate_function<'tcx>(
     } else {
         // Trait method
         let fully_qualified_fn_name = trait_ref.as_ref().map(|trait_ref| {
-                let trait_name = db.symbol_canonical_name(trait_ref.def_id)
-                    .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
-                    .expect("Generated trait method for a trait with an invalid rust name");
                 let struct_name = struct_name.as_ref()
                     .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
                     .expect("Generated trait method for an ADT with an invalid rust name");
