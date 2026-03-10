@@ -10,8 +10,8 @@ use arc_anyhow::Result;
 use database::BindingsGenerator;
 use error_report::bail;
 use ir::{
-    make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, ItemId, PointerType, PointerTypeKind,
-    Record, IR,
+    make_ir, CcType, CcTypeVariant, FlatIR, Func, GenericItem, Item, ItemId, PointerType,
+    PointerTypeKind, Record, IR,
 };
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -536,4 +536,26 @@ pub fn lifetime_defaults_transform(ir: &IR) -> Result<IR> {
         crate_root_path: ir.flat_ir().crate_root_path.clone(),
         crubit_features: ir.flat_ir().crubit_features.clone(),
     }))
+}
+
+/// Implementation of `BindingsGenerator::lifetime_defaults_for_item`.
+pub fn lifetime_defaults_for_item(db: &BindingsGenerator, def_id: ItemId) -> Result<Option<Item>> {
+    let item = db.ir().find_untyped_decl(def_id);
+    let owning_target = item.owning_target();
+    if owning_target.is_none() {
+        return Ok(None);
+    }
+    let mut item_features = db.ir().target_crubit_features(&owning_target.unwrap());
+    if let Some(defining_target) = item.defining_target(db.ir()) {
+        item_features |= db.ir().target_crubit_features(defining_target);
+    }
+    if !item_features.contains(crubit_feature::CrubitFeature::AssumeLifetimes) {
+        return Ok(None);
+    }
+    match item {
+        ir::Item::Func(func) => {
+            Ok(Some(ir::Item::Func(Rc::new(lifetime_defaults_transform_func(db, &*func)?))))
+        }
+        _ => Ok(None),
+    }
 }

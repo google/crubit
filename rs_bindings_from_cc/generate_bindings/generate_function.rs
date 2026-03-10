@@ -22,7 +22,6 @@ use generate_function_thunk::{
 };
 use ir::*;
 use itertools::Itertools;
-use lifetime_defaults_transform::lifetime_defaults_transform_func;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{HashMap, HashSet};
@@ -1296,13 +1295,13 @@ fn rs_type_kinds_for_func(
 
     let errors = Errors::new();
     let infer_lifetimes = func_should_infer_lifetimes_of_references(func);
-    let assume_lifetimes = db
-        .ir()
-        .target_crubit_features(&func.owning_target)
-        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
 
-    // TODO(b/454627672): is it worth caching this?
-    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
+    let infunc: Option<Rc<Func>> = db.lifetime_defaults_for_func(func)?;
+    let (assume_lifetimes, func) = match &infunc {
+        Some(r) => (true, r.as_ref()),
+        None => (false, func),
+    };
+
     let param_types: Vec<RsTypeKind> = func
         .params
         .iter()
@@ -1947,13 +1946,11 @@ fn function_signature(
         );
     }
 
-    let assume_lifetimes = db
-        .ir()
-        .target_crubit_features(&func.owning_target)
-        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
-
-    // TODO(b/454627672): is it worth caching this?
-    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
+    let infunc: Option<Rc<Func>> = db.lifetime_defaults_for_func(func)?;
+    let func: &Func = match &infunc {
+        Some(r) => r.as_ref(),
+        None => func,
+    };
 
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
