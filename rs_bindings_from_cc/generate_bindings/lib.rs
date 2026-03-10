@@ -390,6 +390,7 @@ pub fn new_database<'db>(
             generate_enum: generate_enum::generate_enum,
             generate_item,
             generate_record: generate_struct_and_union::generate_record,
+            lifetime_defaults_for_item: lifetime_defaults_transform::lifetime_defaults_for_item,
         },
         rs_type_kind_safety,
         record_field_safety,

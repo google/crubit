@@ -14,7 +14,6 @@ use database::rs_snippet::{
 use error_report::{anyhow, bail};
 use ir::*;
 use itertools::Itertools;
-use lifetime_defaults_transform::lifetime_defaults_transform_func;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::borrow::Cow;
@@ -125,13 +124,11 @@ pub fn generate_function_thunk(
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
 ) -> Result<Thunk> {
-    let assume_lifetimes = db
-        .ir()
-        .target_crubit_features(&func.owning_target)
-        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
-
-    // TODO(b/454627672): is it worth caching this?
-    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
+    let infunc: Option<Rc<Func>> = db.lifetime_defaults_for_func(func)?;
+    let func: &Func = match &infunc {
+        Some(r) => r.as_ref(),
+        None => func,
+    };
 
     // The first parameter is the output parameter, if any.
     let mut param_types = param_types.iter();

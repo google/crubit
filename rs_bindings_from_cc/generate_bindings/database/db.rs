@@ -24,6 +24,8 @@ pub struct CodegenFunctions {
     pub generate_enum: fn(&BindingsGenerator, Rc<Enum>) -> Result<ApiSnippets>,
     pub generate_item: fn(&BindingsGenerator, ir::Item) -> Result<ApiSnippets>,
     pub generate_record: fn(&BindingsGenerator, Rc<Record>) -> Result<ApiSnippets>,
+    pub lifetime_defaults_for_item:
+        fn(&BindingsGenerator, def_id: ir::ItemId) -> Result<Option<ir::Item>>,
 }
 
 memoized::query_group! {
@@ -197,6 +199,26 @@ memoized::query_group! {
         /// with missing lifetimes with pointer types.
         fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
             self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
+        }
+
+        #[provided]
+        /// Returns the item for the given `def_id` after running the lifetime defaults
+        /// transformation.
+        ///
+        /// If the transformation is not enabled for `def_id`, returns None.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform.rs?q=function:lifetime_defaults_for_item
+        fn lifetime_defaults_for_item(&self, def_id: ir::ItemId) -> Result<Option<ir::Item>> {
+            (self.codegen_functions().lifetime_defaults_for_item)(self, def_id)
+        }
+
+        #[provided]
+        fn lifetime_defaults_for_func(&self, func: &Func) -> Result<Option<Rc<Func>>> {
+            let item = self.lifetime_defaults_for_item(func.id)?;
+            match item {
+                Some(ir::Item::Func(func)) => Ok(Some(func)),
+                _ => Ok(None),
+            }
         }
 
         #[provided]
