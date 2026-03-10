@@ -1453,3 +1453,25 @@ fn test_deprecated_attr_for_fn_with_named_args() {
         )
     })
 }
+
+#[test]
+fn test_format_item_fn_repr_transparent_generic_struct_param() {
+    let test_src = r#"
+            #![allow(dead_code)]
+
+            pub struct Inner(i32);
+
+            #[repr(transparent)]
+            pub struct Wrapper<T>(T);
+
+            pub fn foo(_: Wrapper<Inner>) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Error handling parameter #0 of type `Wrapper<Inner>`: \
+            Generic types are not supported yet (b/259749095)"
+        );
+    });
+}

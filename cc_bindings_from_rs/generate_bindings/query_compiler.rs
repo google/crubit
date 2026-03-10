@@ -34,7 +34,7 @@ use std::rc::Rc;
 
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
-pub fn is_c_abi_compatible_by_value(tcx: TyCtxt<'_>, ty: Ty) -> bool {
+pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
     match ty.kind() {
         // `improper_ctypes_definitions` warning doesn't complain about the following types:
         ty::TyKind::Bool
@@ -66,7 +66,7 @@ pub fn is_c_abi_compatible_by_value(tcx: TyCtxt<'_>, ty: Ty) -> bool {
         // - `#[repr(C)]` structs and unions,
         // - Discriminant-only enums (b/259984090).
         ty::TyKind::Tuple { .. } => false, // An empty tuple (`()` - the unit type) is handled above.
-        ty::TyKind::Adt(adt, _) => {
+        ty::TyKind::Adt(adt, substs) => {
             if !adt.repr().transparent() {
                 // If our adt is not transparent, it is not abi compatible by value.
                 return false;
@@ -75,7 +75,7 @@ pub fn is_c_abi_compatible_by_value(tcx: TyCtxt<'_>, ty: Ty) -> bool {
                 // TODO: b/258259459 - Support zero sized types.
                 return false;
             };
-            is_c_abi_compatible_by_value(tcx, tcx.type_of(field.did).instantiate_identity())
+            is_c_abi_compatible_by_value(tcx, tcx.type_of(field.did).instantiate(tcx, substs))
         }
 
         // Arrays are explicitly not ABI-compatible (though they are layout-compatible).

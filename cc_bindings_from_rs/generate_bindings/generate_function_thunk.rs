@@ -608,7 +608,7 @@ pub fn generate_thunk_impl<'tcx>(
 
 /// Returns `Ok(())` if no thunk is required.
 /// Otherwise returns an error the describes why the thunk is needed.
-pub fn is_thunk_required(tcx: TyCtxt<'_>, sig: &ty::FnSig) -> Result<()> {
+pub fn is_thunk_required<'tcx>(tcx: TyCtxt<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
     match sig.abi {
         // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
         // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
