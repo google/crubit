@@ -70,7 +70,7 @@ impl<'tcx> OptionApi<'_, 'tcx> {
             prereqs.includes.insert(self.db.support_header("internal/slot.h"));
         }
         let set_none = quote! {
-            *this->tag() = #none_val;
+            this->set_tag(#none_val);
         };
         let set_some_from_std_optional = {
             let write_some = if has_move_ctor {
@@ -90,15 +90,17 @@ impl<'tcx> OptionApi<'_, 'tcx> {
         let take_some = if has_relocating_ctor {
             quote! {
                 struct DeferSetTagNone {
-                    #tag_type_cc* _value;
-                    DeferSetTagNone(#tag_type_cc* tag) : _value(tag) {}
+                    rs_std::Option<#arg_ty>* _value;
+                    DeferSetTagNone(rs_std::Option<#arg_ty>* self) : _value(self) {}
                     ~DeferSetTagNone() {
                         #set_none
                     }
-                    #tag_type_cc* tag() noexcept {
-                        return _value;
+
+                    private:
+                    void set_tag(#tag_type_cc tag) {
+                        _value->set_tag(tag);
                     }
-                } defer(this->tag());
+                } defer(this);
                 return std::make_optional<#arg_ty>(crubit::UnsafeRelocateTag{}, std::move(*#some_ptr_val));
             }
         } else {
@@ -113,7 +115,7 @@ impl<'tcx> OptionApi<'_, 'tcx> {
 
         // Destruct a some value if present.
         let reset = quote! {
-            if (*this->tag() != #none_val) {
+            if (tag() != #none_val) {
                 std::destroy_at(#some_ptr_val);
             }
         };
@@ -121,10 +123,10 @@ impl<'tcx> OptionApi<'_, 'tcx> {
         let (drop, drop_details) = if needs_drop {
             (
                 quote! {
-                    ~Option() noexcept;
+                    constexpr ~Option() noexcept;
                 },
                 quote! {
-                    inline rs_std::Option<#arg_ty>::~Option() noexcept {
+                    inline constexpr rs_std::Option<#arg_ty>::~Option() noexcept {
                         #reset
                     }
                 },
@@ -154,7 +156,7 @@ impl<'tcx> OptionApi<'_, 'tcx> {
                         std::construct_at(#some_ptr_val, std::move(value));
                     } __NEWLINE__
                     inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(#arg_ty&& value) noexcept {
-                        if (*this->tag() != #none_val) {
+                        if (tag() != #none_val) {
                           *#some_ptr_val = std::move(value);
                         } else {
                           #write_some_to_tag
@@ -169,10 +171,10 @@ impl<'tcx> OptionApi<'_, 'tcx> {
         let tag_method_main_api = tag_method.main_api.into_tokens(&mut prereqs);
         let main_api = CcSnippet {
             tokens: quote! {
-                Option();  __NEWLINE__ __NEWLINE__
+                constexpr Option();  __NEWLINE__ __NEWLINE__
 
-                explicit Option(std::nullopt_t) noexcept; __NEWLINE__
-                Option& operator=(std::nullopt_t) noexcept; __NEWLINE__ __NEWLINE__
+                constexpr explicit Option(std::nullopt_t) noexcept; __NEWLINE__
+                constexpr Option& operator=(std::nullopt_t) noexcept; __NEWLINE__ __NEWLINE__
 
                 #value_move_ctor_and_assign
 
@@ -198,14 +200,14 @@ impl<'tcx> OptionApi<'_, 'tcx> {
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
         let cc_details = CcSnippet {
             tokens: quote! {
-                inline rs_std::Option<#arg_ty>::Option() {
+                inline constexpr rs_std::Option<#arg_ty>::Option() {
                     #set_none
                 } __NEWLINE__
 
-                inline rs_std::Option<#arg_ty>::Option(std::nullopt_t) noexcept {
+                inline constexpr rs_std::Option<#arg_ty>::Option(std::nullopt_t) noexcept {
                     #set_none
                 } __NEWLINE__
-                inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(std::nullopt_t) noexcept {
+                inline constexpr rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(std::nullopt_t) noexcept {
                     #reset
                     #set_none
                     return *this;
@@ -239,7 +241,7 @@ impl<'tcx> OptionApi<'_, 'tcx> {
                 #drop_details
 
                 inline rs_std::Option<#arg_ty>::operator std::optional<#arg_ty>() && noexcept {
-                    if (*this->tag() == #none_val) {
+                    if (tag() == #none_val) {
                         return std::nullopt;
                     } else {
                         #take_some
@@ -247,7 +249,7 @@ impl<'tcx> OptionApi<'_, 'tcx> {
                 } __NEWLINE__
 
                 inline bool rs_std::Option<#arg_ty>::has_value() noexcept {
-                    return *this->tag() != #none_val;
+                    return tag() != #none_val;
                 } __NEWLINE__
 
                 #tag_method_cc_details
@@ -346,14 +348,32 @@ fn specialize_option<'tcx>(
         that the type can be formatted as a C++ type. That should exclude this case from occurring",
     );
     let none_discr_val = literal_of_tag_ty(discr_for_none.val, tag_type);
+    let endian = tcx.sess.target.options.endian;
+    let endian_index = match endian {
+        rustc_abi::Endian::Little => quote! { i },
+        rustc_abi::Endian::Big => quote! { sizeof(#tag_type_cc) - 1 - i },
+    };
     let tag_method = ApiSnippets {
         main_api: CcSnippet::new(quote! {
-            #tag_type_cc* tag() noexcept;
+            constexpr #tag_type_cc tag() const& noexcept; __NEWLINE__
+            constexpr void set_tag(#tag_type_cc tag) noexcept; __NEWLINE__
         }),
         cc_details: CcSnippet::new(quote! {
-            inline #tag_type_cc* rs_std::Option<#ty_tokens>::tag() noexcept {
-                return reinterpret_cast<#tag_type_cc*>(storage_ + #tag_offset);
+            inline constexpr #tag_type_cc rs_std::Option<#ty_tokens>::tag() const& noexcept {
+                std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
+                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                    __bytes[#endian_index] = this->storage_[#tag_offset + i];
+                }
+                return std::bit_cast<#tag_type_cc>(__bytes);
             }
+            __NEWLINE__
+            inline constexpr void rs_std::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
+                auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
+                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                    this->storage_[#tag_offset + i] = __bytes[#endian_index];
+                }
+            }
+            __NEWLINE__
         }),
         ..Default::default()
     };
@@ -377,7 +397,7 @@ fn specialize_option<'tcx>(
                 needs_drop,
                 tag_method,
                 none_val: quote! { #none_discr_val },
-                write_some_to_tag: quote! { *this->tag() = #some_discr_val; },
+                write_some_to_tag: quote! { this->set_tag(#some_discr_val); },
                 some_ptr_val: quote! {
                     reinterpret_cast<#ty_tokens*>(storage_ + #payload_offset)
                 },
