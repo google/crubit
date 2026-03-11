@@ -7,7 +7,7 @@
 #include <string_view>
 
 #include "clang/AST/DeclBase.h"
-#include "clang/Index/USRGeneration.h"
+#include "clang/UnifiedSymbolResolution/USRGeneration.h"
 #include "llvm/ADT/SmallString.h"
 
 namespace clang::tidy::nullability {

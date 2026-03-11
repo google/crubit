@@ -31,6 +31,7 @@ cc_library(
         "@llvm-project//clang:basic",
         "@llvm-project//clang:index",
         "@llvm-project//clang:lex",
+        "@llvm-project//clang:unified_symbol_resolution",
         "@llvm-project//llvm:Support",
     ],
 )
