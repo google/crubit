@@ -8,7 +8,9 @@ extern crate rustc_span;
 
 use crate::adt_core_bindings::{AdtCoreBindings, CopyCtorStyle, MoveCtorStyle, NoMoveOrAssign};
 use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
-use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
+use crate::fully_qualified_name::{
+    FullyQualifiedName, PublicPaths, TransitiveReexport, UnqualifiedName,
+};
 use crate::include_guard::IncludeGuard;
 use crate::type_location::TypeLocation;
 use arc_anyhow::Result;
@@ -164,6 +166,19 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:public_paths_by_def_id
       fn public_paths_by_def_id(&self, crate_num: CrateNum) -> HashMap<DefId, PublicPaths>;
 
+      /// Computes a mapping from a `DefId` to a list of public paths that reference it in a given
+      /// crate. Unlike `public_paths_by_def_id()`, this only returns paths for definitions that are
+      /// not defined in the given crate (re-exports).
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:transitive_reexports_by_def_id
+      fn transitive_reexports_by_def_id(&self, krate: CrateNum) -> HashMap<DefId, PublicPaths>;
+
+      /// Computes a mapping from a `DefId` to the list of reexports for that `DefId` that exist in
+      /// the crate graph. This is determined by collecting the `DefId` of each includable crate.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:transitive_reexports
+      fn transitive_reexports(&self) -> HashMap<DefId, Vec<TransitiveReexport>>;
+
       /// Formats a C++ identifier, if possible.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_cc_ident
@@ -307,5 +322,8 @@ memoized::query_group! {
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:local_from_trait_impls_by_argument
       fn from_trait_impls_by_argument(&self, crate_num: CrateNum) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>>;
+
+      // Returns the original name of a crate, if it has been renamed.
+      fn renamed_crate_original_name(&self, crate_num: CrateNum) -> Option<Rc<str>>;
   }
 }
