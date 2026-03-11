@@ -236,17 +236,22 @@ fn type_by_value_or_under_const_ref<'a>(
                 errors.add(anyhow!("Expected {value_desc} reference to be immutable, but found mutable reference: {kind_string}"));
                 *mutability = Mutability::Const;
             }
-            if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
+            if let RsTypeKind::Record { record: lhs_record, .. } = lhs.unalias() {
                 Ok((lhs, lhs_record))
             } else {
                 bail_to_errors!(errors, "Expected {value_desc} to be a record or a const reference to a record, found a reference that doesn't refer to a record: {kind_string}");
             }
         }
-        RsTypeKind::Record { record: ref lhs_record, .. } => Ok((kind, lhs_record)),
-        _ => bail_to_errors!(
-            errors,
-            "Expected {value_desc} to be a record or const reference to a record, found {kind_string}"
-        ),
+        ref other => {
+            if let RsTypeKind::Record { record: lhs_record, .. } = other.unalias() {
+                Ok((kind, lhs_record))
+            } else {
+                bail_to_errors!(
+                    errors,
+                    "Expected {value_desc} to be a record or const reference to a record, found {kind_string}"
+                )
+            }
+        }
     }
 }
 
@@ -1040,7 +1045,7 @@ fn adjust_param_types_for_trait_impl(
         .iter_mut()
         .enumerate()
         .map(|(i, param_type)| {
-            let RsTypeKind::Record { record: param_record, .. } = &param_type else {
+            let RsTypeKind::Record { record: param_record, .. } = param_type.unalias() else {
                 return Default::default();
             };
             if !is_record_clonable(db, param_record.clone()) {

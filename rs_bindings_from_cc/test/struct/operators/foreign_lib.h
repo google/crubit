@@ -7,6 +7,7 @@
 
 namespace foreign {
 struct ForeignType {};
+using Alias = ForeignType;
 }  // namespace foreign
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_FOREIGN_LIB_H_

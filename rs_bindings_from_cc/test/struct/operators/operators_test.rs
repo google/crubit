@@ -323,3 +323,11 @@ fn test_foreign_eq() {
     assert!(s1 == s2);
     assert!(s2 == s1);
 }
+
+#[gtest]
+fn test_alias_eq() {
+    let s1 = OperandAlias::default();
+    let s2 = foreign_lib::foreign::ForeignType::default();
+    assert!(s1 == s2);
+    assert!(s2 == s1);
+}
