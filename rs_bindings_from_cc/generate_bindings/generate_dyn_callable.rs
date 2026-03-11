@@ -357,11 +357,11 @@ fn generate_make_cpp_invoker_tokens(
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone())?;
             let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
-            invoke_ffi_and_transform_to_rust.extend(quote! {
+            invoke_ffi_and_transform_to_rust = quote! {
                 ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |out| {
                     #invoke_ffi_and_transform_to_rust
                 })
-            });
+            };
         }
         PassingConvention::Ctor => {
             bail!("Ctor not supported");
