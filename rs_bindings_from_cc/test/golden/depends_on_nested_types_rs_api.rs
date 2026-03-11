@@ -10,7 +10,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(unused)]
 #![deny(warnings)]
 
 /// This should have bindings because Bar is a nested item of Foo, and the module

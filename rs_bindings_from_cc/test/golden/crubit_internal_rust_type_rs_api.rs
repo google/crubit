@@ -10,7 +10,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(unused)]
 #![deny(warnings)]
 
 // Type bindings for MyI8Struct suppressed due to being mapped to an existing Rust type (i8)

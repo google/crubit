@@ -10,5 +10,5 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(unused)]
 #![deny(warnings)]

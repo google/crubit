@@ -11,7 +11,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(unused)]
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=10

@@ -11,7 +11,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code, unused_mut)]
+#![allow(unused)]
 #![deny(warnings)]
 
 /// `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent

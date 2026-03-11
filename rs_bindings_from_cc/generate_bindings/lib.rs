@@ -565,7 +565,7 @@ pub fn generate_bindings_tokens(
 
             // Parts of our generated code are sometimes considered dead
             // (b/349776381).
-            #![allow(dead_code, unused_mut)] __NEWLINE__
+            #![allow(unused)] __NEWLINE__
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
 
             #extern_crate_alloc
