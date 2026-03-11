@@ -1646,7 +1646,7 @@ impl ToTokens for SizeofImpl {
 pub struct CppDetails {
     pub includes: CppIncludes,
     // The "pragma clang diagnostic push/pop" is automatically inserted around the thunks.
-    pub dyn_callable_cpp_decls: Vec<TokenStream>,
+    pub dyn_callable_cpp_decls: TokenStream,
     pub thunks: Vec<ThunkImpl>,
 }
 
@@ -1661,7 +1661,7 @@ impl ToTokens for CppDetails {
             // complain about thunks that call mutex locking functions in an unpaired way.
             __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__ __NEWLINE__
 
-            #( #dyn_callable_cpp_decls __NEWLINE__ __NEWLINE__ )*
+            #dyn_callable_cpp_decls
             #( #thunks __NEWLINE__ __NEWLINE__ )*
 
             __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__

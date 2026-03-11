@@ -438,49 +438,47 @@ pub fn generate_bindings_tokens(
 
     // Since Idents are not free, we reuse them across records.
     let mut param_idents_buffer = vec![];
-    let (dyn_callable_cpp_decls, dyn_callable_rust_impls): (Vec<TokenStream>, Vec<TokenStream>) =
-        ir.records()
-            .filter_map(|record| {
-                // If the record doesn't belong to a target with the Callables feature, skip.
-                if !ir
-                    .target_crubit_features(&record.owning_target)
-                    .contains(CrubitFeature::Callables)
-                {
-                    return None;
-                }
+    let (callables_rs_api_impl, callables_rs_api): (TokenStream, TokenStream) = ir
+        .records()
+        .filter_map(|record| {
+            // If the record doesn't belong to a target with the Callables feature, skip.
+            if !ir.target_crubit_features(&record.owning_target).contains(CrubitFeature::Callables)
+            {
+                return None;
+            }
 
-                // It doesn't matter since we're just checking for presence of DynCallable.
-                let has_reference_param = false;
+            // It doesn't matter since we're just checking for presence of DynCallable.
+            let has_reference_param = false;
 
-                // Find records that are template instantiations of `rs_std::DynCallable`.
-                let Ok(Some(BridgeRsTypeKind::Callable(callable))) =
-                    BridgeRsTypeKind::new(record, has_reference_param, &db)
-                else {
-                    return None;
-                };
+            // Find records that are template instantiations of `rs_std::DynCallable` or
+            // `absl::AnyInvocable`.
+            let Ok(Some(BridgeRsTypeKind::Callable(callable))) =
+                BridgeRsTypeKind::new(record, has_reference_param, &db)
+            else {
+                return None;
+            };
 
-                // The parameters shall be named `param_0`, `param_1`, etc.
-                // These names can be reused across different dyn callables, so we reuse the same vec
-                // and just grow it when we need more Idents than it currently contains.
-                while callable.param_types.len() > param_idents_buffer.len() {
-                    param_idents_buffer.push(format_ident!("param_{}", param_idents_buffer.len()));
-                }
-                // Only take as many filled in names as we need.
-                let param_idents = &param_idents_buffer[..callable.param_types.len()];
+            // The parameters shall be named `param_0`, `param_1`, etc.
+            // These names can be reused across different callables, so we reuse the same vec and
+            // just grow it when we need more Idents than it currently contains.
+            while callable.param_types.len() > param_idents_buffer.len() {
+                param_idents_buffer.push(format_ident!("param_{}", param_idents_buffer.len()));
+            }
+            // Only take as many filled in names as we need.
+            let param_idents = &param_idents_buffer[..callable.param_types.len()];
 
-                // If generate_dyn_callable_cpp_thunk fails, skip. We don't need to generate a nice
-                // error because whoever uses this will also fail and generate an error at the relevant
-                // site.
-                let callable_cpp_decl =
-                    generate_dyn_callable_cpp_thunk(&db, &callable, param_idents)?;
-                let callable_rust_impl =
-                    generate_dyn_callable_rust_thunk_impl(&db, callable.clone(), param_idents)?;
+            // If generate_dyn_callable_cpp_thunk fails, skip. We don't need to generate a nice
+            // error because whoever uses this will also fail and generate an error at the relevant
+            // site.
+            let callable_cpp_decl = generate_dyn_callable_cpp_thunk(&db, &callable, param_idents)?;
+            let callable_rust_impl =
+                generate_dyn_callable_rust_thunk_impl(&db, &callable, param_idents)?;
 
-                Some((callable_cpp_decl, callable_rust_impl))
-            })
-            .unzip();
+            Some((callable_cpp_decl, callable_rust_impl))
+        })
+        .unzip();
 
-    let has_callables = !dyn_callable_rust_impls.is_empty();
+    let has_callables = !callables_rs_api.is_empty();
 
     // Callables use `Box<dyn F>`.
     let extern_crate_alloc =
@@ -505,7 +503,7 @@ pub fn generate_bindings_tokens(
 
     let cc_details = CppDetails {
         includes: generate_rs_api_impl_includes(&db, crubit_support_path_format, has_callables),
-        dyn_callable_cpp_decls,
+        dyn_callable_cpp_decls: callables_rs_api_impl,
         thunks: cc_details,
     };
 
@@ -519,13 +517,7 @@ pub fn generate_bindings_tokens(
         })
     };
 
-    let dyn_callable_rust_impls = if dyn_callable_rust_impls.is_empty() {
-        None
-    } else {
-        Some(quote! { #( #dyn_callable_rust_impls )* })
-    };
-
-    let mod_detail = if thunks.is_none() && dyn_callable_rust_impls.is_none() {
+    let mod_detail = if thunks.is_none() && callables_rs_api.is_empty() {
         None
     } else {
         Some(quote! {
@@ -534,7 +526,7 @@ pub fn generate_bindings_tokens(
                 use super::*;
                 #thunks
                 __NEWLINE__
-                #dyn_callable_rust_impls
+                #callables_rs_api
             }
         })
     };
@@ -1194,14 +1186,14 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
 /// because it will be reported elsewhere.
 fn generate_dyn_callable_cpp_thunk(
     db: &BindingsGenerator,
-    dyn_callable: &Callable,
+    callable: &Callable,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
     assert!(
-        param_idents.len() == dyn_callable.param_types.len(),
+        param_idents.len() == callable.param_types.len(),
         "param_idents and param_types should have the same length, this is a Crubit bug."
     );
-    let param_types = dyn_callable
+    let param_types = callable
         .param_types
         .iter()
         .map(|param_type| -> Option<TokenStream> {
@@ -1225,16 +1217,16 @@ fn generate_dyn_callable_cpp_thunk(
     let out_param_ident;
     let out_param_type;
     let decl_return_type_tokens;
-    match dyn_callable.return_type.passing_convention() {
+    match callable.return_type.passing_convention() {
         PassingConvention::AbiCompatible => {
             out_param_ident = None;
             out_param_type = None;
             decl_return_type_tokens =
-                cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
+                cpp_type_name::format_cpp_type(&callable.return_type, db.ir()).ok()?;
         }
         PassingConvention::LayoutCompatible => {
             let return_type_tokens =
-                cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
+                cpp_type_name::format_cpp_type(&callable.return_type, db.ir()).ok()?;
             out_param_ident = Some(format_ident!("out"));
             out_param_type = Some(quote! { #return_type_tokens* });
             decl_return_type_tokens = quote! { void };
@@ -1259,8 +1251,8 @@ fn generate_dyn_callable_cpp_thunk(
 
     let param_idents = param_idents.iter().chain(out_param_ident.as_ref());
     let param_types = param_types.iter().chain(out_param_type.as_ref());
-    let invoker_ident = &dyn_callable.invoker_ident;
-    let manager_ident = &dyn_callable.manager_ident;
+    let invoker_ident = &callable.invoker_ident;
+    let manager_ident = &callable.manager_ident;
 
     Some(quote! {
         extern "C" #decl_return_type_tokens #invoker_ident(
@@ -1274,6 +1266,7 @@ fn generate_dyn_callable_cpp_thunk(
             ::absl::internal_any_invocable::TypeErasedState* from,
             ::absl::internal_any_invocable::TypeErasedState* to
         );
+        __NEWLINE__ __NEWLINE__
     })
 }
 
@@ -1296,18 +1289,18 @@ fn generate_dyn_callable_cpp_thunk(
 /// reported because it will be reported elsewhere.
 fn generate_dyn_callable_rust_thunk_impl(
     db: &BindingsGenerator,
-    dyn_callable: Rc<Callable>,
+    callable: &Callable,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
     assert!(
-        param_idents.len() == dyn_callable.param_types.len(),
+        param_idents.len() == callable.param_types.len(),
         "param_idents and param_types should have the same length, this is a Crubit bug."
     );
     let mut ffi_to_rust_transforms = quote! {};
 
     let param_types_tokens = param_idents
         .iter()
-        .zip(dyn_callable.param_types.iter())
+        .zip(callable.param_types.iter())
         .map(|(ident, ty)| -> Option<TokenStream> {
             match ty.passing_convention() {
                 PassingConvention::AbiCompatible => {
@@ -1335,16 +1328,16 @@ fn generate_dyn_callable_rust_thunk_impl(
         })
         .collect::<Option<Vec<TokenStream>>>()?;
 
-    let unwrapper = match dyn_callable.fn_trait {
+    let unwrapper = match callable.fn_trait {
         FnTrait::Fn => quote! { &*f },
         FnTrait::FnMut => quote! { &mut *f },
         FnTrait::FnOnce => {
             // Replace the FnOnce with an empty instance, so it can still be dropped.
             // Since it's a ZST, no allocation will be performed, and it can even be forgotten
             // without worrying about leaks.
-            let rust_return_type_fragment = dyn_callable.rust_return_type_fragment(db);
+            let rust_return_type_fragment = callable.rust_return_type_fragment(db);
             let param_type_tokens =
-                dyn_callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
+                callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
             quote! {
                 // SAFETY: f is guaranteed to be valid for reads and writes, is properly aligned,
                 // and points to a properly initialized value of the correct type.
@@ -1363,9 +1356,9 @@ fn generate_dyn_callable_rust_thunk_impl(
     let return_type_fragment;
     let out_param_ident;
     let out_param_type;
-    match dyn_callable.return_type.passing_convention() {
+    match callable.return_type.passing_convention() {
         PassingConvention::AbiCompatible => {
-            let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
+            let ffi_return_type = callable.return_type.to_token_stream(db);
             return_type_fragment = Some(quote! { -> #ffi_return_type });
             out_param_ident = None;
             out_param_type = None;
@@ -1380,14 +1373,13 @@ fn generate_dyn_callable_rust_thunk_impl(
                 }
             };
 
-            let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
+            let ffi_return_type = callable.return_type.to_token_stream(db);
             return_type_fragment = None;
             out_param_ident = Some(out_ident);
             out_param_type = Some(quote! { *mut #ffi_return_type });
         }
         PassingConvention::ComposablyBridged => {
-            let crubit_abi_type =
-                db.crubit_abi_type(dyn_callable.return_type.as_ref().clone()).ok()?;
+            let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone()).ok()?;
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
             let bridge_buffer_ident = format_ident!("bridge_buffer");
             invoke_rust_and_return_to_ffi = quote! {
@@ -1422,9 +1414,9 @@ fn generate_dyn_callable_rust_thunk_impl(
 
     let param_idents = param_idents.iter().chain(out_param_ident.as_ref());
     let param_types_tokens = param_types_tokens.iter().chain(out_param_type.as_ref());
-    let dyn_fn_spelling = dyn_callable.dyn_fn_spelling(db);
-    let invoker_ident = &dyn_callable.invoker_ident;
-    let manager_ident = &dyn_callable.manager_ident;
+    let dyn_fn_spelling = callable.dyn_fn_spelling(db);
+    let invoker_ident = &callable.invoker_ident;
+    let manager_ident = &callable.manager_ident;
 
     Some(quote! {
         #[unsafe(no_mangle)]
