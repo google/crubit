@@ -35,6 +35,8 @@ pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type
 ///CRUBIT_ANNOTATE: cpp_type=UserOfImportedType
 pub struct UserOfImportedType {
     pub trivial: *mut ::trivial_type_cc::ns::Trivial,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for UserOfImportedType {}
 impl !Sync for UserOfImportedType {}

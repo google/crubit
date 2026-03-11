@@ -696,6 +696,10 @@ pub fn generated_items_to_tokens(
                     #visibility #struct_or_union #ident {
                         #head_padding
                         #( #field_definitions )*
+
+                        // DO_NOT_SUBMIT: add docs for why this exists.
+                        #[doc(hidden)]
+                        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
                     }
 
                     #send_impl

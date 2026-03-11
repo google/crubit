@@ -46,6 +46,8 @@ pub struct ExistingRustTypeFieldTypes {
     pub my_i8_enum: i8,
     pub my_i8_alias: i8,
     pub error: crate::TooFewArgs,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for ExistingRustTypeFieldTypes {}
 impl !Sync for ExistingRustTypeFieldTypes {}

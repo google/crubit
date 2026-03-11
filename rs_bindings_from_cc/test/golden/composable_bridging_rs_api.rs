@@ -44,6 +44,8 @@ pub struct Vec3 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Vec3 {}
 impl !Sync for Vec3 {}
@@ -633,6 +635,8 @@ pub struct __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}
 impl !Sync for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}

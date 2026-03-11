@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=Noninline
 pub struct Noninline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Noninline {}
 impl !Sync for Noninline {}
@@ -84,6 +86,8 @@ impl Default for Noninline {
 ///CRUBIT_ANNOTATE: cpp_type=Inline
 pub struct Inline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Inline {}
 impl !Sync for Inline {}

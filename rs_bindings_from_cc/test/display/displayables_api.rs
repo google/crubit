@@ -20,6 +20,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=CanAbslStringify
 pub struct CanAbslStringify {
     pub value: ::string_view::absl::string_view,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for CanAbslStringify {}
 impl !Sync for CanAbslStringify {}
@@ -59,6 +61,8 @@ impl Default for CanAbslStringify {
 pub struct CanAbslStringifyByFill {
     pub count: usize,
     pub ch: ::ffi_11::c_char,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for CanAbslStringifyByFill {}
 impl !Sync for CanAbslStringifyByFill {}
@@ -97,6 +101,8 @@ impl Default for CanAbslStringifyByFill {
 ///CRUBIT_ANNOTATE: cpp_type=CanAbslStringifyByFormat
 pub struct CanAbslStringifyByFormat {
     pub value: ::string_view::absl::string_view,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for CanAbslStringifyByFormat {}
 impl !Sync for CanAbslStringifyByFormat {}
@@ -135,6 +141,8 @@ impl Default for CanAbslStringifyByFormat {
 ///CRUBIT_ANNOTATE: cpp_type=CanOstream
 pub struct CanOstream {
     pub value: ::string_view::absl::string_view,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for CanOstream {}
 impl !Sync for CanOstream {}
@@ -182,6 +190,8 @@ impl Default for CanOstream {
 pub struct CanAbslStringifyAndOstream {
     pub stringify: ::string_view::absl::string_view,
     pub ostream: ::string_view::absl::string_view,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for CanAbslStringifyAndOstream {}
 impl !Sync for CanAbslStringifyAndOstream {}
@@ -272,6 +282,8 @@ impl ::core::fmt::Display for DisplayableEnum {
 ///CRUBIT_ANNOTATE: cpp_type=NotDisplayable
 pub struct NotDisplayable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NotDisplayable {}
 impl !Sync for NotDisplayable {}
@@ -298,6 +310,8 @@ impl Default for NotDisplayable {
 ///CRUBIT_ANNOTATE: cpp_type=TemplatedStringView
 pub struct TemplatedStringView {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TemplatedStringView {}
 impl !Sync for TemplatedStringView {}
@@ -345,6 +359,8 @@ impl ::ctor::CtorNew<::string_view::absl::string_view> for TemplatedStringView {
 ///CRUBIT_ANNOTATE: cpp_type=TemplatedNotDisplayable
 pub struct TemplatedNotDisplayable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for TemplatedNotDisplayable {}
 impl !Sync for TemplatedNotDisplayable {}
@@ -372,6 +388,8 @@ impl Default for TemplatedNotDisplayable {
 pub struct DisplayInRust {
     pub cc_value: ::string_view::absl::string_view,
     pub rust_value: ::string_view::absl::string_view,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for DisplayInRust {}
 impl !Sync for DisplayInRust {}
@@ -912,6 +930,8 @@ pub struct __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}
 impl !Sync for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}

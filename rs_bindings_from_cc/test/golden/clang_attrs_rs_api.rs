@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignment
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for HasCustomAlignment {}
 impl !Sync for HasCustomAlignment {}
@@ -42,6 +44,8 @@ impl Default for HasCustomAlignment {
 ///CRUBIT_ANNOTATE: cpp_type=HasFieldWithCustomAlignment
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for HasFieldWithCustomAlignment {}
 impl !Sync for HasFieldWithCustomAlignment {}
@@ -68,6 +72,8 @@ impl Default for HasFieldWithCustomAlignment {
 ///CRUBIT_ANNOTATE: cpp_type=InheritsFromBaseWithCustomAlignment
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for InheritsFromBaseWithCustomAlignment {}
 impl !Sync for InheritsFromBaseWithCustomAlignment {}
@@ -94,6 +100,8 @@ impl Default for InheritsFromBaseWithCustomAlignment {
 ///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for HasCustomAlignmentWithGnuAttr {}
 impl !Sync for HasCustomAlignmentWithGnuAttr {}

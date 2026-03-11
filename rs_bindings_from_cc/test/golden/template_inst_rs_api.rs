@@ -31,6 +31,8 @@ pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
 ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
 pub(crate) struct __CcTemplateInst10MyTemplateIiE {
     pub field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}

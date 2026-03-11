@@ -18,6 +18,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
@@ -52,6 +54,8 @@ pub mod some_struct {
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
 pub struct SomeOtherStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SomeOtherStruct {}
 impl !Sync for SomeOtherStruct {}
@@ -80,6 +84,8 @@ impl Default for SomeOtherStruct {
 ///CRUBIT_ANNOTATE: cpp_type=SomeUnion
 pub union SomeUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SomeUnion {}
 impl !Sync for SomeUnion {}
@@ -111,6 +117,8 @@ impl Default for SomeUnion {
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion
 pub union SomeOtherUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for SomeOtherUnion {}
 impl !Sync for SomeOtherUnion {}

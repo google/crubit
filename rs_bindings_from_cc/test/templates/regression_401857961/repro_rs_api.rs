@@ -33,6 +33,8 @@ pub mod repro {
         /// Reason for representing this field as a blob of bytes:
         /// Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
         pub(crate) nanos: [::core::mem::MaybeUninit<u8>; 1],
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Interval {}
     impl !Sync for Interval {}

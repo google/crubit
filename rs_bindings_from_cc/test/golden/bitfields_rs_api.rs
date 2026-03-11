@@ -32,6 +32,8 @@ pub struct WithBitfields {
     pub(crate) f7: [::core::mem::MaybeUninit<u8>; 1],
     // f8 : 2 bits
     __bitfields6: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for WithBitfields {}
 impl !Sync for WithBitfields {}
@@ -66,6 +68,8 @@ pub struct AlignmentRegressionTest {
     // code_point : 31 bits
     // status : 1 bits
     __bitfields0: [::core::mem::MaybeUninit<u8>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for AlignmentRegressionTest {}
 impl !Sync for AlignmentRegressionTest {}

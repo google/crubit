@@ -23,6 +23,8 @@ pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for DocCommentSlashes {}
 impl !Sync for DocCommentSlashes {}
@@ -115,6 +117,8 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for DocCommentSlashes {
 pub struct DocCommentBang {
     /// A field
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for DocCommentBang {}
 impl !Sync for DocCommentBang {}
@@ -161,6 +165,8 @@ impl Default for DocCommentBang {
 pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for MultilineCommentTwoStars {}
 impl !Sync for MultilineCommentTwoStars {}
@@ -207,6 +213,8 @@ impl Default for MultilineCommentTwoStars {
 pub struct LineComment {
     /// A field
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for LineComment {}
 impl !Sync for LineComment {}
@@ -253,6 +261,8 @@ impl Default for LineComment {
 pub struct MultilineOneStar {
     /// A field
     pub i: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for MultilineOneStar {}
 impl !Sync for MultilineOneStar {}

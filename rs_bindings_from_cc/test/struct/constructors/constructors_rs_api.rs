@@ -25,6 +25,8 @@
 pub struct StructWithUserProvidedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithUserProvidedConstructors {}
 impl !Sync for StructWithUserProvidedConstructors {}
@@ -93,6 +95,8 @@ impl Clone for StructWithUserProvidedConstructors {
 pub struct StructWithExplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithExplicitConversionConstructor {}
 impl !Sync for StructWithExplicitConversionConstructor {}
@@ -138,6 +142,8 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
 pub struct StructWithMultipleConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithMultipleConstructors {}
 impl !Sync for StructWithMultipleConstructors {}
@@ -234,6 +240,8 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
 pub struct StructWithImplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithImplicitConversionConstructor {}
 impl !Sync for StructWithImplicitConversionConstructor {}
@@ -278,6 +286,8 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
 ///CRUBIT_ANNOTATE: cpp_type=OtherSimpleStruct
 pub struct OtherSimpleStruct {
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for OtherSimpleStruct {}
 impl !Sync for OtherSimpleStruct {}
@@ -309,6 +319,8 @@ impl Default for OtherSimpleStruct {
 pub struct StructWithImplicitConversionFromReference {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithImplicitConversionFromReference {}
 impl !Sync for StructWithImplicitConversionFromReference {}
@@ -355,6 +367,8 @@ impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
 pub struct StructWithInlineConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithInlineConstructors {}
 impl !Sync for StructWithInlineConstructors {}
@@ -441,6 +455,8 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
 pub struct StructWithDeletedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithDeletedConstructors {}
 impl !Sync for StructWithDeletedConstructors {}
@@ -472,6 +488,8 @@ pub struct StructWithPrivateConstructors {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithPrivateConstructors {}
 impl !Sync for StructWithPrivateConstructors {}
@@ -502,6 +520,8 @@ pub struct StructWithExplicitlyDefaultedConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field_with_explicit_initializer: ::ffi_11::c_int,
     pub field_with_no_initializer: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for StructWithExplicitlyDefaultedConstructors {}
 impl !Sync for StructWithExplicitlyDefaultedConstructors {}
@@ -538,6 +558,8 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 pub struct NonTrivialStructWithConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for NonTrivialStructWithConstructors {}
 impl !Sync for NonTrivialStructWithConstructors {}

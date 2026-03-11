@@ -21,6 +21,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=Base0
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Base0 {}
 impl !Sync for Base0 {}
@@ -69,6 +71,8 @@ pub struct Base1 {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) b1_2_: [::core::mem::MaybeUninit<u8>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Base1 {}
 impl !Sync for Base1 {}
@@ -114,6 +118,8 @@ pub struct Base2 {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) b2_1_: [::core::mem::MaybeUninit<u8>; 2],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Base2 {}
 impl !Sync for Base2 {}
@@ -157,6 +163,8 @@ impl Default for Base2 {
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
     pub derived_1: ::ffi_11::c_char,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
@@ -199,6 +207,8 @@ impl Default for Derived {
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
 pub struct VirtualBase1 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for VirtualBase1 {}
 impl !Sync for VirtualBase1 {}
@@ -246,6 +256,8 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
 pub struct VirtualBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for VirtualBase2 {}
 impl !Sync for VirtualBase2 {}
@@ -293,6 +305,8 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
 pub struct VirtualDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for VirtualDerived {}
 impl !Sync for VirtualDerived {}
@@ -340,6 +354,8 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 ///CRUBIT_ANNOTATE: cpp_type=MyAbstractClass
 pub struct MyAbstractClass {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for MyAbstractClass {}
 impl !Sync for MyAbstractClass {}
@@ -365,6 +381,8 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase1
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for MethodBase1 {}
 impl !Sync for MethodBase1 {}
@@ -429,6 +447,8 @@ impl Default for MethodBase1 {
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase2
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for MethodBase2 {}
 impl !Sync for MethodBase2 {}
@@ -481,6 +501,8 @@ impl Default for MethodBase2 {
 ///CRUBIT_ANNOTATE: cpp_type=MethodDerived
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for MethodDerived {}
 impl !Sync for MethodDerived {}

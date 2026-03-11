@@ -21,6 +21,8 @@ pub mod ns {
     ///CRUBIT_ANNOTATE: cpp_type=ns :: Trivial
     pub struct Trivial {
         pub trivial_field: ::ffi_11::c_int,
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for Trivial {}
     impl !Sync for Trivial {}

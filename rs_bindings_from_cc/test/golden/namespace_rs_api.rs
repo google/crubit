@@ -19,6 +19,8 @@ pub mod test_namespace_bindings {
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: S
     pub struct S {
         pub i: ::ffi_11::c_int,
+        #[doc(hidden)]
+        pub __crubit_hidden_field_to_force_struct_update_syntax: (),
     }
     impl !Send for S {}
     impl !Sync for S {}
@@ -96,6 +98,8 @@ pub mod test_namespace_bindings_reopened {
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_reopened :: inner :: S
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for S {}
         impl !Sync for S {}
@@ -139,6 +143,8 @@ pub mod test_namespace_bindings_inline {
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: inner :: StructInInlineNamespace
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            #[doc(hidden)]
+            pub __crubit_hidden_field_to_force_struct_update_syntax: (),
         }
         impl !Send for StructInInlineNamespace {}
         impl !Sync for StructInInlineNamespace {}

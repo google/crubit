@@ -20,6 +20,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=S
 pub struct S {
     pub int_field: ::ffi_11::c_int,
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for S {}
 impl !Sync for S {}

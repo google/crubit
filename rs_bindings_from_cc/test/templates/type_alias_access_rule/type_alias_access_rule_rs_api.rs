@@ -32,6 +32,8 @@ pub struct B {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
     pub(crate) a_: [::core::mem::MaybeUninit<u8>; 1],
+    #[doc(hidden)]
+    pub __crubit_hidden_field_to_force_struct_update_syntax: (),
 }
 impl !Send for B {}
 impl !Sync for B {}
