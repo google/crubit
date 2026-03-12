@@ -13,11 +13,11 @@
 #![allow(unused)]
 #![deny(warnings)]
 
-// Error while generating bindings for function 'Overload':
-// Cannot generate bindings for overloaded function
+// error: function `Overload` could not be bound
+//   Cannot generate bindings for overloaded function
 
-// Error while generating bindings for function 'Overload':
-// Cannot generate bindings for overloaded function
+// error: function `Overload` could not be bound
+//   Cannot generate bindings for overloaded function
 
 /// Both Overload2() overloads should be generated, because one should be
 /// renamed.
@@ -31,25 +31,25 @@ pub fn RenamedOverload2(__param_0: ::ffi_11::c_int) {
     unsafe { crate::detail::__rust_thunk___Z9Overlaod2i(__param_0) }
 }
 
-// Error while generating bindings for function 'UncallableOverload':
-// Cannot generate bindings for overloaded function
+// error: function `UncallableOverload` could not be bound
+//   Cannot generate bindings for overloaded function
 
-// Error while generating bindings for function 'UncallableOverload':
-// Cannot generate bindings for overloaded function
+// error: function `UncallableOverload` could not be bound
+//   Cannot generate bindings for overloaded function
 
-// Error while generating bindings for class 'Sizeof':
-// Class templates are not supported yet
+// error: class `Sizeof` could not be bound
+//   Class templates are not yet supported
 
-// Error while generating bindings for function 'UncallableOverload':
-// Function templates are not supported yet
+// error: function `UncallableOverload` could not be bound
+//   Function templates are not yet supported
 
 #[inline(always)]
 pub fn AlsoTemplateOverload() {
     unsafe { crate::detail::__rust_thunk___Z20AlsoTemplateOverloadv() }
 }
 
-// Error while generating bindings for function 'AlsoTemplateOverload':
-// Function templates are not supported yet
+// error: function `AlsoTemplateOverload` could not be bound
+//   Function templates are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -85,27 +85,21 @@ impl Default for Foo {
     }
 }
 
-// Error while generating bindings for function 'Foo::Bar':
-// Can't generate bindings for Foo::Bar, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::Bar (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation))
+// error: function `Foo::Bar` could not be bound
+//   Unsupported parameter #1 (__param_0): template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for function 'Foo::Bar':
-// Can't generate bindings for Foo::Bar, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::Bar (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<float>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation))
+// error: function `Foo::Bar` could not be bound
+//   Unsupported parameter #1 (__param_0): template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'Sizeof<float>':
-// Can't generate bindings for Sizeof<float>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
+// error: struct `Sizeof<float>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'Sizeof<int>':
-// Can't generate bindings for Sizeof<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
+// error: struct `Sizeof<int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

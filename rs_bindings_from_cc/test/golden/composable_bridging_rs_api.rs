@@ -34,8 +34,8 @@ pub fn TakeCppStruct(__param_0: crate::RustStruct) {
     }
 }
 
-// Error while generating bindings for class 'MyOption':
-// Class templates are not supported yet
+// error: class `MyOption` could not be bound
+//   Class templates are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -204,469 +204,356 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
     }
 }
 
-// Error while generating bindings for struct 'std::integral_constant<bool, false>':
-// Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::integral_constant<bool, false> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::integral_constant<bool, true>':
-// Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::iterator_traits<char32_t *>':
-// Can't generate bindings for std::iterator_traits<char32_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::iterator_traits<char32_t *> (crate::__CcTemplateInstNSt3__u15iterator_traitsIPDiEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::iterator_traits<char16_t *>':
-// Can't generate bindings for std::iterator_traits<char16_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::iterator_traits<char16_t *> (crate::__CcTemplateInstNSt3__u15iterator_traitsIPDsEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::iterator_traits<const char32_t *>':
-// Can't generate bindings for std::iterator_traits<const char32_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::iterator_traits<const char32_t *> (crate::__CcTemplateInstNSt3__u15iterator_traitsIPKDiEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::iterator_traits<const char16_t *>':
-// Can't generate bindings for std::iterator_traits<const char16_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::iterator_traits<const char16_t *> (crate::__CcTemplateInstNSt3__u15iterator_traitsIPKDsEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::iterator_traits<const char *>':
-// Can't generate bindings for std::iterator_traits<const char *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::iterator_traits<const char *> (crate::__CcTemplateInstNSt3__u15iterator_traitsIPKcEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::iterator_traits<char *>':
-// Can't generate bindings for std::iterator_traits<char *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::iterator_traits<char *> (crate::__CcTemplateInstNSt3__u15iterator_traitsIPcEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::pointer_traits<char32_t *>':
-// Can't generate bindings for std::pointer_traits<char32_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pointer_traits<char32_t *> (crate::__CcTemplateInstNSt3__u14pointer_traitsIPDiEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::pointer_traits<char16_t *>':
-// Can't generate bindings for std::pointer_traits<char16_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pointer_traits<char16_t *> (crate::__CcTemplateInstNSt3__u14pointer_traitsIPDsEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::pointer_traits<char *>':
-// Can't generate bindings for std::pointer_traits<char *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pointer_traits<char *> (crate::__CcTemplateInstNSt3__u14pointer_traitsIPcEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char32_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char32_t *>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char32_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPDiEEEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char16_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char16_t *>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char16_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPDsEEEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char32_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char32_t *>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char32_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKDiEEEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char16_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char16_t *>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char16_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKDsEEEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char *>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKcEEEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char *>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPcEEEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<const char32_t *>':
-// Can't generate bindings for std::reverse_iterator<const char32_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const char32_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDiEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<const char16_t *>':
-// Can't generate bindings for std::reverse_iterator<const char16_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const char16_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDsEE is a template instantiation)
-
-// Error while generating bindings for class 'std::reverse_iterator<const char8_t *>':
-// Can't generate bindings for std::reverse_iterator<const char8_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const char8_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDuEE is a template instantiation)
+// error: struct `std::integral_constant<bool, false>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::reverse_iterator<const std::basic_string_view<char, std::char_traits<char>> *>':
-// Can't generate bindings for std::reverse_iterator<const std::basic_string_view<char, std::char_traits<char>> *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const std::basic_string_view<char, std::char_traits<char>> *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE is a template instantiation)
+// error: struct `std::integral_constant<bool, true>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::reverse_iterator<const char *>':
-// Can't generate bindings for std::reverse_iterator<const char *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const char *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE is a template instantiation)
+// error: struct `std::iterator_traits<char32_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::reverse_iterator<const int *>':
-// Can't generate bindings for std::reverse_iterator<const int *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const int *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKiEE is a template instantiation)
+// error: struct `std::iterator_traits<char16_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::reverse_iterator<const wchar_t *>':
-// Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation)
+// error: struct `std::iterator_traits<const char32_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::reverse_iterator<std::basic_string_view<char, std::char_traits<char>> *>':
-// Can't generate bindings for std::reverse_iterator<std::basic_string_view<char, std::char_traits<char>> *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::basic_string_view<char, std::char_traits<char>> *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE is a template instantiation)
+// error: struct `std::iterator_traits<const char16_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::__wrap_iter<char32_t *>':
-// Can't generate bindings for std::__wrap_iter<char32_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<char32_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPDiEE is a template instantiation)
+// error: struct `std::iterator_traits<const char *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::__wrap_iter<char16_t *>':
-// Can't generate bindings for std::__wrap_iter<char16_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<char16_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPDsEE is a template instantiation)
+// error: struct `std::iterator_traits<char *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::__wrap_iter<const char32_t *>':
-// Can't generate bindings for std::__wrap_iter<const char32_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<const char32_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPKDiEE is a template instantiation)
+// error: struct `std::pointer_traits<char32_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::__wrap_iter<const char16_t *>':
-// Can't generate bindings for std::__wrap_iter<const char16_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<const char16_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPKDsEE is a template instantiation)
+// error: struct `std::pointer_traits<char16_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::__wrap_iter<const char *>':
-// Can't generate bindings for std::__wrap_iter<const char *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<const char *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPKcEE is a template instantiation)
+// error: struct `std::pointer_traits<char *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::__wrap_iter<char *>':
-// Can't generate bindings for std::__wrap_iter<char *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<char *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPcEE is a template instantiation)
+// error: class `std::reverse_iterator<std::__wrap_iter<char32_t *>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::initializer_list<char32_t>':
-// Can't generate bindings for std::initializer_list<char32_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char32_t> (crate::__CcTemplateInstSt16initializer_listIDiE is a template instantiation)
+// error: class `std::reverse_iterator<std::__wrap_iter<char16_t *>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::initializer_list<char16_t>':
-// Can't generate bindings for std::initializer_list<char16_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char16_t> (crate::__CcTemplateInstSt16initializer_listIDsE is a template instantiation)
+// error: class `std::reverse_iterator<std::__wrap_iter<const char32_t *>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::initializer_list<char>':
-// Can't generate bindings for std::initializer_list<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char> (crate::__CcTemplateInstSt16initializer_listIcE is a template instantiation)
+// error: class `std::reverse_iterator<std::__wrap_iter<const char16_t *>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::allocator<char32_t>':
-// Can't generate bindings for std::allocator<char32_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char32_t> (crate::__CcTemplateInstNSt3__u9allocatorIDiEE is a template instantiation)
+// error: class `std::reverse_iterator<std::__wrap_iter<const char *>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::allocator<char16_t>':
-// Can't generate bindings for std::allocator<char16_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char16_t> (crate::__CcTemplateInstNSt3__u9allocatorIDsEE is a template instantiation)
+// error: class `std::reverse_iterator<std::__wrap_iter<char *>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::allocator<char>':
-// Can't generate bindings for std::allocator<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char> (crate::__CcTemplateInstNSt3__u9allocatorIcEE is a template instantiation)
+// error: class `std::reverse_iterator<const char32_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<char32_t>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<char32_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char32_t> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIDiEE is a template instantiation)
+// error: class `std::reverse_iterator<const char16_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<char16_t>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<char16_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char16_t> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIDsEE is a template instantiation)
+// error: class `std::reverse_iterator<const char8_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<char>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIcEE is a template instantiation)
+// error: class `std::reverse_iterator<const std::basic_string_view<char, std::char_traits<char>> *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE is a template instantiation)
+// error: class `std::reverse_iterator<const char *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_9allocatorIDiEEEE is a template instantiation)
+// error: class `std::reverse_iterator<const int *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_3pmr21polymorphic_allocatorIDsEEEE is a template instantiation)
+// error: class `std::reverse_iterator<const wchar_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_9allocatorIDsEEEE is a template instantiation)
+// error: class `std::reverse_iterator<std::basic_string_view<char, std::char_traits<char>> *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'char8_t': Unsupported builtin type
+// error: class `std::__wrap_iter<char32_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'char8_t': Unsupported builtin type
+// error: class `std::__wrap_iter<char16_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'wchar_t': Unsupported builtin type
+// error: class `std::__wrap_iter<const char32_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'wchar_t': Unsupported builtin type
+// error: class `std::__wrap_iter<const char16_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_3pmr21polymorphic_allocatorIDiEEPDivEE is a template instantiation)
+// error: class `std::__wrap_iter<const char *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_3pmr21polymorphic_allocatorIDsEEPDsvEE is a template instantiation)
+// error: class `std::__wrap_iter<char *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_3pmr21polymorphic_allocatorIcEEPcvEE is a template instantiation)
+// error: class `std::initializer_list<char32_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>>':
-// Can't generate bindings for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_3pmr21polymorphic_allocatorIDiEEEE is a template instantiation)
+// error: class `std::initializer_list<char16_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>>':
-// Can't generate bindings for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_3pmr21polymorphic_allocatorIDsEEEE is a template instantiation)
+// error: class `std::initializer_list<char>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>>':
-// Can't generate bindings for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_3pmr21polymorphic_allocatorIcEEEE is a template instantiation)
+// error: class `std::allocator<char32_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__allocator_traits_base<std::allocator<char32_t>>':
-// Can't generate bindings for std::__allocator_traits_base<std::allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocator_traits_base<std::allocator<char32_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_9allocatorIDiEEEE is a template instantiation)
+// error: class `std::allocator<char16_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__allocator_traits_base<std::allocator<char16_t>>':
-// Can't generate bindings for std::__allocator_traits_base<std::allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocator_traits_base<std::allocator<char16_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_9allocatorIDsEEEE is a template instantiation)
+// error: class `std::allocator<char>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::__allocator_traits_base<std::allocator<char>>':
-// Can't generate bindings for std::__allocator_traits_base<std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocator_traits_base<std::allocator<char>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_9allocatorIcEEEE is a template instantiation)
+// error: class `std::pmr::polymorphic_allocator<char32_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>':
-// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_3pmr21polymorphic_allocatorIDiEEEE is a template instantiation)
+// error: class `std::pmr::polymorphic_allocator<char16_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>>':
-// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_3pmr21polymorphic_allocatorIDsEEEE is a template instantiation)
+// error: class `std::pmr::polymorphic_allocator<char>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::allocator_traits<std::pmr::polymorphic_allocator<char>>':
-// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::pmr::polymorphic_allocator<char>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_3pmr21polymorphic_allocatorIcEEEE is a template instantiation)
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::allocator_traits<std::allocator<char32_t>>':
-// Can't generate bindings for std::allocator_traits<std::allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::allocator<char32_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_9allocatorIDiEEEE is a template instantiation)
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::allocator_traits<std::allocator<char16_t>>':
-// Can't generate bindings for std::allocator_traits<std::allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::allocator<char16_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_9allocatorIDsEEEE is a template instantiation)
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::allocator_traits<std::allocator<char>>':
-// Can't generate bindings for std::allocator_traits<std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::allocator<char>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_9allocatorIcEEEE is a template instantiation)
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_filebuf<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_filebuf<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_filebuf<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'char8_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_filebuf<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'char8_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_ifstream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ifstream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ifstream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ifstream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_ofstream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ofstream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ofstream<char, std::char_traits<char>> (incomplete type)
+// error: struct `std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ofstream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: struct `std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_fstream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_fstream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_fstream<char, std::char_traits<char>> (incomplete type)
+// error: struct `std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_fstream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_fstream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_fstream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: struct `std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_ios<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ios<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ios<char, std::char_traits<char>> (incomplete type)
+// error: struct `std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_ios<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ios<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ios<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: struct `std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_istream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_istream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_istream<char, std::char_traits<char>> (incomplete type)
+// error: struct `std::__allocator_traits_base<std::allocator<char32_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_istream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_istream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_istream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: struct `std::__allocator_traits_base<std::allocator<char16_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_iostream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_iostream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_iostream<char, std::char_traits<char>> (incomplete type)
+// error: struct `std::__allocator_traits_base<std::allocator<char>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_iostream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_iostream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_iostream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: struct `std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_ostream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ostream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ostream<char, std::char_traits<char>> (incomplete type)
+// error: struct `std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_ostream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ostream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ostream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: struct `std::allocator_traits<std::pmr::polymorphic_allocator<char>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: struct `std::allocator_traits<std::allocator<char32_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: struct `std::allocator_traits<std::allocator<char16_t>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: struct `std::allocator_traits<std::allocator<char>>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_streambuf<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_streambuf<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_streambuf<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_streambuf<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::fpos<__mbstate_t>':
-// Can't generate bindings for std::fpos<__mbstate_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::fpos<__mbstate_t> (incomplete type)
+// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::char_traits<char>':
-// Can't generate bindings for std::char_traits<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char> (crate::__CcTemplateInstNSt3__u11char_traitsIcEE is a template instantiation)
+// error: class `std::basic_ios<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::__char_traits_base<char32_t, unsigned int, 4294967295U>':
-// Can't generate bindings for std::__char_traits_base<char32_t, unsigned int, 4294967295U>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__char_traits_base<char32_t, unsigned int, 4294967295U> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIDijLj4294967295EEE is a template instantiation)
+// error: class `std::basic_ios<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>':
-// Can't generate bindings for std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIDstLt65535EEE is a template instantiation)
+// error: class `std::basic_istream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::__char_traits_base<char8_t, unsigned int, 4294967295U>':
-// Can't generate bindings for std::__char_traits_base<char8_t, unsigned int, 4294967295U>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__char_traits_base<char8_t, unsigned int, 4294967295U> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIDujLj4294967295EEE is a template instantiation)
+// error: class `std::basic_istream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::__char_traits_base<wchar_t, unsigned int, 4294967295U>':
-// Can't generate bindings for std::__char_traits_base<wchar_t, unsigned int, 4294967295U>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__char_traits_base<wchar_t, unsigned int, 4294967295U> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIwjLj4294967295EEE is a template instantiation)
+// error: class `std::basic_iostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::char_traits<wchar_t>':
-// Can't generate bindings for std::char_traits<wchar_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<wchar_t> (crate::__CcTemplateInstNSt3__u11char_traitsIwEE is a template instantiation)
+// error: class `std::basic_iostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::char_traits<char8_t>':
-// Can't generate bindings for std::char_traits<char8_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char8_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDuEE is a template instantiation)
+// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::char_traits<char16_t>':
-// Can't generate bindings for std::char_traits<char16_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char16_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDsEE is a template instantiation)
+// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::char_traits<char32_t>':
-// Can't generate bindings for std::char_traits<char32_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char32_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDiEE is a template instantiation)
+// error: class `std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::__allocation_result<char32_t *, unsigned long>':
-// Can't generate bindings for std::__allocation_result<char32_t *, unsigned long>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char32_t *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPDimEE is a template instantiation)
+// error: class `std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::__allocation_result<char16_t *, unsigned long>':
-// Can't generate bindings for std::__allocation_result<char16_t *, unsigned long>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char16_t *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPDsmEE is a template instantiation)
+// error: class `std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::__allocation_result<char *, unsigned long>':
-// Can't generate bindings for std::__allocation_result<char *, unsigned long>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPcmEE is a template instantiation)
+// error: class `std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string_view<char32_t, std::char_traits<char32_t>>':
-// Can't generate bindings for std::basic_string_view<char32_t, std::char_traits<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<char32_t, std::char_traits<char32_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDiNS_11char_traitsIDiEEEE is a template instantiation)
+// error: class `std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string_view<char16_t, std::char_traits<char16_t>>':
-// Can't generate bindings for std::basic_string_view<char16_t, std::char_traits<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<char16_t, std::char_traits<char16_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDsNS_11char_traitsIDsEEEE is a template instantiation)
+// error: class `std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string_view<char8_t, std::char_traits<char8_t>>':
-// Can't generate bindings for std::basic_string_view<char8_t, std::char_traits<char8_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<char8_t, std::char_traits<char8_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDuNS_11char_traitsIDuEEEE is a template instantiation)
+// error: class `std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::placeholders::__ph<10>':
-// Can't generate bindings for std::placeholders::__ph<10>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<10> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi10EEE is a template instantiation)
+// error: class `std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::placeholders::__ph<1>':
-// Can't generate bindings for std::placeholders::__ph<1>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<1> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi1EEE is a template instantiation)
+// error: class `std::basic_streambuf<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::placeholders::__ph<2>':
-// Can't generate bindings for std::placeholders::__ph<2>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<2> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi2EEE is a template instantiation)
+// error: class `std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::placeholders::__ph<3>':
-// Can't generate bindings for std::placeholders::__ph<3>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<3> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi3EEE is a template instantiation)
+// error: class `std::fpos<__mbstate_t>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'std::placeholders::__ph<4>':
-// Can't generate bindings for std::placeholders::__ph<4>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<4> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi4EEE is a template instantiation)
+// error: struct `std::char_traits<char>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::placeholders::__ph<5>':
-// Can't generate bindings for std::placeholders::__ph<5>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<5> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi5EEE is a template instantiation)
+// error: struct `std::__char_traits_base<char32_t, unsigned int, 4294967295U>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::placeholders::__ph<6>':
-// Can't generate bindings for std::placeholders::__ph<6>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<6> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi6EEE is a template instantiation)
+// error: struct `std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::placeholders::__ph<7>':
-// Can't generate bindings for std::placeholders::__ph<7>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<7> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi7EEE is a template instantiation)
+// error: struct `std::__char_traits_base<char8_t, unsigned int, 4294967295U>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::placeholders::__ph<8>':
-// Can't generate bindings for std::placeholders::__ph<8>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<8> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi8EEE is a template instantiation)
+// error: struct `std::__char_traits_base<wchar_t, unsigned int, 4294967295U>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::placeholders::__ph<9>':
-// Can't generate bindings for std::placeholders::__ph<9>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<9> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi9EEE is a template instantiation)
+// error: struct `std::char_traits<wchar_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::ranges::views::__elements::__fn<0UL>':
-// Can't generate bindings for std::ranges::views::__elements::__fn<0UL>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::ranges::views::__elements::__fn<0UL> (crate::__CcTemplateInstNSt3__u6ranges5views10__elements4__fnILm0EEE is a template instantiation)
+// error: struct `std::char_traits<char8_t>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'std::ranges::views::__elements::__fn<1UL>':
-// Can't generate bindings for std::ranges::views::__elements::__fn<1UL>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::ranges::views::__elements::__fn<1UL> (crate::__CcTemplateInstNSt3__u6ranges5views10__elements4__fnILm1EEE is a template instantiation)
+// error: struct `std::char_traits<char16_t>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::char_traits<char32_t>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::__allocation_result<char32_t *, unsigned long>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::__allocation_result<char16_t *, unsigned long>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::__allocation_result<char *, unsigned long>` could not be bound
+//   template instantiation is not yet supported
+
+// error: class `std::basic_string_view<char32_t, std::char_traits<char32_t>>` could not be bound
+//   template instantiation is not yet supported
+
+// error: class `std::basic_string_view<char16_t, std::char_traits<char16_t>>` could not be bound
+//   template instantiation is not yet supported
+
+// error: class `std::basic_string_view<char8_t, std::char_traits<char8_t>>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<10>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<1>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<2>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<3>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<4>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<5>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<6>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<7>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<8>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::placeholders::__ph<9>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::ranges::views::__elements::__fn<0UL>` could not be bound
+//   template instantiation is not yet supported
+
+// error: struct `std::ranges::views::__elements::__fn<1UL>` could not be bound
+//   template instantiation is not yet supported
 
 // Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
 

@@ -13,8 +13,8 @@
 #![allow(unused)]
 #![deny(warnings)]
 
-// Error while generating bindings for class 'MyTemplate':
-// Class templates are not supported yet
+// error: class `MyTemplate` could not be bound
+//   Class templates are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -40,41 +40,29 @@ impl Default for TopLevel {
     }
 }
 
-// Error while generating bindings for type alias 'Alias1':
-// Can't generate bindings for Alias1, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias1 (error: Can't generate bindings for MyTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation))
+// error: type alias `Alias1` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for type alias 'Alias2':
-// Can't generate bindings for Alias2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias2 (error: Can't generate bindings for MyTemplate<float>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation))
+// error: type alias `Alias2` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for type alias 'Alias3':
-// Can't generate bindings for Alias3, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias3 (error: Can't generate bindings for MyTemplate<TopLevel>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<TopLevel> (crate::__CcTemplateInst10MyTemplateI8TopLevelE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<TopLevel> (crate::__CcTemplateInst10MyTemplateI8TopLevelE is a template instantiation))
+// error: type alias `Alias3` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for type alias 'Alias4':
-// Can't generate bindings for Alias4, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias4 (error: Can't generate bindings for MyTemplate<double>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<double> (crate::__CcTemplateInst10MyTemplateIdE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<double> (crate::__CcTemplateInst10MyTemplateIdE is a template instantiation))
+// error: type alias `Alias4` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for type alias 'Alias5':
-// Can't generate bindings for Alias5, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias5 (error: Can't generate bindings for MyTemplate<bool>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<bool> (crate::__CcTemplateInst10MyTemplateIbE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<bool> (crate::__CcTemplateInst10MyTemplateIbE is a template instantiation))
+// error: type alias `Alias5` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for type alias 'Alias6':
-// Can't generate bindings for Alias6, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias6 (error: Can't generate bindings for MyTemplate<MyTemplate<TopLevel>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation))
+// error: type alias `Alias6` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -103,71 +91,56 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::Alias7':
-    // Can't generate bindings for test_namespace_bindings::Alias7, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for test_namespace_bindings::Alias7 (error: Can't generate bindings for MyTemplate<char>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<char> (crate::__CcTemplateInst10MyTemplateIcE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<char> (crate::__CcTemplateInst10MyTemplateIcE is a template instantiation))
+    // error: type alias `test_namespace_bindings::Alias7` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::Alias8':
-    // Can't generate bindings for test_namespace_bindings::Alias8, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for test_namespace_bindings::Alias8 (error: Can't generate bindings for MyTemplate<test_namespace_bindings::Inner>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::Alias8` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::Alias9':
-    // Can't generate bindings for test_namespace_bindings::Alias9, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for test_namespace_bindings::Alias9 (error: Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::Alias9` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 }
 
 // namespace test_namespace_bindings
 
-// Error while generating bindings for class 'MyTemplate<TopLevel>':
-// Can't generate bindings for MyTemplate<TopLevel>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<TopLevel> (crate::__CcTemplateInst10MyTemplateI8TopLevelE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<TopLevel> (crate::__CcTemplateInst10MyTemplateI8TopLevelE is a template instantiation)
+// error: class `MyTemplate<TopLevel>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<test_namespace_bindings::Inner>':
-// Can't generate bindings for MyTemplate<test_namespace_bindings::Inner>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation)
+// error: class `MyTemplate<test_namespace_bindings::Inner>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<MyTemplate<TopLevel>>':
-// Can't generate bindings for MyTemplate<MyTemplate<TopLevel>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation)
+// error: class `MyTemplate<MyTemplate<TopLevel>>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
-// Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation)
+// error: class `MyTemplate<MyTemplate<test_namespace_bindings::Inner>>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<bool>':
-// Can't generate bindings for MyTemplate<bool>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<bool> (crate::__CcTemplateInst10MyTemplateIbE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<bool> (crate::__CcTemplateInst10MyTemplateIbE is a template instantiation)
+// error: class `MyTemplate<bool>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<char>':
-// Can't generate bindings for MyTemplate<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<char> (crate::__CcTemplateInst10MyTemplateIcE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<char> (crate::__CcTemplateInst10MyTemplateIcE is a template instantiation)
+// error: class `MyTemplate<char>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<double>':
-// Can't generate bindings for MyTemplate<double>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<double> (crate::__CcTemplateInst10MyTemplateIdE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<double> (crate::__CcTemplateInst10MyTemplateIdE is a template instantiation)
+// error: class `MyTemplate<double>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<float>':
-// Can't generate bindings for MyTemplate<float>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation)
+// error: class `MyTemplate<float>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'MyTemplate<int>':
-// Can't generate bindings for MyTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation)
+// error: class `MyTemplate<int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

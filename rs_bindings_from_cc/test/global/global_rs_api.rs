@@ -35,8 +35,8 @@ pub const inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(5);
 // namespace foo
 
 // Generated from: rs_bindings_from_cc/test/global/global.h;l=30
-// Error while generating bindings for global variable 'templated_variable':
-// templated variables are not supported
+// error: global variable `templated_variable` could not be bound
+//   templated variables are not supported
 
 /// instantiate templated_variable<int>
 ///

@@ -19,7 +19,7 @@ namespace crubit::test {
 // template<typename T>
 CRUBIT_MUST_BIND inline void MyFn() {}
 
-// template<typename T>
+// template <typename T>
 struct CRUBIT_MUST_BIND MyStruct {};
 
 }  // namespace crubit::test

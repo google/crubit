@@ -70,247 +70,195 @@ pub fn unambiguous_string_view_return_annotated<'a>(
 }
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for struct 'std::integral_constant<bool, false>':
-// Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::integral_constant<bool, false> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE is a template instantiation)
+// error: struct `std::integral_constant<bool, false>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for struct 'std::integral_constant<bool, true>':
-// Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
+// error: struct `std::integral_constant<bool, true>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>> (incomplete type)
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>> (incomplete type)
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>> (incomplete type)
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>> (incomplete type)
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
+//   incomplete type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'char8_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'char8_t': Unsupported builtin type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'char8_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'char8_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>':
-// Can't generate bindings for std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>> (incomplete type)
+// error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_string<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'wchar_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'wchar_t': Unsupported builtin type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'wchar_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_ostream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ostream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ostream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ostream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ostream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ostream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
 // Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// Error while generating bindings for class 'std::basic_string_view<char32_t, std::char_traits<char32_t>>':
-// Can't generate bindings for std::basic_string_view<char32_t, std::char_traits<char32_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string_view<char32_t, std::char_traits<char32_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDiNS_11char_traitsIDiEEEE is a template instantiation)
+// error: class `std::basic_string_view<char32_t, std::char_traits<char32_t>>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// Error while generating bindings for class 'std::basic_string_view<char16_t, std::char_traits<char16_t>>':
-// Can't generate bindings for std::basic_string_view<char16_t, std::char_traits<char16_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string_view<char16_t, std::char_traits<char16_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDsNS_11char_traitsIDsEEEE is a template instantiation)
+// error: class `std::basic_string_view<char16_t, std::char_traits<char16_t>>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// Error while generating bindings for class 'std::basic_string_view<char8_t, std::char_traits<char8_t>>':
-// Can't generate bindings for std::basic_string_view<char8_t, std::char_traits<char8_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_string_view<char8_t, std::char_traits<char8_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDuNS_11char_traitsIDuEEEE is a template instantiation)
+// error: class `std::basic_string_view<char8_t, std::char_traits<char8_t>>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// Error while generating bindings for class 'std::reverse_iterator<const char32_t *>':
-// Can't generate bindings for std::reverse_iterator<const char32_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::reverse_iterator<const char32_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDiEE is a template instantiation)
+// error: class `std::reverse_iterator<const char32_t *>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// Error while generating bindings for class 'std::reverse_iterator<const char16_t *>':
-// Can't generate bindings for std::reverse_iterator<const char16_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::reverse_iterator<const char16_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDsEE is a template instantiation)
+// error: class `std::reverse_iterator<const char16_t *>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// Error while generating bindings for class 'std::reverse_iterator<const char8_t *>':
-// Can't generate bindings for std::reverse_iterator<const char8_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::reverse_iterator<const char8_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDuEE is a template instantiation)
+// error: class `std::reverse_iterator<const char8_t *>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// Error while generating bindings for class 'std::reverse_iterator<const char *>':
-// Can't generate bindings for std::reverse_iterator<const char *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::reverse_iterator<const char *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE is a template instantiation)
+// error: class `std::reverse_iterator<const char *>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// Error while generating bindings for class 'std::reverse_iterator<const wchar_t *>':
-// Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation)
+// error: class `std::reverse_iterator<const wchar_t *>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_filebuf<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_filebuf<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_filebuf<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_filebuf<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ifstream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ifstream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ifstream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ifstream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ofstream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ofstream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ofstream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ofstream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_fstream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_fstream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_fstream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_fstream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_fstream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_fstream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ios<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ios<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ios<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_ios<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ios<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ios<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ios<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_ios<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_istream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_istream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_istream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_istream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_istream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_istream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_istream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_istream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_iostream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_iostream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_iostream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_iostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_iostream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_iostream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_iostream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_iostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: class `std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: class `std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: class `std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>':
-// Can't generate bindings for std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>> (incomplete type)
+// error: class `std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_streambuf<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_streambuf<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_streambuf<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_streambuf<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::basic_streambuf<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::fpos<__mbstate_t>':
-// Can't generate bindings for std::fpos<__mbstate_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::fpos<__mbstate_t> (incomplete type)
+// error: class `std::fpos<__mbstate_t>` could not be bound
+//   incomplete type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=81
-// Error while generating bindings for struct 'std::char_traits<char>':
-// Can't generate bindings for std::char_traits<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::char_traits<char> (crate::__CcTemplateInstNSt3__u11char_traitsIcEE is a template instantiation)
+// error: struct `std::char_traits<char>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// Error while generating bindings for struct 'std::__char_traits_base<char32_t, unsigned int, 4294967295U>':
-// Can't generate bindings for std::__char_traits_base<char32_t, unsigned int, 4294967295U>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::__char_traits_base<char32_t, unsigned int, 4294967295U> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIDijLj4294967295EEE is a template instantiation)
+// error: struct `std::__char_traits_base<char32_t, unsigned int, 4294967295U>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// Error while generating bindings for struct 'std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>':
-// Can't generate bindings for std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIDstLt65535EEE is a template instantiation)
+// error: struct `std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// Error while generating bindings for struct 'std::__char_traits_base<char8_t, unsigned int, 4294967295U>':
-// Can't generate bindings for std::__char_traits_base<char8_t, unsigned int, 4294967295U>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::__char_traits_base<char8_t, unsigned int, 4294967295U> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIDujLj4294967295EEE is a template instantiation)
+// error: struct `std::__char_traits_base<char8_t, unsigned int, 4294967295U>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// Error while generating bindings for struct 'std::__char_traits_base<wchar_t, unsigned int, 4294967295U>':
-// Can't generate bindings for std::__char_traits_base<wchar_t, unsigned int, 4294967295U>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::__char_traits_base<wchar_t, unsigned int, 4294967295U> (crate::__CcTemplateInstNSt3__u18__char_traits_baseIwjLj4294967295EEE is a template instantiation)
+// error: struct `std::__char_traits_base<wchar_t, unsigned int, 4294967295U>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=247
-// Error while generating bindings for struct 'std::char_traits<wchar_t>':
-// Can't generate bindings for std::char_traits<wchar_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::char_traits<wchar_t> (crate::__CcTemplateInstNSt3__u11char_traitsIwEE is a template instantiation)
+// error: struct `std::char_traits<wchar_t>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=270
-// Error while generating bindings for struct 'std::char_traits<char8_t>':
-// Can't generate bindings for std::char_traits<char8_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::char_traits<char8_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDuEE is a template instantiation)
+// error: struct `std::char_traits<char8_t>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=289
-// Error while generating bindings for struct 'std::char_traits<char16_t>':
-// Can't generate bindings for std::char_traits<char16_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::char_traits<char16_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDsEE is a template instantiation)
+// error: struct `std::char_traits<char16_t>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=324
-// Error while generating bindings for struct 'std::char_traits<char32_t>':
-// Can't generate bindings for std::char_traits<char32_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/assume_lifetimes:string_view needs [//features:wrapper] for std::char_traits<char32_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDiEE is a template instantiation)
+// error: struct `std::char_traits<char32_t>` could not be bound
+//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

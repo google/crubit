@@ -50,23 +50,19 @@ impl DocCommentSlashes {
     }
 }
 
-// Error while generating bindings for constructor 'DocCommentSlashes::DocCommentSlashes':
-// Can't generate bindings for DocCommentSlashes::DocCommentSlashes, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `DocCommentSlashes::DocCommentSlashes` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'DocCommentSlashes::DocCommentSlashes':
-// Can't generate bindings for DocCommentSlashes::DocCommentSlashes, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `DocCommentSlashes::DocCommentSlashes` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'DocCommentSlashes::operator=':
-// Can't generate bindings for DocCommentSlashes::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `DocCommentSlashes::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'DocCommentSlashes::operator=':
-// Can't generate bindings for DocCommentSlashes::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `DocCommentSlashes::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
@@ -134,23 +130,19 @@ impl Default for DocCommentBang {
     }
 }
 
-// Error while generating bindings for constructor 'DocCommentBang::DocCommentBang':
-// Can't generate bindings for DocCommentBang::DocCommentBang, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::DocCommentBang (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `DocCommentBang::DocCommentBang` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'DocCommentBang::DocCommentBang':
-// Can't generate bindings for DocCommentBang::DocCommentBang, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::DocCommentBang (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `DocCommentBang::DocCommentBang` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'DocCommentBang::operator=':
-// Can't generate bindings for DocCommentBang::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `DocCommentBang::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'DocCommentBang::operator=':
-// Can't generate bindings for DocCommentBang::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `DocCommentBang::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// Multiline comment
 ///
@@ -180,23 +172,19 @@ impl Default for MultilineCommentTwoStars {
     }
 }
 
-// Error while generating bindings for constructor 'MultilineCommentTwoStars::MultilineCommentTwoStars':
-// Can't generate bindings for MultilineCommentTwoStars::MultilineCommentTwoStars, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::MultilineCommentTwoStars (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `MultilineCommentTwoStars::MultilineCommentTwoStars` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'MultilineCommentTwoStars::MultilineCommentTwoStars':
-// Can't generate bindings for MultilineCommentTwoStars::MultilineCommentTwoStars, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::MultilineCommentTwoStars (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `MultilineCommentTwoStars::MultilineCommentTwoStars` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'MultilineCommentTwoStars::operator=':
-// Can't generate bindings for MultilineCommentTwoStars::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `MultilineCommentTwoStars::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'MultilineCommentTwoStars::operator=':
-// Can't generate bindings for MultilineCommentTwoStars::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `MultilineCommentTwoStars::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// Line comment
 ///
@@ -226,23 +214,19 @@ impl Default for LineComment {
     }
 }
 
-// Error while generating bindings for constructor 'LineComment::LineComment':
-// Can't generate bindings for LineComment::LineComment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::LineComment (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `LineComment::LineComment` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'LineComment::LineComment':
-// Can't generate bindings for LineComment::LineComment, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::LineComment (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `LineComment::LineComment` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'LineComment::operator=':
-// Can't generate bindings for LineComment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `LineComment::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'LineComment::operator=':
-// Can't generate bindings for LineComment::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `LineComment::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// Multiline comment
 ///
@@ -272,23 +256,19 @@ impl Default for MultilineOneStar {
     }
 }
 
-// Error while generating bindings for constructor 'MultilineOneStar::MultilineOneStar':
-// Can't generate bindings for MultilineOneStar::MultilineOneStar, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::MultilineOneStar (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `MultilineOneStar::MultilineOneStar` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'MultilineOneStar::MultilineOneStar':
-// Can't generate bindings for MultilineOneStar::MultilineOneStar, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::MultilineOneStar (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `MultilineOneStar::MultilineOneStar` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'MultilineOneStar::operator=':
-// Can't generate bindings for MultilineOneStar::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `MultilineOneStar::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'MultilineOneStar::operator=':
-// Can't generate bindings for MultilineOneStar::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `MultilineOneStar::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// A function
 #[inline(always)]
@@ -299,8 +279,8 @@ pub fn foo() -> ::ffi_11::c_int {
 /// A type alias
 pub type MyTypeAlias = crate::DocCommentSlashes;
 
-// Error while generating bindings for class 'MyTemplate':
-// Class templates are not supported yet
+// error: class `MyTemplate` could not be bound
+//   Class templates are not yet supported
 
 // Class template specialization.
 
@@ -308,40 +288,31 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 
 // Data member in a specialization.
 
-// Error while generating bindings for type alias 'MyInstantiation':
-// Can't generate bindings for MyInstantiation, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyInstantiation (error: Can't generate bindings for MyTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation))
+// error: type alias `MyInstantiation` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for type alias 'MySpecializedInstantiation':
-// Can't generate bindings for MySpecializedInstantiation, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MySpecializedInstantiation (error: Can't generate bindings for MyTemplate<float>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation))
+// error: type alias `MySpecializedInstantiation` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'OuterTemplate':
-// Class templates are not supported yet
+// error: class `OuterTemplate` could not be bound
+//   Class templates are not yet supported
 
-// Error while generating bindings for type alias 'ConcreteNestedStruct':
-// Can't generate bindings for ConcreteNestedStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for ConcreteNestedStruct (error: Can't generate bindings for OuterTemplate<int>::NestedStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for OuterTemplate<int>::NestedStruct (incomplete type))
+// error: type alias `ConcreteNestedStruct` could not be bound
+//   incomplete type
 
-// Error while generating bindings for struct 'MyTemplate<int>':
-// Can't generate bindings for MyTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<int> (crate::__CcTemplateInst10MyTemplateIiE is a template instantiation)
+// error: struct `MyTemplate<int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'MyTemplate<float>':
-// Can't generate bindings for MyTemplate<float>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for MyTemplate<float> (crate::__CcTemplateInst10MyTemplateIfE is a template instantiation)
+// error: struct `MyTemplate<float>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'OuterTemplate<int>':
-// Can't generate bindings for OuterTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for OuterTemplate<int> (crate::__CcTemplateInst13OuterTemplateIiE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for OuterTemplate<int> (crate::__CcTemplateInst13OuterTemplateIiE is a template instantiation)
+// error: struct `OuterTemplate<int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

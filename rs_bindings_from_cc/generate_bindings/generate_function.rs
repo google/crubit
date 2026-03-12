@@ -262,14 +262,15 @@ fn api_func_shape_for_operator_ne(
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> ErrorsOr<Option<(Ident, ImplKind)>> {
     // If operator== is present, don't generate ne, rely on rust's default ne.
     let eq_binding = db.get_binding(
         UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
         param_types.to_vec(),
     );
     if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = eq_binding {
-        bail_to_errors!(errors, "operator== is present, skipping bindings for operator!=");
+        // operator== is present, skipping bindings for operator!=
+        return Ok(None);
     }
     // C++ requires that operator!= is binary.
     let [param_1, param_2] = param_types else {
@@ -287,7 +288,7 @@ fn api_func_shape_for_operator_ne(
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
     );
-    Ok((func_name, impl_kind))
+    Ok(Some((func_name, impl_kind)))
 }
 
 fn api_func_shape_for_operator_eq(
@@ -556,7 +557,7 @@ fn api_func_shape_for_operator(
     }
     match op.name.as_ref() {
         "==" => api_func_shape_for_operator_eq(db, func, param_types, errors).ok(),
-        "!=" => api_func_shape_for_operator_ne(db, func, param_types, errors).ok(),
+        "!=" => api_func_shape_for_operator_ne(db, func, param_types, errors).ok().flatten(),
         "<=>" => {
             errors.add(anyhow!("Three-way comparison operator not yet supported (b/219827738)"));
             None

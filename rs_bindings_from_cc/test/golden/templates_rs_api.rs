@@ -38,20 +38,16 @@ impl Default for DifferentScope {
 }
 
 pub mod test_namespace_bindings {
-    // Error while generating bindings for class 'test_namespace_bindings::MyTemplate':
-    // Class templates are not supported yet
+    // error: class `test_namespace_bindings::MyTemplate` could not be bound
+    //   Class templates are not yet supported
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::MyTypeAlias':
-    // Can't generate bindings for test_namespace_bindings::MyTypeAlias, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTypeAlias (error: Can't generate bindings for test_namespace_bindings::MyTemplate<int>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::MyTypeAlias` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::OtherTypeAliasInSameTarget':
-    // Can't generate bindings for test_namespace_bindings::OtherTypeAliasInSameTarget, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::OtherTypeAliasInSameTarget (error: Can't generate bindings for test_namespace_bindings::MyTemplate<int>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::OtherTypeAliasInSameTarget` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
@@ -79,35 +75,27 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::TemplateWithStructTemplateParam':
-    // Can't generate bindings for test_namespace_bindings::TemplateWithStructTemplateParam, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithStructTemplateParam (error: Can't generate bindings for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::TemplateWithStructTemplateParam` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::ParamFromDifferentScope':
-    // Can't generate bindings for test_namespace_bindings::ParamFromDifferentScope, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::ParamFromDifferentScope (error: Can't generate bindings for test_namespace_bindings::MyTemplate<DifferentScope>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::ParamFromDifferentScope` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
-    // Error while generating bindings for class 'test_namespace_bindings::TemplateWithTwoParams':
-    // Class templates are not supported yet
+    // error: class `test_namespace_bindings::TemplateWithTwoParams` could not be bound
+    //   Class templates are not yet supported
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::AliasToTemplateWithTwoParams':
-    // Can't generate bindings for test_namespace_bindings::AliasToTemplateWithTwoParams, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::AliasToTemplateWithTwoParams (error: Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, float>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::AliasToTemplateWithTwoParams` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::AliasToTemplateOfATemplate':
-    // Can't generate bindings for test_namespace_bindings::AliasToTemplateOfATemplate, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::AliasToTemplateOfATemplate (error: Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::AliasToTemplateOfATemplate` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
-    // Error while generating bindings for class 'test_namespace_bindings::MyStruct':
-    // Class templates are not supported yet
+    // error: class `test_namespace_bindings::MyStruct` could not be bound
+    //   Class templates are not yet supported
 
     // Explicit class template specialization with definition should not be imported
     // unless also instantiated.
@@ -115,11 +103,9 @@ pub mod test_namespace_bindings {
     // Explicit class template specialization with definition should be imported
     // even when not instantiated if there is a type alias for it.
 
-    // Error while generating bindings for type alias 'test_namespace_bindings::MyCharStruct':
-    // Can't generate bindings for test_namespace_bindings::MyCharStruct, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyCharStruct (error: Can't generate bindings for test_namespace_bindings::MyStruct<char>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation))
+    // error: type alias `test_namespace_bindings::MyCharStruct` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
     // Forward declared explicit class template specialization should be imported
     // so the forward declaration code is generated (`forward_declare!`).
@@ -134,42 +120,34 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-// Error while generating bindings for class 'MyTopLevelTemplate':
-// Class templates are not supported yet
+// error: class `MyTopLevelTemplate` could not be bound
+//   Class templates are not yet supported
 
-// Error while generating bindings for type alias 'TopLevelTemplateWithNonTopLevelParam':
-// Can't generate bindings for TopLevelTemplateWithNonTopLevelParam, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for TopLevelTemplateWithNonTopLevelParam (error: Can't generate bindings for MyTopLevelTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation))
+// error: type alias `TopLevelTemplateWithNonTopLevelParam` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for function 'processForwardDeclaredSpecialization':
-// Can't generate bindings for processForwardDeclaredSpecialization, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for processForwardDeclaredSpecialization (the type of i (parameter #0): error: Can't generate bindings for MyTopLevelTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<int> (incomplete type))
+// error: function `processForwardDeclaredSpecialization` could not be bound
+//   Unsupported parameter #0 (i): incomplete type
 
-pub mod template_template_params { // Error while generating bindings for class 'template_template_params::Policy':
-                                   // Class templates are not supported yet
+pub mod template_template_params { // error: class `template_template_params::Policy` could not be bound
+                                   //   Class templates are not yet supported
 
-    // Error while generating bindings for class 'template_template_params::MyTemplate':
-    // Class templates are not supported yet
+    // error: class `template_template_params::MyTemplate` could not be bound
+    //   Class templates are not yet supported
 
-    // Error while generating bindings for type alias 'template_template_params::MyTypeAlias':
-    // Can't generate bindings for template_template_params::MyTypeAlias, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTypeAlias (error: Can't generate bindings for template_template_params::MyTemplate<template_template_params::Policy>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation))
+    // error: type alias `template_template_params::MyTypeAlias` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 }
 
 // namespace template_template_params
 
-pub mod forward_declared_template { // Error while generating bindings for class 'forward_declared_template::ForwardDeclaredTemplate':
-                                    // Class templates are not supported yet
+pub mod forward_declared_template { // error: class `forward_declared_template::ForwardDeclaredTemplate` could not be bound
+                                    //   Class templates are not yet supported
 
-    // Error while generating bindings for type alias 'forward_declared_template::TypeAliasToForwardDeclaredTemplate':
-    // Can't generate bindings for forward_declared_template::TypeAliasToForwardDeclaredTemplate, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for forward_declared_template::TypeAliasToForwardDeclaredTemplate (error: Can't generate bindings for forward_declared_template::ForwardDeclaredTemplate<int>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for forward_declared_template::ForwardDeclaredTemplate<int> (incomplete type))
+    // error: type alias `forward_declared_template::TypeAliasToForwardDeclaredTemplate` could not be bound
+    //   incomplete type
 }
 
 // namespace forward_declared_template
@@ -191,58 +169,47 @@ pub mod private_classes {
 
 // namespace private_classes
 
-// Error while generating bindings for class 'test_namespace_bindings::MyTemplate<DifferentScope>':
-// Can't generate bindings for test_namespace_bindings::MyTemplate<DifferentScope>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation)
+// error: class `test_namespace_bindings::MyTemplate<DifferentScope>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>':
-// Can't generate bindings for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation)
+// error: class `test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'test_namespace_bindings::MyTemplate<int>':
-// Can't generate bindings for test_namespace_bindings::MyTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
+// error: class `test_namespace_bindings::MyTemplate<int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>':
-// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
+// error: struct `test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<int, float>':
-// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, float>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation)
+// error: struct `test_namespace_bindings::TemplateWithTwoParams<int, float>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<int, int>':
-// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE is a template instantiation)
+// error: struct `test_namespace_bindings::TemplateWithTwoParams<int, int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'test_namespace_bindings::MyStruct<char>':
-// Can't generate bindings for test_namespace_bindings::MyStruct<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation)
+// error: struct `test_namespace_bindings::MyStruct<char>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'MyTopLevelTemplate<test_namespace_bindings::TemplateParam>':
-// Can't generate bindings for MyTopLevelTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation)
+// error: struct `MyTopLevelTemplate<test_namespace_bindings::TemplateParam>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for struct 'MyTopLevelTemplate<int>':
-// Can't generate bindings for MyTopLevelTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<int> (incomplete type)
+// error: struct `MyTopLevelTemplate<int>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'template_template_params::MyTemplate<template_template_params::Policy>':
-// Can't generate bindings for template_template_params::MyTemplate<template_template_params::Policy>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation)
+// error: class `template_template_params::MyTemplate<template_template_params::Policy>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'forward_declared_template::ForwardDeclaredTemplate<int>':
-// Can't generate bindings for forward_declared_template::ForwardDeclaredTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for forward_declared_template::ForwardDeclaredTemplate<int> (incomplete type)
+// error: class `forward_declared_template::ForwardDeclaredTemplate<int>` could not be bound
+//   incomplete type
 
 mod detail {
     #[allow(unused_imports)]

@@ -138,12 +138,8 @@ fn get_field_rs_type_kind_for_layout(
 
     for target in record.defining_target(ir).into_iter().chain([&record.owning_target]) {
         let enabled_features = ir.target_crubit_features(target);
-        let (missing_features, reason) = type_kind.required_crubit_features(db, enabled_features);
-        ensure!(
-            missing_features.is_empty(),
-            "missing features: [{missing_features}]: {reason}",
-            missing_features = missing_features.into_iter().map(|f| f.aspect_hint()).join(", ")
-        );
+        let (missing_features, reason) = type_kind.required_crubit_features(enabled_features);
+        ensure!(missing_features.is_empty(), reason);
     }
 
     // In supported, we replace nontrivial fields with opaque blobs.

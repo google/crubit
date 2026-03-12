@@ -310,11 +310,11 @@ impl From<NonEmptyCharClass> for ::ffi_11::c_char {
     }
 }
 
-// Error while generating bindings for enum 'ForwardDeclared':
-// Can't generate bindings for ForwardDeclared, because it is unsupported: b/322391132: Forward-declared (opaque) enums are not implemented yet
+// error: enum `ForwardDeclared` could not be bound
+//   b/322391132: Forward-declared (opaque) enums are not implemented yet
 
-// Error while generating bindings for function 'do_not_generate_bindings_for_me':
-// Cannot use an error type by value: Can't generate bindings for ForwardDeclared, because it is unsupported: b/322391132: Forward-declared (opaque) enums are not implemented yet
+// error: function `do_not_generate_bindings_for_me` could not be bound
+//   Cannot use an error type by value: b/322391132: Forward-declared (opaque) enums are not implemented yet
 
 pub const kAnonRed: ::ffi_11::c_uint = ::ffi_11::new_c_uint(0);
 

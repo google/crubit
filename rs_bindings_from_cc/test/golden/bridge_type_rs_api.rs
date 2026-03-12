@@ -29,13 +29,11 @@ pub fn TakeCppStruct(mut __param_0: crate::RustStruct) {
     unsafe { crate::detail::__rust_thunk___Z13TakeCppStruct9CppStruct(&mut __param_0) }
 }
 
-// Error while generating bindings for function 'TakeCppStructByPtr':
-// Can't generate bindings for TakeCppStructByPtr, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:bridge_type_cc needs [//features:wrapper] for TakeCppStructByPtr (the type of __param_0 (parameter #0): error: Bridging types are not supported as pointee/referent types.)
+// error: function `TakeCppStructByPtr` could not be bound
+//   Unsupported parameter #0 (__param_0): Bridging types are not supported as pointee/referent types.
 
-// Error while generating bindings for function 'ReturnCppStructByPtr':
-// Can't generate bindings for ReturnCppStructByPtr, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:bridge_type_cc needs [//features:wrapper] for ReturnCppStructByPtr (return type: error: Bridging types are not supported as pointee/referent types.)
+// error: function `ReturnCppStructByPtr` could not be bound
+//   Unsupported return type: Bridging types are not supported as pointee/referent types.
 
 mod detail {
     #[allow(unused_imports)]

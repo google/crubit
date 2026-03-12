@@ -41,11 +41,11 @@ impl Default for SomeClass {
     }
 }
 
-// Error while generating bindings for function 'Overload':
-// Cannot generate bindings for overloaded function
+// error: function `Overload` could not be bound
+//   Cannot generate bindings for overloaded function
 
-// Error while generating bindings for function 'Overload':
-// Cannot generate bindings for overloaded function
+// error: function `Overload` could not be bound
+//   Cannot generate bindings for overloaded function
 
 mod detail {
     #[allow(unused_imports)]

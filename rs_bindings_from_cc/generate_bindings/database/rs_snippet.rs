@@ -952,7 +952,6 @@ impl RsTypeKind {
     /// merge these two functions.
     pub fn required_crubit_features<'a>(
         &self,
-        db: impl Deref<Target = BindingsGenerator<'a>>,
         enabled_features: flagset::FlagSet<CrubitFeature>,
     ) -> (flagset::FlagSet<CrubitFeature>, String) {
         let mut missing_features = <flagset::FlagSet<CrubitFeature>>::default();
@@ -978,7 +977,7 @@ impl RsTypeKind {
                     } else {
                         require_feature(
                             CrubitFeature::Wrapper,
-                            Some(&|| std::borrow::Cow::from(format!("error: {error}"))),
+                            Some(&|| std::borrow::Cow::from(error.to_string())),
                         )
                     }
                 }
@@ -986,7 +985,7 @@ impl RsTypeKind {
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     require_feature(
                         CrubitFeature::Experimental,
-                        Some(&|| "references are not supported".into()),
+                        Some(&|| "references are not yet supported".into()),
                     );
                 }
                 RsTypeKind::FuncPtr { cc_calling_conv, .. } => {
@@ -995,15 +994,15 @@ impl RsTypeKind {
                     } else {
                         require_feature(
                             CrubitFeature::Experimental,
-                            Some(&|| "functions must be not use a non-C calling convention".into()),
+                            Some(&|| {
+                                "function pointers using a non-`C` calling convention are not yet supported".into()
+                            }),
                         );
                     }
                 }
-                RsTypeKind::IncompleteRecord { .. } => require_feature(
+                RsTypeKind::IncompleteRecord { incomplete_record, .. } => require_feature(
                     CrubitFeature::Wrapper,
-                    Some(&|| {
-                        format!("{} is not a complete type)", rs_type_kind.display(&db)).into()
-                    }),
+                    Some(&|| "forward declared types are not yet supported".into()),
                 ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //
@@ -1025,10 +1024,7 @@ impl RsTypeKind {
                     } else {
                         require_feature(
                             CrubitFeature::Wrapper,
-                            Some(&|| {
-                                format!("{} is a template instantiation", rs_type_kind.display(&db),)
-                                    .into()
-                            }),
+                            Some(&|| "template instantiation is not yet supported".into()),
                         )
                     }
                 }
@@ -1044,13 +1040,7 @@ impl RsTypeKind {
                     if !original_type.has_unique_owning_target() && is_pointer_bridge {
                         require_feature(
                             CrubitFeature::Experimental,
-                            Some(&|| {
-                                format!(
-                                    "{} is a bridged template instantiation",
-                                    rs_type_kind.display(&db),
-                                )
-                                .into()
-                            }),
+                            Some(&|| "bridged template instantiation is not yet supported".into()),
                         )
                     } else {
                         require_feature(CrubitFeature::Supported, None)
@@ -2098,15 +2088,13 @@ mod tests {
                 param_types: Rc::from([reference]),
             },
         ] {
-            let (all_required_features, reason) = func_ptr.required_crubit_features(
-                EmptyDatabase,
-                <flagset::FlagSet<CrubitFeature>>::default(),
-            );
+            let (all_required_features, reason) =
+                func_ptr.required_crubit_features(<flagset::FlagSet<CrubitFeature>>::default());
             assert_eq!(
                 all_required_features,
                 CrubitFeature::Experimental | CrubitFeature::Supported
             );
-            assert_eq!(reason, "references are not supported");
+            assert_eq!(reason, "references are not yet supported");
         }
     }
 

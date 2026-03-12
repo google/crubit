@@ -115,14 +115,12 @@ impl Default for HasCustomAlignmentWithGnuAttr {
     }
 }
 
-pub mod template_with_preferred_name { // Error while generating bindings for class 'template_with_preferred_name::SomeTemplate':
-                                       // Class templates are not supported yet
+pub mod template_with_preferred_name { // error: class `template_with_preferred_name::SomeTemplate` could not be bound
+                                       //   Class templates are not yet supported
 
-    // Error while generating bindings for type alias 'template_with_preferred_name::SpecializedTypeAlias':
-    // Can't generate bindings for template_with_preferred_name::SpecializedTypeAlias, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SpecializedTypeAlias (error: Can't generate bindings for template_with_preferred_name::SomeTemplate<int>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SomeTemplate<int> (crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SomeTemplate<int> (crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE is a template instantiation))
+    // error: type alias `template_with_preferred_name::SpecializedTypeAlias` could not be bound
+    //   template instantiation is not yet supported
+    //   template instantiation is not yet supported
 
     // Based on `llvm/include/c++/v1/string_view` - mimics definition of
     // `basic_string_view` class template (focusing on the attributes related to the
@@ -131,10 +129,9 @@ pub mod template_with_preferred_name { // Error while generating bindings for cl
 
 // namespace template_with_preferred_name
 
-// Error while generating bindings for struct 'template_with_preferred_name::SomeTemplate<int>':
-// Can't generate bindings for template_with_preferred_name::SomeTemplate<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SomeTemplate<int> (crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SomeTemplate<int> (crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE is a template instantiation)
+// error: struct `template_with_preferred_name::SomeTemplate<int>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

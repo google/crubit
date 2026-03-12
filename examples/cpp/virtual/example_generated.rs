@@ -133,62 +133,52 @@ unsafe impl ::operator::Delete for crate::RustDerived {
 }
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for struct 'std::integral_constant<bool, false>':
-// Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::integral_constant<bool, false> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE is a template instantiation)
+// error: struct `std::integral_constant<bool, false>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for struct 'std::integral_constant<bool, true>':
-// Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
+// error: struct `std::integral_constant<bool, true>` could not be bound
+//   template instantiation is not yet supported
 
-// Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>> (incomplete type)
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>> (incomplete type)
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>> (incomplete type)
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>> (incomplete type)
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
+//   incomplete type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'char8_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'char8_t': Unsupported builtin type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'char8_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'char8_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>':
-// Can't generate bindings for std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>> (incomplete type)
+// error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_string<char, std::char_traits<char>, std::allocator<char>>':
-// Can't generate bindings for std::basic_string<char, std::char_traits<char>, std::allocator<char>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_string<char, std::char_traits<char>, std::allocator<char>> (incomplete type)
+// error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'wchar_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'wchar_t': Unsupported builtin type
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// Error while generating bindings for class 'std::basic_string':
-// Unsupported type 'wchar_t': Unsupported builtin type
+// error: class `std::basic_string` could not be bound
+//   Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_ostream<char, std::char_traits<char>>':
-// Can't generate bindings for std::basic_ostream<char, std::char_traits<char>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_ostream<char, std::char_traits<char>> (incomplete type)
+// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-// Error while generating bindings for class 'std::basic_ostream<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_ostream<wchar_t, std::char_traits<wchar_t>>, because of missing required features (crubit.rs-features):
-// //examples/cpp/virtual:example_lib needs [//features:wrapper] for std::basic_ostream<wchar_t, std::char_traits<wchar_t>> (incomplete type)
+// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
 mod detail {
     #[allow(unused_imports)]

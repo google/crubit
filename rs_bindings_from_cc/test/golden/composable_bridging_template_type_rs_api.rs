@@ -13,11 +13,11 @@
 #![allow(unused)]
 #![deny(warnings)]
 
-// Error while generating bindings for class 'MyOption':
-// Class templates are not supported yet
+// error: class `MyOption` could not be bound
+//   Class templates are not yet supported
 
-// Error while generating bindings for class 'Value':
-// Class templates are not supported yet
+// error: class `Value` could not be bound
+//   Class templates are not yet supported
 
 #[inline(always)]
 pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
@@ -40,25 +40,20 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst5ValueIiE
 );
 
-// Error while generating bindings for constructor 'Value<int>::Value<int>':
-// Can't generate bindings for Value<int>::Value<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_template_type_cc needs [//features:experimental] for Value<int>::Value<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Value<int>::Value<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
-// Error while generating bindings for constructor 'Value<int>::Value<int>':
-// Can't generate bindings for Value<int>::Value<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_template_type_cc needs [//features:experimental] for Value<int>::Value<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Value<int>::Value<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
-// Error while generating bindings for constructor 'Value<int>::Value<int>':
-// Can't generate bindings for Value<int>::Value<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_template_type_cc needs [//features:experimental] for Value<int>::Value<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Value<int>::Value<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
-// Error while generating bindings for function 'Value<int>::operator=':
-// Can't generate bindings for Value<int>::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_template_type_cc needs [//features:experimental] for Value<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: function `Value<int>::operator=` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
-// Error while generating bindings for function 'Value<int>::operator=':
-// Can't generate bindings for Value<int>::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_template_type_cc needs [//features:experimental] for Value<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: function `Value<int>::operator=` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 mod detail {
     #[allow(unused_imports)]

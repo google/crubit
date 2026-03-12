@@ -21,7 +21,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        FormattedError::Static("Anonymous namespaces are not supported yet"));
+        FormattedError::Static("Anonymous namespaces are not yet supported"));
   }
 
   absl::StatusOr<TranslatedIdentifier> identifier =
@@ -46,7 +46,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   // if (identifier->crubit_rust_name.has_value()) {
   //   return ictx_.ImportUnsupportedItem(
   //       namespace_decl, std::nullopt,
-  //       FormattedError::Static("Namespace renames are not supported yet"));
+  //       FormattedError::Static("Namespace renames are not yet supported"));
   // }
 
   absl::StatusOr<std::optional<std::string>> unknown_attr =

@@ -15,8 +15,8 @@
 #![deny(warnings)]
 
 // Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=10
-// Error while generating bindings for class 'MyTemplate':
-// Class templates are not supported yet
+// error: class `MyTemplate` could not be bound
+//   Class templates are not yet supported
 
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=25
 pub type MyTypeAlias = crate::__CcTemplateInst10MyTemplateIiE;

@@ -1072,8 +1072,10 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
             BridgeRsTypeKind::Callable(callable) => {
                 ensure!(
-                    db.ir().target_crubit_features(&original_type.owning_target).contains(CrubitFeature::Callables),
-                    "Callables require the `callables` feature, but target `{:?}` does not have it enabled.", original_type.owning_target,
+                    db.ir()
+                        .target_crubit_features(&original_type.owning_target)
+                        .contains(CrubitFeature::Callables),
+                    "callables (e.g. `AnyInvocable`) are not yet supported",
                 );
                 generate_dyn_callable::dyn_callable_crubit_abi_type(db, &callable)
             }

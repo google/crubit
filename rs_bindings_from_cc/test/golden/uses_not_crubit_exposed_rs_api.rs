@@ -13,10 +13,8 @@
 #![allow(unused)]
 #![deny(warnings)]
 
-// Error while generating bindings for function 'UseNotCrubitExposed':
-// Can't generate bindings for UseNotCrubitExposed, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc needs [//features:wrapper] for UseNotCrubitExposed (the type of not_crubit_exposed (parameter #0): error: Can't generate bindings for NotCrubitExposed, because of missing required features (crubit.rs-features):
-// rs_bindings_from_cc/test/golden/not_crubit_exposed.h needs [//features:supported] for NotCrubitExposed)
+// error: function `UseNotCrubitExposed` could not be bound
+//   Unsupported parameter #0 (not_crubit_exposed)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
@@ -42,19 +40,17 @@ impl Default for CannotUpcastInCrubit {
     }
 }
 
-pub mod c9 { // Error while generating bindings for class 'c9::Co':
-             // Class templates are not supported yet
+pub mod c9 { // error: class `c9::Co` could not be bound
+             //   Class templates are not yet supported
 }
 
 // namespace c9
 
-// Error while generating bindings for function 'ReturnsCo':
-// Cannot use an error type by value: Can't generate bindings for c9::Co<NotCrubitExposed> due to missing bindings for its dependency: Can't generate bindings for NotCrubitExposed, because of missing required features (crubit.rs-features):
-// rs_bindings_from_cc/test/golden/not_crubit_exposed.h needs [//features:supported] for NotCrubitExposed
+// error: function `ReturnsCo` could not be bound
+//   Cannot use an error type by value: depends on type with missing bindings:
 
-// Error while generating bindings for class 'c9::Co<NotCrubitExposed>':
-// Can't generate bindings for c9::Co<NotCrubitExposed> due to missing bindings for its dependency: Can't generate bindings for NotCrubitExposed, because of missing required features (crubit.rs-features):
-// rs_bindings_from_cc/test/golden/not_crubit_exposed.h needs [//features:supported] for NotCrubitExposed
+// error: class `c9::Co<NotCrubitExposed>` could not be bound
+//   depends on type with missing bindings:
 
 mod detail {
     #[allow(unused_imports)]

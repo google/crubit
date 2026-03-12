@@ -43,14 +43,12 @@ impl CompatibleType {
     }
 }
 
-// Error while generating bindings for constructor 'CompatibleType::CompatibleType':
-// Can't generate bindings for CompatibleType::CompatibleType, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::CompatibleType (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `CompatibleType::CompatibleType` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'CompatibleType::operator=':
-// Can't generate bindings for CompatibleType::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `CompatibleType::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 mod detail {
     #[allow(unused_imports)]

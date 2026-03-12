@@ -42,14 +42,12 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
     }
 }
 
-// Error while generating bindings for constructor 'PolymorphicBase::PolymorphicBase':
-// Can't generate bindings for PolymorphicBase::PolymorphicBase, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::PolymorphicBase (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `PolymorphicBase::PolymorphicBase` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'PolymorphicBase::operator=':
-// Can't generate bindings for PolymorphicBase::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `PolymorphicBase::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
@@ -100,14 +98,12 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     }
 }
 
-// Error while generating bindings for constructor 'PolymorphicBase2::PolymorphicBase2':
-// Can't generate bindings for PolymorphicBase2::PolymorphicBase2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::PolymorphicBase2 (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `PolymorphicBase2::PolymorphicBase2` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'PolymorphicBase2::operator=':
-// Can't generate bindings for PolymorphicBase2::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `PolymorphicBase2::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
@@ -152,13 +148,11 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
     }
 }
 
-// Error while generating bindings for constructor 'PolymorphicDerived::PolymorphicDerived':
-// Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `PolymorphicDerived::PolymorphicDerived` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'PolymorphicDerived::PolymorphicDerived':
-// Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `PolymorphicDerived::PolymorphicDerived` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
@@ -167,15 +161,13 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
     }
 }
 
-// Error while generating bindings for function 'PolymorphicDerived::operator=':
-// Can't generate bindings for PolymorphicDerived::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `PolymorphicDerived::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'PolymorphicDerived::operator=':
-// Can't generate bindings for PolymorphicDerived::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `PolymorphicDerived::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 unsafe impl ::operator::Delete for crate::PolymorphicDerived {
     #[inline(always)]

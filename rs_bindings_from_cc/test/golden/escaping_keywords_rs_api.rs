@@ -42,11 +42,11 @@ pub fn r#impl(r#match: ::ffi_11::c_int) {
     unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }
 }
 
-// Error while generating bindings for class 'await':
-// Class templates are not supported yet
+// error: class `await` could not be bound
+//   Class templates are not yet supported
 
-// Error while generating bindings for function 'become':
-// Function templates are not supported yet
+// error: function `become` could not be bound
+//   Function templates are not yet supported
 
 mod detail {
     #[allow(unused_imports)]

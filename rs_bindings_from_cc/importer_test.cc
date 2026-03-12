@@ -998,7 +998,7 @@ TEST(ImporterTest, FailedClassTemplateMethod) {
   EXPECT_THAT(unsupported_a->errors,
               Contains(testing::Property(
                   "message", &FormattedError::message,
-                  HasSubstr("Class templates are not supported yet"))));
+                  HasSubstr("Class templates are not yet supported"))));
   EXPECT_THAT(
       unsupported_b->underlying_type.variant,
       VariantWith<FormattedError>(testing::Property(

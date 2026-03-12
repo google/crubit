@@ -124,12 +124,9 @@ pub struct RequiredCrubitFeature {
 
 impl Display for RequiredCrubitFeature {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        let Self { target, item, missing_features, capability_description } = self;
-        let feature_strings: Vec<&str> =
-            missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
-        write!(f, "{target} needs [{features}] for {item}", features = feature_strings.join(", "),)?;
+        let Self { capability_description, .. } = self;
         if !capability_description.is_empty() {
-            write!(f, " ({capability_description})")?;
+            write!(f, "{capability_description}")?;
         }
         Ok(())
     }
@@ -177,7 +174,7 @@ pub fn required_crubit_features(
                                 context: &dyn Fn() -> Rc<str>| {
         for target in item.defining_target(ir).into_iter().chain(item.owning_target().as_ref()) {
             let (missing, desc) =
-                rs_type_kind.required_crubit_features(db, ir.target_crubit_features(target));
+                rs_type_kind.required_crubit_features(ir.target_crubit_features(target));
             if !missing.is_empty() {
                 let context = context();
                 let capability_description = if desc.is_empty() {
@@ -226,11 +223,13 @@ pub fn required_crubit_features(
                 );
             } else {
                 let return_type = db.rs_type_kind(func.return_type.clone())?;
-                require_rs_type_kind(&mut missing_features, &return_type, &|| "return type".into());
+                require_rs_type_kind(&mut missing_features, &return_type, &|| {
+                    "Unsupported return type".into()
+                });
                 for (i, param) in func.params.iter().enumerate() {
                     let param_type = db.rs_type_kind(param.type_.clone())?;
                     require_rs_type_kind(&mut missing_features, &param_type, &|| {
-                        format!("the type of {} (parameter #{i})", &param.identifier).into()
+                        format!("Unsupported parameter #{i} ({})", &param.identifier).into()
                     });
                 }
                 if func.is_extern_c {
@@ -381,7 +380,6 @@ pub struct BindingsInfo {
 #[derive(Clone, PartialEq, Eq)]
 pub enum NoBindingsReason {
     MissingRequiredFeatures {
-        context: Rc<str>,
         missing_features: Vec<RequiredCrubitFeature>,
     },
     DependencyFailed {
@@ -427,26 +425,20 @@ impl std::fmt::Debug for NoBindingsReason {
 impl From<NoBindingsReason> for Error {
     fn from(reason: NoBindingsReason) -> Error {
         match reason {
-            NoBindingsReason::MissingRequiredFeatures { context, missing_features } => {
-                // This maybe could use .context(), but the ordering is backward.
+            NoBindingsReason::MissingRequiredFeatures { missing_features } => {
                 let mut all_missing = vec![];
                 for missing in missing_features {
                     all_missing.push(missing.to_string());
                 }
-                anyhow!(
-                    "Can't generate bindings for {context}, because of missing required features (crubit.rs-features):\n{}",
-                    all_missing.join("\n")
-                )
+                anyhow!(all_missing.join("\n"))
             }
-            NoBindingsReason::DependencyFailed { context, error } => anyhow!(
-                "Can't generate bindings for {context} due to missing bindings for its dependency: {error:#}"
-            ),
+            NoBindingsReason::DependencyFailed { error, .. } => {
+                anyhow!("depends on type with missing bindings: {error:#}")
+            }
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")
             }
-            NoBindingsReason::Unsupported { context, error } => anyhow!(
-                "Can't generate bindings for {context}, because it is unsupported: {error:#}"
-            ),
+            NoBindingsReason::Unsupported { error, .. } => error,
             NoBindingsReason::ParentModuleNameNotUnique {
                 conflicting_name,
                 parent_names_that_map_to_same_name,

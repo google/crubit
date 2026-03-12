@@ -46,23 +46,19 @@ impl ::ctor::CtorNew<()> for Derived2 {
     }
 }
 
-// Error while generating bindings for constructor 'Derived2::Derived2':
-// Can't generate bindings for Derived2::Derived2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `Derived2::Derived2` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'Derived2::Derived2':
-// Can't generate bindings for Derived2::Derived2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `Derived2::Derived2` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'Derived2::operator=':
-// Can't generate bindings for Derived2::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `Derived2::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'Derived2::operator=':
-// Can't generate bindings for Derived2::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `Derived2::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -93,23 +89,19 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
     }
 }
 
-// Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
-// Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `VirtualDerived2::VirtualDerived2` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
-// Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `VirtualDerived2::VirtualDerived2` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'VirtualDerived2::operator=':
-// Can't generate bindings for VirtualDerived2::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `VirtualDerived2::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'VirtualDerived2::operator=':
-// Can't generate bindings for VirtualDerived2::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `VirtualDerived2::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 mod detail {
     #[allow(unused_imports)]

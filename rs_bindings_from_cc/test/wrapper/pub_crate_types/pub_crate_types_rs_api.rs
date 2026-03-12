@@ -15,8 +15,8 @@
 #![deny(warnings)]
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=10
-// Error while generating bindings for class 'Template':
-// Class templates are not supported yet
+// error: class `Template` could not be bound
+//   Class templates are not yet supported
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=21
 pub(crate) type TemplateIntAlias = crate::__CcTemplateInst8TemplateIiE;
@@ -130,29 +130,24 @@ forward_declare::unsafe_define!(
 );
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Can't generate bindings for Template2<int>::Template2<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::Template2<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Template2<int>::Template2<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Can't generate bindings for Template2<int>::Template2<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::Template2<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Template2<int>::Template2<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Can't generate bindings for Template2<int>::Template2<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::Template2<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Template2<int>::Template2<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for function 'Template2<int>::operator=':
-// Can't generate bindings for Template2<int>::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: function `Template2<int>::operator=` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for function 'Template2<int>::operator=':
-// Can't generate bindings for Template2<int>::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: function `Template2<int>::operator=` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -169,40 +164,34 @@ forward_declare::unsafe_define!(
 );
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Can't generate bindings for Template<int>::Template<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::Template<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Template<int>::Template<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Can't generate bindings for Template<int>::Template<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::Template<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Template<int>::Template<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Can't generate bindings for Template<int>::Template<int>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::Template<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: constructor `Template<int>::Template<int>` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for function 'Template<int>::operator=':
-// Can't generate bindings for Template<int>::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: function `Template<int>::operator=` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for function 'Template<int>::operator=':
-// Can't generate bindings for Template<int>::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: function `Template<int>::operator=` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=14
-// Error while generating bindings for function 'Template<int>::IndirectCannotBeInstantiated':
-// Can't generate bindings for Template<int>::IndirectCannotBeInstantiated, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::IndirectCannotBeInstantiated (b/248542210: template instantiation of member function cannot reliably get bindings)
+// error: function `Template<int>::IndirectCannotBeInstantiated` could not be bound
+//   b/248542210: template instantiation of member function cannot reliably get bindings
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18
-// Error while generating bindings for function 'Template<int>::CannotBeInstantiated':
-// Failed to instantiate the function/method template: Diagnostics emitted:
-// rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16:5: note: in instantiation of member function 'Template<int>::CannotBeInstantiated' requested here
-// rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18:47: error: static assertion failed
+// error: function `Template<int>::CannotBeInstantiated` could not be bound
+//   Failed to instantiate the function/method template: Diagnostics emitted:
+//   rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16:5: note: in instantiation of member function 'Template<int>::CannotBeInstantiated' requested here
+//   rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18:47: error: static assertion failed
 
 #[path = "rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types_extra.rs"]
 mod __crubit_mod_0;

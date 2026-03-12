@@ -64,23 +64,19 @@ impl Default for Struct {
     }
 }
 
-// Error while generating bindings for constructor 'Struct::Struct':
-// Can't generate bindings for Struct::Struct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `Struct::Struct` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'Struct::Struct':
-// Can't generate bindings for Struct::Struct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `Struct::Struct` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'Struct::operator=':
-// Can't generate bindings for Struct::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `Struct::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'Struct::operator=':
-// Can't generate bindings for Struct::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `Struct::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// Regression test for b/232418721.  This tests that the offset of `field2` is
 /// correct (given its alignment requirements there need to be 3 bytes of padding
@@ -132,23 +128,19 @@ impl Default for PaddingBetweenFields {
     }
 }
 
-// Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
-// Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `PaddingBetweenFields::PaddingBetweenFields` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
-// Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `PaddingBetweenFields::PaddingBetweenFields` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'PaddingBetweenFields::operator=':
-// Can't generate bindings for PaddingBetweenFields::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `PaddingBetweenFields::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'PaddingBetweenFields::operator=':
-// Can't generate bindings for PaddingBetweenFields::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `PaddingBetweenFields::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// Layout properties of FieldInTailPadding_InnerStruct look as follows:
 /// - alignment: 4 (because of `inner_int_field`)
@@ -187,14 +179,12 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     }
 }
 
-// Error while generating bindings for constructor 'FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct':
-// Can't generate bindings for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'FieldInTailPadding_InnerStruct::operator=':
-// Can't generate bindings for FieldInTailPadding_InnerStruct::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `FieldInTailPadding_InnerStruct::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// User-defined destructor to make this struct non-POD for the purposes of
 /// layout.
@@ -231,13 +221,11 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
-// Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `FieldInTailPadding::FieldInTailPadding` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
-// Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `FieldInTailPadding::FieldInTailPadding` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 impl ::ctor::PinnedDrop for FieldInTailPadding {
     #[inline(always)]
@@ -246,15 +234,13 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
     }
 }
 
-// Error while generating bindings for function 'FieldInTailPadding::operator=':
-// Can't generate bindings for FieldInTailPadding::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `FieldInTailPadding::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'FieldInTailPadding::operator=':
-// Can't generate bindings for FieldInTailPadding::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `FieldInTailPadding::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_char, ::ffi_11::c_char)> for FieldInTailPadding {
     type CtorType = ::ctor::Ctor![Self];

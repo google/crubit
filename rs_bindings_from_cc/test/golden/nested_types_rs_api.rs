@@ -126,8 +126,8 @@ impl Default for already_snake_case {
     }
 }
 
-// Error while generating bindings for struct 'already_snake_case::Inner':
-// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+// error: struct `already_snake_case::Inner` could not be bound
+//   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 
 /// # Safety
 ///
@@ -160,8 +160,8 @@ impl Default for ConflictingSnakeCaseNames {
     }
 }
 
-// Error while generating bindings for struct 'ConflictingSnakeCaseNames::Inner':
-// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+// error: struct `ConflictingSnakeCaseNames::Inner` could not be bound
+//   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
 /// # Safety
 ///
@@ -196,8 +196,8 @@ impl Default for ConflictingSnakeCaseNames_ {
     }
 }
 
-// Error while generating bindings for struct 'ConflictingSnakeCaseNames_::Inner':
-// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+// error: struct `ConflictingSnakeCaseNames_::Inner` could not be bound
+//   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -311,8 +311,8 @@ impl Default for SameNameAsNamespace {
     }
 }
 
-// Error while generating bindings for struct 'SameNameAsNamespace::Inner':
-// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+// error: struct `SameNameAsNamespace::Inner` could not be bound
+//   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 
 // namespace same_name_as_namespace
 
@@ -406,8 +406,8 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'no_longer_top_level::already_snake_case::Inner':
-    // crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+    // error: struct `no_longer_top_level::already_snake_case::Inner` could not be bound
+    //   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 
     /// # Safety
     ///
@@ -440,8 +440,8 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'no_longer_top_level::ConflictingSnakeCaseNames::Inner':
-    // crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    // error: struct `no_longer_top_level::ConflictingSnakeCaseNames::Inner` could not be bound
+    //   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
     /// # Safety
     ///
@@ -474,8 +474,8 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'no_longer_top_level::ConflictingSnakeCaseNames_::Inner':
-    // crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    // error: struct `no_longer_top_level::ConflictingSnakeCaseNames_::Inner` could not be bound
+    //   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
@@ -593,8 +593,8 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'no_longer_top_level::SameNameAsNamespace::Inner':
-    // crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+    // error: struct `no_longer_top_level::SameNameAsNamespace::Inner` could not be bound
+    //   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 
     // namespace same_name_as_namespace
 
@@ -678,12 +678,12 @@ impl Default for ContainsForwardDeclared {
     }
 }
 
-// Error while generating bindings for struct 'ContainsForwardDeclared::Nested':
-// Can't generate bindings for ContainsForwardDeclared::Nested due to missing bindings for its dependency: crubit.rs/errors/nested_type: Could not find parent's module name.
-//   This is a bug. The parent's module name should always be
-//   in the list. More info:
-//     for item: ContainsForwardDeclared::Nested
-//     inside parent module contains_forward_declared (originally ContainsForwardDeclared)
+// error: struct `ContainsForwardDeclared::Nested` could not be bound
+//   depends on type with missing bindings: crubit.rs/errors/nested_type: Could not find parent's module name.
+//     This is a bug. The parent's module name should always be
+//     in the list. More info:
+//       for item: ContainsForwardDeclared::Nested
+//       inside parent module contains_forward_declared (originally ContainsForwardDeclared)
 
 mod detail {
     #[allow(unused_imports)]

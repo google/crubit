@@ -60,23 +60,19 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // Error while generating bindings for constructor 'test_namespace_bindings::SomeClass::SomeClass':
-    // Can't generate bindings for test_namespace_bindings::SomeClass::SomeClass, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for test_namespace_bindings::SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
+    // error: constructor `test_namespace_bindings::SomeClass::SomeClass` could not be bound
+    //   Unsupported parameter #1 (__param_0): references are not yet supported
 
-    // Error while generating bindings for constructor 'test_namespace_bindings::SomeClass::SomeClass':
-    // Can't generate bindings for test_namespace_bindings::SomeClass::SomeClass, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for test_namespace_bindings::SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
+    // error: constructor `test_namespace_bindings::SomeClass::SomeClass` could not be bound
+    //   Unsupported parameter #1 (__param_0): references are not yet supported
 
-    // Error while generating bindings for function 'test_namespace_bindings::SomeClass::operator=':
-    // Can't generate bindings for test_namespace_bindings::SomeClass::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for test_namespace_bindings::SomeClass::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for test_namespace_bindings::SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
+    // error: function `test_namespace_bindings::SomeClass::operator=` could not be bound
+    //   Unsupported return type: references are not yet supported
+    //   Unsupported parameter #1 (__param_0): references are not yet supported
 
-    // Error while generating bindings for function 'test_namespace_bindings::SomeClass::operator=':
-    // Can't generate bindings for test_namespace_bindings::SomeClass::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for test_namespace_bindings::SomeClass::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for test_namespace_bindings::SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
+    // error: function `test_namespace_bindings::SomeClass::operator=` could not be bound
+    //   Unsupported return type: references are not yet supported
+    //   Unsupported parameter #1 (__param_0): references are not yet supported
 }
 
 // namespace test_namespace_bindings

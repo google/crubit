@@ -44,8 +44,8 @@ pub mod some_struct {
     pub type nested_type = ::ffi_11::c_int;
 }
 
-// Error while generating bindings for type alias 'SomeStruct':
-// Typedef only used to introduce a name in C. Not importing.
+// error: type alias `SomeStruct` could not be bound
+//   Typedef only used to introduce a name in C. Not importing.
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -99,8 +99,8 @@ impl Default for SomeUnion {
     }
 }
 
-// Error while generating bindings for type alias 'SomeUnion':
-// Typedef only used to introduce a name in C. Not importing.
+// error: type alias `SomeUnion` could not be bound
+//   Typedef only used to introduce a name in C. Not importing.
 
 /// # Safety
 ///

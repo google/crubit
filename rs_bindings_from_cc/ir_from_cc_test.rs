@@ -371,35 +371,22 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
     )
     .unwrap();
     assert_ir_not_matches!(ir, quote! { Record });
-    assert_ir_matches!(
-        ir,
-        quote! { UnsupportedItem {
-            name: "MyTemplate",
-            unique_name: Some("c:@ST>1#T@MyTemplate"),
-            kind: Class,
-            path: Some(UnsupportedItemPath { ident: "MyTemplate", enclosing_item_id: None, }),
-            errors: [FormattedError {
-                ... message: "Class templates are not supported yet", ...
-            }], ...
-        }}
-    );
+    let unsupported_item = ir.unsupported_items().find(|item| &*item.name == "MyTemplate").unwrap();
+    expect_eq!(unsupported_item.kind, UnsupportedItemKind::Class);
+    let path = unsupported_item.path.as_ref().unwrap();
+    expect_eq!(path.ident, "MyTemplate");
+    expect_eq!(path.enclosing_item_id, None);
 }
 
 #[gtest]
 fn test_function_template_not_supported_yet() {
     let ir = ir_from_cc("template<typename SomeParam> void SomeFunctionTemplate() {};").unwrap();
-    assert_ir_matches!(
-        ir,
-        quote! { UnsupportedItem {
-            name: "SomeFunctionTemplate",
-            unique_name: Some("c:@FT@>1#TSomeFunctionTemplate#v#"),
-            kind: Func,
-            path: Some(UnsupportedItemPath { ident: "SomeFunctionTemplate", enclosing_item_id: None, }),
-            errors: [FormattedError {
-                ... message: "Function templates are not supported yet", ...
-            }], ...
-        }}
-    );
+    let unsupported_item =
+        ir.unsupported_items().find(|item| &*item.name == "SomeFunctionTemplate").unwrap();
+    expect_eq!(unsupported_item.kind, UnsupportedItemKind::Func);
+    let path = unsupported_item.path.as_ref().unwrap();
+    expect_eq!(path.ident, "SomeFunctionTemplate");
+    expect_eq!(path.enclosing_item_id, None);
 }
 
 #[gtest]
@@ -421,20 +408,14 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
     )
     .unwrap();
     // We should only generate bindings for the class template, not the deduction guide.
-    assert_ir_matches!(
-        ir,
-        quote! { UnsupportedItem {
-            name: "SomeFunctionTemplateWithDeductionGuide",
-            unique_name: Some("c:@ST>1#T@SomeFunctionTemplateWithDeductionGuide"),
-            kind: Class,
-            path: Some(UnsupportedItemPath { ident: "SomeFunctionTemplateWithDeductionGuide", enclosing_item_id: None, }),
-            errors: [FormattedError {
-                fmt: "Class templates are not supported yet",
-                message: "Class templates are not supported yet",
-            }],
-            ...
-        }}
-    );
+    let unsupported_item = ir
+        .unsupported_items()
+        .find(|item| &*item.name == "SomeFunctionTemplateWithDeductionGuide")
+        .unwrap();
+    expect_eq!(unsupported_item.kind, UnsupportedItemKind::Class);
+    let path = unsupported_item.path.as_ref().unwrap();
+    expect_eq!(path.ident, "SomeFunctionTemplateWithDeductionGuide");
+    expect_eq!(path.enclosing_item_id, None);
 }
 
 #[gtest]

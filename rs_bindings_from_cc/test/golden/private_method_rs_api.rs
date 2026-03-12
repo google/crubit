@@ -13,8 +13,8 @@
 #![allow(unused)]
 #![deny(warnings)]
 
-// Error while generating bindings for class 'Ptr':
-// Class templates are not supported yet
+// error: class `Ptr` could not be bound
+//   Class templates are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]

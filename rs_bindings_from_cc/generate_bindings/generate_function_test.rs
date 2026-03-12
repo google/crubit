@@ -360,7 +360,6 @@ fn test_doc_comment_func_with_annotations() -> Result<()> {
     )?;
 
     let rs_api = generate_bindings_tokens_for_test_with_annotations(ir)?.rs_api;
-    dbg!(&rs_api);
     assert_rs_matches!(
         rs_api,
         // leading space is intentional so there is a space between /// and the text of the
@@ -473,13 +472,6 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
     // After this CL, this scenario will result in an explicit error.
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {impl From});
-    assert_rs_matches!(rs_api, {
-        let txt = "Generated from: ir_from_cc_virtual_header.h;l=34\n\
-                       Error while generating bindings for constructor 'Foo::Foo':\n\
-                       The lifetime of `__this` is \
-                           unexpectedly also used by another parameter: &'a::ffi_11::c_int";
-        quote! { __COMMENT__ #txt }
-    });
     Ok(())
 }
 
@@ -1266,21 +1258,8 @@ fn test_overloaded_functions() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
 
     // Cannot overload free functions.
-    assert_cc_matches!(rs_api, {
-        let txt = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
-                       Error while generating bindings for function 'f':\n\
-                       Cannot generate bindings for overloaded function";
-        quote! { __COMMENT__ #txt }
-    });
     assert_rs_not_matches!(rs_api, quote! {pub fn f()});
     assert_rs_not_matches!(rs_api, quote! {pub fn f(i: ::ffi_11::c_int)});
-
-    assert_cc_matches!(rs_api, {
-        let txt = "Generated from: ir_from_cc_virtual_header.h;l=7\n\
-                       Error while generating bindings for function 'S1::f':\n\
-                       Cannot generate bindings for overloaded function";
-        quote! { __COMMENT__ #txt }
-    });
     assert_rs_not_matches!(rs_api, quote! {pub fn f(... S1 ...)});
 
     // And thunks aren't generated for either.

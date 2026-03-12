@@ -16,8 +16,8 @@
 
 pub mod repro {
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=10
-    // Error while generating bindings for class 'repro::optional':
-    // Class templates are not supported yet
+    // error: class `repro::optional` could not be bound
+    //   Class templates are not yet supported
 
     /// # Safety
     ///
@@ -54,15 +54,13 @@ pub mod repro {
     }
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=19
-    // Error while generating bindings for class 'repro::Nullable':
-    // Class templates are not supported yet
+    // error: class `repro::Nullable` could not be bound
+    //   Class templates are not yet supported
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=24
-    // Error while generating bindings for function 'repro::crash':
-    // Can't generate bindings for repro::crash, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::crash (the type of __param_0 (parameter #0): error: Can't generate bindings for repro::Nullable<repro::Interval>, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
-    // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation))
+    // error: function `repro::crash` could not be bound
+    //   Unsupported parameter #0 (__param_0): template instantiation is not yet supported
+    //   template instantiation is not yet supported
 }
 
 // namespace repro
@@ -70,16 +68,14 @@ pub mod repro {
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_REGRESSION_401857961_REPRO_H_
 
 // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=11
-// Error while generating bindings for struct 'repro::optional<repro::Interval>':
-// Can't generate bindings for repro::optional<repro::Interval>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::optional<repro::Interval> (crate::__CcTemplateInstN5repro8optionalINS_8IntervalEEE is a template instantiation)
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::optional<repro::Interval> (crate::__CcTemplateInstN5repro8optionalINS_8IntervalEEE is a template instantiation)
+// error: struct `repro::optional<repro::Interval>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
 // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=20
-// Error while generating bindings for struct 'repro::Nullable<repro::Interval>':
-// Can't generate bindings for repro::Nullable<repro::Interval>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
+// error: struct `repro::Nullable<repro::Interval>` could not be bound
+//   template instantiation is not yet supported
+//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

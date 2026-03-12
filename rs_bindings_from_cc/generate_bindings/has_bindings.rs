@@ -29,10 +29,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
     match required_crubit_features(db, &item) {
         Ok(missing_features) if missing_features.is_empty() => {}
         Ok(missing_features) => {
-            return Err(NoBindingsReason::MissingRequiredFeatures {
-                context: item.debug_name(&db.ir()),
-                missing_features,
-            });
+            return Err(NoBindingsReason::MissingRequiredFeatures { missing_features });
         }
         Err(error) => {
             return Err(NoBindingsReason::DependencyFailed {
@@ -241,10 +238,8 @@ fn func_has_bindings(
             target: target.clone(),
             item: func.debug_name(ir),
             missing_features: crubit_feature::CrubitFeature::Experimental.into(),
-            capability_description: format!(
-                "b/248542210: template instantiation of member function cannot reliably get bindings"
-            )
-            .into(),
+            capability_description:
+                "b/248542210: template instantiation of member function cannot reliably get bindings".into(),
         });
     }
 
@@ -257,7 +252,6 @@ fn func_has_bindings(
                 visibility = visibility.or(vis);
             }
             Err(NoBindingsReason::MissingRequiredFeatures {
-                context: _,
                 missing_features: new_missing_features,
             }) => {
                 missing_features.extend(new_missing_features);
@@ -268,10 +262,7 @@ fn func_has_bindings(
     }
 
     if !missing_features.is_empty() {
-        return Err(NoBindingsReason::MissingRequiredFeatures {
-            context: func.debug_name(db.ir()),
-            missing_features,
-        });
+        return Err(NoBindingsReason::MissingRequiredFeatures { missing_features });
     }
 
     Ok(BindingsInfo { visibility })
@@ -412,10 +403,7 @@ fn type_visibility(
                 // again a slight hack.
                 capability_description: error.to_string().into(),
             }];
-            Err(NoBindingsReason::MissingRequiredFeatures {
-                context: item.debug_name(db.ir()),
-                missing_features,
-            })
+            Err(NoBindingsReason::MissingRequiredFeatures { missing_features })
         }
     }
 }

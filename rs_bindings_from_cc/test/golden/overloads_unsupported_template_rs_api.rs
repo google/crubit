@@ -22,8 +22,8 @@ pub fn Overload() {
     unsafe { crate::detail::__rust_thunk___Z8Overloadv() }
 }
 
-// Error while generating bindings for function 'Overload':
-// Function templates are not supported yet
+// error: function `Overload` could not be bound
+//   Function templates are not yet supported
 
 mod detail {
     #[allow(unused_imports)]

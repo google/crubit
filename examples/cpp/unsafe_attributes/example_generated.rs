@@ -68,14 +68,12 @@ pub unsafe fn UnsafeBasedOnBoolean() {
 }
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for struct 'std::integral_constant<bool, false>':
-// Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (crubit.rs-features):
-// //examples/cpp/unsafe_attributes:example_lib needs [//features:wrapper] for std::integral_constant<bool, false> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE is a template instantiation)
+// error: struct `std::integral_constant<bool, false>` could not be bound
+//   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for struct 'std::integral_constant<bool, true>':
-// Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (crubit.rs-features):
-// //examples/cpp/unsafe_attributes:example_lib needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
+// error: struct `std::integral_constant<bool, true>` could not be bound
+//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

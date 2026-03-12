@@ -15,8 +15,8 @@
 #![deny(warnings)]
 
 // Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=10
-// Error while generating bindings for class 'A':
-// Class templates are not supported yet
+// error: class `A` could not be bound
+//   Class templates are not yet supported
 
 /// # Safety
 ///
@@ -54,8 +54,8 @@ impl Default for B {
 }
 
 // Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=10
-// Error while generating bindings for class 'A':
-// Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
+// error: class `A` could not be bound
+//   Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
 
 mod detail {
     #[allow(unused_imports)]

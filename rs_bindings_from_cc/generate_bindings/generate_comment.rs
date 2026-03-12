@@ -138,9 +138,18 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
     if !source_loc.is_empty() {
         writeln!(&mut message, "{source_loc}").unwrap();
     }
+
+    let (bold, reset, red) = if item.must_bind {
+        // If an item is set to `must_bind`, we colorize the output, as it will appear in the
+        // terminal or logs rather than in a comment.
+        ("\x1B[1m", "\x1B[0m", "\x1B[31m")
+    } else {
+        ("", "", "")
+    };
+
     writeln!(
         &mut message,
-        "Error while generating bindings for {} '{}':",
+        "{bold}{red}error:{reset}{bold} {} `{}` could not be bound{reset}",
         item.unsupported_kind(),
         item.name.as_ref()
     )
@@ -149,7 +158,8 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
         if index != 0 {
             message.push_str("\n\n");
         }
-        write!(&mut message, "{error:#}").unwrap();
+        // Add indentation to child error output.
+        write!(&mut message, "{}", format!("  {error:#}").replace('\n', "\n  ")).unwrap();
     }
 
     if item.must_bind {

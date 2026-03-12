@@ -8,8 +8,7 @@ use arc_anyhow::Result;
 use code_gen_utils::{format_cc_ident, make_rs_ident};
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
-    integer_constant_to_token_stream, ApiSnippets, DisplayImpl, Feature, GeneratedItem, Thunk,
-    ThunkImpl,
+    integer_constant_to_token_stream, ApiSnippets, DisplayImpl, GeneratedItem, Thunk, ThunkImpl,
 };
 use database::BindingsGenerator;
 use ir::Enum;

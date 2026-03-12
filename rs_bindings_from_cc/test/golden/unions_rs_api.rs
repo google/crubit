@@ -41,23 +41,19 @@ impl Default for EmptyUnion {
     }
 }
 
-// Error while generating bindings for constructor 'EmptyUnion::EmptyUnion':
-// Can't generate bindings for EmptyUnion::EmptyUnion, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::EmptyUnion (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `EmptyUnion::EmptyUnion` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'EmptyUnion::EmptyUnion':
-// Can't generate bindings for EmptyUnion::EmptyUnion, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::EmptyUnion (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `EmptyUnion::EmptyUnion` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'EmptyUnion::operator=':
-// Can't generate bindings for EmptyUnion::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `EmptyUnion::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'EmptyUnion::operator=':
-// Can't generate bindings for EmptyUnion::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `EmptyUnion::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
@@ -87,9 +83,8 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     }
 }
 
-// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
-// Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `Nontrivial::Nontrivial` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// # Safety
 ///
@@ -119,23 +114,19 @@ impl Default for RenamedUnion {
     }
 }
 
-// Error while generating bindings for constructor 'UnionToRename::UnionToRename':
-// Can't generate bindings for UnionToRename::UnionToRename, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::UnionToRename (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `UnionToRename::UnionToRename` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'UnionToRename::UnionToRename':
-// Can't generate bindings for UnionToRename::UnionToRename, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::UnionToRename (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `UnionToRename::UnionToRename` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'UnionToRename::operator=':
-// Can't generate bindings for UnionToRename::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `UnionToRename::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'UnionToRename::operator=':
-// Can't generate bindings for UnionToRename::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `UnionToRename::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
@@ -150,14 +141,12 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'TriviallyCopyableButNontriviallyDestructible::operator=':
-// Can't generate bindings for TriviallyCopyableButNontriviallyDestructible::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TriviallyCopyableButNontriviallyDestructible::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TriviallyCopyableButNontriviallyDestructible::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `TriviallyCopyableButNontriviallyDestructible::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
-// Can't generate bindings for TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -197,23 +186,19 @@ impl Default for NonEmptyUnion {
     }
 }
 
-// Error while generating bindings for constructor 'NonEmptyUnion::NonEmptyUnion':
-// Can't generate bindings for NonEmptyUnion::NonEmptyUnion, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::NonEmptyUnion (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `NonEmptyUnion::NonEmptyUnion` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'NonEmptyUnion::NonEmptyUnion':
-// Can't generate bindings for NonEmptyUnion::NonEmptyUnion, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::NonEmptyUnion (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `NonEmptyUnion::NonEmptyUnion` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'NonEmptyUnion::operator=':
-// Can't generate bindings for NonEmptyUnion::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `NonEmptyUnion::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'NonEmptyUnion::operator=':
-// Can't generate bindings for NonEmptyUnion::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `NonEmptyUnion::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// # Safety
 ///
@@ -251,23 +236,19 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'NonCopyUnion2::NonCopyUnion2':
-// Can't generate bindings for NonCopyUnion2::NonCopyUnion2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::NonCopyUnion2 (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `NonCopyUnion2::NonCopyUnion2` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'NonCopyUnion2::NonCopyUnion2':
-// Can't generate bindings for NonCopyUnion2::NonCopyUnion2, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::NonCopyUnion2 (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `NonCopyUnion2::NonCopyUnion2` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'NonCopyUnion2::operator=':
-// Can't generate bindings for NonCopyUnion2::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `NonCopyUnion2::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'NonCopyUnion2::operator=':
-// Can't generate bindings for NonCopyUnion2::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `NonCopyUnion2::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// # Safety
 ///
@@ -301,23 +282,19 @@ impl Default for UnionWithOpaqueField {
     }
 }
 
-// Error while generating bindings for constructor 'UnionWithOpaqueField::UnionWithOpaqueField':
-// Can't generate bindings for UnionWithOpaqueField::UnionWithOpaqueField, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::UnionWithOpaqueField (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `UnionWithOpaqueField::UnionWithOpaqueField` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'UnionWithOpaqueField::UnionWithOpaqueField':
-// Can't generate bindings for UnionWithOpaqueField::UnionWithOpaqueField, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::UnionWithOpaqueField (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `UnionWithOpaqueField::UnionWithOpaqueField` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'UnionWithOpaqueField::operator=':
-// Can't generate bindings for UnionWithOpaqueField::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `UnionWithOpaqueField::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'UnionWithOpaqueField::operator=':
-// Can't generate bindings for UnionWithOpaqueField::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `UnionWithOpaqueField::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -343,23 +320,19 @@ impl Default for TrivialButInheritable {
     }
 }
 
-// Error while generating bindings for constructor 'TrivialButInheritable::TrivialButInheritable':
-// Can't generate bindings for TrivialButInheritable::TrivialButInheritable, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::TrivialButInheritable (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `TrivialButInheritable::TrivialButInheritable` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'TrivialButInheritable::TrivialButInheritable':
-// Can't generate bindings for TrivialButInheritable::TrivialButInheritable, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::TrivialButInheritable (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `TrivialButInheritable::TrivialButInheritable` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'TrivialButInheritable::operator=':
-// Can't generate bindings for TrivialButInheritable::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `TrivialButInheritable::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'TrivialButInheritable::operator=':
-// Can't generate bindings for TrivialButInheritable::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `TrivialButInheritable::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// # Safety
 ///
@@ -389,23 +362,19 @@ impl Default for UnionWithInheritable {
     }
 }
 
-// Error while generating bindings for constructor 'UnionWithInheritable::UnionWithInheritable':
-// Can't generate bindings for UnionWithInheritable::UnionWithInheritable, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::UnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `UnionWithInheritable::UnionWithInheritable` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'UnionWithInheritable::UnionWithInheritable':
-// Can't generate bindings for UnionWithInheritable::UnionWithInheritable, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::UnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `UnionWithInheritable::UnionWithInheritable` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'UnionWithInheritable::operator=':
-// Can't generate bindings for UnionWithInheritable::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `UnionWithInheritable::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'UnionWithInheritable::operator=':
-// Can't generate bindings for UnionWithInheritable::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `UnionWithInheritable::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// # Safety
 ///
@@ -435,23 +404,19 @@ impl Default for TypedefUnion {
     }
 }
 
-// Error while generating bindings for constructor 'TypedefUnion::TypedefUnion':
-// Can't generate bindings for TypedefUnion::TypedefUnion, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::TypedefUnion (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `TypedefUnion::TypedefUnion` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'TypedefUnion::TypedefUnion':
-// Can't generate bindings for TypedefUnion::TypedefUnion, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::TypedefUnion (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `TypedefUnion::TypedefUnion` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'TypedefUnion::operator=':
-// Can't generate bindings for TypedefUnion::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `TypedefUnion::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'TypedefUnion::operator=':
-// Can't generate bindings for TypedefUnion::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `TypedefUnion::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 /// # Safety
 ///
@@ -483,23 +448,19 @@ impl Default for TypedefUnionWithInheritable {
     }
 }
 
-// Error while generating bindings for constructor 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
-// Can't generate bindings for TypedefUnionWithInheritable::TypedefUnionWithInheritable, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::TypedefUnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `TypedefUnionWithInheritable::TypedefUnionWithInheritable` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for constructor 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
-// Can't generate bindings for TypedefUnionWithInheritable::TypedefUnionWithInheritable, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::TypedefUnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)
+// error: constructor `TypedefUnionWithInheritable::TypedefUnionWithInheritable` could not be bound
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'TypedefUnionWithInheritable::operator=':
-// Can't generate bindings for TypedefUnionWithInheritable::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `TypedefUnionWithInheritable::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
-// Error while generating bindings for function 'TypedefUnionWithInheritable::operator=':
-// Can't generate bindings for TypedefUnionWithInheritable::operator=, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
+// error: function `TypedefUnionWithInheritable::operator=` could not be bound
+//   Unsupported return type: references are not yet supported
+//   Unsupported parameter #1 (__param_0): references are not yet supported
 
 mod detail {
     #[allow(unused_imports)]

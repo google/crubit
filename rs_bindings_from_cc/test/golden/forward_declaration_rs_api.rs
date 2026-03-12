@@ -13,9 +13,8 @@
 #![allow(unused)]
 #![deny(warnings)]
 
-// Error while generating bindings for struct 'ForwardDeclaredStruct':
-// Can't generate bindings for ForwardDeclaredStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:forward_declaration_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
+// error: struct `ForwardDeclaredStruct` could not be bound
+//   incomplete type
 
 // Intentionally forward declare this struct again, to ensure Crubit can handle
 // it.

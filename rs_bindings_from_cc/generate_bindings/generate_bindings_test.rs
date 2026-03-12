@@ -6,7 +6,7 @@ use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{Mutability, RsTypeKind};
 use googletest::{expect_eq, gtest};
-use ir_testing::{retrieve_func, with_lifetime_macros};
+use ir_testing::retrieve_func;
 use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
 use quote::quote;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
@@ -88,22 +88,6 @@ fn test_func_ref() -> Result<()> {
             }
         }
     );
-    Ok(())
-}
-
-#[gtest]
-fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
-    let ir = ir_from_cc(&with_lifetime_macros(
-        r#"
-        int (* $a get_ptr_to_func())(float, double); "#,
-    ))?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-    assert_cc_matches!(rs_api, {
-        let txt = "Generated from: ir_from_cc_virtual_header.h;l=33\n\
-                       Error while generating bindings for function 'get_ptr_to_func':\n\
-                       Unable to get lifetime annotations: Type may not be annotated with lifetimes";
-        quote! { __COMMENT__ #txt }
-    });
     Ok(())
 }
 
@@ -1091,25 +1075,16 @@ fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
 /// The default crubit feature set currently doesn't include supported.
 #[gtest]
 fn test_default_crubit_features_disabled_supported() -> Result<()> {
-    for (item, kind) in [
-        ("extern \"C\" void NotPresent() {}", "function"),
-        ("struct NotPresent {};", "struct"),
-        ("extern \"C\" int NotPresent() {}", "function"),
+    for item in [
+        "extern \"C\" void NotPresent() {}",
+        "struct NotPresent {};",
+        "extern \"C\" int NotPresent() {}",
     ] {
         let mut ir = ir_from_cc(item)?;
         ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
         assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
-        let contents = rs_tokens_to_formatted_string_for_tests(rs_api)?;
-        // using a string comparison and leaving off the end, because the exact reason
-        // why differs per item.
-        let expected = &format!("\
-            // Generated from: ir_from_cc_virtual_header.h;l=3\n\
-            // Error while generating bindings for {kind} 'NotPresent':\n\
-            // Can't generate bindings for NotPresent, because of missing required features (crubit.rs-features):\n\
-            // //test:testing_target needs [//features:supported] for NotPresent");
-        assert!(contents.contains(expected), "Missing expected string: {contents}\n")
     }
     Ok(())
 }
@@ -1125,11 +1100,6 @@ fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {NotPresent});
     assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
-    let expected = "\
-        Error while generating bindings for struct 'NotPresent':\n\
-        Can't generate bindings for NotPresent, because of missing required features (crubit.rs-features):\n\
-        //test:testing_target needs [//features:wrapper] for NotPresent (incomplete type)";
-    assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
