@@ -520,6 +520,14 @@ pub fn lifetime_defaults_transform_func(db: &BindingsGenerator, func: &Func) -> 
     LifetimeDefaults::new(db.ir()).add_lifetime_to_func(func)
 }
 
+/// Creates a copy of `record` with default lifetimes filled in.
+pub fn lifetime_defaults_transform_record(
+    db: &BindingsGenerator,
+    record: &Record,
+) -> Result<Record> {
+    LifetimeDefaults::new(db.ir()).add_lifetime_to_record(record)
+}
+
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
 pub fn lifetime_defaults_transform(ir: &IR) -> Result<IR> {

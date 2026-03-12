@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{ensure, Context, Result};
-use code_gen_utils::make_rs_ident;
+use code_gen_utils::{make_rs_ident, make_rs_lifetime_ident};
 use crubit_abi_type::{CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens};
 use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
@@ -22,7 +22,9 @@ use generate_function_thunk::{
 };
 use ir::*;
 use itertools::Itertools;
-use lifetime_defaults_transform::lifetime_defaults_transform_func;
+use lifetime_defaults_transform::{
+    lifetime_defaults_transform_func, lifetime_defaults_transform_record,
+};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{HashMap, HashSet};
@@ -1716,6 +1718,17 @@ pub fn generate_function(
             associated_return_type,
             ..
         } => {
+            let assume_lifetimes = db
+                .ir()
+                .target_crubit_features(&trait_record.owning_target)
+                .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+            // TODO(b/454627672): is it worth caching this?
+            let trait_record = if assume_lifetimes {
+                Rc::new(lifetime_defaults_transform_record(db, &*trait_record)?)
+            } else {
+                trait_record
+            };
+
             let mut extra_body = if let Some(name) = associated_return_type {
                 let quoted_return_type = if quoted_return_type.is_empty() {
                     quote! {()}
@@ -1755,7 +1768,26 @@ pub fn generate_function(
             }
 
             let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
-            let trait_lifetime_params = error_lifetime_param.as_slice();
+            let mut trait_lifetime_params = error_lifetime_param.as_slice();
+            let mut assumed_lifetime_params = vec![];
+            let mut all_lifetime_params: Vec<Lifetime> = vec![];
+            if assume_lifetimes {
+                assumed_lifetime_params = trait_record
+                    .lifetime_inputs
+                    .iter()
+                    .map(|id| make_rs_lifetime_ident(&*id))
+                    .collect();
+                all_lifetime_params =
+                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(&*id)).collect();
+                all_lifetime_params.extend_from_slice(trait_lifetime_params);
+                trait_lifetime_params = &all_lifetime_params;
+            }
+            let trait_record_param_tokens = if !assumed_lifetime_params.is_empty() {
+                quote! { < #( #assumed_lifetime_params ),* > }
+            } else {
+                quote! {}
+            };
+
             // NOTE: `trait_generic_params` may include lifetimes!
             let formatted_trait_generic_params =
                 format_generic_params(trait_lifetime_params, &*trait_generic_params);
@@ -1843,7 +1875,7 @@ pub fn generate_function(
             api_func = quote! {
                 #unimplemented_trait_def
                 #doc_comment
-                impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for #unsatisfied_where_clause {
+                impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for #trait_record_param_tokens #unsatisfied_where_clause {
                     #extra_body
                     #api_func_def
                     #extra_api_func_def
@@ -2255,6 +2287,11 @@ fn move_self_from_out_param_to_return_value(
     api_params.remove(0);
     thunk_args.remove(0);
     param_types.remove(0);
+    // TODO(b/475407556): The __this lifetime is at least still valid if there are [[lifetimebound]]
+    // parameters.
+    if func.params.iter().any(|p| p.identifier != "__this" && p.clang_lifetimebound) {
+        return Ok(());
+    }
 
     // Remove the lifetime associated with `__this`.
     if let Some(this_lifetime) = this_lifetime {

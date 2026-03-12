@@ -988,10 +988,15 @@ bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
   return false;
 }
 
+// LINT.IfChange
 bool Importer::AreAssumedLifetimesEnabledForTarget(
     const BazelLabel& label) const {
-  return IsFeatureEnabledForTarget(label, "assume_lifetimes");
+  return (IsFeatureEnabledForTarget(label, "assume_lifetimes") ||
+          IsFeatureEnabledForTarget(label, "all")) &&
+         !IsFeatureEnabledForTarget(label, "no_assume_lifetimes");
 }
+// LINT.ThenChange(//depot/common/crubit_feature.rs,
+// //depot/features/BUILD)
 
 bool Importer::IsFmtEnabledForTarget(const BazelLabel& label) const {
   return IsFeatureEnabledForTarget(label, "fmt");

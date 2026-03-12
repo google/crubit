@@ -4,7 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
+use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, make_rs_lifetime_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
     ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeleteImpl, DeriveAttr,
@@ -19,6 +19,7 @@ use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
 use ir::*;
 use itertools::Itertools;
+use lifetime_defaults_transform::lifetime_defaults_transform_record;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use quote::ToTokens;
@@ -614,6 +615,17 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         crubit_features |= ir.target_crubit_features(defining_target);
     }
     let mut upcast_impls = vec![];
+    let assume_lifetimes = crubit_features.contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    let record = if assume_lifetimes {
+        Rc::new(lifetime_defaults_transform_record(db, &record)?)
+    } else {
+        record
+    };
+    let mut lifetime_params = vec![];
+    if assume_lifetimes {
+        lifetime_params =
+            record.lifetime_inputs.iter().map(|id| make_rs_lifetime_ident(&*id)).collect();
+    }
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
         let (new_upcast_impls, thunks, thunk_impls) = cc_struct_upcast_impl(db, &record, ir)?;
         upcast_impls = new_upcast_impls;
@@ -652,10 +664,17 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         } else {
             vec![]
         };
+    let stubbed_lifetime_params = if lifetime_params.is_empty() {
+        quote! {}
+    } else {
+        let anonymous_lifetime = quote! { '_ };
+        let stubs = lifetime_params.iter().map(|_| &anonymous_lifetime).collect::<Vec<_>>();
+        quote! { < #( #stubs ),* > }
+    };
     let incomplete_definition = if crubit_features.contains(crubit_feature::CrubitFeature::Wrapper)
     {
         Some(quote! {
-            forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
+            forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident #stubbed_lifetime_params);
         })
     } else {
         None
@@ -725,6 +744,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         owned_type_name,
         member_methods,
         delete: operator_delete_impl,
+        lifetime_params,
     };
 
     api_snippets.features |= Feature::negative_impls;
@@ -802,7 +822,11 @@ pub fn generate_derives(record: &Record) -> DeriveAttr {
     }
     if record.should_derive_copy() {
         derives.push(quote! { Copy });
-        derives.push(quote! { ::ctor::MoveAndAssignViaCopy });
+        if record.lifetime_inputs.is_empty() {
+            // TODO(b/491917803): Workaround for assume_lifetimes while MoveAndAssignViaCopy doesn't
+            // support lifetime parameters.
+            derives.push(quote! { ::ctor::MoveAndAssignViaCopy });
+        }
     }
     if record.trait_derives.debug == TraitImplPolarity::Positive {
         derives.push(quote! { Debug });

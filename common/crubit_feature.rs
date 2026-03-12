@@ -91,7 +91,7 @@ impl CrubitFeature {
 /// Returns the set of features named by this short name.
 pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
     let features = match name {
-        // TODO(b/454627672): return AssumeLifetimes to `all` once it can build the goldens.
+        // LINT.IfChange
         b"all" => flagset::FlagSet::<CrubitFeature>::full() - CrubitFeature::NoAssumeLifetimes,
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
@@ -104,6 +104,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"unsafe_view" => CrubitFeature::UnsafeView.into(),
         b"check_default_initialized" => CrubitFeature::CheckDefaultInitialized.into(),
         _ => return None,
+        // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
     Some(features)
 }

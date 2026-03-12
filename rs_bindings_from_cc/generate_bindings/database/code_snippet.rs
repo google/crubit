@@ -17,6 +17,7 @@ use ir::{
     UnqualifiedIdentifier, IR,
 };
 use proc_macro2::{Ident, Literal, TokenStream};
+use quote::format_ident;
 use quote::{quote, ToTokens};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -621,7 +622,14 @@ pub fn generated_items_to_tokens(
                     delete,
                     owned_type_name,
                     member_methods,
+                    lifetime_params,
                 } = record_item.as_ref();
+
+                let type_param_tokens = if !lifetime_params.is_empty() {
+                    quote! { < #( #lifetime_params ),* > }
+                } else {
+                    quote! {}
+                };
 
                 let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
                     let align = Literal::usize_unsuffixed(align);
@@ -639,17 +647,25 @@ pub fn generated_items_to_tokens(
                 });
 
                 let send_impl = match implements_send {
-                    true => quote! { unsafe impl Send for #ident {} },
-                    false => quote! { impl !Send for #ident {} },
+                    true => {
+                        quote! { unsafe impl #type_param_tokens Send for #ident #type_param_tokens {} }
+                    }
+                    false => {
+                        quote! { impl #type_param_tokens !Send for #ident #type_param_tokens {} }
+                    }
                 };
                 let sync_impl = match implements_sync {
-                    true => quote! { unsafe impl Sync for #ident {} },
-                    false => quote! { impl !Sync for #ident {} },
+                    true => {
+                        quote! { unsafe impl #type_param_tokens Sync for #ident #type_param_tokens {} }
+                    }
+                    false => {
+                        quote! { impl #type_param_tokens !Sync for #ident #type_param_tokens {} }
+                    }
                 };
 
                 let cxx_impl = match cxx_impl {
                     Some(CxxExternTypeImpl { id, kind }) => quote! {
-                        unsafe impl ::cxx::ExternType for #ident {
+                        unsafe impl #type_param_tokens ::cxx::ExternType for #ident #type_param_tokens {
                             type Id = ::cxx::type_id!(#id);
                             type Kind = #kind;
                         }
@@ -659,7 +675,7 @@ pub fn generated_items_to_tokens(
 
                 let no_unique_address_accessors_impl = if !no_unique_address_accessors.is_empty() {
                     Some(quote! {
-                        impl #ident {
+                        impl #type_param_tokens #ident #type_param_tokens {
                             #( #no_unique_address_accessors )*
                         }
                     })
@@ -678,13 +694,21 @@ pub fn generated_items_to_tokens(
 
                 let member_methods_impl = if !member_methods.is_empty() {
                     Some(quote! {
-                        impl #ident {
+                        impl #type_param_tokens #ident #type_param_tokens {
                             #( #member_methods )*
                         }
                     })
                 } else {
                     None
                 };
+
+                let lifetime_markers: Vec<TokenStream> = lifetime_params
+                    .iter()
+                    .map(|lt| {
+                        let field_name = format_ident!("__marker_{}", lt.ident);
+                        quote! { #field_name: ::core::marker::PhantomData<& #lt ()> }
+                    })
+                    .collect();
 
                 quote! {
                     #doc_comment_attr
@@ -693,9 +717,10 @@ pub fn generated_items_to_tokens(
                     #must_use_attr
                     #[repr(#(#repr_attrs),*)]
                     #crubit_annotation
-                    #visibility #struct_or_union #ident {
+                    #visibility #struct_or_union #ident #type_param_tokens {
                         #head_padding
                         #( #field_definitions )*
+                        #( #lifetime_markers )*
                     }
 
                     #send_impl
@@ -1009,6 +1034,7 @@ pub struct Record {
     /// The name of the owning wrapper type when the type was annotated with CRUBIT_OWNED_POINTEE.
     pub owned_type_name: Option<Ident>,
     pub member_methods: Vec<TokenStream>,
+    pub lifetime_params: Vec<syn::Lifetime>,
 }
 
 #[derive(Clone, Debug)]

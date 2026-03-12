@@ -63,6 +63,18 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set containing experimental Crubit features, in addition to the officially supported
+# features.
+#
+# See crubit.rs-features#experimental
+crubit_feature_hint(
+    name = "experimental",
+    compatible_with = ["//buildenv/target:non_prod"],
+    # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
+    crubit_features = ["all"],
+    visibility = _EXPERIMENTAL_CLIENTS,
+)
+
 # A feature set enabling the `this` pointer to be interpreted as a reference.
 #
 # See crubit.rs-features#other
@@ -81,18 +93,6 @@ crubit_feature_hint(
     compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES + ["fmt"],
     visibility = ["//visibility:public"],
-)
-
-# A feature set containing experimental Crubit features, in addition to the officially supported
-# features.
-#
-# See crubit.rs-features#experimental
-crubit_feature_hint(
-    name = "experimental",
-    compatible_with = ["//buildenv/target:non_prod"],
-    # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
-    crubit_features = ["all"],
-    visibility = _EXPERIMENTAL_CLIENTS,
 )
 
 crubit_feature_hint(

@@ -124,6 +124,7 @@ rust_library(
     deps = [
         ":cpp_type_name",
         ":generate_comment",
+        ":lifetime_defaults_transform",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",

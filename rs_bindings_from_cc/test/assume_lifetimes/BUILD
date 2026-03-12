@@ -1,3 +1,4 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -6,6 +7,11 @@ load(
 )
 
 package(default_applicable_licenses = ["//:license"])
+
+cc_library(
+    name = "test_annotations",
+    hdrs = ["test_annotations.h"],
+)
 
 crubit_test_cc_library(
     name = "free_function",
@@ -59,6 +65,37 @@ crubit_rust_test(
     srcs = ["member_function_test.rs"],
     cc_deps = [
         ":member_function",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "simple_string_view",
+    srcs = ["simple_string_view.cc"],
+    hdrs = ["simple_string_view.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":test_annotations",
+    ],
+)
+
+golden_test(
+    name = "simple_string_view_golden_test",
+    basename = "simple_string_view",
+    cc_library = "simple_string_view",
+    golden_cc = "simple_string_view_api_impl.cc",
+    golden_rs = "simple_string_view_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "simple_string_view_test",
+    srcs = ["simple_string_view_test.rs"],
+    cc_deps = [
+        ":simple_string_view",
     ],
     deps = [
         "@crate_index//:googletest",

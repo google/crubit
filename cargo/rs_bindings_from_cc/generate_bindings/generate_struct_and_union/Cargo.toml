@@ -20,6 +20,7 @@ doctest = false
 [dependencies]
 cpp_type_name = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cpp_type_name", package = "rs_bindings_from_cc_cpp_type_name"}
 generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment", package = "rs_bindings_from_cc_generate_comment"}
+lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform", package = "rs_bindings_from_cc_lifetime_defaults_transform"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}

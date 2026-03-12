@@ -262,6 +262,15 @@ pub fn make_rs_ident(ident: &str) -> Ident {
     }
 }
 
+/// Makes a 'Lifetime' to be used in the Rust source code as a lifetime name.
+/// Panics if `ident` is empty or is otherwise an invalid identifier.
+///
+/// Hyphens are converted to underscores in the identifier.
+pub fn make_rs_lifetime_ident(ident: &str) -> syn::Lifetime {
+    let ident = hyphen_to_underscore(ident);
+    return syn::Lifetime::new(format!("'{ident}").as_str(), proc_macro2::Span::call_site());
+}
+
 pub fn check_valid_cc_name(name: &str) -> Result<()> {
     // C++ doesn't have an equivalent of
     // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
