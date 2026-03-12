@@ -37,7 +37,7 @@ particular trait is implemented by a type parameter. For example:
 ```
 {{ #include ../../examples/rust/trait/main.cc }}
 ```
-<!--  function:add_with_two -->
+<!--  function:add_with_2 -->
 
 
 ## Limitations
