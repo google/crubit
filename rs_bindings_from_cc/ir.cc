@@ -703,7 +703,7 @@ llvm::json::Value Record::ToJson() const {
       {"nodiscard", nodiscard},
       {"record_type", RecordTypeToString(record_type)},
       {"is_aggregate", is_aggregate},
-      {"is_anon_record_with_typedef", is_anon_record_with_typedef},
+      {"is_canonical_alias", is_canonical_alias},
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_item_id", enclosing_item_id},
       {"must_bind", must_bind},

@@ -405,6 +405,19 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
         canonical_decl == decl) {
       result.push_back(decl);
     }
+
+    // For the special case of aliases, add their referent as a child if
+    // this alias is the preferred name of the template specialization they
+    // refer to.
+    if (clang::TypedefNameDecl* alias_decl =
+            clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
+      if (clang::CXXRecordDecl* record_decl =
+              alias_decl->getUnderlyingType()->getAsCXXRecordDecl()) {
+        if (alias_decl == GetTemplateSpecializationAlias(record_decl)) {
+          result.push_back(record_decl);
+        }
+      }
+    }
   }
   return result;
 }
@@ -419,6 +432,16 @@ const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
     }
     return false;
   };
+
+  if (auto* alias_decl = clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
+    if (clang::CXXRecordDecl* record_decl =
+            alias_decl->getUnderlyingType()->getAsCXXRecordDecl()) {
+      if (alias_decl == GetTemplateSpecializationAlias(record_decl)) {
+        decl = record_decl;
+      }
+    }
+  }
+
   if (llvm::isa<clang::TagDecl>(decl)) {
     if (is_injected_class_name(decl)) {
       return nullptr;
@@ -798,7 +821,9 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
     if (auto* specialization_decl =
             llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
         specialization_decl && IsFromCurrentTarget(specialization_decl)) {
-      class_template_instantiations_.insert(specialization_decl);
+      if (GetTemplateSpecializationAlias(specialization_decl) == nullptr) {
+        class_template_instantiations_.insert(specialization_decl);
+      }
     }
   }
   return result;
@@ -1826,6 +1851,15 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
         return absl::InvalidArgumentError(
             absl::StrCat("Unescapable identifier: ", name));
       }
+      // The string_view -> raw_string_view renaming happens centrally, so that
+      // it applies to both records (if we use preferred_name renaming) and
+      // type aliases (if preferred_name does not exist).
+      if (name == "string_view" && named_decl->isInStdNamespace()) {
+        if (!crubit_rust_name.has_value()) {
+          crubit_rust_name =
+              UnqualifiedIdentifier(Identifier("raw_string_view"));
+        }
+      }
 
       return TranslatedUnqualifiedIdentifier{
           .cc_identifier = Identifier(name),
@@ -1909,6 +1943,49 @@ bool Importer::HasBeenAlreadySuccessfullyImported(
     const clang::NamedDecl* decl) const {
   return known_type_decls_.contains(
       clang::cast<clang::NamedDecl>(CanonicalizeDecl(decl)));
+}
+
+clang::TypedefNameDecl* Importer::GetTemplateSpecializationAlias(
+    clang::Decl* decl) const {
+  clang::ClassTemplateSpecializationDecl* spec_decl =
+      clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
+  if (!spec_decl) {
+    return nullptr;
+  }
+  for (const auto* preferred_name :
+       spec_decl->getMostRecentDecl()
+           ->specific_attrs<clang::PreferredNameAttr>()) {
+    clang::QualType preferred_type = preferred_name->getTypedefType();
+    if (!clang::declaresSameEntity(preferred_type->getAsCXXRecordDecl(),
+                                   spec_decl)) {
+      continue;
+    }
+    while (true) {
+      if (auto* typedef_decl =
+              clang::dyn_cast<clang::TypedefType>(preferred_type)) {
+        // TODO(b/485041750): For Some Reason this doesn't work for std::pmr...
+        // un-allowlist this once we figure out why.
+        // TODO(b/485041750): This doesn't work for std::string because the
+        // wrapper type expects to use the original C++ type name, not the
+        // version produced here.
+        std::string qualified_name =
+            typedef_decl->getDecl()->getQualifiedNameAsString();
+        if (qualified_name != "std::string_view" &&
+            qualified_name != "std::wstring_view") {
+          return nullptr;
+        }
+        return typedef_decl->getDecl();
+      }
+      clang::QualType next_preferred_type =
+          preferred_type.getSingleStepDesugaredType(ctx_);
+      if (next_preferred_type == preferred_type) {
+        break;
+      }
+      preferred_type = std::move(next_preferred_type);
+    }
+    return nullptr;
+  }
+  return nullptr;
 }
 
 }  // namespace crubit

@@ -46,12 +46,4 @@ extern "C" int __rust_thunk___ZNK16LayoutCompatible3getEv(
 
 static_assert((int (LayoutCompatible::*)() const) & ::LayoutCompatible::get);
 
-static_assert(
-    CRUBIT_SIZEOF(
-        class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    16);
-static_assert(
-    alignof(class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
-    8);
-
 #pragma clang diagnostic pop

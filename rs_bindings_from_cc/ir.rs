@@ -1257,7 +1257,7 @@ pub struct Record {
     pub nodiscard: Option<Rc<str>>,
     pub record_type: RecordType,
     pub is_aggregate: bool,
-    pub is_anon_record_with_typedef: bool,
+    pub is_canonical_alias: bool,
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_item_id: Option<ItemId>,
     pub must_bind: bool,
@@ -1325,10 +1325,11 @@ impl Record {
 
     /// Returns a `TokenStream` containing the C++ tag kind for this record.
     ///
-    /// This is the `struct`, `union`, or `class` keyword, or nothing if this
-    /// is an anonymous record with a typedef.
+    /// This is the `struct`, `union`, or `class` keyword, or nothing if this is a canonical alias
+    /// to a record type. (For example, typedefs to anonymous records, or template specializations
+    /// with a `preferred_name`.)
     pub fn cc_tag_kind(&self) -> TokenStream {
-        if self.is_anon_record_with_typedef {
+        if self.is_canonical_alias {
             quote! {}
         } else {
             self.record_type.into_token_stream()
@@ -1393,14 +1394,7 @@ impl Record {
     /// Notably, all records that have a unique owning target are supported, e.g. `std::string`, but
     /// not all supported records have a unique owning target, e.g. `std::vector<int>`.
     pub fn has_unique_owning_target(self: &Record) -> bool {
-        matches!(
-            &self.template_specialization,
-            Some(TemplateSpecialization {
-                kind: TemplateSpecializationKind::StdStringView
-                    | TemplateSpecializationKind::StdWStringView,
-                ..
-            }) | None
-        )
+        self.template_specialization.is_none() || self.is_canonical_alias
     }
 }
 

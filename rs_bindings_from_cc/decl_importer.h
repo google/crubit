@@ -268,6 +268,11 @@ class ImportContext {
   // MarkAsSuccessfullyImported.
   virtual bool EnsureSuccessfullyImported(clang::NamedDecl* decl) = 0;
 
+  // Returns the canonical typedef for this template specialziation, or nullptr
+  // if there is not one (or if this is not a template specialization).
+  virtual clang::TypedefNameDecl* GetTemplateSpecializationAlias(
+      clang::Decl* decl) const = 0;
+
   Invocation& invocation_;
   clang::ASTContext& ctx_;
   clang::Sema& sema_;

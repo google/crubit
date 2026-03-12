@@ -903,6 +903,29 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
+  std::optional<ItemId> enclosing_item_id = std::nullopt;
+
+  // Reports an unsupported type with the given error.
+  //
+  // This is preferred to invoking `ImportUnsupportedItem` directly because it
+  // ensures that the path is set correctly. Note that this cannot be used above
+  // because the enclosing item ID and translated name are not yet available.
+  auto unsupported = [this, &record_decl, &rs_name,
+                      &enclosing_item_id](FormattedError error) {
+    return ictx_.ImportUnsupportedItem(
+        *record_decl,
+        UnsupportedItem::Path{
+            .ident = Identifier(rs_name),
+            .enclosing_item_id = std::move(enclosing_item_id)},
+        error);
+  };
+
+  absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
+  if (!record_type.ok()) {
+    return unsupported(
+        FormattedError::FromStatus(std::move(record_type).status()));
+  }
+  bool is_canonical_template_alias = false;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -961,22 +984,29 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                  .dyn_cast<clang::ClassTemplatePartialSpecializationDecl*>();
     }
     ts.defining_target = ictx_.GetOwningTarget(decl);
-    // TODO(okabayashi): File a bug for generalizing "canonical insts".
-    // When a template like `std::string_view` is instantiated, it will be
-    // owned by whatever target it was instantiated in. The C++ compiler is
-    // then responsible for unifying identical instantiations. However, this
-    // is a pain for Crubit because we aren't able to generally unify these.
-    // In the case of `std::string_view`, however, we know that there's an
-    // instantiation in the `cc_std` target, so I've chosen that as the
-    // canonical instantiation, and am mapping all other instantiations to
-    // that instantiation.
-    // A problem with this is it's not _actually_ the same ItemId, and it
-    // really should be. This ensures that when we refer to this Item, it's
-    // spelled `cc_std::__CcTemplateInst...`. But a major downside is that we
-    // still generate this template inst struct...
-    if (std::holds_alternative<TemplateSpecialization::StdStringView>(
-            ts.kind)) {
-      owning_target = ts.defining_target;
+    if (clang::TypedefNameDecl* alias_decl =
+            ictx_.GetTemplateSpecializationAlias(specialization_decl)) {
+      absl::StatusOr<TranslatedIdentifier> alias_name =
+          ictx_.GetTranslatedIdentifier(alias_decl);
+      if (!alias_name.ok()) {
+        return ictx_.ImportUnsupportedItem(
+            *record_decl, std::nullopt,
+            FormattedError::PrefixedStrCat("preferred_name is not supported",
+                                           alias_name.status().message()));
+      }
+      owning_target = ictx_.GetOwningTarget(alias_decl);
+      rs_name = alias_name->rs_identifier().Ident();
+      cc_name = alias_name->cc_identifier.Ident();
+      is_canonical_template_alias = true;
+      absl::StatusOr<std::optional<ItemId>> alias_enclosing_item_id =
+          ictx_.GetEnclosingItemId(alias_decl);
+      if (!alias_enclosing_item_id.ok()) {
+        return ictx_.ImportUnsupportedItem(
+            *record_decl, std::nullopt,
+            FormattedError::FromStatus(
+                std::move(alias_enclosing_item_id).status()));
+      }
+      enclosing_item_id = *std::move(alias_enclosing_item_id);
     }
 
     if (std::optional<absl::StatusOr<BridgeType>> extracted_callable =
@@ -1027,27 +1057,17 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     source_loc = record_decl->getBeginLoc();
   }
 
-  auto enclosing_item_id = ictx_.GetEnclosingItemId(record_decl);
-  if (!enclosing_item_id.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        *record_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id).status()));
+  if (!enclosing_item_id.has_value()) {
+    absl::StatusOr<std::optional<ItemId>> real_enclosing_item_id =
+        ictx_.GetEnclosingItemId(record_decl);
+    if (!real_enclosing_item_id.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          *record_decl, std::nullopt,
+          FormattedError::FromStatus(
+              std::move(real_enclosing_item_id).status()));
+    }
+    enclosing_item_id = *std::move(real_enclosing_item_id);
   }
-
-  // Reports an unsupported type with the given error.
-  //
-  // This is preferred to invoking `ImportUnsupportedItem` directly because it
-  // ensures that the path is set correctly. Note that this cannot be used above
-  // because the enclosing item ID and translated name are not yet available.
-  auto unsupported = [this, &record_decl, &rs_name,
-                      &enclosing_item_id](FormattedError error) {
-    return ictx_.ImportUnsupportedItem(
-        *record_decl,
-        UnsupportedItem::Path{.ident = Identifier(rs_name),
-                              .enclosing_item_id = *enclosing_item_id},
-        error);
-  };
-
   if (record_decl->isDependentContext()) {
     // We can't pass this to getASTRecordLayout() or it'll segfault.
     // TODO(jeanpierreda): investigate what we can do to support dependent records?
@@ -1056,12 +1076,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     // this.
     return unsupported(
         FormattedError::Static("Dependent records are not supported"));
-  }
-
-  absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
-  if (!record_type.ok()) {
-    return unsupported(
-        FormattedError::FromStatus(std::move(record_type).status()));
   }
 
   if (record_decl->hasAttr<clang::PackedAttr>() ||
@@ -1082,7 +1096,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                             .owning_target = std::move(owning_target),
                             .unknown_attr = *std::move(unknown_attr),
                             .record_type = *std::move(record_type),
-                            .enclosing_item_id = *std::move(enclosing_item_id)};
+                            .enclosing_item_id = std::move(enclosing_item_id)};
   }
 
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
@@ -1181,11 +1195,12 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .nodiscard = std::move(nodiscard),
       .record_type = *record_type,
       .is_aggregate = record_decl->isAggregate(),
-      .is_anon_record_with_typedef = anon_typedef != nullptr,
+      .is_canonical_alias =
+          anon_typedef != nullptr || is_canonical_template_alias,
       .is_explicit_class_template_instantiation_definition =
           is_explicit_class_template_instantiation_definition,
       .child_item_ids = std::move(item_ids),
-      .enclosing_item_id = *std::move(enclosing_item_id),
+      .enclosing_item_id = std::move(enclosing_item_id),
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
       .detected_formatter = *detected_formatter,
       .lifetime_inputs = std::move(lifetime_inputs),

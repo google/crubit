@@ -801,7 +801,7 @@ struct Record {
   bool is_aggregate = false;
 
   // It is an anonymous record with a typedef name.
-  bool is_anon_record_with_typedef = false;
+  bool is_canonical_alias = false;
 
   // True when this record is created from an explicit class template
   // instantiation definition (which is also what cc_template!{} macro results
