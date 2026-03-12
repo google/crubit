@@ -538,18 +538,14 @@ impl ToTokens for FnTrait {
     }
 }
 
-/// Information about a dyn callable type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Callable {
-    pub backing_type: BackingType,
+pub struct CallableSignature {
     pub fn_trait: FnTrait,
     pub return_type: Rc<RsTypeKind>,
     pub param_types: Rc<[RsTypeKind]>,
-    pub invoker_ident: Ident,
-    pub manager_ident: Ident,
 }
 
-impl Callable {
+impl CallableSignature {
     /// Returns a `TokenStream` in the shape of `-> Output`, or None if the return type is void.
     pub fn rust_return_type_fragment(&self, db: &BindingsGenerator) -> Option<TokenStream> {
         if self.return_type.is_void() {
@@ -579,6 +575,23 @@ impl Callable {
         self.param_types.iter().all(|param_type| param_type.is_c_abi_compatible_by_value())
             && self.return_type.is_c_abi_compatible_by_value()
     }
+}
+
+/// Information about a dyn callable type.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Callable {
+    pub backing_type: BackingType,
+    pub sig: CallableSignature,
+
+    /// The name of an extern "C" function that knows how to invoke this callable.
+    /// It is declared in C++ and defined in Rust. It has the signature
+    /// `extern "C" fn(*mut Box<dyn F>, ...) -> ...`
+    pub invoker_ident: Ident,
+
+    /// The name of an extern "C" function that knows how to delete this callable.
+    /// It is declared in C++ and defined in Rust. It has the signature
+    /// `extern "C" fn(FunctionToCall, *mut TypeErasedState, *mut TypeErasedState)`.
+    pub manager_ident: Ident,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -668,16 +681,18 @@ impl BridgeRsTypeKind {
                 let target_identifier = record.owning_target.convert_to_cc_identifier();
                 BridgeRsTypeKind::Callable(Rc::new(Callable {
                     backing_type,
-                    fn_trait: match fn_trait {
-                        ir::FnTrait::Fn => FnTrait::Fn,
-                        ir::FnTrait::FnMut => FnTrait::FnMut,
-                        ir::FnTrait::FnOnce => FnTrait::FnOnce,
+                    sig: CallableSignature {
+                        fn_trait: match fn_trait {
+                            ir::FnTrait::Fn => FnTrait::Fn,
+                            ir::FnTrait::FnMut => FnTrait::FnMut,
+                            ir::FnTrait::FnOnce => FnTrait::FnOnce,
+                        },
+                        return_type: Rc::new(db.rs_type_kind(return_type.clone())?),
+                        param_types: param_types
+                            .iter()
+                            .map(|param_type| db.rs_type_kind(param_type.clone()))
+                            .collect::<Result<_>>()?,
                     },
-                    return_type: Rc::new(db.rs_type_kind(return_type.clone())?),
-                    param_types: param_types
-                        .iter()
-                        .map(|param_type| db.rs_type_kind(param_type.clone()))
-                        .collect::<Result<_>>()?,
                     invoker_ident: format_ident!(
                         "__crubit_invoker_{}{}",
                         record.rs_name.identifier.as_ref(),
@@ -1785,7 +1800,7 @@ impl RsTypeKind {
                         }
                     }
                     BridgeRsTypeKind::Callable(callable) => {
-                        let callable_spelling = callable.dyn_fn_spelling(&db);
+                        let callable_spelling = callable.sig.dyn_fn_spelling(&db);
                         quote! { ::alloc::boxed::Box<#callable_spelling> }
                     }
                     BridgeRsTypeKind::C9Co { has_reference_param, result_type, .. } => {
@@ -1944,8 +1959,8 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         }
                         BridgeRsTypeKind::StdString { .. } => {}
                         BridgeRsTypeKind::Callable(callable) => {
-                            self.todo.push(&callable.return_type);
-                            self.todo.extend(callable.param_types.iter().rev());
+                            self.todo.push(&callable.sig.return_type);
+                            self.todo.extend(callable.sig.param_types.iter().rev());
                         }
                         BridgeRsTypeKind::C9Co { result_type, .. } => {
                             self.todo.push(result_type);

@@ -25,7 +25,7 @@ pub fn dyn_callable_crubit_abi_type(
     {
         bail!("absl::AnyInvocable appears in the C++ API, but CRUBIT_ANY_INVOCABLE_SUPPORT_HEADER is not set. It should be set as a path to a .h file.");
     }
-    let dyn_fn_spelling = callable.dyn_fn_spelling(db);
+    let dyn_fn_spelling = callable.sig.dyn_fn_spelling(db);
 
     let rust_type_tokens = match callable.backing_type {
         BackingType::DynCallable => quote! {
@@ -37,9 +37,9 @@ pub fn dyn_callable_crubit_abi_type(
     };
 
     let on_empty_tokens = {
-        let rust_return_type_fragment = callable.rust_return_type_fragment(db);
+        let rust_return_type_fragment = callable.sig.rust_return_type_fragment(db);
         let param_type_tokens =
-            callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
+            callable.sig.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
 
         quote! {
             ::alloc::boxed::Box::new(|#(_: #param_type_tokens),*| #rust_return_type_fragment {
@@ -65,14 +65,15 @@ pub fn dyn_callable_crubit_abi_type(
         }
     };
 
-    let qualifier = match callable.fn_trait {
+    let qualifier = match callable.sig.fn_trait {
         FnTrait::Fn => quote! { const },
         FnTrait::FnMut => quote! {},
         FnTrait::FnOnce => quote! { && },
     };
 
-    let cpp_return_type = cpp_type_name::format_cpp_type(&callable.return_type, db.ir())?;
+    let cpp_return_type = cpp_type_name::format_cpp_type(&callable.sig.return_type, db.ir())?;
     let cpp_param_types = callable
+        .sig
         .param_types
         .iter()
         .map(|param_ty| cpp_type_name::format_cpp_type(param_ty, db.ir()))
@@ -145,11 +146,11 @@ fn generate_invoker_function_pointer(
     // Even if the callable has all C ABI compatible inputs and outputs, we cannot pass the function
     // pointer directly because cfi doesn't recognize Rust function pointers as safe.
     let param_idents =
-        (0..callable.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
+        (0..callable.sig.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
 
     let mut arg_transforms = quote! {};
     let mut arg_exprs = Vec::with_capacity(param_idents.len());
-    for (i, param_ty) in callable.param_types.iter().enumerate() {
+    for (i, param_ty) in callable.sig.param_types.iter().enumerate() {
         let param_ident = &param_idents[i];
 
         match param_ty.passing_convention() {
@@ -182,7 +183,7 @@ fn generate_invoker_function_pointer(
         }
     }
 
-    let out_param_arg = match callable.return_type.passing_convention() {
+    let out_param_arg = match callable.sig.return_type.passing_convention() {
         PassingConvention::AbiCompatible
         | PassingConvention::Void
         | PassingConvention::OwnedPtr => None,
@@ -193,7 +194,8 @@ fn generate_invoker_function_pointer(
             Some(quote! { , out.Get() })
         }
         PassingConvention::ComposablyBridged => {
-            let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
+            let crubit_abi_type =
+                db.crubit_abi_type(RsTypeKind::clone(&callable.sig.return_type))?;
             let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
             arg_transforms.extend(quote! {
                 unsigned char out[#crubit_abi_type_tokens::kSize];
@@ -209,7 +211,7 @@ fn generate_invoker_function_pointer(
         #invoker_ident(state #(, #arg_exprs)* #out_param_arg);
     };
 
-    match callable.return_type.passing_convention() {
+    match callable.sig.return_type.passing_convention() {
         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
             // Return the result.
             invoke_ffi_and_transform_to_cpp = quote! {
@@ -224,7 +226,8 @@ fn generate_invoker_function_pointer(
             });
         }
         PassingConvention::ComposablyBridged => {
-            let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
+            let crubit_abi_type =
+                db.crubit_abi_type(RsTypeKind::clone(&callable.sig.return_type))?;
             let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
             invoke_ffi_and_transform_to_cpp.extend(quote! {
@@ -265,14 +268,15 @@ fn generate_make_cpp_invoker_tokens(
     callable: &Callable,
 ) -> Result<TokenStream> {
     let param_idents =
-        (0..callable.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
-    let rust_param_types = callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
-    let rust_return_type_fragment = callable.rust_return_type_fragment(db);
+        (0..callable.sig.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
+    let rust_param_types =
+        callable.sig.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
+    let rust_return_type_fragment = callable.sig.rust_return_type_fragment(db);
 
-    let mut c_param_types = Vec::with_capacity(callable.param_types.len());
-    let mut arg_exprs = Vec::with_capacity(callable.param_types.len());
+    let mut c_param_types = Vec::with_capacity(callable.sig.param_types.len());
+    let mut arg_exprs = Vec::with_capacity(callable.sig.param_types.len());
     // We are the caller
-    for (i, param_ty) in callable.param_types.iter().enumerate() {
+    for (i, param_ty) in callable.sig.param_types.iter().enumerate() {
         let param_ident = &param_idents[i];
 
         match param_ty.passing_convention() {
@@ -314,14 +318,14 @@ fn generate_make_cpp_invoker_tokens(
     // What the extern "C" function should return.
     let mut c_return_type_fragment = None;
     // Set c_return_type_fragment, or push an out param, or nothing if void.
-    match callable.return_type.passing_convention() {
+    match callable.sig.return_type.passing_convention() {
         PassingConvention::AbiCompatible => {
-            let c_return_type = callable.return_type.to_token_stream(db);
+            let c_return_type = callable.sig.return_type.to_token_stream(db);
             c_return_type_fragment = Some(quote! { -> #c_return_type });
         }
         PassingConvention::Void => {}
         PassingConvention::LayoutCompatible => {
-            let return_type_tokens = callable.return_type.to_token_stream(db);
+            let return_type_tokens = callable.sig.return_type.to_token_stream(db);
             c_param_types.push(quote! { *mut #return_type_tokens });
             arg_exprs.push(quote! { &raw mut out });
         }
@@ -333,7 +337,7 @@ fn generate_make_cpp_invoker_tokens(
             bail!("Ctor not supported");
         }
         PassingConvention::OwnedPtr => {
-            let c_return_type = callable.return_type.to_token_stream_with_owned_ptr_type(db);
+            let c_return_type = callable.sig.return_type.to_token_stream_with_owned_ptr_type(db);
             c_return_type_fragment = Some(quote! { -> #c_return_type });
         }
     };
@@ -342,7 +346,7 @@ fn generate_make_cpp_invoker_tokens(
         unsafe { c_invoker(managed.state() #(, #arg_exprs)*) }
     };
 
-    match callable.return_type.passing_convention() {
+    match callable.sig.return_type.passing_convention() {
         PassingConvention::AbiCompatible => {
             // invoke_ffi_and_transform_to_rust is already a trailing expr.
         }
@@ -354,7 +358,7 @@ fn generate_make_cpp_invoker_tokens(
             }
         }
         PassingConvention::ComposablyBridged => {
-            let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone())?;
+            let crubit_abi_type = db.crubit_abi_type(callable.sig.return_type.as_ref().clone())?;
             let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
             invoke_ffi_and_transform_to_rust = quote! {
@@ -380,7 +384,7 @@ fn generate_make_cpp_invoker_tokens(
         }
     }
 
-    let dyn_fn_spelling = callable.dyn_fn_spelling(db);
+    let dyn_fn_spelling = callable.sig.dyn_fn_spelling(db);
 
     Ok(quote! {
         |managed: ::any_invocable::ManagedState,
