@@ -21,6 +21,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include <utility>
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   FooService(const FooService&) = delete;
   FooService& operator=(const FooService&) = delete;
   FooService(::crubit::UnsafeRelocateTag, FooService&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

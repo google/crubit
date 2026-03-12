@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <utility>
 
 namespace example_crate {
@@ -44,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonTrivialStruct(const NonTrivialStruct&) = delete;
   NonTrivialStruct& operator=(const NonTrivialStruct&) = delete;
   NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

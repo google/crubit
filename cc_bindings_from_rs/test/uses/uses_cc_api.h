@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -47,7 +48,7 @@ AliasOfExportedStruct final {
   AliasOfExportedStruct& operator=(const AliasOfExportedStruct&) = delete;
   AliasOfExportedStruct(::crubit::UnsafeRelocateTag,
                         AliasOfExportedStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -87,7 +88,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   Original(const Original&) = delete;
   Original& operator=(const Original&) = delete;
   Original(::crubit::UnsafeRelocateTag, Original&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -124,7 +125,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   OtherPublicName(const OtherPublicName&) = delete;
   OtherPublicName& operator=(const OtherPublicName&) = delete;
   OtherPublicName(::crubit::UnsafeRelocateTag, OtherPublicName&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

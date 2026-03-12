@@ -22,6 +22,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <utility>
 
 namespace no_std {
@@ -46,7 +47,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
   NoStdStruct(const NoStdStruct&) = delete;
   NoStdStruct& operator=(const NoStdStruct&) = delete;
   NoStdStruct(::crubit::UnsafeRelocateTag, NoStdStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

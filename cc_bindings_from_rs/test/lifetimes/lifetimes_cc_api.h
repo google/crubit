@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -47,7 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::lifetimes::StructWithLifetime& operator=(const StructWithLifetime&) =
       default;
   StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -130,7 +131,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const StructWithLifetimeAndDropGlue&) = delete;
   StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
                                 StructWithLifetimeAndDropGlue&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

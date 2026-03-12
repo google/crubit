@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   ArrayStruct(const ArrayStruct&) = default;
   ::arrays::ArrayStruct& operator=(const ArrayStruct&) = default;
   ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -77,7 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   HasDrop(const HasDrop&) = delete;
   HasDrop& operator=(const HasDrop&) = delete;
   HasDrop(::crubit::UnsafeRelocateTag, HasDrop&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -113,7 +114,7 @@ HasDropAndDefault final {
   HasDropAndDefault(const HasDropAndDefault&) = delete;
   HasDropAndDefault& operator=(const HasDropAndDefault&) = delete;
   HasDropAndDefault(::crubit::UnsafeRelocateTag, HasDropAndDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

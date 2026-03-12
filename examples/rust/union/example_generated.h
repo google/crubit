@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace example_crate {
@@ -40,7 +41,7 @@ ReprCUnion final {
   ReprCUnion(const ReprCUnion&) = delete;
   ReprCUnion& operator=(const ReprCUnion&) = delete;
   ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // examples/rust/union/example.rs;l=7

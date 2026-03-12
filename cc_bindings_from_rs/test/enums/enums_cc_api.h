@@ -22,6 +22,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -82,7 +83,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   MyEnum(const MyEnum&) = delete;
   MyEnum& operator=(const MyEnum&) = delete;
   MyEnum(::crubit::UnsafeRelocateTag, MyEnum&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   struct alignas(0) __crubit_E_struct {
    private:
@@ -191,7 +192,7 @@ CloneActiveVariant final {
       const CloneActiveVariant&);
 
   CloneActiveVariant(::crubit::UnsafeRelocateTag, CloneActiveVariant&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   struct alignas(0) __crubit_A_struct {
    public:
@@ -273,7 +274,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::enums::repr_c_clone_counter::CloneCount& operator=(const CloneCount&);
 
   CloneCount(::crubit::UnsafeRelocateTag, CloneCount&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   struct alignas(0) __crubit_A_struct {
    public:
@@ -341,7 +342,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DropMe(const DropMe&) = delete;
   DropMe& operator=(const DropMe&) = delete;
   DropMe(::crubit::UnsafeRelocateTag, DropMe&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   struct alignas(0) __crubit_A_struct {
    public:
@@ -422,7 +423,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   IntReprEnumWithNoPayload& operator=(const IntReprEnumWithNoPayload&) = delete;
   IntReprEnumWithNoPayload(::crubit::UnsafeRelocateTag,
                            IntReprEnumWithNoPayload&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -498,7 +499,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   RustReprEnum(const RustReprEnum&) = delete;
   RustReprEnum& operator=(const RustReprEnum&) = delete;
   RustReprEnum(::crubit::UnsafeRelocateTag, RustReprEnum&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -574,7 +575,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   RustReprWithNamingConflictBetweenCtorsAndMethods(
       ::crubit::UnsafeRelocateTag,
       RustReprWithNamingConflictBetweenCtorsAndMethods&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   //  Presence of this function tests the scenario where `MakeNoPayloadVariant`
@@ -649,7 +650,7 @@ RustReprWithSingleTuplePayloadVariant final {
   RustReprWithSingleTuplePayloadVariant(
       ::crubit::UnsafeRelocateTag,
       RustReprWithSingleTuplePayloadVariant&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:

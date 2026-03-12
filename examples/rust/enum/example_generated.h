@@ -19,6 +19,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include <type_traits>
 
 namespace example_crate {
@@ -52,7 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   Color(const Color&) = default;
   ::example_crate::Color& operator=(const Color&) = default;
   Color(::crubit::UnsafeRelocateTag, Color&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:

@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -44,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   Copyable(const Copyable&) = default;
   ::move::Copyable& operator=(const Copyable&) = default;
   Copyable(::crubit::UnsafeRelocateTag, Copyable&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -87,7 +88,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

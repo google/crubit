@@ -20,7 +20,6 @@ use rustc_hir::def::DefKind;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
-use std::str::FromStr;
 
 #[rustversion::before(2025-05-26)]
 use rustc_span::symbol::kw;

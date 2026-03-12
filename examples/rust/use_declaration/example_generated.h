@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace example_crate {
@@ -40,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
   Type(const Type&) = delete;
   Type& operator=(const Type&) = delete;
   Type(::crubit::UnsafeRelocateTag, Type&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

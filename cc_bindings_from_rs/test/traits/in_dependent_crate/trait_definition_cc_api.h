@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace trait_definition {
@@ -42,7 +43,7 @@ MyStruct final {
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:

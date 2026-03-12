@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace struct_with_conflicting_fields_and_member_functions_rust {
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   X(const X&) = delete;
   X& operator=(const X&) = delete;
   X(::crubit::UnsafeRelocateTag, X&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

@@ -446,6 +446,10 @@ impl CcInclude {
         Self::SystemHeader("cstdint".into())
     }
 
+    pub fn cstring() -> Self {
+        Self::SystemHeader("cstring".into())
+    }
+
     /// Creates a `CcInclude` that represents `#include <memory>`.
     /// See https://en.cppreference.com/w/cpp/header/memory
     pub fn memory() -> Self {

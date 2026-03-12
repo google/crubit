@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace example_crate {
@@ -41,7 +42,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   ReprRustUnion(const ReprRustUnion&) = delete;
   ReprRustUnion& operator=(const ReprRustUnion&) = delete;
   ReprRustUnion(::crubit::UnsafeRelocateTag, ReprRustUnion&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

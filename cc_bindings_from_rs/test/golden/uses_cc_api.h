@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -42,7 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   Bar(const Bar&) = delete;
   Bar& operator=(const Bar&) = delete;
   Bar(::crubit::UnsafeRelocateTag, Bar&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -73,7 +74,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -123,7 +124,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
   G(const G&) = delete;
   G& operator=(const G&) = delete;
   G(::crubit::UnsafeRelocateTag, G&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -156,7 +157,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   InnerX(const InnerX&) = delete;
   InnerX& operator=(const InnerX&) = delete;
   InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -189,7 +190,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
   X1(const X1&) = delete;
   X1& operator=(const X1&) = delete;
   X1(::crubit::UnsafeRelocateTag, X1&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:

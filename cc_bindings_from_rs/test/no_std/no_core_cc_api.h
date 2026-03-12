@@ -21,6 +21,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include <utility>
 
 namespace no_core {
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
   Test(const Test&) = delete;
   Test& operator=(const Test&) = delete;
   Test(::crubit::UnsafeRelocateTag, Test&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

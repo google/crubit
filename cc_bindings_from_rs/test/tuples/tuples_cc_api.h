@@ -22,6 +22,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -47,7 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   AdtHoldingFiveAndSix& operator=(const AdtHoldingFiveAndSix&) = delete;
   AdtHoldingFiveAndSix(::crubit::UnsafeRelocateTag,
                        AdtHoldingFiveAndSix&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -89,7 +90,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   NonCppMovable(const NonCppMovable&) = delete;
   NonCppMovable& operator=(const NonCppMovable&) = delete;
   NonCppMovable(::crubit::UnsafeRelocateTag, NonCppMovable&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -119,7 +120,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   NontrivialDrop(const NontrivialDrop&) = delete;
   NontrivialDrop& operator=(const NontrivialDrop&) = delete;
   NontrivialDrop(::crubit::UnsafeRelocateTag, NontrivialDrop&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -154,7 +155,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   TupleStruct(const TupleStruct&) = delete;
   TupleStruct& operator=(const TupleStruct&) = delete;
   TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Error generating bindings for

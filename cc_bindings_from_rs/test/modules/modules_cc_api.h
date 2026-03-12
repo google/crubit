@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -67,7 +68,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

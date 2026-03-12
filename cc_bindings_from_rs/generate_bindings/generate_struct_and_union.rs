@@ -1904,7 +1904,7 @@ pub(crate) fn generate_relocating_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
     adt_cc_name: &Ident,
 ) -> ApiSnippets<'tcx> {
-    let main_api = CcSnippet::with_include(
+    let mut main_api = CcSnippet::with_include(
         quote! {
             #adt_cc_name(::crubit::UnsafeRelocateTag, #adt_cc_name&& value) {
                 // This is a bit tricky. Note that the lifetime of `this` has already begun,
@@ -1917,10 +1917,12 @@ pub(crate) fn generate_relocating_ctor<'tcx>(
                 // union.)
                 //
                 // So while `memcpy` doesn't usually work, it does here.
-                memcpy(this, &value, sizeof(value));
+                std::memcpy(this, &value, sizeof(value));
             }
         },
         db.support_header("internal/slot.h"),
     );
-    ApiSnippets { main_api, ..Default::default() }
+    // We include this for `std::memcpy`.
+    main_api.prereqs.includes.insert(CcInclude::cstring());
+    main_api.into_main_api()
 }

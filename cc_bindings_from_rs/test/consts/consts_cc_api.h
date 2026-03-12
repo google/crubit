@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 #include "support/ffi_11/ffi_11.h"
@@ -77,7 +78,7 @@ TyWithAssocConsts final {
   TyWithAssocConsts(const TyWithAssocConsts&) = delete;
   TyWithAssocConsts& operator=(const TyWithAssocConsts&) = delete;
   TyWithAssocConsts(::crubit::UnsafeRelocateTag, TyWithAssocConsts&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   static constexpr std::int32_t ASSOC_42 = INT32_C(42);
 

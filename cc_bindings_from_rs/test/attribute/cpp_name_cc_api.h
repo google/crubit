@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -43,7 +44,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   Replaced(const Replaced&) = delete;
   Replaced& operator=(const Replaced&) = delete;
   Replaced(::crubit::UnsafeRelocateTag, Replaced&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: cpp_name=create

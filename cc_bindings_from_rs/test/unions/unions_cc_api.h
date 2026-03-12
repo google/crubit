@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -42,7 +43,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=12
@@ -84,7 +85,7 @@ U final {
   ::unions::repr_c_clone::U& operator=(const U&);
 
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=78
@@ -120,7 +121,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=123
@@ -152,7 +153,7 @@ __attribute__((packed)) U final {
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=52
@@ -190,7 +191,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -253,7 +254,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   ::unions::repr_rust_clone::U& operator=(const U&);
 
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -301,7 +302,7 @@ U final {
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -344,7 +345,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=65

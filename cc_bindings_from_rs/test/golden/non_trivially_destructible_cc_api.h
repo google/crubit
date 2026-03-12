@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <utility>
 
 namespace non_trivially_destructible_rust {
@@ -51,7 +52,7 @@ NonTriviallyDestructable final {
 
   NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
                            NonTriviallyDestructable&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

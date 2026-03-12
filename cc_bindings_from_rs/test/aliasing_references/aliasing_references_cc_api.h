@@ -24,6 +24,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace aliasing_references {
@@ -47,7 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonFreezeType(const NonFreezeType&) = delete;
   NonFreezeType& operator=(const NonFreezeType&) = delete;
   NonFreezeType(::crubit::UnsafeRelocateTag, NonFreezeType&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   //  # Safety
@@ -92,7 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = default;
   ::aliasing_references::SomeStruct& operator=(const SomeStruct&) = default;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

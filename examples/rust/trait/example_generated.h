@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -44,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
   MyStruct(const MyStruct&) = default;
   ::example_crate::MyStruct& operator=(const MyStruct&) = default;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

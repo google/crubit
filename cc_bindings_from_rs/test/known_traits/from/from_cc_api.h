@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe(const NotFfiSafe&) = delete;
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -90,7 +91,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   Opaque(const Opaque&) = delete;
   Opaque& operator=(const Opaque&) = delete;
   Opaque(::crubit::UnsafeRelocateTag, Opaque&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=13
@@ -141,7 +142,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   OpaqueRef(const OpaqueRef&) = delete;
   OpaqueRef& operator=(const OpaqueRef&) = delete;
   OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=

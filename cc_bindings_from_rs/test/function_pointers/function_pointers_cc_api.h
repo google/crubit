@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -58,7 +59,7 @@ CStruct final {
   CStruct(const CStruct&) = default;
   ::function_pointers::CStruct& operator=(const CStruct&) = default;
   CStruct(::crubit::UnsafeRelocateTag, CStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -92,7 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   HasFnPtrField(const HasFnPtrField&) = default;
   ::function_pointers::HasFnPtrField& operator=(const HasFnPtrField&) = default;
   HasFnPtrField(::crubit::UnsafeRelocateTag, HasFnPtrField&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

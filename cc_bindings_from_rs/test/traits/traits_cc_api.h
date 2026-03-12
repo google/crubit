@@ -24,6 +24,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -53,7 +54,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   AssociatedTypeStruct(::crubit::UnsafeRelocateTag,
                        AssociatedTypeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -106,7 +107,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   Foo(const Foo&) = default;
   ::traits::Foo& operator=(const Foo&) = default;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -140,7 +141,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   LifetimeStruct(const LifetimeStruct&) = delete;
   LifetimeStruct& operator=(const LifetimeStruct&) = delete;
   LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -180,7 +181,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   MyStruct(const MyStruct&) = default;
   ::traits::MyStruct& operator=(const MyStruct&) = default;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -216,7 +217,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
   MyStruct2(const MyStruct2&) = default;
   ::traits::MyStruct2& operator=(const MyStruct2&) = default;
   MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -261,7 +262,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const StructWithAssociatedConst&) = default;
   StructWithAssociatedConst(::crubit::UnsafeRelocateTag,
                             StructWithAssociatedConst&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

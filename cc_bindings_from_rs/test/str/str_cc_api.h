@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -50,7 +51,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   TypeWithStr(const TypeWithStr&) = default;
   ::str::TypeWithStr& operator=(const TypeWithStr&) = default;
   TypeWithStr(::crubit::UnsafeRelocateTag, TypeWithStr&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace stdlib {
@@ -41,7 +42,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

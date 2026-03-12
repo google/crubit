@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -48,7 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   Convert(const Convert&) = delete;
   Convert& operator=(const Convert&) = delete;
   Convert(::crubit::UnsafeRelocateTag, Convert&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=16
@@ -99,7 +100,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   ConvertModule(const ConvertModule&) = delete;
   ConvertModule& operator=(const ConvertModule&) = delete;
   ConvertModule(::crubit::UnsafeRelocateTag, ConvertModule&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=91
@@ -138,7 +139,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   ConvertRef(const ConvertRef&) = delete;
   ConvertRef& operator=(const ConvertRef&) = delete;
   ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -191,7 +192,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe(const NotFfiSafe&) = delete;
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:

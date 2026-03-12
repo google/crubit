@@ -20,6 +20,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -59,7 +60,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   LeafRsEnum(const LeafRsEnum&) = default;
   ::leaf_rs_lib::LeafRsEnum& operator=(const LeafRsEnum&) = default;
   LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -94,7 +95,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   LeafRsType(const LeafRsType&) = default;
   ::leaf_rs_lib::LeafRsType& operator=(const LeafRsType&) = default;
   LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:

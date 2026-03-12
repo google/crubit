@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   AnotherStruct(const AnotherStruct&) = delete;
   AnotherStruct& operator=(const AnotherStruct&) = delete;
   AnotherStruct(::crubit::UnsafeRelocateTag, AnotherStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -76,7 +77,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructGeneric(const StructGeneric&) = delete;
   StructGeneric& operator=(const StructGeneric&) = delete;
   StructGeneric(::crubit::UnsafeRelocateTag, StructGeneric&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

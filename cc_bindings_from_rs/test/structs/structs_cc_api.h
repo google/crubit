@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -51,7 +52,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructFloat(const StructFloat&) = delete;
   StructFloat& operator=(const StructFloat&) = delete;
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -116,7 +117,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructInteger(const StructInteger&) = delete;
   StructInteger& operator=(const StructInteger&) = delete;
   StructInteger(::crubit::UnsafeRelocateTag, StructInteger&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -175,7 +176,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructMemory(const StructMemory&) = delete;
   StructMemory& operator=(const StructMemory&) = delete;
   StructMemory(::crubit::UnsafeRelocateTag, StructMemory&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -238,7 +239,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -301,7 +302,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -341,7 +342,7 @@ struct
   AField(const AField&) = delete;
   AField& operator=(const AField&) = delete;
   AField(::crubit::UnsafeRelocateTag, AField&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -387,7 +388,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -433,7 +434,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -486,7 +487,7 @@ Point final {
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -542,7 +543,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructFloat(const StructFloat&) = delete;
   StructFloat& operator=(const StructFloat&) = delete;
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -614,7 +615,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const StructFloat&);
 
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -681,7 +682,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -737,7 +738,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ZstFields(const ZstFields&) = delete;
   ZstFields& operator=(const ZstFields&) = delete;
   ZstFields(::crubit::UnsafeRelocateTag, ZstFields&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

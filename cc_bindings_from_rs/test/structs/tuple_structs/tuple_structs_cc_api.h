@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -47,7 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::tuple_structs::CloneNoDefault& operator=(const CloneNoDefault&);
 
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -80,7 +81,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CopyNoDefault(const CopyNoDefault&) = default;
   ::tuple_structs::CopyNoDefault& operator=(const CopyNoDefault&) = default;
   CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -125,7 +126,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   DefaultAndCloneNoUnpin(::crubit::UnsafeRelocateTag,
                          DefaultAndCloneNoUnpin&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -159,7 +160,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DefaultNoCopyNoClone& operator=(const DefaultNoCopyNoClone&) = delete;
   DefaultNoCopyNoClone(::crubit::UnsafeRelocateTag,
                        DefaultNoCopyNoClone&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -192,7 +193,7 @@ DontMoveMe final {
   DontMoveMe(const DontMoveMe&) = delete;
   DontMoveMe& operator=(const DontMoveMe&) = delete;
   DontMoveMe(::crubit::UnsafeRelocateTag, DontMoveMe&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -229,7 +230,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructOnePrivateArg&) = default;
   TupleStructOnePrivateArg(::crubit::UnsafeRelocateTag,
                            TupleStructOnePrivateArg&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -284,7 +285,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructOnePublicArg&) = default;
   TupleStructOnePublicArg(::crubit::UnsafeRelocateTag,
                           TupleStructOnePublicArg&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -339,7 +340,7 @@ struct
   TupleStructOnePublicArgOnePrivateArg(
       ::crubit::UnsafeRelocateTag,
       TupleStructOnePublicArgOnePrivateArg&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -397,7 +398,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructTwoPrivateArgs&) = default;
   TupleStructTwoPrivateArgs(::crubit::UnsafeRelocateTag,
                             TupleStructTwoPrivateArgs&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -464,7 +465,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructTwoPublicArgs&) = default;
   TupleStructTwoPublicArgs(::crubit::UnsafeRelocateTag,
                            TupleStructTwoPublicArgs&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -529,7 +530,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructWithCloneNoDefault&) = delete;
   TupleStructWithCloneNoDefault(::crubit::UnsafeRelocateTag,
                                 TupleStructWithCloneNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -585,7 +586,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructWithCppImmovableType&) = delete;
   TupleStructWithCppImmovableType(::crubit::UnsafeRelocateTag,
                                   TupleStructWithCppImmovableType&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -656,7 +657,7 @@ struct
   TupleStructWithDefaultAndCloneNoUnpin(
       ::crubit::UnsafeRelocateTag,
       TupleStructWithDefaultAndCloneNoUnpin&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -714,7 +715,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithDefaultNoCopyNoClone(
       ::crubit::UnsafeRelocateTag,
       TupleStructWithDefaultNoCopyNoClone&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -752,7 +753,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructWithInvalidArgumentType&) = default;
   TupleStructWithInvalidArgumentType(
       ::crubit::UnsafeRelocateTag, TupleStructWithInvalidArgumentType&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -806,7 +807,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithNoDefault& operator=(const TupleStructWithNoDefault&) = delete;
   TupleStructWithNoDefault(::crubit::UnsafeRelocateTag,
                            TupleStructWithNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -844,7 +845,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const TupleStructWithNonExhaustiveCtor&) = default;
   TupleStructWithNonExhaustiveCtor(::crubit::UnsafeRelocateTag,
                                    TupleStructWithNonExhaustiveCtor&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=

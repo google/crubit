@@ -25,6 +25,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -51,7 +52,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
   ::option::CloneNoDefault& operator=(const CloneNoDefault&);
 
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -81,7 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
   CopyNoDefault(const CopyNoDefault&) = default;
   ::option::CopyNoDefault& operator=(const CopyNoDefault&) = default;
   CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -111,7 +112,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   HasDefault(const HasDefault&) = delete;
   HasDefault& operator=(const HasDefault&) = delete;
   HasDefault(::crubit::UnsafeRelocateTag, HasDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -153,7 +154,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   HasNoDefault(const HasNoDefault&) = delete;
   HasNoDefault& operator=(const HasNoDefault&) = delete;
   HasNoDefault(::crubit::UnsafeRelocateTag, HasNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -202,7 +203,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: NonMaxU8") alignas(1)
   NonMaxU8(const NonMaxU8&) = delete;
   NonMaxU8& operator=(const NonMaxU8&) = delete;
   NonMaxU8(::crubit::UnsafeRelocateTag, NonMaxU8&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -241,7 +242,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   OptZst(const OptZst&) = delete;
   OptZst& operator=(const OptZst&) = delete;
   OptZst(::crubit::UnsafeRelocateTag, OptZst&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -281,7 +282,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Option<::option::CloneNoDefault>& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -332,7 +333,7 @@ OptCloneNoDefault final {
   ::option::OptCloneNoDefault& operator=(const OptCloneNoDefault&);
 
   OptCloneNoDefault(::crubit::UnsafeRelocateTag, OptCloneNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -366,7 +367,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Option<::option::CopyNoDefault>& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -415,7 +416,7 @@ OptCopyNoDefault final {
   OptCopyNoDefault(const OptCopyNoDefault&) = default;
   ::option::OptCopyNoDefault& operator=(const OptCopyNoDefault&) = default;
   OptCopyNoDefault(::crubit::UnsafeRelocateTag, OptCopyNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -447,7 +448,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&);
   rs_std::Option<::option::HasDefault>& operator=(Option&&);
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -498,7 +499,7 @@ OptDefaultWithDrop final {
   OptDefaultWithDrop(const OptDefaultWithDrop&) = delete;
   OptDefaultWithDrop& operator=(const OptDefaultWithDrop&) = delete;
   OptDefaultWithDrop(::crubit::UnsafeRelocateTag, OptDefaultWithDrop&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -535,7 +536,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&);
   rs_std::Option<::option::HasNoDefault>& operator=(Option&&);
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -584,7 +585,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   OptNoDefaultWithDrop& operator=(const OptNoDefaultWithDrop&) = delete;
   OptNoDefaultWithDrop(::crubit::UnsafeRelocateTag,
                        OptNoDefaultWithDrop&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -622,7 +623,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Option<::option::HasOptions>& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -664,7 +665,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Option<::option::NonMaxU8>& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -707,7 +708,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
       default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -751,7 +752,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Option<std::uint8_t>& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
@@ -795,7 +796,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   HasOptions(const HasOptions&) = delete;
   HasOptions& operator=(const HasOptions&) = delete;
   HasOptions(::crubit::UnsafeRelocateTag, HasOptions&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -852,7 +853,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
   HasHasOptions(const HasHasOptions&) = delete;
   HasHasOptions& operator=(const HasHasOptions&) = delete;
   HasHasOptions(::crubit::UnsafeRelocateTag, HasHasOptions&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

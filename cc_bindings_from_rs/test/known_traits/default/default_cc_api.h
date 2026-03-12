@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace rs_default::derived_impl {
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -88,7 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -136,7 +137,7 @@ StructWithoutDefault final {
   StructWithoutDefault& operator=(const StructWithoutDefault&) = delete;
   StructWithoutDefault(::crubit::UnsafeRelocateTag,
                        StructWithoutDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
@@ -173,7 +174,7 @@ StructWithFieldWithNoDefault final {
       delete;
   StructWithFieldWithNoDefault(::crubit::UnsafeRelocateTag,
                                StructWithFieldWithNoDefault&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -218,7 +219,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -257,7 +258,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

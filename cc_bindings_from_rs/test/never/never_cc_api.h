@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace never {
@@ -40,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   NeverStruct(const NeverStruct&) = delete;
   NeverStruct& operator=(const NeverStruct&) = delete;
   NeverStruct(::crubit::UnsafeRelocateTag, NeverStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:

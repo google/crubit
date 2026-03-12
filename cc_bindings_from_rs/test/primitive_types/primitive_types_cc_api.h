@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -61,7 +62,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Types(const Types&) = delete;
   Types& operator=(const Types&) = delete;
   Types(::crubit::UnsafeRelocateTag, Types&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
@@ -376,7 +377,7 @@ StructWithCVoidPointerMember final {
       delete;
   StructWithCVoidPointerMember(::crubit::UnsafeRelocateTag,
                                StructWithCVoidPointerMember&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:

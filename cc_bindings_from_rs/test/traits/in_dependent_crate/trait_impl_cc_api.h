@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -45,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -83,7 +84,7 @@ NotImplemented final {
   NotImplemented(const NotImplemented&) = delete;
   NotImplemented& operator=(const NotImplemented&) = delete;
   NotImplemented(::crubit::UnsafeRelocateTag, NotImplemented&& value) {
-    memcpy(this, &value, sizeof(value));
+    std::memcpy(this, &value, sizeof(value));
   }
 
  private:
