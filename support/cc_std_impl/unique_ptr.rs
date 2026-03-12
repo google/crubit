@@ -14,6 +14,10 @@ pub use operator::Delete;
 ///
 /// If the class has a virtual destructor and is not the most-derived class, or if it overloads
 /// `operator delete`, it is UB to use `unique_ptr`. Instead, use [`virtual_unique_ptr`].
+///
+/// Note that `unique_ptr` has "shallow" semantics: having a `&unique_ptr<T>` means that the
+/// `unique_ptr` will not be mutated, but does not guarantee that the underlying `T` will not be
+/// mutated. Therefore, to get access to `T`, you must have exclusive access to the `unique_ptr`.
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct unique_ptr<T: Sized> {
@@ -28,26 +32,10 @@ pub struct unique_ptr<T: Sized> {
 // pointer.
 unsafe impl<T: Sized + Send> Send for unique_ptr<T> {}
 
-// This is _not_ Sync, because we want to be able to pass unique_ptr to C++ in safe code,
-// but the following would have UB in a multithreaded context:
-//
-// ```c++
-// void Foo(const std::unique_ptr<MyClass>& ptr) {
-//   ptr->Mutate();
-// }
-// ```
-//
-// ```rust
-// let ptr : unique_ptr<MyClass> = ...;
-// cpp_lib::Foo(&ptr);
-// ```
-//
-// In other words, because unique_ptr is internally mutable, we have the choice between safely
-// sharing `&unique_ptr` in Rust, or safely calling functions that take a `&unique_ptr`.
-//
-// In either case, we can feel a little bit relieved that it's extraordinarily rare to pass
-// a reference to a unique_ptr. If you want to borrow T, you can unsafely dereference the
-// unique_ptr and obtain a `&T`.
+// SAFETY: unique_ptr has "shallow" semantics, and you cannot do anything with a `&unique_ptr`
+// except pass it to C++, where the unsafe operation of internal mutability requires C++ programmers
+// to prove safety.
+unsafe impl<T: Sized + Sync> Sync for unique_ptr<T> {}
 
 impl<T: Sized> unique_ptr<T> {
     /// Takes ownership of the provided raw pointer.
@@ -70,6 +58,15 @@ impl<T: Sized> unique_ptr<T> {
 
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
+    }
+
+    /// Returns an shared reference to the owned object, if-non-null, or None otherwise.
+    ///
+    /// Note that it is not safe to obtain a `&T` from a `&unique_ptr`, because the pointed-to `T`
+    /// may be mutated when a `&unique_ptr` is shared between C++ and Rust.
+    pub fn as_ref(&mut self) -> Option<&T> {
+        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        unsafe { self.ptr.as_ref() }
     }
 
     /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
@@ -113,6 +110,11 @@ pub type unique_ptr_dyn<T> = virtual_unique_ptr<T>;
 ///
 /// This type is ABI-compatible with C++'s `std::unique_ptr<T>`, where `T` is a base class with a
 /// virtual destructor.
+///
+/// Note that `virtual_unique_ptr` has "shallow" semantics: having a `&virtual_unique_ptr<T>` means that
+/// the `virtual_unique_ptr` will not be mutated, but does not guarantee that the underlying `T` will
+/// not be mutated. Therefore, to get access to `T`, you must have exclusive access to the
+/// `virtual_unique_ptr`.
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct virtual_unique_ptr<T: Sized + Delete> {
@@ -123,11 +125,11 @@ pub struct virtual_unique_ptr<T: Sized + Delete> {
     ptr: *mut T,
 }
 
-// SAFETY: virtual_unique_ptr exclusively owns `T` and adds no additional constraints on sending the
-// pointer.
+// SAFETY: Same as for `unique_ptr`
 unsafe impl<T: Sized + Delete + Send> Send for virtual_unique_ptr<T> {}
 
-// This is _not_ Sync for the same reason as unique_ptr.
+// SAFETY: Same as for `unique_ptr`.
+unsafe impl<T: Sized + Delete + Sync> Sync for virtual_unique_ptr<T> {}
 
 impl<T: Sized + Delete> virtual_unique_ptr<T> {
     /// Takes ownership of the provided raw pointer to a polymorphic type.
@@ -149,6 +151,15 @@ impl<T: Sized + Delete> virtual_unique_ptr<T> {
 
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
+    }
+
+    /// Returns an shared reference to the owned object, if-non-null, or None otherwise.
+    ///
+    /// Note that it is not safe to obtain a `&T` from a `&unique_ptr`, because the pointed-to `T`
+    /// may be mutated when a `&unique_ptr` is shared between C++ and Rust.
+    pub fn as_ref(&mut self) -> Option<&T> {
+        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        unsafe { self.ptr.as_ref() }
     }
 
     /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
