@@ -183,8 +183,8 @@ does not care about the address of `Person`.)
 crubit.rs/cpp/cookbook#renaming
 
 Overloaded functions cannot be called from Rust (yet: b/213280424). To make them
-available anyway, you can define new non-overloaded functions with different
-names:
+available anyway, you can use the `CRUBIT_RUST_NAME` attribute macro to specify
+a unique Rust name for each overload:
 
 ```c++ {.bad}
 void Foo(int x);
@@ -192,13 +192,12 @@ void Foo(float x);
 ```
 
 ```c++ {.good}
-void Foo(int x);
-void Foo(float x);
+#include "support/annotations.h"
 
-// For Rust callers: crubit.rs/cpp/cookbook#renaming
-inline void FooInt(int x) {return Foo(x);}
-// For Rust callers: crubit.rs/cpp/cookbook#renaming
-inline void FooFloat(float x) {return Foo(x);}
+CRUBIT_RUST_NAME("FooInt")
+void Foo(int x);
+CRUBIT_RUST_NAME("FooFloat")
+void Foo(float x);
 ```
 
 ## Thread-safety {#thread_safety}
@@ -312,16 +311,24 @@ The following workarounds can help get you moving again:
 ### Disable Crubit on a declaration {#disable-declaration}
 
 If a declaration causes hard failures within Crubit, that declaration alone can
-be disabled using the CRUBIT_DO_NOT_BIND attribute macro, defined in
-support/annotations.h. This must be paired with an additional entry in
-rs_bindings_from_cc/bazel_support/generate_bindings.bzl, recording the name of the item.
+be disabled using the `CRUBIT_DO_NOT_BIND` attribute macro:
 
-To mail the CL performing this change, use <internal link>_manage: add
-`AUTO_MANAGE=testing:TGP` to the CL description.
+```c++
+#include "support/annotations.h"
 
-NOTE: By disabling Crubit on this declaration, items which depend on it may
-also, in turn, not receive bindings. For example, if it declares a type, then
-functions which accept or return that type will also not receive bindings.
+CRUBIT_DO_NOT_BIND  // b/123: Crubit crashes on std::crash_rust_plz_t
+void foo(std::crash_rust_plz_t*);
+```
+
+> NOTE: By disabling Crubit on this declaration, items which depend on it may
+> also, in turn, not receive bindings. For example, if it declares a type, then
+> functions which accept or return that type will also not receive bindings.
+>
+> For that reason, except for functions, `CRUBIT_DO_NOT_BIND` requires modifying
+> an allowlist at
+> rs_bindings_from_cc/bazel_support/generate_bindings.bzl.
+> Changes to that file are most easily mailed using <internal link>_manage: add
+> `AUTO_MANAGE=testing:TGP` to the CL description.
 
 ### Disable Crubit on a header {#disable-header}
 
