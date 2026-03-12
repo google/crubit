@@ -212,7 +212,6 @@ impl<'a> LifetimeDefaults<'a> {
     fn add_lifetime_to_input_type(
         &mut self,
         is_this: bool,
-        is_constructor: bool,
         name_hint: Option<&Rc<str>>,
         new_bindings: &mut Vec<Rc<str>>,
         ty: &CcType,
@@ -232,7 +231,6 @@ impl<'a> LifetimeDefaults<'a> {
             }
             CcTypeVariant::Pointer(pty) if is_this || pty.kind == PointerTypeKind::LValueRef => {
                 let LifetimeResult { ty: pointee_type, .. } = self.add_lifetime_to_input_type(
-                    false,
                     false,
                     name_hint,
                     new_bindings,
@@ -460,7 +458,6 @@ impl<'a> LifetimeDefaults<'a> {
             let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
                 self.add_lifetime_to_input_type(
                     is_this,
-                    is_constructor,
                     Some(&param.identifier.identifier),
                     &mut new_func.lifetime_inputs,
                     &param.type_,
