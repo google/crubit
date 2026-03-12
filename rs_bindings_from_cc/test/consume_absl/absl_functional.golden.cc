@@ -25,19 +25,19 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+__crubit_invoker_IFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::rs_std::internal_dyn_callable::TypeErasedState* state);
 extern "C" void
-__crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+__crubit_manager_IFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to);
 
 extern "C" int
-__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+__crubit_invoker_IKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::rs_std::internal_dyn_callable::TypeErasedState* state, int param_0);
 extern "C" void
-__crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+__crubit_manager_IKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to);
@@ -51,11 +51,11 @@ __rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIF
           [](absl::internal_any_invocable::FunctionToCall operation,
              absl::internal_any_invocable::TypeErasedState* from,
              absl::internal_any_invocable::TypeErasedState* to) noexcept {
-            __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+            __crubit_manager_IFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
                 operation, from, to);
           },
           [](::rs_std::internal_dyn_callable::TypeErasedState* state) -> void {
-            __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+            __crubit_invoker_IFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
                 state);
           })
           .Decode(__f_decoder));
@@ -72,12 +72,12 @@ extern "C" void __rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(
       [](absl::internal_any_invocable::FunctionToCall operation,
          absl::internal_any_invocable::TypeErasedState* from,
          absl::internal_any_invocable::TypeErasedState* to) noexcept {
-        __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        __crubit_manager_IKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
             operation, from, to);
       },
       [](::rs_std::internal_dyn_callable::TypeErasedState* state,
          int param_0) -> int {
-        return __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        return __crubit_invoker_IKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
             state, param_0);
       })
       .Encode(absl_functional_internal::ReturnIntVoid(), __return_encoder);
