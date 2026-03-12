@@ -6,7 +6,7 @@
 
 use crate::code_snippet::{Feature, Visibility};
 use crate::BindingsGenerator;
-use arc_anyhow::Result;
+use arc_anyhow::{anyhow, Result};
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
 use crubit_feature::CrubitFeature;
@@ -666,6 +666,25 @@ impl BridgeRsTypeKind {
             }
             BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {
                 let target_identifier = record.owning_target.convert_to_cc_identifier();
+                let mangled_callable_signature: &str = {
+                    let backing_type_name = match backing_type {
+                        ir::BackingType::DynCallable => "DynCallable",
+                        ir::BackingType::AnyInvocable => "AnyInvocable",
+                    };
+                    record
+                        .rs_name
+                        .identifier
+                        .as_ref()
+                        .split_once(backing_type_name)
+                        .ok_or_else(|| {
+                            anyhow!(
+                                "crubit.rs-bug: Failed to split on `{}` in the name: {}",
+                                backing_type_name,
+                                record.rs_name.identifier.as_ref()
+                            )
+                        })?
+                        .1
+                };
                 BridgeRsTypeKind::Callable(Rc::new(Callable {
                     backing_type,
                     fn_trait: match fn_trait {
@@ -679,14 +698,10 @@ impl BridgeRsTypeKind {
                         .map(|param_type| db.rs_type_kind(param_type.clone()))
                         .collect::<Result<_>>()?,
                     invoker_ident: format_ident!(
-                        "__crubit_invoker_{}{}",
-                        record.rs_name.identifier.as_ref(),
-                        target_identifier,
+                        "__crubit_invoker_{mangled_callable_signature}{target_identifier}"
                     ),
                     manager_ident: format_ident!(
-                        "__crubit_manager_{}{}",
-                        record.rs_name.identifier.as_ref(),
-                        target_identifier,
+                        "__crubit_manager_{mangled_callable_signature}{target_identifier}"
                     ),
                 }))
             }

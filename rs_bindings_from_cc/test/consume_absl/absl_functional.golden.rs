@@ -602,7 +602,7 @@ mod detail {
         );
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    unsafe extern "C" fn __crubit_invoker_IFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
@@ -617,7 +617,7 @@ mod detail {
         })();
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    unsafe extern "C" fn __crubit_manager_IFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         operation: ::dyn_callable_rs::FunctionToCall,
         from: *mut ::alloc::boxed::Box<
             dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
@@ -629,7 +629,7 @@ mod detail {
         ::dyn_callable_rs::manager(operation, from, to);
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    unsafe extern "C" fn __crubit_invoker_IKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
                 + ::core::marker::Send
@@ -641,7 +641,7 @@ mod detail {
         (unsafe { &*f })(param_0)
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    unsafe extern "C" fn __crubit_manager_IKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         operation: ::dyn_callable_rs::FunctionToCall,
         from: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
