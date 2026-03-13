@@ -1000,7 +1000,7 @@ impl RsTypeKind {
                         );
                     }
                 }
-                RsTypeKind::IncompleteRecord { incomplete_record, .. } => require_feature(
+                RsTypeKind::IncompleteRecord { incomplete_record: _, .. } => require_feature(
                     CrubitFeature::Wrapper,
                     Some(&|| "forward declared types are not yet supported".into()),
                 ),

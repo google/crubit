@@ -163,72 +163,72 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_type_names
         fn resolve_type_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>>;
+    }
+}
 
-        #[provided]
-        /// Returns the generated bindings for the given enum.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
-        fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets> {
-            (self.codegen_functions().generate_enum)(self, enum_)
+impl BindingsGenerator<'_> {
+    /// Returns the generated bindings for the given enum.
+    ///
+    /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
+    pub fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets> {
+        (self.codegen_functions().generate_enum)(self, enum_)
+    }
+
+    /// Returns the generated bindings for an item, or `Err` if bindings generation
+    /// failed in such a way as to make the generated bindings as a whole invalid.
+    ///
+    /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
+    pub fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets> {
+        (self.codegen_functions().generate_item)(self, item)
+    }
+
+    /// Returns the generated bindings for the given record, along with associated safety
+    /// assertions.
+    ///
+    /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
+    pub fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets> {
+        (self.codegen_functions().generate_record)(self, record)
+    }
+
+    /// Returns the Rust type kind of the given C++ type.
+    ///
+    /// This differs from `rs_type_kind_with_lifetime_elision` in that it replaces references
+    /// with missing lifetimes with pointer types.
+    pub fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
+        self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
+    }
+
+    /// Returns true if an ItemId refers to a function that cannot receive bindings, because
+    /// it is overloaded and ambiguous.
+    ///
+    /// This does not include functions that are overloaded, where all but one overload is
+    /// deprecated.
+    pub fn is_ambiguous_function(&self, function_id: &FunctionId, item_id: ir::ItemId) -> bool {
+        match self.overload_sets().get(function_id) {
+            None => false,
+            Some(id) => *id != Some(item_id),
         }
+    }
 
-        #[provided]
-        /// Returns the generated bindings for an item, or `Err` if bindings generation
-        /// failed in such a way as to make the generated bindings as a whole invalid.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
-        fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets> {
-            (self.codegen_functions().generate_item)(self, item)
-        }
-
-        #[provided]
-        /// Returns the generated bindings for the given record, along with associated safety
-        /// assertions.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
-        fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets> {
-            (self.codegen_functions().generate_record)(self, record)
-        }
-
-        #[provided]
-        /// Returns the Rust type kind of the given C++ type.
-        ///
-        /// This differs from `rs_type_kind_with_lifetime_elision` in that it replaces references
-        /// with missing lifetimes with pointer types.
-        fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
-            self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
-        }
-
-        #[provided]
-        /// Returns true if an ItemId refers to a function that cannot receive bindings, because
-        /// it is overloaded and ambiguous.
-        ///
-        /// This does not include functions that are overloaded, where all but one overload is
-        /// deprecated.
-        fn is_ambiguous_function(&self, function_id: &FunctionId, item_id: ir::ItemId) -> bool {
-            match self.overload_sets().get(function_id) {
-                None => false,
-                Some(id) => *id != Some(item_id),
+    /// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
+    pub fn type_visibility(
+        &self,
+        library: &BazelLabel,
+        rs_type_kind: RsTypeKind,
+    ) -> Result<Visibility> {
+        match self.type_target_restriction(rs_type_kind.clone())? {
+            Some(label) if &label != library => {
+                let rs_type_kind = rs_type_kind.display(self);
+                Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
             }
-        }
-
-        #[provided]
-        /// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
-        fn type_visibility(&self, library: &BazelLabel, rs_type_kind: RsTypeKind) -> Result<Visibility> {
-            match self.type_target_restriction(rs_type_kind.clone())? {
-                Some(label) if &label != library => {
-                    let rs_type_kind = rs_type_kind.display(self);
-                    Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
-                }
-                Some(_) => Ok(Visibility::PubCrate),
-                None => {
-                    for subtype in rs_type_kind.dfs_iter() {
-                        if let RsTypeKind::Error { visibility_override, .. } = subtype {
-                            return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
-                        }
+            Some(_) => Ok(Visibility::PubCrate),
+            None => {
+                for subtype in rs_type_kind.dfs_iter() {
+                    if let RsTypeKind::Error { visibility_override, .. } = subtype {
+                        return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
                     }
-                    Ok(Visibility::Public)
                 }
+                Ok(Visibility::Public)
             }
         }
     }
