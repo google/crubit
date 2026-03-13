@@ -1254,7 +1254,8 @@ pub(crate) fn generate_fields<'tcx>(
                             let ty = field_def.ty(tcx, adt_generic_args);
                             let size = get_layout(tcx, ty).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
-                                if is_bridged_type(db, ty)?.is_some()
+                                if is_bridged_type(db, ty)
+                                    .is_ok_and(|bridged_type| bridged_type.is_some())
                                     && !ty
                                         .ty_adt_def()
                                         .and_then(|adt_def| BridgedBuiltin::new(db, adt_def))

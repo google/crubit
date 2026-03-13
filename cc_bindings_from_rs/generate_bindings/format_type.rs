@@ -277,27 +277,20 @@ pub fn format_ty_for_cc<'tcx>(
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
-            if let Some(bridged_type) = is_bridged_type(db, ty)? {
-                if !location.is_bridgeable() {
-                    if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, adt) {
-                        let arg = substs.type_at(0);
-                        let ty_tokens = db
-                            .format_ty_for_cc(arg, TypeLocation::Other)?
-                            .resolve_feature_requirements(crate::crate_features(
-                                db,
-                                db.source_crate_num(),
-                            ))?
-                            .into_tokens(&mut prereqs);
-                        prereqs.template_specializations.insert(
-                            TemplateSpecialization::RsStdOption { arg_ty: arg, self_ty: ty },
-                        );
-                        prereqs.includes.insert(db.support_header("rs_std/option.h"));
-                        return Ok(CcSnippet {
-                            tokens: quote! { rs_std::Option<#ty_tokens> },
-                            prereqs,
-                        });
-                    }
-                }
+            if BridgedBuiltin::new(db, adt).is_some_and(|builtin| {
+                matches!(builtin, BridgedBuiltin::Option) && !location.is_bridgeable()
+            }) {
+                let arg = substs.type_at(0);
+                let ty_tokens = db
+                    .format_ty_for_cc(arg, TypeLocation::Other)?
+                    .resolve_feature_requirements(crate::crate_features(db, db.source_crate_num()))?
+                    .into_tokens(&mut prereqs);
+                prereqs
+                    .template_specializations
+                    .insert(TemplateSpecialization::RsStdOption { arg_ty: arg, self_ty: ty });
+                prereqs.includes.insert(db.support_header("rs_std/option.h"));
+                return Ok(CcSnippet { tokens: quote! { rs_std::Option<#ty_tokens> }, prereqs });
+            } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 ensure!(
                     location.is_bridgeable(),
                     "Bridged types must appear in a bridgeable type location"
@@ -978,6 +971,14 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 
                 // It's just a regular old type.
                 // Question: do we need to check that it doesn't have any generics?
+
+                ensure!(
+                    db.has_move_ctor_and_assignment_operator(
+                        adt.did(),
+                        db.tcx().type_of(adt.did()).instantiate(db.tcx(), substs)
+                    ).is_some(),
+                    "Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator."
+                );
 
                 CrubitAbiType::Transmute {
                     rust_type: {
