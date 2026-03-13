@@ -917,8 +917,18 @@ static void modelGetReferenceableValue(const CallExpr& CE, Environment& Env) {
   if (!CE.isGLValue()) return;
   assert(CE.getNumArgs() == 1);
   assert(CE.getArg(0) != nullptr);
-  if (StorageLocation* Loc = Env.getStorageLocation(*CE.getArg(0)))
+  if (StorageLocation* Loc = Env.getStorageLocation(*CE.getArg(0))) {
     Env.setStorageLocation(CE, *Loc);
+    // Normally, we do unpackPointerValue during an LValueToRValue conversion
+    // for raw pointers (smart pointers are already unpacked during
+    // ensureSmartPointerInitialized). Since the result of GetReferenceableValue
+    // is passed to a helper function (`CheckNE_Impl`), the LValueToRValue
+    // cast is in the separate function and not in the current function.
+    // Unpack as if the LValueToRValue happens in the current function.
+    if (isSupportedRawPointerType(CE.getArg(0)->getType())) {
+      unpackPointerValue(*Loc, Env);
+    }
+  }
 }
 
 // Models the Abseil-logging `CheckNE_Impl` function. Essentially, associates
