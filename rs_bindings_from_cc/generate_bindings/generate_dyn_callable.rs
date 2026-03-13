@@ -97,13 +97,7 @@ pub fn dyn_callable_crubit_abi_type(
         // Construct the DynCallableAbi value with a pointer to the invoker function.
         quote! {
             #cpp_type_tokens(
-                [](
-                    absl::internal_any_invocable::FunctionToCall operation,
-                    absl::internal_any_invocable::TypeErasedState* from,
-                    absl::internal_any_invocable::TypeErasedState* to
-                ) noexcept {
-                    #manager_ident(operation, from, to);
-                },
+                #manager_ident,
                 #invoker_function_pointer
             )
         }

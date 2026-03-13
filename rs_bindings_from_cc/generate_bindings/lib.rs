@@ -1268,7 +1268,7 @@ fn generate_dyn_callable_invoker_and_manager_decls(
             ::absl::internal_any_invocable::FunctionToCall operation,
             ::absl::internal_any_invocable::TypeErasedState* from,
             ::absl::internal_any_invocable::TypeErasedState* to
-        );
+        ) noexcept;
         __NEWLINE__ __NEWLINE__
     })
 }

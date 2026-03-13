@@ -31,7 +31,7 @@ extern "C" void
 __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
-    ::absl::internal_any_invocable::TypeErasedState* to);
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" int
 __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
@@ -40,7 +40,7 @@ extern "C" void
 __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
-    ::absl::internal_any_invocable::TypeErasedState* to);
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
 __rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIFvvOEEE(
@@ -48,12 +48,7 @@ __rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIF
   ::crubit::Decoder __f_decoder(::crubit::AnyInvocableAbi<void() &&>::kSize, f);
   absl_functional_internal::CallVoidVoid(
       ::crubit::AnyInvocableAbi<void() &&>(
-          [](absl::internal_any_invocable::FunctionToCall operation,
-             absl::internal_any_invocable::TypeErasedState* from,
-             absl::internal_any_invocable::TypeErasedState* to) noexcept {
-            __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
-                operation, from, to);
-          },
+          __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
           [](::rs_std::internal_dyn_callable::TypeErasedState* state) -> void {
             __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
                 state);
@@ -69,12 +64,7 @@ extern "C" void __rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(
   ::crubit::Encoder __return_encoder(
       ::crubit::AnyInvocableAbi<int(int) const>::kSize, __return_abi_buffer);
   ::crubit::AnyInvocableAbi<int(int) const>(
-      [](absl::internal_any_invocable::FunctionToCall operation,
-         absl::internal_any_invocable::TypeErasedState* from,
-         absl::internal_any_invocable::TypeErasedState* to) noexcept {
-        __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
-            operation, from, to);
-      },
+      __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
       [](::rs_std::internal_dyn_callable::TypeErasedState* state,
          int param_0) -> int {
         return __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
