@@ -2,6 +2,7 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//build_integration:build_integration.bzl", "bazel_to_builds")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
@@ -273,5 +274,20 @@ cpp_api_from_rust_toolchain_bindings(
     deps = [
         ":rs_alloc",
         ":rs_core",
+    ],
+)
+
+bazel_to_builds(
+    name = "generate_cmake",
+    cmake = "CMakeLists.txt",
+    targets = [
+        ":char",
+        ":slice_ref",
+        ":str_ref",
+        ":dyn_callable",
+        ":traits",
+        ":option",
+        ":result",
+        ":lossy_formatter_for_bindings",
     ],
 )
