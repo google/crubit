@@ -42,7 +42,7 @@ use database::code_snippet::{
 };
 use database::{
     AdtCoreBindings, ExportedPath, FineGrainedFeature, FullyQualifiedName, NoMoveOrAssign,
-    PublicPaths, TypeLocation, UnqualifiedName,
+    PublicPaths, TransitiveReexport, TypeLocation, UnqualifiedName,
 };
 pub use database::{BindingsGenerator, CopyCtorStyle, IncludeGuard, MoveCtorStyle};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
@@ -214,6 +214,8 @@ pub fn new_database<'db>(
         symbol_unqualified_name,
         symbol_canonical_name,
         public_paths_by_def_id,
+        transitive_reexports_by_def_id,
+        transitive_reexports,
         format_cc_ident_symbol,
         format_top_level_ns_for_crate,
         format_type::format_ty_for_cc,
@@ -230,6 +232,7 @@ pub fn new_database<'db>(
         generate_adt_core,
         crubit_abi_type_from_ty,
         from_trait_impls_by_argument,
+        renamed_crate_original_name,
     )
 }
 
@@ -374,10 +377,10 @@ fn format_with_cc_body(
     Ok(tokens)
 }
 
-/// Implementation of `BindingsGenerator::public_paths_by_def_id`.
-fn public_paths_by_def_id(
+fn public_paths_by_def_id_impl(
     db: &BindingsGenerator<'_>,
     crate_num: CrateNum,
+    filter: impl Fn(DefId, Option<DefId>) -> bool,
 ) -> HashMap<DefId, PublicPaths> {
     /// This is retooled logic from rustc's `visible_parent_map` function. Except where that only
     /// selects the shortest visible path, we track all paths and defer selecting the correct one
@@ -460,12 +463,14 @@ fn public_paths_by_def_id(
             type_alias_def_id,
             is_doc_hidden,
         };
-        use std::collections::hash_map::Entry;
-        match visible_parent_map.entry(def_id) {
-            Entry::Vacant(vacant) => {
-                vacant.insert(PublicPaths::new(path));
+        if filter(def_id, type_alias_def_id) {
+            use std::collections::hash_map::Entry;
+            match visible_parent_map.entry(def_id) {
+                Entry::Vacant(vacant) => {
+                    vacant.insert(PublicPaths::new(path));
+                }
+                Entry::Occupied(mut occupied) => occupied.get_mut().insert(path),
             }
-            Entry::Occupied(mut occupied) => occupied.get_mut().insert(path),
         }
         // TODO: b/459865403 - Support bindings for `pub extern crate core`.
         let is_extern_crate_core = |child: &ModChild| {
@@ -493,6 +498,57 @@ fn public_paths_by_def_id(
     }
 
     visible_parent_map
+}
+
+/// Implementation of `BindingsGenerator::public_paths_by_def_id`.
+fn public_paths_by_def_id(
+    db: &BindingsGenerator<'_>,
+    crate_num: CrateNum,
+) -> HashMap<DefId, PublicPaths> {
+    public_paths_by_def_id_impl(db, crate_num, |_, _| true)
+}
+
+/// Implementation of `BindingsGenerator::transitive_reexports_by_def_id`.
+fn transitive_reexports_by_def_id(
+    db: &BindingsGenerator<'_>,
+    crate_num: CrateNum,
+) -> HashMap<DefId, PublicPaths> {
+    let tcx = db.tcx();
+    public_paths_by_def_id_impl(db, crate_num, |def_id, type_alias_def_id| {
+        type_alias_def_id.is_none() && def_id.krate != crate_num
+    })
+}
+
+/// Implementation of `BindingsGenerator::transitive_reexports`.
+fn transitive_reexports(db: &BindingsGenerator<'_>) -> HashMap<DefId, Vec<TransitiveReexport>> {
+    let mut output = HashMap::new();
+    let tcx = db.tcx();
+    db.crate_name_to_include_paths()
+        .keys()
+        .filter_map(|crate_name| {
+            tcx.used_crates(()).iter().find(|&&krate| {
+                crate_name.as_ref()
+                    == db
+                        .renamed_crate_original_name(krate)
+                        .unwrap_or_else(|| Rc::from(tcx.crate_name(krate).as_str()))
+                        .as_ref()
+            })
+        })
+        .flat_map(|&krate| {
+            let reexports = db.transitive_reexports_by_def_id(krate);
+            reexports
+                .into_iter()
+                .map(move |(def_id, paths)| (def_id, TransitiveReexport { krate, paths }))
+        })
+        .for_each(|(def_id, reexport)| {
+            let vec: &mut Vec<TransitiveReexport> = output.entry(def_id).or_default();
+            // We sort by crate num to ensure our ordering here is consistent.
+            if let Err(index) = vec.binary_search_by_key(&reexport.krate, |reexport| reexport.krate)
+            {
+                vec.insert(index, reexport);
+            }
+        });
+    output
 }
 
 fn module_children(tcx: TyCtxt<'_>, parent: DefId) -> &[ModChild] {
@@ -543,6 +599,17 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
     Some(UnqualifiedName { cpp_name, rs_name, cpp_type })
 }
 
+fn renamed_crate_original_name(db: &BindingsGenerator<'_>, krate_id: CrateNum) -> Option<Rc<str>> {
+    let tcx = db.tcx();
+    let crate_name = tcx.crate_name(krate_id);
+    for (name, renamed) in db.crate_renames().iter() {
+        if renamed.as_ref() == crate_name.as_str() {
+            return Some(name.clone());
+        }
+    }
+    return None;
+}
+
 /// Implementation of `BindingsGenerator::symbol_canonical_name`.
 fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<FullyQualifiedName> {
     let tcx = db.tcx();
@@ -552,13 +619,33 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     // canonical name.
     let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
 
-    let (full_path_strs, type_alias_def_id) = {
-        // If our definition is at a path that can't be spelled, we have to pick a path from our
-        // aliases.
-        let paths = db.public_paths_by_def_id(def_id.krate);
+    let (full_path_strs, type_alias_def_id, krate_id) = {
+        let is_importable_crate = def_id.krate == db.source_crate_num()
+            || db.crate_name_to_include_paths().contains_key(db.renamed_crate_original_name(def_id.krate)
+                .unwrap_or_else(|| Rc::from(tcx.crate_name(def_id.krate).as_str())).as_ref())
+            // TODO - b/391443811: We don't need this workaround once we bind `std`, `core`, and `alloc`.
+            || {
+                let sym = tcx.crate_name(def_id.krate);
+                let name = sym.as_str();
+                name == "std" || name == "core" || name == "alloc" || name == "proc_macro"
+            };
+        let (paths, krate) = if is_importable_crate {
+            // If our definition is at a path that can't be spelled, we have to pick a path from our
+            // aliases.
+            let paths = db.public_paths_by_def_id(def_id.krate);
 
-        // If our definition has no public spellings, we can't give it a canonical name.
-        let paths = paths.get(&def_id)?;
+            // If our definition has no public spellings, we can't give it a canonical name.
+            (paths.get(&def_id).cloned()?, def_id.krate)
+        } else {
+            // Our definition might be a transitive reexport, so we need to check if any of the
+            // dependencies have a spelling for this definition. This is expensive, so we only do it
+            // for DefIds we know aren't in the source crate or a direct dependency.
+            let trans_reexports = db.transitive_reexports();
+            trans_reexports
+                .get(&def_id)
+                .and_then(|reexports| reexports.first())
+                .map(|reexport| (reexport.paths.clone(), reexport.krate))?
+        };
 
         // Select a canonical path for this symbol from available paths.
         // Our paths are kept in sorted order, so the canonical path will be the first one.
@@ -569,6 +656,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         (
             canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
             canonical_path.type_alias_def_id,
+            krate,
         )
     };
 
@@ -593,7 +681,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         .then_some(())
         .and_then(|_| db.source_crate_name())
         .map(|source_crate_name| Symbol::intern(source_crate_name.as_ref()))
-        .unwrap_or_else(|| tcx.crate_name(def_id.krate));
+        .unwrap_or_else(|| tcx.crate_name(krate_id));
 
     if krate.as_str() == "polars_plan"
         && matches!(unqualified.rs_name.as_str(), "date_range" | "time_range")
@@ -625,7 +713,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
     let cpp_ns_path =
         NamespaceQualifier::new(full_path_strs.into_iter().map(rename_clang_builtin_macros));
-    let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
+    let cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_id);
     Some(FullyQualifiedName { krate, cpp_top_level_ns, cpp_ns_path, rs_mod_path, unqualified })
 }
 

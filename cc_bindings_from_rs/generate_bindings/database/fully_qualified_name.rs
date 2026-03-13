@@ -9,7 +9,7 @@ use arc_anyhow::Result;
 use code_gen_utils::{format_cc_type_name, make_rs_ident, NamespaceQualifier};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use rustc_span::def_id::DefId;
+use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
 use std::rc::Rc;
 
@@ -203,4 +203,10 @@ impl PublicPaths {
         self.aliases.insert(0, self.canonical_path);
         self.aliases
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TransitiveReexport {
+    pub krate: CrateNum,
+    pub paths: PublicPaths,
 }
