@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:free_function
-// Features: assume_lifetimes, supported
+// Features: assume_lifetimes, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]

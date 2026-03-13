@@ -973,7 +973,7 @@ impl RsTypeKind {
             match rs_type_kind {
                 RsTypeKind::Error { error, visibility_override, .. } => {
                     if visibility_override.is_some() {
-                        require_feature(CrubitFeature::Supported, None)
+                        require_feature(CrubitFeature::Types, None)
                     } else {
                         require_feature(
                             CrubitFeature::Wrapper,
@@ -981,7 +981,7 @@ impl RsTypeKind {
                         )
                     }
                 }
-                RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::Types, None),
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     require_feature(
                         CrubitFeature::Experimental,
@@ -990,7 +990,7 @@ impl RsTypeKind {
                 }
                 RsTypeKind::FuncPtr { cc_calling_conv, .. } => {
                     if *cc_calling_conv == CcCallingConv::C {
-                        require_feature(CrubitFeature::Supported, None);
+                        require_feature(CrubitFeature::Types, None);
                     } else {
                         require_feature(
                             CrubitFeature::Experimental,
@@ -1020,7 +1020,7 @@ impl RsTypeKind {
                     // instantiations.
 
                     if uniform_repr_template_type.is_some() || record.has_unique_owning_target() {
-                        require_feature(CrubitFeature::Supported, None);
+                        require_feature(CrubitFeature::Types, None);
                     } else {
                         require_feature(
                             CrubitFeature::Wrapper,
@@ -1028,11 +1028,6 @@ impl RsTypeKind {
                         )
                     }
                 }
-                RsTypeKind::Enum { .. } => require_feature(CrubitFeature::Supported, None),
-                // the alias itself is supported, but the overall features require depends on the
-                // aliased type, which is also visited by dfs_iter.
-                RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::Supported, None),
-                RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::BridgeType { bridge_type, original_type } => {
                     let is_pointer_bridge =
                         matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
@@ -1043,10 +1038,13 @@ impl RsTypeKind {
                             Some(&|| "bridged template instantiation is not yet supported".into()),
                         )
                     } else {
-                        require_feature(CrubitFeature::Supported, None)
+                        require_feature(CrubitFeature::Types, None)
                     }
                 }
-                RsTypeKind::ExistingRustType(_) => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::ExistingRustType(_)
+                | RsTypeKind::Enum { .. }
+                | RsTypeKind::TypeAlias { .. }
+                | RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Types, None),
             }
         }
         (missing_features, reasons.into_iter().join(", "))

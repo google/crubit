@@ -43,6 +43,18 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
+# A rust_api_from_cpp feature which only enables bindings for types.
+#
+# If `types` is enabled, but `supported` is not, then named functions and methods will not receive
+# bindings. However, constructors, destructors, and operators will still receive bindings, as these
+# are essential for working with values of the provided type.
+crubit_feature_hint(
+    name = "types",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = ["types"],
+    visibility = ["//visibility:public"],
+)
+
 # Explicitly disables assume_lifetimes for a target.
 #
 # See crubit.rs-features#other

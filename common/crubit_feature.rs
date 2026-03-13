@@ -18,6 +18,10 @@ flagset::flags! {
 
         Wrapper,
 
+        /// Enable support for types, but not necessarily functions.
+        /// This is automatically enabled by `Supported`.
+        Types,
+
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -56,6 +60,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
+            Self::Types => "types",
             Self::Experimental => "experimental",
             Self::AssumeLifetimes => "assume_lifetimes",
             Self::AssumeThisLifetime => "assume_this_lifetimes",
@@ -74,6 +79,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "//features:supported",
             Self::Wrapper => "//features:wrapper",
+            Self::Types => "//features:types",
             Self::Experimental => "//features:experimental",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
             Self::AssumeThisLifetime => "//features:assume_this_lifetimes",
@@ -93,8 +99,10 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
     let features = match name {
         // LINT.IfChange
         b"all" => flagset::FlagSet::<CrubitFeature>::full() - CrubitFeature::NoAssumeLifetimes,
-        b"supported" => CrubitFeature::Supported.into(),
+        // `supported` automatically implies `types`.
+        b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
         b"wrapper" => CrubitFeature::Wrapper.into(),
+        b"types" => CrubitFeature::Types.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         b"assume_this_lifetimes" => CrubitFeature::AssumeThisLifetime.into(),

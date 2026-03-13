@@ -35,6 +35,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticIDs.h"
@@ -176,10 +177,25 @@ Identifier FunctionDeclImporter::GetTranslatedParamName(
   return Identifier(std::string((*name).rs_identifier().Ident()));
 }
 
+namespace {
+
+bool FunctionNameIsIdentifier(clang::FunctionDecl& function_decl) {
+  return function_decl.getDeclName().getNameKind() ==
+         clang::DeclarationName::Identifier;
+}
+
+}  // namespace
+
 std::optional<IR::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
+  const bool only_import_types =
+      ictx_.IsFeatureEnabledForCurrentTarget("types") &&
+      !ictx_.IsFeatureEnabledForCurrentTarget("supported");
+  if (only_import_types && FunctionNameIsIdentifier(*function_decl)) {
+    return std::nullopt;
+  }
   if (IsInStdNamespace(function_decl)) {
     if (clang::IdentifierInfo* id = function_decl->getIdentifier();
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
