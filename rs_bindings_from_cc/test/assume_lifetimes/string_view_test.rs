@@ -18,6 +18,8 @@ fn string_view_sink_test() {
     let sv4: ccsv = "gnirts".into();
     string_view::explicit_lifetime_string_view(sv4);
 
-    let raw_sv: raw_string_view = string_view::ambiguous_string_view_return("a".into(), "b".into());
-    let ok_sv: ccsv = string_view::unambiguous_string_view_return_annotated("a".into(), "b".into());
+    let _raw_sv: raw_string_view =
+        string_view::ambiguous_string_view_return("a".into(), "b".into());
+    let _ok_sv: ccsv =
+        string_view::unambiguous_string_view_return_annotated("a".into(), "b".into());
 }

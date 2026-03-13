@@ -61,7 +61,7 @@ fn test_properly_greet_stuff() {
 #[gtest]
 fn test_string_view_by_value() {
     fn live(value: cc_std::std::string_view<'static>) -> &'static [u8] {
-        unsafe { &*value.as_bytes() }
+        &*value.as_bytes()
     }
     expect_eq!(live(StringViewByValue("Hello".into())), b"Hello");
 }
@@ -139,8 +139,8 @@ fn test_composable_bridge_with_virtual_destructor() {
     let statusor = composable_bridging_lib::MakeStatusOrWithVirtualDestructor();
     assert!(statusor.is_ok());
 
-    let vector = composable_bridging_lib::MakeVectorWithVirtualDestructor();
-    let span = composable_bridging_lib::MakeSpanWithVirtualDestructor();
+    let _vector = composable_bridging_lib::MakeVectorWithVirtualDestructor();
+    let _span = composable_bridging_lib::MakeSpanWithVirtualDestructor();
 
     let optional = composable_bridging_lib::MakeOptionalWithVirtualDestructor();
     assert!(optional.is_some());
