@@ -1199,7 +1199,7 @@ impl RsTypeKind {
                 // TODO(jeanpierreda): provide end-user-facing docs, and insert a link to e.g.
                 // something like crubit.rs-self-lifetime
                 bail!(
-                    "`self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function."
+                    "`self` has no lifetime. Use lifetime annotations to create bindings for this function."
                 )
             }
             RsTypeKind::Reference { referent, lifetime, mutability } => {
