@@ -65,6 +65,27 @@ TEST void checkNERightSmartPointer(std::unique_ptr<int> P) {
   nonnull(P);
 }
 
+// Test where a loop can result in Top pointer null states.
+// Make sure we can still do a null check after the loop, despite the Top
+// null state.
+TEST void checkNEAfterLoop(int* _Nullable P, int Bound, bool B) {
+  int X = 17;
+  for (int I = 0; I < Bound; ++I) {
+    if (B) P = &X;
+  }
+  CHECK_NE(P, nullptr);
+  nonnull(P);
+}
+
+TEST void checkNEAfterLoopSmartPointer(_Nullable std::unique_ptr<int> P,
+                                       int Bound, bool B) {
+  for (int I = 0; I < Bound; ++I) {
+    if (B) P = std::make_unique<int>(17);
+  }
+  CHECK_NE(P, nullptr);
+  nonnull(P);
+}
+
 TEST void utilCheckNEImplModelEqualAndNull() {
   int *P = nullptr;
   // `P` is definitely equal to `nullptr`, so result is nonnull.
