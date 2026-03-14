@@ -24,5 +24,6 @@ cpp_api_from_rust_lib = { path = "../../../cargo/cc_bindings_from_rs/cpp_api_fro
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 cargo_metadata.workspace = true
 clap.workspace = true
+clap_cargo.workspace = true
 [dev-dependencies]
 tempfile.workspace = true

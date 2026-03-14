@@ -21,6 +21,8 @@ resolver = "2"
 anyhow = "1"
 base64 = "0.22"
 clap = { version = "4", features = [ "derive" ] }
+clap-cargo = "0.12"
+clap_cargo = { package = "clap-cargo", version = "0.12", features = [ "clap", "cargo_metadata" ] }
 cargo_metadata = "0.23"
 either = "1"
 flagset = "0.4"
