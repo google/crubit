@@ -772,12 +772,11 @@ impl RsTypeKind {
         // unit, we don't know if the record is incomplete from the point of view of the alias.
         // For example, perhaps the alias is to a forward declaration, and then later, we completed
         // the forward declaration.
-        if let RsTypeKind::Record { record, .. } = &underlying_type {
-            if record.owning_target != type_alias.owning_target
-                && record.defining_target(ir) != Some(&type_alias.owning_target)
-            {
-                return Ok(underlying_type);
-            }
+        if let RsTypeKind::Record { record, .. } = &underlying_type
+            && record.owning_target != type_alias.owning_target
+            && db.defining_target(record.id()).as_ref() != Some(&type_alias.owning_target)
+        {
+            return Ok(underlying_type);
         }
         let crate_path = Rc::new(CratePath::new(
             &ir,
@@ -1000,7 +999,7 @@ impl RsTypeKind {
                         );
                     }
                 }
-                RsTypeKind::IncompleteRecord { incomplete_record, .. } => require_feature(
+                RsTypeKind::IncompleteRecord { incomplete_record: _, .. } => require_feature(
                     CrubitFeature::Wrapper,
                     Some(&|| "forward declared types are not yet supported".into()),
                 ),
@@ -1815,8 +1814,7 @@ fn fully_qualify_type<'a>(
     type_expression: &str,
 ) -> TokenStream {
     let root_crate = || {
-        let target =
-            item.defining_target(db.ir()).cloned().or_else(|| item.owning_target()).unwrap();
+        let target = db.defining_target(item.id()).or_else(|| item.owning_target()).unwrap();
         if db.ir().is_current_target(&target) {
             quote! { crate }
         } else {

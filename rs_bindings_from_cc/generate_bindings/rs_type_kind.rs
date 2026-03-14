@@ -149,7 +149,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 let error: Error;
                 let unsupported_alias_error = || {
                     use ir::GenericItem;
-                    anyhow!("Unsupported type alias {name}", name = item.debug_name(db.ir()))
+                    anyhow!("Unsupported type alias {name}", name = db.debug_name(item.id()))
                 };
                 // Alias fallbacks: type aliases are unique among items, in that if the item
                 // defining the alias fails to receive bindings, we can still use the aliased type.

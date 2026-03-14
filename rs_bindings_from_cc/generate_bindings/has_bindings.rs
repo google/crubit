@@ -33,7 +33,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
         }
         Err(error) => {
             return Err(NoBindingsReason::DependencyFailed {
-                context: item.debug_name(&db.ir()),
+                context: db.debug_name(item.id()),
                 error,
             });
         }
@@ -44,7 +44,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
 
         if let Err(no_parent_bindings) = db.has_bindings(parent.clone()) {
             return Err(NoBindingsReason::DependencyFailed {
-                context: item.debug_name(ir),
+                context: db.debug_name(item.id()),
                 error: no_parent_bindings.into(),
             });
         }
@@ -55,7 +55,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                 // The parent check ensures that all ancestors are checked as well.
                 if parent_record.template_specialization.is_some() {
                     return Err(NoBindingsReason::Unsupported {
-                        context: item.debug_name(ir),
+                        context: db.debug_name(item.id()),
                         error: anyhow!(
                             "b/485949049: type definitions nested inside templated records are not yet supported"
                         ),
@@ -79,15 +79,15 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
 
                 let resolved_type_name = resolved_type_names.get(&parent_module_name).ok_or_else(||
                     NoBindingsReason::DependencyFailed {
-                        context: item.debug_name(ir),
+                        context: db.debug_name(item.id()),
                         error: anyhow!(
                             "crubit.rs/errors/nested_type: Could not find parent's module name.\
                             \n  This is a bug. The parent's module name should always be\
                             \n  in the list. More info:\
                             \n    for item: {item_name}\
                             \n    inside parent module {parent_module_name} (originally {parent_name})",
-                            item_name = item.debug_name(ir),
-                            parent_name = parent.debug_name(ir),
+                            item_name = db.debug_name(item.id()),
+                            parent_name = db.debug_name(parent.id()),
                         ),
                     })?;
                 let ResolvedTypeName::RecordNestedItems { parent_records_that_map_to_this_name } =
@@ -125,7 +125,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
     if let Item::Enum(enum_) = &item {
         if enum_.enumerators.is_none() {
             return Err(NoBindingsReason::Unsupported {
-                context: enum_.debug_name(ir),
+                context: db.debug_name(enum_.id()),
                 error: anyhow!(
                     "b/322391132: Forward-declared (opaque) enums are not implemented yet"
                 ),
@@ -139,19 +139,19 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
         // Not even forward declarations help. You just can't do `enum Foo: Something<Foo>;`.
         if let Err(error) = db.rs_type_kind(enum_.underlying_type.clone()) {
             return Err(NoBindingsReason::DependencyFailed {
-                context: enum_.debug_name(ir),
+                context: db.debug_name(enum_.id()),
                 error,
             });
         }
     }
     // Require that the underlying type exists. Otherwise, the constant can't.
-    if let Item::Constant(constant) = &item {
-        if let Err(error) = db.rs_type_kind(constant.type_.clone()) {
-            return Err(NoBindingsReason::DependencyFailed {
-                context: constant.debug_name(ir),
-                error,
-            });
-        }
+    if let Item::Constant(constant) = &item
+        && let Err(error) = db.rs_type_kind(constant.type_.clone())
+    {
+        return Err(NoBindingsReason::DependencyFailed {
+            context: db.debug_name(constant.id()),
+            error,
+        });
     }
 
     // TODO(b/392882224): Records might not generated if an error occurs in generation.
@@ -178,19 +178,20 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                     if matches!(item, Item::TypeAlias(_)) && rs_type_kind.unalias().is_bridge_type()
                     {
                         return Err(NoBindingsReason::Unsupported {
-                            context: item.debug_name(ir),
+                            context: db.debug_name(item.id()),
                             error: anyhow!(
                                 "Type alias for {cpp_type} suppressed due to being a bridge type",
-                                cpp_type = item.debug_name(ir),
+                                cpp_type = db.debug_name(item.id()),
                             ),
                         });
                     }
                     let visibility = type_visibility(db, &item, rs_type_kind)?;
                     Ok(BindingsInfo { visibility })
                 }
-                Err(error) => {
-                    Err(NoBindingsReason::DependencyFailed { context: item.debug_name(ir), error })
-                }
+                Err(error) => Err(NoBindingsReason::DependencyFailed {
+                    context: db.debug_name(item.id()),
+                    error,
+                }),
             }
         }
         // Global variables receive bindings if the underlying type is visible.
@@ -200,7 +201,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                 Ok(BindingsInfo { visibility })
             }
             Err(error) => {
-                Err(NoBindingsReason::DependencyFailed { context: item.debug_name(ir), error })
+                Err(NoBindingsReason::DependencyFailed { context: db.debug_name(item.id()), error })
             }
         },
         // Other items are public.
@@ -219,7 +220,7 @@ fn func_has_bindings(
 ) -> Result<BindingsInfo, NoBindingsReason> {
     if func.is_consteval {
         return Err(NoBindingsReason::Unsupported {
-            context: func.debug_name(db.ir()),
+            context: db.debug_name(func.id()),
             error: anyhow!("consteval functions are not supported"),
         });
     }
@@ -236,7 +237,7 @@ fn func_has_bindings(
     {
         missing_features.push(RequiredCrubitFeature {
             target: target.clone(),
-            item: func.debug_name(ir),
+            item: db.debug_name(func.id()),
             missing_features: crubit_feature::CrubitFeature::Experimental.into(),
             capability_description:
                 "b/248542210: template instantiation of member function cannot reliably get bindings".into(),
