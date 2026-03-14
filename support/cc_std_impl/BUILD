@@ -11,7 +11,10 @@ package(default_applicable_licenses = ["//:license"])
 
 filegroup(
     name = "extra_rs_srcs_for_cc_std",
-    srcs = ["slice_ptr.rs"],
+    srcs = [
+        "lossy_utf8.rs",
+        "slice_ptr.rs",
+    ],
     compatible_with = [
         "//buildenv/target:non_prod",
     ],
