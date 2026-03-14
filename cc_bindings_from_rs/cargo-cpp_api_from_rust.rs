@@ -23,12 +23,30 @@
 #![feature(never_type)]
 
 use arc_anyhow::{anyhow, bail, Error, Result};
-use cargo_metadata::{Message, MetadataCommand};
+use cargo_metadata::camino::Utf8PathBuf;
+use cargo_metadata::Message;
+use clap::Parser;
 use cmdline::Cmdline;
 
 use std::env;
 use std::ffi;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
+
+#[derive(Debug, Parser)]
+#[clap(name = "cargo-cpp_api_from_rust")]
+#[clap(about = "Generates C++ bindings for a Cargo project", long_about = None)]
+#[command(styles = clap_cargo::style::CLAP_STYLING)]
+struct Cli {
+    #[command(flatten)]
+    manifest: clap_cargo::Manifest,
+    #[command(flatten)]
+    features: clap_cargo::Features,
+    #[arg(long, value_name = "DIRECTORY")]
+    target_dir: Option<Utf8PathBuf>,
+    #[arg(last = true)]
+    build_args: Vec<String>,
+}
 
 // TODO(b/448731652): This should support passthrough for arbitrary cargo commandline flags that
 // one might want to specify. This is important both for building target package initially, and
@@ -39,12 +57,17 @@ fn main() -> Result<()> {
     //! 1. Build the target Rust crate, outputting an rlib file.
     //! 2. Run `cpp_api_from_rust` on the rlib file, outputting C++, rs, and h files.
     //! 3. Build a static lib out of the rs file generated in step 2.
-    let metadata = MetadataCommand::new().exec().unwrap();
+    let mut env_args = std::env::args();
+    env_args.next(); // Remove the binary name.
+    let cli = Cli::try_parse_from(env_args)?;
+    let mut metadata = cli.manifest.metadata();
+    cli.features.forward_metadata(&mut metadata);
+    let metadata = metadata.exec()?;
 
     let root = metadata.root_package().ok_or_else(|| anyhow!("Failed to find root package"))?;
 
     let edition = root.edition;
-    let source_crate_name = root.name.as_ref();
+    let source_crate_name: &str = root.name.as_ref();
 
     let mut args = vec![
         // Make up a binary name for our call. This will get removed by Cmdline, so it doesn't matter
@@ -55,12 +78,32 @@ fn main() -> Result<()> {
         "--enable-rmeta-interface".to_string(),
     ];
 
+    let mut build_args = vec![];
+    let mut target_dir = &metadata.target_directory;
+    if let Some(cli_target_dir) = &cli.target_dir {
+        build_args.push(format!("--target-dir={}", cli_target_dir));
+        target_dir = cli_target_dir;
+    }
+    if let Some(manifest_path) = &cli.manifest.manifest_path {
+        build_args.push(format!("--manifest-path={}", manifest_path.display()));
+    }
+    if cli.features.all_features {
+        build_args.push("--all-features".to_string());
+    }
+    if cli.features.no_default_features {
+        build_args.push("--no-default-features".to_string());
+    }
+    if !cli.features.features.is_empty() {
+        build_args.push(format!("--features={}", cli.features.features.join(",")));
+    }
+    build_args.extend(cli.build_args);
+
     // Step 1: Build the target Rust crate, outputting an rlib file.
-    // TODO: Include cargo flags in this from our own args.
-    let mut command = Command::new(cargo_bin())
-        //We build, instead of check, because we need the rlib output to compile out final
-        // staticlib.
-        .args(&["build", "--message-format=json"])
+    let mut build_command = Command::new(cargo_bin());
+    build_command.args(["build", "--message-format=json"]);
+    build_command.args(&build_args);
+
+    let mut command = build_command
         .stdout(Stdio::piped())
         .spawn()
         .map_err(|err| anyhow!("Failed to spawn cargo: {}", err))?;
@@ -92,7 +135,7 @@ fn main() -> Result<()> {
         let name = artifact.target.name;
         if name == source_crate_name {
             profile_dir = filename
-                .strip_prefix(&metadata.target_directory)
+                .strip_prefix(&target_dir)
                 .ok()
                 .and_then(|path| path.components().next())
                 .map(|component| component.as_str().to_owned());
@@ -112,7 +155,8 @@ fn main() -> Result<()> {
         );
     };
 
-    let out_dir = metadata.target_directory.join(profile_dir);
+    let out_dir = target_dir.join(&profile_dir);
+
     args.extend([
         format!("--h-out={}", out_dir.join(format!("{}.h", source_crate_name))),
         format!("--rs-out={}", out_dir.join(format!("{}_cc_api_impl.rs", source_crate_name))),
@@ -120,8 +164,16 @@ fn main() -> Result<()> {
         format!("-Ldependency={}", out_dir.join("deps")),
     ]);
 
-    // Wait on `cargo check` to finish to ensure all our files are generated.
-    command.wait().map_err(|err| anyhow!("Failed to wait for cargo: {}", err))?;
+    // Wait on `cargo build` to finish to ensure all our files are generated.
+    let cargo_output =
+        command.wait_with_output().map_err(|err| anyhow!("Failed to wait for cargo: {}", err))?;
+    if !cargo_output.status.success() {
+        println!("{}", String::from_utf8_lossy(&cargo_output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&cargo_output.stderr));
+        bail!("cargo build failed");
+    } else {
+        println!("cargo suceeded");
+    }
 
     // Step 2: Run `cpp_api_from_rust` on the rlib file, outputting C++, rs, and h files.
     Cmdline::new(&args)
@@ -140,7 +192,7 @@ fn main() -> Result<()> {
         })?;
 
     // Step 3: Build a static lib out of the rs file generated in step 2.
-    let rustc_args = vec![
+    let mut rustc_args = vec![
         "rustc".to_string(),
         out_dir.join(format!("{}_cc_api_impl.rs", source_crate_name)).to_string(),
         format!("--edition={}", edition),

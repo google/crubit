@@ -57,6 +57,7 @@ crubit_rust_binary(
         "//common:arc_anyhow",
         "@crate_index//:cargo_metadata",  # v0_23
         "@crate_index//:clap",  # v4
+        "@crate_index//:clap_cargo",  # v0_12
     ],
 )
 

@@ -4,12 +4,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-#[test] // allow_core_test
-fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
-    let tmp_dir = tempfile::tempdir()?;
-    let cwd = std::env::current_dir()?;
-    let project_dir = cwd.join("tests/test_project");
-
+fn setup_command(tmp_dir: &tempfile::TempDir, project_dir: &std::path::Path) -> Command {
     // Locate the cargo-cpp_api_from_rust binary.
     let binary_path = PathBuf::from(env!("CARGO_BIN_EXE_cargo-cpp_api_from_rust"));
 
@@ -22,9 +17,19 @@ fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut cmd = Command::new(env!("CARGO"));
 
-    cmd.current_dir(&project_dir);
+    cmd.current_dir(project_dir);
     cmd.env("CARGO_TARGET_DIR", tmp_dir.path().display().to_string());
     cmd.env("PATH", new_path);
+    cmd
+}
+
+#[test] // allow_core_test
+fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_project");
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
     cmd.arg("cpp_api_from_rust");
 
     let output = cmd.output().expect("Failed to execute");
@@ -43,6 +48,64 @@ fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
     assert!(target_dir.join("debug/test_project_cc_api_impl.rs").exists());
     assert!(target_dir.join("debug/test_project.cpp").exists());
     assert!(target_dir.join("debug/libtest_project.a").exists());
+
+    Ok(())
+}
+
+#[test] // allow_core_test
+fn test_subcommand_target_dir() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_project");
+    let explicit_target_dir = tmp_dir.path().join("explicit_target_dir");
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+    cmd.arg("--target-dir");
+    cmd.arg(&explicit_target_dir);
+
+    let output = cmd.output().expect("Failed to execute");
+
+    if !output.status.success() {
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        panic!("cargo-cpp_api_from_rust failed");
+    }
+
+    // Verify output files in the explicit target dir
+    assert!(explicit_target_dir.join("debug/test_project.h").exists());
+    assert!(explicit_target_dir.join("debug/test_project_cc_api_impl.rs").exists());
+    assert!(explicit_target_dir.join("debug/test_project.cpp").exists());
+    assert!(explicit_target_dir.join("debug/libtest_project.a").exists());
+
+    Ok(())
+}
+
+#[test] // allow_core_test
+fn test_subcommand_build_args() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_project");
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+    cmd.arg("--");
+    cmd.arg("--profile=release");
+
+    let output = cmd.output().expect("Failed to execute");
+
+    if !output.status.success() {
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        panic!("cargo-cpp_api_from_rust failed");
+    }
+
+    // Verify output files in the release directory
+    let target_dir = tmp_dir.path();
+    assert!(target_dir.join("release/test_project.h").exists());
+    assert!(target_dir.join("release/test_project_cc_api_impl.rs").exists());
+    assert!(target_dir.join("release/test_project.cpp").exists());
+    assert!(target_dir.join("release/libtest_project.a").exists());
 
     Ok(())
 }
