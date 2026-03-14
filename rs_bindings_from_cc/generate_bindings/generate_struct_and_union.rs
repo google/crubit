@@ -115,7 +115,9 @@ fn get_field_rs_type_kind_for_layout(
         Ok(Some(unknown_attr)) => {
             // Both the template definition and its instantiation should enable experimental
             // features.
-            for target in record.defining_target(ir).into_iter().chain([&record.owning_target]) {
+            for target in
+                db.defining_target(record.id()).as_ref().into_iter().chain([&record.owning_target])
+            {
                 let enabled_features = ir.target_crubit_features(target);
                 ensure!(
                     enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
@@ -136,7 +138,9 @@ fn get_field_rs_type_kind_for_layout(
         bail!("Bridge-by-value types are not supported in struct fields.")
     }
 
-    for target in record.defining_target(ir).into_iter().chain([&record.owning_target]) {
+    for target in
+        db.defining_target(record.id()).as_ref().into_iter().chain([&record.owning_target])
+    {
         let enabled_features = ir.target_crubit_features(target);
         let (missing_features, reason) = type_kind.required_crubit_features(enabled_features);
         ensure!(missing_features.is_empty(), reason);
@@ -148,7 +152,9 @@ fn get_field_rs_type_kind_for_layout(
     //
     // Users can still work around this with accessor functions.
     if record.should_implement_drop() && !record.is_union() && needs_manually_drop(&type_kind) {
-        for target in record.defining_target(ir).into_iter().chain([&record.owning_target]) {
+        for target in
+            db.defining_target(record.id()).as_ref().into_iter().chain([&record.owning_target])
+        {
             let enabled_features = ir.target_crubit_features(target);
             ensure!(
                 enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
@@ -581,7 +587,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     .iter()
     .filter_map(|unambiguous_base_class_member_function| -> Option<ApiSnippets> {
         let item = ir.find_untyped_decl(unambiguous_base_class_member_function.id);
-        let _scope = item.error_scope(db.ir(), db.errors());
+        let _scope = db.error_scope(item.id());
         let Item::Func(ir_func) = item else { panic!("Unexpected item type: {:?}", item) };
         let generated_func =
             db.generate_function(ir_func.clone(), Some(record.clone())).ok().flatten()?;
@@ -607,8 +613,8 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     // Both the template definition and its instantiation should enable experimental
     // features.
     let mut crubit_features = ir.target_crubit_features(&record.owning_target);
-    if let Some(defining_target) = record.defining_target(ir) {
-        crubit_features |= ir.target_crubit_features(defining_target);
+    if let Some(defining_target) = db.defining_target(record.id()) {
+        crubit_features |= ir.target_crubit_features(&defining_target);
     }
     let mut upcast_impls = vec![];
     let assume_lifetimes = crubit_features.contains(crubit_feature::CrubitFeature::AssumeLifetimes);

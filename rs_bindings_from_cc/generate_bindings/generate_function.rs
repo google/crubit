@@ -1441,7 +1441,7 @@ pub fn generate_function(
     func: Rc<Func>,
     derived_record: Option<Rc<Record>>,
 ) -> Result<Option<GeneratedFunction>> {
-    let _scope = ir::Item::Func(func.clone()).error_scope(db.ir(), db.errors());
+    let _scope = db.error_scope(func.id);
     db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();

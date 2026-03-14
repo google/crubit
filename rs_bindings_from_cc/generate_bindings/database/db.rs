@@ -7,11 +7,11 @@ use crate::code_snippet::{
 };
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::{LifetimeOptions, RsTypeKind, Safety};
-use arc_anyhow::{anyhow, Result};
+use arc_anyhow::{anyhow, Error, Result};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
-use ir::{BazelLabel, CcType, Enum, Field, Func, Record, UnqualifiedIdentifier, IR};
+use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -163,73 +163,271 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_type_names
         fn resolve_type_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>>;
+    }
+}
 
-        #[provided]
-        /// Returns the generated bindings for the given enum.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
-        fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets> {
-            (self.codegen_functions().generate_enum)(self, enum_)
+impl BindingsGenerator<'_> {
+    /// Returns the generated bindings for the given enum.
+    ///
+    /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
+    pub fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets> {
+        (self.codegen_functions().generate_enum)(self, enum_)
+    }
+
+    /// Returns the generated bindings for an item, or `Err` if bindings generation
+    /// failed in such a way as to make the generated bindings as a whole invalid.
+    ///
+    /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
+    pub fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets> {
+        (self.codegen_functions().generate_item)(self, item)
+    }
+
+    /// Returns the generated bindings for the given record, along with associated safety
+    /// assertions.
+    ///
+    /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
+    pub fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets> {
+        (self.codegen_functions().generate_record)(self, record)
+    }
+
+    /// Returns the Rust type kind of the given C++ type.
+    ///
+    /// This differs from `rs_type_kind_with_lifetime_elision` in that it replaces references
+    /// with missing lifetimes with pointer types.
+    pub fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
+        self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
+    }
+
+    /// Returns true if an ItemId refers to a function that cannot receive bindings, because
+    /// it is overloaded and ambiguous.
+    ///
+    /// This does not include functions that are overloaded, where all but one overload is
+    /// deprecated.
+    pub fn is_ambiguous_function(&self, function_id: &FunctionId, item_id: ir::ItemId) -> bool {
+        match self.overload_sets().get(function_id) {
+            None => false,
+            Some(id) => *id != Some(item_id),
         }
+    }
 
-        #[provided]
-        /// Returns the generated bindings for an item, or `Err` if bindings generation
-        /// failed in such a way as to make the generated bindings as a whole invalid.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
-        fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets> {
-            (self.codegen_functions().generate_item)(self, item)
-        }
-
-        #[provided]
-        /// Returns the generated bindings for the given record, along with associated safety
-        /// assertions.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
-        fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets> {
-            (self.codegen_functions().generate_record)(self, record)
-        }
-
-        #[provided]
-        /// Returns the Rust type kind of the given C++ type.
-        ///
-        /// This differs from `rs_type_kind_with_lifetime_elision` in that it replaces references
-        /// with missing lifetimes with pointer types.
-        fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
-            self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
-        }
-
-        #[provided]
-        /// Returns true if an ItemId refers to a function that cannot receive bindings, because
-        /// it is overloaded and ambiguous.
-        ///
-        /// This does not include functions that are overloaded, where all but one overload is
-        /// deprecated.
-        fn is_ambiguous_function(&self, function_id: &FunctionId, item_id: ir::ItemId) -> bool {
-            match self.overload_sets().get(function_id) {
-                None => false,
-                Some(id) => *id != Some(item_id),
+    /// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
+    pub fn type_visibility(
+        &self,
+        library: &BazelLabel,
+        rs_type_kind: RsTypeKind,
+    ) -> Result<Visibility> {
+        match self.type_target_restriction(rs_type_kind.clone())? {
+            Some(label) if &label != library => {
+                let rs_type_kind = rs_type_kind.display(self);
+                Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
             }
-        }
-
-        #[provided]
-        /// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
-        fn type_visibility(&self, library: &BazelLabel, rs_type_kind: RsTypeKind) -> Result<Visibility> {
-            match self.type_target_restriction(rs_type_kind.clone())? {
-                Some(label) if &label != library => {
-                    let rs_type_kind = rs_type_kind.display(self);
-                    Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
-                }
-                Some(_) => Ok(Visibility::PubCrate),
-                None => {
-                    for subtype in rs_type_kind.dfs_iter() {
-                        if let RsTypeKind::Error { visibility_override, .. } = subtype {
-                            return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
-                        }
+            Some(_) => Ok(Visibility::PubCrate),
+            None => {
+                for subtype in rs_type_kind.dfs_iter() {
+                    if let RsTypeKind::Error { visibility_override, .. } = subtype {
+                        return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
                     }
-                    Ok(Visibility::Public)
                 }
+                Ok(Visibility::Public)
             }
         }
+    }
+}
+
+impl<'db> BindingsGenerator<'db> {
+    pub fn defining_target(&self, item_id: ir::ItemId) -> Option<ir::BazelLabel> {
+        let ir = self.ir();
+        let item = ir.find_untyped_decl(item_id);
+        match item {
+            ir::Item::Func(f) => {
+                if let Some(parent_id) = f.enclosing_item_id
+                    && let Ok(record) = ir.find_decl::<std::rc::Rc<ir::Record>>(parent_id)
+                {
+                    return self.defining_target(record.id);
+                }
+                None
+            }
+            ir::Item::Record(r) => {
+                r.template_specialization.as_ref().map(|ts| ts.defining_target.clone())
+            }
+            ir::Item::UnsupportedItem(ui) => ui.defining_target.clone(),
+            _ => None,
+        }
+    }
+
+    pub fn debug_name(&self, item_id: ir::ItemId) -> std::rc::Rc<str> {
+        let ir = self.ir();
+        let item = ir.find_untyped_decl(item_id);
+        match item {
+            ir::Item::Func(f) => {
+                let mut name = ir.namespace_qualifier_from_id(f.id).format_for_cc_debug();
+                let record_name = || -> Option<std::rc::Rc<str>> {
+                    if let Some(parent_id) = f.enclosing_item_id {
+                        match ir.find_untyped_decl(parent_id) {
+                            ir::Item::ExistingRustType(existing_rust_type) => {
+                                Some(existing_rust_type.cc_name.clone())
+                            }
+                            ir::Item::Record(record) => Some(record.cc_name.identifier.clone()),
+                            ir::Item::IncompleteRecord(record) => {
+                                Some(record.cc_name.identifier.clone())
+                            }
+                            _ => None,
+                        }
+                    } else {
+                        None
+                    }
+                };
+
+                match &f.cc_name {
+                    ir::UnqualifiedIdentifier::Identifier(id) => {
+                        name.push_str(&id.identifier);
+                    }
+                    ir::UnqualifiedIdentifier::Operator(op) => {
+                        name.push_str(&op.cc_name());
+                    }
+                    ir::UnqualifiedIdentifier::Destructor => {
+                        name.push('~');
+                        name.push_str(
+                            &record_name().expect("destructor must be associated with a record"),
+                        );
+                    }
+                    ir::UnqualifiedIdentifier::Constructor => {
+                        name.push_str(
+                            &record_name().expect("constructor must be associated with a record"),
+                        );
+                    }
+                }
+                name.into()
+            }
+            ir::Item::Comment(c) => format!(
+                "<[internal] comment at {}>",
+                c.source_loc().as_deref().unwrap_or("<unknown loc>")
+            )
+            .into(),
+            ir::Item::UseMod(u) => {
+                format!("<[internal] use mod {}::* = {}>", u.mod_name, u.path).into()
+            }
+            ir::Item::ExistingRustType(e) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(e.id).format_for_cc_debug(),
+                e.cc_name
+            )
+            .into(),
+            ir::Item::UnsupportedItem(ui) => ui.name.clone(),
+            ir::Item::Namespace(n) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(n.id).format_for_cc_debug(),
+                n.rs_name.identifier
+            )
+            .into(),
+            ir::Item::IncompleteRecord(r) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(r.id).format_for_cc_debug(),
+                r.cc_name.identifier
+            )
+            .into(),
+            ir::Item::Record(r) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(r.id).format_for_cc_debug(),
+                r.cc_name.identifier
+            )
+            .into(),
+            ir::Item::Enum(e) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(e.id).format_for_cc_debug(),
+                e.cc_name.identifier
+            )
+            .into(),
+            ir::Item::Constant(c) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(c.id).format_for_cc_debug(),
+                c.cc_name.identifier
+            )
+            .into(),
+            ir::Item::GlobalVar(g) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(g.id).format_for_cc_debug(),
+                g.cc_name.identifier
+            )
+            .into(),
+            ir::Item::TypeAlias(t) => format!(
+                "{}{}",
+                ir.namespace_qualifier_from_id(t.id).format_for_cc_debug(),
+                t.cc_name.identifier
+            )
+            .into(),
+        }
+    }
+
+    pub fn new_unsupported_item(
+        &self,
+        item: &impl GenericItem,
+        path: Option<ir::UnsupportedItemPath>,
+        error: Option<Rc<ir::FormattedError>>,
+        cause: Option<Error>,
+        must_bind: bool,
+    ) -> ir::UnsupportedItem {
+        ir::UnsupportedItem::new_raw(
+            self.debug_name(item.id()),
+            item.unique_name(),
+            item.unsupported_kind(),
+            item.id(),
+            item.source_loc(),
+            self.defining_target(item.id()),
+            must_bind,
+            path,
+            error,
+            cause,
+        )
+    }
+
+    pub fn new_unsupported_item_with_static_message(
+        &self,
+        item: &impl GenericItem,
+        path: Option<ir::UnsupportedItemPath>,
+        message: &'static str,
+    ) -> ir::UnsupportedItem {
+        self.new_unsupported_item(
+            item,
+            path,
+            Some(Rc::new(ir::FormattedError { fmt: message.into(), message: message.into() })),
+            None,
+            item.must_bind(),
+        )
+    }
+
+    pub fn new_unsupported_item_with_cause(
+        &self,
+        item: &impl GenericItem,
+        path: Option<ir::UnsupportedItemPath>,
+        cause: Error,
+    ) -> ir::UnsupportedItem {
+        self.new_unsupported_item(item, path, None, Some(cause), item.must_bind())
+    }
+
+    pub fn error_item_name(&self, item_id: ir::ItemId) -> error_report::ItemName {
+        let name = self.debug_name(item_id);
+        let item = self.ir().find_untyped_decl(item_id);
+        error_report::ItemName {
+            name,
+            id: item.id().as_u64(),
+            unique_name: item.unique_name(),
+            defining_target: self
+                .defining_target(item.id())
+                .map(|ir::BazelLabel(label)| std::rc::Rc::clone(&label)),
+        }
+    }
+
+    pub fn error_scope<'a>(&'a self, item_id: ir::ItemId) -> Option<error_report::ItemScope<'a>> {
+        let item = self.ir().find_untyped_decl(item_id);
+        if matches!(item, ir::Item::Comment(_) | ir::Item::UseMod(_)) {
+            None
+        } else {
+            Some(error_report::ItemScope::new(self.errors(), self.error_item_name(item_id)))
+        }
+    }
+
+    pub fn assert_in_error_scope(&self, item_id: ir::ItemId) {
+        self.errors().assert_in_item(self.error_item_name(item_id));
     }
 }

@@ -116,12 +116,6 @@ impl ir::GenericItem for TestItem {
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
-    fn defining_target<'a>(&'a self, _ir: &'a IR) -> Option<&'a BazelLabel> {
-        None
-    }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        "test_item".into()
-    }
     fn source_loc(&self) -> Option<Rc<str>> {
         self.source_loc.clone()
     }
@@ -143,8 +137,23 @@ struct TestDbFactory {
 }
 impl TestDbFactory {
     fn new() -> Self {
+        let test_item = UnsupportedItem::new_raw(
+            "test_item".into(),
+            None,
+            UnsupportedItemKind::Other,
+            TEST_ITEM_ID,
+            Some("Generated from: some/header;l=1".into()),
+            None,
+            false,
+            /* path= */ None,
+            Some(Rc::new(ir::FormattedError {
+                fmt: "unsupported_message".into(),
+                message: "unsupported_message".into(),
+            })),
+            None,
+        );
         Self {
-            ir: make_ir_from_items([]),
+            ir: make_ir_from_items([test_item.into()]),
             errors: ErrorReport::new(SourceLanguage::Cpp),
             fatal_errors: FatalErrors::new(),
         }
@@ -175,8 +184,7 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     );
     let actual = generate_unsupported(
         &db,
-        UnsupportedItem::new_with_static_message(
-            &db.ir(),
+        db.new_unsupported_item_with_static_message(
             &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
             /* path= */ None,
             "unsupported_message",
@@ -208,8 +216,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     );
     let actual = generate_unsupported(
         &db,
-        UnsupportedItem::new_with_static_message(
-            &db.ir(),
+        db.new_unsupported_item_with_static_message(
             &TestItem { source_loc: None },
             /* path= */ None,
             "unsupported_message",
@@ -238,8 +245,7 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     );
     let actual = generate_unsupported(
         &db,
-        UnsupportedItem::new_with_static_message(
-            &db.ir(),
+        db.new_unsupported_item_with_static_message(
             &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
             /* path= */ None,
             "unsupported_message",

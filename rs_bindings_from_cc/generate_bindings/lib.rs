@@ -248,7 +248,7 @@ fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
             return Ok(ApiSnippets::default());
         }
     }
-    let _scope = item.error_scope(db.ir(), db.errors());
+    let _scope = db.error_scope(item.id());
     let err = match generate_item_impl(db, &item) {
         Ok(generated) => return Ok(generated),
         Err(err) => err,
@@ -262,8 +262,7 @@ fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
 
     // FIXME(cramertj): get paths here in more cases. It may be that
     // `generate_item_impl` failed in such a way that the path is still available.
-    let unsupported_item =
-        UnsupportedItem::new_with_cause(db.ir(), &item, /* path= */ None, err);
+    let unsupported_item = db.new_unsupported_item_with_cause(&item, /* path= */ None, err);
 
     Ok(generate_unsupported(db, unsupported_item.into()))
 }
@@ -340,7 +339,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
             let disable_comment = format!(
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type_kind})",
-                cpp_type = existing_rust_type.debug_name(db.ir()),
+                cpp_type = db.debug_name(existing_rust_type.id()),
                 rs_type_kind = rs_type_kind.display(db),
             );
             let assertions = existing_rust_type
@@ -1023,10 +1022,11 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             }
             BridgeRsTypeKind::ProtoMessageBridge { .. } => {
                 let ir = db.ir();
-                let target =
-                    original_type.defining_target(ir).unwrap_or(&original_type.owning_target);
+                let target = db
+                    .defining_target(original_type.id())
+                    .unwrap_or_else(|| original_type.owning_target.clone());
                 let rust_abi_path =
-                    make_rust_abi_path_from_str("ProtoMessageRustBridge", ir, target);
+                    make_rust_abi_path_from_str("ProtoMessageRustBridge", ir, &target);
 
                 let cpp_namespace_qualifier = ir.namespace_qualifier(original_type.as_ref());
 
@@ -1040,16 +1040,17 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                     rust_proto_path: make_rust_abi_path_from_str(
                         original_type.rs_name.identifier.as_ref(),
                         ir,
-                        target,
+                        &target,
                     ),
                     cpp_proto_path: make_cpp_abi_path_from_str(&merged_cpp_abi_path)?,
                 })
             }
             BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
                 let ir = db.ir();
-                let target =
-                    original_type.defining_target(ir).unwrap_or(&original_type.owning_target);
-                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, ir, target);
+                let target = db
+                    .defining_target(original_type.id())
+                    .unwrap_or_else(|| original_type.owning_target.clone());
+                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, ir, &target);
 
                 let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
 
