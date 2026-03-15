@@ -218,7 +218,7 @@ pub fn required_crubit_features(
                 // particular case, it's safe.
                 require_any_feature(
                     &mut missing_features,
-                    crubit_feature::CrubitFeature::Supported.into(),
+                    crubit_feature::CrubitFeature::Types.into(),
                     &|| "destructors".into(),
                 );
             } else {
@@ -231,19 +231,6 @@ pub fn required_crubit_features(
                     require_rs_type_kind(&mut missing_features, &param_type, &|| {
                         format!("Unsupported parameter #{i} ({})", &param.identifier).into()
                     });
-                }
-                if func.is_extern_c {
-                    require_any_feature(
-                        &mut missing_features,
-                        crubit_feature::CrubitFeature::Supported.into(),
-                        &|| "extern \"C\" function".into(),
-                    );
-                } else {
-                    require_any_feature(
-                        &mut missing_features,
-                        crubit_feature::CrubitFeature::Supported.into(),
-                        &|| "non-extern \"C\" function".into(),
-                    );
                 }
                 if !func.has_c_calling_convention {
                     require_any_feature(
@@ -313,13 +300,7 @@ pub fn required_crubit_features(
                 &|| "".into(),
             );
         }
-        Item::Namespace(_) => {
-            require_any_feature(
-                &mut missing_features,
-                crubit_feature::CrubitFeature::Supported.into(),
-                &|| "namespace".into(),
-            );
-        }
+        Item::Namespace(_) => {}
         Item::IncompleteRecord(_) => {
             require_any_feature(
                 &mut missing_features,

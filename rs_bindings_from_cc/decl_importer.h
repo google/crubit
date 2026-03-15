@@ -15,6 +15,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -188,6 +189,13 @@ class ImportContext {
   // Returns true iff `label` has opted in to marking classes with
   // `[[gsl::Pointer]]` as unsafe.
   virtual bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const = 0;
+
+  virtual bool IsFeatureEnabledForTarget(const BazelLabel& label,
+                                         absl::string_view feature) const = 0;
+
+  bool IsFeatureEnabledForCurrentTarget(absl::string_view feature) {
+    return IsFeatureEnabledForTarget(invocation_.target_, feature);
+  }
 
   // Returns whether the given `decl`'s type has a detectable formatter.
   //
