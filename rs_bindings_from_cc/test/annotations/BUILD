@@ -59,6 +59,34 @@ crubit_rust_test(
 )
 
 crubit_test_cc_library(
+    name = "memcpy_movable",
+    hdrs = ["memcpy_movable.h"],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+golden_test(
+    name = "memcpy_movable_golden_test",
+    basename = "memcpy_movable",
+    cc_library = "memcpy_movable",
+    golden_cc = "memcpy_movable_api_impl.cc",
+    golden_rs = "memcpy_movable_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "memcpy_movable_test",
+    srcs = ["memcpy_movable_test.rs"],
+    cc_deps = [
+        ":memcpy_movable",
+    ],
+    deps = [
+        "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
     name = "must_bind",
     hdrs = ["must_bind.h"],
     deps = [
