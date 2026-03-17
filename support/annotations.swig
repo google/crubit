@@ -6,6 +6,8 @@
 %enddef
 %define CRUBIT_UNSAFE
 %enddef
+%define CRUBIT_UNSAFE_IMPL(...)
+%enddef
 %define CRUBIT_UNSAFE_MARK_SAFE
 %enddef
 %define CRUBIT_OVERRIDE_UNSAFE(safety)
