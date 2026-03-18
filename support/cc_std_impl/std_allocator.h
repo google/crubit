@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_
 
+#include <__memory/shared_count.h>
 #include <stdio.h>
 
 #include <cstddef>
@@ -38,6 +39,16 @@ inline void cpp_delete(void* ptr, size_t n, size_t align) {
     operator delete(ptr, static_cast<std::align_val_t>(align));
   }
 #endif
+}
+
+inline void shared_ptr_add_shared(void* cntrl) {
+  auto* weak_count = static_cast<std::__shared_weak_count*>(cntrl);
+  weak_count->__add_shared();
+}
+
+inline void shared_ptr_release_shared(void* cntrl) {
+  auto* weak_count = static_cast<std::__shared_weak_count*>(cntrl);
+  weak_count->__release_shared();
 }
 
 }  // namespace crubit_cc_std_internal::std_allocator

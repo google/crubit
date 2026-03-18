@@ -619,6 +619,12 @@ llvm::json::Value TemplateSpecialization::ToJson() const {
                       llvm::json::Object{
                           {"element_type", std_vector.element_type}}}};
                },
+               [&](const StdSharedPtr& std_shared_ptr) {
+                 return llvm::json::Object{
+                     {"StdSharedPtr",
+                      llvm::json::Object{
+                          {"element_type", std_shared_ptr.element_type}}}};
+               },
                [&](const StdUniquePtr& std_unique_ptr) {
                  return llvm::json::Object{
                      {"StdUniquePtr",
