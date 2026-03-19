@@ -41,7 +41,6 @@ cc_library(
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
-        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -194,6 +193,7 @@ cc_library(
     srcs = ["type_nullability.cc"],
     hdrs = ["type_nullability.h"],
     visibility = [
+        "//net/fabric/controller/edge/luge:__pkg__",
         "//nullability/inference:__pkg__",
         "//nullability/test:__pkg__",
     ],
