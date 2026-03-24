@@ -35,7 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~NeverStruct() = default;
   NeverStruct(NeverStruct&&) = default;
-  NeverStruct& operator=(NeverStruct&&) = default;
+  ::never::NeverStruct& operator=(NeverStruct&&) = default;
 
   // `never_golden::NeverStruct` doesn't implement the `Clone` trait
   NeverStruct(const NeverStruct&) = delete;

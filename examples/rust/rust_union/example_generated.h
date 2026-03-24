@@ -36,7 +36,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~ReprRustUnion() = default;
   ReprRustUnion(ReprRustUnion&&) = default;
-  ReprRustUnion& operator=(ReprRustUnion&&) = default;
+  ::example_crate::ReprRustUnion& operator=(ReprRustUnion&&) = default;
 
   // `example_crate_golden::ReprRustUnion` doesn't implement the `Clone` trait
   ReprRustUnion(const ReprRustUnion&) = delete;

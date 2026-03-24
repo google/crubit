@@ -41,7 +41,7 @@ AliasOfExportedStruct final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~AliasOfExportedStruct() = default;
   AliasOfExportedStruct(AliasOfExportedStruct&&) = default;
-  AliasOfExportedStruct& operator=(AliasOfExportedStruct&&) = default;
+  ::uses::AliasOfExportedStruct& operator=(AliasOfExportedStruct&&) = default;
 
   // `uses_golden::AliasOfExportedStruct` doesn't implement the `Clone` trait
   AliasOfExportedStruct(const AliasOfExportedStruct&) = delete;
@@ -82,7 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Original() = default;
   Original(Original&&) = default;
-  Original& operator=(Original&&) = default;
+  ::uses::Original& operator=(Original&&) = default;
 
   // `uses_golden::Original` doesn't implement the `Clone` trait
   Original(const Original&) = delete;
@@ -119,7 +119,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~OtherPublicName() = default;
   OtherPublicName(OtherPublicName&&) = default;
-  OtherPublicName& operator=(OtherPublicName&&) = default;
+  ::uses::OtherPublicName& operator=(OtherPublicName&&) = default;
 
   // `uses_golden::OtherPublicName` doesn't implement the `Clone` trait
   OtherPublicName(const OtherPublicName&) = delete;

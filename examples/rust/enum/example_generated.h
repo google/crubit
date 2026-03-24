@@ -46,12 +46,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
   Color(Color&&) = default;
-  Color& operator=(Color&&) = default;
+  ::example_crate::Color& operator=(Color&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   Color(const Color&) = default;
-  Color& operator=(const Color&) = default;
+  ::example_crate::Color& operator=(const Color&) = default;
   Color(::crubit::UnsafeRelocateTag, Color&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

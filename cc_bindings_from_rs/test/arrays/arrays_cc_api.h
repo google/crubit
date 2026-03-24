@@ -39,12 +39,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~ArrayStruct() = default;
   ArrayStruct(ArrayStruct&&) = default;
-  ArrayStruct& operator=(ArrayStruct&&) = default;
+  ::arrays::ArrayStruct& operator=(ArrayStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   ArrayStruct(const ArrayStruct&) = default;
-  ArrayStruct& operator=(const ArrayStruct&) = default;
+  ::arrays::ArrayStruct& operator=(const ArrayStruct&) = default;
   ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

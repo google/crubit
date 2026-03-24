@@ -40,7 +40,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~NotFfiSafe() = default;
   NotFfiSafe(NotFfiSafe&&) = default;
-  NotFfiSafe& operator=(NotFfiSafe&&) = default;
+  ::from::NotFfiSafe& operator=(NotFfiSafe&&) = default;
 
   // `from_golden::NotFfiSafe` doesn't implement the `Clone` trait
   NotFfiSafe(const NotFfiSafe&) = delete;
@@ -85,7 +85,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Opaque() = default;
   Opaque(Opaque&&) = default;
-  Opaque& operator=(Opaque&&) = default;
+  ::from::Opaque& operator=(Opaque&&) = default;
 
   // `from_golden::Opaque` doesn't implement the `Clone` trait
   Opaque(const Opaque&) = delete;
@@ -136,7 +136,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~OpaqueRef() = default;
   OpaqueRef(OpaqueRef&&) = default;
-  OpaqueRef& operator=(OpaqueRef&&) = default;
+  ::from::OpaqueRef& operator=(OpaqueRef&&) = default;
 
   // `from_golden::OpaqueRef` doesn't implement the `Clone` trait
   OpaqueRef(const OpaqueRef&) = delete;

@@ -73,7 +73,7 @@ TyWithAssocConsts final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~TyWithAssocConsts() = default;
   TyWithAssocConsts(TyWithAssocConsts&&) = default;
-  TyWithAssocConsts& operator=(TyWithAssocConsts&&) = default;
+  ::consts::TyWithAssocConsts& operator=(TyWithAssocConsts&&) = default;
 
   // `consts_golden::TyWithAssocConsts` doesn't implement the `Clone` trait
   TyWithAssocConsts(const TyWithAssocConsts&) = delete;

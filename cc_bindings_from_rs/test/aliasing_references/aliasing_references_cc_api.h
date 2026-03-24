@@ -41,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~NonFreezeType() = default;
   NonFreezeType(NonFreezeType&&) = default;
-  NonFreezeType& operator=(NonFreezeType&&) = default;
+  ::aliasing_references::NonFreezeType& operator=(NonFreezeType&&) = default;
 
   // `aliasing_references_golden::NonFreezeType` doesn't implement the `Clone`
   // trait
@@ -86,12 +86,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
+  ::aliasing_references::SomeStruct& operator=(SomeStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   SomeStruct(const SomeStruct&) = default;
-  SomeStruct& operator=(const SomeStruct&) = default;
+  ::aliasing_references::SomeStruct& operator=(const SomeStruct&) = default;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

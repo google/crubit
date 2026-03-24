@@ -35,7 +35,7 @@ ReprCUnion final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~ReprCUnion() = default;
   ReprCUnion(ReprCUnion&&) = default;
-  ReprCUnion& operator=(ReprCUnion&&) = default;
+  ::example_crate::ReprCUnion& operator=(ReprCUnion&&) = default;
 
   // `example_crate_golden::ReprCUnion` doesn't implement the `Clone` trait
   ReprCUnion(const ReprCUnion&) = delete;

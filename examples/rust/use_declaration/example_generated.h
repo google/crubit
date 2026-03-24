@@ -35,7 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Type() = default;
   Type(Type&&) = default;
-  Type& operator=(Type&&) = default;
+  ::example_crate::Type& operator=(Type&&) = default;
 
   // `example_crate_golden::Type` doesn't implement the `Clone` trait
   Type(const Type&) = delete;

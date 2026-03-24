@@ -38,7 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Bar() = default;
   Bar(Bar&&) = default;
-  Bar& operator=(Bar&&) = default;
+  ::uses_rust::Bar& operator=(Bar&&) = default;
 
   // `uses_rust_golden::Bar` doesn't implement the `Clone` trait
   Bar(const Bar&) = delete;
@@ -69,7 +69,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
+  ::uses_rust::Foo& operator=(Foo&&) = default;
 
   // `uses_rust_golden::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
@@ -119,7 +119,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~G() = default;
   G(G&&) = default;
-  G& operator=(G&&) = default;
+  ::uses_rust::G& operator=(G&&) = default;
 
   // `uses_rust_golden::G` doesn't implement the `Clone` trait
   G(const G&) = delete;
@@ -152,7 +152,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~InnerX() = default;
   InnerX(InnerX&&) = default;
-  InnerX& operator=(InnerX&&) = default;
+  ::uses_rust::InnerX& operator=(InnerX&&) = default;
 
   // `uses_rust_golden::InnerX` doesn't implement the `Clone` trait
   InnerX(const InnerX&) = delete;
@@ -185,7 +185,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~X1() = default;
   X1(X1&&) = default;
-  X1& operator=(X1&&) = default;
+  ::uses_rust::X1& operator=(X1&&) = default;
 
   // `uses_rust_golden::X1` doesn't implement the `Clone` trait
   X1(const X1&) = delete;

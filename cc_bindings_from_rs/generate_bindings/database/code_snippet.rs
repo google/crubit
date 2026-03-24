@@ -81,8 +81,6 @@ pub struct CcPrerequisites<'tcx> {
 pub enum TemplateSpecialization<'tcx> {
     /// Our layout compatible type for `std::option::Option`.
     RsStdOption { arg_ty: Ty<'tcx>, self_ty: Ty<'tcx> },
-    /// Our layout compatible type for `std::result::Result`.
-    RsStdResult { ok_ty: Ty<'tcx>, err_ty: Ty<'tcx>, self_ty: Ty<'tcx> },
 }
 
 impl<'tcx> CcPrerequisites<'tcx> {
@@ -382,26 +380,6 @@ impl<'tcx> ApiSnippets<'tcx> {
             cc_details: self.cc_details.resolve_feature_requirements(crubit_features)?,
             rs_details: self.rs_details,
         })
-    }
-
-    pub fn comment_only(comment: &str) -> Self {
-        ApiSnippets {
-            main_api: CcSnippet::new(quote::quote! {
-                __COMMENT__ #comment
-            }),
-            cc_details: CcSnippet::new(quote::quote! {}),
-            ..Default::default()
-        }
-    }
-
-    pub fn prepend_main_api(mut self, main_api: CcSnippet<'tcx>) -> Self {
-        let preamble = main_api.into_tokens(&mut self.main_api.prereqs);
-        let main = self.main_api.tokens;
-        self.main_api.tokens = quote::quote! {
-            #preamble
-            #main
-        };
-        self
     }
 }
 

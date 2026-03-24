@@ -40,7 +40,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct() = default;
   MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
+  ::trait_impl::MyStruct& operator=(MyStruct&&) = default;
 
   // `trait_impl_golden::MyStruct` doesn't implement the `Clone` trait
   MyStruct(const MyStruct&) = delete;

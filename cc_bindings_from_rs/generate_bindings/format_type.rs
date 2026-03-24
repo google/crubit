@@ -11,7 +11,7 @@ extern crate rustc_span;
 extern crate rustc_type_ir;
 
 use crate::generate_function::check_fn_sig;
-use crate::generate_function_thunk::{is_thunk_required, replace_all_regions_with_static};
+use crate::generate_function_thunk::is_thunk_required;
 use crate::{
     check_feature_enabled_on_self_and_all_deps, check_slice_layout, get_layout,
     matches_qualified_name, CcType,
@@ -277,58 +277,19 @@ pub fn format_ty_for_cc<'tcx>(
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
-            let bridged_builtin = BridgedBuiltin::new(db, adt);
-            if bridged_builtin.is_some_and(|bridged_builtin| {
-                (matches!(bridged_builtin, BridgedBuiltin::Option) && !location.is_bridgeable())
-                    || matches!(bridged_builtin, BridgedBuiltin::Result)
+            if BridgedBuiltin::new(db, adt).is_some_and(|builtin| {
+                matches!(builtin, BridgedBuiltin::Option) && !location.is_bridgeable()
             }) {
-                match bridged_builtin.unwrap() {
-                    BridgedBuiltin::Option => {
-                        let arg = replace_all_regions_with_static(tcx, substs.type_at(0));
-                        let ty_tokens = db
-                            .format_ty_for_cc(arg, TypeLocation::Other)?
-                            .resolve_feature_requirements(crate::crate_features(
-                                db,
-                                db.source_crate_num(),
-                            ))?
-                            .into_tokens(&mut prereqs);
-                        prereqs.template_specializations.insert(
-                            TemplateSpecialization::RsStdOption { arg_ty: arg, self_ty: ty },
-                        );
-                        prereqs.includes.insert(db.support_header("rs_std/option.h"));
-                        return Ok(CcSnippet {
-                            tokens: quote! { rs_std::Option<#ty_tokens> },
-                            prereqs,
-                        });
-                    }
-                    BridgedBuiltin::Result => {
-                        let ok_ty = replace_all_regions_with_static(tcx, substs.type_at(0));
-                        let ok_ty_tokens = db
-                            .format_ty_for_cc(ok_ty, TypeLocation::Other)?
-                            .resolve_feature_requirements(crate::crate_features(
-                                db,
-                                db.source_crate_num(),
-                            ))?
-                            .into_tokens(&mut prereqs);
-                        let err_ty = replace_all_regions_with_static(tcx, substs.type_at(1));
-                        let err_ty_tokens = db
-                            .format_ty_for_cc(err_ty, TypeLocation::Other)?
-                            .resolve_feature_requirements(crate::crate_features(
-                                db,
-                                db.source_crate_num(),
-                            ))?
-                            .into_tokens(&mut prereqs);
-
-                        prereqs.template_specializations.insert(
-                            TemplateSpecialization::RsStdResult { ok_ty, err_ty, self_ty: ty },
-                        );
-                        prereqs.includes.insert(db.support_header("rs_std/result.h"));
-                        return Ok(CcSnippet {
-                            tokens: quote! { rs_std::Result<#ok_ty_tokens, #err_ty_tokens> },
-                            prereqs,
-                        });
-                    }
-                }
+                let arg = substs.type_at(0);
+                let ty_tokens = db
+                    .format_ty_for_cc(arg, TypeLocation::Other)?
+                    .resolve_feature_requirements(crate::crate_features(db, db.source_crate_num()))?
+                    .into_tokens(&mut prereqs);
+                prereqs
+                    .template_specializations
+                    .insert(TemplateSpecialization::RsStdOption { arg_ty: arg, self_ty: ty });
+                prereqs.includes.insert(db.support_header("rs_std/option.h"));
+                return Ok(CcSnippet { tokens: quote! { rs_std::Option<#ty_tokens> }, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 ensure!(
                     location.is_bridgeable(),
@@ -760,11 +721,8 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
             let has_composable_bridging =
                 matches!(is_bridged_type(db, ty)?, Some(BridgedType::Composable(_)));
-            // We support generics if they're for `std::option::Option` or `std::result::Result`.
-            let is_supported_generic_type =
-                BridgedBuiltin::new(db, adt).is_some() || !has_non_lifetime_substs(substs);
             ensure!(
-                has_cpp_type || is_supported_generic_type || has_composable_bridging,
+                has_cpp_type || !has_non_lifetime_substs(substs) || has_composable_bridging,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
             );
             let canonical_name = db
@@ -1283,11 +1241,6 @@ pub fn is_bridged_type<'tcx>(
             }
 
             if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
-                if let BridgedBuiltin::Result = bridged_builtin {
-                    // We can't ask for the CrubitAbiType of a Result, because it will return an Err,
-                    // so we check for it here and return Ok.
-                    return Ok(None);
-                }
                 // The ADT is either a Result or an Option, which are composable bridged types.
                 let crubit_abi_type_with_cc_prereqs =
                     bridged_builtin.crubit_abi_type(db, substs)?;

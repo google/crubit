@@ -38,7 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Original() = default;
   Original(Original&&) = default;
-  Original& operator=(Original&&) = default;
+  ::must_bind::Original& operator=(Original&&) = default;
 
   // `must_bind_golden::Original` doesn't implement the `Clone` trait
   Original(const Original&) = delete;

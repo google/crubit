@@ -1121,7 +1121,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                 let main_api = CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ #msg
                     #cc_struct_name(const #cc_struct_name&) = default;  __NEWLINE__
-                    #cc_struct_name& operator=(const #cc_struct_name&) = default;
+                    #qualified_adt_name& operator=(const #cc_struct_name&) = default;
                 });
                 let cc_details = CcSnippet::with_include(
                     quote! {
@@ -1298,7 +1298,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
                     // generated C++ move constructor might need to assign `Default::default()` to the
                     // moved-from object.
                     #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
-                    #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
+                    #qualified_adt_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
                     __NEWLINE__
                 });
                 let cc_details = CcSnippet::with_include(
@@ -1842,20 +1842,6 @@ fn template_specialization_cmp<'tcx>(
             TemplateSpecialization::RsStdOption { self_ty: left_ty, .. },
             TemplateSpecialization::RsStdOption { self_ty: right_ty, .. },
         ) => left_ty.sort_string(tcx).cmp(&right_ty.sort_string(tcx)),
-        (
-            TemplateSpecialization::RsStdResult { self_ty: left_ty, .. },
-            TemplateSpecialization::RsStdResult { self_ty: right_ty, .. },
-        ) => left_ty.sort_string(tcx).cmp(&right_ty.sort_string(tcx)),
-        // We need some ordering for consistency, but we don't care what it is.
-        // Pick something arbitrary.
-        (
-            TemplateSpecialization::RsStdOption { .. },
-            TemplateSpecialization::RsStdResult { .. },
-        ) => std::cmp::Ordering::Less,
-        (
-            TemplateSpecialization::RsStdResult { .. },
-            TemplateSpecialization::RsStdOption { .. },
-        ) => std::cmp::Ordering::Greater,
     }
 }
 

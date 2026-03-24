@@ -42,7 +42,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~AdtHoldingFiveAndSix() = default;
   AdtHoldingFiveAndSix(AdtHoldingFiveAndSix&&) = default;
-  AdtHoldingFiveAndSix& operator=(AdtHoldingFiveAndSix&&) = default;
+  ::tuples::AdtHoldingFiveAndSix& operator=(AdtHoldingFiveAndSix&&) = default;
 
   // `tuples_golden::AdtHoldingFiveAndSix` doesn't implement the `Clone` trait
   AdtHoldingFiveAndSix(const AdtHoldingFiveAndSix&) = delete;
@@ -150,7 +150,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~TupleStruct() = default;
   TupleStruct(TupleStruct&&) = default;
-  TupleStruct& operator=(TupleStruct&&) = default;
+  ::tuples::TupleStruct& operator=(TupleStruct&&) = default;
 
   // `tuples_golden::TupleStruct` doesn't implement the `Clone` trait
   TupleStruct(const TupleStruct&) = delete;

@@ -53,12 +53,12 @@ CStruct final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~CStruct() = default;
   CStruct(CStruct&&) = default;
-  CStruct& operator=(CStruct&&) = default;
+  ::function_pointers::CStruct& operator=(CStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   CStruct(const CStruct&) = default;
-  CStruct& operator=(const CStruct&) = default;
+  ::function_pointers::CStruct& operator=(const CStruct&) = default;
   CStruct(::crubit::UnsafeRelocateTag, CStruct&& value) {
     std::memcpy(this, &value, sizeof(value));
   }
@@ -87,12 +87,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~HasFnPtrField() = default;
   HasFnPtrField(HasFnPtrField&&) = default;
-  HasFnPtrField& operator=(HasFnPtrField&&) = default;
+  ::function_pointers::HasFnPtrField& operator=(HasFnPtrField&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   HasFnPtrField(const HasFnPtrField&) = default;
-  HasFnPtrField& operator=(const HasFnPtrField&) = default;
+  ::function_pointers::HasFnPtrField& operator=(const HasFnPtrField&) = default;
   HasFnPtrField(::crubit::UnsafeRelocateTag, HasFnPtrField&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

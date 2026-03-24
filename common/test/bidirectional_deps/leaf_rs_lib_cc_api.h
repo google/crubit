@@ -53,12 +53,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsEnum() = default;
   LeafRsEnum(LeafRsEnum&&) = default;
-  LeafRsEnum& operator=(LeafRsEnum&&) = default;
+  ::leaf_rs_lib::LeafRsEnum& operator=(LeafRsEnum&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   LeafRsEnum(const LeafRsEnum&) = default;
-  LeafRsEnum& operator=(const LeafRsEnum&) = default;
+  ::leaf_rs_lib::LeafRsEnum& operator=(const LeafRsEnum&) = default;
   LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value) {
     std::memcpy(this, &value, sizeof(value));
   }
@@ -88,12 +88,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsType() = default;
   LeafRsType(LeafRsType&&) = default;
-  LeafRsType& operator=(LeafRsType&&) = default;
+  ::leaf_rs_lib::LeafRsType& operator=(LeafRsType&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   LeafRsType(const LeafRsType&) = default;
-  LeafRsType& operator=(const LeafRsType&) = default;
+  ::leaf_rs_lib::LeafRsType& operator=(const LeafRsType&) = default;
   LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

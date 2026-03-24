@@ -40,12 +40,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructWithLifetime() = default;
   StructWithLifetime(StructWithLifetime&&) = default;
-  StructWithLifetime& operator=(StructWithLifetime&&) = default;
+  ::lifetimes::StructWithLifetime& operator=(StructWithLifetime&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   StructWithLifetime(const StructWithLifetime&) = default;
-  StructWithLifetime& operator=(const StructWithLifetime&) = default;
+  ::lifetimes::StructWithLifetime& operator=(const StructWithLifetime&) =
+      default;
   StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

@@ -39,7 +39,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~X() = default;
   X(X&&) = default;
-  X& operator=(X&&) = default;
+  ::struct_with_conflicting_fields_and_member_functions_rust::X& operator=(
+      X&&) = default;
 
   // `struct_with_conflicting_fields_and_member_functions_rust_golden::X`
   // doesn't implement the `Clone` trait

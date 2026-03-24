@@ -41,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~AnotherStruct() = default;
   AnotherStruct(AnotherStruct&&) = default;
-  AnotherStruct& operator=(AnotherStruct&&) = default;
+  ::generic_traits::AnotherStruct& operator=(AnotherStruct&&) = default;
 
   // `generic_traits_golden::AnotherStruct` doesn't implement the `Clone` trait
   AnotherStruct(const AnotherStruct&) = delete;
@@ -72,7 +72,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructGeneric() = default;
   StructGeneric(StructGeneric&&) = default;
-  StructGeneric& operator=(StructGeneric&&) = default;
+  ::generic_traits::StructGeneric& operator=(StructGeneric&&) = default;
 
   // `generic_traits_golden::StructGeneric` doesn't implement the `Clone` trait
   StructGeneric(const StructGeneric&) = delete;

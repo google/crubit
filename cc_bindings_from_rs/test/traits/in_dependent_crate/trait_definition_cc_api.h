@@ -37,7 +37,7 @@ MyStruct final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct() = default;
   MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
+  ::trait_definition::MyStruct& operator=(MyStruct&&) = default;
 
   // `trait_definition_golden::MyStruct` doesn't implement the `Clone` trait
   MyStruct(const MyStruct&) = delete;

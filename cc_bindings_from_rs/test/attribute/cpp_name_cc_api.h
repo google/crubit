@@ -38,7 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Replaced() = default;
   Replaced(Replaced&&) = default;
-  Replaced& operator=(Replaced&&) = default;
+  ::cpp_name::Replaced& operator=(Replaced&&) = default;
 
   // `cpp_name_golden::Original` doesn't implement the `Clone` trait
   Replaced(const Replaced&) = delete;

@@ -61,7 +61,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
+  ::modules::impl_in_separate_private_module::Foo& operator=(Foo&&) = default;
 
   // `modules_golden::impl_in_separate_private_module::Foo` doesn't implement
   // the `Clone` trait

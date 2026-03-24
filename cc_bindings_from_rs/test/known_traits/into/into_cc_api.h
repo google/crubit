@@ -43,7 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Convert() = default;
   Convert(Convert&&) = default;
-  Convert& operator=(Convert&&) = default;
+  ::into::Convert& operator=(Convert&&) = default;
 
   // `into_golden::Convert` doesn't implement the `Clone` trait
   Convert(const Convert&) = delete;
@@ -94,7 +94,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~ConvertModule() = default;
   ConvertModule(ConvertModule&&) = default;
-  ConvertModule& operator=(ConvertModule&&) = default;
+  ::into::ConvertModule& operator=(ConvertModule&&) = default;
 
   // `into_golden::ConvertModule` doesn't implement the `Clone` trait
   ConvertModule(const ConvertModule&) = delete;
@@ -133,7 +133,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~ConvertRef() = default;
   ConvertRef(ConvertRef&&) = default;
-  ConvertRef& operator=(ConvertRef&&) = default;
+  ::into::ConvertRef& operator=(ConvertRef&&) = default;
 
   // `into_golden::ConvertRef` doesn't implement the `Clone` trait
   ConvertRef(const ConvertRef&) = delete;
@@ -186,7 +186,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~NotFfiSafe() = default;
   NotFfiSafe(NotFfiSafe&&) = default;
-  NotFfiSafe& operator=(NotFfiSafe&&) = default;
+  ::into::NotFfiSafe& operator=(NotFfiSafe&&) = default;
 
   // `into_golden::NotFfiSafe` doesn't implement the `Clone` trait
   NotFfiSafe(const NotFfiSafe&) = delete;

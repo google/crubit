@@ -56,7 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~Types() = default;
   Types(Types&&) = default;
-  Types& operator=(Types&&) = default;
+  ::primitive_types::field_types::Types& operator=(Types&&) = default;
 
   // `primitive_types_golden::field_types::Types` doesn't implement the `Clone`
   // trait
@@ -368,8 +368,8 @@ StructWithCVoidPointerMember final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructWithCVoidPointerMember() = default;
   StructWithCVoidPointerMember(StructWithCVoidPointerMember&&) = default;
-  StructWithCVoidPointerMember& operator=(StructWithCVoidPointerMember&&) =
-      default;
+  ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember& operator=(
+      StructWithCVoidPointerMember&&) = default;
 
   // `primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember`
   // doesn't implement the `Clone` trait

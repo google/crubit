@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crate::generate_function_thunk::replace_all_regions_with_static;
 use crate::generate_struct_and_union::{generate_relocating_ctor, scalar_value_to_string};
 use arc_anyhow::Result;
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
@@ -13,27 +14,10 @@ use proc_macro2::TokenStream;
 use query_compiler::{get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
 use rustc_abi::VariantIdx;
-use rustc_middle::ty::layout::PrimitiveExt;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt};
 use std::rc::Rc;
 
-fn is_cpp_movable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
-    ty.ty_adt_def()
-        .map(|adt| db.has_move_ctor_and_assignment_operator(adt.did(), ty).is_some())
-        // Primitive types bind to C++ primitives that support move construction and assignment.
-        .unwrap_or_else(|| ty.is_primitive_ty())
-}
-
-fn has_relocating_ctor<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
-    ty.ty_adt_def()
-        .map(|adt| {
-            crate::BridgedBuiltin::new(db, adt).is_some()
-                || db.adt_needs_bindings(adt.did()).is_ok()
-        })
-        .unwrap_or(false)
-}
-
-struct OptionApiGenerator<'a, 'tcx> {
+struct OptionApi<'a, 'tcx> {
     db: &'a BindingsGenerator<'tcx>,
     arg_ty_rs: Ty<'tcx>,
     arg_ty: TokenStream,
@@ -48,12 +32,31 @@ struct OptionApiGenerator<'a, 'tcx> {
     tag_type_cc: TokenStream,
 }
 
-impl<'tcx> OptionApiGenerator<'_, 'tcx> {
+impl<'tcx> OptionApi<'_, 'tcx> {
+    fn has_move_ctor(&self) -> bool {
+        self.arg_ty_rs
+            .ty_adt_def()
+            .map(|adt| {
+                self.db.has_move_ctor_and_assignment_operator(adt.did(), self.arg_ty_rs).is_some()
+            })
+            .unwrap_or(false)
+    }
+
+    fn has_relocating_ctor(&self) -> bool {
+        self.arg_ty_rs
+            .ty_adt_def()
+            .map(|adt| {
+                crate::BridgedBuiltin::new(self.db, adt).is_some()
+                    || self.db.adt_needs_bindings(adt.did()).is_ok()
+            })
+            .unwrap_or(false)
+    }
+
     fn api_snippets(self) -> ApiSnippets<'tcx> {
+        let has_move_ctor = self.has_move_ctor();
+        let has_relocating_ctor = self.has_relocating_ctor();
         let Self {
-            db,
             arg_ty,
-            arg_ty_rs,
             needs_drop,
             tag_method,
             none_val,
@@ -62,14 +65,12 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
             tag_type_cc,
             ..
         } = self;
-        let has_move_ctor = is_cpp_movable(db, arg_ty_rs);
-        let has_relocating_ctor = has_relocating_ctor(db, arg_ty_rs);
         let mut prereqs = CcPrerequisites::default();
         if has_relocating_ctor {
             prereqs.includes.insert(self.db.support_header("internal/slot.h"));
         }
         let set_none = quote! {
-            set_tag(#none_val);
+            this->set_tag(#none_val);
         };
         let set_some_from_std_optional = {
             let write_some = if has_move_ctor {
@@ -280,19 +281,6 @@ fn get_option_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> Opt
     }
 }
 
-fn literal_of_tag_ty<'tcx>(tcx: TyCtxt<'tcx>, val: u128, ty: Ty<'tcx>) -> TokenStream {
-    use rustc_middle::mir::interpret::Scalar;
-    use rustc_middle::ty::ScalarInt;
-    let (size, _) = ty.int_size_and_signed(tcx);
-    let (scalar_int, _) = ScalarInt::truncate_from_uint(val, size);
-    scalar_value_to_string(tcx, Scalar::Int(scalar_int), *ty.kind())
-        .and_then(|s| {
-            s.parse::<TokenStream>()
-                .map_err(|_| anyhow!("scalar_value_to_string produced invalid tokens"))
-        })
-        .expect("tag to be valid scalar tokens")
-}
-
 /// Generate a template specialization for an instance of `Option<T>`.
 ///
 /// `arg_ty` is used to determine the corresponding C++ type of the `T` in `Option<T>`.
@@ -305,6 +293,7 @@ fn specialize_option<'tcx>(
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
+    let arg_ty = replace_all_regions_with_static(tcx, arg_ty);
     let ty_tokens = db
         .format_ty_for_cc(arg_ty, TypeLocation::Other)?
         .resolve_feature_requirements(crate::crate_features(db, db.source_crate_num()))?
@@ -336,11 +325,29 @@ fn specialize_option<'tcx>(
             (tag, tag_encoding, tag_field, variants)
         }
     };
+    use rustc_middle::ty::layout::PrimitiveExt;
     let tag_type = tag.primitive().to_int_ty(tcx);
     let tag_type_cc: TokenStream =
         db.format_ty_for_cc(tag_type, TypeLocation::Other)?.into_tokens(&mut prereqs);
     let tag_offset = Literal::u64_unsuffixed(layout.fields().offset(tag_field.as_usize()).bytes());
 
+    let literal_of_tag_ty = |val: u128, ty: Ty<'tcx>| {
+        use rustc_middle::mir::interpret::Scalar;
+        use rustc_middle::ty::ScalarInt;
+        let (size, _) = ty.int_size_and_signed(tcx);
+        let (scalar_int, _) = ScalarInt::truncate_from_uint(val, size);
+        scalar_value_to_string(tcx, Scalar::Int(scalar_int), *ty.kind())
+            .and_then(|s| {
+                s.parse::<TokenStream>()
+                    .map_err(|_| anyhow!("scalar_value_to_string produced invalid tokens"))
+            })
+            .expect("tag to be valid scalar tokens")
+    };
+    let discr_for_none = self_ty.discriminant_for_variant(tcx, none_idx).expect(
+        "We do not support zero sized types. Before generating a specialization, we check \
+        that the type can be formatted as a C++ type. That should exclude this case from occurring",
+    );
+    let none_discr_val = literal_of_tag_ty(discr_for_none.val, tag_type);
     let endian = tcx.sess.target.options.endian;
     let endian_index = match endian {
         rustc_abi::Endian::Little => quote! { i },
@@ -355,7 +362,7 @@ fn specialize_option<'tcx>(
             inline constexpr #tag_type_cc rs_std::Option<#ty_tokens>::tag() const& noexcept {
                 std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
                 for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    __bytes[#endian_index] = storage_[#tag_offset + i];
+                    __bytes[#endian_index] = this->storage_[#tag_offset + i];
                 }
                 return std::bit_cast<#tag_type_cc>(__bytes);
             }
@@ -363,7 +370,7 @@ fn specialize_option<'tcx>(
             inline constexpr void rs_std::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
                 auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
                 for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    storage_[#tag_offset + i] = __bytes[#endian_index];
+                    this->storage_[#tag_offset + i] = __bytes[#endian_index];
                 }
             }
             __NEWLINE__
@@ -371,28 +378,26 @@ fn specialize_option<'tcx>(
         ..Default::default()
     };
 
-    let expect_msg =
-        "Please file a bug at crubit.rs-bug. We do not support zero sized types. Before generating \
-         a specialization, we check that the type can be formatted as a C++ type. That should \
-         exclude this case from occurring.";
-    let discr_for_none = self_ty.discriminant_for_variant(tcx, none_idx).expect(expect_msg);
-    let none_discr_val = literal_of_tag_ty(tcx, discr_for_none.val, tag_type);
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
             let some_variant = &variants[some_idx];
             let payload_offset = Literal::u64_unsuffixed(some_variant.fields.offset(0).bytes());
-            let discr_for_some = self_ty.discriminant_for_variant(tcx, some_idx).expect(expect_msg);
-            let some_discr_val = literal_of_tag_ty(tcx, discr_for_some.val, tag_type);
+            let discr_for_some = self_ty.discriminant_for_variant(tcx, some_idx).expect(
+                "We do not support zero sized types. Before generating a specialization, we\
+                 check that the type can be formatted as a C++ type. That should exclude this case \
+                 from occurring",
+            );
+            let some_discr_val = literal_of_tag_ty(discr_for_some.val, tag_type);
 
-            OptionApiGenerator {
+            OptionApi {
                 db,
                 arg_ty_rs: arg_ty,
                 arg_ty: ty_tokens.clone(),
                 needs_drop,
                 tag_method,
                 none_val: quote! { #none_discr_val },
-                write_some_to_tag: quote! { set_tag(#some_discr_val); },
+                write_some_to_tag: quote! { this->set_tag(#some_discr_val); },
                 some_ptr_val: quote! {
                     reinterpret_cast<#ty_tokens*>(storage_ + #payload_offset)
                 },
@@ -402,9 +407,8 @@ fn specialize_option<'tcx>(
         rustc_abi::TagEncoding::Niche { niche_start, ref niche_variants, .. } => {
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-            let none_relative_val =
-                literal_of_tag_ty(tcx, *niche_start + none_relative_idx, tag_type);
-            OptionApiGenerator {
+            let none_relative_val = literal_of_tag_ty(*niche_start + none_relative_idx, tag_type);
+            OptionApi {
                 db,
                 arg_ty_rs: arg_ty,
                 arg_ty: ty_tokens.clone(),
@@ -497,532 +501,6 @@ fn specialize_option<'tcx>(
     })
 }
 
-struct ResultVariantIndices {
-    ok_idx: VariantIdx,
-    err_idx: VariantIdx,
-}
-
-fn get_result_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> ResultVariantIndices {
-    let (mut ok_idx, mut err_idx) = (None, None);
-    for (idx, variant) in adt.variants().iter_enumerated() {
-        use rustc_hir::LangItem;
-        match tcx.lang_items().from_def_id(variant.def_id) {
-            Some(LangItem::ResultOk) => ok_idx = Some(idx),
-            Some(LangItem::ResultErr) => err_idx = Some(idx),
-            _ => unreachable!("Result<T, E> must only have an Ok and Err variant"),
-        }
-    }
-    ResultVariantIndices {
-        ok_idx: ok_idx.expect("Result<T, E> must have an Ok variant"),
-        err_idx: err_idx.expect("Result<T, E> must have an Err variant"),
-    }
-}
-
-struct ResultApiGenerator<'a, 'tcx> {
-    db: &'a BindingsGenerator<'tcx>,
-    ok_ty_rs: Ty<'tcx>,
-    ok_ty_cpp: TokenStream,
-    err_ty_rs: Ty<'tcx>,
-    err_ty_cpp: TokenStream,
-    needs_drop: bool,
-    tag_method: ApiSnippets<'tcx>,
-    has_value_impl: TokenStream,
-    write_ok_to_tag: TokenStream,
-    write_err_to_tag: TokenStream,
-    ok_ptr_val: TokenStream,
-    err_ptr_val: TokenStream,
-}
-
-impl<'tcx> ResultApiGenerator<'_, 'tcx> {
-    fn drop_method(&self) -> (TokenStream, TokenStream) {
-        let ok_ptr_val = &self.ok_ptr_val;
-        let err_ptr_val = &self.err_ptr_val;
-        let ok_ty_cpp = &self.ok_ty_cpp;
-        let err_ty_cpp = &self.err_ty_cpp;
-        let ok_ptr = quote! { reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val) };
-        let err_ptr = quote! { reinterpret_cast<#err_ty_cpp*>(#err_ptr_val) };
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
-        if self.needs_drop {
-            (
-                quote! { ~Result() noexcept; },
-                quote! {
-                    inline #full_self_ty::~Result() noexcept {
-                        if (has_value()) {
-                            std::destroy_at(#ok_ptr);
-                        } else {
-                            std::destroy_at(#err_ptr);
-                        }
-                    }
-                },
-            )
-        } else {
-            (
-                quote! { ~Result() noexcept = default; },
-                quote! { static_assert(std::is_trivially_destructible_v<#full_self_ty>); },
-            )
-        }
-    }
-
-    fn move_operations_ok(&self) -> ApiSnippets<'tcx> {
-        if !is_cpp_movable(self.db, self.ok_ty_rs) {
-            let ctor_msg = format!(
-                "Move constructor is not available for the Ok variant because {} does not have a move constructor",
-                self.ok_ty_rs
-            );
-            return ApiSnippets::comment_only(&ctor_msg);
-        }
-        let ok_ty_cpp = &self.ok_ty_cpp;
-        let ok_ptr_val = &self.ok_ptr_val;
-        let ok_ptr = quote! { reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val) };
-        let err_ty_cpp = &self.err_ty_cpp;
-        let err_ptr_val = &self.err_ptr_val;
-        let err_ptr = quote! { reinterpret_cast<#err_ty_cpp*>(#err_ptr_val) };
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
-        let write_ok_to_tag = &self.write_ok_to_tag;
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                Result(#ok_ty_cpp&& ok) noexcept;
-                Result& operator=(#ok_ty_cpp&& ok) noexcept;
-            }),
-            cc_details: CcSnippet::new(quote! {
-                inline #full_self_ty::Result(#ok_ty_cpp&& ok) noexcept {
-                    #write_ok_to_tag
-                    std::construct_at(#ok_ptr, std::move(ok));
-                } __NEWLINE__
-
-                inline #full_self_ty& #full_self_ty::operator=(#ok_ty_cpp&& ok) noexcept {
-                    if (!has_value()) {
-                        std::destroy_at(#err_ptr);
-                        #write_ok_to_tag
-                        std::construct_at(#ok_ptr, std::move(ok));
-                    } else {
-                        #write_ok_to_tag
-                        *#ok_ptr = std::move(ok);
-                    }
-                    return *this;
-                } __NEWLINE__
-            }),
-            ..Default::default()
-        }
-    }
-
-    fn move_operations_err(&self) -> ApiSnippets<'tcx> {
-        let has_move = is_cpp_movable(self.db, self.err_ty_rs);
-        let ok_ty_cpp = &self.ok_ty_cpp;
-        let err_ty_cpp = &self.err_ty_cpp;
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
-        let err_ptr_val = &self.err_ptr_val;
-        let ok_ptr_val = &self.ok_ptr_val;
-        let write_err_to_tag = &self.write_err_to_tag;
-        let err_ptr = quote! { reinterpret_cast<#err_ty_cpp*>(#err_ptr_val) };
-        if !has_move {
-            let ctor_msg = format!("Move constructor not available for Err variant because {} has not move constructor", self.err_ty_rs);
-            ApiSnippets::comment_only(&ctor_msg)
-        } else {
-            ApiSnippets {
-                main_api: CcSnippet::new(quote! {
-                    Result(rs_std::unexpected<#err_ty_cpp>&& err) noexcept;
-                    Result& operator=(rs_std::unexpected<#err_ty_cpp>&& err) noexcept;
-                }),
-                cc_details: CcSnippet::new(quote! {
-                    inline #full_self_ty::Result(rs_std::unexpected<#err_ty_cpp>&& err) noexcept {
-                        #write_err_to_tag
-                        std::construct_at(#err_ptr, std::move(err.error()));
-                    } __NEWLINE__
-
-                    inline #full_self_ty& #full_self_ty::operator=(rs_std::unexpected<#err_ty_cpp>&& err) noexcept {
-                        if (has_value()) {
-                            std::destroy_at(#ok_ptr_val);
-                            #write_err_to_tag
-                            std::construct_at(#err_ptr, std::move(err.error()));
-                        } else {
-                            #write_err_to_tag
-                            *#err_ptr = std::move(err.error());
-                        }
-                        return *this;
-                    } __NEWLINE__
-                }),
-                ..Default::default()
-            }
-        }
-    }
-
-    fn api_snippets(self) -> ApiSnippets<'tcx> {
-        let (drop, drop_details) = self.drop_method();
-        let move_constructor_ok = self.move_operations_ok();
-        let move_constructor_err = self.move_operations_err();
-        let Self {
-            db,
-            ok_ty_cpp,
-            err_ty_cpp,
-            tag_method,
-            has_value_impl,
-            ok_ptr_val,
-            err_ptr_val,
-            write_ok_to_tag,
-            write_err_to_tag,
-            ..
-        } = self;
-        let mut prereqs = CcPrerequisites::default();
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
-
-        let move_construct_ok = move_constructor_ok.main_api.into_tokens(&mut prereqs);
-        let move_construct_err = move_constructor_err.main_api.into_tokens(&mut prereqs);
-
-        let tag_method_main_api = tag_method.main_api.into_tokens(&mut prereqs);
-        let main_api = CcSnippet {
-            tokens: quote! {
-                #move_construct_ok __NEWLINE__
-                #move_construct_err __NEWLINE__
-
-                template <typename... Args>
-                Result(std::in_place_t, Args&&... args); __NEWLINE__
-
-                template <typename... Args>
-                Result(rs_std::unexpect_t, Args&&... args); __NEWLINE__
-
-                explicit constexpr operator bool() const noexcept; __NEWLINE__
-                constexpr bool has_value() const noexcept; __NEWLINE__
-
-                #ok_ty_cpp& value() &; __NEWLINE__
-                #ok_ty_cpp&& value() &&; __NEWLINE__
-
-                #err_ty_cpp& err() &; __NEWLINE__
-                #err_ty_cpp&& err() &&; __NEWLINE__
-
-                #drop
-
-            private:
-                #tag_method_main_api
-
-                void check_has_ok();
-                void check_has_err();
-            },
-            prereqs,
-        };
-
-        let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(CcInclude::utility());
-        prereqs.includes.insert(db.support_header("internal/check.h"));
-        prereqs.includes.insert(CcInclude::cstring());
-        let move_construct_ok_details = move_constructor_ok.cc_details.into_tokens(&mut prereqs);
-        let move_construct_err_details = move_constructor_err.cc_details.into_tokens(&mut prereqs);
-        let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
-        let cc_details = CcSnippet {
-            tokens: quote! {
-                #move_construct_ok_details __NEWLINE__
-                #move_construct_err_details __NEWLINE__
-
-                template <typename... Args>
-                inline #full_self_ty::Result(std::in_place_t, Args&&... args) {
-                    #write_ok_to_tag
-                    std::construct_at(#ok_ptr_val, std::forward<Args>(args)...);
-                } __NEWLINE__
-
-                template <typename... Args>
-                inline #full_self_ty::Result(rs_std::unexpect_t, Args&&... args) {
-                    #write_err_to_tag
-                    std::construct_at(#err_ptr_val, std::forward<Args>(args)...);
-                } __NEWLINE__
-
-                inline constexpr #full_self_ty::operator bool() const noexcept {
-                    return has_value();
-                } __NEWLINE__
-
-                inline constexpr bool #full_self_ty::has_value() const noexcept {
-                    return #has_value_impl;
-                } __NEWLINE__
-
-                inline #ok_ty_cpp& #full_self_ty::value() & {
-                    check_has_ok();
-                    return *reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
-                } __NEWLINE__
-
-                inline #ok_ty_cpp&& #full_self_ty::value() && {
-                    check_has_ok();
-                    return std::move(*reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val));
-                } __NEWLINE__
-
-                inline #err_ty_cpp& #full_self_ty::err() & {
-                    check_has_err();
-                    return *reinterpret_cast<#err_ty_cpp*>(#err_ptr_val);
-                } __NEWLINE__
-
-                inline #err_ty_cpp&& #full_self_ty::err() && {
-                    check_has_err();
-                    return std::move(*reinterpret_cast<#err_ty_cpp*>(#err_ptr_val));
-                } __NEWLINE__
-
-
-                #drop_details __NEWLINE__
-                #tag_method_cc_details __NEWLINE__
-
-                inline void #full_self_ty::check_has_ok() {
-                    CHECK(has_value()) << "Bad value access on rs_std::Result";
-                } __NEWLINE__
-
-                inline void #full_self_ty::check_has_err() {
-                    CHECK(!has_value()) << "Bad error access on rs_std::Result";
-                } __NEWLINE__
-
-            },
-            prereqs,
-        };
-
-        ApiSnippets { main_api, cc_details, ..Default::default() }
-    }
-}
-
-fn specialize_result<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    ok_ty: Ty<'tcx>,
-    err_ty: Ty<'tcx>,
-    self_ty: Ty<'tcx>,
-) -> Result<ApiSnippets<'tcx>> {
-    let tcx = db.tcx();
-    let mut prereqs = CcPrerequisites::default();
-    let ok_ty_tokens = db
-        .format_ty_for_cc(ok_ty, TypeLocation::Other)?
-        .resolve_feature_requirements(crate::crate_features(db, db.source_crate_num()))?
-        .into_tokens(&mut prereqs);
-    let err_ty_tokens = db
-        .format_ty_for_cc(err_ty, TypeLocation::Other)?
-        .resolve_feature_requirements(crate::crate_features(db, db.source_crate_num()))?
-        .into_tokens(&mut prereqs);
-
-    let layout = get_layout(tcx, self_ty).expect("We've already checked this layout is valid");
-    let ty::TyKind::Adt(adt, _) = self_ty.kind() else {
-        unreachable!("Result<T, E> must be an ADT");
-    };
-
-    let ResultVariantIndices { ok_idx, err_idx } = get_result_variant_indices(tcx, *adt);
-
-    let (tag, tag_encoding, tag_field, variants) = match layout.variants() {
-        rustc_abi::Variants::Empty => {
-            unreachable!(
-                "Result is only uninhabited when both Ok and Err are uninhabited. We do \
-            not support zero sized types today, and we format our Ok and Err type before queueing \
-            this specialization, so this case should not occur in practice."
-            )
-        }
-        rustc_abi::Variants::Single { .. } => {
-            unreachable!(
-                "Result only has a single variant when either Ok or Err is uninhabited. We do \
-            not support zero sized types today, and we format our Ok and Err type before queueing \
-            this specialization, so this case should not occur in practice."
-            )
-        }
-        rustc_abi::Variants::Multiple { tag, tag_encoding, tag_field, variants } => {
-            (tag, tag_encoding, tag_field, variants)
-        }
-    };
-    let tag_type = tag.primitive().to_int_ty(tcx);
-    let tag_type_cc: TokenStream =
-        db.format_ty_for_cc(tag_type, TypeLocation::Other)?.into_tokens(&mut prereqs);
-    let tag_offset = Literal::u64_unsuffixed(layout.fields().offset(tag_field.as_usize()).bytes());
-    let endian = tcx.sess.target.options.endian;
-    let byte_index_read = match endian {
-        rustc_abi::Endian::Little => quote! { i },
-        rustc_abi::Endian::Big => quote! { sizeof(#tag_type_cc) - 1 - i },
-    };
-    let byte_index_write = match endian {
-        rustc_abi::Endian::Little => quote! { i },
-        rustc_abi::Endian::Big => quote! { sizeof(#tag_type_cc) - 1 - i },
-    };
-    let tag_method = ApiSnippets {
-        main_api: CcSnippet::new(quote! {
-            constexpr #tag_type_cc tag() const& noexcept; __NEWLINE__
-            void set_tag(#tag_type_cc tag) noexcept; __NEWLINE__
-        }),
-        cc_details: CcSnippet::new(quote! {
-            inline constexpr #tag_type_cc rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::tag() const& noexcept {
-                std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
-                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    __bytes[#byte_index_read] = __storage[#tag_offset + i];
-                }
-                return std::bit_cast<#tag_type_cc>(__bytes);
-            }
-            __NEWLINE__
-            inline void rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
-                auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
-                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    __storage[#tag_offset + i] = __bytes[#byte_index_write];
-                }
-            }
-            __NEWLINE__
-        }),
-        ..Default::default()
-    };
-
-    let needs_drop = self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
-
-    let name = escape_non_identifier_chars(&format!("{}", self_ty));
-    let discr_for_ok = self_ty.discriminant_for_variant(tcx, ok_idx).expect(
-        "We do not support zero sized types. Before generating a specialization, we\
-         check that the type can be formatted as a C++ type. That should exclude this case \
-         from occurring",
-    );
-    let ok_discr_val = literal_of_tag_ty(tcx, discr_for_ok.val, tag_type);
-    let discr_for_err = self_ty.discriminant_for_variant(tcx, err_idx).expect(
-        "We do not support zero sized types. Before generating a specialization, we\
-         check that the type can be formatted as a C++ type. That should exclude this case \
-         from occurring",
-    );
-    let err_discr_val = literal_of_tag_ty(tcx, discr_for_err.val, tag_type);
-
-    let result_api = match tag_encoding {
-        rustc_abi::TagEncoding::Direct => {
-            let ok_variant = &variants[ok_idx];
-            let ok_offset = Literal::u64_unsuffixed(ok_variant.fields.offset(0).bytes());
-
-            let err_variant = &variants[err_idx];
-            let err_offset = Literal::u64_unsuffixed(err_variant.fields.offset(0).bytes());
-
-            ResultApiGenerator {
-                db,
-                ok_ty_rs: ok_ty,
-                ok_ty_cpp: ok_ty_tokens.clone(),
-                err_ty_rs: err_ty,
-                err_ty_cpp: err_ty_tokens.clone(),
-                needs_drop,
-                tag_method,
-                has_value_impl: quote! { tag() == #ok_discr_val },
-                write_ok_to_tag: quote! { set_tag(#ok_discr_val); },
-                write_err_to_tag: quote! { set_tag(#err_discr_val); },
-                ok_ptr_val: quote! {
-                    __storage + #ok_offset
-                },
-                err_ptr_val: quote! {
-                    __storage + #err_offset
-                },
-            }
-        }
-        rustc_abi::TagEncoding::Niche { niche_start, ref niche_variants, untagged_variant } => {
-            let mut has_value_impl = quote! {};
-            let (write_ok_to_tag, ok_ptr_val) = if *untagged_variant == ok_idx {
-                // Untagged variant is Ok, we don't need to set the tag when we write Ok.
-                // Our tag is implicitly ok when it is not the err discriminant value.
-                (quote! {}, quote! { __storage })
-            } else {
-                let ok_relative_idx =
-                    ok_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                let ok_relative_val =
-                    literal_of_tag_ty(tcx, *niche_start + ok_relative_idx, tag_type);
-                let ok_variant = &variants[ok_idx];
-                let ok_offset = Literal::u64_unsuffixed(ok_variant.fields.offset(0).bytes());
-                has_value_impl = quote! { tag() == #ok_relative_val };
-                (
-                    quote! { set_tag(#ok_relative_val); },
-                    quote! {
-                        __storage + #ok_offset
-                    },
-                )
-            };
-            let (write_err_to_tag, err_ptr_val) = if *untagged_variant == err_idx {
-                (quote! {}, quote! { __storage })
-            } else {
-                let err_relative_idx =
-                    err_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                let err_relative_val =
-                    literal_of_tag_ty(tcx, *niche_start + err_relative_idx, tag_type);
-                let err_variant = &variants[err_idx];
-                let err_offset = Literal::u64_unsuffixed(err_variant.fields.offset(0).bytes());
-                has_value_impl = quote! { tag() != #err_relative_val };
-                (
-                    quote! { set_tag(#err_relative_val); },
-                    quote! {
-                        __storage + #err_offset
-                    },
-                )
-            };
-            ResultApiGenerator {
-                db,
-                ok_ty_rs: ok_ty,
-                ok_ty_cpp: ok_ty_tokens.clone(),
-                err_ty_rs: err_ty,
-                err_ty_cpp: err_ty_tokens.clone(),
-                needs_drop,
-                tag_method,
-                has_value_impl,
-                write_ok_to_tag,
-                write_err_to_tag,
-                ok_ptr_val,
-                err_ptr_val,
-            }
-        }
-    };
-    let arg_ty_for_rs = db.format_ty_for_rs(ok_ty)?;
-    let err_ty_for_rs = db.format_ty_for_rs(err_ty)?;
-
-    let rs_fully_qualified_name = quote! { std::result::Result<#arg_ty_for_rs, #err_ty_for_rs> };
-    let core = Rc::new(database::AdtCoreBindings {
-        def_id: adt.did(),
-        keyword: quote! { struct },
-        cc_short_name: format_ident!("Result"),
-        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
-        cc_fully_qualified_name: quote! { rs_std::Result<#ok_ty_tokens, #err_ty_tokens> },
-        self_ty,
-        alignment_in_bytes: layout.align().abi.bytes(),
-        size_in_bytes: layout.size().bytes(),
-    });
-
-    let copy_ctor_and_assignment_snippets =
-        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
-    let move_ctor_and_assignment_snippets = db
-        .generate_move_ctor_and_assignment_operator(core.clone())
-        .unwrap_or_else(|err| err.explicitly_deleted);
-    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
-
-    let ApiSnippets { main_api, cc_details, rs_details } = [
-        copy_ctor_and_assignment_snippets,
-        move_ctor_and_assignment_snippets,
-        relocating_ctor_snippets,
-        result_api.api_snippets(),
-    ]
-    .into_iter()
-    .collect();
-    let main_api_tokens = main_api.into_tokens(&mut prereqs);
-
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
-    let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
-    let internal_rust_type_string = rs_fully_qualified_name.to_string();
-    let main_api_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
-        template<> __NEWLINE__
-        struct
-        alignas(#align_literal) __NEWLINE__
-        CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Result<#ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
-        public:
-            #main_api_tokens __NEWLINE__
-
-            private:
-               unsigned char __storage[#size_literal]; __NEWLINE__
-        }; __NEWLINE__
-
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
-    };
-
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
-    let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
-    let cc_details_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
-        #cc_details_tokens
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
-    };
-
-    Ok(ApiSnippets {
-        main_api: CcSnippet { tokens: main_api_tokens, prereqs },
-        cc_details: CcSnippet::new(cc_details_tokens),
-        rs_details,
-    })
-}
-
 /// Generate a template specialization.
 pub fn generate_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1033,16 +511,8 @@ pub fn generate_template_specialization<'tcx>(
             TemplateSpecialization::RsStdOption { arg_ty, self_ty } => {
                 specialize_option(db, *arg_ty, *self_ty)
                     .map(|mut snippets| {
+                        // If our specialization depends on it's argument type, we need to forward declare that type.
                         snippets.main_api.prereqs.forward_declare_type(*arg_ty);
-                        snippets
-                    })
-                    .map_err(|e| (*self_ty, e))
-            }
-            TemplateSpecialization::RsStdResult { ok_ty, err_ty, self_ty } => {
-                specialize_result(db, *ok_ty, *err_ty, *self_ty)
-                    .map(|mut snippets| {
-                        snippets.main_api.prereqs.forward_declare_type(*ok_ty);
-                        snippets.main_api.prereqs.forward_declare_type(*err_ty);
                         snippets
                     })
                     .map_err(|e| (*self_ty, e))
@@ -1058,9 +528,8 @@ pub fn generate_template_specialization<'tcx>(
             FmtPrinter::print_string(tcx, Namespace::TypeNS, |fmt| fmt.pretty_print_type(ty))
                 .unwrap_or_else(|_| "<unknown type>".to_string());
         let msg = format!("Error generating specialization for `{name}`: {err:#}");
-        ApiSnippets::comment_only(&msg).prepend_main_api(CcSnippet::new(quote! {
-            __NEWLINE__ __NEWLINE__
-        }))
+        CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ })
+            .into_main_api()
     });
     // Because we reuse logic from generate_struct_and_union here, we will add our `self_ty` as a template specialization of it's own specialization creating a depedency cycle.
     // We break that loop manually here to avoid that.

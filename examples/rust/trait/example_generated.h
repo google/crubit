@@ -38,12 +38,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct() = default;
   MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
+  ::example_crate::MyStruct& operator=(MyStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   MyStruct(const MyStruct&) = default;
-  MyStruct& operator=(const MyStruct&) = default;
+  ::example_crate::MyStruct& operator=(const MyStruct&) = default;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

@@ -182,7 +182,8 @@ CloneActiveVariant final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~CloneActiveVariant() = default;
   CloneActiveVariant(CloneActiveVariant&&) = default;
-  CloneActiveVariant& operator=(CloneActiveVariant&&) = default;
+  ::enums::repr_c_clone_active_variant::CloneActiveVariant& operator=(
+      CloneActiveVariant&&) = default;
 
   // Clone::clone
   CloneActiveVariant(const CloneActiveVariant&);
@@ -265,7 +266,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~CloneCount() = default;
   CloneCount(CloneCount&&) = default;
-  CloneCount& operator=(CloneCount&&) = default;
+  ::enums::repr_c_clone_counter::CloneCount& operator=(CloneCount&&) = default;
 
   // Clone::clone
   CloneCount(const CloneCount&);
@@ -414,7 +415,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~IntReprEnumWithNoPayload() = default;
   IntReprEnumWithNoPayload(IntReprEnumWithNoPayload&&) = default;
-  IntReprEnumWithNoPayload& operator=(IntReprEnumWithNoPayload&&) = default;
+  ::enums::repr_int::IntReprEnumWithNoPayload& operator=(
+      IntReprEnumWithNoPayload&&) = default;
 
   // `enums_golden::repr_int::IntReprEnumWithNoPayload` doesn't implement the
   // `Clone` trait
@@ -492,7 +494,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~RustReprEnum() = default;
   RustReprEnum(RustReprEnum&&) = default;
-  RustReprEnum& operator=(RustReprEnum&&) = default;
+  ::enums::repr_rust::RustReprEnum& operator=(RustReprEnum&&) = default;
 
   // `enums_golden::repr_rust::RustReprEnum` doesn't implement the `Clone` trait
   RustReprEnum(const RustReprEnum&) = delete;
@@ -562,8 +564,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ~RustReprWithNamingConflictBetweenCtorsAndMethods() = default;
   RustReprWithNamingConflictBetweenCtorsAndMethods(
       RustReprWithNamingConflictBetweenCtorsAndMethods&&) = default;
-  RustReprWithNamingConflictBetweenCtorsAndMethods& operator=(
-      RustReprWithNamingConflictBetweenCtorsAndMethods&&) = default;
+  ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods&
+  operator=(RustReprWithNamingConflictBetweenCtorsAndMethods&&) = default;
 
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods`
   // doesn't implement the `Clone` trait
@@ -637,7 +639,7 @@ RustReprWithSingleTuplePayloadVariant final {
   ~RustReprWithSingleTuplePayloadVariant() = default;
   RustReprWithSingleTuplePayloadVariant(
       RustReprWithSingleTuplePayloadVariant&&) = default;
-  RustReprWithSingleTuplePayloadVariant& operator=(
+  ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant& operator=(
       RustReprWithSingleTuplePayloadVariant&&) = default;
 
   // `enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant` doesn't

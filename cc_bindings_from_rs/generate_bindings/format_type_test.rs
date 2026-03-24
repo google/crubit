@@ -467,6 +467,10 @@ fn test_format_ty_for_cc_failures() {
             "core::alloc::LayoutError",
             "Definition `std::alloc::LayoutError` comes from the `core` crate, but no `--crate-header` was specified for this crate",
         ),
+        (
+            "*const Result<i8, i8>",
+            "Failed to format the pointee of the pointer type `*const std::result::Result<i8, i8>`: Result as a bridge type is not yet supported"
+        ),
     ];
     let preamble = quote! {
         #![feature(never_type)]

@@ -101,12 +101,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
+  ::traits::Foo& operator=(Foo&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   Foo(const Foo&) = default;
-  Foo& operator=(const Foo&) = default;
+  ::traits::Foo& operator=(const Foo&) = default;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
     std::memcpy(this, &value, sizeof(value));
   }
@@ -136,7 +136,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   // No custom `Drop` impl and no custom "drop glue" required
   ~LifetimeStruct() = default;
   LifetimeStruct(LifetimeStruct&&) = default;
-  LifetimeStruct& operator=(LifetimeStruct&&) = default;
+  ::traits::LifetimeStruct& operator=(LifetimeStruct&&) = default;
 
   // `traits_golden::LifetimeStruct` doesn't implement the `Clone` trait
   LifetimeStruct(const LifetimeStruct&) = delete;
@@ -175,12 +175,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct() = default;
   MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
+  ::traits::MyStruct& operator=(MyStruct&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   MyStruct(const MyStruct&) = default;
-  MyStruct& operator=(const MyStruct&) = default;
+  ::traits::MyStruct& operator=(const MyStruct&) = default;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
     std::memcpy(this, &value, sizeof(value));
   }
@@ -211,12 +211,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~MyStruct2() = default;
   MyStruct2(MyStruct2&&) = default;
-  MyStruct2& operator=(MyStruct2&&) = default;
+  ::traits::MyStruct2& operator=(MyStruct2&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   MyStruct2(const MyStruct2&) = default;
-  MyStruct2& operator=(const MyStruct2&) = default;
+  ::traits::MyStruct2& operator=(const MyStruct2&) = default;
   MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value) {
     std::memcpy(this, &value, sizeof(value));
   }
@@ -253,13 +253,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~StructWithAssociatedConst() = default;
   StructWithAssociatedConst(StructWithAssociatedConst&&) = default;
-  StructWithAssociatedConst& operator=(StructWithAssociatedConst&&) = default;
+  ::traits::StructWithAssociatedConst& operator=(StructWithAssociatedConst&&) =
+      default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   StructWithAssociatedConst(const StructWithAssociatedConst&) = default;
-  StructWithAssociatedConst& operator=(const StructWithAssociatedConst&) =
-      default;
+  ::traits::StructWithAssociatedConst& operator=(
+      const StructWithAssociatedConst&) = default;
   StructWithAssociatedConst(::crubit::UnsafeRelocateTag,
                             StructWithAssociatedConst&& value) {
     std::memcpy(this, &value, sizeof(value));

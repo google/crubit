@@ -37,7 +37,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~U() = default;
   U(U&&) = default;
-  U& operator=(U&&) = default;
+  ::unions::repr_c::U& operator=(U&&) = default;
 
   // `unions_golden::repr_c::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
@@ -76,7 +76,7 @@ U final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~U() = default;
   U(U&&) = default;
-  U& operator=(U&&) = default;
+  ::unions::repr_c_clone::U& operator=(U&&) = default;
 
   // Clone::clone
   U(const U&);
@@ -147,7 +147,7 @@ __attribute__((packed)) U final {
   // No custom `Drop` impl and no custom "drop glue" required
   ~U() = default;
   U(U&&) = default;
-  U& operator=(U&&) = default;
+  ::unions::repr_c_packed::U& operator=(U&&) = default;
 
   // `unions_golden::repr_c_packed::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
@@ -185,7 +185,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
   // No custom `Drop` impl and no custom "drop glue" required
   ~U() = default;
   U(U&&) = default;
-  U& operator=(U&&) = default;
+  ::unions::repr_rust::U& operator=(U&&) = default;
 
   // `unions_golden::repr_rust::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
@@ -245,7 +245,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~U() = default;
   U(U&&) = default;
-  U& operator=(U&&) = default;
+  ::unions::repr_rust_clone::U& operator=(U&&) = default;
 
   // Clone::clone
   U(const U&);
@@ -339,7 +339,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // No custom `Drop` impl and no custom "drop glue" required
   ~U() = default;
   U(U&&) = default;
-  U& operator=(U&&) = default;
+  ::unions::repr_rust_packed::U& operator=(U&&) = default;
 
   // `unions_golden::repr_rust_packed::U` doesn't implement the `Clone` trait
   U(const U&) = delete;

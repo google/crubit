@@ -44,12 +44,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   // No custom `Drop` impl and no custom "drop glue" required
   ~TypeWithStr() = default;
   TypeWithStr(TypeWithStr&&) = default;
-  TypeWithStr& operator=(TypeWithStr&&) = default;
+  ::str::TypeWithStr& operator=(TypeWithStr&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   TypeWithStr(const TypeWithStr&) = default;
-  TypeWithStr& operator=(const TypeWithStr&) = default;
+  ::str::TypeWithStr& operator=(const TypeWithStr&) = default;
   TypeWithStr(::crubit::UnsafeRelocateTag, TypeWithStr&& value) {
     std::memcpy(this, &value, sizeof(value));
   }

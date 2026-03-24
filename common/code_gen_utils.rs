@@ -446,9 +446,6 @@ impl CcInclude {
         Self::SystemHeader("cstdint".into())
     }
 
-    /// Creates a `CcInclude` that represents `#include <cstring>` and provides
-    /// C++ methods like `std::memcpy`.
-    /// https://en.cppreference.com/w/cpp/header/cstring
     pub fn cstring() -> Self {
         Self::SystemHeader("cstring".into())
     }

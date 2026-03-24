@@ -115,35 +115,3 @@ crubit_cc_test(
         "//testing/base/public:gunit_main",
     ],
 )
-
-rust_library(
-    name = "result",
-    testonly = 1,
-    srcs = ["result.rs"],
-    proc_macro_deps = [
-        "//support:crubit_annotate",
-    ],
-)
-
-golden_test(
-    name = "result_golden_test",
-    basename = "result",
-    golden_h = "result_cc_api.h",
-    golden_rs = "result_cc_api_impl.rs",
-    rust_library = "result",
-)
-
-cc_bindings_from_rust(
-    name = "result_cc_api",
-    testonly = 1,
-    crate = ":result",
-)
-
-crubit_cc_test(
-    name = "result_test",
-    srcs = ["result_test.cc"],
-    deps = [
-        ":result_cc_api",
-        "//testing/base/public:gunit_main",
-    ],
-)

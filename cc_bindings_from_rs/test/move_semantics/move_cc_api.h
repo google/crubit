@@ -38,12 +38,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   // No custom `Drop` impl and no custom "drop glue" required
   ~Copyable() = default;
   Copyable(Copyable&&) = default;
-  Copyable& operator=(Copyable&&) = default;
+  ::move::Copyable& operator=(Copyable&&) = default;
 
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
   Copyable(const Copyable&) = default;
-  Copyable& operator=(const Copyable&) = default;
+  ::move::Copyable& operator=(const Copyable&) = default;
   Copyable(::crubit::UnsafeRelocateTag, Copyable&& value) {
     std::memcpy(this, &value, sizeof(value));
   }
