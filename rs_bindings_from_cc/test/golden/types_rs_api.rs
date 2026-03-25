@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: type alias `PtrDiff` could not be bound
 //   depends on type with missing bindings: Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported type '__ptrdiff_t': Unsupported clang::Type class 'PredefinedSugar'
 
@@ -23,7 +24,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
@@ -35,7 +36,7 @@ unsafe impl ::cxx::ExternType for SomeStruct {
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -89,7 +90,7 @@ pub struct FieldTypeTestStruct {
     pub char32_t_field: u32,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'wchar_t': Unsupported builtin type
-    pub(crate) wchar_t_field: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) wchar_t_field: [::__rust_core::mem::MaybeUninit<u8>; 4],
     pub short_field: ::ffi_11::c_short,
     pub int_field: ::ffi_11::c_int,
     pub long_field: ::ffi_11::c_long,
@@ -104,10 +105,10 @@ pub struct FieldTypeTestStruct {
     pub signed_long_long_field: ::ffi_11::c_longlong,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type alias PtrDiff
-    pub(crate) ptrdiff_t_field: [::core::mem::MaybeUninit<u8>; 8],
+    pub(crate) ptrdiff_t_field: [::__rust_core::mem::MaybeUninit<u8>; 8],
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type alias Size
-    pub(crate) size_t_field: [::core::mem::MaybeUninit<u8>; 8],
+    pub(crate) size_t_field: [::__rust_core::mem::MaybeUninit<u8>; 8],
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut ::ffi_11::c_int,
@@ -125,7 +126,7 @@ pub struct FieldTypeTestStruct {
     ///
     /// Reason for representing this field as a blob of bytes:
     /// incomplete type
-    pub(crate) forward_declared_ptr_field: [::core::mem::MaybeUninit<u8>; 8],
+    pub(crate) forward_declared_ptr_field: [::__rust_core::mem::MaybeUninit<u8>; 8],
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
 impl !Send for FieldTypeTestStruct {}
@@ -178,7 +179,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) unsafe fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
             unsafe extern "C" fn(
@@ -194,47 +197,62 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::SomeStruct>() == 1);
-    assert!(::core::mem::align_of::<crate::SomeStruct>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::SomeStruct>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::SomeStruct>() == 1);
     static_assertions::assert_impl_all!(crate::SomeStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 
-    assert!(::core::mem::size_of::<crate::FieldTypeTestStruct>() == 208);
-    assert!(::core::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::FieldTypeTestStruct>() == 208);
+    assert!(::__rust_core::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
     static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::FieldTypeTestStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, bool_field) == 0);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, char_field) == 1);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_char_field) == 2);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, signed_char_field) == 3);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, char16_t_field) == 4);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, char32_t_field) == 8);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, wchar_t_field) == 12);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, short_field) == 16);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, int_field) == 20);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, long_field) == 24);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, long_long_field) == 32);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_short_field) == 40);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_int_field) == 44);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_long_field) == 48);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_long_long_field) == 56);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, signed_short_field) == 64);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, signed_int_field) == 68);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, signed_long_field) == 72);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, signed_long_long_field) == 80);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, ptrdiff_t_field) == 88);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, size_t_field) == 96);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, float_field) == 104);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, double_field) == 112);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, ptr_field) == 120);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, void_ptr_field) == 128);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, const_void_ptr_field) == 136);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, void_double_ptr_field) == 144);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, struct_field) == 152);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, struct_ptr_field) == 160);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) == 168);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, struct_ref_field) == 176);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) == 184);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field) == 192);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, cyclic_ptr_field) == 200);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, bool_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, char_field) == 1);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_char_field) == 2);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, signed_char_field) == 3);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, char16_t_field) == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, char32_t_field) == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, wchar_t_field) == 12);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, short_field) == 16);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, int_field) == 20);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, long_field) == 24);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, long_long_field) == 32);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_short_field) == 40);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_int_field) == 44);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_long_field) == 48);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_long_long_field) == 56
+    );
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, signed_short_field) == 64);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, signed_int_field) == 68);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, signed_long_field) == 72);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, signed_long_long_field) == 80
+    );
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, ptrdiff_t_field) == 88);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, size_t_field) == 96);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, float_field) == 104);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, double_field) == 112);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, ptr_field) == 120);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, void_ptr_field) == 128);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, const_void_ptr_field) == 136
+    );
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, void_double_ptr_field) == 144
+    );
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, struct_field) == 152);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, struct_ptr_field) == 160);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) == 168
+    );
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, struct_ref_field) == 176);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) == 184
+    );
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field)
+            == 192
+    );
+    assert!(::__rust_core::mem::offset_of!(crate::FieldTypeTestStruct, cyclic_ptr_field) == 200);
 };

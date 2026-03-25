@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 extern "C" {
     pub static mut extern_int: ::ffi_11::c_int;
 }
@@ -96,7 +97,7 @@ pub mod foo {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum
 pub struct StructWithAnonEnum {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for StructWithAnonEnum {}
 impl !Sync for StructWithAnonEnum {}
@@ -109,7 +110,7 @@ unsafe impl ::cxx::ExternType for StructWithAnonEnum {
 impl Default for StructWithAnonEnum {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18StructWithAnonEnumC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -138,14 +139,14 @@ mod detail {
         #[link_name = "_Z15GetInlineIntValv"]
         pub(crate) unsafe fn __rust_thunk___Z15GetInlineIntValv() -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN18StructWithAnonEnumC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::StructWithAnonEnum>() == 1);
-    assert!(::core::mem::align_of::<crate::StructWithAnonEnum>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithAnonEnum>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithAnonEnum>() == 1);
     static_assertions::assert_impl_all!(crate::StructWithAnonEnum: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithAnonEnum: Drop);
 };

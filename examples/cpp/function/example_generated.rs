@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod gshoe {
     /// Generated from: examples/cpp/function/example.h;l=12
     #[inline(always)]

@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
@@ -21,7 +22,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
 pub union EmptyUnion {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for EmptyUnion {}
 impl !Sync for EmptyUnion {}
@@ -33,7 +34,7 @@ unsafe impl ::cxx::ExternType for EmptyUnion {
 impl Default for EmptyUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -59,7 +60,7 @@ impl Default for EmptyUnion {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
@@ -77,7 +78,9 @@ impl ::ctor::CtorNew<()> for Nontrivial {
         let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(dest as *mut ::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
+                    dest as *mut ::__rust_core::ffi::c_void,
+                );
             })
         }
     }
@@ -94,7 +97,7 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionToRename
 pub union RenamedUnion {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for RenamedUnion {}
 impl !Sync for RenamedUnion {}
@@ -106,7 +109,7 @@ unsafe impl ::cxx::ExternType for RenamedUnion {
 impl Default for RenamedUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13UnionToRenameC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -132,7 +135,7 @@ impl Default for RenamedUnion {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
@@ -150,7 +153,7 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
     }
 }
@@ -178,7 +181,7 @@ unsafe impl ::cxx::ExternType for NonEmptyUnion {
 impl Default for NonEmptyUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -209,7 +212,7 @@ impl Default for NonEmptyUnion {
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion
 pub union NonCopyUnion {
     pub trivial_member: bool,
-    pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
+    pub nontrivial_member: ::__rust_core::mem::ManuallyDrop<crate::Nontrivial>,
 }
 impl !Send for NonCopyUnion {}
 impl !Sync for NonCopyUnion {}
@@ -227,7 +230,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion {
 pub union NonCopyUnion2 {
     pub trivial_member: bool,
     pub nontrivial_member:
-        ::core::mem::ManuallyDrop<crate::TriviallyCopyableButNontriviallyDestructible>,
+        ::__rust_core::mem::ManuallyDrop<crate::TriviallyCopyableButNontriviallyDestructible>,
 }
 impl !Send for NonCopyUnion2 {}
 impl !Sync for NonCopyUnion2 {}
@@ -262,7 +265,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
-    pub(crate) constant_array_field_not_yet_supported: [::core::mem::MaybeUninit<u8>; 42],
+    pub(crate) constant_array_field_not_yet_supported: [::__rust_core::mem::MaybeUninit<u8>; 42],
 }
 impl !Send for UnionWithOpaqueField {}
 impl !Sync for UnionWithOpaqueField {}
@@ -274,7 +277,7 @@ unsafe impl ::cxx::ExternType for UnionWithOpaqueField {
 impl Default for UnionWithOpaqueField {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -312,7 +315,7 @@ unsafe impl ::cxx::ExternType for TrivialButInheritable {
 impl Default for TrivialButInheritable {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN21TrivialButInheritableC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -354,7 +357,7 @@ unsafe impl ::cxx::ExternType for UnionWithInheritable {
 impl Default for UnionWithInheritable {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20UnionWithInheritableC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -396,7 +399,7 @@ unsafe impl ::cxx::ExternType for TypedefUnion {
 impl Default for TypedefUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12TypedefUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -438,7 +441,7 @@ unsafe impl ::cxx::ExternType for TypedefUnionWithInheritable {
 impl Default for TypedefUnionWithInheritable {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
                 &raw mut tmp as *mut _,
@@ -466,107 +469,123 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         #[link_name = "_ZN10NontrivialC1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<
             'a,
         >(
-            __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
+            __this: ::__rust_core::pin::Pin<
+                &'a mut crate::TriviallyCopyableButNontriviallyDestructible,
+            >,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::EmptyUnion>() == 1);
-    assert!(::core::mem::align_of::<crate::EmptyUnion>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::EmptyUnion>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::EmptyUnion>() == 1);
     static_assertions::assert_impl_all!(crate::EmptyUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::EmptyUnion: Drop);
 
-    assert!(::core::mem::size_of::<crate::Nontrivial>() == 4);
-    assert!(::core::mem::align_of::<crate::Nontrivial>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Nontrivial>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Nontrivial>() == 4);
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::Nontrivial, field) == 0);
-    assert!(::core::mem::size_of::<crate::RenamedUnion>() == 1);
-    assert!(::core::mem::align_of::<crate::RenamedUnion>() == 1);
+    assert!(::__rust_core::mem::offset_of!(crate::Nontrivial, field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::RenamedUnion>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::RenamedUnion>() == 1);
     static_assertions::assert_impl_all!(crate::RenamedUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::RenamedUnion: Drop);
 
-    assert!(::core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
-    assert!(::core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(
+        ::__rust_core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1
+    );
+    assert!(
+        ::__rust_core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1
+    );
     static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
     static_assertions::assert_not_impl_any!(crate::TriviallyCopyableButNontriviallyDestructible: Copy);
 
-    assert!(::core::mem::size_of::<crate::NonEmptyUnion>() == 8);
-    assert!(::core::mem::align_of::<crate::NonEmptyUnion>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::NonEmptyUnion>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::NonEmptyUnion>() == 8);
     static_assertions::assert_impl_all!(crate::NonEmptyUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::NonEmptyUnion: Drop);
-    assert!(::core::mem::offset_of!(crate::NonEmptyUnion, bool_field) == 0);
-    assert!(::core::mem::offset_of!(crate::NonEmptyUnion, char_field) == 0);
-    assert!(::core::mem::offset_of!(crate::NonEmptyUnion, int_field) == 0);
-    assert!(::core::mem::offset_of!(crate::NonEmptyUnion, long_long_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonEmptyUnion, bool_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonEmptyUnion, char_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonEmptyUnion, int_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonEmptyUnion, long_long_field) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_char: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_longlong: Copy);
-    assert!(::core::mem::size_of::<crate::NonCopyUnion>() == 4);
-    assert!(::core::mem::align_of::<crate::NonCopyUnion>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::NonCopyUnion>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::NonCopyUnion>() == 4);
     static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::NonCopyUnion, trivial_member) == 0);
-    assert!(::core::mem::offset_of!(crate::NonCopyUnion, nontrivial_member) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonCopyUnion, trivial_member) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonCopyUnion, nontrivial_member) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
-    assert!(::core::mem::size_of::<crate::NonCopyUnion2>() == 1);
-    assert!(::core::mem::align_of::<crate::NonCopyUnion2>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::NonCopyUnion2>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::NonCopyUnion2>() == 1);
     static_assertions::assert_not_impl_any!(crate::NonCopyUnion2: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::NonCopyUnion2, trivial_member) == 0);
-    assert!(::core::mem::offset_of!(crate::NonCopyUnion2, nontrivial_member) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonCopyUnion2, trivial_member) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NonCopyUnion2, nontrivial_member) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
-    assert!(::core::mem::size_of::<crate::UnionWithOpaqueField>() == 42);
-    assert!(::core::mem::align_of::<crate::UnionWithOpaqueField>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::UnionWithOpaqueField>() == 42);
+    assert!(::__rust_core::mem::align_of::<crate::UnionWithOpaqueField>() == 1);
     static_assertions::assert_impl_all!(crate::UnionWithOpaqueField: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::UnionWithOpaqueField: Drop);
     assert!(
-        ::core::mem::offset_of!(
+        ::__rust_core::mem::offset_of!(
             crate::UnionWithOpaqueField,
             constant_array_field_not_yet_supported
         ) == 0
     );
-    assert!(::core::mem::size_of::<crate::TrivialButInheritable>() == 4);
-    assert!(::core::mem::align_of::<crate::TrivialButInheritable>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::TrivialButInheritable>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::TrivialButInheritable>() == 4);
     static_assertions::assert_impl_all!(crate::TrivialButInheritable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TrivialButInheritable: Drop);
-    assert!(::core::mem::offset_of!(crate::TrivialButInheritable, x) == 0);
-    assert!(::core::mem::size_of::<crate::UnionWithInheritable>() == 4);
-    assert!(::core::mem::align_of::<crate::UnionWithInheritable>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::TrivialButInheritable, x) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::UnionWithInheritable>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::UnionWithInheritable>() == 4);
     static_assertions::assert_impl_all!(crate::UnionWithInheritable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::UnionWithInheritable: Drop);
-    assert!(::core::mem::offset_of!(crate::UnionWithInheritable, t) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::UnionWithInheritable, t) == 0);
     static_assertions::assert_impl_all!(crate::TrivialButInheritable: Copy);
-    assert!(::core::mem::size_of::<crate::TypedefUnion>() == 1);
-    assert!(::core::mem::align_of::<crate::TypedefUnion>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::TypedefUnion>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::TypedefUnion>() == 1);
     static_assertions::assert_impl_all!(crate::TypedefUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TypedefUnion: Drop);
-    assert!(::core::mem::offset_of!(crate::TypedefUnion, trivial_member) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::TypedefUnion, trivial_member) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
-    assert!(::core::mem::size_of::<crate::TypedefUnionWithInheritable>() == 4);
-    assert!(::core::mem::align_of::<crate::TypedefUnionWithInheritable>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::TypedefUnionWithInheritable>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::TypedefUnionWithInheritable>() == 4);
     static_assertions::assert_impl_all!(crate::TypedefUnionWithInheritable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TypedefUnionWithInheritable: Drop);
-    assert!(::core::mem::offset_of!(crate::TypedefUnionWithInheritable, t) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::TypedefUnionWithInheritable, t) == 0);
     static_assertions::assert_impl_all!(crate::TrivialButInheritable: Copy);
 };

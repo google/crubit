@@ -14,12 +14,13 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithPtrConstructor
 pub struct TypeWithPtrConstructor {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TypeWithPtrConstructor {}
 impl !Sync for TypeWithPtrConstructor {}
@@ -52,7 +53,7 @@ where
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithNonNullPtrConstructor
 pub struct TypeWithNonNullPtrConstructor {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TypeWithNonNullPtrConstructor {}
 impl !Sync for TypeWithNonNullPtrConstructor {}
@@ -85,7 +86,7 @@ where
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithReferenceConstructor
 pub struct TypeWithReferenceConstructor {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TypeWithReferenceConstructor {}
 impl !Sync for TypeWithReferenceConstructor {}
@@ -99,7 +100,7 @@ impl From<&mut ::ffi_11::c_int> for TypeWithReferenceConstructor {
     #[inline(always)]
     fn from(args: &mut ::ffi_11::c_int) -> Self {
         let mut r#ref = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN28TypeWithReferenceConstructorC1ERi(
                 &raw mut tmp as *mut _,
@@ -123,25 +124,25 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN28TypeWithReferenceConstructorC1ERi(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             r#ref: &mut ::ffi_11::c_int,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::TypeWithPtrConstructor>() == 1);
-    assert!(::core::mem::align_of::<crate::TypeWithPtrConstructor>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::TypeWithPtrConstructor>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::TypeWithPtrConstructor>() == 1);
     static_assertions::assert_impl_all!(crate::TypeWithPtrConstructor: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TypeWithPtrConstructor: Drop);
 
-    assert!(::core::mem::size_of::<crate::TypeWithNonNullPtrConstructor>() == 1);
-    assert!(::core::mem::align_of::<crate::TypeWithNonNullPtrConstructor>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::TypeWithNonNullPtrConstructor>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::TypeWithNonNullPtrConstructor>() == 1);
     static_assertions::assert_impl_all!(crate::TypeWithNonNullPtrConstructor: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TypeWithNonNullPtrConstructor: Drop);
 
-    assert!(::core::mem::size_of::<crate::TypeWithReferenceConstructor>() == 1);
-    assert!(::core::mem::align_of::<crate::TypeWithReferenceConstructor>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::TypeWithReferenceConstructor>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::TypeWithReferenceConstructor>() == 1);
     static_assertions::assert_impl_all!(crate::TypeWithReferenceConstructor: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TypeWithReferenceConstructor: Drop);
 };

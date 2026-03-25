@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod crubit {
     pub mod rust_type { // error: class `crubit::rust_type::Args` could not be bound
                         //   Class templates are not yet supported
@@ -68,7 +69,7 @@ unsafe impl ::cxx::ExternType for ExistingRustTypeFieldTypes {
 impl Default for ExistingRustTypeFieldTypes {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
                 &raw mut tmp as *mut _,
@@ -144,7 +145,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z12AcceptPtrInt3PtrIiE(
             ptr: &mut crate::RustPtr<::ffi_11::c_int>,
@@ -166,39 +167,43 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<i8>() == 1);
-    assert!(::core::mem::align_of::<i8>() == 1);
-    assert!(::core::mem::size_of::<i8>() == 1);
-    assert!(::core::mem::align_of::<i8>() == 1);
-    assert!(::core::mem::size_of::<i8>() == 1);
-    assert!(::core::mem::align_of::<i8>() == 1);
-    assert!(::core::mem::size_of::<i8>() == 1);
-    assert!(::core::mem::align_of::<i8>() == 1);
-    assert!(::core::mem::size_of::<crate::ExistingRustTypeFieldTypes>() == 5);
-    assert!(::core::mem::align_of::<crate::ExistingRustTypeFieldTypes>() == 1);
+    assert!(::__rust_core::mem::size_of::<i8>() == 1);
+    assert!(::__rust_core::mem::align_of::<i8>() == 1);
+    assert!(::__rust_core::mem::size_of::<i8>() == 1);
+    assert!(::__rust_core::mem::align_of::<i8>() == 1);
+    assert!(::__rust_core::mem::size_of::<i8>() == 1);
+    assert!(::__rust_core::mem::align_of::<i8>() == 1);
+    assert!(::__rust_core::mem::size_of::<i8>() == 1);
+    assert!(::__rust_core::mem::align_of::<i8>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::ExistingRustTypeFieldTypes>() == 5);
+    assert!(::__rust_core::mem::align_of::<crate::ExistingRustTypeFieldTypes>() == 1);
     static_assertions::assert_impl_all!(crate::ExistingRustTypeFieldTypes: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ExistingRustTypeFieldTypes: Drop);
-    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_struct) == 0);
-    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_class) == 1);
-    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_enum) == 2);
-    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_alias) == 3);
-    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, error) == 4);
-    assert!(::core::mem::size_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
-    assert!(::core::mem::align_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_struct) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_class) == 1);
+    assert!(::__rust_core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_enum) == 2);
+    assert!(::__rust_core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_alias) == 3);
+    assert!(::__rust_core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, error) == 4);
+    assert!(::__rust_core::mem::size_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
     assert!(
-        ::core::mem::size_of::<crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>>()
-            == 16
+        ::__rust_core::mem::size_of::<
+            crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
+        >() == 16
     );
     assert!(
-        ::core::mem::align_of::<crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>>()
-            == 8
+        ::__rust_core::mem::align_of::<
+            crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
+        >() == 8
     );
-    assert!(::core::mem::size_of::<crate::RustTypeReordered<f32, ::ffi_11::c_int>>() == 1);
-    assert!(::core::mem::align_of::<crate::RustTypeReordered<f32, ::ffi_11::c_int>>() == 1);
-    assert!(::core::mem::size_of::<crate::RustTypeWithDefault<f32, ::ffi_11::c_int>>() == 1);
-    assert!(::core::mem::align_of::<crate::RustTypeWithDefault<f32, ::ffi_11::c_int>>() == 1);
-    assert!(::core::mem::size_of::<crate::MyRustContainer<::ffi_11::c_int>>() == 1);
-    assert!(::core::mem::align_of::<crate::MyRustContainer<::ffi_11::c_int>>() == 1);
-    assert!(::core::mem::size_of::<crate::MyRustContainerVoid>() == 1);
-    assert!(::core::mem::align_of::<crate::MyRustContainerVoid>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::RustTypeReordered<f32, ::ffi_11::c_int>>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::RustTypeReordered<f32, ::ffi_11::c_int>>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::RustTypeWithDefault<f32, ::ffi_11::c_int>>() == 1);
+    assert!(
+        ::__rust_core::mem::align_of::<crate::RustTypeWithDefault<f32, ::ffi_11::c_int>>() == 1
+    );
+    assert!(::__rust_core::mem::size_of::<crate::MyRustContainer<::ffi_11::c_int>>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::MyRustContainer<::ffi_11::c_int>>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::MyRustContainerVoid>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::MyRustContainerVoid>() == 1);
 };

@@ -586,7 +586,7 @@ fn api_func_shape_for_operator(
                 let impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: Rc::from(format!("::core::ops::{trait_name}")),
+                        name: Rc::from(format!("::__rust_core::ops::{trait_name}")),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
@@ -606,7 +606,7 @@ fn api_func_shape_for_operator(
                 let impl_kind = ImplKind::Trait {
                     record,
                     trait_name: TraitName::Other {
-                        name: Rc::from(format!("::core::ops::{trait_name}")),
+                        name: Rc::from(format!("::__rust_core::ops::{trait_name}")),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
@@ -1094,7 +1094,7 @@ fn generate_func_body(
             // we don't need to worry about them.
             Ok(quote! {
                 #thunk_prepare
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut _ #( , #thunk_args )* );
                     tmp.assume_init()
@@ -1134,9 +1134,9 @@ fn generate_func_body(
                 }
                 PassingConvention::LayoutCompatible => {
                     quote! {
-                        let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
+                        let mut __return = ::__rust_core::mem::MaybeUninit::<#return_type_or_self>::uninit();
                         #crate_root_path::detail::#thunk_ident(
-                            &raw mut __return as *mut ::core::ffi::c_void
+                            &raw mut __return as *mut ::__rust_core::ffi::c_void
                             #( , #clone_prefixes #thunk_args #clone_suffixes )*
                         );
                         __return.assume_init()
@@ -1161,7 +1161,7 @@ fn generate_func_body(
                         ::ctor::FnCtor::new(
                             move |dest: *mut #return_type_or_self| {
                                 #crate_root_path::detail::#thunk_ident(
-                                    dest as *mut ::core::ffi::c_void
+                                    dest as *mut ::__rust_core::ffi::c_void
                                     #( , #thunk_args )*
                                 );
                             }
@@ -1170,7 +1170,7 @@ fn generate_func_body(
                 }
                 PassingConvention::OwnedPtr => {
                     quote! {
-                        ::core::mem::transmute(
+                        ::__rust_core::mem::transmute(
                             #crate_root_path::detail::#thunk_ident(
                                 #( #clone_prefixes #thunk_args #clone_suffixes ),*
                             )
@@ -2052,12 +2052,12 @@ fn function_signature(
                 *features |= Feature::impl_trait_in_assoc_type;
                 api_params.push(quote! {#ident: ::ctor::Ctor![#quoted_type_or_self]});
                 thunk_args.push(
-                    quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))},
+                    quote! {::__rust_core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))},
                 );
             }
             PassingConvention::OwnedPtr => {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
-                thunk_args.push(quote! {::core::mem::transmute(#ident)});
+                thunk_args.push(quote! {::__rust_core::mem::transmute(#ident)});
             }
             PassingConvention::Void => {
                 unreachable!("parameter types should never be void")

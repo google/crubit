@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // Type bindings for MyI8 suppressed due to being mapped to an existing Rust type (i8)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -31,7 +32,7 @@ unsafe impl ::cxx::ExternType for X {
 impl Default for X {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN1XC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -59,7 +60,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN1XC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN1XC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
         pub(crate) unsafe fn __rust_thunk___Z1fiPvi(
             a: crate::MyTypedefDecl,
@@ -70,11 +71,11 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<i8>() == 1);
-    assert!(::core::mem::align_of::<i8>() == 1);
-    assert!(::core::mem::size_of::<crate::X>() == 4);
-    assert!(::core::mem::align_of::<crate::X>() == 4);
+    assert!(::__rust_core::mem::size_of::<i8>() == 1);
+    assert!(::__rust_core::mem::align_of::<i8>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::X>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::X>() == 4);
     static_assertions::assert_impl_all!(crate::X: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::X: Drop);
-    assert!(::core::mem::offset_of!(crate::X, a) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::X, a) == 0);
 };

@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// An example of a C++ struct that supports ownership via the raw pointer.
 ///
 /// The CRUBIT_OWNED_PTR_TYPE annotation is used to specify the Rust type that
@@ -25,7 +26,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Thing
 pub struct RawThing {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
 }
 impl !Send for RawThing {}
@@ -55,7 +56,7 @@ impl RawThing {
 /// THIS TYPE REQUIRES A MANUAL DROP IMPLEMENTATION.
 /// You MUST provide an `impl OwnedThing { pub fn DropImpl(&mut self) { /*...*/ } }` block in a separate Rust file (e.g., via `additional_rust_srcs`). Failure to do so will result in a compile-time error: `method not found in `OwnedThing``.
 #[repr(transparent)]
-pub struct OwnedThing(::core::ptr::NonNull<RawThing>);
+pub struct OwnedThing(::__rust_core::ptr::NonNull<RawThing>);
 impl Drop for OwnedThing {
     fn drop(&mut self) {
         // IMPORTANT: The DropImpl method for `{}` MUST be implemented in a user-written .rs file (e.g., using `additional_rust_srcs`).
@@ -70,7 +71,7 @@ impl From<i32> for RawThing {
     #[inline(always)]
     fn from(args: i32) -> Self {
         let mut value = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5ThingC1Ei(&raw mut tmp as *mut _, value);
             tmp.assume_init()
@@ -104,7 +105,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN5ThingC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             value: i32,
         );
         pub(crate) unsafe fn __rust_thunk___ZN5Thing5CloseEv(__this: *mut crate::RawThing);
@@ -112,9 +113,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::RawThing>() == 4);
-    assert!(::core::mem::align_of::<crate::RawThing>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::RawThing>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::RawThing>() == 4);
     static_assertions::assert_impl_all!(crate::RawThing: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::RawThing: Drop);
-    assert!(::core::mem::offset_of!(crate::RawThing, value) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::RawThing, value) == 0);
 };

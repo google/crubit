@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=FirstStruct
@@ -29,7 +30,7 @@ unsafe impl ::cxx::ExternType for FirstStruct {
 impl Default for FirstStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -58,7 +59,7 @@ unsafe impl ::cxx::ExternType for SecondStruct {
 impl Default for SecondStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -75,22 +76,26 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z10first_funcv() -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z11second_funcv() -> ::ffi_11::c_int;
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::FirstStruct>() == 4);
-    assert!(::core::mem::align_of::<crate::FirstStruct>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::FirstStruct>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::FirstStruct>() == 4);
     static_assertions::assert_impl_all!(crate::FirstStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::FirstStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::FirstStruct, field) == 0);
-    assert!(::core::mem::size_of::<crate::SecondStruct>() == 4);
-    assert!(::core::mem::align_of::<crate::SecondStruct>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::FirstStruct, field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::SecondStruct>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::SecondStruct>() == 4);
     static_assertions::assert_impl_all!(crate::SecondStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SecondStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::SecondStruct, field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::SecondStruct, field) == 0);
 };

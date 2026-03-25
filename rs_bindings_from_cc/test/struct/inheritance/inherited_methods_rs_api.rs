@@ -14,12 +14,13 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
@@ -38,7 +39,9 @@ impl ::ctor::CtorNew<()> for Nonmovable {
         let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(dest as *mut ::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
+                    dest as *mut ::__rust_core::ffi::c_void,
+                );
             })
         }
     }
@@ -49,7 +52,7 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Base
 pub struct Base {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Base {}
 impl !Sync for Base {}
@@ -82,7 +85,7 @@ impl Base {
 impl Default for Base {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN4BaseC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -100,7 +103,7 @@ pub trait BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable {}
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Derived
 pub struct Derived {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
@@ -135,7 +138,7 @@ impl Derived {
 impl Default for Derived {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -158,27 +161,29 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN4BaseC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN4BaseC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZNK4Base12has_bindingsEv<'__this>(
             __this: &'__this crate::Base,
         ) -> bool;
-        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::__rust_core::ffi::c_void);
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Nonmovable>() == 1);
-    assert!(::core::mem::align_of::<crate::Nonmovable>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Nonmovable>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Nonmovable>() == 1);
     static_assertions::assert_not_impl_any!(crate::Nonmovable: Copy,Drop);
 
-    assert!(::core::mem::size_of::<crate::Base>() == 1);
-    assert!(::core::mem::align_of::<crate::Base>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Base>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Base>() == 1);
     static_assertions::assert_impl_all!(crate::Base: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Base: Drop);
 
-    assert!(::core::mem::size_of::<crate::Derived>() == 1);
-    assert!(::core::mem::align_of::<crate::Derived>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Derived>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Derived>() == 1);
     static_assertions::assert_impl_all!(crate::Derived: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Derived: Drop);
 };

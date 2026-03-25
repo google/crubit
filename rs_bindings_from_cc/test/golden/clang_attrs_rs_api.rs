@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(64))]
 ///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignment
 pub struct HasCustomAlignment {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 64],
 }
 impl !Send for HasCustomAlignment {}
 impl !Sync for HasCustomAlignment {}
@@ -29,7 +30,7 @@ unsafe impl ::cxx::ExternType for HasCustomAlignment {
 impl Default for HasCustomAlignment {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -53,7 +54,7 @@ unsafe impl ::cxx::ExternType for HasFieldWithCustomAlignment {
 impl Default for HasFieldWithCustomAlignment {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
                 &raw mut tmp as *mut _,
@@ -67,7 +68,7 @@ impl Default for HasFieldWithCustomAlignment {
 #[repr(C, align(64))]
 ///CRUBIT_ANNOTATE: cpp_type=InheritsFromBaseWithCustomAlignment
 pub struct InheritsFromBaseWithCustomAlignment {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 64],
 }
 impl !Send for InheritsFromBaseWithCustomAlignment {}
 impl !Sync for InheritsFromBaseWithCustomAlignment {}
@@ -79,7 +80,7 @@ unsafe impl ::cxx::ExternType for InheritsFromBaseWithCustomAlignment {
 impl Default for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
                 &raw mut tmp as *mut _,
@@ -93,7 +94,7 @@ impl Default for InheritsFromBaseWithCustomAlignment {
 #[repr(C, align(64))]
 ///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr
 pub struct HasCustomAlignmentWithGnuAttr {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 64],
 }
 impl !Send for HasCustomAlignmentWithGnuAttr {}
 impl !Sync for HasCustomAlignmentWithGnuAttr {}
@@ -105,7 +106,7 @@ unsafe impl ::cxx::ExternType for HasCustomAlignmentWithGnuAttr {
 impl Default for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
                 &raw mut tmp as *mut _,
@@ -138,38 +139,38 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN18HasCustomAlignmentC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::HasCustomAlignment>() == 64);
-    assert!(::core::mem::align_of::<crate::HasCustomAlignment>() == 64);
+    assert!(::__rust_core::mem::size_of::<crate::HasCustomAlignment>() == 64);
+    assert!(::__rust_core::mem::align_of::<crate::HasCustomAlignment>() == 64);
     static_assertions::assert_impl_all!(crate::HasCustomAlignment: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignment: Drop);
 
-    assert!(::core::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64);
-    assert!(::core::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64);
+    assert!(::__rust_core::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64);
+    assert!(::__rust_core::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64);
     static_assertions::assert_impl_all!(crate::HasFieldWithCustomAlignment: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment: Drop);
-    assert!(::core::mem::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
-    assert!(::core::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
-    assert!(::core::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
+    assert!(::__rust_core::mem::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
+    assert!(::__rust_core::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
     static_assertions::assert_impl_all!(crate::InheritsFromBaseWithCustomAlignment: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment: Drop);
 
-    assert!(::core::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
-    assert!(::core::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
+    assert!(::__rust_core::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
+    assert!(::__rust_core::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
     static_assertions::assert_impl_all!(crate::HasCustomAlignmentWithGnuAttr: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Drop);
 };

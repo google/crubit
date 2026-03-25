@@ -14,14 +14,15 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=10
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
 pub struct DestructionOrderRecorder {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) int_field_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for DestructionOrderRecorder {}
 impl !Sync for DestructionOrderRecorder {}
@@ -60,7 +61,7 @@ impl From<::ffi_11::c_int> for DestructionOrderRecorder {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut int_field = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorderC1Ei(
                 &raw mut tmp as *mut _,
@@ -84,7 +85,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for DestructionOrderRecorder {
     #[inline(always)]
     fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
         let mut other = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorderC1EOS_(
                 &raw mut tmp as *mut _,
@@ -125,16 +126,16 @@ impl Drop for DestructionOrderRecorder {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
 pub struct FieldDestructionOrderTester {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field1_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) field1_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field2_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) field2_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field3_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) field3_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for FieldDestructionOrderTester {}
 impl !Sync for FieldDestructionOrderTester {}
@@ -163,7 +164,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrderTester {
     #[inline(always)]
     fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
         let mut __param_0 = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesterC1EOS_(
                 &raw mut tmp as *mut _,
@@ -217,7 +218,7 @@ impl
         ),
     ) -> Self {
         let (mut field1, mut field2, mut field3) = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(&raw mut tmp as*mut _,&mut field1,&mut field2,&mut field3);
             tmp.assume_init()
@@ -262,11 +263,11 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             int_field: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderC1EOS_(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             other: ::ctor::RvalueReference<'_, crate::DestructionOrderRecorder>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderaSEOS_<'__return_lifetime>(
@@ -286,7 +287,7 @@ mod detail {
         #[link_name = "_ZN24DestructionOrderRecorder22ClearDestructionRecordEv"]
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv();
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterC1EOS_(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'_, crate::FieldDestructionOrderTester>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterD1Ev<'a>(
@@ -299,7 +300,7 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'_, crate::FieldDestructionOrderTester>,
         ) -> &'__return_lifetime mut crate::FieldDestructionOrderTester;
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field1: &mut crate::DestructionOrderRecorder,
             field2: &mut crate::DestructionOrderRecorder,
             field3: &mut crate::DestructionOrderRecorder,
@@ -313,16 +314,16 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::DestructionOrderRecorder>() == 4);
-    assert!(::core::mem::align_of::<crate::DestructionOrderRecorder>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::DestructionOrderRecorder>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::DestructionOrderRecorder>() == 4);
     static_assertions::assert_impl_all!(crate::DestructionOrderRecorder: Drop);
     static_assertions::assert_not_impl_any!(crate::DestructionOrderRecorder: Copy);
-    assert!(::core::mem::offset_of!(crate::DestructionOrderRecorder, int_field_) == 0);
-    assert!(::core::mem::size_of::<crate::FieldDestructionOrderTester>() == 12);
-    assert!(::core::mem::align_of::<crate::FieldDestructionOrderTester>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::DestructionOrderRecorder, int_field_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::FieldDestructionOrderTester>() == 12);
+    assert!(::__rust_core::mem::align_of::<crate::FieldDestructionOrderTester>() == 4);
     static_assertions::assert_impl_all!(crate::FieldDestructionOrderTester: Drop);
     static_assertions::assert_not_impl_any!(crate::FieldDestructionOrderTester: Copy);
-    assert!(::core::mem::offset_of!(crate::FieldDestructionOrderTester, field1_) == 0);
-    assert!(::core::mem::offset_of!(crate::FieldDestructionOrderTester, field2_) == 4);
-    assert!(::core::mem::offset_of!(crate::FieldDestructionOrderTester, field3_) == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldDestructionOrderTester, field1_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldDestructionOrderTester, field2_) == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldDestructionOrderTester, field3_) == 8);
 };

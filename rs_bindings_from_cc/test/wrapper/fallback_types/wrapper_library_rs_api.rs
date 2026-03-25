@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/wrapper/fallback_types/wrapper_library.h;l=10
 #[inline(always)]
 pub(crate) fn GetGlobalUnsupportedType(

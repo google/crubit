@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/free_function.h;l=8
 #[inline(always)]
 pub fn increment_int_ref<'a>(a: &'a mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int {

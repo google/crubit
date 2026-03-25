@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Nontrivial due to (declared, but not yet defined) user-specified constructor
 /// and destructor.
 ///
@@ -22,7 +23,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
@@ -33,7 +34,7 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 }
 impl Nontrivial {
     #[inline(always)]
-    pub fn Unqualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Unqualified<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(self) }
     }
     #[inline(always)]
@@ -41,7 +42,7 @@ impl Nontrivial {
         unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(self) }
     }
     #[inline(always)]
-    pub fn LvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn LvalueRefQualified<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(self) }
     }
     #[inline(always)]
@@ -58,7 +59,9 @@ impl ::ctor::CtorNew<()> for Nontrivial {
         let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(dest as *mut ::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
+                    dest as *mut ::__rust_core::ffi::c_void,
+                );
             })
         }
     }
@@ -73,7 +76,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     field,
                 );
             })
@@ -99,7 +102,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     field,
                     unused,
                 );
@@ -127,11 +130,11 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
 
 impl ::ctor::Assign<f32> for Nontrivial {
     #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: f32) {
+    fn assign<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>, __param_0: f32) {
         unsafe {
             let _ = ::ctor::emplace!(::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialaSEf(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     self,
                     __param_0,
                 );
@@ -142,7 +145,7 @@ impl ::ctor::Assign<f32> for Nontrivial {
 
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self)
     }
 }
@@ -166,7 +169,7 @@ impl ::ctor::PinnedDrop for Nontrivial {
 //   Unsupported parameter #1 (rhs): references are not yet supported
 
 // error: function `Nontrivial::operator+=` could not be bound
-//   Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'a mut crate::Nontrivial>
+//   Compound assignment operators are not supported for non-Unpin types, found ::__rust_core::pin::Pin<&'a mut crate::Nontrivial>
 
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
@@ -176,7 +179,7 @@ impl ::ctor::PinnedDrop for Nontrivial {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
 pub struct NontrivialInline {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for NontrivialInline {}
@@ -187,7 +190,7 @@ unsafe impl ::cxx::ExternType for NontrivialInline {
 }
 impl NontrivialInline {
     #[inline(always)]
-    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn MemberFunction<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
     }
 }
@@ -201,7 +204,7 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -217,7 +220,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialInline {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     field,
                 );
             })
@@ -243,7 +246,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     field,
                     unused,
                 );
@@ -271,7 +274,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
 
 impl ::ctor::PinnedDrop for NontrivialInline {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self)
     }
 }
@@ -287,7 +290,8 @@ impl ::ctor::PinnedDrop for NontrivialInline {
 pub struct NontrivialMembers {
     /// Reason for representing this field as a blob of bytes:
     /// nontrivial fields would be destroyed in the wrong order
-    pub(crate) nontrivial_member: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) nontrivial_member:
+        [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for NontrivialMembers {}
 impl !Sync for NontrivialMembers {}
@@ -305,7 +309,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -320,7 +324,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 
 impl ::ctor::PinnedDrop for NontrivialMembers {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
     }
 }
@@ -337,7 +341,7 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
 pub struct NontrivialUnpin {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for NontrivialUnpin {}
@@ -356,7 +360,7 @@ impl NontrivialUnpin {
 impl Default for NontrivialUnpin {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -368,7 +372,7 @@ impl From<::ffi_11::c_int> for NontrivialUnpin {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut field = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ei(&raw mut tmp as *mut _, field);
             tmp.assume_init()
@@ -388,7 +392,7 @@ impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialUnpin {
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
         let (mut field, mut unused) = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Eii(
                 &raw mut tmp as *mut _,
@@ -442,8 +446,8 @@ pub fn TakesByValue(
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
             crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
-                dest as *mut ::core::ffi::c_void,
-                ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+                dest as *mut ::__rust_core::ffi::c_void,
+                ::__rust_core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
             );
         })
     }
@@ -456,8 +460,8 @@ pub fn TakesByValueInline(
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::NontrivialInline| {
             crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
-                dest as *mut ::core::ffi::c_void,
-                ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+                dest as *mut ::__rust_core::ffi::c_void,
+                ::__rust_core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
             );
         })
     }
@@ -466,9 +470,9 @@ pub fn TakesByValueInline(
 #[inline(always)]
 pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<crate::NontrivialUnpin>::uninit();
+        let mut __return = ::__rust_core::mem::MaybeUninit::<crate::NontrivialUnpin>::uninit();
         crate::detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __return as *mut ::__rust_core::ffi::c_void,
             &mut nontrivial,
         );
         __return.assume_init()
@@ -512,7 +516,7 @@ pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::Nontr
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
 pub struct NontrivialByValue {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for NontrivialByValue {}
 impl !Sync for NontrivialByValue {}
@@ -541,9 +545,9 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, other: ::ctor::RvalueReference<'other, crate::Nontrivial>) {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN17NontrivialByValueaSE10Nontrivial(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 self,
                 other,
             );
@@ -574,7 +578,7 @@ where
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
@@ -584,7 +588,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
 }
 impl Nonmovable {
     #[inline(always)]
-    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn MemberFunction<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(self) }
     }
 }
@@ -597,7 +601,9 @@ impl ::ctor::CtorNew<()> for Nonmovable {
         let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(dest as *mut ::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
+                    dest as *mut ::__rust_core::ffi::c_void,
+                );
             })
         }
     }
@@ -605,7 +611,7 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 
 impl ::ctor::PinnedDrop for Nonmovable {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self)
     }
 }
@@ -631,7 +637,7 @@ pub fn ReturnsNonmovableByValue() -> ::ctor::Ctor![crate::Nonmovable] {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nonmovable| {
             crate::detail::__rust_thunk___Z24ReturnsNonmovableByValuev(
-                dest as *mut ::core::ffi::c_void,
+                dest as *mut ::__rust_core::ffi::c_void,
             );
         })
     }
@@ -642,30 +648,32 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         #[link_name = "_ZN10NontrivialC1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         #[link_name = "_ZN10NontrivialC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
         );
         #[link_name = "_ZN10NontrivialC1Eii"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Eii(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
             unused: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEf<'a>(
-            __return: *mut ::core::ffi::c_void,
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __return: *mut ::__rust_core::ffi::c_void,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Nontrivial>,
             __param_0: f32,
         );
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Nontrivial>,
         );
         #[link_name = "_ZN10Nontrivial11UnqualifiedEv"]
         pub(crate) unsafe fn __rust_thunk___ZN10Nontrivial11UnqualifiedEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Nontrivial>,
         );
         #[link_name = "_ZNK10Nontrivial14ConstQualifiedEv"]
         pub(crate) unsafe fn __rust_thunk___ZNK10Nontrivial14ConstQualifiedEv<'a>(
@@ -673,48 +681,48 @@ mod detail {
         );
         #[link_name = "_ZNR10Nontrivial18LvalueRefQualifiedEv"]
         pub(crate) unsafe fn __rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Nontrivial>,
         );
         #[link_name = "_ZNKR10Nontrivial23ConstLvalueRefQualifiedEv"]
         pub(crate) unsafe fn __rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv<'a>(
             __this: &'a crate::Nontrivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Eii(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
             unused: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::NontrivialInline>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::NontrivialInline>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::NontrivialInline>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::NontrivialInline>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::NontrivialMembers>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::NontrivialMembers>,
         );
         #[link_name = "_ZN15NontrivialUnpinC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN15NontrivialUnpinC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
         );
         #[link_name = "_ZN15NontrivialUnpinC1Eii"]
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1Eii(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
             unused: ::ffi_11::c_int,
         );
@@ -727,69 +735,71 @@ mod detail {
             __this: &'a mut crate::NontrivialUnpin,
         );
         pub(crate) unsafe fn __rust_thunk___Z12TakesByValue10Nontrivial(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             nontrivial: &mut crate::Nontrivial,
         );
         pub(crate) unsafe fn __rust_thunk___Z18TakesByValueInline16NontrivialInline(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             nontrivial: &mut crate::NontrivialInline,
         );
         pub(crate) unsafe fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             nontrivial: &mut crate::NontrivialUnpin,
         );
         pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial<'a, 'other>(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             __this: &'a mut crate::NontrivialByValue,
             other: ::ctor::RvalueReference<'other, crate::Nontrivial>,
         );
         #[link_name = "_ZN10NonmovableC1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         #[link_name = "_ZN10NonmovableD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN10NonmovableD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nonmovable>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Nonmovable>,
         );
         #[link_name = "_ZN10Nonmovable14MemberFunctionEv"]
         pub(crate) unsafe fn __rust_thunk___ZN10Nonmovable14MemberFunctionEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nonmovable>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Nonmovable>,
         );
         pub(crate) unsafe fn __rust_thunk___Z24ReturnsNonmovableByValuev(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Nontrivial>() == 4);
-    assert!(::core::mem::align_of::<crate::Nontrivial>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Nontrivial>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Nontrivial>() == 4);
     static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
-    assert!(::core::mem::offset_of!(crate::Nontrivial, field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Nontrivial, field) == 0);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
-    assert!(::core::mem::size_of::<crate::NontrivialInline>() == 4);
-    assert!(::core::mem::align_of::<crate::NontrivialInline>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::NontrivialInline>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::NontrivialInline>() == 4);
     static_assertions::assert_impl_all!(crate::NontrivialInline: Drop);
     static_assertions::assert_not_impl_any!(crate::NontrivialInline: Copy);
-    assert!(::core::mem::offset_of!(crate::NontrivialInline, field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NontrivialInline, field) == 0);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
-    assert!(::core::mem::size_of::<crate::NontrivialMembers>() == 4);
-    assert!(::core::mem::align_of::<crate::NontrivialMembers>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::NontrivialMembers>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::NontrivialMembers>() == 4);
     static_assertions::assert_impl_all!(crate::NontrivialMembers: Drop);
     static_assertions::assert_not_impl_any!(crate::NontrivialMembers: Copy);
-    assert!(::core::mem::offset_of!(crate::NontrivialMembers, nontrivial_member) == 0);
-    assert!(::core::mem::size_of::<crate::NontrivialUnpin>() == 4);
-    assert!(::core::mem::align_of::<crate::NontrivialUnpin>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::NontrivialMembers, nontrivial_member) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::NontrivialUnpin>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::NontrivialUnpin>() == 4);
     static_assertions::assert_impl_all!(crate::NontrivialUnpin: Drop);
     static_assertions::assert_not_impl_any!(crate::NontrivialUnpin: Copy);
-    assert!(::core::mem::offset_of!(crate::NontrivialUnpin, field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NontrivialUnpin, field) == 0);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
-    assert!(::core::mem::size_of::<crate::NontrivialByValue>() == 1);
-    assert!(::core::mem::align_of::<crate::NontrivialByValue>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::NontrivialByValue>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::NontrivialByValue>() == 1);
     static_assertions::assert_impl_all!(crate::NontrivialByValue: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::NontrivialByValue: Drop);
 
-    assert!(::core::mem::size_of::<crate::Nonmovable>() == 1);
-    assert!(::core::mem::align_of::<crate::Nonmovable>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Nonmovable>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Nonmovable>() == 1);
     static_assertions::assert_impl_all!(crate::Nonmovable: Drop);
     static_assertions::assert_not_impl_any!(crate::Nonmovable: Copy);
 };

@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// This type renames the special member functions so that they can be
 /// overridden in Rust instead -- this is proof that you can write bindings
 /// that are forward-compatible, as described in
@@ -21,7 +22,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CompatibleType
 pub struct CompatibleType {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for CompatibleType {}
 impl !Sync for CompatibleType {}
@@ -31,12 +32,12 @@ unsafe impl ::cxx::ExternType for CompatibleType {
 }
 impl CompatibleType {
     #[inline(always)]
-    pub fn renamed_default_constructor<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn renamed_default_constructor<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(self) }
     }
     #[inline(always)]
     pub fn renamed_constructor<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
+        self: ::__rust_core::pin::Pin<&'a mut Self>,
         __param_0: ::ffi_11::c_int,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(self, __param_0) }
@@ -56,18 +57,18 @@ mod detail {
     unsafe extern "C" {
         #[link_name = "_ZN14CompatibleTypeC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::CompatibleType>,
         );
         #[link_name = "_ZN14CompatibleTypeC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ei<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::CompatibleType>,
             __param_0: ::ffi_11::c_int,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::CompatibleType>() == 1);
-    assert!(::core::mem::align_of::<crate::CompatibleType>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::CompatibleType>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::CompatibleType>() == 1);
     static_assertions::assert_not_impl_any!(crate::CompatibleType: Copy,Drop);
 };

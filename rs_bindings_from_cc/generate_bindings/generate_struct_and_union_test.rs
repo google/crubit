@@ -169,12 +169,12 @@ fn test_simple_struct() -> Result<()> {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
-                __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+                __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
                 pub public_int: ::ffi_11::c_int,
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                pub(crate) protected_int: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+                pub(crate) protected_int: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                pub(crate) private_int: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+                pub(crate) private_int: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
             }
         }
     );
@@ -183,13 +183,13 @@ fn test_simple_struct() -> Result<()> {
         quote! {
             const _ : () = {
                 ...
-                assert!(::core::mem::size_of::<crate::SomeStruct>() == 12);
-                assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
+                assert!(::__rust_core::mem::size_of::<crate::SomeStruct>() == 12);
+                assert!(::__rust_core::mem::align_of::<crate::SomeStruct>() == 4);
                 static_assertions::assert_impl_all!(crate::SomeStruct: Drop);
                 static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
-                assert!(::core::mem::offset_of!(crate::SomeStruct, public_int) == 0);
-                assert!(::core::mem::offset_of!(crate::SomeStruct, protected_int) == 4);
-                assert!(::core::mem::offset_of!(crate::SomeStruct, private_int) == 8);
+                assert!(::__rust_core::mem::offset_of!(crate::SomeStruct, public_int) == 0);
+                assert!(::__rust_core::mem::offset_of!(crate::SomeStruct, protected_int) == 4);
+                assert!(::__rust_core::mem::offset_of!(crate::SomeStruct, private_int) == 8);
                 ...
             };
         }
@@ -280,19 +280,19 @@ fn test_struct_vs_typedefed_struct() -> Result<()> {
     // In Rust, both have align == 16 and size == 16.
     assert_rs_matches!(
         rs_api,
-        quote! { assert!(::core::mem::size_of::<crate::SomeStruct>() == 16); }
+        quote! { assert!(::__rust_core::mem::size_of::<crate::SomeStruct>() == 16); }
     );
     assert_rs_matches!(
         rs_api,
-        quote! { assert!(::core::mem::align_of::<crate::SomeStruct>() == 16); }
+        quote! { assert!(::__rust_core::mem::align_of::<crate::SomeStruct>() == 16); }
     );
     assert_rs_matches!(
         rs_api,
-        quote! { assert!(::core::mem::size_of::<crate::SomeAnonStruct>() == 16); }
+        quote! { assert!(::__rust_core::mem::size_of::<crate::SomeAnonStruct>() == 16); }
     );
     assert_rs_matches!(
         rs_api,
-        quote! { assert!(::core::mem::align_of::<crate::SomeAnonStruct>() == 16); }
+        quote! { assert!(::__rust_core::mem::align_of::<crate::SomeAnonStruct>() == 16); }
     );
 
     Ok(())
@@ -318,13 +318,13 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithUnsupportedField"]
             pub struct StructWithUnsupportedField {
                 #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported `volatile` qualifier: volatile int"]
-                pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
+                pub(crate) my_field: [::__rust_core::mem::MaybeUninit<u8>; 4],
             }
             ...
             const _: () = {
                 ...
                 assert!(
-                ::core::mem::offset_of!(crate::StructWithUnsupportedField, my_field) == 0);
+                ::__rust_core::mem::offset_of!(crate::StructWithUnsupportedField, my_field) == 0);
                 ...
             };
         }
@@ -363,8 +363,8 @@ fn test_struct_with_only_bitfields() -> Result<()> {
         quote! {
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::SomeStruct>() == 4);
-                assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
+                assert!(::__rust_core::mem::size_of::<crate::SomeStruct>() == 4);
+                assert!(::__rust_core::mem::align_of::<crate::SomeStruct>() == 4);
                 ...
             };
         }
@@ -392,14 +392,14 @@ fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
                 pub first_field: ::ffi_11::c_int, ...
-                __bitfields1: [::core::mem::MaybeUninit<u8>; 4],
+                __bitfields1: [::__rust_core::mem::MaybeUninit<u8>; 4],
                 pub last_field: ::ffi_11::c_int,
             }
             ...
             const _: () = {
                 ...
-                assert!(::core::mem::offset_of!(crate::SomeStruct, first_field) == 0);
-                assert!(::core::mem::offset_of!(crate::SomeStruct, last_field) == 8);
+                assert!(::__rust_core::mem::offset_of!(crate::SomeStruct, first_field) == 0);
+                assert!(::__rust_core::mem::offset_of!(crate::SomeStruct, last_field) == 8);
                 ...
             };
         }
@@ -564,21 +564,21 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
             pub struct StructWithUnnamedMembers {
                pub first_field: ::ffi_11::c_int,
                #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'StructWithUnnamedMembers::(anonymous struct at ./ir_from_cc_virtual_header.h:7:11)': No generated bindings found for ''"]
-               pub(crate) __unnamed_field1: [::core::mem::MaybeUninit<u8>; 8],
+               pub(crate) __unnamed_field1: [::__rust_core::mem::MaybeUninit<u8>; 8],
                #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'StructWithUnnamedMembers::(anonymous union at ./ir_from_cc_virtual_header.h:11:11)': No generated bindings found for ''"]
-               pub(crate) __unnamed_field2: [::core::mem::MaybeUninit<u8>; 4],
+               pub(crate) __unnamed_field2: [::__rust_core::mem::MaybeUninit<u8>; 4],
                pub last_field: ::ffi_11::c_int,
             }
             ...
             const _: () = {
                 ...
-                assert!(::core::mem::offset_of!(
+                assert!(::__rust_core::mem::offset_of!(
                     crate::StructWithUnnamedMembers, first_field) == 0);
-                assert!(::core::mem::offset_of!(
+                assert!(::__rust_core::mem::offset_of!(
                    crate::StructWithUnnamedMembers, __unnamed_field1) == 4);
-                assert!(::core::mem::offset_of!(
+                assert!(::__rust_core::mem::offset_of!(
                    crate::StructWithUnnamedMembers, __unnamed_field2) == 12);
-                assert!(::core::mem::offset_of!(
+                assert!(::__rust_core::mem::offset_of!(
                    crate::StructWithUnnamedMembers, last_field) == 16);
                 ...
             };
@@ -686,7 +686,7 @@ fn test_base_class_subobject_layout() -> Result<()> {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
+                __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 10],
                 pub z: ::ffi_11::c_short,
             }
         }
@@ -712,7 +712,7 @@ fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
+                __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 10],
                 pub z: ::ffi_11::c_short,
             }
         }
@@ -738,7 +738,7 @@ fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
+                __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 10],
                 pub z: ::ffi_11::c_short,
             }
         }
@@ -763,7 +763,7 @@ fn test_base_class_subobject_fieldless_layout() -> Result<()> {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
+                __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 16],
             }
         }
     );
@@ -786,7 +786,7 @@ fn test_base_class_subobject_empty_fieldless() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
                 ...
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+                __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
             }
         }
     );
@@ -834,7 +834,7 @@ fn test_non_aggregate_struct_private_field() -> Result<()> {
         rs_api,
         quote! {
             pub struct NonAggregate {
-                __non_field_data:  [::core::mem::MaybeUninit<u8>; 0],
+                __non_field_data:  [::__rust_core::mem::MaybeUninit<u8>; 0],
                 pub x: ::ffi_11::c_short,
             }
         }
@@ -865,9 +865,9 @@ fn test_no_unique_address() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
             pub struct Struct {
                 ...
-                pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
+                pub(crate) field1: [::__rust_core::mem::MaybeUninit<u8>; 8],
                 ...
-                pub(crate) field2: [::core::mem::MaybeUninit<u8>; 2],
+                pub(crate) field2: [::__rust_core::mem::MaybeUninit<u8>; 2],
                 pub z: ::ffi_11::c_short,
             }
         }
@@ -916,9 +916,9 @@ fn test_no_unique_address_last_field() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
             pub struct Struct {
                 ...
-                pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
+                pub(crate) field1: [::__rust_core::mem::MaybeUninit<u8>; 8],
                 ...
-                pub(crate) field2: [::core::mem::MaybeUninit<u8>; 8],
+                pub(crate) field2: [::__rust_core::mem::MaybeUninit<u8>; 8],
             }
         }
     );
@@ -1085,7 +1085,7 @@ fn test_union_with_opaque_field() -> Result<()> {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=MyUnion"]
             pub union MyUnion { ...
-                first_field: [::core::mem::MaybeUninit<u8>; 56],
+                first_field: [::__rust_core::mem::MaybeUninit<u8>; 56],
                 pub second_field: ::ffi_11::c_int,
             }
         }
@@ -1096,8 +1096,8 @@ fn test_union_with_opaque_field() -> Result<()> {
         quote! {
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::MyUnion>() == 56);
-                assert!(::core::mem::align_of::<crate::MyUnion>() == 4);
+                assert!(::__rust_core::mem::size_of::<crate::MyUnion>() == 56);
+                assert!(::__rust_core::mem::align_of::<crate::MyUnion>() == 4);
                 ...
             };
         }
@@ -1122,9 +1122,9 @@ fn test_currently_no_offset_assertions_for_unions() -> Result<()> {
         quote! {
             const _: () = {
                 ...
-                assert!(::core::mem::offset_of!(
+                assert!(::__rust_core::mem::offset_of!(
                     crate::SomeUnion, some_field) == 0);
-                assert!(::core::mem::offset_of!(
+                assert!(::__rust_core::mem::offset_of!(
                     crate::SomeUnion, some_bigger_field) == 0);
                 ...
             };
@@ -1156,7 +1156,7 @@ fn test_union_with_private_fields() -> Result<()> {
             pub union SomeUnionWithPrivateFields {
                 pub public_field: ::ffi_11::c_int,
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                pub(crate) private_field: [::core::mem::MaybeUninit<u8>; 8],
+                pub(crate) private_field: [::__rust_core::mem::MaybeUninit<u8>; 8],
             }
         }
     );
@@ -1166,8 +1166,8 @@ fn test_union_with_private_fields() -> Result<()> {
         quote! {
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
-                assert!(::core::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
+                assert!(::__rust_core::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
+                assert!(::__rust_core::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
                 static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Copy,Clone);
                 static_assertions::assert_not_impl_any!(crate::SomeUnionWithPrivateFields: Drop);
                 ...
@@ -1224,7 +1224,7 @@ fn test_empty_struct() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyStruct"]
             pub struct EmptyStruct {
                 ...
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+                __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
             }
         }
     );
@@ -1234,8 +1234,8 @@ fn test_empty_struct() -> Result<()> {
         quote! {
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::EmptyStruct>() == 1);
-                assert!(::core::mem::align_of::<crate::EmptyStruct>() == 1);
+                assert!(::__rust_core::mem::size_of::<crate::EmptyStruct>() == 1);
+                assert!(::__rust_core::mem::align_of::<crate::EmptyStruct>() == 1);
                 ...
             };
         }
@@ -1261,7 +1261,7 @@ fn test_empty_union() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyUnion"]
             pub union EmptyUnion {
                 ...
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+                __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
             }
         }
     );
@@ -1271,8 +1271,8 @@ fn test_empty_union() -> Result<()> {
         quote! {
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::EmptyUnion>() == 1);
-                assert!(::core::mem::align_of::<crate::EmptyUnion>() == 1);
+                assert!(::__rust_core::mem::size_of::<crate::EmptyUnion>() == 1);
+                assert!(::__rust_core::mem::align_of::<crate::EmptyUnion>() == 1);
                 ...
             };
         }
@@ -1301,7 +1301,7 @@ fn test_union_field_with_nontrivial_destructor() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithNontrivialField"]
             pub union UnionWithNontrivialField {
                 pub trivial_field: ::ffi_11::c_int,
-                pub nontrivial_field: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,
+                pub nontrivial_field: ::__rust_core::mem::ManuallyDrop<crate::NontrivialStruct>,
             }
         }
     );
@@ -1311,8 +1311,8 @@ fn test_union_field_with_nontrivial_destructor() -> Result<()> {
         quote! {
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::UnionWithNontrivialField>() == 4);
-                assert!(::core::mem::align_of::<crate::UnionWithNontrivialField>() == 4);
+                assert!(::__rust_core::mem::size_of::<crate::UnionWithNontrivialField>() == 4);
+                assert!(::__rust_core::mem::align_of::<crate::UnionWithNontrivialField>() == 4);
                 ...
             };
         }
@@ -1349,7 +1349,7 @@ fn test_union_with_constructors() -> Result<()> {
             impl Default for UnionWithDefaultConstructors {
                 #[inline(always)]
                 fn default() -> Self {
-                    let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                    let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
                         crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&raw mut tmp as *mut _);
                         tmp.assume_init()
@@ -1560,11 +1560,11 @@ fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result
             ...
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::#my_struct_bool>() == 1);
+                assert!(::__rust_core::mem::size_of::<crate::#my_struct_bool>() == 1);
                 ...
-                assert!(::core::mem::size_of::<crate::#my_struct_double>() == 1);
+                assert!(::__rust_core::mem::size_of::<crate::#my_struct_double>() == 1);
                 ...
-                assert!(::core::mem::size_of::<crate::#my_struct_int>() == 1);
+                assert!(::__rust_core::mem::size_of::<crate::#my_struct_int>() == 1);
                 ...
             }
             ...
@@ -1767,7 +1767,7 @@ fn test_supported_suppressed_field_types() -> Result<()> {
         quote! {
         struct Trivial {
             ...
-            pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
+            pub(crate) hidden_field: [::__rust_core::mem::MaybeUninit<u8>; 8],
             ...
         }}
     );
@@ -1795,7 +1795,7 @@ fn test_supported_nontrivial_field() -> Result<()> {
         quote! {
         pub struct Outer {
             ...
-            pub(crate) inner_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+            pub(crate) inner_field: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 8],
             pub inner_ptr_field: *mut crate::Inner,
         }}
     );
@@ -1818,7 +1818,7 @@ fn test_supported_no_unique_address_field() -> Result<()> {
         quote! {
             pub struct Struct {
                 ...
-                pub(crate) field: [::core::mem::MaybeUninit<u8>; 1],
+                pub(crate) field: [::__rust_core::mem::MaybeUninit<u8>; 1],
             }
         }
     );
@@ -1936,7 +1936,7 @@ fn test_display() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl ::core::fmt::Display for CanDisplay {
+            impl ::__rust_core::fmt::Display for CanDisplay {
               ...
             }
         }

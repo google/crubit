@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: class `MyOption` could not be bound
 //   Class templates are not yet supported
 
@@ -60,15 +61,15 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z12ReturnsValuev(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst5ValueIiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst5ValueIiE>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::__CcTemplateInst5ValueIiE>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::__CcTemplateInst5ValueIiE>() == 4);
     static_assertions::assert_impl_all!(crate::__CcTemplateInst5ValueIiE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst5ValueIiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst5ValueIiE, value) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::__CcTemplateInst5ValueIiE, value) == 0);
 };

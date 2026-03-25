@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent
 /// generating bindings for constructors, even though the presence of a
 /// user-defined copy constructor technically means that the struct below
@@ -23,7 +24,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithUserProvidedConstructors
 pub struct StructWithUserProvidedConstructors {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for StructWithUserProvidedConstructors {}
@@ -55,7 +56,7 @@ impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithUserProvide
 impl Default for StructWithUserProvidedConstructors {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN34StructWithUserProvidedConstructorsC1Ev(
                 &raw mut tmp as *mut _,
@@ -71,7 +72,7 @@ impl Default for StructWithUserProvidedConstructors {
 impl Clone for StructWithUserProvidedConstructors {
     #[inline(always)]
     fn clone<'__param_0>(&'__param_0 self) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN34StructWithUserProvidedConstructorsC1ERKS_(
                 &raw mut tmp as *mut _,
@@ -91,7 +92,7 @@ impl Clone for StructWithUserProvidedConstructors {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitConversionConstructor
 pub struct StructWithExplicitConversionConstructor {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for StructWithExplicitConversionConstructor {}
@@ -112,7 +113,7 @@ impl From<::ffi_11::c_int> for StructWithExplicitConversionConstructor {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut i = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN39StructWithExplicitConversionConstructorC1Ei(
                 &raw mut tmp as *mut _,
@@ -136,7 +137,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithMultipleConstructors
 pub struct StructWithMultipleConstructors {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for StructWithMultipleConstructors {}
@@ -155,7 +156,7 @@ impl From<::ffi_11::c_int> for StructWithMultipleConstructors {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut i = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30StructWithMultipleConstructorsC1Ei(
                 &raw mut tmp as *mut _,
@@ -179,7 +180,7 @@ impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMultipleConstructors
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
         let (mut i, mut j) = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30StructWithMultipleConstructorsC1Eii(
                 &raw mut tmp as *mut _,
@@ -204,7 +205,7 @@ impl From<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMul
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
         let (mut i, mut j, mut k) = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30StructWithMultipleConstructorsC1Eiii(
                 &raw mut tmp as *mut _,
@@ -232,7 +233,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionConstructor
 pub struct StructWithImplicitConversionConstructor {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for StructWithImplicitConversionConstructor {}
@@ -253,7 +254,7 @@ impl From<::ffi_11::c_int> for StructWithImplicitConversionConstructor {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut i = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN39StructWithImplicitConversionConstructorC1Ei(
                 &raw mut tmp as *mut _,
@@ -294,7 +295,7 @@ forward_declare::unsafe_define!(
 impl Default for OtherSimpleStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17OtherSimpleStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -307,7 +308,7 @@ impl Default for OtherSimpleStruct {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionFromReference
 pub struct StructWithImplicitConversionFromReference {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for StructWithImplicitConversionFromReference {}
@@ -328,7 +329,7 @@ impl<'other> From<&'other crate::OtherSimpleStruct> for StructWithImplicitConver
     #[inline(always)]
     fn from(args: &'other crate::OtherSimpleStruct) -> Self {
         let mut other = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN41StructWithImplicitConversionFromReferenceC1ERK17OtherSimpleStruct(&raw mut tmp as*mut _,other);
             tmp.assume_init()
@@ -353,7 +354,7 @@ impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithInlineConstructors
 pub struct StructWithInlineConstructors {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for StructWithInlineConstructors {}
@@ -381,7 +382,7 @@ impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithInlineConst
 impl Default for StructWithInlineConstructors {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN28StructWithInlineConstructorsC1Ev(
                 &raw mut tmp as *mut _,
@@ -395,7 +396,7 @@ impl Default for StructWithInlineConstructors {
 impl Clone for StructWithInlineConstructors {
     #[inline(always)]
     fn clone<'other>(&'other self) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN28StructWithInlineConstructorsC1ERKS_(
                 &raw mut tmp as *mut _,
@@ -415,7 +416,7 @@ impl From<::ffi_11::c_int> for StructWithInlineConstructors {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut i = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN28StructWithInlineConstructorsC1Ei(
                 &raw mut tmp as *mut _,
@@ -439,7 +440,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithDeletedConstructors
 pub struct StructWithDeletedConstructors {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for StructWithDeletedConstructors {}
@@ -456,7 +457,10 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=70
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstructors {
     #[inline(always)]
-    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+    fn assign<'__this>(
+        self: ::__rust_core::pin::Pin<&'__this mut Self>,
+        __param_0: &'__param_0 Self,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN29StructWithDeletedConstructorsaSERKS_(self, __param_0);
         }
@@ -468,10 +472,10 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstruct
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithPrivateConstructors
 pub struct StructWithPrivateConstructors {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) int_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) int_field: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for StructWithPrivateConstructors {}
 impl !Sync for StructWithPrivateConstructors {}
@@ -487,7 +491,10 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=78
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstructors {
     #[inline(always)]
-    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+    fn assign<'__this>(
+        self: ::__rust_core::pin::Pin<&'__this mut Self>,
+        __param_0: &'__param_0 Self,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN29StructWithPrivateConstructorsaSERKS_(self, __param_0);
         }
@@ -499,7 +506,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstruct
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitlyDefaultedConstructors
 pub struct StructWithExplicitlyDefaultedConstructors {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     pub field_with_explicit_initializer: ::ffi_11::c_int,
     pub field_with_no_initializer: ::ffi_11::c_int,
 }
@@ -518,7 +525,7 @@ forward_declare::unsafe_define!(
 impl Default for StructWithExplicitlyDefaultedConstructors {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN41StructWithExplicitlyDefaultedConstructorsC1Ev(
                 &raw mut tmp as *mut _,
@@ -536,7 +543,7 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonTrivialStructWithConstructors
 pub struct NonTrivialStructWithConstructors {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for NonTrivialStructWithConstructors {}
@@ -560,7 +567,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivialStructWithConst
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -580,7 +587,10 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NonTrivialStructWithCo
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=99
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NonTrivialStructWithConstructors {
     #[inline(always)]
-    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+    fn assign<'__this>(
+        self: ::__rust_core::pin::Pin<&'__this mut Self>,
+        __param_0: &'__param_0 Self,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsaSERKS_(
                 self, __param_0,
@@ -599,7 +609,7 @@ impl ::ctor::CtorNew<()> for NonTrivialStructWithConstructors {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -616,7 +626,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for NonTrivialStructWithConstructors {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -638,7 +648,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int,)> for NonTrivialStructWithConstructors {
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=104
 impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
     #[inline(always)]
-    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::__rust_core::pin::Pin<&'__this mut Self>) {
         crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev(self)
     }
 }
@@ -656,45 +666,45 @@ mod detail {
         ) -> &'__this mut crate::StructWithUserProvidedConstructors;
         #[link_name = "_ZN34StructWithUserProvidedConstructorsC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN34StructWithUserProvidedConstructorsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN34StructWithUserProvidedConstructorsC1ERKS_"]
         pub(crate) unsafe fn __rust_thunk___ZN34StructWithUserProvidedConstructorsC1ERKS_<
             '__param_0,
         >(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: &'__param_0 crate::StructWithUserProvidedConstructors,
         );
         pub(crate) unsafe fn __rust_thunk___ZN39StructWithExplicitConversionConstructorC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             i: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30StructWithMultipleConstructorsC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             i: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30StructWithMultipleConstructorsC1Eii(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             i: ::ffi_11::c_int,
             j: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30StructWithMultipleConstructorsC1Eiii(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             i: ::ffi_11::c_int,
             j: ::ffi_11::c_int,
             k: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN39StructWithImplicitConversionConstructorC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             i: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN17OtherSimpleStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN41StructWithImplicitConversionFromReferenceC1ERK17OtherSimpleStruct<
             'other,
         >(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             other: &'other crate::OtherSimpleStruct,
         );
         pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsaSERKS_<
@@ -705,130 +715,141 @@ mod detail {
             __param_0: &'__param_0 crate::StructWithInlineConstructors,
         ) -> &'__this mut crate::StructWithInlineConstructors;
         pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsC1ERKS_<'other>(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             other: &'other crate::StructWithInlineConstructors,
         );
         pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             i: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN29StructWithDeletedConstructorsaSERKS_<
             '__this,
             '__param_0,
         >(
-            __this: ::core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>,
+            __this: ::__rust_core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>,
             __param_0: &'__param_0 crate::StructWithDeletedConstructors,
-        ) -> ::core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>;
+        ) -> ::__rust_core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>;
         pub(crate) unsafe fn __rust_thunk___ZN29StructWithPrivateConstructorsaSERKS_<
             '__this,
             '__param_0,
         >(
-            __this: ::core::pin::Pin<&'__this mut crate::StructWithPrivateConstructors>,
+            __this: ::__rust_core::pin::Pin<&'__this mut crate::StructWithPrivateConstructors>,
             __param_0: &'__param_0 crate::StructWithPrivateConstructors,
-        ) -> ::core::pin::Pin<&'__this mut crate::StructWithPrivateConstructors>;
+        ) -> ::__rust_core::pin::Pin<&'__this mut crate::StructWithPrivateConstructors>;
         pub(crate) unsafe fn __rust_thunk___ZN41StructWithExplicitlyDefaultedConstructorsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsC1ERKS_<
             '__param_0,
         >(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: &'__param_0 crate::NonTrivialStructWithConstructors,
         );
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsaSERKS_<
             '__this,
             '__param_0,
         >(
-            __this: ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
+            __this: ::__rust_core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
             __param_0: &'__param_0 crate::NonTrivialStructWithConstructors,
-        ) -> ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>;
+        ) -> ::__rust_core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>;
         #[link_name = "_ZN32NonTrivialStructWithConstructorsC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN32NonTrivialStructWithConstructorsC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: ::ffi_11::c_int,
         );
         #[link_name = "_ZN32NonTrivialStructWithConstructorsD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev<'__this>(
-            __this: ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
+            __this: ::__rust_core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::StructWithUserProvidedConstructors>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithUserProvidedConstructors>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithUserProvidedConstructors>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithUserProvidedConstructors>() == 4);
     static_assertions::assert_not_impl_any!(crate::StructWithUserProvidedConstructors: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::StructWithUserProvidedConstructors, int_field) == 0);
-    assert!(::core::mem::size_of::<crate::StructWithExplicitConversionConstructor>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithExplicitConversionConstructor>() == 4);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::StructWithUserProvidedConstructors, int_field) == 0
+    );
+    assert!(::__rust_core::mem::size_of::<crate::StructWithExplicitConversionConstructor>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithExplicitConversionConstructor>() == 4);
     static_assertions::assert_impl_all!(crate::StructWithExplicitConversionConstructor: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithExplicitConversionConstructor: Drop);
     assert!(
-        ::core::mem::offset_of!(crate::StructWithExplicitConversionConstructor, int_field) == 0
+        ::__rust_core::mem::offset_of!(crate::StructWithExplicitConversionConstructor, int_field)
+            == 0
     );
-    assert!(::core::mem::size_of::<crate::StructWithMultipleConstructors>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithMultipleConstructors>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithMultipleConstructors>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithMultipleConstructors>() == 4);
     static_assertions::assert_impl_all!(crate::StructWithMultipleConstructors: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithMultipleConstructors: Drop);
-    assert!(::core::mem::offset_of!(crate::StructWithMultipleConstructors, int_field) == 0);
-    assert!(::core::mem::size_of::<crate::StructWithImplicitConversionConstructor>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithImplicitConversionConstructor>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::StructWithMultipleConstructors, int_field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithImplicitConversionConstructor>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithImplicitConversionConstructor>() == 4);
     static_assertions::assert_impl_all!(crate::StructWithImplicitConversionConstructor: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithImplicitConversionConstructor: Drop);
     assert!(
-        ::core::mem::offset_of!(crate::StructWithImplicitConversionConstructor, int_field) == 0
+        ::__rust_core::mem::offset_of!(crate::StructWithImplicitConversionConstructor, int_field)
+            == 0
     );
-    assert!(::core::mem::size_of::<crate::OtherSimpleStruct>() == 4);
-    assert!(::core::mem::align_of::<crate::OtherSimpleStruct>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::OtherSimpleStruct>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::OtherSimpleStruct>() == 4);
     static_assertions::assert_impl_all!(crate::OtherSimpleStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::OtherSimpleStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::OtherSimpleStruct, int_field) == 0);
-    assert!(::core::mem::size_of::<crate::StructWithImplicitConversionFromReference>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithImplicitConversionFromReference>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::OtherSimpleStruct, int_field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithImplicitConversionFromReference>() == 4);
+    assert!(
+        ::__rust_core::mem::align_of::<crate::StructWithImplicitConversionFromReference>() == 4
+    );
     static_assertions::assert_impl_all!(crate::StructWithImplicitConversionFromReference: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithImplicitConversionFromReference: Drop);
     assert!(
-        ::core::mem::offset_of!(crate::StructWithImplicitConversionFromReference, int_field) == 0
+        ::__rust_core::mem::offset_of!(crate::StructWithImplicitConversionFromReference, int_field)
+            == 0
     );
-    assert!(::core::mem::size_of::<crate::StructWithInlineConstructors>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithInlineConstructors>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithInlineConstructors>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithInlineConstructors>() == 4);
     static_assertions::assert_not_impl_any!(crate::StructWithInlineConstructors: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::StructWithInlineConstructors, int_field) == 0);
-    assert!(::core::mem::size_of::<crate::StructWithDeletedConstructors>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithDeletedConstructors>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::StructWithInlineConstructors, int_field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithDeletedConstructors>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithDeletedConstructors>() == 4);
     static_assertions::assert_not_impl_any!(crate::StructWithDeletedConstructors: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::StructWithDeletedConstructors, int_field) == 0);
-    assert!(::core::mem::size_of::<crate::StructWithPrivateConstructors>() == 4);
-    assert!(::core::mem::align_of::<crate::StructWithPrivateConstructors>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::StructWithDeletedConstructors, int_field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithPrivateConstructors>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::StructWithPrivateConstructors>() == 4);
     static_assertions::assert_not_impl_any!(crate::StructWithPrivateConstructors: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::StructWithPrivateConstructors, int_field) == 0);
-    assert!(::core::mem::size_of::<crate::StructWithExplicitlyDefaultedConstructors>() == 8);
-    assert!(::core::mem::align_of::<crate::StructWithExplicitlyDefaultedConstructors>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::StructWithPrivateConstructors, int_field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::StructWithExplicitlyDefaultedConstructors>() == 8);
+    assert!(
+        ::__rust_core::mem::align_of::<crate::StructWithExplicitlyDefaultedConstructors>() == 4
+    );
     static_assertions::assert_impl_all!(crate::StructWithExplicitlyDefaultedConstructors: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithExplicitlyDefaultedConstructors: Drop);
     assert!(
-        ::core::mem::offset_of!(
+        ::__rust_core::mem::offset_of!(
             crate::StructWithExplicitlyDefaultedConstructors,
             field_with_explicit_initializer
         ) == 0
     );
     assert!(
-        ::core::mem::offset_of!(
+        ::__rust_core::mem::offset_of!(
             crate::StructWithExplicitlyDefaultedConstructors,
             field_with_no_initializer
         ) == 4
     );
-    assert!(::core::mem::size_of::<crate::NonTrivialStructWithConstructors>() == 4);
-    assert!(::core::mem::align_of::<crate::NonTrivialStructWithConstructors>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::NonTrivialStructWithConstructors>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::NonTrivialStructWithConstructors>() == 4);
     static_assertions::assert_impl_all!(crate::NonTrivialStructWithConstructors: Drop);
     static_assertions::assert_not_impl_any!(crate::NonTrivialStructWithConstructors: Copy);
-    assert!(::core::mem::offset_of!(crate::NonTrivialStructWithConstructors, int_field) == 0);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::NonTrivialStructWithConstructors, int_field) == 0
+    );
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
 };

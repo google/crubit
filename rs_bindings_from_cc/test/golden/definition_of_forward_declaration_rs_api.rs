@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ForwardDeclaredStruct
 pub struct ForwardDeclaredStruct {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ForwardDeclaredStruct {}
 impl !Sync for ForwardDeclaredStruct {}
@@ -29,7 +30,7 @@ unsafe impl ::cxx::ExternType for ForwardDeclaredStruct {
 impl Default for ForwardDeclaredStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN21ForwardDeclaredStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -42,14 +43,14 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN21ForwardDeclaredStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::ForwardDeclaredStruct>() == 1);
-    assert!(::core::mem::align_of::<crate::ForwardDeclaredStruct>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::ForwardDeclaredStruct>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::ForwardDeclaredStruct>() == 1);
     static_assertions::assert_impl_all!(crate::ForwardDeclaredStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ForwardDeclaredStruct: Drop);
 };

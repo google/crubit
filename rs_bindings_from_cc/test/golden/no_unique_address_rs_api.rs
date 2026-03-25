@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// The no_unique_address.h header is present both in
 /// rs_bindings_from_cc/test/struct/no_unique_address/ and in
 /// rs_bindings_from_cc/test/golden/ because the format provides end-to-end
@@ -27,10 +28,10 @@ pub struct Struct {
     ///
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
-    pub(crate) field1: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field1: [::__rust_core::mem::MaybeUninit<u8>; 4],
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
-    pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field2: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for Struct {}
 impl !Sync for Struct {}
@@ -42,9 +43,9 @@ impl Struct {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN6Struct4MakeEic(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 f1,
                 f2,
             );
@@ -56,7 +57,7 @@ impl Struct {
 impl Default for Struct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN6StructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -89,12 +90,12 @@ impl Default for Struct {
 pub struct PaddingBetweenFields {
     /// size: 1, alignment: 1 => offset: 0
     pub field1: ::ffi_11::c_char,
-    __padding1: [::core::mem::MaybeUninit<u8>; 3],
+    __padding1: [::__rust_core::mem::MaybeUninit<u8>; 3],
     /// size: 4, alignment: 4 => offset: 4
     ///
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
-    pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field2: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for PaddingBetweenFields {}
 impl !Sync for PaddingBetweenFields {}
@@ -106,9 +107,9 @@ impl PaddingBetweenFields {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 f1,
                 f2,
             );
@@ -120,7 +121,7 @@ impl PaddingBetweenFields {
 impl Default for PaddingBetweenFields {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -172,7 +173,7 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -190,7 +191,7 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
 /// layout.
 impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev(self)
     }
 }
@@ -207,10 +208,10 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding
 pub struct FieldInTailPadding {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
-    pub(crate) inner_struct: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 5],
+    pub(crate) inner_struct: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 5],
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: ::ffi_11::c_char,
 }
@@ -229,7 +230,7 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding {
 
 impl ::ctor::PinnedDrop for FieldInTailPadding {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN18FieldInTailPaddingD1Ev(self)
     }
 }
@@ -251,7 +252,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_char, ::ffi_11::c_char)> for 
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     inner_int,
                     inner_char,
                     outer_char,
@@ -265,31 +266,31 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN6Struct4MakeEic(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             f1: ::ffi_11::c_int,
             f2: ::ffi_11::c_char,
         );
         pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             f1: ::ffi_11::c_char,
             f2: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::FieldInTailPadding_InnerStruct>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::FieldInTailPadding_InnerStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::FieldInTailPadding>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::FieldInTailPadding>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1Eicc(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             inner_int: ::ffi_11::c_int,
             inner_char: ::ffi_11::c_char,
             outer_char: ::ffi_11::c_char,
@@ -298,33 +299,41 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Struct>() == 8);
-    assert!(::core::mem::align_of::<crate::Struct>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Struct>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::Struct>() == 4);
     static_assertions::assert_impl_all!(crate::Struct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Struct: Drop);
-    assert!(::core::mem::offset_of!(crate::Struct, field1) == 0);
-    assert!(::core::mem::offset_of!(crate::Struct, field2) == 4);
-    assert!(::core::mem::size_of::<crate::PaddingBetweenFields>() == 8);
-    assert!(::core::mem::align_of::<crate::PaddingBetweenFields>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::Struct, field1) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Struct, field2) == 4);
+    assert!(::__rust_core::mem::size_of::<crate::PaddingBetweenFields>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::PaddingBetweenFields>() == 4);
     static_assertions::assert_impl_all!(crate::PaddingBetweenFields: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::PaddingBetweenFields: Drop);
-    assert!(::core::mem::offset_of!(crate::PaddingBetweenFields, field1) == 0);
-    assert!(::core::mem::offset_of!(crate::PaddingBetweenFields, field2) == 4);
-    assert!(::core::mem::size_of::<crate::FieldInTailPadding_InnerStruct>() == 8);
-    assert!(::core::mem::align_of::<crate::FieldInTailPadding_InnerStruct>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::PaddingBetweenFields, field1) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::PaddingBetweenFields, field2) == 4);
+    assert!(::__rust_core::mem::size_of::<crate::FieldInTailPadding_InnerStruct>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::FieldInTailPadding_InnerStruct>() == 4);
     static_assertions::assert_impl_all!(crate::FieldInTailPadding_InnerStruct: Drop);
     static_assertions::assert_not_impl_any!(crate::FieldInTailPadding_InnerStruct: Copy);
-    assert!(::core::mem::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_int_field) == 0);
-    assert!(::core::mem::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_char_field) == 4);
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_int_field) == 0
+    );
+    assert!(
+        ::__rust_core::mem::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_char_field)
+            == 4
+    );
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_char: Copy);
-    assert!(::core::mem::size_of::<crate::FieldInTailPadding>() == 8);
-    assert!(::core::mem::align_of::<crate::FieldInTailPadding>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::FieldInTailPadding>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::FieldInTailPadding>() == 4);
     static_assertions::assert_impl_all!(crate::FieldInTailPadding: Drop);
     static_assertions::assert_not_impl_any!(crate::FieldInTailPadding: Copy);
-    assert!(::core::mem::offset_of!(crate::FieldInTailPadding, inner_struct) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::FieldInTailPadding, inner_struct) == 0);
     assert!(
-        ::core::mem::offset_of!(crate::FieldInTailPadding, char_in_tail_padding_of_prev_field) == 5
+        ::__rust_core::mem::offset_of!(
+            crate::FieldInTailPadding,
+            char_in_tail_padding_of_prev_field
+        ) == 5
     );
     static_assertions::assert_impl_all!(::ffi_11::c_char: Copy);
 };

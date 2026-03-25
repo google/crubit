@@ -14,13 +14,16 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// An example of a C++ file that defines functions that create a
 /// CRUBIT_OWNED_PTR type as well as consume it.
 ///
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=14
 #[inline(always)]
 pub fn MakeOwnedThing(value: ::ffi_11::c_int) -> ::owned_ptr::OwnedThing {
-    unsafe { ::core::mem::transmute(crate::detail::__rust_thunk___Z14MakeOwnedThingi(value)) }
+    unsafe {
+        ::__rust_core::mem::transmute(crate::detail::__rust_thunk___Z14MakeOwnedThingi(value))
+    }
 }
 
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=16
@@ -37,7 +40,7 @@ pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=18
 #[inline(always)]
 pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z12ThingToValueP5Thing(::core::mem::transmute(thingptr))
+    crate::detail::__rust_thunk___Z12ThingToValueP5Thing(::__rust_core::mem::transmute(thingptr))
 }
 
 /// # Safety

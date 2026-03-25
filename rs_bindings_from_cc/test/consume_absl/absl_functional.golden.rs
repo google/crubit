@@ -15,6 +15,7 @@
 #![deny(warnings)]
 
 extern crate alloc;
+extern crate core as __rust_core;
 
 pub mod absl_functional_internal {
     /// Calls the invocable and returns void.
@@ -23,11 +24,14 @@ pub mod absl_functional_internal {
     #[inline(always)]
     pub fn CallVoidVoid(
         f: ::alloc::boxed::Box<
-            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+            dyn ::__rust_core::ops::FnOnce()
+                + ::__rust_core::marker::Send
+                + ::__rust_core::marker::Sync
+                + 'static,
         >,
     ) {
         unsafe {
-            crate::detail::__rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIFvvOEEE(::bridge_rust::unstable_encode!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(||{ ::core::panic!("moved-from value") }),|managed: ::any_invocable::ManagedState,invoker: unsafe extern "C" fn()|->::alloc::boxed::Box<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>{ let c_invoker=unsafe{ ::core::mem::transmute::<unsafe extern "C" fn(),unsafe extern "C" fn(*mut::any_invocable::TypeErasedState)>(invoker) };::alloc::boxed::Box::new(move||{ unsafe{ c_invoker(managed.state()) }; }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
+            crate::detail::__rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIFvvOEEE(::bridge_rust::unstable_encode!(@::any_invocable::AnyInvocableAbi::<dyn::__rust_core::ops::FnOnce()+::__rust_core::marker::Send+::__rust_core::marker::Sync+'static>::new(::alloc::boxed::Box::new(||{ ::__rust_core::panic!("moved-from value") }),|managed: ::any_invocable::ManagedState,invoker: unsafe extern "C" fn()|->::alloc::boxed::Box<dyn::__rust_core::ops::FnOnce()+::__rust_core::marker::Send+::__rust_core::marker::Sync+'static>{ let c_invoker=unsafe{ ::__rust_core::mem::transmute::<unsafe extern "C" fn(),unsafe extern "C" fn(*mut::any_invocable::TypeErasedState)>(invoker) };::alloc::boxed::Box::new(move||{ unsafe{ c_invoker(managed.state()) }; }) },),::any_invocable::AnyInvocableAbi<dyn::__rust_core::ops::FnOnce()+::__rust_core::marker::Send+::__rust_core::marker::Sync+'static>,f).as_ptr()as*const u8)
         }
     }
 
@@ -36,13 +40,13 @@ pub mod absl_functional_internal {
     /// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=16
     #[inline(always)]
     pub fn ReturnIntVoid() -> ::alloc::boxed::Box<
-        dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
-            + ::core::marker::Send
-            + ::core::marker::Sync
+        dyn ::__rust_core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+            + ::__rust_core::marker::Send
+            + ::__rust_core::marker::Sync
             + 'static,
     > {
         unsafe {
-            ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::core::panic!("moved-from value") }),|managed: ::any_invocable::ManagedState,invoker: unsafe extern "C" fn()|->::alloc::boxed::Box<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>{ let c_invoker=unsafe{ ::core::mem::transmute::<unsafe extern "C" fn(),unsafe extern "C" fn(*mut::any_invocable::TypeErasedState,::ffi_11::c_int)->::ffi_11::c_int>(invoker) };::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ c_invoker(managed.state(),param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>,|__return_abi_buffer|{ crate::detail::__rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(__return_abi_buffer,); })
+            ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::__rust_core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::__rust_core::marker::Send+::__rust_core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::__rust_core::panic!("moved-from value") }),|managed: ::any_invocable::ManagedState,invoker: unsafe extern "C" fn()|->::alloc::boxed::Box<dyn::__rust_core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::__rust_core::marker::Send+::__rust_core::marker::Sync+'static>{ let c_invoker=unsafe{ ::__rust_core::mem::transmute::<unsafe extern "C" fn(),unsafe extern "C" fn(*mut::any_invocable::TypeErasedState,::ffi_11::c_int)->::ffi_11::c_int>(invoker) };::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ c_invoker(managed.state(),param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::__rust_core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::__rust_core::marker::Send+::__rust_core::marker::Sync+'static>,|__return_abi_buffer|{ crate::detail::__rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(__return_abi_buffer,); })
         }
     }
 }
@@ -485,23 +489,26 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN24absl_functional_internal12CallVoidVoidEN4absl12AnyInvocableIFvvOEEE(
-            f: *const ::core::ffi::c_uchar,
+            f: *const ::__rust_core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___ZN24absl_functional_internal13ReturnIntVoidEv(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         f: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+            dyn ::__rust_core::ops::FnOnce()
+                + ::__rust_core::marker::Send
+                + ::__rust_core::marker::Sync
+                + 'static,
         >,
     ) {
         (unsafe {
-            ::core::ptr::replace(
+            ::__rust_core::ptr::replace(
                 f,
                 ::alloc::boxed::Box::new(|| {
-                    ::core::unreachable!("Called FnOnce after it was moved");
+                    ::__rust_core::unreachable!("Called FnOnce after it was moved");
                 }),
             )
         })();
@@ -510,10 +517,16 @@ mod detail {
     unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         operation: ::dyn_callable_rs::FunctionToCall,
         from: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+            dyn ::__rust_core::ops::FnOnce()
+                + ::__rust_core::marker::Send
+                + ::__rust_core::marker::Sync
+                + 'static,
         >,
         to: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+            dyn ::__rust_core::ops::FnOnce()
+                + ::__rust_core::marker::Send
+                + ::__rust_core::marker::Sync
+                + 'static,
         >,
     ) {
         ::dyn_callable_rs::manager(operation, from, to);
@@ -521,9 +534,9 @@ mod detail {
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         f: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
-                + ::core::marker::Send
-                + ::core::marker::Sync
+            dyn ::__rust_core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::__rust_core::marker::Send
+                + ::__rust_core::marker::Sync
                 + 'static,
         >,
         param_0: ::ffi_11::c_int,
@@ -534,15 +547,15 @@ mod detail {
     unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         operation: ::dyn_callable_rs::FunctionToCall,
         from: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
-                + ::core::marker::Send
-                + ::core::marker::Sync
+            dyn ::__rust_core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::__rust_core::marker::Send
+                + ::__rust_core::marker::Sync
                 + 'static,
         >,
         to: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
-                + ::core::marker::Send
-                + ::core::marker::Sync
+            dyn ::__rust_core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::__rust_core::marker::Send
+                + ::__rust_core::marker::Sync
                 + 'static,
         >,
     ) {

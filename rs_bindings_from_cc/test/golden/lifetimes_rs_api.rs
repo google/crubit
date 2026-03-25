@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[inline(always)]
 pub fn AddHook(__param_0: Option<extern "C" fn()>) {
     unsafe { crate::detail::__rust_thunk___Z7AddHookPFvvE(__param_0) }

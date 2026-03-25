@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Noninline
 pub struct Noninline {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Noninline {}
 impl !Sync for Noninline {}
@@ -71,7 +72,7 @@ impl Noninline {
 impl Default for Noninline {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9NoninlineC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -83,7 +84,7 @@ impl Default for Noninline {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Inline
 pub struct Inline {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Inline {}
 impl !Sync for Inline {}
@@ -137,7 +138,7 @@ impl Inline {
 impl Default for Inline {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN6InlineC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -149,7 +150,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN9NoninlineC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9NoninlineC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         #[link_name = "_ZN9Noninline17UnqualifiedMethodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN9Noninline17UnqualifiedMethodEv(
             __this: *mut crate::Noninline,
@@ -170,7 +173,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(
             __this: *const crate::Noninline,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN6InlineC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN6InlineC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN6Inline17UnqualifiedMethodEv(
             __this: *mut crate::Inline,
         );
@@ -186,13 +189,13 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Noninline>() == 1);
-    assert!(::core::mem::align_of::<crate::Noninline>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Noninline>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Noninline>() == 1);
     static_assertions::assert_impl_all!(crate::Noninline: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Noninline: Drop);
 
-    assert!(::core::mem::size_of::<crate::Inline>() == 1);
-    assert!(::core::mem::align_of::<crate::Inline>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Inline>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Inline>() == 1);
     static_assertions::assert_impl_all!(crate::Inline: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Inline: Drop);
 };

@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -44,7 +45,7 @@ impl S {
 impl Default for S {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -56,7 +57,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZNK1S12int_accessorEv<'__this>(
             __this: &'__this crate::S,
         ) -> &'__this ::ffi_11::c_int;
@@ -67,9 +68,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::S>() == 4);
-    assert!(::core::mem::align_of::<crate::S>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::S>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::S>() == 4);
     static_assertions::assert_impl_all!(crate::S: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::S: Drop);
-    assert!(::core::mem::offset_of!(crate::S, int_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::S, int_field) == 0);
 };

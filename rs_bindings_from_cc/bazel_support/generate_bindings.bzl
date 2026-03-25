@@ -20,8 +20,11 @@ def escape_cpp_target_name(package_name, crate_name):
         string: escaped crate name
     """
 
-    # Crubit generates assertions with `::core`, which would resolve to current crate, if current
-    # crate (i.e., cc_library) is named 'core'.
+    # Crubit used to generate assertions with `::core`, which would resolve to current crate, if
+    # current crate (i.e., cc_library) is named 'core'. Crubit now uses `::__rust_core` to avoid
+    # this issue, but we still rename 'core' targets: if a cc_library named "core" is built,
+    # Bazel passes `--extern core=...` to dependent rustc invocations. This shadows the sysroot
+    # `core` crate entirely, overriding `::__rust_core` aliases (e.g. `cannot find 'mem' in '__rust_core'`).
     if crate_name == "core":
         _, _, last_path_component = package_name.rpartition("/")
         crate_name = "core_" + last_path_component

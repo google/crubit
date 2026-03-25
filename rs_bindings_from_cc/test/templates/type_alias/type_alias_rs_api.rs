@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=10
 // error: class `MyTemplate` could not be bound
 //   Class templates are not yet supported
@@ -29,10 +30,10 @@ pub type OtherTypeAliasInSameTarget = crate::__CcTemplateInst10MyTemplateIiE;
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
 pub struct __CcTemplateInst10MyTemplateIiE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) value_: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}
@@ -45,8 +46,8 @@ impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut __return as*mut::core::ffi::c_void,value);
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut __return as*mut::__rust_core::ffi::c_void,value);
             __return.assume_init()
         }
     }
@@ -63,7 +64,7 @@ impl __CcTemplateInst10MyTemplateIiE {
 impl Default for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut tmp as*mut _);
             tmp.assume_init()
@@ -76,10 +77,10 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             value: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias<
@@ -91,9 +92,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value_) == 0);
 };

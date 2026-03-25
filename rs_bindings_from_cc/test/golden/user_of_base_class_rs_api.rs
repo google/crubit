@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// The same as Derived from inheritance.h, but in a different build target.
 ///
 /// This tests inheritance across library boundaries.
@@ -22,7 +23,7 @@
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Derived2
 pub struct Derived2 {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 20],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 20],
     pub derived_1: ::ffi_11::c_char,
 }
 impl !Send for Derived2 {}
@@ -40,7 +41,9 @@ impl ::ctor::CtorNew<()> for Derived2 {
         let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN8Derived2C1Ev(dest as *mut ::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN8Derived2C1Ev(
+                    dest as *mut ::__rust_core::ffi::c_void,
+                );
             })
         }
     }
@@ -64,7 +67,7 @@ impl ::ctor::CtorNew<()> for Derived2 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived2
 pub struct VirtualDerived2 {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 32],
 }
 impl !Send for VirtualDerived2 {}
 impl !Sync for VirtualDerived2 {}
@@ -82,7 +85,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN15VirtualDerived2C1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -107,19 +110,21 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Derived2>() == 24);
-    assert!(::core::mem::align_of::<crate::Derived2>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::Derived2>() == 24);
+    assert!(::__rust_core::mem::align_of::<crate::Derived2>() == 8);
     static_assertions::assert_not_impl_any!(crate::Derived2: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::Derived2, derived_1) == 20);
-    assert!(::core::mem::size_of::<crate::VirtualDerived2>() == 32);
-    assert!(::core::mem::align_of::<crate::VirtualDerived2>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::Derived2, derived_1) == 20);
+    assert!(::__rust_core::mem::size_of::<crate::VirtualDerived2>() == 32);
+    assert!(::__rust_core::mem::align_of::<crate::VirtualDerived2>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Copy,Drop);
 };

@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Because this class has a destructor, it will not receive Rust bindings
 /// without ABSL_ATTRIBUTE_TRIVIAL_ABI.
 ///
@@ -36,7 +37,7 @@ unsafe impl ::cxx::ExternType for Position {
 impl Default for Position {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN8PositionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -74,7 +75,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN8PositionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8PositionC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN8PositionaSERKS_<'__return_lifetime>(
             __this: &mut crate::Position,
             __param_0: &crate::Position,
@@ -84,12 +87,12 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Position>() == 8);
-    assert!(::core::mem::align_of::<crate::Position>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Position>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::Position>() == 4);
     static_assertions::assert_impl_all!(crate::Position: Clone,Drop);
     static_assertions::assert_not_impl_any!(crate::Position: Copy);
-    assert!(::core::mem::offset_of!(crate::Position, x) == 0);
-    assert!(::core::mem::offset_of!(crate::Position, y) == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::Position, x) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Position, y) == 4);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
 };

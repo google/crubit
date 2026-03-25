@@ -167,18 +167,18 @@ pub fn generate_function_thunk(
                 first_param.display(db)
             )
         };
-        out_param = Some(quote! { *mut ::core::ffi::c_void });
+        out_param = Some(quote! { *mut ::__rust_core::ffi::c_void });
         out_param_ident = Some(param_idents.next().unwrap().clone());
     } else {
         match return_type.passing_convention() {
             PassingConvention::ComposablyBridged => {
-                out_param = Some(quote! { *mut ::core::ffi::c_uchar });
+                out_param = Some(quote! { *mut ::__rust_core::ffi::c_uchar });
                 out_param_ident = Some(make_rs_ident("__return_abi_buffer"));
                 return_type_fragment = None;
             }
             // For return types that can't be passed by value, create a new out parameter.
             PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
-                out_param = Some(quote! { *mut ::core::ffi::c_void });
+                out_param = Some(quote! { *mut ::__rust_core::ffi::c_void });
                 out_param_ident = Some(make_rs_ident("__return"));
                 return_type_fragment = None;
             }
@@ -202,7 +202,7 @@ pub fn generate_function_thunk(
     let param_types = out_param
         .into_iter()
         .chain(param_types.map(|param_type| match param_type.passing_convention() {
-            PassingConvention::ComposablyBridged => quote! { *const ::core::ffi::c_uchar },
+            PassingConvention::ComposablyBridged => quote! { *const ::__rust_core::ffi::c_uchar },
             PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
                 let param_type_tokens = param_type.to_token_stream(db);
                 quote! {&mut #param_type_tokens}

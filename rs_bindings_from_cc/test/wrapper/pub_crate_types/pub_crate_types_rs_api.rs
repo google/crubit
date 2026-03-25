@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=10
 // error: class `Template` could not be bound
 //   Class templates are not yet supported
@@ -43,7 +44,7 @@ forward_declare::unsafe_define!(
 impl Default for CompoundDataType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16CompoundDataTypeC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -56,9 +57,9 @@ impl Default for CompoundDataType {
 pub(crate) fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
     unsafe {
         let mut __return =
-            ::core::mem::MaybeUninit::<crate::__CcTemplateInst8TemplateIiE>::uninit();
+            ::__rust_core::mem::MaybeUninit::<crate::__CcTemplateInst8TemplateIiE>::uninit();
         crate::detail::__rust_thunk___Z14GetTemplateIntv(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __return as *mut ::__rust_core::ffi::c_void,
         );
         __return.assume_init()
     }
@@ -100,9 +101,9 @@ pub unsafe fn OtherPubCrateTypes(__param_0: *mut ::other_pub_crate_types::Forwar
 pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template2IiE {
     unsafe {
         let mut __return =
-            ::core::mem::MaybeUninit::<crate::__CcTemplateInst9Template2IiE>::uninit();
+            ::__rust_core::mem::MaybeUninit::<crate::__CcTemplateInst9Template2IiE>::uninit();
         crate::detail::__rust_thunk___Z28GetOtherPubCrateTemplate2Intv(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __return as *mut ::__rust_core::ffi::c_void,
         );
         __return.assume_init()
     }
@@ -203,9 +204,11 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN16CompoundDataTypeC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___Z14GetTemplateIntv(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___Z14GetTemplateIntv(
+            __return: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(
             container: &mut crate::CompoundDataType,
         ) -> ::ffi_11::c_int;
@@ -213,25 +216,25 @@ mod detail {
             __param_0: *mut ::other_pub_crate_types::ForwardDeclared2,
         );
         pub(crate) unsafe fn __rust_thunk___Z28GetOtherPubCrateTemplate2Intv(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::CompoundDataType>() == 4);
-    assert!(::core::mem::align_of::<crate::CompoundDataType>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::CompoundDataType>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::CompoundDataType>() == 4);
     static_assertions::assert_impl_all!(crate::CompoundDataType: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CompoundDataType: Drop);
-    assert!(::core::mem::offset_of!(crate::CompoundDataType, template_int) == 0);
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst9Template2IiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst9Template2IiE>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::CompoundDataType, template_int) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::__CcTemplateInst9Template2IiE>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::__CcTemplateInst9Template2IiE>() == 4);
     static_assertions::assert_impl_all!(crate::__CcTemplateInst9Template2IiE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst9Template2IiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst9Template2IiE, value) == 0);
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::__CcTemplateInst9Template2IiE, value) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
     static_assertions::assert_impl_all!(crate::__CcTemplateInst8TemplateIiE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst8TemplateIiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst8TemplateIiE, value) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::__CcTemplateInst8TemplateIiE, value) == 0);
 };

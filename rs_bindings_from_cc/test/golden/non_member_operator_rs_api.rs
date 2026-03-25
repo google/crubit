@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
@@ -30,7 +31,7 @@ pub mod ns {
     impl Default for X {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns1XC1Ev(&raw mut tmp as *mut _);
                 tmp.assume_init()
@@ -52,7 +53,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN2ns1XC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN2ns1XC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZeqN2ns1XES0_(
             a: &mut crate::ns::X,
             b: &mut crate::ns::X,
@@ -61,9 +62,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::ns::X>() == 4);
-    assert!(::core::mem::align_of::<crate::ns::X>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::ns::X>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::ns::X>() == 4);
     static_assertions::assert_impl_all!(crate::ns::X: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ns::X: Drop);
-    assert!(::core::mem::offset_of!(crate::ns::X, f) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::ns::X, f) == 0);
 };

@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: class `Ptr` could not be bound
 //   Class templates are not yet supported
 
@@ -20,7 +21,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Outer
 pub struct Outer {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Outer {}
 impl !Sync for Outer {}
@@ -32,7 +33,7 @@ unsafe impl ::cxx::ExternType for Outer {
 impl Default for Outer {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5OuterC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -44,13 +45,13 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN5OuterC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5OuterC1Ev(__this: *mut ::__rust_core::ffi::c_void);
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Outer>() == 1);
-    assert!(::core::mem::align_of::<crate::Outer>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Outer>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Outer>() == 1);
     static_assertions::assert_impl_all!(crate::Outer: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Outer: Drop);
 };

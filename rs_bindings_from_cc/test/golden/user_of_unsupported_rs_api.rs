@@ -13,13 +13,16 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[inline(always)]
 pub fn UseNontrivialCustomType(
     non_trivial_custom_type: ::ctor::Ctor![::unsupported_cc::NontrivialCustomType],
 ) {
     unsafe {
         crate::detail::__rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
-            ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(non_trivial_custom_type)),
+            ::__rust_core::pin::Pin::into_inner_unchecked(::ctor::emplace!(
+                non_trivial_custom_type
+            )),
         )
     }
 }

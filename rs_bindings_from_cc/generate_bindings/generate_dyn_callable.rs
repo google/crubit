@@ -43,7 +43,7 @@ pub fn dyn_callable_crubit_abi_type(
 
         quote! {
             ::alloc::boxed::Box::new(|#(_: #param_type_tokens),*| #rust_return_type_fragment {
-                ::core::panic!("moved-from value")
+                ::__rust_core::panic!("moved-from value")
             })
         }
     };
@@ -298,7 +298,7 @@ fn generate_make_cpp_invoker_tokens(
                 c_param_types.push(param_ty.to_token_stream_with_owned_ptr_type(db));
                 arg_exprs.push(quote! {
                     // SAFETY: Transmuting from a repr(transparent) struct that wraps the pointer.
-                    unsafe { ::core::mem::transmute(#param_ident) }
+                    unsafe { ::__rust_core::mem::transmute(#param_ident) }
                 });
             }
             PassingConvention::Void => bail!("parameter types cannot be void"),
@@ -342,7 +342,7 @@ fn generate_make_cpp_invoker_tokens(
         }
         PassingConvention::LayoutCompatible => {
             invoke_ffi_and_transform_to_rust = quote! {
-                let out = ::core::mem::MaybeUninit::uninit();
+                let out = ::__rust_core::mem::MaybeUninit::uninit();
                 #invoke_ffi_and_transform_to_rust;
                 unsafe { out.assume_init() }
             }
@@ -363,7 +363,7 @@ fn generate_make_cpp_invoker_tokens(
         PassingConvention::OwnedPtr => {
             invoke_ffi_and_transform_to_rust = quote! {
                 // SAFETY: Transmuting to a repr(transparent) struct that wraps the pointer.
-                unsafe { ::core::mem::transmute(#invoke_ffi_and_transform_to_rust) }
+                unsafe { ::__rust_core::mem::transmute(#invoke_ffi_and_transform_to_rust) }
             };
         }
         PassingConvention::Void => {
@@ -380,7 +380,7 @@ fn generate_make_cpp_invoker_tokens(
         |managed: ::any_invocable::ManagedState,
          invoker: unsafe extern "C" fn()| -> ::alloc::boxed::Box<#dyn_fn_spelling> {
             let c_invoker = unsafe {
-                ::core::mem::transmute::<
+                ::__rust_core::mem::transmute::<
                     unsafe extern "C" fn(),
                     unsafe extern "C" fn(
                         *mut ::any_invocable::TypeErasedState

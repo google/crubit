@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod crubit {
     pub mod test {
         /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=13
@@ -27,7 +28,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName
         pub struct StructNewName {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for StructNewName {}
         impl !Sync for StructNewName {}
@@ -40,7 +41,7 @@ pub mod crubit {
         impl Default for StructNewName {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test13StructOldNameC1Ev(
                         &raw mut tmp as *mut _,
@@ -55,7 +56,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct
         pub struct SomeStruct {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
             pub field_new_name: ::ffi_11::c_int,
         }
         impl !Send for SomeStruct {}
@@ -73,7 +74,7 @@ pub mod crubit {
                 b: ::ffi_11::c_int,
                 c: ::ffi_11::c_int,
             ) -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test10SomeStructC1Eiii(
                         &raw mut tmp as *mut _,
@@ -101,7 +102,7 @@ pub mod crubit {
         impl Default for SomeStruct {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test10SomeStructC1Ev(
                         &raw mut tmp as *mut _,
@@ -129,10 +130,10 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test13FreeFnOldNameEv();
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test13StructOldNameC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test10SomeStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test10SomeStructC1Eiii(
             __this: *mut crate::crubit::test::SomeStruct,
@@ -147,14 +148,14 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::crubit::test::StructNewName>() == 1);
-    assert!(::core::mem::align_of::<crate::crubit::test::StructNewName>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::crubit::test::StructNewName>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::crubit::test::StructNewName>() == 1);
     static_assertions::assert_impl_all!(crate::crubit::test::StructNewName: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::StructNewName: Drop);
 
-    assert!(::core::mem::size_of::<crate::crubit::test::SomeStruct>() == 4);
-    assert!(::core::mem::align_of::<crate::crubit::test::SomeStruct>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::crubit::test::SomeStruct>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::crubit::test::SomeStruct>() == 4);
     static_assertions::assert_impl_all!(crate::crubit::test::SomeStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::SomeStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::crubit::test::SomeStruct, field_new_name) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::crubit::test::SomeStruct, field_new_name) == 0);
 };

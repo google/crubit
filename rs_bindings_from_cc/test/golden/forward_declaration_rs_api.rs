@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: struct `ForwardDeclaredStruct` could not be bound
 //   incomplete type
 

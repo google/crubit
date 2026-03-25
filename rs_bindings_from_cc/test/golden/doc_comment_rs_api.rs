@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Doc comment
 ///
 ///  * with three slashes
@@ -20,7 +21,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DocCommentSlashes
 pub struct DocCommentSlashes {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// A field.
     pub i: ::ffi_11::c_int,
 }
@@ -69,7 +70,7 @@ impl DocCommentSlashes {
 impl Default for DocCommentSlashes {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -83,7 +84,7 @@ impl From<::ffi_11::c_int> for DocCommentSlashes {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut __param_0 = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(
                 &raw mut tmp as *mut _,
@@ -122,7 +123,7 @@ unsafe impl ::cxx::ExternType for DocCommentBang {
 impl Default for DocCommentBang {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -164,7 +165,7 @@ unsafe impl ::cxx::ExternType for MultilineCommentTwoStars {
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -206,7 +207,7 @@ unsafe impl ::cxx::ExternType for LineComment {
 impl Default for LineComment {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11LineCommentC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -248,7 +249,7 @@ unsafe impl ::cxx::ExternType for MultilineOneStar {
 impl Default for MultilineOneStar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -320,11 +321,11 @@ mod detail {
     unsafe extern "C" {
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: ::ffi_11::c_int,
         );
         #[link_name = "_ZNK17DocCommentSlashes15get_field_valueEv"]
@@ -340,43 +341,45 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv(
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN14DocCommentBangC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN11LineCommentC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11LineCommentC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN16MultilineOneStarC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z3foov() -> ::ffi_11::c_int;
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::DocCommentSlashes>() == 4);
-    assert!(::core::mem::align_of::<crate::DocCommentSlashes>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::DocCommentSlashes>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::DocCommentSlashes>() == 4);
     static_assertions::assert_impl_all!(crate::DocCommentSlashes: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::DocCommentSlashes: Drop);
-    assert!(::core::mem::offset_of!(crate::DocCommentSlashes, i) == 0);
-    assert!(::core::mem::size_of::<crate::DocCommentBang>() == 4);
-    assert!(::core::mem::align_of::<crate::DocCommentBang>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::DocCommentSlashes, i) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::DocCommentBang>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::DocCommentBang>() == 4);
     static_assertions::assert_impl_all!(crate::DocCommentBang: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::DocCommentBang: Drop);
-    assert!(::core::mem::offset_of!(crate::DocCommentBang, i) == 0);
-    assert!(::core::mem::size_of::<crate::MultilineCommentTwoStars>() == 4);
-    assert!(::core::mem::align_of::<crate::MultilineCommentTwoStars>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::DocCommentBang, i) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::MultilineCommentTwoStars>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::MultilineCommentTwoStars>() == 4);
     static_assertions::assert_impl_all!(crate::MultilineCommentTwoStars: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MultilineCommentTwoStars: Drop);
-    assert!(::core::mem::offset_of!(crate::MultilineCommentTwoStars, i) == 0);
-    assert!(::core::mem::size_of::<crate::LineComment>() == 4);
-    assert!(::core::mem::align_of::<crate::LineComment>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::MultilineCommentTwoStars, i) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::LineComment>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::LineComment>() == 4);
     static_assertions::assert_impl_all!(crate::LineComment: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::LineComment: Drop);
-    assert!(::core::mem::offset_of!(crate::LineComment, i) == 0);
-    assert!(::core::mem::size_of::<crate::MultilineOneStar>() == 4);
-    assert!(::core::mem::align_of::<crate::MultilineOneStar>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::LineComment, i) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::MultilineOneStar>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::MultilineOneStar>() == 4);
     static_assertions::assert_impl_all!(crate::MultilineOneStar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MultilineOneStar: Drop);
-    assert!(::core::mem::offset_of!(crate::MultilineOneStar, i) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::MultilineOneStar, i) == 0);
 };

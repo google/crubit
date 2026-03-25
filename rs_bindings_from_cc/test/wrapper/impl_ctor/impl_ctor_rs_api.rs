@@ -14,12 +14,13 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=8
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub value: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
@@ -40,7 +41,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     x,
                 );
             })
@@ -67,7 +68,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -87,7 +88,10 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=12
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Nontrivial {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: ::ctor::RvalueReference<'_, Self>) {
+    fn assign(
+        self: ::__rust_core::pin::Pin<&mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN10NontrivialaSEOS_(self, __param_0);
         }
@@ -97,7 +101,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Nontrivial {
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=13
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self)
     }
 }
@@ -107,7 +111,7 @@ impl ::ctor::PinnedDrop for Nontrivial {
 pub fn Create() -> ::ctor::Ctor![crate::Nontrivial] {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
-            crate::detail::__rust_thunk___Z6Createv(dest as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___Z6Createv(dest as *mut ::__rust_core::ffi::c_void);
         })
     }
 }
@@ -116,9 +120,9 @@ pub fn Create() -> ::ctor::Ctor![crate::Nontrivial] {
 #[inline(always)]
 pub fn Read(nontrivial: ::ctor::Ctor![crate::Nontrivial]) -> ::ffi_11::c_int {
     unsafe {
-        crate::detail::__rust_thunk___Z4Read10Nontrivial(::core::pin::Pin::into_inner_unchecked(
-            ::ctor::emplace!(nontrivial),
-        ))
+        crate::detail::__rust_thunk___Z4Read10Nontrivial(
+            ::__rust_core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+        )
     }
 }
 
@@ -132,21 +136,21 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             x: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1EOS_<'__unelided>(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'__unelided, crate::Nontrivial>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEOS_<'__return_lifetime>(
-            __this: ::core::pin::Pin<&mut crate::Nontrivial>,
+            __this: ::__rust_core::pin::Pin<&mut crate::Nontrivial>,
             __param_0: ::ctor::RvalueReference<'_, crate::Nontrivial>,
-        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::Nontrivial>;
+        ) -> ::__rust_core::pin::Pin<&'__return_lifetime mut crate::Nontrivial>;
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Nontrivial>,
         );
-        pub(crate) unsafe fn __rust_thunk___Z6Createv(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___Z6Createv(__return: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z4Read10Nontrivial(
             nontrivial: &mut crate::Nontrivial,
         ) -> ::ffi_11::c_int;
@@ -154,10 +158,10 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Nontrivial>() == 4);
-    assert!(::core::mem::align_of::<crate::Nontrivial>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Nontrivial>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Nontrivial>() == 4);
     static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
-    assert!(::core::mem::offset_of!(crate::Nontrivial, value) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Nontrivial, value) == 0);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
 };

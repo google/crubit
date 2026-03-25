@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=10
 // error: class `A` could not be bound
 //   Class templates are not yet supported
@@ -31,7 +32,7 @@
 pub struct B {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
-    pub(crate) a_: [::core::mem::MaybeUninit<u8>; 1],
+    pub(crate) a_: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for B {}
 impl !Sync for B {}
@@ -45,7 +46,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("B"), crate::B);
 impl Default for B {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN1BC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -61,14 +62,14 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN1BC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN1BC1Ev(__this: *mut ::__rust_core::ffi::c_void);
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::B>() == 1);
-    assert!(::core::mem::align_of::<crate::B>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::B>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::B>() == 1);
     static_assertions::assert_impl_all!(crate::B: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::B: Drop);
-    assert!(::core::mem::offset_of!(crate::B, a_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::B, a_) == 0);
 };

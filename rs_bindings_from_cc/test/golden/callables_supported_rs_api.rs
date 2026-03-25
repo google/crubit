@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: function `invoke_once` could not be bound
 //   while generating bridge param 'f': callables (e.g. `AnyInvocable`) are not yet supported
 
@@ -44,7 +45,7 @@ unsafe impl ::cxx::ExternType for ABICompatible {
 impl Default for ABICompatible {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13ABICompatibleC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -59,10 +60,10 @@ impl Default for ABICompatible {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=LayoutCompatible
 pub struct LayoutCompatible {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) private_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) private_: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for LayoutCompatible {}
 impl !Sync for LayoutCompatible {}
@@ -74,9 +75,9 @@ impl LayoutCompatible {
     #[inline(always)]
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN16LayoutCompatible6CreateEi(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 x,
             );
             __return.assume_init()
@@ -435,9 +436,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN13ABICompatibleC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13ABICompatibleC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN16LayoutCompatible6CreateEi(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             x: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK16LayoutCompatible3getEv(
@@ -447,14 +450,14 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::ABICompatible>() == 4);
-    assert!(::core::mem::align_of::<crate::ABICompatible>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::ABICompatible>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::ABICompatible>() == 4);
     static_assertions::assert_impl_all!(crate::ABICompatible: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ABICompatible: Drop);
-    assert!(::core::mem::offset_of!(crate::ABICompatible, x) == 0);
-    assert!(::core::mem::size_of::<crate::LayoutCompatible>() == 4);
-    assert!(::core::mem::align_of::<crate::LayoutCompatible>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::ABICompatible, x) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::LayoutCompatible>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::LayoutCompatible>() == 4);
     static_assertions::assert_impl_all!(crate::LayoutCompatible: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::LayoutCompatible: Drop);
-    assert!(::core::mem::offset_of!(crate::LayoutCompatible, private_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::LayoutCompatible, private_) == 0);
 };

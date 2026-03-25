@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialCustomType
@@ -29,7 +30,7 @@ unsafe impl ::cxx::ExternType for TrivialCustomType {
 impl Default for TrivialCustomType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -61,7 +62,7 @@ impl Default for TrivialCustomType {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType
 pub struct NontrivialCustomType {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     pub i: ::ffi_11::c_int,
 }
 impl !Send for NontrivialCustomType {}
@@ -99,19 +100,19 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::TrivialCustomType>() == 4);
-    assert!(::core::mem::align_of::<crate::TrivialCustomType>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::TrivialCustomType>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::TrivialCustomType>() == 4);
     static_assertions::assert_impl_all!(crate::TrivialCustomType: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TrivialCustomType: Drop);
-    assert!(::core::mem::offset_of!(crate::TrivialCustomType, i) == 0);
-    assert!(::core::mem::size_of::<crate::NontrivialCustomType>() == 4);
-    assert!(::core::mem::align_of::<crate::NontrivialCustomType>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::TrivialCustomType, i) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::NontrivialCustomType>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::NontrivialCustomType>() == 4);
     static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Copy,Drop);
-    assert!(::core::mem::offset_of!(crate::NontrivialCustomType, i) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::NontrivialCustomType, i) == 0);
 };

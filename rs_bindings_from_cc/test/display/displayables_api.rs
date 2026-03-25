@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/display/displayables.h;l=15
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -27,15 +28,15 @@ unsafe impl ::cxx::ExternType for CanAbslStringify {
     type Id = ::cxx::type_id!("CanAbslStringify");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Display for CanAbslStringify {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+impl ::__rust_core::fmt::Display for CanAbslStringify {
+    fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);
         if unsafe {
             crate::detail::__crubit_fmt__16CanAbslStringify___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(self,&mut f)
         } {
-            ::core::result::Result::Ok(())
+            ::__rust_core::result::Result::Ok(())
         } else {
-            ::core::result::Result::Err(::core::fmt::Error)
+            ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
         }
     }
 }
@@ -44,7 +45,7 @@ impl ::core::fmt::Display for CanAbslStringify {
 impl Default for CanAbslStringify {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16CanAbslStringifyC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -66,15 +67,15 @@ unsafe impl ::cxx::ExternType for CanAbslStringifyByFill {
     type Id = ::cxx::type_id!("CanAbslStringifyByFill");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Display for CanAbslStringifyByFill {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+impl ::__rust_core::fmt::Display for CanAbslStringifyByFill {
+    fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);
         if unsafe {
             crate::detail::__crubit_fmt__22CanAbslStringifyByFill___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(self,&mut f)
         } {
-            ::core::result::Result::Ok(())
+            ::__rust_core::result::Result::Ok(())
         } else {
-            ::core::result::Result::Err(::core::fmt::Error)
+            ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
         }
     }
 }
@@ -83,7 +84,7 @@ impl ::core::fmt::Display for CanAbslStringifyByFill {
 impl Default for CanAbslStringifyByFill {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN22CanAbslStringifyByFillC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -104,15 +105,15 @@ unsafe impl ::cxx::ExternType for CanAbslStringifyByFormat {
     type Id = ::cxx::type_id!("CanAbslStringifyByFormat");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Display for CanAbslStringifyByFormat {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+impl ::__rust_core::fmt::Display for CanAbslStringifyByFormat {
+    fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);
         if unsafe {
             crate::detail::__crubit_fmt__24CanAbslStringifyByFormat___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(self,&mut f)
         } {
-            ::core::result::Result::Ok(())
+            ::__rust_core::result::Result::Ok(())
         } else {
-            ::core::result::Result::Err(::core::fmt::Error)
+            ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
         }
     }
 }
@@ -121,7 +122,7 @@ impl ::core::fmt::Display for CanAbslStringifyByFormat {
 impl Default for CanAbslStringifyByFormat {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24CanAbslStringifyByFormatC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -142,15 +143,15 @@ unsafe impl ::cxx::ExternType for CanOstream {
     type Id = ::cxx::type_id!("CanOstream");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Display for CanOstream {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+impl ::__rust_core::fmt::Display for CanOstream {
+    fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);
         if unsafe {
             crate::detail::__crubit_fmt__10CanOstream___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(self,&mut f)
         } {
-            ::core::result::Result::Ok(())
+            ::__rust_core::result::Result::Ok(())
         } else {
-            ::core::result::Result::Err(::core::fmt::Error)
+            ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
         }
     }
 }
@@ -159,7 +160,7 @@ impl ::core::fmt::Display for CanOstream {
 impl Default for CanOstream {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10CanOstreamC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -186,15 +187,15 @@ unsafe impl ::cxx::ExternType for CanAbslStringifyAndOstream {
     type Id = ::cxx::type_id!("CanAbslStringifyAndOstream");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Display for CanAbslStringifyAndOstream {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+impl ::__rust_core::fmt::Display for CanAbslStringifyAndOstream {
+    fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);
         if unsafe {
             crate::detail::__crubit_fmt__26CanAbslStringifyAndOstream___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(self,&mut f)
         } {
-            ::core::result::Result::Ok(())
+            ::__rust_core::result::Result::Ok(())
         } else {
-            ::core::result::Result::Err(::core::fmt::Error)
+            ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
         }
     }
 }
@@ -203,7 +204,7 @@ impl ::core::fmt::Display for CanAbslStringifyAndOstream {
 impl Default for CanAbslStringifyAndOstream {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN26CanAbslStringifyAndOstreamC1Ev(
                 &raw mut tmp as *mut _,
@@ -236,15 +237,15 @@ impl From<DisplayableEnum> for ::ffi_11::c_int {
         value.0
     }
 }
-impl ::core::fmt::Display for DisplayableEnum {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+impl ::__rust_core::fmt::Display for DisplayableEnum {
+    fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);
         if unsafe {
             crate::detail::__crubit_fmt__DisplayableEnum___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(self,&mut f)
         } {
-            ::core::result::Result::Ok(())
+            ::__rust_core::result::Result::Ok(())
         } else {
-            ::core::result::Result::Err(::core::fmt::Error)
+            ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
         }
     }
 }
@@ -266,7 +267,7 @@ impl ::core::fmt::Display for DisplayableEnum {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NotDisplayable
 pub struct NotDisplayable {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for NotDisplayable {}
 impl !Sync for NotDisplayable {}
@@ -279,7 +280,7 @@ unsafe impl ::cxx::ExternType for NotDisplayable {
 impl Default for NotDisplayable {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14NotDisplayableC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -292,7 +293,7 @@ impl Default for NotDisplayable {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=TemplatedStringView
 pub struct TemplatedStringView {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 16],
 }
 impl !Send for TemplatedStringView {}
 impl !Sync for TemplatedStringView {}
@@ -300,15 +301,15 @@ unsafe impl ::cxx::ExternType for TemplatedStringView {
     type Id = ::cxx::type_id!("TemplatedStringView");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Display for TemplatedStringView {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+impl ::__rust_core::fmt::Display for TemplatedStringView {
+    fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);
         if unsafe {
             crate::detail::__crubit_fmt__19TemplatedStringView___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(self,&mut f)
         } {
-            ::core::result::Result::Ok(())
+            ::__rust_core::result::Result::Ok(())
         } else {
-            ::core::result::Result::Err(::core::fmt::Error)
+            ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
         }
     }
 }
@@ -318,7 +319,7 @@ impl From<::cc_std::std::__u::raw_string_view> for TemplatedStringView {
     #[inline(always)]
     fn from(args: ::cc_std::std::__u::raw_string_view) -> Self {
         let mut v = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN19TemplatedStringViewC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(&raw mut tmp as*mut _,&mut v);
             tmp.assume_init()
@@ -339,7 +340,7 @@ impl ::ctor::CtorNew<::cc_std::std::__u::raw_string_view> for TemplatedStringVie
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TemplatedNotDisplayable
 pub struct TemplatedNotDisplayable {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TemplatedNotDisplayable {}
 impl !Sync for TemplatedNotDisplayable {}
@@ -352,7 +353,7 @@ unsafe impl ::cxx::ExternType for TemplatedNotDisplayable {
 impl Default for TemplatedNotDisplayable {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23TemplatedNotDisplayableC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -379,7 +380,7 @@ unsafe impl ::cxx::ExternType for DisplayInRust {
 impl Default for DisplayInRust {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13DisplayInRustC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -1421,33 +1422,35 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN16CanAbslStringifyC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __crubit_fmt__16CanAbslStringify___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(
             value: &crate::CanAbslStringify,
             formatter: &mut ::lossy_formatter::LossyFormatter,
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___ZN22CanAbslStringifyByFillC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __crubit_fmt__22CanAbslStringifyByFill___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(
             value: &crate::CanAbslStringifyByFill,
             formatter: &mut ::lossy_formatter::LossyFormatter,
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___ZN24CanAbslStringifyByFormatC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __crubit_fmt__24CanAbslStringifyByFormat___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(
             value: &crate::CanAbslStringifyByFormat,
             formatter: &mut ::lossy_formatter::LossyFormatter,
         ) -> bool;
-        pub(crate) unsafe fn __rust_thunk___ZN10CanOstreamC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10CanOstreamC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __crubit_fmt__10CanOstream___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(
             value: &crate::CanOstream,
             formatter: &mut ::lossy_formatter::LossyFormatter,
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___ZN26CanAbslStringifyAndOstreamC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __crubit_fmt__26CanAbslStringifyAndOstream___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(
             value: &crate::CanAbslStringifyAndOstream,
@@ -1458,10 +1461,10 @@ mod detail {
             formatter: &mut ::lossy_formatter::LossyFormatter,
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___ZN14NotDisplayableC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN19TemplatedStringViewC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             v: &mut ::cc_std::std::__u::raw_string_view,
         );
         pub(crate) unsafe fn __crubit_fmt__19TemplatedStringView___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fdisplay_3adisplayables(
@@ -1469,59 +1472,61 @@ mod detail {
             formatter: &mut ::lossy_formatter::LossyFormatter,
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___ZN23TemplatedNotDisplayableC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13DisplayInRustC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13DisplayInRustC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::CanAbslStringify>() == 16);
-    assert!(::core::mem::align_of::<crate::CanAbslStringify>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::CanAbslStringify>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::CanAbslStringify>() == 8);
     static_assertions::assert_impl_all!(crate::CanAbslStringify: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CanAbslStringify: Drop);
-    assert!(::core::mem::offset_of!(crate::CanAbslStringify, value) == 0);
-    assert!(::core::mem::size_of::<crate::CanAbslStringifyByFill>() == 16);
-    assert!(::core::mem::align_of::<crate::CanAbslStringifyByFill>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::CanAbslStringify, value) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::CanAbslStringifyByFill>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::CanAbslStringifyByFill>() == 8);
     static_assertions::assert_impl_all!(crate::CanAbslStringifyByFill: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CanAbslStringifyByFill: Drop);
-    assert!(::core::mem::offset_of!(crate::CanAbslStringifyByFill, count) == 0);
-    assert!(::core::mem::offset_of!(crate::CanAbslStringifyByFill, ch) == 8);
-    assert!(::core::mem::size_of::<crate::CanAbslStringifyByFormat>() == 16);
-    assert!(::core::mem::align_of::<crate::CanAbslStringifyByFormat>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::CanAbslStringifyByFill, count) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::CanAbslStringifyByFill, ch) == 8);
+    assert!(::__rust_core::mem::size_of::<crate::CanAbslStringifyByFormat>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::CanAbslStringifyByFormat>() == 8);
     static_assertions::assert_impl_all!(crate::CanAbslStringifyByFormat: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CanAbslStringifyByFormat: Drop);
-    assert!(::core::mem::offset_of!(crate::CanAbslStringifyByFormat, value) == 0);
-    assert!(::core::mem::size_of::<crate::CanOstream>() == 16);
-    assert!(::core::mem::align_of::<crate::CanOstream>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::CanAbslStringifyByFormat, value) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::CanOstream>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::CanOstream>() == 8);
     static_assertions::assert_impl_all!(crate::CanOstream: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CanOstream: Drop);
-    assert!(::core::mem::offset_of!(crate::CanOstream, value) == 0);
-    assert!(::core::mem::size_of::<crate::CanAbslStringifyAndOstream>() == 32);
-    assert!(::core::mem::align_of::<crate::CanAbslStringifyAndOstream>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::CanOstream, value) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::CanAbslStringifyAndOstream>() == 32);
+    assert!(::__rust_core::mem::align_of::<crate::CanAbslStringifyAndOstream>() == 8);
     static_assertions::assert_impl_all!(crate::CanAbslStringifyAndOstream: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CanAbslStringifyAndOstream: Drop);
-    assert!(::core::mem::offset_of!(crate::CanAbslStringifyAndOstream, stringify) == 0);
-    assert!(::core::mem::offset_of!(crate::CanAbslStringifyAndOstream, ostream) == 16);
-    assert!(::core::mem::size_of::<crate::NotDisplayable>() == 1);
-    assert!(::core::mem::align_of::<crate::NotDisplayable>() == 1);
+    assert!(::__rust_core::mem::offset_of!(crate::CanAbslStringifyAndOstream, stringify) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::CanAbslStringifyAndOstream, ostream) == 16);
+    assert!(::__rust_core::mem::size_of::<crate::NotDisplayable>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::NotDisplayable>() == 1);
     static_assertions::assert_impl_all!(crate::NotDisplayable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::NotDisplayable: Drop);
 
-    assert!(::core::mem::size_of::<crate::TemplatedStringView>() == 16);
-    assert!(::core::mem::align_of::<crate::TemplatedStringView>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::TemplatedStringView>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::TemplatedStringView>() == 8);
     static_assertions::assert_impl_all!(crate::TemplatedStringView: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TemplatedStringView: Drop);
 
-    assert!(::core::mem::size_of::<crate::TemplatedNotDisplayable>() == 1);
-    assert!(::core::mem::align_of::<crate::TemplatedNotDisplayable>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::TemplatedNotDisplayable>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::TemplatedNotDisplayable>() == 1);
     static_assertions::assert_impl_all!(crate::TemplatedNotDisplayable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TemplatedNotDisplayable: Drop);
 
-    assert!(::core::mem::size_of::<crate::DisplayInRust>() == 32);
-    assert!(::core::mem::align_of::<crate::DisplayInRust>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::DisplayInRust>() == 32);
+    assert!(::__rust_core::mem::align_of::<crate::DisplayInRust>() == 8);
     static_assertions::assert_impl_all!(crate::DisplayInRust: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::DisplayInRust: Drop);
-    assert!(::core::mem::offset_of!(crate::DisplayInRust, cc_value) == 0);
-    assert!(::core::mem::offset_of!(crate::DisplayInRust, rust_value) == 16);
+    assert!(::__rust_core::mem::offset_of!(crate::DisplayInRust, cc_value) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::DisplayInRust, rust_value) == 16);
 };

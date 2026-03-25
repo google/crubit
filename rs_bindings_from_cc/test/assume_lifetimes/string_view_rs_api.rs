@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/string_view.h;l=12
 #[inline(always)]
 pub fn string_view_sink<'s>(mut s: ::cc_std::std::string_view<'s>) {
@@ -28,8 +29,9 @@ pub fn string_view_return<'s>(
     mut s: ::cc_std::std::string_view<'s>,
 ) -> ::cc_std::std::string_view<'s> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<::cc_std::std::string_view<'s>>::uninit();
-        crate::detail::__rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(&raw mut __return as*mut::core::ffi::c_void,&mut s);
+        let mut __return =
+            ::__rust_core::mem::MaybeUninit::<::cc_std::std::string_view<'s>>::uninit();
+        crate::detail::__rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(&raw mut __return as*mut::__rust_core::ffi::c_void,&mut s);
         __return.assume_init()
     }
 }
@@ -42,8 +44,8 @@ pub fn ambiguous_string_view_return<'a, 'b>(
 ) -> ::cc_std::std::__u::raw_string_view {
     unsafe {
         let mut __return =
-            ::core::mem::MaybeUninit::<::cc_std::std::__u::raw_string_view>::uninit();
-        crate::detail::__rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __return as*mut::core::ffi::c_void,&mut a,&mut b);
+            ::__rust_core::mem::MaybeUninit::<::cc_std::std::__u::raw_string_view>::uninit();
+        crate::detail::__rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __return as*mut::__rust_core::ffi::c_void,&mut a,&mut b);
         __return.assume_init()
     }
 }
@@ -63,8 +65,9 @@ pub fn unambiguous_string_view_return_annotated<'a>(
     mut y: ::cc_std::std::string_view<'a>,
 ) -> ::cc_std::std::string_view<'a> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<::cc_std::std::string_view<'a>>::uninit();
-        crate::detail::__rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __return as*mut::core::ffi::c_void,&mut x,&mut y);
+        let mut __return =
+            ::__rust_core::mem::MaybeUninit::<::cc_std::std::string_view<'a>>::uninit();
+        crate::detail::__rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __return as*mut::__rust_core::ffi::c_void,&mut x,&mut y);
         __return.assume_init()
     }
 }
@@ -272,14 +275,14 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE<
             's,
         >(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             s: &mut ::cc_std::std::string_view<'s>,
         );
         pub(crate) unsafe fn __rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_<
             'a,
             'b,
         >(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             a: &mut ::cc_std::std::string_view<'a>,
             b: &mut ::cc_std::std::string_view<'b>,
         );
@@ -291,7 +294,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_<
             'a,
         >(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             x: &mut ::cc_std::std::string_view<'a>,
             y: &mut ::cc_std::std::string_view<'a>,
         );
