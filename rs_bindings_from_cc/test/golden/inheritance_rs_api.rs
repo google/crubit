@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Using classes to force these to be non-POD.
 /// In the Itanium ABI, the tail padding of POD types cannot be reused by other
 /// objects, even if the POD type is potentially-overlapping.
@@ -20,7 +21,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Base0
 pub struct Base0 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Base0 {}
 impl !Sync for Base0 {}
@@ -32,7 +33,7 @@ unsafe impl ::cxx::ExternType for Base0 {
 impl Default for Base0 {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5Base0C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -58,13 +59,13 @@ impl Default for Base0 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Base1
 pub struct Base1 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) b1_1_: [::core::mem::MaybeUninit<u8>; 8],
+    pub(crate) b1_1_: [::__rust_core::mem::MaybeUninit<u8>; 8],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) b1_2_: [::core::mem::MaybeUninit<u8>; 8],
+    pub(crate) b1_2_: [::__rust_core::mem::MaybeUninit<u8>; 8],
 }
 impl !Send for Base1 {}
 impl !Sync for Base1 {}
@@ -76,7 +77,7 @@ unsafe impl ::cxx::ExternType for Base1 {
 impl Default for Base1 {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5Base1C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -102,10 +103,10 @@ impl Default for Base1 {
 #[repr(C, align(2))]
 ///CRUBIT_ANNOTATE: cpp_type=Base2
 pub struct Base2 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) b2_1_: [::core::mem::MaybeUninit<u8>; 2],
+    pub(crate) b2_1_: [::__rust_core::mem::MaybeUninit<u8>; 2],
 }
 impl !Send for Base2 {}
 impl !Sync for Base2 {}
@@ -117,7 +118,7 @@ unsafe impl ::cxx::ExternType for Base2 {
 impl Default for Base2 {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5Base2C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -143,7 +144,7 @@ impl Default for Base2 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Derived
 pub struct Derived {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 12],
     pub derived_1: ::ffi_11::c_char,
 }
 impl !Send for Derived {}
@@ -156,7 +157,7 @@ unsafe impl ::cxx::ExternType for Derived {
 impl Default for Derived {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -182,7 +183,7 @@ impl Default for Derived {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
 pub struct VirtualBase1 {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for VirtualBase1 {}
 impl !Sync for VirtualBase1 {}
@@ -200,7 +201,7 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN12VirtualBase1C1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -225,7 +226,7 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
 pub struct VirtualBase2 {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for VirtualBase2 {}
 impl !Sync for VirtualBase2 {}
@@ -243,7 +244,7 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN12VirtualBase2C1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -268,7 +269,7 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
 pub struct VirtualDerived {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 32],
 }
 impl !Send for VirtualDerived {}
 impl !Sync for VirtualDerived {}
@@ -286,7 +287,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN14VirtualDerivedC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -311,7 +312,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=MyAbstractClass
 pub struct MyAbstractClass {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 8],
 }
 impl !Send for MyAbstractClass {}
 impl !Sync for MyAbstractClass {}
@@ -335,7 +336,7 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase1
 pub struct MethodBase1 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for MethodBase1 {}
 impl !Sync for MethodBase1 {}
@@ -369,7 +370,7 @@ impl MethodBase1 {
 impl Default for MethodBase1 {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -395,7 +396,7 @@ impl Default for MethodBase1 {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase2
 pub struct MethodBase2 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for MethodBase2 {}
 impl !Sync for MethodBase2 {}
@@ -417,7 +418,7 @@ impl MethodBase2 {
 impl Default for MethodBase2 {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -443,7 +444,7 @@ impl Default for MethodBase2 {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodDerived
 pub struct MethodDerived {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for MethodDerived {}
 impl !Sync for MethodDerived {}
@@ -455,7 +456,7 @@ unsafe impl ::cxx::ExternType for MethodDerived {
 impl Default for MethodDerived {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13MethodDerivedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -487,16 +488,22 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev(
-            __this: *mut ::core::ffi::c_void,
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1Ev(__this: *mut ::__rust_core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1Ev(__this: *mut ::__rust_core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev(__this: *mut ::__rust_core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::__rust_core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         #[link_name = "_ZN11MethodBase16PublicEv"]
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
             __this: &'a mut crate::MethodBase1,
@@ -514,7 +521,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
             __this: &'a mut crate::MethodBase1,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         #[link_name = "_ZN11MethodBase210Colliding1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'a>(
             __this: &'a mut crate::MethodBase2,
@@ -523,60 +532,62 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
             __this: &'a mut crate::MethodBase2,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Base0>() == 1);
-    assert!(::core::mem::align_of::<crate::Base0>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Base0>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Base0>() == 1);
     static_assertions::assert_impl_all!(crate::Base0: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Base0: Drop);
 
-    assert!(::core::mem::size_of::<crate::Base1>() == 16);
-    assert!(::core::mem::align_of::<crate::Base1>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::Base1>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::Base1>() == 8);
     static_assertions::assert_impl_all!(crate::Base1: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Base1: Drop);
-    assert!(::core::mem::offset_of!(crate::Base1, b1_1_) == 0);
-    assert!(::core::mem::offset_of!(crate::Base1, b1_2_) == 8);
-    assert!(::core::mem::size_of::<crate::Base2>() == 2);
-    assert!(::core::mem::align_of::<crate::Base2>() == 2);
+    assert!(::__rust_core::mem::offset_of!(crate::Base1, b1_1_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Base1, b1_2_) == 8);
+    assert!(::__rust_core::mem::size_of::<crate::Base2>() == 2);
+    assert!(::__rust_core::mem::align_of::<crate::Base2>() == 2);
     static_assertions::assert_impl_all!(crate::Base2: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Base2: Drop);
-    assert!(::core::mem::offset_of!(crate::Base2, b2_1_) == 0);
-    assert!(::core::mem::size_of::<crate::Derived>() == 16);
-    assert!(::core::mem::align_of::<crate::Derived>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::Base2, b2_1_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::Derived>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::Derived>() == 8);
     static_assertions::assert_impl_all!(crate::Derived: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Derived: Drop);
-    assert!(::core::mem::offset_of!(crate::Derived, derived_1) == 12);
-    assert!(::core::mem::size_of::<crate::VirtualBase1>() == 24);
-    assert!(::core::mem::align_of::<crate::VirtualBase1>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::Derived, derived_1) == 12);
+    assert!(::__rust_core::mem::size_of::<crate::VirtualBase1>() == 24);
+    assert!(::__rust_core::mem::align_of::<crate::VirtualBase1>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualBase1: Copy,Drop);
 
-    assert!(::core::mem::size_of::<crate::VirtualBase2>() == 24);
-    assert!(::core::mem::align_of::<crate::VirtualBase2>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::VirtualBase2>() == 24);
+    assert!(::__rust_core::mem::align_of::<crate::VirtualBase2>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualBase2: Copy,Drop);
 
-    assert!(::core::mem::size_of::<crate::VirtualDerived>() == 32);
-    assert!(::core::mem::align_of::<crate::VirtualDerived>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::VirtualDerived>() == 32);
+    assert!(::__rust_core::mem::align_of::<crate::VirtualDerived>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualDerived: Copy,Drop);
 
-    assert!(::core::mem::size_of::<crate::MyAbstractClass>() == 8);
-    assert!(::core::mem::align_of::<crate::MyAbstractClass>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::MyAbstractClass>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::MyAbstractClass>() == 8);
     static_assertions::assert_not_impl_any!(crate::MyAbstractClass: Copy,Drop);
 
-    assert!(::core::mem::size_of::<crate::MethodBase1>() == 1);
-    assert!(::core::mem::align_of::<crate::MethodBase1>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::MethodBase1>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::MethodBase1>() == 1);
     static_assertions::assert_impl_all!(crate::MethodBase1: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MethodBase1: Drop);
 
-    assert!(::core::mem::size_of::<crate::MethodBase2>() == 1);
-    assert!(::core::mem::align_of::<crate::MethodBase2>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::MethodBase2>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::MethodBase2>() == 1);
     static_assertions::assert_impl_all!(crate::MethodBase2: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MethodBase2: Drop);
 
-    assert!(::core::mem::size_of::<crate::MethodDerived>() == 1);
-    assert!(::core::mem::align_of::<crate::MethodDerived>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::MethodDerived>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::MethodDerived>() == 1);
     static_assertions::assert_impl_all!(crate::MethodDerived: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MethodDerived: Drop);
 };

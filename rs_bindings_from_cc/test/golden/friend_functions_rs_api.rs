@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeClass
 pub struct SomeClass {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeClass {}
 impl !Sync for SomeClass {}
@@ -29,7 +30,7 @@ unsafe impl ::cxx::ExternType for SomeClass {
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -47,7 +48,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
             __param_0: &mut crate::SomeClass,
         );
@@ -55,8 +58,8 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::SomeClass>() == 1);
-    assert!(::core::mem::align_of::<crate::SomeClass>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::SomeClass>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::SomeClass>() == 1);
     static_assertions::assert_impl_all!(crate::SomeClass: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeClass: Drop);
 };

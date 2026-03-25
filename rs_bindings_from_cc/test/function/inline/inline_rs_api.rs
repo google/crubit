@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=8
 #[inline(always)]
 pub fn hello_world_inline() -> ::ffi_11::c_int {
@@ -41,7 +42,7 @@ unsafe impl ::cxx::ExternType for SomeStruct {
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -87,7 +88,9 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z18hello_world_inlinev() -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(
             s: *const crate::SomeStruct,
         ) -> ::ffi_11::c_int;
@@ -101,9 +104,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::SomeStruct>() == 4);
-    assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::SomeStruct>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::SomeStruct>() == 4);
     static_assertions::assert_impl_all!(crate::SomeStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::SomeStruct, int_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::SomeStruct, int_field) == 0);
 };

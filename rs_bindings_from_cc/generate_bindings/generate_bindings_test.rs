@@ -385,7 +385,7 @@ fn test_impl_drop_user_defined_destructor() -> Result<()> {
         quote! {
             impl ::ctor::PinnedDrop for UserDefinedDestructor {
                 #[inline(always)]
-                unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+                unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
                     crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self)
                 }
             }
@@ -394,7 +394,7 @@ fn test_impl_drop_user_defined_destructor() -> Result<()> {
     assert_rs_matches!(rs_api, quote! {pub x: ::ffi_11::c_int,});
     assert_rs_matches!(
         rs_api,
-        quote! {pub nts: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,}
+        quote! {pub nts: ::__rust_core::mem::ManuallyDrop<crate::NontrivialStruct>,}
     );
     Ok(())
 }
@@ -423,7 +423,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
         quote! {
             impl ::ctor::PinnedDrop for NontrivialMembers {
                 #[inline(always)]
-                unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+                unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
                     crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
                 }
             }
@@ -433,7 +433,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
     assert_rs_matches!(rs_api, quote! {pub ts: crate::TrivialStruct,});
     assert_rs_matches!(
         rs_api,
-        quote! {pub udd: ::core::mem::ManuallyDrop<crate::UserDefinedDestructor>,}
+        quote! {pub udd: ::__rust_core::mem::ManuallyDrop<crate::UserDefinedDestructor>,}
     );
     Ok(())
 }
@@ -825,10 +825,10 @@ fn test_assertions_outside_of_namespace_module() -> Result<()> {
             ...
             const _: () = {
                 ...
-                assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
-                assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
+                assert!(::__rust_core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
+                assert!(::__rust_core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
                 ...
-                assert!(::core::mem::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+                assert!(::__rust_core::mem::offset_of!(crate::test_namespace_bindings::S, i) == 0);
                 ...
             };
         }
@@ -1170,7 +1170,7 @@ fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
             quote! {
                 pub struct Present {
                     ...
-                    pub(crate) field: [::core::mem::MaybeUninit<u8>; 1],
+                    pub(crate) field: [::__rust_core::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
@@ -1229,14 +1229,14 @@ fn test_existing_rust_type_assert() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            assert!(::core::mem::size_of::<i32>() == 1);
+            assert!(::__rust_core::mem::size_of::<i32>() == 1);
         }
     );
 
     assert_rs_matches!(
         rs_api,
         quote! {
-            assert!(::core::mem::align_of::<i32>() == 1);
+            assert!(::__rust_core::mem::align_of::<i32>() == 1);
         }
     );
     Ok(())
@@ -1263,7 +1263,7 @@ fn test_existing_rust_type_c_abi_incompatible() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z4Makev(__return: *mut ::core::ffi::c_void);
+            pub(crate) unsafe fn __rust_thunk___Z4Makev(__return: *mut ::__rust_core::ffi::c_void);
         }
     );
     Ok(())
@@ -1312,13 +1312,13 @@ fn test_existing_rust_type_assert_incomplete() -> Result<()> {
     assert_rs_not_matches!(
         rs_api,
         quote! {
-        const _: () = { ... ::core::mem::size_of::<i32>() ... } }
+        const _: () = { ... ::__rust_core::mem::size_of::<i32>() ... } }
     );
 
     assert_rs_not_matches!(
         rs_api,
         quote! {
-        const _: () = { ... ::core::mem::align_of::<i32>() ... }}
+        const _: () = { ... ::__rust_core::mem::align_of::<i32>() ... }}
     );
     Ok(())
 }

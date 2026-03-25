@@ -619,9 +619,9 @@ pub fn generated_items_to_tokens<'db>(
                     let n = Literal::usize_unsuffixed(n);
                     // TODO(b/481405536): Do this unconditionally.
                     if *internally_mutable_unknown_fields {
-                        quote! { __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n], }
+                        quote! { __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; #n], }
                     } else {
-                        quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
+                        quote! { __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; #n], }
                     }
                 });
 
@@ -672,7 +672,7 @@ pub fn generated_items_to_tokens<'db>(
                         __COMMENT__ "Generated due to CRUBIT_OWNED_POINTEE annotation."
                         #[doc = #doc_comment]
                         #[repr(transparent)]
-                        pub struct #owned_type_name(::core::ptr::NonNull<#ident>);
+                        pub struct #owned_type_name(::__rust_core::ptr::NonNull<#ident>);
 
                         impl Drop for #owned_type_name {
                             fn drop(&mut self) {
@@ -699,7 +699,7 @@ pub fn generated_items_to_tokens<'db>(
                     .iter()
                     .map(|lt| {
                         let field_name = format_ident!("__marker_{}", lt.ident);
-                        quote! { #field_name: ::core::marker::PhantomData<& #lt ()> }
+                        quote! { #field_name: ::__rust_core::marker::PhantomData<& #lt ()> }
                     })
                     .collect();
 
@@ -1061,13 +1061,13 @@ impl ToTokens for DisplayImpl {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let Self { type_name, fmt_fn_name } = self;
         quote! {
-            impl ::core::fmt::Display for #type_name {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+            impl ::__rust_core::fmt::Display for #type_name {
+                fn fmt(&self, f: &mut ::__rust_core::fmt::Formatter<'_>) -> ::__rust_core::fmt::Result {
                     let mut f = ::lossy_formatter::LossyFormatter::new(f);
                     if unsafe { crate::detail::#fmt_fn_name(self, &mut f) } {
-                        ::core::result::Result::Ok(())
+                        ::__rust_core::result::Result::Ok(())
                     } else {
-                        ::core::result::Result::Err(::core::fmt::Error)
+                        ::__rust_core::result::Result::Err(::__rust_core::fmt::Error)
                     }
                 }
             }
@@ -1182,9 +1182,10 @@ impl ToTokens for BitPadding {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let n = Literal::usize_unsuffixed(self.padding_size_in_bytes());
         if self.internally_mutable {
-            quote! { [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n] }.to_tokens(tokens);
+            quote! { [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; #n] }
+                .to_tokens(tokens);
         } else {
-            quote! { [::core::mem::MaybeUninit<u8>; #n] }.to_tokens(tokens);
+            quote! { [::__rust_core::mem::MaybeUninit<u8>; #n] }.to_tokens(tokens);
         }
     }
 }
@@ -1274,7 +1275,7 @@ impl ToTokens for FieldType {
             FieldType::Erased(padding) => padding.to_tokens(tokens),
             FieldType::Type { needs_manually_drop, ty } => {
                 if *needs_manually_drop {
-                    quote! { ::core::mem::ManuallyDrop<#ty> }.to_tokens(tokens)
+                    quote! { ::__rust_core::mem::ManuallyDrop<#ty> }.to_tokens(tokens)
                 } else {
                     ty.to_tokens(tokens)
                 }
@@ -1391,8 +1392,8 @@ impl ToTokens for Assertion {
                 let size = Literal::usize_unsuffixed(*size);
                 let alignment = Literal::usize_unsuffixed(*alignment);
                 quote! {
-                    assert!(::core::mem::size_of::<#type_name>() == #size);
-                    assert!(::core::mem::align_of::<#type_name>() == #alignment);
+                    assert!(::__rust_core::mem::size_of::<#type_name>() == #size);
+                    assert!(::__rust_core::mem::align_of::<#type_name>() == #alignment);
                 }
                 .to_tokens(tokens);
             }
@@ -1420,7 +1421,7 @@ impl ToTokens for Assertion {
                 for (field_ident, expected_offset) in fields_and_expected_offsets {
                     let expected_offset = Literal::usize_unsuffixed(*expected_offset);
                     quote! {
-                        assert!(::core::mem::offset_of!(#qualified_ident, #field_ident) == #expected_offset);
+                        assert!(::__rust_core::mem::offset_of!(#qualified_ident, #field_ident) == #expected_offset);
                     }
                     .to_tokens(tokens);
                 }

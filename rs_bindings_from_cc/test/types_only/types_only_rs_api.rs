@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=13
 #[inline(always)]
 pub fn MustBindFn() {
@@ -38,7 +39,7 @@ unsafe impl ::cxx::ExternType for Copyable {
 impl Default for Copyable {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN8CopyableC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -51,10 +52,10 @@ impl Default for Copyable {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Cloneable
 pub struct Cloneable {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) field_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for Cloneable {}
 impl !Sync for Cloneable {}
@@ -73,7 +74,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Cloneable {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN9CloneableC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     field,
                 );
             })
@@ -100,7 +101,7 @@ impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for Cloneable {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN9CloneableC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -127,7 +128,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN9CloneableC1EOS_(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -147,7 +148,7 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 /// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=26
 impl ::ctor::Assign<&Self> for Cloneable {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
+    fn assign(self: ::__rust_core::pin::Pin<&mut Self>, __param_0: &Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN9CloneableaSERKS_(self, __param_0);
         }
@@ -157,7 +158,10 @@ impl ::ctor::Assign<&Self> for Cloneable {
 /// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=27
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Cloneable {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: ::ctor::RvalueReference<'_, Self>) {
+    fn assign(
+        self: ::__rust_core::pin::Pin<&mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN9CloneableaSEOS_(self, __param_0);
         }
@@ -167,7 +171,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Cloneable {
 /// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=28
 impl ::ctor::PinnedDrop for Cloneable {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN9CloneableD1Ev(self)
     }
 }
@@ -177,10 +181,10 @@ impl ::ctor::PinnedDrop for Cloneable {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Movable
 pub struct Movable {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) field_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for Movable {}
 impl !Sync for Movable {}
@@ -199,7 +203,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Movable {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN7MovableC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     field,
                 );
             })
@@ -226,7 +230,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN7MovableC1EOS_(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     other,
                 );
             })
@@ -246,7 +250,7 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 /// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=40
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Movable {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, other: ::ctor::RvalueReference<'_, Self>) {
+    fn assign(self: ::__rust_core::pin::Pin<&mut Self>, other: ::ctor::RvalueReference<'_, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN7MovableaSEOS_(self, other);
         }
@@ -256,7 +260,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Movable {
 /// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=45
 impl ::ctor::PinnedDrop for Movable {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN7MovableD1Ev(self)
     }
 }
@@ -274,62 +278,64 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z10MustBindFnv();
-        pub(crate) unsafe fn __rust_thunk___ZN8CopyableC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8CopyableC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN9CloneableC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN9CloneableC1ERKS_<'__unelided>(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: &'__unelided crate::Cloneable,
         );
         pub(crate) unsafe fn __rust_thunk___ZN9CloneableC1EOS_<'__unelided>(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'__unelided, crate::Cloneable>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN9CloneableaSERKS_<'__return_lifetime>(
-            __this: ::core::pin::Pin<&mut crate::Cloneable>,
+            __this: ::__rust_core::pin::Pin<&mut crate::Cloneable>,
             __param_0: &crate::Cloneable,
-        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::Cloneable>;
+        ) -> ::__rust_core::pin::Pin<&'__return_lifetime mut crate::Cloneable>;
         pub(crate) unsafe fn __rust_thunk___ZN9CloneableaSEOS_<'__return_lifetime>(
-            __this: ::core::pin::Pin<&mut crate::Cloneable>,
+            __this: ::__rust_core::pin::Pin<&mut crate::Cloneable>,
             __param_0: ::ctor::RvalueReference<'_, crate::Cloneable>,
-        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::Cloneable>;
+        ) -> ::__rust_core::pin::Pin<&'__return_lifetime mut crate::Cloneable>;
         pub(crate) unsafe fn __rust_thunk___ZN9CloneableD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Cloneable>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Cloneable>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN7MovableC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             field: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN7MovableC1EOS_<'__unelided>(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             other: ::ctor::RvalueReference<'__unelided, crate::Movable>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN7MovableaSEOS_<'__return_lifetime>(
-            __this: ::core::pin::Pin<&mut crate::Movable>,
+            __this: ::__rust_core::pin::Pin<&mut crate::Movable>,
             other: ::ctor::RvalueReference<'_, crate::Movable>,
-        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::Movable>;
+        ) -> ::__rust_core::pin::Pin<&'__return_lifetime mut crate::Movable>;
         pub(crate) unsafe fn __rust_thunk___ZN7MovableD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Movable>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::Movable>,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Copyable>() == 4);
-    assert!(::core::mem::align_of::<crate::Copyable>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Copyable>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Copyable>() == 4);
     static_assertions::assert_impl_all!(crate::Copyable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Copyable: Drop);
-    assert!(::core::mem::offset_of!(crate::Copyable, field) == 0);
-    assert!(::core::mem::size_of::<crate::Cloneable>() == 4);
-    assert!(::core::mem::align_of::<crate::Cloneable>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::Copyable, field) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::Cloneable>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Cloneable>() == 4);
     static_assertions::assert_impl_all!(crate::Cloneable: Drop);
     static_assertions::assert_not_impl_any!(crate::Cloneable: Copy);
-    assert!(::core::mem::offset_of!(crate::Cloneable, field_) == 0);
-    assert!(::core::mem::size_of::<crate::Movable>() == 4);
-    assert!(::core::mem::align_of::<crate::Movable>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::Cloneable, field_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::Movable>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Movable>() == 4);
     static_assertions::assert_impl_all!(crate::Movable: Drop);
     static_assertions::assert_not_impl_any!(crate::Movable: Copy);
-    assert!(::core::mem::offset_of!(crate::Movable, field_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Movable, field_) == 0);
 };

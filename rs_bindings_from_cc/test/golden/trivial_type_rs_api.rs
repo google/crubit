@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod ns {
     /// Implicitly defined special member functions are trivial on a struct with
     /// only trivial members.
@@ -52,7 +53,7 @@ pub mod ns {
     impl Default for Trivial {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns7TrivialC1Ev(&raw mut tmp as *mut _);
                 tmp.assume_init()
@@ -83,9 +84,9 @@ pub mod ns {
     #[inline(always)]
     pub fn TakesByValue(mut trivial: crate::ns::Trivial) -> crate::ns::Trivial {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ns::Trivial>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<crate::ns::Trivial>::uninit();
             crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 &mut trivial,
             );
             __return.assume_init()
@@ -115,7 +116,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         #[link_name = "_ZN2ns7Trivial11UnqualifiedEv"]
         pub(crate) unsafe fn __rust_thunk___ZN2ns7Trivial11UnqualifiedEv<'a>(
             __this: &'a mut crate::ns::Trivial,
@@ -133,16 +136,16 @@ mod detail {
             __this: &'a crate::ns::Trivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             trivial: &mut crate::ns::Trivial,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::ns::Trivial>() == 4);
-    assert!(::core::mem::align_of::<crate::ns::Trivial>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::ns::Trivial>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::ns::Trivial>() == 4);
     static_assertions::assert_impl_all!(crate::ns::Trivial: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ns::Trivial: Drop);
-    assert!(::core::mem::offset_of!(crate::ns::Trivial, trivial_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::ns::Trivial, trivial_field) == 0);
 };

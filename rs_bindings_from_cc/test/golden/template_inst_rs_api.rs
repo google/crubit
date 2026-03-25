@@ -13,14 +13,15 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// This library reproduces the issue in b/458678348.
 #[inline(always)]
 pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
     unsafe {
         let mut __return =
-            ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
+            ::__rust_core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
         crate::detail::__rust_thunk___Z13GetMyTemplatev(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __return as *mut ::__rust_core::ffi::c_void,
         );
         __return.assume_init()
     }
@@ -58,14 +59,16 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___Z13GetMyTemplatev(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___Z13GetMyTemplatev(
+            __return: *mut ::__rust_core::ffi::c_void,
+        );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, field) == 0);
 };

@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod A {
     #[inline(always)]
     pub fn Foo() {

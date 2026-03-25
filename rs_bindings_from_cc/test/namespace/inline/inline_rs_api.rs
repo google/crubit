@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod foo {
     // namespace inline1
 
@@ -39,7 +40,7 @@ pub mod foo {
         impl Default for MyStruct {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN3foo7inline18MyStructC1Ev(
                         &raw mut tmp as *mut _,
@@ -106,7 +107,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN3foo7inline18MyStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN3foo7inline115GetStructValue1EPKNS0_8MyStructE(
             s: *const crate::foo::inline1::MyStruct,
@@ -124,9 +125,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::foo::inline1::MyStruct>() == 4);
-    assert!(::core::mem::align_of::<crate::foo::inline1::MyStruct>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::foo::inline1::MyStruct>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::foo::inline1::MyStruct>() == 4);
     static_assertions::assert_impl_all!(crate::foo::inline1::MyStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::foo::inline1::MyStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::foo::inline1::MyStruct, value) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::foo::inline1::MyStruct, value) == 0);
 };

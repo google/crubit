@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=10
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -93,7 +94,7 @@ impl UnpinStructWithRefQualifiedMethods {
 impl Default for UnpinStructWithRefQualifiedMethods {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN34UnpinStructWithRefQualifiedMethodsC1Ev(
                 &raw mut tmp as *mut _,
@@ -108,7 +109,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN34UnpinStructWithRefQualifiedMethodsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN34UnpinStructWithRefQualifiedMethods11increment_iEv"]
         pub(crate) unsafe fn __rust_thunk___ZN34UnpinStructWithRefQualifiedMethods11increment_iEv<
@@ -156,9 +157,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::UnpinStructWithRefQualifiedMethods>() == 4);
-    assert!(::core::mem::align_of::<crate::UnpinStructWithRefQualifiedMethods>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::UnpinStructWithRefQualifiedMethods>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::UnpinStructWithRefQualifiedMethods>() == 4);
     static_assertions::assert_impl_all!(crate::UnpinStructWithRefQualifiedMethods: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::UnpinStructWithRefQualifiedMethods: Drop);
-    assert!(::core::mem::offset_of!(crate::UnpinStructWithRefQualifiedMethods, i) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::UnpinStructWithRefQualifiedMethods, i) == 0);
 };

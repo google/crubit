@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Tests that no bindings are generated when an overload set includes
 /// any unsupported items.
 ///

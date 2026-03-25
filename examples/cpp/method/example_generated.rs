@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod foo {
     /// Generated from: examples/cpp/method/example.h;l=12
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -45,7 +46,7 @@ pub mod foo {
     impl Default for Bar {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN3foo3BarC1Ev(&raw mut tmp as *mut _);
                 tmp.assume_init()
@@ -60,15 +61,15 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN3foo3BarC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN3foo3BarC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN3foo3Bar8MyMethodEv(__this: *mut crate::foo::Bar);
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::foo::Bar>() == 4);
-    assert!(::core::mem::align_of::<crate::foo::Bar>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::foo::Bar>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::foo::Bar>() == 4);
     static_assertions::assert_impl_all!(crate::foo::Bar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::foo::Bar: Drop);
-    assert!(::core::mem::offset_of!(crate::foo::Bar, x) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::foo::Bar, x) == 0);
 };

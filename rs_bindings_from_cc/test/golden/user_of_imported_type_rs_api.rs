@@ -13,12 +13,14 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[inline(always)]
 pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type_cc::ns::Trivial {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<::trivial_type_cc::ns::Trivial>::uninit();
+        let mut __return =
+            ::__rust_core::mem::MaybeUninit::<::trivial_type_cc::ns::Trivial>::uninit();
         crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __return as *mut ::__rust_core::ffi::c_void,
             &mut t,
         );
         __return.assume_init()
@@ -46,7 +48,7 @@ unsafe impl ::cxx::ExternType for UserOfImportedType {
 impl Default for UserOfImportedType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -59,19 +61,19 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             t: &mut ::trivial_type_cc::ns::Trivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::UserOfImportedType>() == 8);
-    assert!(::core::mem::align_of::<crate::UserOfImportedType>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::UserOfImportedType>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::UserOfImportedType>() == 8);
     static_assertions::assert_impl_all!(crate::UserOfImportedType: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::UserOfImportedType: Drop);
-    assert!(::core::mem::offset_of!(crate::UserOfImportedType, trivial) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::UserOfImportedType, trivial) == 0);
 };

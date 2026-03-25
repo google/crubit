@@ -13,14 +13,15 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableConstMember
 pub struct AddableConstMember {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for AddableConstMember {}
 impl !Sync for AddableConstMember {}
@@ -32,7 +33,7 @@ unsafe impl ::cxx::ExternType for AddableConstMember {
 impl Default for AddableConstMember {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableConstMemberC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -61,10 +62,10 @@ impl Default for AddableConstMember {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableNonConstMember
 pub struct AddableNonConstMember {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for AddableNonConstMember {}
 impl !Sync for AddableNonConstMember {}
@@ -76,7 +77,7 @@ unsafe impl ::cxx::ExternType for AddableNonConstMember {
 impl Default for AddableNonConstMember {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -105,10 +106,10 @@ impl Default for AddableNonConstMember {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFriend
 pub struct AddableFriend {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for AddableFriend {}
 impl !Sync for AddableFriend {}
@@ -120,7 +121,7 @@ unsafe impl ::cxx::ExternType for AddableFriend {
 impl Default for AddableFriend {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13AddableFriendC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -150,7 +151,7 @@ impl Default for AddableFriend {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByConstRef
 pub struct AddableFreeByConstRef {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByConstRef {}
 impl !Sync for AddableFreeByConstRef {}
@@ -162,7 +163,7 @@ unsafe impl ::cxx::ExternType for AddableFreeByConstRef {
 impl Default for AddableFreeByConstRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN21AddableFreeByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -188,7 +189,7 @@ impl Default for AddableFreeByConstRef {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByMutRef
 pub struct AddableFreeByMutRef {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByMutRef {}
 impl !Sync for AddableFreeByMutRef {}
@@ -200,7 +201,7 @@ unsafe impl ::cxx::ExternType for AddableFreeByMutRef {
 impl Default for AddableFreeByMutRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN19AddableFreeByMutRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -226,7 +227,7 @@ impl Default for AddableFreeByMutRef {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByValue
 pub struct AddableFreeByValue {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByValue {}
 impl !Sync for AddableFreeByValue {}
@@ -238,7 +239,7 @@ unsafe impl ::cxx::ExternType for AddableFreeByValue {
 impl Default for AddableFreeByValue {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableFreeByValueC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -264,7 +265,7 @@ impl Default for AddableFreeByValue {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByRValueRef
 pub struct AddableFreeByRValueRef {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByRValueRef {}
 impl !Sync for AddableFreeByRValueRef {}
@@ -276,7 +277,7 @@ unsafe impl ::cxx::ExternType for AddableFreeByRValueRef {
 impl Default for AddableFreeByRValueRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -306,14 +307,14 @@ impl Default for AddableFreeByRValueRef {
 //   Unsupported parameter #0 (lhs): references are not yet supported
 //   Unsupported parameter #1 (rhs): references are not yet supported
 
-impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
+impl ::__rust_core::ops::Add<Self> for crate::AddableFreeByValue {
     type Output = crate::AddableFreeByValue;
     #[inline(always)]
     fn add(mut self, mut rhs: Self) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___Zpl18AddableFreeByValueS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 &mut self,
                 &mut rhs,
             );
@@ -329,7 +330,7 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Overloaded
 pub struct Overloaded {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Overloaded {}
 impl !Sync for Overloaded {}
@@ -341,7 +342,7 @@ unsafe impl ::cxx::ExternType for Overloaded {
 impl Default for Overloaded {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10OverloadedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -373,7 +374,7 @@ impl Default for Overloaded {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=IncompatibleLHS
 pub struct IncompatibleLHS {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for IncompatibleLHS {}
 impl !Sync for IncompatibleLHS {}
@@ -385,7 +386,7 @@ unsafe impl ::cxx::ExternType for IncompatibleLHS {
 impl Default for IncompatibleLHS {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15IncompatibleLHSC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -417,10 +418,10 @@ impl Default for IncompatibleLHS {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableReturnsVoid
 pub struct AddableReturnsVoid {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for AddableReturnsVoid {}
 impl !Sync for AddableReturnsVoid {}
@@ -432,7 +433,7 @@ unsafe impl ::cxx::ExternType for AddableReturnsVoid {
 impl Default for AddableReturnsVoid {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -461,10 +462,10 @@ impl Default for AddableReturnsVoid {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableConstMemberNonunpin
 pub struct AddableConstMemberNonunpin {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub(crate) field_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for AddableConstMemberNonunpin {}
 impl !Sync for AddableConstMemberNonunpin {}
@@ -482,7 +483,7 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -501,7 +502,7 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
 
 impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(self)
     }
 }
@@ -510,7 +511,7 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberInt
 pub struct AddAssignMemberInt {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignMemberInt {}
 impl !Sync for AddAssignMemberInt {}
@@ -522,7 +523,7 @@ unsafe impl ::cxx::ExternType for AddAssignMemberInt {
 impl Default for AddAssignMemberInt {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -544,7 +545,7 @@ impl Default for AddAssignMemberInt {
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
 
-impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
+impl ::__rust_core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: ::ffi_11::c_int) {
         unsafe {
@@ -557,7 +558,7 @@ impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberByConstRef
 pub struct AddAssignMemberByConstRef {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignMemberByConstRef {}
 impl !Sync for AddAssignMemberByConstRef {}
@@ -569,7 +570,7 @@ unsafe impl ::cxx::ExternType for AddAssignMemberByConstRef {
 impl Default for AddAssignMemberByConstRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -599,7 +600,7 @@ impl Default for AddAssignMemberByConstRef {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByConstRef
 pub struct AddAssignFreeByConstRef {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFreeByConstRef {}
 impl !Sync for AddAssignFreeByConstRef {}
@@ -611,7 +612,7 @@ unsafe impl ::cxx::ExternType for AddAssignFreeByConstRef {
 impl Default for AddAssignFreeByConstRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -633,7 +634,7 @@ impl Default for AddAssignFreeByConstRef {
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
 
-impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
+impl ::__rust_core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
     #[inline(always)]
     fn add_assign(&mut self, rhs: &Self) {
         unsafe {
@@ -646,7 +647,7 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByValue
 pub struct AddAssignFreeByValue {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFreeByValue {}
 impl !Sync for AddAssignFreeByValue {}
@@ -658,7 +659,7 @@ unsafe impl ::cxx::ExternType for AddAssignFreeByValue {
 impl Default for AddAssignFreeByValue {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -688,7 +689,7 @@ impl Default for AddAssignFreeByValue {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByConstRef
 pub struct AddAssignFriendByConstRef {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFriendByConstRef {}
 impl !Sync for AddAssignFriendByConstRef {}
@@ -700,7 +701,7 @@ unsafe impl ::cxx::ExternType for AddAssignFriendByConstRef {
 impl Default for AddAssignFriendByConstRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -722,7 +723,7 @@ impl Default for AddAssignFriendByConstRef {
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
 
-impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
+impl ::__rust_core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
     #[inline(always)]
     fn add_assign(&mut self, rhs: &Self) {
         unsafe {
@@ -735,7 +736,7 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByValue
 pub struct AddAssignFriendByValue {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFriendByValue {}
 impl !Sync for AddAssignFriendByValue {}
@@ -747,7 +748,7 @@ unsafe impl ::cxx::ExternType for AddAssignFriendByValue {
 impl Default for AddAssignFriendByValue {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -777,7 +778,7 @@ impl Default for AddAssignFriendByValue {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedConstMember
 pub struct AddAssignProhibitedConstMember {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignProhibitedConstMember {}
 impl !Sync for AddAssignProhibitedConstMember {}
@@ -789,7 +790,7 @@ unsafe impl ::cxx::ExternType for AddAssignProhibitedConstMember {
 impl Default for AddAssignProhibitedConstMember {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
                 &raw mut tmp as *mut _,
@@ -817,7 +818,7 @@ impl Default for AddAssignProhibitedConstMember {
     message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
 )]
 pub trait BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi {}
-impl<'error> ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignProhibitedConstMember
+impl<'error> ::__rust_core::ops::AddAssign<::ffi_11::c_int> for AddAssignProhibitedConstMember
 where
     &'error (): BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi,
 {
@@ -835,7 +836,7 @@ where
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedFriendConstLhs
 pub struct AddAssignProhibitedFriendConstLhs {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignProhibitedFriendConstLhs {}
 impl !Sync for AddAssignProhibitedFriendConstLhs {}
@@ -847,7 +848,7 @@ unsafe impl ::cxx::ExternType for AddAssignProhibitedFriendConstLhs {
 impl Default for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(
                 &raw mut tmp as *mut _,
@@ -878,7 +879,7 @@ impl Default for AddAssignProhibitedFriendConstLhs {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ManyOperators
 pub struct ManyOperators {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ManyOperators {}
 impl !Sync for ManyOperators {}
@@ -890,9 +891,9 @@ impl ManyOperators {
     #[inline(always)]
     pub fn unary_plus<'a>(&'a self) -> crate::ManyOperators {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 self,
             );
             __return.assume_init()
@@ -903,7 +904,7 @@ impl ManyOperators {
 impl Default for ManyOperators {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -925,14 +926,14 @@ impl Default for ManyOperators {
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
 
-impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
+impl<'a> ::__rust_core::ops::Neg for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn neg(self) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorsngEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 self,
             );
             __return.assume_init()
@@ -940,14 +941,14 @@ impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
     }
 }
 
-impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
+impl<'a> ::__rust_core::ops::Not for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn not(self) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorsntEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 self,
             );
             __return.assume_init()
@@ -1033,44 +1034,48 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Zpl18AddableFreeByValueS_(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             lhs: &mut crate::AddableFreeByValue,
             rhs: &mut crate::AddableFreeByValue,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN18AddAssignMemberIntpLEi"]
         pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
@@ -1078,10 +1083,10 @@ mod detail {
             rhs: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZpLR23AddAssignFreeByConstRefRKS_"]
         pub(crate) unsafe fn __rust_thunk___ZpLR23AddAssignFreeByConstRefRKS_<'__return_lifetime>(
@@ -1089,10 +1094,10 @@ mod detail {
             rhs: &crate::AddAssignFreeByConstRef,
         ) -> &'__return_lifetime mut crate::AddAssignFreeByConstRef;
         pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZpLR25AddAssignFriendByConstRefRKS_"]
         pub(crate) unsafe fn __rust_thunk___ZpLR25AddAssignFriendByConstRefRKS_<
@@ -1102,128 +1107,130 @@ mod detail {
             rhs: &crate::AddAssignFriendByConstRef,
         ) -> &'__return_lifetime mut crate::AddAssignFriendByConstRef;
         pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorspsEv<'a>(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             __this: &'a crate::ManyOperators,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             __this: &'a crate::ManyOperators,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsntEv<'a>(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             __this: &'a crate::ManyOperators,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::AddableConstMember>() == 4);
-    assert!(::core::mem::align_of::<crate::AddableConstMember>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::AddableConstMember>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::AddableConstMember>() == 4);
     static_assertions::assert_impl_all!(crate::AddableConstMember: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableConstMember: Drop);
-    assert!(::core::mem::offset_of!(crate::AddableConstMember, field_) == 0);
-    assert!(::core::mem::size_of::<crate::AddableNonConstMember>() == 4);
-    assert!(::core::mem::align_of::<crate::AddableNonConstMember>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::AddableConstMember, field_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::AddableNonConstMember>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::AddableNonConstMember>() == 4);
     static_assertions::assert_impl_all!(crate::AddableNonConstMember: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableNonConstMember: Drop);
-    assert!(::core::mem::offset_of!(crate::AddableNonConstMember, field_) == 0);
-    assert!(::core::mem::size_of::<crate::AddableFriend>() == 4);
-    assert!(::core::mem::align_of::<crate::AddableFriend>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::AddableNonConstMember, field_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::AddableFriend>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::AddableFriend>() == 4);
     static_assertions::assert_impl_all!(crate::AddableFriend: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableFriend: Drop);
-    assert!(::core::mem::offset_of!(crate::AddableFriend, field_) == 0);
-    assert!(::core::mem::size_of::<crate::AddableFreeByConstRef>() == 1);
-    assert!(::core::mem::align_of::<crate::AddableFreeByConstRef>() == 1);
+    assert!(::__rust_core::mem::offset_of!(crate::AddableFriend, field_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::AddableFreeByConstRef>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddableFreeByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByConstRef: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableFreeByConstRef: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddableFreeByMutRef>() == 1);
-    assert!(::core::mem::align_of::<crate::AddableFreeByMutRef>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddableFreeByMutRef>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddableFreeByMutRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByMutRef: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableFreeByMutRef: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddableFreeByValue>() == 1);
-    assert!(::core::mem::align_of::<crate::AddableFreeByValue>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddableFreeByValue>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddableFreeByValue>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByValue: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableFreeByValue: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddableFreeByRValueRef>() == 1);
-    assert!(::core::mem::align_of::<crate::AddableFreeByRValueRef>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddableFreeByRValueRef>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddableFreeByRValueRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByRValueRef: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableFreeByRValueRef: Drop);
 
-    assert!(::core::mem::size_of::<crate::Overloaded>() == 1);
-    assert!(::core::mem::align_of::<crate::Overloaded>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Overloaded>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Overloaded>() == 1);
     static_assertions::assert_impl_all!(crate::Overloaded: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Overloaded: Drop);
 
-    assert!(::core::mem::size_of::<crate::IncompatibleLHS>() == 1);
-    assert!(::core::mem::align_of::<crate::IncompatibleLHS>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::IncompatibleLHS>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::IncompatibleLHS>() == 1);
     static_assertions::assert_impl_all!(crate::IncompatibleLHS: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::IncompatibleLHS: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddableReturnsVoid>() == 4);
-    assert!(::core::mem::align_of::<crate::AddableReturnsVoid>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::AddableReturnsVoid>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::AddableReturnsVoid>() == 4);
     static_assertions::assert_impl_all!(crate::AddableReturnsVoid: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddableReturnsVoid: Drop);
-    assert!(::core::mem::offset_of!(crate::AddableReturnsVoid, field_) == 0);
-    assert!(::core::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
-    assert!(::core::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::AddableReturnsVoid, field_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
     static_assertions::assert_impl_all!(crate::AddableConstMemberNonunpin: Drop);
     static_assertions::assert_not_impl_any!(crate::AddableConstMemberNonunpin: Copy);
-    assert!(::core::mem::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
-    assert!(::core::mem::size_of::<crate::AddAssignMemberInt>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignMemberInt>() == 1);
+    assert!(::__rust_core::mem::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignMemberInt>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignMemberInt>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignMemberInt: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignMemberInt: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddAssignMemberByConstRef>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignMemberByConstRef>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignMemberByConstRef>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignMemberByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignMemberByConstRef: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignMemberByConstRef: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddAssignFreeByConstRef>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignFreeByConstRef>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignFreeByConstRef>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignFreeByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFreeByConstRef: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignFreeByConstRef: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddAssignFreeByValue>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignFreeByValue>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignFreeByValue>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignFreeByValue>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFreeByValue: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignFreeByValue: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddAssignFriendByConstRef>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignFriendByConstRef>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignFriendByConstRef>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignFriendByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFriendByConstRef: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignFriendByConstRef: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddAssignFriendByValue>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignFriendByValue>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignFriendByValue>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignFriendByValue>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFriendByValue: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignFriendByValue: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddAssignProhibitedConstMember>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignProhibitedConstMember>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignProhibitedConstMember>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignProhibitedConstMember>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedConstMember: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedConstMember: Drop);
 
-    assert!(::core::mem::size_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
-    assert!(::core::mem::align_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedFriendConstLhs: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedFriendConstLhs: Drop);
 
-    assert!(::core::mem::size_of::<crate::ManyOperators>() == 1);
-    assert!(::core::mem::align_of::<crate::ManyOperators>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::ManyOperators>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::ManyOperators>() == 1);
     static_assertions::assert_impl_all!(crate::ManyOperators: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ManyOperators: Drop);
 };

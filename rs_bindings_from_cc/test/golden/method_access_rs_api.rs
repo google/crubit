@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Struct
 pub struct Struct {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Struct {}
 impl !Sync for Struct {}
@@ -47,7 +48,7 @@ impl Struct {
 impl Default for Struct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN6StructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -59,7 +60,7 @@ impl Default for Struct {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Class
 pub struct Class {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Class {}
 impl !Sync for Class {}
@@ -81,7 +82,7 @@ impl Class {
 impl Default for Class {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5ClassC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -93,25 +94,25 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         #[link_name = "_ZN6Struct10AccessNoneEv"]
         pub(crate) unsafe fn __rust_thunk___ZN6Struct10AccessNoneEv(__this: *mut crate::Struct);
         #[link_name = "_ZN6Struct12AccessPublicEv"]
         pub(crate) unsafe fn __rust_thunk___ZN6Struct12AccessPublicEv(__this: *mut crate::Struct);
-        pub(crate) unsafe fn __rust_thunk___ZN5ClassC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5ClassC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         #[link_name = "_ZN5Class12AccessPublicEv"]
         pub(crate) unsafe fn __rust_thunk___ZN5Class12AccessPublicEv(__this: *mut crate::Class);
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Struct>() == 1);
-    assert!(::core::mem::align_of::<crate::Struct>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Struct>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Struct>() == 1);
     static_assertions::assert_impl_all!(crate::Struct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Struct: Drop);
 
-    assert!(::core::mem::size_of::<crate::Class>() == 1);
-    assert!(::core::mem::align_of::<crate::Class>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Class>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Class>() == 1);
     static_assertions::assert_impl_all!(crate::Class: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Class: Drop);
 };

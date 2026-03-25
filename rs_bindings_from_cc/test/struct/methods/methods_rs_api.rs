@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -32,9 +33,9 @@ impl SomeClass {
     #[inline(always)]
     pub fn static_factory_method(int_var_initial_value: ::ffi_11::c_int) -> crate::SomeClass {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 int_var_initial_value,
             );
             __return.assume_init()
@@ -66,7 +67,7 @@ impl SomeClass {
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -148,7 +149,7 @@ impl InstanceMethods {
 impl Default for InstanceMethods {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15InstanceMethodsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -160,9 +161,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             int_var_initial_value: ::ffi_11::c_int,
         );
         #[link_name = "_ZN9SomeClass38static_method_that_multiplies_its_argsEii"]
@@ -174,7 +177,7 @@ mod detail {
             arg: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN15InstanceMethodsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZNK15InstanceMethods13get_int_fieldEv"]
         pub(crate) unsafe fn __rust_thunk___ZNK15InstanceMethods13get_int_fieldEv(
@@ -209,14 +212,14 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::SomeClass>() == 4);
-    assert!(::core::mem::align_of::<crate::SomeClass>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::SomeClass>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::SomeClass>() == 4);
     static_assertions::assert_impl_all!(crate::SomeClass: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeClass: Drop);
-    assert!(::core::mem::offset_of!(crate::SomeClass, int_var) == 0);
-    assert!(::core::mem::size_of::<crate::InstanceMethods>() == 4);
-    assert!(::core::mem::align_of::<crate::InstanceMethods>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::SomeClass, int_var) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::InstanceMethods>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::InstanceMethods>() == 4);
     static_assertions::assert_impl_all!(crate::InstanceMethods: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::InstanceMethods: Drop);
-    assert!(::core::mem::offset_of!(crate::InstanceMethods, int_field) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::InstanceMethods, int_field) == 0);
 };

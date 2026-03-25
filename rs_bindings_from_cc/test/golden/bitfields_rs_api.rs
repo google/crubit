@@ -13,25 +13,26 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WithBitfields
 pub struct WithBitfields {
     // f1 : 2 bits
-    __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
+    __bitfields0: [::__rust_core::mem::MaybeUninit<u8>; 1],
     pub f2: ::ffi_11::c_int,
     // f3 : 4 bits
     // f4 : 8 bits
     //  : 45 bits
-    __bitfields2: [::core::mem::MaybeUninit<u8>; 10],
+    __bitfields2: [::__rust_core::mem::MaybeUninit<u8>; 10],
     pub f5: ::ffi_11::c_int,
     // f6 : 23 bits
-    __bitfields4: [::core::mem::MaybeUninit<u8>; 3],
+    __bitfields4: [::__rust_core::mem::MaybeUninit<u8>; 3],
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
-    pub(crate) f7: [::core::mem::MaybeUninit<u8>; 1],
+    pub(crate) f7: [::__rust_core::mem::MaybeUninit<u8>; 1],
     // f8 : 2 bits
-    __bitfields6: [::core::mem::MaybeUninit<u8>; 1],
+    __bitfields6: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for WithBitfields {}
 impl !Sync for WithBitfields {}
@@ -43,7 +44,7 @@ unsafe impl ::cxx::ExternType for WithBitfields {
 impl Default for WithBitfields {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -65,7 +66,7 @@ impl Default for WithBitfields {
 pub struct AlignmentRegressionTest {
     // code_point : 31 bits
     // status : 1 bits
-    __bitfields0: [::core::mem::MaybeUninit<u8>; 4],
+    __bitfields0: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for AlignmentRegressionTest {}
 impl !Sync for AlignmentRegressionTest {}
@@ -77,7 +78,7 @@ unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
 impl Default for AlignmentRegressionTest {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -98,23 +99,25 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::WithBitfields>() == 32);
-    assert!(::core::mem::align_of::<crate::WithBitfields>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::WithBitfields>() == 32);
+    assert!(::__rust_core::mem::align_of::<crate::WithBitfields>() == 4);
     static_assertions::assert_impl_all!(crate::WithBitfields: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::WithBitfields: Drop);
-    assert!(::core::mem::offset_of!(crate::WithBitfields, f2) == 4);
-    assert!(::core::mem::offset_of!(crate::WithBitfields, f5) == 20);
-    assert!(::core::mem::offset_of!(crate::WithBitfields, f7) == 27);
-    assert!(::core::mem::size_of::<crate::AlignmentRegressionTest>() == 4);
-    assert!(::core::mem::align_of::<crate::AlignmentRegressionTest>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::WithBitfields, f2) == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::WithBitfields, f5) == 20);
+    assert!(::__rust_core::mem::offset_of!(crate::WithBitfields, f7) == 27);
+    assert!(::__rust_core::mem::size_of::<crate::AlignmentRegressionTest>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::AlignmentRegressionTest>() == 4);
     static_assertions::assert_impl_all!(crate::AlignmentRegressionTest: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AlignmentRegressionTest: Drop);
 };

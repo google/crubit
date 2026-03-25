@@ -12,3 +12,5 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![deny(warnings)]
+
+extern crate core as __rust_core;

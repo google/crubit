@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod crubit {
     pub mod test {
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
@@ -21,7 +22,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToBoundOverload
         pub struct ArgumentToBoundOverload {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for ArgumentToBoundOverload {}
         impl !Sync for ArgumentToBoundOverload {}
@@ -34,7 +35,7 @@ pub mod crubit {
         impl Default for ArgumentToBoundOverload {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test23ArgumentToBoundOverloadC1Ev(
                         &raw mut tmp as *mut _,
@@ -49,7 +50,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToUnboundOverload
         pub struct ArgumentToUnboundOverload {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for ArgumentToUnboundOverload {}
         impl !Sync for ArgumentToUnboundOverload {}
@@ -62,7 +63,7 @@ pub mod crubit {
         impl Default for ArgumentToUnboundOverload {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test25ArgumentToUnboundOverloadC1Ev(
                         &raw mut tmp as *mut _,
@@ -89,7 +90,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor
         pub struct StructWithDoNotBindConstructor {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for StructWithDoNotBindConstructor {}
         impl !Sync for StructWithDoNotBindConstructor {}
@@ -103,7 +104,7 @@ pub mod crubit {
             #[inline(always)]
             fn from(args: crate::crubit::test::ArgumentToBoundOverload) -> Self {
                 let mut __param_0 = args;
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut _,&mut __param_0);
                     tmp.assume_init()
@@ -126,7 +127,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod
         pub struct StructWithDoNotBindMethod {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for StructWithDoNotBindMethod {}
         impl !Sync for StructWithDoNotBindMethod {}
@@ -154,7 +155,7 @@ pub mod crubit {
         impl Default for StructWithDoNotBindMethod {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethodC1Ev(
                         &raw mut tmp as *mut _,
@@ -181,20 +182,20 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test23ArgumentToBoundOverloadC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25ArgumentToUnboundOverloadC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test11DoNotBindFnENS0_23ArgumentToBoundOverloadE(
             __param_0: &mut crate::crubit::test::ArgumentToBoundOverload,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: &mut crate::crubit::test::ArgumentToBoundOverload,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethodC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(
             __this: *mut crate::crubit::test::StructWithDoNotBindMethod,
@@ -204,23 +205,27 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::crubit::test::ArgumentToBoundOverload>() == 1);
-    assert!(::core::mem::align_of::<crate::crubit::test::ArgumentToBoundOverload>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::crubit::test::ArgumentToBoundOverload>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::crubit::test::ArgumentToBoundOverload>() == 1);
     static_assertions::assert_impl_all!(crate::crubit::test::ArgumentToBoundOverload: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ArgumentToBoundOverload: Drop);
 
-    assert!(::core::mem::size_of::<crate::crubit::test::ArgumentToUnboundOverload>() == 1);
-    assert!(::core::mem::align_of::<crate::crubit::test::ArgumentToUnboundOverload>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::crubit::test::ArgumentToUnboundOverload>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::crubit::test::ArgumentToUnboundOverload>() == 1);
     static_assertions::assert_impl_all!(crate::crubit::test::ArgumentToUnboundOverload: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ArgumentToUnboundOverload: Drop);
 
-    assert!(::core::mem::size_of::<crate::crubit::test::StructWithDoNotBindConstructor>() == 1);
-    assert!(::core::mem::align_of::<crate::crubit::test::StructWithDoNotBindConstructor>() == 1);
+    assert!(
+        ::__rust_core::mem::size_of::<crate::crubit::test::StructWithDoNotBindConstructor>() == 1
+    );
+    assert!(
+        ::__rust_core::mem::align_of::<crate::crubit::test::StructWithDoNotBindConstructor>() == 1
+    );
     static_assertions::assert_impl_all!(crate::crubit::test::StructWithDoNotBindConstructor: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::StructWithDoNotBindConstructor: Drop);
 
-    assert!(::core::mem::size_of::<crate::crubit::test::StructWithDoNotBindMethod>() == 1);
-    assert!(::core::mem::align_of::<crate::crubit::test::StructWithDoNotBindMethod>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::crubit::test::StructWithDoNotBindMethod>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::crubit::test::StructWithDoNotBindMethod>() == 1);
     static_assertions::assert_impl_all!(crate::crubit::test::StructWithDoNotBindMethod: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::StructWithDoNotBindMethod: Drop);
 };

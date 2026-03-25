@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // File comment
 
 pub mod ns {
@@ -38,7 +39,7 @@ pub mod ns {
     impl Default for Foo {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns3FooC1Ev(&raw mut tmp as *mut _);
                 tmp.assume_init()
@@ -85,7 +86,7 @@ unsafe impl ::cxx::ExternType for Bar {
 impl Default for Bar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3BarC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -110,7 +111,7 @@ unsafe impl ::cxx::ExternType for HasNoComments {
 impl Default for HasNoComments {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -124,28 +125,30 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN2ns3FooC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN2ns3FooC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z3foov();
-        pub(crate) unsafe fn __rust_thunk___ZN3BarC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN3BarC1Ev(__this: *mut ::__rust_core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::ns::Foo>() == 8);
-    assert!(::core::mem::align_of::<crate::ns::Foo>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::ns::Foo>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::ns::Foo>() == 4);
     static_assertions::assert_impl_all!(crate::ns::Foo: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ns::Foo: Drop);
-    assert!(::core::mem::offset_of!(crate::ns::Foo, i) == 0);
-    assert!(::core::mem::offset_of!(crate::ns::Foo, j) == 4);
-    assert!(::core::mem::size_of::<crate::Bar>() == 4);
-    assert!(::core::mem::align_of::<crate::Bar>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::ns::Foo, i) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::ns::Foo, j) == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Bar>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Bar>() == 4);
     static_assertions::assert_impl_all!(crate::Bar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Bar: Drop);
-    assert!(::core::mem::offset_of!(crate::Bar, i) == 0);
-    assert!(::core::mem::size_of::<crate::HasNoComments>() == 4);
-    assert!(::core::mem::align_of::<crate::HasNoComments>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::Bar, i) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::HasNoComments>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::HasNoComments>() == 4);
     static_assertions::assert_impl_all!(crate::HasNoComments: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::HasNoComments: Drop);
-    assert!(::core::mem::offset_of!(crate::HasNoComments, i) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::HasNoComments, i) == 0);
 };

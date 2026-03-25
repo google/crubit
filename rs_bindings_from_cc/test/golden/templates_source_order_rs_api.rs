@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: class `MyTemplate` could not be bound
 //   Class templates are not yet supported
 
@@ -20,7 +21,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TopLevel
 pub struct TopLevel {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TopLevel {}
 impl !Sync for TopLevel {}
@@ -32,7 +33,7 @@ unsafe impl ::cxx::ExternType for TopLevel {
 impl Default for TopLevel {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN8TopLevelC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -69,7 +70,7 @@ pub mod test_namespace_bindings {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: Inner
     pub struct Inner {
-        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
@@ -81,7 +82,7 @@ pub mod test_namespace_bindings {
     impl Default for Inner {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings5InnerC1Ev(
                     &raw mut tmp as *mut _,
@@ -146,21 +147,23 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN8TopLevelC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8TopLevelC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5InnerC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::TopLevel>() == 1);
-    assert!(::core::mem::align_of::<crate::TopLevel>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::TopLevel>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::TopLevel>() == 1);
     static_assertions::assert_impl_all!(crate::TopLevel: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TopLevel: Drop);
 
-    assert!(::core::mem::size_of::<crate::test_namespace_bindings::Inner>() == 1);
-    assert!(::core::mem::align_of::<crate::test_namespace_bindings::Inner>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::test_namespace_bindings::Inner>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::test_namespace_bindings::Inner>() == 1);
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::Inner: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Inner: Drop);
 };

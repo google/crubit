@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: function `deprecated_function` could not be bound
 //   [[deprecated]] attribute
 
@@ -75,11 +76,11 @@ pub struct DeprecatedFields {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/unknown_attribute: unknown field attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:deprecated_cc
     /// Unknown attribute: deprecated`
-    pub(crate) no_message: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) no_message: [::__rust_core::mem::MaybeUninit<u8>; 4],
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/unknown_attribute: unknown field attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:deprecated_cc
     /// Unknown attribute: deprecated`
-    pub(crate) message: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) message: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for DeprecatedFields {}
 impl !Sync for DeprecatedFields {}
@@ -91,7 +92,7 @@ unsafe impl ::cxx::ExternType for DeprecatedFields {
 impl Default for DeprecatedFields {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16DeprecatedFieldsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -122,16 +123,16 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN16DeprecatedFieldsC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::DeprecatedFields>() == 8);
-    assert!(::core::mem::align_of::<crate::DeprecatedFields>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::DeprecatedFields>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::DeprecatedFields>() == 4);
     static_assertions::assert_impl_all!(crate::DeprecatedFields: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::DeprecatedFields: Drop);
-    assert!(::core::mem::offset_of!(crate::DeprecatedFields, no_message) == 0);
-    assert!(::core::mem::offset_of!(crate::DeprecatedFields, message) == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::DeprecatedFields, no_message) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::DeprecatedFields, message) == 4);
 };

@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
@@ -30,7 +31,7 @@ pub mod test_namespace_bindings {
     impl Default for S {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1Ev(
                     &raw mut tmp as *mut _,
@@ -66,9 +67,10 @@ pub mod test_namespace_bindings {
 #[inline(always)]
 pub fn identity(mut s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<crate::test_namespace_bindings::S>::uninit();
+        let mut __return =
+            ::__rust_core::mem::MaybeUninit::<crate::test_namespace_bindings::S>::uninit();
         crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __return as *mut ::__rust_core::ffi::c_void,
             &mut s,
         );
         __return.assume_init()
@@ -95,7 +97,7 @@ pub mod test_namespace_bindings_reopened {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_reopened :: inner :: S
         pub struct S {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for S {}
         impl !Sync for S {}
@@ -107,7 +109,7 @@ pub mod test_namespace_bindings_reopened {
         impl Default for S {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
                         &raw mut tmp as *mut _,
@@ -138,7 +140,7 @@ pub mod test_namespace_bindings_inline {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: inner :: StructInInlineNamespace
         pub struct StructInInlineNamespace {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for StructInInlineNamespace {}
         impl !Sync for StructInInlineNamespace {}
@@ -152,7 +154,7 @@ pub mod test_namespace_bindings_inline {
         impl Default for StructInInlineNamespace {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(&raw mut tmp as*mut _);
                     tmp.assume_init()
@@ -202,7 +204,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
             s: &mut crate::test_namespace_bindings::S,
@@ -211,13 +213,13 @@ mod detail {
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
         pub(crate) unsafe fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             s: &mut crate::test_namespace_bindings::S,
         );
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN32test_namespace_bindings_reopened1yEv"]
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened1yEv();
@@ -225,7 +227,7 @@ mod detail {
             s: &mut crate::test_namespace_bindings_reopened::inner::S,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
             s: &mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
@@ -238,22 +240,27 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
-    assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::S: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::S: Drop);
-    assert!(::core::mem::offset_of!(crate::test_namespace_bindings::S, i) == 0);
-    assert!(::core::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
-    assert!(::core::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
+    assert!(::__rust_core::mem::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+    assert!(
+        ::__rust_core::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1
+    );
+    assert!(
+        ::__rust_core::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1
+    );
     static_assertions::assert_impl_all!(crate::test_namespace_bindings_reopened::inner::S: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings_reopened::inner::S: Drop);
 
     assert!(
-        ::core::mem::size_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>(
-        ) == 1
+        ::__rust_core::mem::size_of::<
+            crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        >() == 1
     );
     assert!(
-        ::core::mem::align_of::<
+        ::__rust_core::mem::align_of::<
             crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         >() == 1
     );

@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // Note: a real example would require that Crubit implements CrubitAbiTrait in
 // order for the generated code to properly compile. This example just serves to
 // illustrate what the generated code will look like.
@@ -55,7 +56,7 @@ unsafe impl ::cxx::ExternType for Vec3 {
 impl Default for Vec3 {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN4Vec3C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -564,65 +565,65 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z15ReturnCppStructv(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___Z13TakeCppStruct9CppStruct(
-            __param_0: *const ::core::ffi::c_uchar,
+            __param_0: *const ::__rust_core::ffi::c_uchar,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN4Vec3C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN4Vec3C1Ev(__this: *mut ::__rust_core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z16MakeOptionalVec3fffb(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
             x: f32,
             y: f32,
             z: f32,
             is_present: bool,
         );
         pub(crate) unsafe fn __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
-            v: *const ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
+            v: *const ::__rust_core::ffi::c_uchar,
             factor: f32,
         );
         pub(crate) unsafe fn __rust_thunk___Z14MakeMyI8Structv(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
         #[link_name = "_Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE"]
         pub(crate) unsafe fn __rust_thunk___Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(
             slice: *mut [::cc_std::std::__u::raw_string_view],
         );
         pub(crate) unsafe fn __rust_thunk___Z12MaybeVoidPtrv(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
             slice: *const [::ffi_11::c_int],
         );
         pub(crate) unsafe fn __rust_thunk___Z16ReturnsCStrArrayv(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+            __return_abi_buffer: *mut ::__rust_core::ffi::c_uchar,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Vec3>() == 12);
-    assert!(::core::mem::align_of::<crate::Vec3>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::Vec3>() == 12);
+    assert!(::__rust_core::mem::align_of::<crate::Vec3>() == 4);
     static_assertions::assert_impl_all!(crate::Vec3: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Vec3: Drop);
-    assert!(::core::mem::offset_of!(crate::Vec3, x) == 0);
-    assert!(::core::mem::offset_of!(crate::Vec3, y) == 4);
-    assert!(::core::mem::offset_of!(crate::Vec3, z) == 8);
-    assert!(::core::mem::size_of::<i8>() == 1);
-    assert!(::core::mem::align_of::<i8>() == 1);
-    assert!(::core::mem::size_of::<*const [::ffi_11::c_int]>() == 16);
-    assert!(::core::mem::align_of::<*const [::ffi_11::c_int]>() == 8);
-    assert!(::core::mem::size_of::<*mut [::cc_std::std::__u::raw_string_view]>() == 16);
-    assert!(::core::mem::align_of::<*mut [::cc_std::std::__u::raw_string_view]>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::Vec3, x) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Vec3, y) == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::Vec3, z) == 8);
+    assert!(::__rust_core::mem::size_of::<i8>() == 1);
+    assert!(::__rust_core::mem::align_of::<i8>() == 1);
+    assert!(::__rust_core::mem::size_of::<*const [::ffi_11::c_int]>() == 16);
+    assert!(::__rust_core::mem::align_of::<*const [::ffi_11::c_int]>() == 8);
+    assert!(::__rust_core::mem::size_of::<*mut [::cc_std::std::__u::raw_string_view]>() == 16);
+    assert!(::__rust_core::mem::align_of::<*mut [::cc_std::std::__u::raw_string_view]>() == 8);
 };

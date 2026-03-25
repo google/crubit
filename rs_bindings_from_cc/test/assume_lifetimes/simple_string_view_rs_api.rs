@@ -14,13 +14,14 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SV
 pub struct SV<'a> {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-    __marker_a: ::core::marker::PhantomData<&'a ()>,
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
+    __marker_a: ::__rust_core::marker::PhantomData<&'a ()>,
 }
 impl<'a> !Send for SV<'a> {}
 impl<'a> !Sync for SV<'a> {}
@@ -34,7 +35,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SV"), crate::SV<'_>);
 impl<'a> Default for SV<'a> {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN2SVC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -46,13 +47,13 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN2SVC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN2SVC1Ev(__this: *mut ::__rust_core::ffi::c_void);
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::SV>() == 1);
-    assert!(::core::mem::align_of::<crate::SV>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::SV>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::SV>() == 1);
     static_assertions::assert_impl_all!(crate::SV: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SV: Drop);
 };

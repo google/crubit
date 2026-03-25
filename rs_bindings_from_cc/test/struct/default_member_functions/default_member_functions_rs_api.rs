@@ -14,12 +14,13 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Uncopyable
 pub struct Uncopyable {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Uncopyable {}
 impl !Sync for Uncopyable {}
@@ -37,7 +38,9 @@ impl ::ctor::CtorNew<()> for Uncopyable {
         let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10UncopyableC1Ev(dest as *mut ::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN10UncopyableC1Ev(
+                    dest as *mut ::__rust_core::ffi::c_void,
+                );
             })
         }
     }
@@ -48,10 +51,10 @@ impl ::ctor::CtorNew<()> for Uncopyable {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl
 pub struct UncopyableDespiteDecl {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) vector_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
+    pub(crate) vector_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for UncopyableDespiteDecl {}
 impl !Sync for UncopyableDespiteDecl {}
@@ -63,7 +66,7 @@ unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=17
 impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclD1Ev(self)
     }
 }
@@ -82,7 +85,7 @@ impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -139,24 +142,26 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10UncopyableC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10UncopyableC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::UncopyableDespiteDecl>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::UncopyableDespiteDecl>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Uncopyable>() == 1);
-    assert!(::core::mem::align_of::<crate::Uncopyable>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Uncopyable>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Uncopyable>() == 1);
     static_assertions::assert_not_impl_any!(crate::Uncopyable: Copy,Drop);
 
-    assert!(::core::mem::size_of::<crate::UncopyableDespiteDecl>() == 24);
-    assert!(::core::mem::align_of::<crate::UncopyableDespiteDecl>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::UncopyableDespiteDecl>() == 24);
+    assert!(::__rust_core::mem::align_of::<crate::UncopyableDespiteDecl>() == 8);
     static_assertions::assert_impl_all!(crate::UncopyableDespiteDecl: Drop);
     static_assertions::assert_not_impl_any!(crate::UncopyableDespiteDecl: Copy);
-    assert!(::core::mem::offset_of!(crate::UncopyableDespiteDecl, vector_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::UncopyableDespiteDecl, vector_) == 0);
 };

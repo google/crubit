@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=10
 #[inline(always)]
 pub fn return_value() -> ::ffi_11::c_int {

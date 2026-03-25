@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase
 pub struct PolymorphicBase {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 8],
 }
 impl !Send for PolymorphicBase {}
 impl !Sync for PolymorphicBase {}
@@ -35,7 +36,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN15PolymorphicBaseC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -51,7 +52,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
 
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN15PolymorphicBaseD1Ev(self)
     }
 }
@@ -67,7 +68,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2
 pub struct PolymorphicBase2 {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 8],
 }
 impl !Send for PolymorphicBase2 {}
 impl !Sync for PolymorphicBase2 {}
@@ -77,7 +78,7 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
 }
 impl PolymorphicBase2 {
     #[inline(always)]
-    pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Foo<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(self) }
     }
 }
@@ -91,7 +92,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16PolymorphicBase2C1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -107,7 +108,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
 
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN16PolymorphicBase2D1Ev(self)
     }
 }
@@ -123,7 +124,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicDerived
 pub struct PolymorphicDerived {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 16],
 }
 impl !Send for PolymorphicDerived {}
 impl !Sync for PolymorphicDerived {}
@@ -141,7 +142,7 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                 );
             })
         }
@@ -156,7 +157,7 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
 
 impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN18PolymorphicDerivedD1Ev(self)
     }
 }
@@ -181,31 +182,31 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::PolymorphicBase>,
         );
         pub(crate) unsafe fn __crubit_operator_delete__15PolymorphicBase___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
             ptr: *mut crate::PolymorphicBase,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase23FooEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
         pub(crate) unsafe fn __crubit_operator_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
             ptr: *mut crate::PolymorphicBase2,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::PolymorphicDerived>,
         );
         pub(crate) unsafe fn __crubit_operator_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
             ptr: *mut crate::PolymorphicDerived,
@@ -214,18 +215,18 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::PolymorphicBase>() == 8);
-    assert!(::core::mem::align_of::<crate::PolymorphicBase>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::PolymorphicBase>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::PolymorphicBase>() == 8);
     static_assertions::assert_impl_all!(crate::PolymorphicBase: Drop);
     static_assertions::assert_not_impl_any!(crate::PolymorphicBase: Copy);
 
-    assert!(::core::mem::size_of::<crate::PolymorphicBase2>() == 8);
-    assert!(::core::mem::align_of::<crate::PolymorphicBase2>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::PolymorphicBase2>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::PolymorphicBase2>() == 8);
     static_assertions::assert_impl_all!(crate::PolymorphicBase2: Drop);
     static_assertions::assert_not_impl_any!(crate::PolymorphicBase2: Copy);
 
-    assert!(::core::mem::size_of::<crate::PolymorphicDerived>() == 16);
-    assert!(::core::mem::align_of::<crate::PolymorphicDerived>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::PolymorphicDerived>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::PolymorphicDerived>() == 8);
     static_assertions::assert_impl_all!(crate::PolymorphicDerived: Drop);
     static_assertions::assert_not_impl_any!(crate::PolymorphicDerived: Copy);
 };

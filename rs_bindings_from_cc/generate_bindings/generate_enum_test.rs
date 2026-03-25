@@ -342,7 +342,7 @@ fn test_display() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl ::core::fmt::Display for Enum {
+            impl ::__rust_core::fmt::Display for Enum {
               ...
             }
         }

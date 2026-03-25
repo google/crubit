@@ -572,6 +572,8 @@ pub fn generate_bindings_tokens(
             #![allow(unused)] __NEWLINE__
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
 
+            extern crate core as __rust_core; __NEWLINE__
+
             #extern_crate_alloc
 
             #main_api
@@ -978,12 +980,12 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             Primitive::Void => bail!("values of type `void` cannot be bridged by value"),
             Primitive::Float => CrubitAbiType::transmute("f32", "float"),
             Primitive::Double => CrubitAbiType::transmute("f64", "double"),
-            Primitive::Char => CrubitAbiType::transmute("::core::ffi::c_char", "char"),
+            Primitive::Char => CrubitAbiType::transmute("::__rust_core::ffi::c_char", "char"),
             Primitive::SignedChar => CrubitAbiType::SignedChar,
             Primitive::UnsignedChar => CrubitAbiType::UnsignedChar,
-            Primitive::Short => CrubitAbiType::transmute("::core::ffi::c_short", "short"),
-            Primitive::Int => CrubitAbiType::transmute("::core::ffi::c_int", "int"),
-            Primitive::Long => CrubitAbiType::transmute("::core::ffi::c_long", "long"),
+            Primitive::Short => CrubitAbiType::transmute("::__rust_core::ffi::c_short", "short"),
+            Primitive::Int => CrubitAbiType::transmute("::__rust_core::ffi::c_int", "int"),
+            Primitive::Long => CrubitAbiType::transmute("::__rust_core::ffi::c_long", "long"),
             Primitive::LongLong => CrubitAbiType::LongLong,
             Primitive::UnsignedShort => CrubitAbiType::UnsignedShort,
             Primitive::UnsignedInt => CrubitAbiType::UnsignedInt,
@@ -1113,7 +1115,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                             // the native Rust value.
                             quote! {
                                 |consume_result_into_buffer: ::co::internal_crubit::ConsumeResultIntoBufferFn,
-                                 context: *mut ::core::ffi::c_void| -> #result_type_tokens {
+                                 context: *mut ::__rust_core::ffi::c_void| -> #result_type_tokens {
                                     ::bridge_rust::unstable_return!(@
                                         // Crubit ABI details
                                         #result_type_crubit_abi_expr_tokens,
@@ -1311,7 +1313,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                 }
                 PassingConvention::LayoutCompatible => {
                     ffi_to_rust_transforms.extend(quote! {
-                        let #ident = ::core::ptr::read(#ident);
+                        let #ident = ::__rust_core::ptr::read(#ident);
                     });
                     let ty_tokens = ty.to_token_stream(db);
                     Some(quote! { , #ident: *mut #ty_tokens })
@@ -1322,7 +1324,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                     ffi_to_rust_transforms.extend(quote! {
                         let #ident = ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident);
                     });
-                    Some(quote! { , #ident: *mut ::core::ffi::c_uchar })
+                    Some(quote! { , #ident: *mut ::__rust_core::ffi::c_uchar })
                 }
                 PassingConvention::Ctor => None,
                 PassingConvention::OwnedPtr => None,
@@ -1344,9 +1346,9 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             quote! {
                 // SAFETY: f is guaranteed to be valid for reads and writes, is properly aligned,
                 // and points to a properly initialized value of the correct type.
-                ::core::ptr::replace(f, ::alloc::boxed::Box::new(
+                ::__rust_core::ptr::replace(f, ::alloc::boxed::Box::new(
                     |#(_: #param_type_tokens),*| #rust_return_type_fragment {
-                        ::core::unreachable!("Called FnOnce after it was moved");
+                        ::__rust_core::unreachable!("Called FnOnce after it was moved");
                     }
                 ))
             }
@@ -1368,7 +1370,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             invoke_rust_and_return_to_ffi = quote! {
                 match #invoke_rust_and_return_to_ffi {
                     result => unsafe {
-                        ::core::ptr::write(out, result);
+                        ::__rust_core::ptr::write(out, result);
                     }
                 }
             };
@@ -1389,7 +1391,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             };
 
             return_type_fragment = None;
-            out_param = Some(quote! { , bridge_buffer: *mut ::core::ffi::c_uchar });
+            out_param = Some(quote! { , bridge_buffer: *mut ::__rust_core::ffi::c_uchar });
         }
         PassingConvention::Ctor => {
             return None;

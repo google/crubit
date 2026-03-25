@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
@@ -34,7 +35,7 @@ unsafe impl ::cxx::ExternType for PublicPointer {
 impl Default for PublicPointer {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13PublicPointerC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -46,10 +47,10 @@ impl Default for PublicPointer {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PrivatePointer
 pub struct PrivatePointer {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+    pub(crate) p_: [::__rust_core::mem::MaybeUninit<u8>; 8],
 }
 impl !Send for PrivatePointer {}
 impl !Sync for PrivatePointer {}
@@ -61,7 +62,7 @@ unsafe impl ::cxx::ExternType for PrivatePointer {
 impl Default for PrivatePointer {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14PrivatePointerC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -96,7 +97,7 @@ unsafe impl ::cxx::ExternType for TransitivePublicPointer {
 impl Default for TransitivePublicPointer {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23TransitivePublicPointerC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -125,7 +126,7 @@ unsafe impl ::cxx::ExternType for Union {
 impl Default for Union {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5UnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -175,17 +176,19 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointerC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointerC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointerC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
             p: &mut crate::PrivatePointer,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointerC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN5UnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5UnionC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         #[link_name = "_Z12DerefPointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12DerefPointerPi(
             p: *mut ::ffi_11::c_int,
@@ -203,28 +206,28 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::PublicPointer>() == 8);
-    assert!(::core::mem::align_of::<crate::PublicPointer>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::PublicPointer>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::PublicPointer>() == 8);
     static_assertions::assert_impl_all!(crate::PublicPointer: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::PublicPointer: Drop);
-    assert!(::core::mem::offset_of!(crate::PublicPointer, p) == 0);
-    assert!(::core::mem::size_of::<crate::PrivatePointer>() == 8);
-    assert!(::core::mem::align_of::<crate::PrivatePointer>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::PublicPointer, p) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::PrivatePointer>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::PrivatePointer>() == 8);
     static_assertions::assert_impl_all!(crate::PrivatePointer: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::PrivatePointer: Drop);
-    assert!(::core::mem::offset_of!(crate::PrivatePointer, p_) == 0);
-    assert!(::core::mem::size_of::<crate::TransitivePublicPointer>() == 16);
-    assert!(::core::mem::align_of::<crate::TransitivePublicPointer>() == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::PrivatePointer, p_) == 0);
+    assert!(::__rust_core::mem::size_of::<crate::TransitivePublicPointer>() == 16);
+    assert!(::__rust_core::mem::align_of::<crate::TransitivePublicPointer>() == 8);
     static_assertions::assert_impl_all!(crate::TransitivePublicPointer: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TransitivePublicPointer: Drop);
-    assert!(::core::mem::offset_of!(crate::TransitivePublicPointer, r#pub) == 0);
-    assert!(::core::mem::offset_of!(crate::TransitivePublicPointer, r#priv) == 8);
-    assert!(::core::mem::size_of::<crate::Union>() == 4);
-    assert!(::core::mem::align_of::<crate::Union>() == 4);
+    assert!(::__rust_core::mem::offset_of!(crate::TransitivePublicPointer, r#pub) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::TransitivePublicPointer, r#priv) == 8);
+    assert!(::__rust_core::mem::size_of::<crate::Union>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::Union>() == 4);
     static_assertions::assert_impl_all!(crate::Union: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Union: Drop);
-    assert!(::core::mem::offset_of!(crate::Union, i) == 0);
-    assert!(::core::mem::offset_of!(crate::Union, f) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Union, i) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::Union, f) == 0);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     static_assertions::assert_impl_all!(f32: Copy);
 };

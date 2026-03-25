@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// # Safety
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
@@ -26,7 +27,7 @@ pub unsafe fn free_function(p1: *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=S
 pub struct S {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for S {}
 impl !Sync for S {}
@@ -68,7 +69,7 @@ impl S {
 impl Default for S {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -80,7 +81,7 @@ impl Default for S {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
@@ -91,7 +92,7 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
 
 impl ::ctor::Assign<&Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
+    fn assign(self: ::__rust_core::pin::Pin<&mut Self>, __param_0: &Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
                 self, __param_0,
@@ -110,7 +111,7 @@ impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
         let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(dest as*mut::core::ffi::c_void,__param_0);
+                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(dest as*mut::__rust_core::ffi::c_void,__param_0);
             })
         }
     }
@@ -129,7 +130,7 @@ impl<'__unelided> ::ctor::CtorNew<(&'__unelided Self,)>
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
     }
 }
@@ -147,10 +148,10 @@ pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WrappedValue
 pub struct WrappedValue {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) value_: [::__rust_core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for WrappedValue {}
 impl !Sync for WrappedValue {}
@@ -163,7 +164,7 @@ impl From<::ffi_11::c_int> for WrappedValue {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut value = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12WrappedValueC1Ei(&raw mut tmp as *mut _, value);
             tmp.assume_init()
@@ -179,14 +180,14 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for WrappedValue {
     }
 }
 
-impl ::core::ops::Add<&crate::WrappedValue> for &crate::WrappedValue {
+impl ::__rust_core::ops::Add<&crate::WrappedValue> for &crate::WrappedValue {
     type Output = crate::WrappedValue;
     #[inline(always)]
     fn add(self, rhs: &crate::WrappedValue) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::WrappedValue>::uninit();
+            let mut __return = ::__rust_core::mem::MaybeUninit::<crate::WrappedValue>::uninit();
             crate::detail::__rust_thunk___ZNK12WrappedValueplERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __return as *mut ::__rust_core::ffi::c_void,
                 self,
                 rhs,
             );
@@ -203,7 +204,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z13free_functionRi(
             p1: *mut ::ffi_11::c_int,
         ) -> *mut ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) unsafe fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const crate::S,
@@ -219,31 +220,35 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
             '__return_lifetime,
         >(
-            __this: ::core::pin::Pin<&mut crate::TriviallyCopyableButNontriviallyDestructible>,
+            __this: ::__rust_core::pin::Pin<
+                &mut crate::TriviallyCopyableButNontriviallyDestructible,
+            >,
             __param_0: &crate::TriviallyCopyableButNontriviallyDestructible,
-        ) -> ::core::pin::Pin<
+        ) -> ::__rust_core::pin::Pin<
             &'__return_lifetime mut crate::TriviallyCopyableButNontriviallyDestructible,
         >;
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_<
             '__unelided,
         >(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: &'__unelided crate::TriviallyCopyableButNontriviallyDestructible,
         );
         #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<
             'a,
         >(
-            __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
+            __this: ::__rust_core::pin::Pin<
+                &'a mut crate::TriviallyCopyableButNontriviallyDestructible,
+            >,
         );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(p: *mut ::ffi_11::c_int);
         pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueC1Ei(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             value: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK12WrappedValueplERKS_(
-            __return: *mut ::core::ffi::c_void,
+            __return: *mut ::__rust_core::ffi::c_void,
             __this: &crate::WrappedValue,
             rhs: &crate::WrappedValue,
         );
@@ -251,19 +256,23 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::S>() == 1);
-    assert!(::core::mem::align_of::<crate::S>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::S>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::S>() == 1);
     static_assertions::assert_impl_all!(crate::S: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::S: Drop);
 
-    assert!(::core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
-    assert!(::core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(
+        ::__rust_core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1
+    );
+    assert!(
+        ::__rust_core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1
+    );
     static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
     static_assertions::assert_not_impl_any!(crate::TriviallyCopyableButNontriviallyDestructible: Copy);
 
-    assert!(::core::mem::size_of::<crate::WrappedValue>() == 4);
-    assert!(::core::mem::align_of::<crate::WrappedValue>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::WrappedValue>() == 4);
+    assert!(::__rust_core::mem::align_of::<crate::WrappedValue>() == 4);
     static_assertions::assert_impl_all!(crate::WrappedValue: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::WrappedValue: Drop);
-    assert!(::core::mem::offset_of!(crate::WrappedValue, value_) == 0);
+    assert!(::__rust_core::mem::offset_of!(crate::WrappedValue, value_) == 0);
 };

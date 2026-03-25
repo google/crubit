@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DifferentScope
 pub struct DifferentScope {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for DifferentScope {}
 impl !Sync for DifferentScope {}
@@ -29,7 +30,7 @@ unsafe impl ::cxx::ExternType for DifferentScope {
 impl Default for DifferentScope {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DifferentScopeC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -53,7 +54,7 @@ pub mod test_namespace_bindings {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateParam
     pub struct TemplateParam {
-        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for TemplateParam {}
     impl !Sync for TemplateParam {}
@@ -65,7 +66,7 @@ pub mod test_namespace_bindings {
     impl Default for TemplateParam {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
                     &raw mut tmp as *mut _,
@@ -157,7 +158,7 @@ pub mod private_classes {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=private_classes :: HasPrivateType
     pub struct HasPrivateType {
-        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for HasPrivateType {}
     impl !Sync for HasPrivateType {}
@@ -216,27 +217,27 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN14DifferentScopeC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::DifferentScope>() == 1);
-    assert!(::core::mem::align_of::<crate::DifferentScope>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::DifferentScope>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::DifferentScope>() == 1);
     static_assertions::assert_impl_all!(crate::DifferentScope: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::DifferentScope: Drop);
 
-    assert!(::core::mem::size_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
-    assert!(::core::mem::align_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::TemplateParam: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TemplateParam: Drop);
 
-    assert!(::core::mem::size_of::<crate::private_classes::HasPrivateType>() == 1);
-    assert!(::core::mem::align_of::<crate::private_classes::HasPrivateType>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::private_classes::HasPrivateType>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::private_classes::HasPrivateType>() == 1);
     static_assertions::assert_impl_all!(crate::private_classes::HasPrivateType: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType: Drop);
 };

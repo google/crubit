@@ -535,9 +535,9 @@ pub enum FnTrait {
 impl ToTokens for FnTrait {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            FnTrait::Fn => quote! { ::core::ops::Fn },
-            FnTrait::FnMut => quote! { ::core::ops::FnMut },
-            FnTrait::FnOnce => quote! { ::core::ops::FnOnce },
+            FnTrait::Fn => quote! { ::__rust_core::ops::Fn },
+            FnTrait::FnMut => quote! { ::__rust_core::ops::FnMut },
+            FnTrait::FnOnce => quote! { ::__rust_core::ops::FnOnce },
         }
         .to_tokens(tokens);
     }
@@ -572,7 +572,7 @@ impl Callable {
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
         let fn_trait = self.fn_trait;
         quote! {
-            dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send + ::core::marker::Sync + 'static
+            dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::__rust_core::marker::Send + ::__rust_core::marker::Sync + 'static
         }
     }
 
@@ -1245,7 +1245,9 @@ impl RsTypeKind {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    Ok(RsSnippet::new(quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>}))
+                    Ok(RsSnippet::new(
+                        quote! {self: ::__rust_core::pin::Pin< & #lifetime #mut_ Self>},
+                    ))
                 } else {
                     Ok(RsSnippet::new(quote! { & #lifetime #mut_ self }))
                 }
@@ -1456,7 +1458,7 @@ impl RsTypeKind {
                 let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
                 let mut tokens = quote! {& #lifetime #mut_ #referent_};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    tokens = quote! {::core::pin::Pin< #tokens >};
+                    tokens = quote! {::__rust_core::pin::Pin< #tokens >};
                 }
                 tokens
             }
@@ -1726,7 +1728,7 @@ impl RsTypeKind {
                 let referent_tokens = referent.to_token_stream(db);
                 let mut tokens = quote! {& #lifetime #mut_ #referent_tokens};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    tokens = quote! { ::core::pin::Pin< #tokens > };
+                    tokens = quote! { ::__rust_core::pin::Pin< #tokens > };
                 }
                 tokens
             }
@@ -1831,7 +1833,7 @@ impl RsTypeKind {
                     }
                     BridgeRsTypeKind::StdOptional(inner) => {
                         let inner = inner.to_token_stream(db);
-                        quote! { ::core::option::Option< #inner > }
+                        quote! { ::__rust_core::option::Option< #inner > }
                     }
                     BridgeRsTypeKind::StdPair(first, second) => {
                         let first = first.to_token_stream(db);

@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: function `Overload` could not be bound
 //   Cannot generate bindings for overloaded function
 
@@ -55,7 +56,7 @@ pub fn AlsoTemplateOverload() {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Foo
 pub struct Foo {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
@@ -77,7 +78,7 @@ impl Foo {
 impl Default for Foo {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -110,7 +111,7 @@ mod detail {
         #[link_name = "_Z9Overlaod2i"]
         pub(crate) unsafe fn __rust_thunk___Z9Overlaod2i(__param_0: ::ffi_11::c_int);
         pub(crate) unsafe fn __rust_thunk___Z20AlsoTemplateOverloadv();
-        pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::__rust_core::ffi::c_void);
         #[link_name = "_ZN3Foo3BarEi"]
         pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarEi(
             __this: *mut crate::Foo,
@@ -120,8 +121,8 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Foo>() == 1);
-    assert!(::core::mem::align_of::<crate::Foo>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::Foo>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::Foo>() == 1);
     static_assertions::assert_impl_all!(crate::Foo: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Foo: Drop);
 };

@@ -13,11 +13,12 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
@@ -29,7 +30,7 @@ unsafe impl ::cxx::ExternType for SomeStruct {
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -51,7 +52,7 @@ pub mod some_struct {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
 pub struct SomeOtherStruct {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeOtherStruct {}
 impl !Sync for SomeOtherStruct {}
@@ -63,7 +64,7 @@ unsafe impl ::cxx::ExternType for SomeOtherStruct {
 impl Default for SomeOtherStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15SomeOtherStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -79,7 +80,7 @@ impl Default for SomeOtherStruct {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeUnion
 pub union SomeUnion {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeUnion {}
 impl !Sync for SomeUnion {}
@@ -91,7 +92,7 @@ unsafe impl ::cxx::ExternType for SomeUnion {
 impl Default for SomeUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -110,7 +111,7 @@ impl Default for SomeUnion {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion
 pub union SomeOtherUnion {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeOtherUnion {}
 impl !Sync for SomeOtherUnion {}
@@ -122,7 +123,7 @@ unsafe impl ::cxx::ExternType for SomeOtherUnion {
 impl Default for SomeOtherUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14SomeOtherUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
@@ -139,13 +140,17 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev(
+            __this: *mut ::__rust_core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_Z23FunctionUsingNestedTypev"]
         pub(crate) unsafe fn __rust_thunk___Z23FunctionUsingNestedTypev(
@@ -154,23 +159,23 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::SomeStruct>() == 1);
-    assert!(::core::mem::align_of::<crate::SomeStruct>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::SomeStruct>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::SomeStruct>() == 1);
     static_assertions::assert_impl_all!(crate::SomeStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 
-    assert!(::core::mem::size_of::<crate::SomeOtherStruct>() == 1);
-    assert!(::core::mem::align_of::<crate::SomeOtherStruct>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::SomeOtherStruct>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::SomeOtherStruct>() == 1);
     static_assertions::assert_impl_all!(crate::SomeOtherStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeOtherStruct: Drop);
 
-    assert!(::core::mem::size_of::<crate::SomeUnion>() == 1);
-    assert!(::core::mem::align_of::<crate::SomeUnion>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::SomeUnion>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::SomeUnion>() == 1);
     static_assertions::assert_impl_all!(crate::SomeUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeUnion: Drop);
 
-    assert!(::core::mem::size_of::<crate::SomeOtherUnion>() == 1);
-    assert!(::core::mem::align_of::<crate::SomeOtherUnion>() == 1);
+    assert!(::__rust_core::mem::size_of::<crate::SomeOtherUnion>() == 1);
+    assert!(::__rust_core::mem::align_of::<crate::SomeOtherUnion>() == 1);
     static_assertions::assert_impl_all!(crate::SomeOtherUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeOtherUnion: Drop);
 };

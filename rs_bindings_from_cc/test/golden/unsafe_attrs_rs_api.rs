@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 #[inline(always)]
 pub fn ReturnsTrue() -> bool {
     unsafe { crate::detail::__rust_thunk___ZL11ReturnsTruev() }

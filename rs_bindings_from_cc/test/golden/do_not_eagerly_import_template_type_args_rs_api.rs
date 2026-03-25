@@ -13,6 +13,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 // error: class `DoesNotUse` could not be bound
 //   Class templates are not yet supported
 

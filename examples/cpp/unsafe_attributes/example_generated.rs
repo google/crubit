@@ -14,6 +14,7 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=10
 #[inline(always)]
 pub fn SafeSignatureWithoutAnnotation() {

@@ -13,16 +13,17 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C, align(4))]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: SomeClass
     pub struct SomeClass {
-        __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+        __non_field_data: [::__rust_core::mem::MaybeUninit<u8>; 0],
         pub public_member_variable_: ::ffi_11::c_int,
         /// Reason for representing this field as a blob of bytes:
         /// Types of non-public C++ fields can be elided away
-        pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],
+        pub(crate) private_member_variable_: [::__rust_core::mem::MaybeUninit<u8>; 4],
     }
     impl !Send for SomeClass {}
     impl !Sync for SomeClass {}
@@ -50,7 +51,7 @@ pub mod test_namespace_bindings {
     impl Default for SomeClass {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::__rust_core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
                     &raw mut tmp as *mut _,
@@ -82,7 +83,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
         );
         #[link_name = "_ZN23test_namespace_bindings9SomeClass13public_methodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv<
@@ -97,16 +98,18 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::test_namespace_bindings::SomeClass>() == 8);
-    assert!(::core::mem::align_of::<crate::test_namespace_bindings::SomeClass>() == 4);
+    assert!(::__rust_core::mem::size_of::<crate::test_namespace_bindings::SomeClass>() == 8);
+    assert!(::__rust_core::mem::align_of::<crate::test_namespace_bindings::SomeClass>() == 4);
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::SomeClass: Drop);
     assert!(
-        ::core::mem::offset_of!(crate::test_namespace_bindings::SomeClass, public_member_variable_)
-            == 0
+        ::__rust_core::mem::offset_of!(
+            crate::test_namespace_bindings::SomeClass,
+            public_member_variable_
+        ) == 0
     );
     assert!(
-        ::core::mem::offset_of!(
+        ::__rust_core::mem::offset_of!(
             crate::test_namespace_bindings::SomeClass,
             private_member_variable_
         ) == 4

@@ -14,15 +14,16 @@
 #![allow(unused)]
 #![deny(warnings)]
 
+extern crate core as __rust_core;
 /// Generated from: examples/cpp/virtual/example.h;l=13
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=RustDerived
 pub struct RustDerived {
-    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 8],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) rust_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
+    pub(crate) rust_: [::__rust_core::cell::Cell<::__rust_core::mem::MaybeUninit<u8>>; 16],
 }
 impl !Send for RustDerived {}
 impl !Sync for RustDerived {}
@@ -63,7 +64,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN11RustDerivedC1EOS_(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -83,7 +84,7 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 /// Generated from: examples/cpp/virtual/example.h;l=13
 impl ::ctor::PinnedDrop for RustDerived {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::__rust_core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN11RustDerivedD1Ev(self)
     }
 }
@@ -91,7 +92,10 @@ impl ::ctor::PinnedDrop for RustDerived {
 /// Generated from: examples/cpp/virtual/example.h;l=13
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for RustDerived {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: ::ctor::RvalueReference<'_, Self>) {
+    fn assign(
+        self: ::__rust_core::pin::Pin<&mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN11RustDerivedaSEOS_(self, __param_0);
         }
@@ -108,7 +112,7 @@ impl ::ctor::CtorNew<::definition::RustDerived> for RustDerived {
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN11RustDerivedC1EN10definition11RustDerivedE(
-                    dest as *mut ::core::ffi::c_void,
+                    dest as *mut ::__rust_core::ffi::c_void,
                     &mut rust,
                 );
             })
@@ -185,18 +189,18 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedC1EOS_<'__unelided>(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'__unelided, crate::RustDerived>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::RustDerived>,
+            __this: ::__rust_core::pin::Pin<&'a mut crate::RustDerived>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedaSEOS_<'__return_lifetime>(
-            __this: ::core::pin::Pin<&mut crate::RustDerived>,
+            __this: ::__rust_core::pin::Pin<&mut crate::RustDerived>,
             __param_0: ::ctor::RvalueReference<'_, crate::RustDerived>,
-        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::RustDerived>;
+        ) -> ::__rust_core::pin::Pin<&'__return_lifetime mut crate::RustDerived>;
         pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedC1EN10definition11RustDerivedE(
-            __this: *mut ::core::ffi::c_void,
+            __this: *mut ::__rust_core::ffi::c_void,
             rust: &mut ::definition::RustDerived,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK11RustDerived7Method1Ev(
@@ -212,9 +216,9 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::RustDerived>() == 24);
-    assert!(::core::mem::align_of::<crate::RustDerived>() == 8);
+    assert!(::__rust_core::mem::size_of::<crate::RustDerived>() == 24);
+    assert!(::__rust_core::mem::align_of::<crate::RustDerived>() == 8);
     static_assertions::assert_impl_all!(crate::RustDerived: Drop);
     static_assertions::assert_not_impl_any!(crate::RustDerived: Copy);
-    assert!(::core::mem::offset_of!(crate::RustDerived, rust_) == 8);
+    assert!(::__rust_core::mem::offset_of!(crate::RustDerived, rust_) == 8);
 };
