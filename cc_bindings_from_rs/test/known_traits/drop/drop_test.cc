@@ -120,9 +120,9 @@ TYPED_TEST(CustomDropWithDefaultTest, ByValue) {
 TEST(DropTest, DropImplWithClone) {
   using TypeUnderTest = drop::drop_impl_with_clone::DropImplWithClone;
   static_assert(!std::is_default_constructible_v<TypeUnderTest>);
-  static_assert(std::is_move_constructible_v<TypeUnderTest>);
+  static_assert(!std::is_move_constructible_v<TypeUnderTest>);
   static_assert(!std::is_trivially_move_constructible_v<TypeUnderTest>);
-  static_assert(std::is_move_assignable_v<TypeUnderTest>);
+  static_assert(!std::is_move_assignable_v<TypeUnderTest>);
   static_assert(!std::is_trivially_move_assignable_v<TypeUnderTest>);
   static_assert(std::is_destructible_v<TypeUnderTest>);
   static_assert(!std::is_trivially_destructible_v<TypeUnderTest>);
@@ -151,9 +151,10 @@ TEST(DropTest, DropImplWithClone) {
 
     // We expect the move to be implemented in terms of copy, so we expect
     // a corresponding increase in clone counters.
-    TypeUnderTest s2(std::move(s));
+    TypeUnderTest s2(s);
     EXPECT_EQ(123, s2.get_int());
-    EXPECT_EQ(123, s.get_int());  // NOLINT(bugprone-use-after-move)
+    EXPECT_EQ(123, s.get_int());  // Since it's no longer movable, we must
+                                  // invoke copy explicitly.
     EXPECT_EQ(1, drop::counters::get_clone_count());
     EXPECT_EQ(0, drop::counters::get_drop_count());
   }
@@ -169,10 +170,10 @@ TEST(DropTest, DropImplWithClone) {
     EXPECT_EQ(0, drop::counters::get_clone_from_count());
     EXPECT_EQ(0, drop::counters::get_drop_count());
 
-    // We expect the move to be implemented in terms of copy, so we expect
-    // a corresponding increase in clone counters.
-    s2 = std::move(s1);
-    EXPECT_EQ(123, s1.get_int());  // NOLINT(bugprone-use-after-move)
+    // We expect the explicit move to trigger a compiler error, so we verify
+    // copy assignment works instead.
+    s2 = s1;
+    EXPECT_EQ(123, s1.get_int());
     EXPECT_EQ(123, s2.get_int());
     EXPECT_EQ(0, drop::counters::get_clone_count());
     EXPECT_EQ(1, drop::counters::get_clone_from_count());
@@ -182,8 +183,8 @@ TEST(DropTest, DropImplWithClone) {
     // (it would lead to aliasing-related UB in Rust when `self` and `source`
     // point to the same object).
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wself-move"
-    s2 = std::move(s2);
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
+    s2 = s2;
 #pragma clang diagnostic pop
     EXPECT_EQ(123, s1.get_int());
     EXPECT_EQ(123, s2.get_int());
@@ -194,19 +195,6 @@ TEST(DropTest, DropImplWithClone) {
   EXPECT_EQ(0, drop::counters::get_clone_count());
   EXPECT_EQ(1, drop::counters::get_clone_from_count());
   EXPECT_EQ(2, drop::counters::get_drop_count());
-
-  // Testing pass by value.
-  drop::counters::reset_counts();
-  {
-    TypeUnderTest s = TypeUnderTest::create_from_int(123);
-    EXPECT_EQ(0, drop::counters::get_clone_count());
-    // Clones twice: once into the parameter, once again from the thunk to Rust.
-    // Both are destroyed.
-    TypeUnderTest::take_by_value(std::move(s));
-    EXPECT_EQ(2, drop::counters::get_clone_count());
-    EXPECT_EQ(2, drop::counters::get_drop_count());
-  }
-  EXPECT_EQ(3, drop::counters::get_drop_count());
 }
 
 TEST(DropTest, DropImplWithNothingElse) {

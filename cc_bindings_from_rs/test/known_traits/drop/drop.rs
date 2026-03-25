@@ -165,9 +165,6 @@ pub mod drop_impl_with_clone {
             self.field = i;
         }
     }
-    impl DropImplWithClone {
-        pub fn take_by_value(_: Self) {}
-    }
 }
 
 /// Test for `Drop` support when:
