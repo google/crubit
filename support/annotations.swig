@@ -2,29 +2,19 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-%define CRUBIT_RUST_NAME(name)
-%enddef
-%define CRUBIT_UNSAFE
-%enddef
-%define CRUBIT_UNSAFE_IMPL(...)
-%enddef
-%define CRUBIT_UNSAFE_MARK_SAFE
-%enddef
-%define CRUBIT_OVERRIDE_UNSAFE(safety)
-%enddef
-%define CRUBIT_TRAIT_DERIVE(...)
-%enddef
-%define CRUBIT_BRIDGE_VOID_CONVERTERS(...)
-%enddef
-%define CRUBIT_BRIDGE_SLICE_PTR(abi)
-%enddef
-%define CRUBIT_MUST_BIND
-%enddef
-%define CRUBIT_DO_NOT_BIND
-%enddef
-%define CRUBIT_OWNED_POINTEE(name)
-%enddef
-%define CRUBIT_OWNED_POINTER
-%enddef
-%define CRUBIT_OVERRIDE_DISPLAY(should_bind)
-%enddef
+// <internal link> start
+%define CRUBIT_BRIDGE(rust_name, abi_rust, abi_cpp) %enddef
+%define CRUBIT_BRIDGE_VOID_CONVERTERS(...) %enddef
+%define CRUBIT_DO_NOT_BIND %enddef
+%define CRUBIT_MUST_BIND %enddef
+%define CRUBIT_OVERRIDE_DISPLAY(should_bind) %enddef
+%define CRUBIT_OVERRIDE_UNSAFE(safety) %enddef
+%define CRUBIT_OWNED_POINTEE(name) %enddef
+%define CRUBIT_OWNED_POINTER %enddef
+%define CRUBIT_RUST_NAME(name) %enddef
+%define CRUBIT_TRAIT_DERIVE(...) %enddef
+%define CRUBIT_UNSAFE %enddef
+%define CRUBIT_UNSAFE_IGNORE_ATTR(...) %enddef
+%define CRUBIT_UNSAFE_IMPL(...) %enddef
+%define CRUBIT_UNSAFE_MARK_SAFE %enddef
+// <internal link> end
