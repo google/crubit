@@ -298,6 +298,10 @@ pub enum UniformReprTemplateType {
     StdUniquePtr {
         element_type: RsTypeKind,
     },
+    /// std::shared_ptr<const T>
+    StdSharedPtr {
+        element_type: RsTypeKind,
+    },
     AbslSpan {
         is_const: bool,
         include_lifetime: bool,
@@ -338,6 +342,18 @@ impl UniformReprTemplateType {
             Ok(arg_type_kind)
         };
         match template_specialization_kind {
+            Some(TemplateSpecializationKind::StdSharedPtr { element_type }) => {
+                let element_type_kind = type_arg(element_type)?;
+                ensure!(element_type.is_const, "b/485328340: Crubit does not yet support std::shared_ptr<non-const T>, got: {}", element_type_kind.display(db));
+                ensure!(
+                    element_type_kind.is_complete(),
+                    "Crubit does not support std::shared_ptr<incomplete T>, got: `{}`",
+                    element_type_kind.display(db)
+                );
+                Ok(Some(Rc::new(UniformReprTemplateType::StdSharedPtr {
+                    element_type: element_type_kind,
+                })))
+            }
             Some(TemplateSpecializationKind::StdUniquePtr { element_type }) => {
                 let element_type = type_arg(element_type)?;
                 ensure!(element_type.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", element_type.display(db));
@@ -401,6 +417,10 @@ impl UniformReprTemplateType {
                     quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
                 }
             }
+            Self::StdSharedPtr { element_type } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                quote! { ::cc_std::std::shared_ptr_const::<#element_type_tokens> }
+            }
             Self::AbslSpan { is_const, include_lifetime, element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
 
@@ -429,6 +449,7 @@ impl UniformReprTemplateType {
         match self {
             Self::StdVector { .. } => None,
             Self::StdUniquePtr { .. } => None,
+            Self::StdSharedPtr { .. } => None,
             Self::AbslSpan { include_lifetime: true, .. } => Some(Lifetime::elided()),
             Self::AbslSpan { include_lifetime: false, .. } => None,
             Self::StdStringView { lifetime, .. } => Some(lifetime.clone()),

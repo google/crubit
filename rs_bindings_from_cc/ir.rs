@@ -1122,13 +1122,24 @@ pub enum TemplateSpecializationKind {
     /// std::basic_string_view<wchar_t, std::char_traits<wchar_t>>
     StdWStringView,
     /// std::vector<T, std::allocator<T>>
-    StdVector { element_type: CcType },
+    StdVector {
+        element_type: CcType,
+    },
     /// std::unique_ptr<T, std::default_delete<T>>
-    StdUniquePtr { element_type: CcType },
+    StdSharedPtr {
+        element_type: CcType,
+    },
+    StdUniquePtr {
+        element_type: CcType,
+    },
     /// c9::Co<T>
-    C9Co { element_type: CcType },
+    C9Co {
+        element_type: CcType,
+    },
     /// absl::Span<T>
-    AbslSpan { element_type: CcType },
+    AbslSpan {
+        element_type: CcType,
+    },
     /// Some other template specialization.
     NonSpecial,
 }

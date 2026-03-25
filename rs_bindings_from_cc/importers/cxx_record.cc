@@ -309,9 +309,7 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
       for (const clang::TemplateArgument& template_arg :
            specialization_decl->getTemplateArgs().asArray()) {
         if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
-          // TODO(b/454627672): is record_decl the right decl to check for
-          // assumed_lifetimes?
-          template_args.emplace_back(
+          template_args.push_back(
               ictx.ConvertQualType(template_arg.getAsType(),
                                    /*lifetimes=*/nullptr, /*nullable=*/true,
                                    ictx.AreAssumedLifetimesEnabledForTarget(
@@ -596,6 +594,18 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
                               ParameterizedByTAndStdTraitT(
                                   ictx, specialization_decl, "default_delete"));
       return TemplateSpecialization::StdUniquePtr(
+          // TODO(b/454627672): is specialization_decl the right decl to check
+          // for assumed_lifetimes?
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(specialization_decl))));
+    } else if (templated_decl->getName() == "shared_ptr") {
+      if (specialization_decl->getTemplateArgs().size() != 1) {
+        return absl::InvalidArgumentError(
+            "std::shared_ptr must have exactly one template argument");
+      }
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+      return TemplateSpecialization::StdSharedPtr(
           // TODO(b/454627672): is specialization_decl the right decl to check
           // for assumed_lifetimes?
           ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
