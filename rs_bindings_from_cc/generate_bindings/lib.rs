@@ -437,11 +437,14 @@ pub fn generate_bindings_tokens(
 
     let mut internal_includes = BTreeSet::new();
 
-    let (callables_rs_api_impl, callables_rs_api): (TokenStream, TokenStream) = {
+    let (callables_rs_api_impl, callables_rs_api) = {
         // Since Idents are not free, we reuse them across records.
         let mut param_idents_buffer = vec![];
 
-        ir.records()
+        let mut deferred_cpp_api = TokenStream::new();
+
+        let (mut cpp_api, rust_api): (TokenStream, TokenStream) = ir
+            .records()
             .filter_map(|record| {
                 // If the record doesn't belong to a target with the Callables feature, skip.
                 if !ir
@@ -474,7 +477,7 @@ pub fn generate_bindings_tokens(
                 // If generate_dyn_callable_invoker_and_manager_decls fails, skip. We don't need to generate a nice
                 // error because whoever uses this will also fail and generate an error at the relevant
                 // site.
-                let mut cpp_api = generate_dyn_callable_invoker_and_manager_decls(
+                let cpp_api = generate_dyn_callable_invoker_and_manager_decls(
                     &db,
                     &callable,
                     param_idents,
@@ -492,7 +495,11 @@ pub fn generate_bindings_tokens(
                         param_idents,
                         invoke_any_invocable_ident,
                     )?);
-                    cpp_api.extend(generate_any_invocable_invoker_def(
+                    // We need to defer the invoke_any_invocable def because it might depend on
+                    // invoker/manager decls which are generated in later iterations of this loop.
+                    // By appending them to cpp_api after this loop finishes, we ensure that all the
+                    // C++ decls appear before the defs.
+                    deferred_cpp_api.extend(generate_any_invocable_invoker_def(
                         &db,
                         &callable,
                         param_idents,
@@ -508,7 +515,9 @@ pub fn generate_bindings_tokens(
 
                 Some((cpp_api, rust_api))
             })
-            .unzip()
+            .unzip();
+        cpp_api.extend(deferred_cpp_api);
+        (cpp_api, rust_api)
     };
 
     // Callables use `Box<dyn F>`.

@@ -258,27 +258,30 @@ fn generate_make_cpp_invoker_tokens(
     callable: &Callable,
     invoke_any_invocable_ident: &Ident,
 ) -> Result<TokenStream> {
-    let param_idents =
-        (0..callable.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
-    let rust_param_types = callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
     let rust_return_type_fragment = callable.rust_return_type_fragment(db);
 
+    let mut params = Vec::with_capacity(callable.param_types.len());
     let mut arg_exprs = Vec::with_capacity(callable.param_types.len());
     // We are the caller
     for (i, param_ty) in callable.param_types.iter().enumerate() {
-        let param_ident = &param_idents[i];
+        let param_ident = format_ident!("param_{i}");
+        let rust_param_type = param_ty.to_token_stream(db);
 
         match param_ty.passing_convention() {
             PassingConvention::AbiCompatible => {
+                params.push(quote! { #param_ident: #rust_param_type });
                 arg_exprs.push(quote! { #param_ident });
             }
             PassingConvention::LayoutCompatible => {
+                params.push(quote! { mut #param_ident: #rust_param_type });
                 arg_exprs.push(quote! { &mut #param_ident });
             }
             PassingConvention::ComposablyBridged => {
                 let crubit_abi_type = db.crubit_abi_type(param_ty.clone())?;
                 let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
                 let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+
+                params.push(quote! { #param_ident: #rust_param_type });
                 // For arguments that are bridge types, we encode the
                 // Rust value into a buffer and then the argument is a pointer to that buffer.
                 arg_exprs.push(quote! {
@@ -290,6 +293,7 @@ fn generate_make_cpp_invoker_tokens(
                 bail!("Ctor not supported");
             }
             PassingConvention::OwnedPtr => {
+                params.push(quote! { #param_ident: #rust_param_type });
                 arg_exprs.push(quote! {
                     // SAFETY: Transmuting from a repr(transparent) struct that wraps the pointer.
                     unsafe { ::core::mem::transmute(#param_ident) }
@@ -366,7 +370,7 @@ fn generate_make_cpp_invoker_tokens(
             -> ::alloc::boxed::Box<#dyn_fn_spelling>
         {
             ::alloc::boxed::Box::new(
-                move |#( #param_idents: #rust_param_types ),*|
+                move |#(#params),*|
                     #rust_return_type_fragment
                 {
                     #invoke_ffi_and_transform_to_rust
