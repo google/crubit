@@ -959,8 +959,6 @@ inline std::int32_t get_x(::structs::default_repr::Point p) {
 
 }  // namespace structs::default_repr
 
-namespace structs::dynamically_sized_type {}
-
 namespace structs::interior_mutability {
 
 static_assert(

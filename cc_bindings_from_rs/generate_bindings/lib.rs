@@ -367,6 +367,9 @@ fn format_with_cc_body(
     mut tokens: TokenStream,
     attributes: Vec<TokenStream>,
 ) -> Result<TokenStream> {
+    if tokens.is_empty() {
+        return Ok(quote! {});
+    }
     let mut namespaces = ns.parts().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
 
     // Nested namespace syntax does not accept attributes (see b/445613694), so we have to split out

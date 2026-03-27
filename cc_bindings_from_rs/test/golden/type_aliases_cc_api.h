@@ -48,8 +48,6 @@ std::int32_t func_using_alias();
 
 }  // namespace type_aliases_rust::test_type_aliases
 
-namespace type_aliases_rust::test_deprecated_type_alias {}
-
 namespace type_aliases_rust::test_type_aliases {
 
 namespace __crubit_internal {

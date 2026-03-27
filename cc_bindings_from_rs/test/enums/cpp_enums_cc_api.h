@@ -83,12 +83,6 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace cpp_enums::forward_declared_enum
 
-namespace cpp_enums::classless_enum {}
-
-namespace cpp_enums::cpp_enum {}
-
-namespace cpp_enums::deprecated_enum {}
-
 namespace cpp_enums::forward_declared_enum {
 
 namespace __crubit_internal {

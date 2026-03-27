@@ -183,17 +183,5 @@ inline void Foo::__crubit_field_offset_assertions() {
 }
 }  // namespace modules::impl_in_separate_private_module
 
-namespace modules::outer {
-
-namespace [[deprecated]] inner_deprecated {}
-
-}  // namespace modules::outer
-
-namespace modules::outer::middle {
-
-namespace [[deprecated]] innermost_deprecated {}
-
-}  // namespace modules::outer::middle
-
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
