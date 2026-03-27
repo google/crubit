@@ -20,3 +20,7 @@ pub mod public {
         pub value: i32,
     }
 }
+
+pub struct TransitiveReexportAndDirectReexport {
+    pub value: i32,
+}

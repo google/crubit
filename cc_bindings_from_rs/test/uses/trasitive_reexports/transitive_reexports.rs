@@ -26,3 +26,5 @@ pub fn direct_to_transitive_private_type_alias(
 pub fn direct_to_transitive_use_alias(direct: &direct::Direct) -> direct::TransitiveUseAlias {
     direct::TransitiveUseAlias { value: direct.value }
 }
+
+pub type DirectReexportOfTransitive = direct::TransitiveReexportAndDirectReexport;

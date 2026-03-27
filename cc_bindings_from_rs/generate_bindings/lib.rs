@@ -591,7 +591,7 @@ fn resolve_if_use(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<DefId> {
 fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<UnqualifiedName> {
     let tcx = db.tcx();
     let item_name = db
-        .public_paths_by_def_id(def_id.krate)
+        .all_public_paths_by_def_id()
         .get(&def_id)
         .map(|path| path.canonical().name)
         .or_else(|| tcx.opt_item_name(def_id))?;

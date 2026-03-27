@@ -27,3 +27,5 @@ impl Direct {
         Direct { value: train.value }
     }
 }
+
+pub use transitive::TransitiveReexportAndDirectReexport;

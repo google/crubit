@@ -14,6 +14,7 @@
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
 #include <utility>
@@ -45,6 +46,19 @@ namespace transitive_reexports {
 // cc_bindings_from_rs/test/uses/trasitive_reexports/transitive_reexports.rs;l=16
 ::direct::Transitive direct_to_transittive_type_alias(
     ::direct::Direct const& direct);
+
+}  // namespace transitive_reexports
+
+namespace transitive_reexports {
+
+// Generated from:
+// cc_bindings_from_rs/test/uses/trasitive_reexports/transitive.rs;l=24
+using DirectReexportOfTransitive CRUBIT_INTERNAL_RUST_TYPE(
+    ":: direct :: TransitiveReexportAndDirectReexport") =
+    ::direct::TransitiveReexportAndDirectReexport;
+}  // namespace transitive_reexports
+
+namespace transitive_reexports {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_direct_uto_utransitive(

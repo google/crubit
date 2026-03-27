@@ -199,7 +199,7 @@ impl PublicPaths {
     }
 
     pub fn merge(&mut self, mut other: Self) {
-        if self.canonical_path < other.canonical_path {
+        if self.canonical_path > other.canonical_path {
             std::mem::swap(&mut self.canonical_path, &mut other.canonical_path);
         }
         self.insert_aliases(other);

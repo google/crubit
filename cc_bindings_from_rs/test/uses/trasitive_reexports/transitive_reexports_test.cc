@@ -7,6 +7,9 @@
 
 namespace {
 
+static_assert(std::is_same_v<direct::TransitiveReexportAndDirectReexport,
+                             transitive_reexports::DirectReexportOfTransitive>);
+
 TEST(TransitiveReexportsTest, DirectToTransitive) {
   static_assert(std::is_same_v<direct::Transitive, transitive::Transitive>);
   direct::Transitive transitive = direct::Transitive::new_(1);
