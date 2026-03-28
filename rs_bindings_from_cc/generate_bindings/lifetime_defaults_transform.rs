@@ -28,7 +28,7 @@ pub struct BindingContext {
     /// All variable names we've seen.
     pub names: HashSet<Rc<str>>,
 }
-fn lifetime_arity(_db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
+fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
     // TODO(b/454627672): Support other types.
     match &ty.variant {
         CcTypeVariant::Pointer(_) => Ok(1),
@@ -36,9 +36,14 @@ fn lifetime_arity(_db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
         CcTypeVariant::FuncPointer { .. } => {
             bail!("TODO(b/454627672): function pointer returns are unsupported")
         }
-        CcTypeVariant::Decl(_id) => bail!("TODO(b/454627672): decl returns are unsupported"),
+        CcTypeVariant::Decl(id) => decl_lifetime_arity(db, *id),
         CcTypeVariant::Error(msg) => bail!("encountered error type: {:?}", msg),
     }
+}
+
+fn record_lifetime_arity(db: &BindingsGenerator, rc: &Record) -> Result<usize, arc_anyhow::Error> {
+    // TODO(zarko): Handle the effects of [[lifetimebound]] et al on arity.
+    Ok(rc.lifetime_inputs.len())
 }
 
 fn decl_lifetime_arity_impl(
@@ -63,7 +68,38 @@ fn decl_lifetime_arity_impl(
         {
             Ok(1)
         }
-        _ => bail!("Unexpected item found in type position: {:?}", item.cc_name_as_str()),
+        Item::TypeAlias(_ta) => {
+            bail!("Type aliases unhandled for lifetimes: {:?}", item.cc_name_as_str())
+        }
+        Item::Record(rc) => record_lifetime_arity(db, rc),
+        Item::IncompleteRecord(_) => {
+            bail!("Incomplete records unhandled for lifetimes: {:?}", item.cc_name_as_str())
+        }
+        Item::Enum(_ec) => bail!("Enums unhandled for lifetimes: {:?}", item.cc_name_as_str()),
+        Item::ExistingRustType(_ec) => {
+            bail!("Existing Rust types unhandled for lifetimes: {:?}", item.cc_name_as_str())
+        }
+        Item::Func(_) => {
+            bail!("Unexpected function found in type position: {:?}", item.cc_name_as_str())
+        }
+        Item::Comment(_) => {
+            bail!("Unexpected comment found in type position: {:?}", item.cc_name_as_str())
+        }
+        Item::Namespace(_) => {
+            bail!("Unexpected namespace found in type position: {:?}", item.cc_name_as_str())
+        }
+        Item::UseMod(_) => {
+            bail!("Unexpected UseMod found in type position: {:?}", item.cc_name_as_str())
+        }
+        Item::GlobalVar(_) => {
+            bail!("Unexpected global var found in type position: {:?}", item.cc_name_as_str())
+        }
+        Item::Constant(_) => {
+            bail!("Unexpected const found in type position: {:?}", item.cc_name_as_str())
+        }
+        Item::UnsupportedItem(_) => {
+            bail!("Unexpected unsupported item found in type position: {:?}", item.cc_name_as_str())
+        }
     }
 }
 
@@ -314,6 +350,9 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                                 .get_or_push_new_binding(l, |name| new_bindings.push(name.clone()))
                         })
                         .collect();
+                    if new_ty.explicit_lifetimes.iter().any(|l| l.as_ref() == "unknown") {
+                        new_ty.explicit_lifetimes.clear();
+                    }
                     return Ok(new_ty);
                 }
                 // If there is no viable inferred lifetime, there is nothing to do.

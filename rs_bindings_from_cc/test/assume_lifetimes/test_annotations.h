@@ -11,5 +11,6 @@
 #define $b $(b)
 #define $c $(c)
 #define $static $(static)
+#define $unknown $(unknown)
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ASSUME_LIFETIMES_TEST_ANNOTATIONS_H_

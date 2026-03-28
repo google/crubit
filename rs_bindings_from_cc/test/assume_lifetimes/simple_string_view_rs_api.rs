@@ -42,17 +42,83 @@ impl<'a> Default for SV<'a> {
     }
 }
 
+/// TODO(zarko): We should mark 'unknowns (or equivalent) as unsafe.
+///
+/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=13
+#[inline(always)]
+pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
+    unsafe {
+        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'s>>::uninit();
+        crate::detail::__rust_thunk___Z8sv_ident2SV(
+            &raw mut __return as *mut ::core::ffi::c_void,
+            &mut s,
+        );
+        __return.assume_init()
+    }
+}
+
+/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=14
+#[inline(always)]
+pub fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> {
+    unsafe {
+        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
+        crate::detail::__rust_thunk___Z16sv_ident_unknown2SV(
+            &raw mut __return as *mut ::core::ffi::c_void,
+            &mut s,
+        );
+        __return.assume_init()
+    }
+}
+
+/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=15
+#[inline(always)]
+pub fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'static> {
+    unsafe {
+        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
+        crate::detail::__rust_thunk___Z23sv_ident_unknown_elided2SV(
+            &raw mut __return as *mut ::core::ffi::c_void,
+            &mut s,
+        );
+        __return.assume_init()
+    }
+}
+
+/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=16
+#[inline(always)]
+pub fn sv_make_raw() -> crate::SV<'static> {
+    unsafe {
+        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
+        crate::detail::__rust_thunk___Z11sv_make_rawv(
+            &raw mut __return as *mut ::core::ffi::c_void,
+        );
+        __return.assume_init()
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN2SVC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___Z8sv_ident2SV<'s>(
+            __return: *mut ::core::ffi::c_void,
+            s: &mut crate::SV<'s>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z16sv_ident_unknown2SV(
+            __return: *mut ::core::ffi::c_void,
+            s: &mut crate::SV<'static>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z23sv_ident_unknown_elided2SV(
+            __return: *mut ::core::ffi::c_void,
+            s: &mut crate::SV<'static>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z11sv_make_rawv(__return: *mut ::core::ffi::c_void);
     }
 }
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::SV>() == 1);
     assert!(::core::mem::align_of::<crate::SV>() == 1);
-    static_assertions::assert_impl_all!(crate::SV: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::SV: Drop);
+    static_assertions::assert_impl_all!(crate::SV<'static>: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::SV<'static>: Drop);
 };

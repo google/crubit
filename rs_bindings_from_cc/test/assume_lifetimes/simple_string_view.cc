@@ -3,3 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h"
+
+SV sv_ident(SV s) { return s; }
+SV sv_make_raw() { return SV{}; }

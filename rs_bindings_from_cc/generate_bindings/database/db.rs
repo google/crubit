@@ -24,6 +24,7 @@ pub struct CodegenFunctions {
     pub generate_enum: fn(&BindingsGenerator, Rc<Enum>) -> Result<ApiSnippets>,
     pub generate_item: fn(&BindingsGenerator, ir::Item) -> Result<ApiSnippets>,
     pub generate_record: fn(&BindingsGenerator, Rc<Record>) -> Result<ApiSnippets>,
+    pub decl_lifetime_arity: fn(&BindingsGenerator, ir::ItemId) -> Result<usize>,
 }
 
 memoized::query_group! {

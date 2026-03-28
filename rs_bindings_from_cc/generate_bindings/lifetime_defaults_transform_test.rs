@@ -285,8 +285,30 @@ fn test_lifetimebound_param_with_decl_type() -> Result<()> {
       S f(S i1 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir);
-    assert!(dir.is_err());
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: [] ... }, ...
+                ...
+                params: [
+                    FuncParam {
+                       type_: CcType { ... explicit_lifetimes: [] ... },
+                       identifier: "i1", ...
+                       ...
+                       clang_lifetimebound: true,
+                       ...
+                    }
+                ],
+                ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
     Ok(())
 }
 
@@ -909,7 +931,7 @@ fn test_struct_binds_lifetime_param() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this"],
+                lifetime_inputs: ["__this", "__this_0"],
                 ...
             }
         }
@@ -947,7 +969,7 @@ fn test_struct_shadows_unknown_lifetime_param() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["unknown_0"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this"],
+                lifetime_inputs: ["__this", "__this_0"],
                 ...
             }
         }
@@ -985,7 +1007,7 @@ fn test_struct_does_not_shadow_unrelated_lifetime_param() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this", "a"],
+                lifetime_inputs: ["__this", "__this_0", "a"],
                 ...
             }
         }
@@ -1023,7 +1045,7 @@ fn test_struct_renames_shadowed_lifetime_param_in_function() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["a_0"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["a_0", "__this"],
+                lifetime_inputs: ["a_0", "__this", "__this_0"],
                 ...
             }
         }

@@ -43,6 +43,7 @@ rust_library(
         ":generate_function_thunk",
         ":generate_struct_and_union",
         ":has_bindings",
+        ":lifetime_defaults_transform",
         ":rs_type_kind",
         "//common:arc_anyhow",
         "//common:code_gen_utils",

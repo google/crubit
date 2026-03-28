@@ -7,8 +7,8 @@
 use crate::code_snippet::{Feature, Visibility};
 use crate::BindingsGenerator;
 use arc_anyhow::{anyhow, Result};
-use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
+use code_gen_utils::{make_rs_ident, make_rs_lifetime_ident};
 use crubit_feature::CrubitFeature;
 use error_report::{bail, ensure};
 use flagset::FlagSet;
@@ -487,6 +487,7 @@ pub enum RsTypeKind {
         /// If this record is an instantiation of a `UniformReprTemplateType`, this will be set.
         uniform_repr_template_type: Option<Rc<UniformReprTemplateType>>,
         owned_ptr_type: Option<Rc<str>>,
+        lifetimes: Vec<Lifetime>,
     },
     Enum {
         enum_: Rc<Enum>,
@@ -845,6 +846,7 @@ impl RsTypeKind {
             owned_ptr_type: record.owned_ptr_type.clone(),
             record,
             crate_path,
+            lifetimes: lifetimes.to_vec(),
         })
     }
 
@@ -1716,6 +1718,14 @@ impl PrimitiveName {
     }
 }
 
+/// Detect whether a `Record` is the projection of `std::string_view`, as we special-case this.
+fn record_is_raw_string_view(record: &ir::Record) -> bool {
+    matches!(
+        record.template_specialization,
+        Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
+    ) && record.rs_name.identifier.as_ref() == "raw_string_view"
+}
+
 impl RsTypeKind {
     pub fn to_token_stream<'a>(
         &self,
@@ -1779,12 +1789,28 @@ impl RsTypeKind {
                 crate_path,
                 uniform_repr_template_type,
                 owned_ptr_type: _,
+                lifetimes,
             } => {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(&db);
                 }
-                let ident = make_rs_ident(record.rs_name.identifier.as_ref());
-                quote! { #crate_path #ident }
+                let arity = (db.codegen_functions().decl_lifetime_arity)(&*db, record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
+                if arity == 0 || lifetimes.len() == arity || record_is_raw_string_view(record) {
+                    // Use the safe projection.
+                    let lts = if lifetimes.is_empty() {
+                        quote! {}
+                    } else {
+                        quote! { <#( #lifetimes ),* > }
+                    };
+                    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
+                    quote! { #crate_path #ident #lts }
+                } else {
+                    // Until we can get unsafe binders, the unsafe projection of a type with
+                    // lifetime parameters is that type instantiated at all 'static.
+                    let statics = std::iter::repeat_n(make_rs_lifetime_ident("static"), arity);
+                    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
+                    quote! { #crate_path #ident <#( #statics ),* > }
+                }
             }
             RsTypeKind::Enum { enum_, crate_path } => {
                 let ident = make_rs_ident(&enum_.rs_name.identifier);
