@@ -1307,7 +1307,7 @@ fn rs_type_kinds_for_func(
             if i == 0 && func.is_instance_method() {
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.
-                let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _ }) =
+                let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _, is_cref: _}) =
                     &mut param_type.variant
                 else {
                     panic!(

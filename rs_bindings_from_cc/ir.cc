@@ -75,29 +75,32 @@ llvm::json::Value CcType::ToJson() const {
             return llvm::json::Object{{"Primitive", primitive.spelling}};
           },
           [&](CcType::PointerType pointer) {
+            auto pointer_json = llvm::json::Object{
+                {
+                    "kind",
+                    [&]() -> llvm::json::Value {
+                      switch (pointer.kind) {
+                        case PointerTypeKind::kLValueRef:
+                          return "LValueRef";
+                        case PointerTypeKind::kRValueRef:
+                          return "RValueRef";
+                        case PointerTypeKind::kNullable:
+                          return "Nullable";
+                        case PointerTypeKind::kNonNull:
+                          return "NonNull";
+                        case PointerTypeKind::kOwned:
+                          return "Owned";
+                      }
+                    }(),
+                },
+                {"lifetime", pointer.lifetime},
+                {"pointee_type", *pointer.pointee_type},
+            };
+            if (pointer.is_cref) {
+              pointer_json.insert({"is_cref", pointer.is_cref});
+            }
             return llvm::json::Object{
-                {"Pointer",
-                 llvm::json::Object{
-                     {
-                         "kind",
-                         [&]() -> llvm::json::Value {
-                           switch (pointer.kind) {
-                             case PointerTypeKind::kLValueRef:
-                               return "LValueRef";
-                             case PointerTypeKind::kRValueRef:
-                               return "RValueRef";
-                             case PointerTypeKind::kNullable:
-                               return "Nullable";
-                             case PointerTypeKind::kNonNull:
-                               return "NonNull";
-                             case PointerTypeKind::kOwned:
-                               return "Owned";
-                           }
-                         }(),
-                     },
-                     {"lifetime", pointer.lifetime},
-                     {"pointee_type", *pointer.pointee_type},
-                 }},
+                {"Pointer", std::move(pointer_json)},
             };
           },
           [&](const CcType::FuncPointer& func_value) {
