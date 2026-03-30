@@ -68,3 +68,26 @@ C++ API     | Rust bindings
 ----------- | -------------
 `operator-` | `Neg`
 `operator!` | `Not`
+
+## One-way map into `Display`
+
+By default: for a C++ type `T`, Crubit maps one-way the following C++ signatures
+into the Rust trait `Display`:
+
+*   `template <typename Sink> void AbslStringify(Sink&, const T&)`
+*   `template <typename Sink> void AbslStringify(Sink&, T)`
+*   `std::ostream& operator<<(std::ostream&, const T&)`
+*   `std::ostream& operator<<(std::ostream&, T)`
+
+Crubit prefers
+[`AbslStringify`](https://abseil.io/docs/cpp/guides/abslstringify) but falls
+back to `operator<<`.
+
+The [attribute macro](customizing.md) `CRUBIT_OVERRIDE_DISPLAY` forces whether
+to implement the `Display` binding. See the macro's documentation:
+
+```
+{{ #include ../../support/annotations.h }}
+```
+<!--  symbol:CRUBIT_OVERRIDE_DISPLAY -->
+

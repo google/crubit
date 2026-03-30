@@ -27,6 +27,7 @@
     *   [Customizing](/docs/cpp/customizing.md)
     *   <hr>
     *   [Functions](/docs/cpp/functions.md)
+        *   [Operator overloading](/docs/cpp/operator_overloading.md)
     *   [Classes and Structs](/docs/cpp/classes_and_structs.md)
     *   [Enums](/docs/cpp/enums.md)
 
