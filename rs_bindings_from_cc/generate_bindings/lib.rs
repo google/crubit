@@ -1188,9 +1188,26 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                     }
                 };
 
-                // The default constructor knows what `start_coroutine` and `destroy_at_initial_suspend`
-                // functions to use.
-                let cpp_expr_tokens = quote! { #cpp_type_tokens() };
+                let cpp_expr_tokens = {
+                    let start_coroutine_fn_tokens = match &result_type_crubit_abi_type {
+                        None => {
+                            quote! {
+                                &::c9::internal::rust::StartCoroutineFromRust
+                            }
+                        }
+                        Some(result_type_crubit_abi_type) => {
+                            let abi_expr_tokens =
+                                CrubitAbiTypeToCppExprTokens(result_type_crubit_abi_type);
+
+                            quote! {
+                                &::c9::internal::rust::StartCoroutineFromRust<[]() { return #abi_expr_tokens; }>
+                            }
+                        }
+                    };
+                    quote! {
+                        #cpp_type_tokens(#start_coroutine_fn_tokens)
+                    }
+                };
 
                 Ok(CrubitAbiType::C9Co {
                     rust_type_tokens,
