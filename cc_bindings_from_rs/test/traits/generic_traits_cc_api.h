@@ -118,6 +118,38 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   using impl = rs_std::impl<T, TraitWithTwoGenerics<T0, T1>>;
 };
 
+}  // namespace generic_traits
+
+// Error generating bindings for `<generic_traits_golden::AnotherStruct as
+// generic_traits_golden::TraitWithTwoGenerics<i32, U>>` defined at
+// cc_bindings_from_rs/test/traits/generic_traits.rs;l=42:
+// The following Rust type is not supported yet: U
+
+template <>
+struct rs_std::impl<::generic_traits::StructGeneric,
+                    ::generic_traits::TraitWithGeneric<std::int32_t>> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/generic_traits.rs;l=21
+  static std::int32_t foo(::generic_traits::StructGeneric const& self,
+                          std::int32_t t);
+};
+
+template <>
+struct rs_std::impl<
+    ::generic_traits::StructGeneric,
+    ::generic_traits::TraitWithTwoGenerics<std::int32_t, std::int32_t>> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/generic_traits.rs;l=32
+  static std::int32_t bar(::generic_traits::StructGeneric const& self,
+                          std::int32_t t, std::int32_t u);
+};
+
+namespace generic_traits {
+
 static_assert(
     sizeof(AnotherStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -157,34 +189,6 @@ inline void StructGeneric::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructGeneric, x));
 }
 }  // namespace generic_traits
-
-template <>
-struct rs_std::impl<::generic_traits::StructGeneric,
-                    ::generic_traits::TraitWithGeneric<std::int32_t>> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/generic_traits.rs;l=21
-  static std::int32_t foo(::generic_traits::StructGeneric const& self,
-                          std::int32_t t);
-};
-
-template <>
-struct rs_std::impl<
-    ::generic_traits::StructGeneric,
-    ::generic_traits::TraitWithTwoGenerics<std::int32_t, std::int32_t>> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/generic_traits.rs;l=32
-  static std::int32_t bar(::generic_traits::StructGeneric const& self,
-                          std::int32_t t, std::int32_t u);
-};
-
-// Error generating bindings for `<generic_traits_golden::AnotherStruct as
-// generic_traits_golden::TraitWithTwoGenerics<i32, U>>` defined at
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=42:
-// The following Rust type is not supported yet: U
 
 namespace generic_traits {
 namespace __crubit_internal {

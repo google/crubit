@@ -69,6 +69,24 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyTrait") MyTrait {
   using impl = rs_std::impl<T, MyTrait>;
 };
 
+}  // namespace example_crate
+
+template <>
+struct rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // examples/rust/trait/example.rs;l=23
+  static std::int32_t add_with(::example_crate::MyStruct const& self,
+                               std::int32_t y);
+
+  // Generated from:
+  // examples/rust/trait/example.rs;l=27
+  static rs_std::StrRef describe(::example_crate::MyStruct const& self);
+};
+
+namespace example_crate {
+
 static_assert(
     sizeof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -102,20 +120,6 @@ inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
 }
 }  // namespace example_crate
-
-template <>
-struct rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // examples/rust/trait/example.rs;l=23
-  static std::int32_t add_with(::example_crate::MyStruct const& self,
-                               std::int32_t y);
-
-  // Generated from:
-  // examples/rust/trait/example.rs;l=27
-  static rs_std::StrRef describe(::example_crate::MyStruct const& self);
-};
 
 namespace example_crate {
 namespace __crubit_internal {

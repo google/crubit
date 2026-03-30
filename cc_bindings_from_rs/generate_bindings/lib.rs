@@ -34,13 +34,13 @@ use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, generate_associated_item, has_type_or_const_vars, scalar_value_to_string,
+    generate_adt_core, scalar_value_to_string,
 };
+use crate::generate_template_specialization::collect_trait_impls;
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet,
-    RsStdEnumTemplateSpecialization, RsStdEnumTemplateSpecializationCore, TemplateSpecialization,
+    ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
 };
 use database::{
     AdtCoreBindings, ExportedPath, FineGrainedFeature, FullyQualifiedName, NoMoveOrAssign,
@@ -1710,152 +1710,62 @@ struct FormattedItem<'tcx> {
     aliases: Vec<ExportedPath>,
 }
 
-/// Generate bindings to supported trait implementations. An implementation is supported if both
-/// its trait and implementing type receive bindings.
-fn generate_trait_impls<'a, 'tcx>(
-    db: &'a BindingsGenerator<'tcx>,
-) -> impl Iterator<Item = ApiSnippets<'tcx>> + use<'a, 'tcx> {
-    let tcx = db.tcx();
-    let supported_traits: Vec<DefId> = db.supported_traits().iter().copied().collect();
-    // TyCtxt makes it easy to get all the implementations of a trait, but there isn't an easy way
-    // to say give me all the trait implementations for this type. This is by design. The compiler
-    // lazily determines conformance to traits as needed for types and never computes every trait
-    // for a type in a single data structure.
-    //
-    // We, however, want every implementation for a supported type, so we can emit bindings to them.
-    // We achieve this by walking every supported trait, walking every implementation of that trait,
-    // and paring down to the implementations that receive bindings.
-    //
-    // A serendipitous side effect of this approach is that our implementations are emitted as a
-    // single list containing just implementations. We want to emit all of our implementations in a
-    // separate portion of our header from the rest of our bindings. Our impls become template
-    // specializaitons, which are required to be in an enclosing namespace of the template they
-    // specialize. This prevents them from living in the same namespace as our other bindings, as
-    // they may implement a trait that is not enclosed by that namespace.
-    supported_traits
-        .into_iter()
-        .flat_map(move |trait_def_id| {
-            use rustc_middle::ty::fast_reject::SimplifiedType;
-            tcx.trait_impls_of(trait_def_id)
-                .non_blanket_impls()
-                .into_iter()
-                .filter_map(move |(simple_ty, impl_def_ids)| match simple_ty {
-                    SimplifiedType::Adt(did) => {
-                        // Only bind implementations for supported ADTs.
-                        let canonical_name = db.symbol_canonical_name(*did)?;
-                        // We explicitly want to allow ADTs that specify cpp_type.
-                        // These are typically C++ types that have generated Rust bindings.
-                        if canonical_name.unqualified.cpp_type.is_none()
-                            && db.adt_needs_bindings(*did).is_err() {
-                            return None;
-                        }
-                        let crate_name = tcx.crate_name(did.krate);
-                        // TODO: b/391443811 - Add support for implementations of stdlib types once
-                        // we have headers that can be included for those types.
-                        if ["std", "core", "alloc"].contains(&crate_name.as_str()) {
-                            return None;
-                        }
-                        let adt_cc_name = canonical_name.format_for_cc(db).ok()?;
-                        Some((adt_cc_name, trait_def_id, impl_def_ids))
-                    }
-                    // TODO: b/457803426 - Support trait implementations for non-adt types.
-                    _ => None,
-                })
-                .flat_map(move |(adt_cc_name, trait_def_id, impl_def_ids)| {
-                    impl_def_ids
-                        .iter()
-                        .copied()
-                        // TODO: b/458768435 - This is technically suboptimal. We could instead only
-                        // query for the impls from this crate, but the logic is complicated by
-                        // supporting LOCAL_CRATE. Revisit once we've migrated to rmetas.
-                        .filter(|impl_def_id| impl_def_id.krate == db.source_crate_num())
-                        .map(move |impl_def_id| (adt_cc_name.clone(), trait_def_id, impl_def_id))
-                })
-        })
-        .map(
-            move |(adt_cc_name, trait_def_id, impl_def_id)| -> Result<ApiSnippets, (DefId, Error)> {
-                let trait_header = tcx.impl_trait_header(impl_def_id);
-                #[rustversion::before(2025-10-17)]
-                let trait_header = trait_header.expect("Trait impl should have a trait header");
-                let trait_ref = trait_header.trait_ref.instantiate_identity();
+struct GeneratedSpecializations<'tcx> {
+    specializations: HashMap<TemplateSpecialization<'tcx>, CcSnippet<'tcx>>,
+    impls_cc_details: Vec<TokenStream>,
+}
 
-                let canonical_name = db.symbol_canonical_name(trait_def_id).expect(
-                    "symbol_canonical_name was unexpectedly called on a trait without a canonical name",
-                );
-                let trait_name =
-                    canonical_name.format_for_cc(db).map_err(|err| (impl_def_id, err))?;
+/// Generates template specializations for a given worklist, and transitively discovers
+/// any specializations required by the generated specializations.
+fn generate_specializations_fixpoint<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    mut worklist: Vec<TemplateSpecialization<'tcx>>,
+    cc_details_prereqs: &mut CcPrerequisites<'tcx>,
+    extern_c_decls: &mut BTreeSet<ExternCDecl>,
+    cc_api_impl: &mut TokenStream,
+) -> GeneratedSpecializations<'tcx> {
+    let mut seen = HashSet::new();
+    let mut specializations = HashMap::new();
+    let mut impls_cc_details = Vec::new();
 
-                let mut prereqs = CcPrerequisites::default();
-                let trait_args: Vec<_> = trait_ref
-                    .args
-                    .iter()
-                    // Skip self type.
-                    .skip(1)
-                    .filter_map(|arg| arg.as_type())
-                    .map(|arg| {
-                        if arg.flags().contains(has_type_or_const_vars()) {
-                            return Err((impl_def_id, anyhow!("Implementation of traits must specify all types to receive bindings.")));
-                        }
-                        if arg.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
-                            return Err((
-                                impl_def_id,
-                                anyhow!(
-                                    "b/491106325 - isize and usize types are not yet supported as trait type arguments."
-                                ),
-                            ));
-                        }
-                        db.format_ty_for_cc(arg, TypeLocation::Other)
-                            .map(|snippet| snippet.into_tokens(&mut prereqs))
-                            .map_err(|err| (impl_def_id, err))
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
+    while !worklist.is_empty() {
+        // Sort to ensure deterministic processing.
+        worklist.sort_unstable_by(|a, b| template_specialization_cmp(db.tcx(), a, b));
 
-                let type_args = if trait_args.is_empty() {
-                    quote! {}
-                } else {
-                    quote! { <#(#trait_args),*> }
-                };
+        let mut next_worklist = Vec::new();
+        for spec in worklist {
+            if seen.contains(&spec) {
+                continue;
+            }
 
-                let trait_name_with_args = quote! { #trait_name #type_args };
+            let snippets = generate_template_specialization::generate_template_specialization(
+                db,
+                spec.clone(),
+            );
+            seen.insert(spec.clone());
 
-                prereqs.depend_on_def(db, trait_def_id).map_err(|err| (impl_def_id, err))?;
+            // Collect specializations required by the main_api.
+            for new_spec in snippets.main_api.prereqs.template_specializations.iter() {
+                if !seen.contains(new_spec) {
+                    next_worklist.push(new_spec.clone());
+                }
+            }
 
-                let mut member_function_names = HashSet::new();
-                let assoc_items: ApiSnippets = tcx
-                    .associated_items(impl_def_id)
-                    .in_definition_order()
-                    .flat_map(|assoc_item| {
-                        generate_associated_item(db, assoc_item, &mut member_function_names)
-                    })
-                    .collect();
+            impls_cc_details.push(snippets.cc_details.into_tokens(cc_details_prereqs));
+            // Collect any transitive specializations discovered in cc_details.
+            for new_spec in std::mem::take(&mut cc_details_prereqs.template_specializations) {
+                if !seen.contains(&new_spec) {
+                    next_worklist.push(new_spec);
+                }
+            }
 
-                let main_api = assoc_items.main_api.into_tokens(&mut prereqs);
-                prereqs.includes.insert(db.support_header("rs_std/traits.h"));
+            cc_api_impl.extend(snippets.rs_details.into_tokens(extern_c_decls));
+            specializations.insert(spec, snippets.main_api);
+        }
+        worklist = next_worklist;
+    }
 
-                Ok(ApiSnippets {
-                    main_api: CcSnippet {
-                        tokens: quote! {
-                            __NEWLINE__
-                            template<>
-                            struct rs_std::impl<#adt_cc_name, #trait_name_with_args> {
-                                static constexpr bool kIsImplemented = true;
-
-                                #main_api
-                            };
-                            __NEWLINE__
-                        },
-                        prereqs,
-                    },
-                    cc_details: assoc_items.cc_details,
-                    rs_details: assoc_items.rs_details,
-                })
-            },
-        )
-        .map(|results_snippets| {
-            results_snippets.unwrap_or_else(|(def_id, err)| {
-                generate_unsupported_def(db, def_id, err).into_main_api()
-            })
-        })
+    GeneratedSpecializations { specializations, impls_cc_details }
 }
 
 fn formatted_items_in_crate<'tcx>(
@@ -1897,16 +1807,14 @@ fn template_specialization_cmp<'tcx>(
     right: &TemplateSpecialization<'tcx>,
 ) -> std::cmp::Ordering {
     match (left, right) {
-        (
-            TemplateSpecialization::RsStdEnum(RsStdEnumTemplateSpecialization {
-                core: RsStdEnumTemplateSpecializationCore { self_ty_rs: left_ty, .. },
-                ..
-            }),
-            TemplateSpecialization::RsStdEnum(RsStdEnumTemplateSpecialization {
-                core: RsStdEnumTemplateSpecializationCore { self_ty_rs: right_ty, .. },
-                ..
-            }),
-        ) => left_ty.sort_string(tcx).cmp(&right_ty.sort_string(tcx)),
+        (TemplateSpecialization::RsStdEnum(left), TemplateSpecialization::RsStdEnum(right)) => {
+            left.core.self_ty_rs.sort_string(tcx).cmp(&right.core.self_ty_rs.sort_string(tcx))
+        }
+        (TemplateSpecialization::TraitImpl(left), TemplateSpecialization::TraitImpl(right)) => {
+            stable_def_id_cmp(tcx, left.trait_impl, right.trait_impl)
+        }
+        (TemplateSpecialization::RsStdEnum(_), _) => Ordering::Less,
+        (_, TemplateSpecialization::RsStdEnum(_)) => Ordering::Greater,
     }
 }
 
@@ -1965,47 +1873,22 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         cc_api_impl.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
     }
 
-    // Because trait implementations are template specialization, they can't live in the top-level
-    // namespace generated for our other definitions. Template specializations must live in an
-    // enclosing namespace of the template they specialize. For this reason, we put our specializations in the top level namespace. The remainder of our implementation code, should be handled like normal.
-    // We append our cc_details and rs_details here, so that they get processed like normal, but save our main_api to be specially placed in the top level namespace.
-    let mut impls_cc_details = vec![];
-    let impls = generate_trait_impls(db)
-        .map(|snippets| {
-            impls_cc_details.push(snippets.cc_details.clone().into_tokens(&mut cc_details_prereqs));
-            cc_api_impl.extend(snippets.rs_details.clone().into_tokens(&mut extern_c_decls));
-            snippets.main_api.clone().into_tokens(&mut cc_details_prereqs)
-        })
-        .collect::<Vec<_>>();
-    let impls_tokens = if impls.is_empty() {
-        // Exclude leading newline for an empty impls list.
-        quote! {}
-    } else {
-        quote! {
-            __NEWLINE__
-            #(#impls)__NEWLINE__*
-        }
-    };
-
-    let mut specializations = std::mem::take(&mut cc_details_prereqs.template_specializations);
-    specializations.extend(
-        main_apis.values().flat_map(|api| api.prereqs.template_specializations.iter()).cloned(),
-    );
-
-    let mut specializations: HashMap<TemplateSpecialization, CcSnippet> = specializations
+    let worklist: Vec<_> = std::mem::take(&mut cc_details_prereqs.template_specializations)
         .into_iter()
-        // We sort here, so our details are added in a consistent order.
-        .sorted_unstable_by(|a, b| template_specialization_cmp(db.tcx(), a, b))
-        .map(|spec| {
-            let snippets = generate_template_specialization::generate_template_specialization(
-                db,
-                spec.clone(),
-            );
-            impls_cc_details.push(snippets.cc_details.clone().into_tokens(&mut cc_details_prereqs));
-            cc_api_impl.extend(snippets.rs_details.clone().into_tokens(&mut extern_c_decls));
-            (spec, snippets.main_api)
-        })
+        .chain(
+            main_apis.values().flat_map(|api| api.prereqs.template_specializations.iter()).cloned(),
+        )
+        .chain(collect_trait_impls(db))
         .collect();
+
+    let GeneratedSpecializations { mut specializations, impls_cc_details } =
+        generate_specializations_fixpoint(
+            db,
+            worklist,
+            &mut cc_details_prereqs,
+            &mut extern_c_decls,
+            &mut cc_api_impl,
+        );
 
     // Find the order of `main_apis` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
@@ -2165,7 +2048,6 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             __NEWLINE__ __NEWLINE__
             #ordered_cc
             __NEWLINE__
-            #impls_tokens
             #(#impls_cc_details)__NEWLINE__*
             __NEWLINE__
         }

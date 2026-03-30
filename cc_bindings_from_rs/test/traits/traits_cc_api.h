@@ -282,6 +282,129 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
   using impl = rs_std::impl<T, TraitWithAssociatedConst>;
 };
 
+}  // namespace traits
+
+template <>
+struct rs_std::impl<::traits::AssociatedTypeStruct,
+                    ::traits::AssociatedTypeTrait> {
+  static constexpr bool kIsImplemented = true;
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=148
+  using MyAssocType CRUBIT_INTERNAL_RUST_TYPE(
+      "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
+      "AssociatedTypeTrait>::MyAssocType") = std::int32_t;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=149
+  static std::int32_t get_my_assoc_type(
+      ::traits::AssociatedTypeStruct const& self);
+
+  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
+  // traits_golden::AssociatedTypeTrait>::UnsupportedAssocType` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=154:
+  // Definition `std::string::String` comes from the `alloc` crate, but no
+  // `--crate-header` was specified for this crate
+
+  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
+  // traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=155:
+  // Error formatting function return type `std::string::String`: Definition
+  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
+  // was specified for this crate
+};
+
+template <>
+struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=95
+  static std::int32_t const& $a
+  trait_do_something(::traits::LifetimeStruct const& self);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=99
+  static std::int32_t const& $(__anon1)
+      function_do_something(::traits::LifetimeStruct const& self);
+};
+
+template <>
+struct rs_std::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=79
+  static std::int32_t do_something(::traits::MyStruct const& self);
+};
+
+template <>
+struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=57
+  static std::int32_t do_something(::traits::MyStruct const& self);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=61
+  static std::int32_t consume_self(::traits::MyStruct self);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=65
+  static ::traits::MyStruct const& $(__anon1)
+      return_self(::traits::MyStruct const& self);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=69
+  static std::int32_t no_self();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=73
+  static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
+      ::traits::MyStruct const& self, ::traits::Foo x);
+};
+
+template <>
+struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=110
+  static std::int32_t do_something(::traits::MyStruct2 const& self);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=114
+  static std::int32_t consume_self(::traits::MyStruct2 self);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=118
+  static ::traits::MyStruct2 const& $(__anon1)
+      return_self(::traits::MyStruct2 const& self);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=122
+  static std::int32_t no_self();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=126
+  static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
+      ::traits::MyStruct2 const& self, ::traits::Foo x);
+};
+
+template <>
+struct rs_std::impl<::traits::StructWithAssociatedConst,
+                    ::traits::TraitWithAssociatedConst> {
+  static constexpr bool kIsImplemented = true;
+  static constexpr std::int32_t CONST_INT = INT32_C(10);
+
+  // Error generating bindings for `<traits_golden::StructWithAssociatedConst as
+  // traits_golden::TraitWithAssociatedConst>::CONST_STRUCT` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=174:
+  // Unsupported constant type: traits_golden::StructWithAssociatedConst
+};
+
+namespace traits {
+
 static_assert(
     sizeof(AssociatedTypeStruct) == 32,
     "Verify that ADT layout didn't change since this header got generated");
@@ -450,124 +573,60 @@ inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
 }
 }  // namespace traits
 
-template <>
-struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
-  static constexpr bool kIsImplemented = true;
+namespace traits {
+namespace __crubit_internal {
+extern "C" std::int32_t
+__crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
+    ::traits::AssociatedTypeStruct const&);
+}
+}  // namespace traits
+inline std::int32_t
+rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
+    get_my_assoc_type(::traits::AssociatedTypeStruct const& self) {
+  return traits::__crubit_internal::
+      __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(self);
+}
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=57
-  static std::int32_t do_something(::traits::MyStruct const& self);
+namespace traits {
+namespace __crubit_internal {
+extern "C" std::int32_t const& $a
+__crubit_thunk_LifetimeTrait_utrait_udo_usomething(
+    ::traits::LifetimeStruct const&);
+}
+}  // namespace traits
+inline std::int32_t const& $a
+rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
+    trait_do_something(::traits::LifetimeStruct const& self) {
+  return traits::__crubit_internal::
+      __crubit_thunk_LifetimeTrait_utrait_udo_usomething(self);
+}
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=61
-  static std::int32_t consume_self(::traits::MyStruct self);
+namespace traits {
+namespace __crubit_internal {
+extern "C" std::int32_t const& $(__anon1)
+    __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
+        ::traits::LifetimeStruct const&);
+}
+}  // namespace traits
+inline std::int32_t const& $(
+    __anon1) rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
+    function_do_something(::traits::LifetimeStruct const& self) {
+  return traits::__crubit_internal::
+      __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(self);
+}
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=65
-  static ::traits::MyStruct const& $(__anon1)
-      return_self(::traits::MyStruct const& self);
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=69
-  static std::int32_t no_self();
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=73
-  static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
-      ::traits::MyStruct const& self, ::traits::Foo x);
-};
-
-template <>
-struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=110
-  static std::int32_t do_something(::traits::MyStruct2 const& self);
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=114
-  static std::int32_t consume_self(::traits::MyStruct2 self);
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=118
-  static ::traits::MyStruct2 const& $(__anon1)
-      return_self(::traits::MyStruct2 const& self);
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=122
-  static std::int32_t no_self();
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=126
-  static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
-      ::traits::MyStruct2 const& self, ::traits::Foo x);
-};
-
-template <>
-struct rs_std::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=79
-  static std::int32_t do_something(::traits::MyStruct const& self);
-};
-
-template <>
-struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=95
-  static std::int32_t const& $a
-  trait_do_something(::traits::LifetimeStruct const& self);
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=99
-  static std::int32_t const& $(__anon1)
-      function_do_something(::traits::LifetimeStruct const& self);
-};
-
-template <>
-struct rs_std::impl<::traits::AssociatedTypeStruct,
-                    ::traits::AssociatedTypeTrait> {
-  static constexpr bool kIsImplemented = true;
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=148
-  using MyAssocType CRUBIT_INTERNAL_RUST_TYPE(
-      "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
-      "AssociatedTypeTrait>::MyAssocType") = std::int32_t;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=149
-  static std::int32_t get_my_assoc_type(
-      ::traits::AssociatedTypeStruct const& self);
-
-  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
-  // traits_golden::AssociatedTypeTrait>::UnsupportedAssocType` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=154:
-  // Definition `std::string::String` comes from the `alloc` crate, but no
-  // `--crate-header` was specified for this crate
-
-  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
-  // traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=155:
-  // Error formatting function return type `std::string::String`: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-};
-
-template <>
-struct rs_std::impl<::traits::StructWithAssociatedConst,
-                    ::traits::TraitWithAssociatedConst> {
-  static constexpr bool kIsImplemented = true;
-  static constexpr std::int32_t CONST_INT = INT32_C(10);
-
-  // Error generating bindings for `<traits_golden::StructWithAssociatedConst as
-  // traits_golden::TraitWithAssociatedConst>::CONST_STRUCT` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=174:
-  // Unsupported constant type: traits_golden::StructWithAssociatedConst
-};
+namespace traits {
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_DifferentTraitSameName_udo_usomething(
+    ::traits::MyStruct const&);
+}
+}  // namespace traits
+inline std::int32_t rs_std::
+    impl<::traits::MyStruct, ::traits::DifferentTraitSameName>::do_something(
+        ::traits::MyStruct const& self) {
+  return traits::__crubit_internal::
+      __crubit_thunk_DifferentTraitSameName_udo_usomething(self);
+}
 
 namespace traits {
 namespace __crubit_internal {
@@ -703,61 +762,6 @@ inline std::tuple<std::int32_t, std::int32_t> rs_std::
       __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
           self, &x, __return_value_storage);
   return std::make_tuple(*__return_value_0_storage, *__return_value_1_storage);
-}
-
-namespace traits {
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_DifferentTraitSameName_udo_usomething(
-    ::traits::MyStruct const&);
-}
-}  // namespace traits
-inline std::int32_t rs_std::
-    impl<::traits::MyStruct, ::traits::DifferentTraitSameName>::do_something(
-        ::traits::MyStruct const& self) {
-  return traits::__crubit_internal::
-      __crubit_thunk_DifferentTraitSameName_udo_usomething(self);
-}
-
-namespace traits {
-namespace __crubit_internal {
-extern "C" std::int32_t const& $a
-__crubit_thunk_LifetimeTrait_utrait_udo_usomething(
-    ::traits::LifetimeStruct const&);
-}
-}  // namespace traits
-inline std::int32_t const& $a
-rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
-    trait_do_something(::traits::LifetimeStruct const& self) {
-  return traits::__crubit_internal::
-      __crubit_thunk_LifetimeTrait_utrait_udo_usomething(self);
-}
-
-namespace traits {
-namespace __crubit_internal {
-extern "C" std::int32_t const& $(__anon1)
-    __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
-        ::traits::LifetimeStruct const&);
-}
-}  // namespace traits
-inline std::int32_t const& $(
-    __anon1) rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
-    function_do_something(::traits::LifetimeStruct const& self) {
-  return traits::__crubit_internal::
-      __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(self);
-}
-
-namespace traits {
-namespace __crubit_internal {
-extern "C" std::int32_t
-__crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
-    ::traits::AssociatedTypeStruct const&);
-}
-}  // namespace traits
-inline std::int32_t
-rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
-    get_my_assoc_type(::traits::AssociatedTypeStruct const& self) {
-  return traits::__crubit_internal::
-      __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(self);
 }
 
 #pragma clang diagnostic pop

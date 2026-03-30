@@ -97,6 +97,19 @@ NotImplemented final {
   static void __crubit_field_offset_assertions();
 };
 
+}  // namespace trait_impl
+
+template <>
+struct rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=18
+  static std::int32_t do_something(::trait_impl::MyStruct const& self);
+};
+
+namespace trait_impl {
+
 static_assert(
     sizeof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -135,15 +148,6 @@ inline void NotImplemented::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotImplemented, foo));
 }
 }  // namespace trait_impl
-
-template <>
-struct rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=18
-  static std::int32_t do_something(::trait_impl::MyStruct const& self);
-};
 
 namespace trait_impl {
 namespace __crubit_internal {

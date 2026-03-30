@@ -79,8 +79,27 @@ pub struct CcPrerequisites<'tcx> {
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum TemplateSpecialization<'tcx> {
     RsStdEnum(RsStdEnumTemplateSpecialization<'tcx>),
+    TraitImpl(TraitImplTemplateSpecialization),
+}
+
+#[derive(Clone, Debug)]
+pub struct TraitImplTemplateSpecialization {
+    pub self_ty_cc_name: TokenStream,
+    pub trait_impl: DefId,
+}
+impl PartialEq for TraitImplTemplateSpecialization {
+    fn eq(&self, other: &Self) -> bool {
+        self.trait_impl == other.trait_impl
+    }
+}
+impl Eq for TraitImplTemplateSpecialization {}
+impl Hash for TraitImplTemplateSpecialization {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.trait_impl.hash(state);
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -92,10 +111,18 @@ pub struct RsStdEnumTemplateSpecializationCore<'tcx> {
     pub tag_type_cc: CcSnippet<'tcx>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct RsStdEnumTemplateSpecialization<'tcx> {
     pub core: RsStdEnumTemplateSpecializationCore<'tcx>,
     pub kind: TemplateSpecializationKind<'tcx>,
+}
+impl std::fmt::Debug for RsStdEnumTemplateSpecialization<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RsStdEnumTemplateSpecialization")
+            .field("core", &self.core.self_ty_rs)
+            .field("kind", &self.kind)
+            .finish()
+    }
 }
 
 impl PartialEq for RsStdEnumTemplateSpecialization<'_> {

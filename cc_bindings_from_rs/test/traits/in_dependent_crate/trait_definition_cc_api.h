@@ -65,6 +65,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_definition_golden :: MyTrait")
   using impl = rs_std::impl<T, MyTrait>;
 };
 
+}  // namespace trait_definition
+
+template <>
+struct rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=14
+  static std::int32_t do_something(::trait_definition::MyStruct const& self);
+};
+
+namespace trait_definition {
+
 static_assert(
     sizeof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -80,15 +93,6 @@ inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, y));
 }
 }  // namespace trait_definition
-
-template <>
-struct rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
-  static constexpr bool kIsImplemented = true;
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=14
-  static std::int32_t do_something(::trait_definition::MyStruct const& self);
-};
 
 namespace trait_definition {
 namespace __crubit_internal {

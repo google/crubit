@@ -103,6 +103,42 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
 }
 const _: () = assert!(::core::mem::offset_of!(::traits_golden::StructWithAssociatedConst, x) == 0);
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
+    __self: &'static ::traits_golden::AssociatedTypeStruct,
+) -> i32 {
+    unsafe {
+        <::traits_golden::AssociatedTypeStruct as::traits_golden::AssociatedTypeTrait>::get_my_assoc_type(__self)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething(
+    __self: &'static ::traits_golden::LifetimeStruct<'static>,
+) -> &'static i32 {
+    unsafe {
+        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::trait_do_something(
+            __self,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
+    __self: &'static ::traits_golden::LifetimeStruct<'static>,
+) -> &'static i32 {
+    unsafe {
+        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::function_do_something(
+            __self,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_DifferentTraitSameName_udo_usomething(
+    __self: &'static ::traits_golden::MyStruct,
+) -> i32 {
+    unsafe {
+        <::traits_golden::MyStruct as ::traits_golden::DifferentTraitSameName>::do_something(__self)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething(
     __self: &'static ::traits_golden::MyStruct,
 ) -> i32 {
@@ -186,41 +222,5 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
         let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
         (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
         (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_DifferentTraitSameName_udo_usomething(
-    __self: &'static ::traits_golden::MyStruct,
-) -> i32 {
-    unsafe {
-        <::traits_golden::MyStruct as ::traits_golden::DifferentTraitSameName>::do_something(__self)
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething(
-    __self: &'static ::traits_golden::LifetimeStruct<'static>,
-) -> &'static i32 {
-    unsafe {
-        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::trait_do_something(
-            __self,
-        )
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
-    __self: &'static ::traits_golden::LifetimeStruct<'static>,
-) -> &'static i32 {
-    unsafe {
-        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::function_do_something(
-            __self,
-        )
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
-    __self: &'static ::traits_golden::AssociatedTypeStruct,
-) -> i32 {
-    unsafe {
-        <::traits_golden::AssociatedTypeStruct as::traits_golden::AssociatedTypeTrait>::get_my_assoc_type(__self)
     }
 }
