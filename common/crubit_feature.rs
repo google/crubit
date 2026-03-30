@@ -31,7 +31,7 @@ flagset::flags! {
 
         /// Unconditionally assume that the `this` pointer is a reference, even in the absence of
         /// a lifetime annotation or other justification.
-        AssumeThisLifetime,
+        AssumeThisLifetimes,
 
         /// Disable AssumeLifetimes (useful for :experimental).
         NoAssumeLifetimes,
@@ -54,7 +54,7 @@ impl CrubitFeature {
     /// The name of this feature.
     ///
     /// This is used for serialization/deserialization: an aspect hint maps to a
-    /// list of short names, whicwhichbh are passed to Crubit to enable the
+    /// list of short names, which are passed to Crubit to enable the
     /// corresponding feature bits.
     pub fn short_name(&self) -> &'static str {
         match self {
@@ -63,7 +63,7 @@ impl CrubitFeature {
             Self::Types => "types",
             Self::Experimental => "experimental",
             Self::AssumeLifetimes => "assume_lifetimes",
-            Self::AssumeThisLifetime => "assume_this_lifetimes",
+            Self::AssumeThisLifetimes => "assume_this_lifetimes",
             Self::NoAssumeLifetimes => "no_assume_lifetimes",
             Self::Fmt => "fmt",
             Self::Callables => "callables",
@@ -82,7 +82,7 @@ impl CrubitFeature {
             Self::Types => "//features:types",
             Self::Experimental => "//features:experimental",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
-            Self::AssumeThisLifetime => "//features:assume_this_lifetimes",
+            Self::AssumeThisLifetimes => "//features:assume_this_lifetimes",
             Self::NoAssumeLifetimes => "//features:no_assume_lifetimes",
             Self::Fmt => "//features:fmt",
             Self::Callables => "//features:callables",
@@ -105,7 +105,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"types" => CrubitFeature::Types.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
-        b"assume_this_lifetimes" => CrubitFeature::AssumeThisLifetime.into(),
+        b"assume_this_lifetimes" => CrubitFeature::AssumeThisLifetimes.into(),
         b"no_assume_lifetimes" => CrubitFeature::NoAssumeLifetimes.into(),
         b"fmt" => CrubitFeature::Fmt.into(),
         b"callables" => CrubitFeature::Callables.into(),
@@ -223,7 +223,7 @@ mod tests {
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
-                | CrubitFeature::AssumeThisLifetime
+                | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -257,7 +257,7 @@ mod tests {
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
-                | CrubitFeature::AssumeThisLifetime
+                | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -276,7 +276,7 @@ mod tests {
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
-                | CrubitFeature::AssumeThisLifetime
+                | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
@@ -296,7 +296,7 @@ mod tests {
                 | CrubitFeature::Wrapper
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
-                | CrubitFeature::AssumeThisLifetime
+                | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Fmt
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView

@@ -1317,7 +1317,7 @@ fn rs_type_kinds_for_func(
                 };
                 if db.ir()
                     .target_crubit_features(&func.owning_target)
-                    .contains(crubit_feature::CrubitFeature::AssumeThisLifetime) {
+                    .contains(crubit_feature::CrubitFeature::AssumeThisLifetimes) {
                     infer_param_lifetimes = true;
                 }
                 if infer_param_lifetimes || lifetime.is_some() {
