@@ -380,9 +380,6 @@
 //   ```
 // * Formattable but non-public bases
 // * Deleted functions
-//
-// TODO: b/274965650 - Only works for the `fmt` Crubit feature. Once launched,
-// remove this TODO.
 #define CRUBIT_OVERRIDE_DISPLAY(should_bind) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_override_display", should_bind)
 
