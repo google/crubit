@@ -14,8 +14,6 @@
 %enddef
 %define CRUBIT_TRAIT_DERIVE(...)
 %enddef
-%define CRUBIT_BRIDGE_VOID_CONVERTERS(...)
-%enddef
 %define CRUBIT_BRIDGE_SLICE_PTR(abi)
 %enddef
 %define CRUBIT_MUST_BIND

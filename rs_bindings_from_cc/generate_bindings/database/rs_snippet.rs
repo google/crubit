@@ -598,11 +598,6 @@ impl Callable {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum BridgeRsTypeKind {
-    BridgeVoidConverters {
-        rust_name: Rc<str>,
-        cpp_to_rust_converter: Rc<str>,
-        rust_to_cpp_converter: Rc<str>,
-    },
     Bridge {
         rust_name: Rc<str>,
         abi_rust: Rc<str>,
@@ -643,15 +638,6 @@ impl BridgeRsTypeKind {
         };
 
         let bridge_rs_type_kind = match bridge_type.clone() {
-            BridgeType::BridgeVoidConverters {
-                rust_name,
-                cpp_to_rust_converter,
-                rust_to_cpp_converter,
-            } => BridgeRsTypeKind::BridgeVoidConverters {
-                rust_name,
-                cpp_to_rust_converter,
-                rust_to_cpp_converter,
-            },
             BridgeType::ProtoMessageBridge { rust_name } => {
                 BridgeRsTypeKind::ProtoMessageBridge { rust_name }
             }
@@ -716,10 +702,6 @@ impl BridgeRsTypeKind {
         };
 
         Ok(Some(bridge_rs_type_kind))
-    }
-
-    pub fn is_void_converters_bridge_type(&self) -> bool {
-        matches!(self, BridgeRsTypeKind::BridgeVoidConverters { .. })
     }
 }
 
@@ -969,20 +951,6 @@ impl RsTypeKind {
         matches!(self.unalias(), RsTypeKind::BridgeType { .. })
     }
 
-    pub fn is_pointer_bridge_type(&self) -> bool {
-        matches!(
-            self.unalias(),
-            RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::BridgeVoidConverters { .. },
-                ..
-            }
-        )
-    }
-
-    pub fn is_crubit_abi_bridge_type(&self) -> bool {
-        self.is_bridge_type() && !self.is_pointer_bridge_type()
-    }
-
     pub fn is_proto_message_bridge_type(&self) -> bool {
         matches!(
             self.unalias(),
@@ -1086,19 +1054,7 @@ impl RsTypeKind {
                         )
                     }
                 }
-                RsTypeKind::BridgeType { bridge_type, original_type } => {
-                    let is_pointer_bridge =
-                        matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
-
-                    if !original_type.has_unique_owning_target() && is_pointer_bridge {
-                        require_feature(
-                            CrubitFeature::Experimental,
-                            Some(&|| "bridged template instantiation is not yet supported".into()),
-                        )
-                    } else {
-                        require_feature(CrubitFeature::Types, None)
-                    }
-                }
+                RsTypeKind::BridgeType { .. } => require_feature(CrubitFeature::Types, None),
                 RsTypeKind::ExistingRustType { .. }
                 | RsTypeKind::Enum { .. }
                 | RsTypeKind::TypeAlias { .. }
@@ -1308,9 +1264,9 @@ impl RsTypeKind {
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                 // We cannot get the information of the Rust type so we assume it is not Copy.
-                BridgeRsTypeKind::BridgeVoidConverters { .. }
-                | BridgeRsTypeKind::Bridge { .. }
-                | BridgeRsTypeKind::ProtoMessageBridge { .. } => false,
+                BridgeRsTypeKind::Bridge { .. } | BridgeRsTypeKind::ProtoMessageBridge { .. } => {
+                    false
+                }
                 BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
                 BridgeRsTypeKind::StdString { .. } => false,
@@ -1548,7 +1504,7 @@ impl RsTypeKind {
         } else if self.is_void() {
             // void is a subset of is_c_abi_compatible_by_value, so must be checked before.
             PassingConvention::Void
-        } else if self.is_crubit_abi_bridge_type() {
+        } else if self.is_bridge_type() {
             PassingConvention::ComposablyBridged
         } else if !self.is_unpin() {
             PassingConvention::Ctor
@@ -1850,9 +1806,6 @@ impl RsTypeKind {
             }
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
-                    BridgeRsTypeKind::BridgeVoidConverters { rust_name, .. } => {
-                        fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
-                    }
                     BridgeRsTypeKind::Bridge { rust_name, generic_types, .. } => {
                         let path = fully_qualify_type(
                             db,
@@ -2025,8 +1978,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         self.todo.extend(param_types.iter().rev());
                     }
                     RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
-                        BridgeRsTypeKind::BridgeVoidConverters { .. }
-                        | BridgeRsTypeKind::ProtoMessageBridge { .. }
+                        BridgeRsTypeKind::ProtoMessageBridge { .. }
                         | BridgeRsTypeKind::Bridge { .. } => {}
                         BridgeRsTypeKind::StdOptional(t) => self.todo.push(t),
                         BridgeRsTypeKind::StdPair(t1, t2) => {

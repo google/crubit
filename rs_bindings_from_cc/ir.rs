@@ -1077,11 +1077,6 @@ pub enum FnTrait {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum BridgeType {
-    BridgeVoidConverters {
-        rust_name: Rc<str>,
-        rust_to_cpp_converter: Rc<str>,
-        cpp_to_rust_converter: Rc<str>,
-    },
     ProtoMessageBridge {
         rust_name: Rc<str>,
     },

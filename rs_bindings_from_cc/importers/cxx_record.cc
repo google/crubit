@@ -274,31 +274,15 @@ std::optional<std::array<std::string, N>> GetKeyValues(
 // Returns the bridge type annotation for the given `record_decl` if it exists.
 std::optional<BridgeType> GetBridgeTypeAnnotation(
     ImportContext& ictx, const clang::RecordDecl& record_decl) {
-  auto void_converter_values = GetKeyValues<3>(
-      record_decl,
-      {"crubit_bridge_type", "crubit_bridge_type_rust_to_cpp_converter",
-       "crubit_bridge_type_cpp_to_rust_converter"});
   auto crubit_abi_values = GetKeyValues<3>(
       record_decl, {"crubit_bridge_rust_name", "crubit_bridge_abi_rust",
                     "crubit_bridge_abi_cpp"});
-  CHECK(1 >= void_converter_values.has_value() + crubit_abi_values.has_value())
-      << "CRUBIT_BRIDGE_VOID_CONVERTERS, CRUBIT_BRIDGE, and are mutually "
-         "exclusive, and cannot be used on the same type.";
 
   if (crubit::IsProto2Message(record_decl)) {
     return BridgeType{BridgeType::ProtoMessageBridge{
         .rust_name = record_decl.getNameAsString()}};
   }
 
-  if (void_converter_values.has_value()) {
-    auto [rust_name, rust_to_cpp_converter, cpp_to_rust_converter] =
-        *void_converter_values;
-    return BridgeType{BridgeType::BridgeVoidConverters{
-        .rust_name = std::move(rust_name),
-        .rust_to_cpp_converter = std::move(rust_to_cpp_converter),
-        .cpp_to_rust_converter = std::move(cpp_to_rust_converter),
-    }};
-  }
   if (crubit_abi_values.has_value()) {
     std::vector<CcType> template_args;
     // If this is a template specialization, need to iterate through the

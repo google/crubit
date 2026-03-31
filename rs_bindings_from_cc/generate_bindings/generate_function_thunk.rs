@@ -8,8 +8,7 @@ use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
-    format_generic_params, unique_lifetimes, BridgeRsTypeKind, Lifetime, Mutability,
-    PassingConvention, RsTypeKind,
+    format_generic_params, unique_lifetimes, Lifetime, Mutability, PassingConvention, RsTypeKind,
 };
 use error_report::{anyhow, bail};
 use ir::*;
@@ -428,43 +427,22 @@ pub fn generate_function_thunk_impl(
         .map(|p| format_cc_ident(&p.identifier.identifier))
         .collect::<Result<Vec<_>>>()?;
 
-    let mut conversion_externs = quote! {};
     let mut conversion_stmts = quote! {};
-    let convert_ident =
-        |ident: &Ident| -> Ident { format_ident!("__converted_{}", ident.to_string()) };
     let mut param_types = func
         .params
         .iter()
         .map(|p| {
             let arg_type = db.rs_type_kind(p.type_.clone())?;
             let cpp_type = cpp_type_name::format_cpp_type(&arg_type, db)?;
-            if let RsTypeKind::BridgeType { bridge_type, .. } = arg_type.unalias() {
+            if arg_type.is_bridge_type() {
                 let ident = format_cc_ident(&p.identifier.identifier)?;
-                match bridge_type {
-                    BridgeRsTypeKind::BridgeVoidConverters { rust_to_cpp_converter, .. } => {
-                        let convert_function = format_cc_ident(rust_to_cpp_converter)?;
-                        let cpp_ident = convert_ident(&ident);
-                        conversion_externs.extend(quote! {
-                            extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
-                        });
-                        conversion_stmts.extend(quote! {
-                            ::crubit::LazyInit<#cpp_type> #cpp_ident;
-                        });
-                        conversion_stmts.extend(quote! {
-                            #convert_function(#ident, &#cpp_ident.val);
-                        });
-                        Ok(quote! { void* })
-                    }
-                    _ => {
-                        let crubit_abi_type = db.crubit_abi_type(arg_type)?;
-                        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                        let decoder = format_ident!("__{ident}_decoder");
-                        conversion_stmts.extend(quote! {
-                            ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
-                        });
-                        Ok(quote! { const unsigned char* })
-                    }
-                }
+                let crubit_abi_type = db.crubit_abi_type(arg_type)?;
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                let decoder = format_ident!("__{ident}_decoder");
+                conversion_stmts.extend(quote! {
+                    ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
+                });
+                Ok(quote! { const unsigned char* })
             } else if !arg_type.is_c_abi_compatible_by_value() {
                 // non-Unpin types are wrapped by a pointer in the thunk.
                 Ok(quote! {#cpp_type *})
@@ -479,12 +457,6 @@ pub fn generate_function_thunk_impl(
         .iter()
         .map(|p| {
             let ident = format_cc_ident(&p.identifier.identifier)?;
-            let ident = if db.rs_type_kind(p.type_.clone())?.is_pointer_bridge_type() {
-                let formatted_ident = convert_ident(&ident);
-                quote! { &(#formatted_ident.val) }
-            } else {
-                ident.to_token_stream()
-            };
             match &p.type_.variant {
                 CcTypeVariant::Pointer(pointer) => match pointer.kind {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
@@ -545,19 +517,7 @@ pub fn generate_function_thunk_impl(
         }
         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
             param_idents.insert(0, format_cc_ident("__return")?);
-            if let RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
-                ..
-            } = return_type_kind.unalias()
-            {
-                let convert_function = format_cc_ident(cpp_to_rust_converter)?;
-                conversion_externs.extend(quote! {
-                    extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
-                });
-                param_types.insert(0, quote! {void *});
-            } else {
-                param_types.insert(0, quote! {#return_type_cpp_spelling *});
-            }
+            param_types.insert(0, quote! {#return_type_cpp_spelling *});
             quote! {void}
         }
         PassingConvention::AbiCompatible
@@ -609,21 +569,9 @@ pub fn generate_function_thunk_impl(
         }
         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
             let out_param = &param_idents[0];
-            if let RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
-                ..
-            } = return_type_kind.unalias()
-            {
-                let convert_function = format_cc_ident(cpp_to_rust_converter)?;
-                quote! {
-                    auto __original_cpp_struct = #return_expr;
-                    #convert_function(&__original_cpp_struct, #out_param)
-                }
-            } else {
-                // Explicitly use placement `new` so that we get guaranteed copy elision in
-                // C++17.
-                quote! {new(#out_param) auto(#return_expr)}
-            }
+            // Explicitly use placement `new` so that we get guaranteed copy elision in
+            // C++17.
+            quote! {new(#out_param) auto(#return_expr)}
         }
         PassingConvention::Void => return_expr,
         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
@@ -654,7 +602,6 @@ pub fn generate_function_thunk_impl(
     };
 
     Ok(Some(ThunkImpl::Function {
-        conversion_externs,
         return_type_name,
         thunk_ident,
         param_types,

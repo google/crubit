@@ -1033,7 +1033,6 @@ fn cc_struct_operator_delete_impl(
 
     let cc_record_name = cpp_type_name_for_record(record.as_ref(), db)?;
     let thunk_impl = ThunkImpl::Function {
-        conversion_externs: quote! {},
         return_type_name: quote! { void },
         thunk_ident: thunk_ident.clone(),
         param_types: vec![quote! { #cc_record_name* }],

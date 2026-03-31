@@ -24,34 +24,6 @@ cc_bindings_from_rust(
 )
 
 cc_library(
-    name = "bridging_lib",
-    hdrs = ["bridging_lib.h"],
-    aspect_hints = [
-        "//features:experimental",
-        ":converter",
-    ],
-    deps = [
-        "//support/public:bindings_support",  # build_cleaner: keep
-    ],
-)
-
-additional_rust_srcs_for_crubit_bindings(
-    name = "converter",
-    srcs = ["converter.rs"],
-)
-
-crubit_rust_test(
-    name = "test",
-    srcs = ["test.rs"],
-    cc_deps = [
-        ":bridging_lib",
-    ],
-    deps = [
-        "@crate_index//:googletest",
-    ],
-)
-
-cc_library(
     name = "string_test_lib",
     hdrs = ["string_test_lib.h"],
     aspect_hints = [
