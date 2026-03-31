@@ -856,8 +856,35 @@ fn generate_using<'tcx>(
             create_type_alias(db, def_id, using_name.as_str(), use_type)
         }
         DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str()),
-        _ => {
-            bail!("Unsupported use statement that refers to this type of the entity: {:#?}", def_id)
+        DefKind::Trait => {
+            if !db.supported_traits().contains(&def_id) {
+                bail!(
+                    "Trait {} is not yet supported, so we're not generating a using for it.",
+                    tcx.def_path_str(def_id)
+                )
+            }
+            let canonical_name = db.symbol_canonical_name(def_id).expect(
+                "generate_trait was unexpectedly called on an item without a canonical name",
+            );
+
+            let trait_name = canonical_name.format_for_cc(db)?;
+            let using_name_ident =
+                format_cc_ident(db, using_name.as_str()).context("Error formatting using name")?;
+            let mut prereqs = CcPrerequisites::default();
+            prereqs.depend_on_def(db, def_id)?;
+            let tokens = if using_name_ident == canonical_name.unqualified.cpp_name.as_str() {
+                quote! { using #trait_name; }
+            } else {
+                quote! { using #using_name_ident = #trait_name; }
+            };
+            Ok(CcSnippet { prereqs, tokens })
+        }
+        kind => {
+            bail!(
+                "Unsupported use statement that refers to this type of the entity: {} of kind {:?}",
+                tcx.def_path_str(def_id),
+                kind
+            )
         }
     }
 }

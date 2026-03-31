@@ -44,3 +44,8 @@ TEST(TraitsTest, AssociatedConst) {
   static_assert(traits::TraitWithAssociatedConst::impl<
                     traits::StructWithAssociatedConst>::CONST_INT == 10);
 }
+
+TEST(TraitsTest, Aliases) {
+  static_assert(std::is_same_v<traits::aliases::MyTrait, traits::MyTrait>);
+  static_assert(std::is_same_v<traits::aliases::RenamedTrait, traits::MyTrait>);
+}

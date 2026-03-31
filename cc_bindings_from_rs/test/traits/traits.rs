@@ -128,6 +128,12 @@ impl MyTrait for MyStruct2 {
     }
 }
 
+pub mod aliases {
+    pub use super::MyTrait;
+
+    pub use super::MyTrait as RenamedTrait;
+}
+
 pub trait AssociatedTypeTrait {
     type MyAssocType;
 

@@ -33,7 +33,7 @@
 namespace traits {
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=142
+// cc_bindings_from_rs/test/traits/traits.rs;l=148
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: traits_golden :: AssociatedTypeStruct") alignas(8)
     [[clang::trivial_abi]] AssociatedTypeStruct final {
@@ -65,7 +65,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   std::array<unsigned char, 24> a;
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/traits.rs;l=143
+    // cc_bindings_from_rs/test/traits/traits.rs;l=149
     std::int32_t b;
   };
   unsigned char __padding0[4];
@@ -75,7 +75,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=131
+// cc_bindings_from_rs/test/traits/traits.rs;l=137
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: AssociatedTypeTrait")
     AssociatedTypeTrait {
   template <typename T>
@@ -242,7 +242,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyTrait") MyTrait {
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=167
+// cc_bindings_from_rs/test/traits/traits.rs;l=173
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: traits_golden :: StructWithAssociatedConst") alignas(4)
     [[clang::trivial_abi]] StructWithAssociatedConst final {
@@ -266,7 +266,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/traits.rs;l=168
+    // cc_bindings_from_rs/test/traits/traits.rs;l=174
     std::int32_t x;
   };
 
@@ -275,7 +275,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=160
+// cc_bindings_from_rs/test/traits/traits.rs;l=166
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
     TraitWithAssociatedConst {
   template <typename T>
@@ -289,25 +289,25 @@ struct rs_std::impl<::traits::AssociatedTypeStruct,
                     ::traits::AssociatedTypeTrait> {
   static constexpr bool kIsImplemented = true;
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=148
+  // cc_bindings_from_rs/test/traits/traits.rs;l=154
   using MyAssocType CRUBIT_INTERNAL_RUST_TYPE(
       "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
       "AssociatedTypeTrait>::MyAssocType") = std::int32_t;
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=149
+  // cc_bindings_from_rs/test/traits/traits.rs;l=155
   static std::int32_t get_my_assoc_type(
       ::traits::AssociatedTypeStruct const& self);
 
   // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
   // traits_golden::AssociatedTypeTrait>::UnsupportedAssocType` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=154:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=160:
   // Definition `std::string::String` comes from the `alloc` crate, but no
   // `--crate-header` was specified for this crate
 
   // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
   // traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=155:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=161:
   // Error formatting function return type `std::string::String`: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
@@ -399,7 +399,7 @@ struct rs_std::impl<::traits::StructWithAssociatedConst,
 
   // Error generating bindings for `<traits_golden::StructWithAssociatedConst as
   // traits_golden::TraitWithAssociatedConst>::CONST_STRUCT` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=174:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=180:
   // Unsupported constant type: traits_golden::StructWithAssociatedConst
 };
 
@@ -546,6 +546,15 @@ static_assert(std::is_trivially_copy_assignable_v<::traits::MyStruct2>);
 inline void MyStruct2::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct2, y));
 }
+}  // namespace traits
+
+namespace traits::aliases {
+using ::traits::MyTrait;
+using RenamedTrait = ::traits::MyTrait;
+}  // namespace traits::aliases
+
+namespace traits {
+
 static_assert(
     sizeof(StructWithAssociatedConst) == 4,
     "Verify that ADT layout didn't change since this header got generated");
