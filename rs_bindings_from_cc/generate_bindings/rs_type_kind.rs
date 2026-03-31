@@ -77,9 +77,12 @@ pub fn rs_type_kind_with_lifetime_elision(
                 }
             };
             Ok(match pointer.kind {
-                PointerTypeKind::LValueRef => {
-                    RsTypeKind::Reference { referent: pointee, mutability, lifetime }
-                }
+                PointerTypeKind::LValueRef => RsTypeKind::Reference {
+                    referent: pointee,
+                    mutability,
+                    lifetime,
+                    is_cref: pointer.is_cref,
+                },
                 PointerTypeKind::RValueRef => {
                     RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime }
                 }

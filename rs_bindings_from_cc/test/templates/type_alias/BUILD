@@ -38,6 +38,7 @@ crubit_rust_test(
         ":type_alias_in_different_target",
     ],
     deps = [
+        "//support:cref",
         "//support:forward_declare",
         "@crate_index//:googletest",
     ],

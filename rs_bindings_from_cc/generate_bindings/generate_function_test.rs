@@ -1980,7 +1980,7 @@ fn test_simple_explicit_lifetime() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn Add<'a>(x: &'a mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int {
+            pub fn Add<'a>(x: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::ffi_11::c_int> {
                 unsafe { crate::detail::__rust_thunk___Z3AddRi(x) }
             }
         }
@@ -1993,7 +1993,7 @@ fn test_simple_explicit_lifetime() -> Result<()> {
                 use super::*;
                 unsafe extern "C" {
                     #[link_name = "_Z3AddRi"]
-                    pub(crate) unsafe fn __rust_thunk___Z3AddRi<'a>(x: &'a mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int;
+                    pub(crate) unsafe fn __rust_thunk___Z3AddRi<'a>(x: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::ffi_11::c_int>;
                 }
             }
         }

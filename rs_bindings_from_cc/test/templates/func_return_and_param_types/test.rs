@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use cref::CRef;
 use func_return_and_param_types::*;
 use googletest::prelude::*;
 
@@ -15,7 +16,8 @@ fn test_template_instantiation_in_return_value_and_parameter_type() {
 
     // Class template instantiation used as a function return type.
     let s = CreateInstanceOfMyTemplate(123);
-    assert_eq!(123, *s.value());
+    // SAFETY: s is alive while s.value() is alive, and no other references exist.
+    assert_eq!(123, *unsafe { CRef::unchanging(s.value()) });
 
     // Const-ref to class template instantiation used as a function parameter type.
     let d = DoubleInstanceOfMyTemplate(&s);

@@ -463,6 +463,7 @@ pub enum RsTypeKind {
         referent: Rc<RsTypeKind>,
         mutability: Mutability,
         lifetime: Lifetime,
+        is_cref: bool,
     },
     RvalueReference {
         referent: Rc<RsTypeKind>,
@@ -1216,7 +1217,10 @@ impl RsTypeKind {
                     "`self` has no lifetime. Use lifetime annotations to create bindings for this function."
                 )
             }
-            RsTypeKind::Reference { referent, lifetime, mutability } => {
+            RsTypeKind::Reference { referent, lifetime, mutability, is_cref } => {
+                if *is_cref {
+                    bail!("Internal error (crubit.rs-bug): `self` should not be CRef/CMut.");
+                };
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
@@ -1425,12 +1429,20 @@ impl RsTypeKind {
                     quote! {* #mutability #pointee_ }
                 }
             }
-            RsTypeKind::Reference { referent, mutability, lifetime } => {
+            RsTypeKind::Reference { referent, mutability, lifetime, is_cref } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
-                let mut tokens = quote! {& #lifetime #mut_ #referent_};
+                let mut tokens = if *is_cref {
+                    match mutability {
+                        Mutability::Mut => quote! { ::cref::CMut<#lifetime, #referent_> },
+                        Mutability::Const => quote! { ::cref::CRef<#lifetime, #referent_> },
+                    }
+                } else {
+                    quote! {& #lifetime #mut_ #referent_ }
+                };
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
+                    // TODO(zarko): Is Pin right for cref here?
                     tokens = quote! {::core::pin::Pin< #tokens >};
                 }
                 tokens
@@ -1703,12 +1715,20 @@ impl RsTypeKind {
                     quote! {* #mutability #pointee_tokens }
                 }
             }
-            RsTypeKind::Reference { referent, mutability, lifetime } => {
-                let mut_ = mutability.format_for_reference();
+            RsTypeKind::Reference { referent, mutability, lifetime, is_cref } => {
                 let lifetime = lifetime.format_for_reference();
                 let referent_tokens = referent.to_token_stream(db);
-                let mut tokens = quote! {& #lifetime #mut_ #referent_tokens};
+                let mut tokens = if *is_cref {
+                    match mutability {
+                        Mutability::Mut => quote! { ::cref::CMut<#lifetime, #referent_tokens> },
+                        Mutability::Const => quote! { ::cref::CRef<#lifetime, #referent_tokens> },
+                    }
+                } else {
+                    let mut_ = mutability.format_for_reference();
+                    quote! {& #lifetime #mut_ #referent_tokens}
+                };
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
+                    // TODO(zarko): Is this the right thing for CRef?
                     tokens = quote! { ::core::pin::Pin< #tokens > };
                 }
                 tokens
@@ -2071,6 +2091,7 @@ mod tests {
             referent,
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
+            is_cref: false,
         };
         assert_rs_matches!(reference.to_token_stream(EmptyDatabase), quote! {&::T});
     }
@@ -2129,6 +2150,7 @@ mod tests {
             referent: Rc::new(int.clone()),
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
+            is_cref: false,
         };
         for func_ptr in [
             RsTypeKind::FuncPtr {

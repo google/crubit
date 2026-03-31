@@ -1054,6 +1054,8 @@ fn adjust_param_types_for_trait_impl(
                 referent: Rc::new(param_type.clone()),
                 mutability: Mutability::Const,
                 lifetime: Lifetime::new("_"),
+                // This is a parameter type, so we don't want to lower to CRef.
+                is_cref: false,
             };
             (quote! {&mut }, quote! {.clone()})
         })

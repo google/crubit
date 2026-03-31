@@ -51,6 +51,7 @@ deps_for_bindings(
         "//support:forward_declare",
         "//support:oops",
         "//support:bridge_rust",
+        "//support:cref",
         "//support/rs_std:dyn_callable_rs",
         "//support/rs_std:lossy_formatter",
         # Required for `Copy` trait assertions added to the generated Rust

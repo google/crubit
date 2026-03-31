@@ -16,7 +16,7 @@
 
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/free_function.h;l=8
 #[inline(always)]
-pub fn increment_int_ref<'a>(a: &'a mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int {
+pub fn increment_int_ref<'a>(a: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::ffi_11::c_int> {
     unsafe { crate::detail::__rust_thunk___Z17increment_int_refRi(a) }
 }
 
@@ -27,6 +27,6 @@ mod detail {
         #[link_name = "_Z17increment_int_refRi"]
         pub(crate) unsafe fn __rust_thunk___Z17increment_int_refRi<'a>(
             a: &'a mut ::ffi_11::c_int,
-        ) -> &'a mut ::ffi_11::c_int;
+        ) -> ::cref::CMut<'a, ::ffi_11::c_int>;
     }
 }

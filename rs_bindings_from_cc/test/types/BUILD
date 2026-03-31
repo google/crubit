@@ -41,6 +41,7 @@ crubit_rust_test(
     ],
     proc_macro_deps = ["//common:item_exists"],
     deps = [
+        "//support:cref",
         "//support/ffi_11",
         "@crate_index//:googletest",
     ],

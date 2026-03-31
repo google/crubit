@@ -38,6 +38,7 @@ crubit_rust_test(
         ":free_function",
     ],
     deps = [
+        "//support:cref",
         "@crate_index//:googletest",
     ],
 )
@@ -67,6 +68,7 @@ crubit_rust_test(
         ":member_function",
     ],
     deps = [
+        "//support:cref",
         "@crate_index//:googletest",
     ],
 )
@@ -100,6 +102,59 @@ crubit_rust_test(
     deps = [
         "@crate_index//:googletest",
     ],
+)
+
+crubit_test_cc_library(
+    name = "crefs",
+    srcs = ["crefs.cc"],
+    hdrs = ["crefs.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":test_annotations",
+    ],
+)
+
+golden_test(
+    name = "crefs_golden_test",
+    basename = "crefs",
+    cc_library = "crefs",
+    golden_cc = "crefs_api_impl.cc",
+    golden_rs = "crefs_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "crefs_test",
+    srcs = ["crefs_test.rs"],
+    cc_deps = [
+        ":crefs",
+    ],
+    deps = [
+        "//support:cref",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "assumed_c9",
+    srcs = ["assumed_c9.cc"],
+    hdrs = ["assumed_c9.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":test_annotations",
+        "//rs_bindings_from_cc/test/c9:co",
+    ],
+)
+
+golden_test(
+    name = "assumed_c9_golden_test",
+    basename = "assumed_c9",
+    cc_library = "assumed_c9",
+    golden_cc = "assumed_c9_api_impl.cc",
+    golden_rs = "assumed_c9_rs_api.rs",
 )
 
 crubit_test_cc_library(

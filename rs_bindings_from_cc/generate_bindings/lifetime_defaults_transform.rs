@@ -41,7 +41,7 @@ fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
     }
 }
 
-fn record_lifetime_arity(db: &BindingsGenerator, rc: &Record) -> Result<usize, arc_anyhow::Error> {
+fn record_lifetime_arity(_db: &BindingsGenerator, rc: &Record) -> Result<usize, arc_anyhow::Error> {
     // TODO(zarko): Handle the effects of [[lifetimebound]] et al on arity.
     Ok(rc.lifetime_inputs.len())
 }
@@ -333,6 +333,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// assigned.
     fn add_lifetime_to_output_type(
         &mut self,
+        use_crefs: bool,
         lifetime_hint: &Vec<Rc<str>>,
         new_bindings: &mut Vec<Rc<str>>,
         ty: &CcType,
@@ -374,15 +375,22 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                                 .get_or_push_new_binding(l, |name| new_bindings.push(name.clone()))
                         })
                         .collect();
+                    // TODO(zarko): Recurse on pty.pointee_type.
+                    new_ty.variant =
+                        CcTypeVariant::Pointer(PointerType { is_cref: use_crefs, ..pty.clone() });
                     return Ok(new_ty);
                 }
                 // If there is no viable inferred lifetime, we need to downgrade this to a raw
                 // pointer. We can at least mark it non-null. (An argument could be made about
                 // doing this later on provided we have a fuller treatement of safe/unsafe types
                 // selected by the presence of lifetime inputs.)
-                let kind =
-                    if lifetime_hint.is_empty() { PointerTypeKind::NonNull } else { pty.kind };
+                let (kind, is_cref) = if lifetime_hint.is_empty() {
+                    (PointerTypeKind::NonNull, false)
+                } else {
+                    (pty.kind, use_crefs && pty.kind == PointerTypeKind::LValueRef)
+                };
                 let pointee_type = self.add_lifetime_to_output_type(
+                    use_crefs,
                     lifetime_hint,
                     new_bindings,
                     &pty.pointee_type,
@@ -390,6 +398,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 new_ty.variant = CcTypeVariant::Pointer(PointerType {
                     pointee_type: pointee_type.into(),
                     kind,
+                    is_cref,
                     ..pty.clone()
                 });
                 new_ty.explicit_lifetimes = lifetime_hint.clone();
@@ -498,6 +507,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         let mut this_state = LifetimeState::Unseen;
         let mut had_this = false;
         new_func.lifetime_inputs.clear();
+        let is_operator = matches!(func.cc_name, ir::UnqualifiedIdentifier::Operator(_));
         // Note that we generate a new LifetimeDefaults per Item that we're importing, so we don't
         // need to pop these bindings. (We *do* need to worry about unbinding names for internal
         // binders, like function types.)
@@ -530,6 +540,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             _ => self.get_lifetime_for_state(&this_state),
         };
         new_func.return_type = self.add_lifetime_to_output_type(
+            !is_operator,
             &lifetime,
             &mut new_func.lifetime_inputs,
             &new_func.return_type,

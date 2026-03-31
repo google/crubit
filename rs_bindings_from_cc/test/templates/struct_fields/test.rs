@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use cref::CRef;
 use googletest::prelude::*;
 use struct_fields::*;
 
@@ -15,5 +16,6 @@ fn test_template_instantiation_in_return_value_and_parameter_type() {
 
     // Class template instantiation used as a type of a public field.
     let s = MyStruct { public_field: 123.into() };
-    assert_eq!(123, *s.public_field.value());
+    // SAFETY: s is alive while s.public_field.value() is alive, and no other references to s exist.
+    assert_eq!(123, *unsafe { CRef::unchanging(s.public_field.value()) });
 }

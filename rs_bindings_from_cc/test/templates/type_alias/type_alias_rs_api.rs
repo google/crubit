@@ -52,7 +52,7 @@ impl __CcTemplateInst10MyTemplateIiE {
     }
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
-    pub fn value<'__this>(&'__this self) -> &'__this ::ffi_11::c_int {
+    pub fn value<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe {
             crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(self)
         }
@@ -86,7 +86,7 @@ mod detail {
             '__this,
         >(
             __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
-        ) -> &'__this ::ffi_11::c_int;
+        ) -> ::cref::CRef<'__this, ::ffi_11::c_int>;
     }
 }
 

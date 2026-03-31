@@ -30,12 +30,12 @@ unsafe impl ::cxx::ExternType for S {
 impl S {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=9
     #[inline(always)]
-    pub fn int_accessor<'__this>(&'__this self) -> &'__this ::ffi_11::c_int {
+    pub fn int_accessor<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZNK1S12int_accessorEv(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=10
     #[inline(always)]
-    pub fn me<'__this>(&'__this mut self) -> &'__this mut crate::S {
+    pub fn me<'__this>(&'__this mut self) -> ::cref::CMut<'__this, crate::S> {
         unsafe { crate::detail::__rust_thunk___ZN1S2meEv(self) }
     }
 }
@@ -59,10 +59,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZNK1S12int_accessorEv<'__this>(
             __this: &'__this crate::S,
-        ) -> &'__this ::ffi_11::c_int;
+        ) -> ::cref::CRef<'__this, ::ffi_11::c_int>;
         pub(crate) unsafe fn __rust_thunk___ZN1S2meEv<'__this>(
             __this: &'__this mut crate::S,
-        ) -> &'__this mut crate::S;
+        ) -> ::cref::CMut<'__this, crate::S>;
     }
 }
 

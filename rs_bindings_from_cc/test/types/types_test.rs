@@ -6,6 +6,7 @@
 
 use core::cell::Cell;
 use core::ffi::c_void;
+use cref::{CMut, CRef};
 use googletest::prelude::*;
 
 trait ParameterIs<P> {}
@@ -227,8 +228,8 @@ struct_field_type_is!(
 function_return_type_is!(types_inferred_lifetimes,
     IntP => *mut i32,
     ConstIntP => *const i32,
-    IntRef => &mut i32,
-    ConstIntRef => &i32,
+    IntRef => CMut<'_, i32>,
+    ConstIntRef => CRef<'_, i32>,
     VoidP => *mut c_void,
     ConstVoidP => *const c_void,
     // TODO: b/436971180 - Why is this a pointer?
@@ -236,8 +237,8 @@ function_return_type_is!(types_inferred_lifetimes,
 
     StructPtr => *mut types_inferred_lifetimes::ExampleStruct,
     ConstStructPtr => *const types_inferred_lifetimes::ExampleStruct,
-    StructRef => &mut types_inferred_lifetimes::ExampleStruct,
-    ConstStructRef => &types_inferred_lifetimes::ExampleStruct,
+    StructRef => CMut<'_, types_inferred_lifetimes::ExampleStruct>,
+    ConstStructRef => CRef<'_, types_inferred_lifetimes::ExampleStruct>,
 );
 
 function_parameter_type_is!(types_inferred_lifetimes,
