@@ -649,7 +649,7 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safe
         | RsTypeKind::ExistingRustType { .. } => Safety::Safe,
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-            BridgeRsTypeKind::BridgeVoidConverters { .. } | BridgeRsTypeKind::Bridge { .. } => {
+            BridgeRsTypeKind::Bridge { .. } => {
                 if record_safety(db, original_type.clone()).is_safe() {
                     Safety::Safe
                 } else {
@@ -850,12 +850,6 @@ fn generate_rs_api_impl_includes(
         // we can ignore it.
         if let Ok(Some(bridge_type)) = BridgeRsTypeKind::new(record, has_reference_param, db) {
             match bridge_type {
-                BridgeRsTypeKind::BridgeVoidConverters { .. } => {
-                    internal_includes.insert(CcInclude::SupportLibHeader(
-                        crubit_support_path_format.clone(),
-                        "internal/lazy_init.h".into(),
-                    ));
-                }
                 BridgeRsTypeKind::C9Co { .. } => {
                     internal_includes.insert(CcInclude::SupportLibHeader(
                         crubit_support_path_format.clone(),
@@ -931,22 +925,15 @@ fn generate_rs_api_impl_includes(
             continue;
         };
 
-        if let RsTypeKind::BridgeType { bridge_type, .. } = rs_type_kind.unalias() {
-            if bridge_type.is_void_converters_bridge_type() {
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    "internal/lazy_init.h".into(),
-                ));
-            } else {
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    "bridge.h".into(),
-                ));
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    "internal/slot.h".into(),
-                ));
-            }
+        if rs_type_kind.is_bridge_type() {
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.clone(),
+                "bridge.h".into(),
+            ));
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.clone(),
+                "internal/slot.h".into(),
+            ));
         }
     }
 
@@ -1049,9 +1036,6 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             Primitive::StdUint64T => CrubitAbiType::transmute("u64", "std::uint64_t"),
         }),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
-            BridgeRsTypeKind::BridgeVoidConverters { .. } => {
-                bail!("Void pointer bridge types are not allowed within composable bridging")
-            }
             BridgeRsTypeKind::ProtoMessageBridge { .. } => {
                 let ir = db.ir();
                 let target = db

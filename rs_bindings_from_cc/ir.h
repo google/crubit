@@ -598,13 +598,6 @@ struct TemplateArg {
 struct BridgeType {
   llvm::json::Value ToJson() const;
 
-  // From CRUBIT_BRIDGE_VOID_CONVERTERS.
-  struct BridgeVoidConverters {
-    std::string rust_name;
-    std::string rust_to_cpp_converter;
-    std::string cpp_to_rust_converter;
-  };
-
   // From CRUBIT_BRIDGE.
   struct Bridge {
     std::string rust_name;
@@ -642,8 +635,8 @@ struct BridgeType {
     std::vector<CcType> param_types;
   };
 
-  std::variant<BridgeVoidConverters, Bridge, StdOptional, StdPair,
-               ProtoMessageBridge, StdString, Callable>
+  std::variant<Bridge, StdOptional, StdPair, StdString, ProtoMessageBridge,
+               Callable>
       variant;
 };
 

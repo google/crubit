@@ -90,21 +90,6 @@ struct Const {};
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
-#define CRUBIT_INTERNAL_BRIDGE_TYPE(t) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type", t)
-
-#define CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(t) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type_rust_to_cpp_converter", t)
-
-#define CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(t) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type_cpp_to_rust_converter", t)
-
-// See CRUBIT_BRIDGE_VOID_CONVERTERS in annotations.h.
-#define CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty, rust_to_cpp, cpp_to_rust) \
-  CRUBIT_INTERNAL_BRIDGE_TYPE(ty)                                    \
-  CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \
-  CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(cpp_to_rust)
-
 #define CRUBIT_LIFETIME_BOUND ABSL_ATTRIBUTE_LIFETIME_BOUND
 
 #define crubit_nonnull absl_nonnull

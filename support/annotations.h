@@ -190,86 +190,26 @@
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_unsafe_impl" __VA_OPT__(, ) \
                                __VA_ARGS__)
 
-// Declare a Rust type as the bridge type for binding generation.
+// Marks a type as bridging to a Rust type.
 //
-// This can be applied to a struct, class, or enum.
+// # Warning
 //
-// Let's walk through an example, starting with the BUILD file:
+// Composable bridging on user-defined types is still highly experimental.
 //
-// ```bzl
-// cc_library(
-//   name = "example",
-//   hdrs = ["example.h"],
-//   additional_rust_srcs_for_crubit_bindings = [":additional_example_src"],
-// )
+// # Usage
 //
-// additional_rust_srcs_for_crubit_bindings(
-//     name = "additional_example_src",
-//     srcs = ["additional_example_src.rs"],
-// )
+// * rust_name: The name of the Rust type.
+// * abi_rust: The Crubit ABI of the Rust type.
+// * abi_cpp: The Crubit ABI of the C++ type.
 //
-// rust_library(
-//     name = "user",
-//     srcs = ["user.rs"],
-//     cc_deps = [":example"],
-// )
-// ```
-//
-// There are two main targets: :example and :additional_example_src. If the Rust
-// side of the bridge type isn't provided by Rust std, then it must be provided
-// in the additional_rust_srcs_for_crubit_bindings. :user is simply a Rust
-// library that shows how a Rust library can consume the C++ bindings and its
-// bridge type.
-//
-// Here's the C++ bridge type with the annotation, as well as a function that
-// returns it:
+// From absl::StatusOr:
 //
 // ```c++
-// // example.h
-// struct CRUBIT_BRIDGE_VOID_CONVERTERS("MyRustStruct", "rust_to_cpp",
-// "cpp_to_rust")
-//   MyCppStruct {
-//     std::string name;
-// };
-// MyCppStruct foo();
+// template <typename T>
+// class
+// CRUBIT_BRIDGE("::status::absl::StatusOr", "::status::absl::StatusOrAbi",
+//               "::crubit::StatusOrAbi") StatusOr;
 // ```
-//
-// For this example, we'll make a native Rust struct that contains a Rust String
-// field, defined in additional_example_src.rs:
-//
-// ```rust
-// // additional_example_src.rs
-// pub struct MyRustStruct {
-//   pub name: String,
-// }
-// ```
-//
-// With the provided BUILD configuration above, we can now use the bridge type
-// and methods that use the bridge type in Rust.
-//
-// ```rust
-// // user.rs
-// pub fn print_foo() {
-//   let s: example::MyRustStruct = example::foo();
-//   println!("{}", s.name);
-// }
-// ```
-//
-// `ty` must be a path to a Rust type. If it starts with `::`, it will be
-// treated as a fully-qualified path, i.e. it can refer to types defined outside
-// of (but still visible to) the current build target. Otherwise, it will assume
-// the Rust type is defined in the Rust bindings by prefixing it with `crate::`
-// in all references, which requires defining the type in an
-// `additional_rust_srcs_for_crubit_bindings`.
-//
-// SAFETY:
-//   * `rust_to_cpp` must be a valid function name, and its signature must be
-//     `void rust_to_cpp (void* rust_struct, MyCppStruct* cpp_struct)`.
-//   * `cpp_to_rust` must be valid function name and its signature must be
-//     `void cpp_to_rust (MyCppStruct* cpp_struct, void* rust_struct)`.
-#define CRUBIT_BRIDGE_VOID_CONVERTERS(ty, ...) \
-  CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty __VA_OPT__(, ) __VA_ARGS__)
-
 #define CRUBIT_BRIDGE(rust_name, abi_rust, abi_cpp)              \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_rust_name", rust_name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_abi_rust", abi_rust)   \

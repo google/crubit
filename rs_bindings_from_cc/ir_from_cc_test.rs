@@ -656,34 +656,6 @@ fn test_struct_with_unnamed_bitfield_member() {
 }
 
 #[gtest]
-fn test_struct_with_bridge_type_annotation() {
-    let ir = ir_from_cc(
-        r#"
-        struct [[clang::annotate("crubit_bridge_type", "SomeBridgeType"),
-                 clang::annotate("crubit_bridge_type_rust_to_cpp_converter", "rust_to_cpp_converter"),
-                 clang::annotate("crubit_bridge_type_cpp_to_rust_converter", "cpp_to_rust_converter")]]
-                RecordWithBridgeType {
-            int foo;
-        };"#,
-    )
-    .unwrap();
-
-    assert_ir_matches!(
-        ir,
-        quote! {
-            Record {
-                rs_name: "RecordWithBridgeType", ...
-                bridge_type: Some(BridgeVoidConverters {
-                  rust_name: "SomeBridgeType",
-                  rust_to_cpp_converter: "rust_to_cpp_converter",
-                  cpp_to_rust_converter: "cpp_to_rust_converter", ...
-                }), ...
-            }
-        }
-    );
-}
-
-#[gtest]
 fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
     let ir = ir_from_cc(
         r#"

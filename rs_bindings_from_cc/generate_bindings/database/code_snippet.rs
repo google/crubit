@@ -1522,7 +1522,6 @@ pub enum ThunkImpl {
     },
     /// A function that implements a Rust function thunk.
     Function {
-        conversion_externs: TokenStream,
         return_type_name: TokenStream,
         thunk_ident: Ident,
         param_types: Vec<TokenStream>,
@@ -1567,7 +1566,6 @@ impl ToTokens for ThunkImpl {
                 .to_tokens(tokens);
             }
             ThunkImpl::Function {
-                conversion_externs,
                 return_type_name,
                 thunk_ident,
                 param_types,
@@ -1576,8 +1574,6 @@ impl ToTokens for ThunkImpl {
                 return_stmt,
             } => {
                 quote! {
-                    #conversion_externs
-
                     extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
                         #conversion_stmts
                         #return_stmt;

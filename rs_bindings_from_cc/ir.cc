@@ -532,16 +532,6 @@ static llvm::json::Value toJSON(BridgeType::Callable::FnTrait fn_trait) {
 llvm::json::Value BridgeType::ToJson() const {
   return std::visit(
       visitor{
-          [&](const BridgeType::BridgeVoidConverters& annotation) {
-            return llvm::json::Object{{
-                "BridgeVoidConverters",
-                llvm::json::Object{
-                    {"rust_name", annotation.rust_name},
-                    {"rust_to_cpp_converter", annotation.rust_to_cpp_converter},
-                    {"cpp_to_rust_converter", annotation.cpp_to_rust_converter},
-                },
-            }};
-          },
           [&](const BridgeType::Bridge& annotation) {
             return llvm::json::Object{{
                 "Bridge",
@@ -585,7 +575,8 @@ llvm::json::Value BridgeType::ToJson() const {
                     {"param_types", callable.param_types},
                 },
             }};
-          }},
+          },
+      },
       variant);
 }
 

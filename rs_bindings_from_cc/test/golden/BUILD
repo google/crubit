@@ -107,8 +107,6 @@ rust_bindings_from_cc_cli_flag(
 ) for name in TESTS]
 
 NON_BUILDABLE_TEST = [
-    # The bridge type is not defined in the C++ header so it cannot be built.
-    "bridge_type",
     "callables",
 
     # The rust type is not defined in the C++ header so it cannot be built.
