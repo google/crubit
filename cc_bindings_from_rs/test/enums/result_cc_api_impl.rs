@@ -167,6 +167,16 @@ unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_v
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::NestedResult, in_ok) == 0);
 const _: () = assert!(::core::mem::offset_of!(::result_golden::NestedResult, in_err) == 8);
+const _: () = assert!(::std::mem::size_of::<::result_golden::ResultWithSizeTypes>() == 64);
+const _: () = assert!(::std::mem::align_of::<::result_golden::ResultWithSizeTypes>() == 8);
+const _: () =
+    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, uval_in_ok) == 0);
+const _: () =
+    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, uval_in_err) == 16);
+const _: () =
+    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_ok) == 32);
+const _: () =
+    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_err) == 48);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uresult_uby_uvalue(
     __ret_ptr: *mut core::ffi::c_void,

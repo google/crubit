@@ -255,6 +255,40 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
+// Generated from:
+// cc_bindings_from_rs/test/enums/option.rs;l=169
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: option_golden :: OptionWithSizeTypes") alignas(8) [[clang::trivial_abi]]
+OptionWithSizeTypes final {
+ public:
+  // `option_golden::OptionWithSizeTypes` doesn't implement the `Default` trait
+  OptionWithSizeTypes() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~OptionWithSizeTypes() = default;
+  OptionWithSizeTypes(OptionWithSizeTypes&&) = default;
+  OptionWithSizeTypes& operator=(OptionWithSizeTypes&&) = default;
+
+  // `option_golden::OptionWithSizeTypes` doesn't implement the `Clone` trait
+  OptionWithSizeTypes(const OptionWithSizeTypes&) = delete;
+  OptionWithSizeTypes& operator=(const OptionWithSizeTypes&) = delete;
+  OptionWithSizeTypes(::crubit::UnsafeRelocateTag,
+                      OptionWithSizeTypes&& value) {
+    std::memcpy(this, &value, sizeof(value));
+  }
+
+ private:
+  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
+  // usize types are not yet supported as generic type arguments.
+  std::array<unsigned char, 16> uval;
+  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
+  // usize types are not yet supported as generic type arguments.
+  std::array<unsigned char, 16> ival;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 // Error generating bindings for `option_golden::UninhabitedEnum` defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=151:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -518,7 +552,7 @@ OptDefaultWithDrop final {
 
 // Generated from:
 // cc_bindings_from_rs/test/enums/option.rs;l=165
-std::optional<std::uintptr_t> stringify_len(
+std::optional<std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x);
 
 }  // namespace option
@@ -1255,19 +1289,34 @@ static_assert(std::is_trivially_move_assignable_v<::option::OptZst>);
 inline void OptZst::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptZst, val));
 }
+static_assert(
+    sizeof(OptionWithSizeTypes) == 32,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(OptionWithSizeTypes) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<OptionWithSizeTypes>);
+static_assert(
+    std::is_trivially_move_constructible_v<::option::OptionWithSizeTypes>);
+static_assert(
+    std::is_trivially_move_assignable_v<::option::OptionWithSizeTypes>);
+inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(OptionWithSizeTypes, uval));
+  static_assert(16 == offsetof(OptionWithSizeTypes, ival));
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_stringify_ulen(
     rs_std::Option<::option::HasDefault> const&, unsigned char* __ret_ptr);
 }
-inline std::optional<std::uintptr_t> stringify_len(
+inline std::optional<std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x) {
   unsigned char __return_value_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::uintptr_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint32_t>>::kSize];
   __crubit_internal::__crubit_thunk_stringify_ulen(x, __return_value_storage);
   return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uintptr_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uintptr_t>>(
-          ::crubit::TransmuteAbi<std::uintptr_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint32_t>>(
+          ::crubit::TransmuteAbi<std::uint32_t>()),
       __return_value_storage);
 }
 

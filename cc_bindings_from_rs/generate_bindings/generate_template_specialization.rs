@@ -8,7 +8,7 @@ use crate::generate_struct_and_union::{
     scalar_value_to_string,
 };
 use crate::generate_unsupported_def;
-use arc_anyhow::{Error, Result};
+use arc_anyhow::{bail, Error, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, FormattedTy, RsStdEnumTemplateSpecialization,
@@ -54,6 +54,9 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     };
     BridgedBuiltin::new(db, *adt).map(|bridged_builtin| {
         let tcx = db.tcx();
+        if self_ty.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
+            bail!("b/491106325 - isize and usize types are not yet supported as generic type arguments.")
+        }
         match bridged_builtin {
             BridgedBuiltin::Option => {
                 let arg_ty = FormattedTy::try_from_ty(

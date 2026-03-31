@@ -238,6 +238,10 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptZst, val) == 0);
+const _: () = assert!(::std::mem::size_of::<::option_golden::OptionWithSizeTypes>() == 32);
+const _: () = assert!(::std::mem::align_of::<::option_golden::OptionWithSizeTypes>() == 8);
+const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, uval) == 0);
+const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, ival) == 16);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_stringify_ulen(
     x: &'static ::core::option::Option<::option_golden::HasDefault>,
@@ -247,7 +251,7 @@ unsafe extern "C" fn __crubit_thunk_stringify_ulen(
         let __rs_return_value = ::option_golden::stringify_len(x);
         unsafe {
             ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<usize>()),
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<u32>()),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );

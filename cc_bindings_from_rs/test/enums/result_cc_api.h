@@ -169,6 +169,46 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
+// Generated from:
+// cc_bindings_from_rs/test/enums/result.rs;l=135
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: result_golden :: ResultWithSizeTypes") alignas(8) [[clang::trivial_abi]]
+ResultWithSizeTypes final {
+ public:
+  // `result_golden::ResultWithSizeTypes` doesn't implement the `Default` trait
+  ResultWithSizeTypes() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~ResultWithSizeTypes() = default;
+  ResultWithSizeTypes(ResultWithSizeTypes&&) = default;
+  ResultWithSizeTypes& operator=(ResultWithSizeTypes&&) = default;
+
+  // `result_golden::ResultWithSizeTypes` doesn't implement the `Clone` trait
+  ResultWithSizeTypes(const ResultWithSizeTypes&) = delete;
+  ResultWithSizeTypes& operator=(const ResultWithSizeTypes&) = delete;
+  ResultWithSizeTypes(::crubit::UnsafeRelocateTag,
+                      ResultWithSizeTypes&& value) {
+    std::memcpy(this, &value, sizeof(value));
+  }
+
+ private:
+  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
+  // usize types are not yet supported as generic type arguments.
+  std::array<unsigned char, 16> uval_in_ok;
+  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
+  // usize types are not yet supported as generic type arguments.
+  std::array<unsigned char, 16> uval_in_err;
+  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
+  // usize types are not yet supported as generic type arguments.
+  std::array<unsigned char, 16> ival_in_ok;
+  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
+  // usize types are not yet supported as generic type arguments.
+  std::array<unsigned char, 16> ival_in_err;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 }  // namespace result
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -1285,6 +1325,23 @@ inline ::result::NestedResult NestedResult::new_(std::uint32_t val) {
 inline void NestedResult::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NestedResult, in_ok));
   static_assert(8 == offsetof(NestedResult, in_err));
+}
+static_assert(
+    sizeof(ResultWithSizeTypes) == 64,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(ResultWithSizeTypes) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<ResultWithSizeTypes>);
+static_assert(
+    std::is_trivially_move_constructible_v<::result::ResultWithSizeTypes>);
+static_assert(
+    std::is_trivially_move_assignable_v<::result::ResultWithSizeTypes>);
+inline void ResultWithSizeTypes::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(ResultWithSizeTypes, uval_in_ok));
+  static_assert(16 == offsetof(ResultWithSizeTypes, uval_in_err));
+  static_assert(32 == offsetof(ResultWithSizeTypes, ival_in_ok));
+  static_assert(48 == offsetof(ResultWithSizeTypes, ival_in_err));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uresult_uby_uvalue(

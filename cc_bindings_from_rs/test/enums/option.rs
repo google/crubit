@@ -162,6 +162,12 @@ pub struct OptZst {
     pub val: Option<Unit>,
 }
 
-pub fn stringify_len(x: &Option<HasDefault>) -> Option<usize> {
-    x.as_ref().map(|y| y.get_string_inside_option().len())
+pub fn stringify_len(x: &Option<HasDefault>) -> Option<u32> {
+    x.as_ref().map(|y| y.get_string_inside_option().len() as u32)
+}
+
+pub struct OptionWithSizeTypes {
+    // b/491106325 - We expect these not to get bindings.
+    pub uval: Option<usize>,
+    pub ival: Option<isize>,
 }
