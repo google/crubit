@@ -43,6 +43,23 @@ fn has_relocating_ctor<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool
         .unwrap_or(false)
 }
 
+// TODO(b/497927944): This is a temporary hack to unblock status until we can get a real solution in place for additional Rust srcs.
+fn is_status_additional_srcs<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
+    let def_span = tcx.def_span(def_id);
+    let rustc_span::FileLines { file, .. } = match tcx.sess.source_map().span_to_lines(def_span) {
+        Ok(filelines) => filelines,
+        Err(_) => return false,
+    };
+    #[rustversion::before(2025-12-14)]
+    let file_name = file.name.prefer_local().to_string();
+    #[rustversion::since(2025-12-14)]
+    let file_name = file.name.prefer_local_unconditionally().to_string();
+    // Virtual paths will have a "./" prefix that we don't want to display.
+    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
+    file_name.contains("third_party/absl/status/additional_status_src.rs")
+        || file_name.contains("third_party/absl/status/additional_status_wrapper_src.rs")
+}
+
 pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
@@ -52,6 +69,15 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     let ty::TyKind::Adt(adt, substs) = self_ty.kind() else {
         return None;
     };
+    // If our specialization contains a status type from additonal srcs, we should not generate a
+    // specialization for it.
+    if self_ty.walk().any(|arg| {
+        arg.as_type()
+            .and_then(|ty| ty.ty_adt_def())
+            .is_some_and(|adt| is_status_additional_srcs(db.tcx(), adt.did()))
+    }) {
+        return None;
+    }
     BridgedBuiltin::new(db, *adt).map(|bridged_builtin| {
         let tcx = db.tcx();
         if self_ty.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
