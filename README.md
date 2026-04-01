@@ -1,4 +1,4 @@
-# Crubit: C++/Rust Bidirectional Interop Tool
+# Cruwubit: C++/Rust Bidirectional Interop Tool
 
 ![rust workflow](https://github.com/google/crubit/actions/workflows/rust.yml/badge.svg)
 
