@@ -86,9 +86,6 @@ impl Default for AlignmentRegressionTest {
 }
 
 pub mod alignment_regression_test {
-    #[allow(unused_imports)]
-    use super::*;
-
     pub const ok: u32 = 0;
 
     pub const error: u32 = 1;

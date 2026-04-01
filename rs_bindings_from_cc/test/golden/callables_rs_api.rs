@@ -137,8 +137,23 @@ unsafe impl ::cxx::ExternType for LayoutCompatible {
 impl LayoutCompatible {
     #[inline(always)]
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
+        self::layout_compatible::Create(x)
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn get(__this: *const Self) -> ::ffi_11::c_int {
+        self::layout_compatible::get(__this)
+    }
+}
+
+pub mod layout_compatible {
+    #[inline(always)]
+    pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __return = ::core::mem::MaybeUninit::<crate::LayoutCompatible>::uninit();
             crate::detail::__rust_thunk___ZN16LayoutCompatible6CreateEi(
                 &raw mut __return as *mut ::core::ffi::c_void,
                 x,
@@ -151,7 +166,7 @@ impl LayoutCompatible {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn get(__this: *const Self) -> ::ffi_11::c_int {
+    pub unsafe fn get(__this: *const crate::LayoutCompatible) -> ::ffi_11::c_int {
         crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this)
     }
 }

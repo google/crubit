@@ -2,22 +2,19 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::code_snippet::{
-    ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedTypeName, Visibility,
-};
+use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedName, Visibility};
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::{LifetimeOptions, RsTypeKind, Safety};
 use arc_anyhow::{anyhow, Error, Result};
+use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
+use heck::ToSnakeCase;
 use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashMap;
 use std::rc::Rc;
-
-#[unsafe(no_mangle)]
-pub fn test_again() {}
 
 #[derive(Clone)]
 pub struct CodegenFunctions {
@@ -116,6 +113,7 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:generate_function
         fn generate_function(&self, func: Rc<Func>, derived_record: Option<Rc<Record>>) -> Result<Option<GeneratedFunction>>;
 
+
         /// You should call is_function_ambiguous() instead.
         ///
         /// Identifies all functions having overloads that we can't import (yet).
@@ -157,13 +155,12 @@ memoized::query_group! {
         // You should probably use `type_visibility()` instead of this function.
         fn type_target_restriction(&self, rs_type_kind: RsTypeKind) -> Result<Option<BazelLabel>>;
 
-        /// Resolves type names to a map from name to ResolvedTypeName.
+        /// Resolves names to a map from name to ResolvedName.
         ///
-        /// This only checks the type namespace, as described here:
-        /// https://doc.rust-lang.org/reference/names/namespaces.html.
+        /// This checks both type and value namespaces.
         ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_type_names
-        fn resolve_type_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>>;
+        /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_names
+        fn resolve_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>>;
     }
 }
 
@@ -459,8 +456,10 @@ impl<'db> BindingsGenerator<'db> {
                         namespaces.is_empty(),
                         "Record was listed as the enclosing item for a namespace, this is a bug."
                     );
+                    let module_name =
+                        self.record_to_associated_module_name(parent_record.clone()).unwrap();
                     nested_records.push((
-                        parent_record.rs_name.identifier.clone(),
+                        module_name.to_string().into(),
                         parent_record.cc_name.identifier.clone(),
                     ));
                     enclosing_item_id = parent_record.enclosing_item_id;
@@ -482,5 +481,39 @@ impl<'db> BindingsGenerator<'db> {
         namespaces.reverse();
         nested_records.reverse();
         code_gen_utils::NamespaceQualifier { namespaces, nested_records }
+    }
+
+    /// Returns the name of the snake-cased module that exposes the given record's nested items.
+    pub fn record_to_associated_module_name(
+        &self,
+        record: Rc<Record>,
+    ) -> Result<proc_macro2::Ident> {
+        let record_name: &str = record.rs_name.as_str();
+        let snake_case_name = record_name.to_snake_case();
+        // Add an `_items` suffix to distinguish the module name if the record name is already snake-case,
+        // then distinguish by adding `_` suffixes until we find a name that is not in use.
+        let mut name = if snake_case_name == record_name {
+            format!("{}_items", snake_case_name)
+        } else {
+            snake_case_name
+        };
+
+        let resolved_names = self.resolve_names(record.clone())?;
+        let is_used = |n: &str| match resolved_names.get(n) {
+            Some(ResolvedName::RecordNestedItems { parent_records_that_map_to_this_name }) => {
+                !parent_records_that_map_to_this_name.contains(&record.id)
+            }
+            Some(_) => true,
+            None => false,
+        };
+        if is_used(&name) {
+            if !name.ends_with("_items") {
+                name = format!("{}_items", name);
+            }
+            while is_used(&name) {
+                name.push('_');
+            }
+        }
+        Ok(make_rs_ident(&name))
     }
 }

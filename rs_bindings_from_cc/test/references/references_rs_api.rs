@@ -42,7 +42,7 @@ where
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
+                    If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
 }
@@ -75,7 +75,7 @@ where
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
+                    If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
 }

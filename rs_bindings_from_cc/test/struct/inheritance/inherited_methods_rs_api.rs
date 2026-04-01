@@ -62,7 +62,7 @@ impl Base {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
-        unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(self) }
+        self::base::has_bindings(self)
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
@@ -70,11 +70,7 @@ impl Base {
     where
         for<'error> &'error (): BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable,
     {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
-        )
+        self::base::no_bindings(self, __param_0)
     }
 }
 
@@ -95,6 +91,26 @@ impl Default for Base {
 )]
 pub trait BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable {}
 
+pub mod base {
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
+    #[inline(always)]
+    pub fn has_bindings<'__this>(__this: &'__this crate::Base) -> bool {
+        unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(__this) }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
+    #[inline(always)]
+    pub fn no_bindings<'__this>(
+        __this: &'__this crate::Base,
+        __param_0: ::ctor::Ctor![crate::Nonmovable],
+    ) {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a crubit.rs-bug."
+        )
+    }
+}
+
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=22
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -113,9 +129,7 @@ impl Derived {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(oops::Upcast::<_>::upcast(self))
-        }
+        self::derived::has_bindings(oops::Upcast::<_>::upcast(self))
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
@@ -123,11 +137,7 @@ impl Derived {
     where
         for<'error> &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
     {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
-        )
+        self::derived::no_bindings(oops::Upcast::<_>::upcast(self), __param_0)
     }
 }
 
@@ -151,6 +161,26 @@ pub trait BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable {}
 unsafe impl oops::Inherits<crate::Base> for crate::Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base {
         (derived as *const _ as *const u8).offset(0) as *const crate::Base
+    }
+}
+
+pub mod derived {
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
+    #[inline(always)]
+    pub fn has_bindings<'__this>(__this: &'__this crate::Base) -> bool {
+        unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(__this) }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
+    #[inline(always)]
+    pub fn no_bindings<'__this>(
+        __this: &'__this crate::Base,
+        __param_0: ::ctor::Ctor![crate::Nonmovable],
+    ) {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a crubit.rs-bug."
+        )
     }
 }
 

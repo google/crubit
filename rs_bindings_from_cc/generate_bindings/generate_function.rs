@@ -17,8 +17,7 @@ use errors::{bail_to_errors, Errors, ErrorsOr};
 use flagset::FlagSet;
 use generate_comment::{generate_doc_comment, parse_extended_source_loc};
 use generate_function_thunk::{
-    generate_function_assertation, generate_function_thunk, generate_function_thunk_impl,
-    thunk_ident,
+    generate_function_assertion, generate_function_thunk, generate_function_thunk_impl, thunk_ident,
 };
 use ir::*;
 use itertools::Itertools;
@@ -1067,7 +1066,7 @@ fn adjust_param_types_for_trait_impl(
 fn generate_func_body(
     db: &BindingsGenerator,
     impl_kind: &ImplKind,
-    crate_root_path: TokenStream,
+    crate_root_path: &TokenStream,
     return_type: &RsTypeKind,
     param_value_adjustments: &ParamValueAdjustments,
     thunk_ident: Ident,
@@ -1075,6 +1074,21 @@ fn generate_func_body(
     thunk_args: Vec<TokenStream>,
 ) -> Result<TokenStream> {
     let ParamValueAdjustments { clone_prefixes, clone_suffixes } = param_value_adjustments;
+
+    // Note: for the time being, all !Unpin values are treated as if they were not
+    // trivially relocatable. We could, in the special case of trivial !Unpin types,
+    // not generate the thunk at all, but this would be a bit of extra work.
+    //
+    // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
+    let return_type_or_self = {
+        let record = match impl_kind {
+            // Only use `Self` inside trait impls, and then only if the `Self` type is the same
+            // as the trait implementation record type.
+            ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
+            _ => None,
+        };
+        return_type.to_token_stream_replacing_by_self(db, record)
+    };
 
     match &impl_kind {
         ImplKind::Trait {
@@ -1090,7 +1104,7 @@ fn generate_func_body(
             // we don't need to worry about them.
             Ok(quote! {
                 #thunk_prepare
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::core::mem::MaybeUninit::<#return_type_or_self>::zeroed();
                 unsafe {
                     #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut _ #( , #thunk_args )* );
                     tmp.assume_init()
@@ -1098,19 +1112,6 @@ fn generate_func_body(
             })
         }
         _ => {
-            // Note: for the time being, all !Unpin values are treated as if they were not
-            // trivially relocatable. We could, in the special case of trivial !Unpin types,
-            // not generate the thunk at all, but this would be a bit of extra work.
-            //
-            // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
-            let return_type_or_self = {
-                let record = match impl_kind {
-                    ImplKind::Struct { record, .. }
-                    | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
-                    _ => None,
-                };
-                return_type.to_token_stream_replacing_by_self(db, record)
-            };
             let mut body = match return_type.passing_convention() {
                 PassingConvention::AbiCompatible | PassingConvention::Void => {
                     let negate_symbol = if let ImplKind::Trait {
@@ -1433,7 +1434,6 @@ pub fn generate_function(
     db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
-    let mut features = FlagSet::empty();
     let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, &func)?;
 
     let errors = Errors::new();
@@ -1457,7 +1457,25 @@ pub fn generate_function(
     }
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-    let thunk: Option<Thunk> = if derived_record.is_some() {
+
+    // Skip thunk generation if the function is a method on a public base class,
+    // as the base class thunk will already have been generated.
+    let skip_thunk_generation: bool = {
+        || {
+            let Some(derived) = &derived_record else { return false };
+            let Some(enclosing_id) = func.enclosing_item_id else { return false };
+            if enclosing_id == derived.id {
+                return false;
+            };
+            let Some(&idx) = db.ir().item_id_to_item_idx().get(&enclosing_id) else { return false };
+            let base_item = &db.ir().flat_ir().items[idx];
+            let Item::Record(_) = base_item else { return false };
+            let Ok(bindings_info) = db.has_bindings(base_item.clone()) else { return false };
+            bindings_info.visibility == Visibility::Public
+        }
+    }();
+
+    let thunk: Option<Thunk> = if skip_thunk_generation {
         None
     } else {
         errors.consume_error(generate_function_thunk(
@@ -1481,9 +1499,9 @@ pub fn generate_function(
         return_type_fragment: mut quoted_return_type,
         thunk_prepare,
         thunk_args,
+        mut features,
     } = errors.consolidate_on_err(function_signature(
         db,
-        &mut features,
         &func,
         &impl_kind,
         &param_idents,
@@ -1521,32 +1539,34 @@ pub fn generate_function(
             &format!("{sep}{derived_class_prefix}{sep}{}", &func.mangled_name),
         );
 
-    let func_body = if reportable_status.is_ok() {
-        generate_func_body(
-            db,
-            &impl_kind,
-            crate_root_path,
-            &return_type,
-            &param_value_adjustments,
-            thunk_ident(&func),
-            thunk_prepare,
-            thunk_args,
-        )?
-    } else {
-        let mut result = quote! {
-            #![allow(unused_variables)]
-            unreachable!(
-                "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
+    let create_func_body = || -> Result<TokenStream> {
+        if reportable_status.is_ok() {
+            generate_func_body(
+                db,
+                &impl_kind,
+                &crate_root_path,
+                &return_type,
+                &param_value_adjustments,
+                thunk_ident(&func),
+                thunk_prepare,
+                thunk_args,
             )
-        };
-        if !return_type.is_unpin() {
-            result.extend(quote! {
-                ; #[allow(unreachable_code)]
-                ::ctor::UnreachableCtor::new()
-            });
+        } else {
+            let mut result = quote! {
+                #![allow(unused_variables)]
+                unreachable!(
+                    "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a crubit.rs-bug."
+                )
+            };
+            if !return_type.is_unpin() {
+                result.extend(quote! {
+                    ; #[allow(unreachable_code)]
+                    ::ctor::UnreachableCtor::new()
+                });
+            }
+            Ok(result)
         }
-        result
     };
 
     // Check to see if we can get precise location information. If it's not available, emit a stub
@@ -1593,8 +1613,10 @@ pub fn generate_function(
     let api_func: TokenStream;
     let function_id: FunctionId;
     let mut member_functions_map = HashMap::new();
+    let mut free_functions_map = HashMap::new();
     match impl_kind {
         ImplKind::None { .. } => {
+            let func_body = create_func_body()?;
             let fn_generic_params =
                 format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
             api_func = quote! {
@@ -1615,12 +1637,116 @@ pub fn generate_function(
                 function_path: syn::parse2(quote! { #namespace_qualifier #func_name }).unwrap(),
             };
         }
-        ImplKind::Struct { record, .. } => {
+        ImplKind::Struct {
+            ref record,
+            format_first_param_as_self,
+            is_renamed_unpin_constructor,
+            is_unsafe,
+        } => {
             let record_name = make_rs_ident(
                 derived_record.as_deref().unwrap_or(record.as_ref()).rs_name.identifier.as_ref(),
             );
             let fn_generic_params =
                 format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+
+            // Generate the free function.
+            let free_param_idents = {
+                // Replace `self` with `__this`.
+                let mut idents = param_idents.clone();
+                if format_first_param_as_self {
+                    idents[0] = make_rs_ident("__this");
+                }
+                idents
+            };
+            let mut free_param_types = param_types.clone();
+            let mut free_return_type = return_type.clone();
+            // When generating the free function, shift `ImplKind::Struct` to `ImplKind::None`.
+            let free_impl_kind = ImplKind::None { is_unsafe };
+
+            // Ignore `errors` because `function_signature` for the member method already
+            // checked parameters.
+            let free_errors = Errors::new();
+            let BindingsSignature {
+                lifetimes: free_lifetimes,
+                params: free_api_params,
+                return_type_fragment: free_return_type_fragment,
+                thunk_prepare: free_thunk_prepare,
+                thunk_args: free_thunk_args,
+                features: free_features,
+            } = free_errors.consolidate_on_err(function_signature(
+                db,
+                &func,
+                &free_impl_kind,
+                &free_param_idents,
+                &mut free_param_types,
+                &mut free_return_type,
+                None,
+                &free_errors,
+            ))?;
+            free_errors.discard();
+
+            // Update main features mapping
+            features |= free_features;
+
+            let free_func_body = if reportable_status.is_ok() {
+                generate_func_body(
+                    db,
+                    &impl_kind,
+                    &crate_root_path,
+                    &free_return_type,
+                    &param_value_adjustments,
+                    thunk_ident(&func),
+                    free_thunk_prepare,
+                    free_thunk_args,
+                )?
+            } else {
+                // Use the `unreachable` body
+                create_func_body()?
+            };
+
+            let free_fn_generic_params =
+                format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
+
+            // Add the free method to the mapping, which we will extract and put into
+            // snippets inside db later.
+            free_functions_map.insert(
+                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                vec![quote! {
+                    #capture_tags
+                    #doc_comment
+                    #[inline(always)]
+                    #visibility
+                    #unsafety
+                    fn #bracketed_func_name #free_fn_generic_params(
+                        #( #free_api_params ),*
+                    ) #arrow #free_return_type_fragment {
+                        #free_func_body
+                    }
+                }],
+            );
+
+            // Delegate from the method to the free function.
+            // When translating args, `__this` acts as the first arg.
+            let mut method_delegation_args = param_idents.iter().enumerate().map(|(i, ident)| {
+                if i == 0 && impl_kind.format_first_param_as_self() {
+                    if derived_record.is_some() {
+                        quote! { oops::Upcast::<_>::upcast(self) }
+                    } else {
+                        quote! { self }
+                    }
+                } else {
+                    quote! { #ident }
+                }
+            });
+            if is_renamed_unpin_constructor {
+                // For constructors which have been renamed to methods, skip the `__this` parameter,
+                // as it isn't accepted as an argument to the underlying function.
+                method_delegation_args.next();
+            }
+
+            let target_record = derived_record.clone().unwrap_or_else(|| record.clone());
+            let mod_name = db.record_to_associated_module_name(target_record)?;
+
             member_functions_map.insert(
                 derived_record.as_deref().unwrap_or(record.as_ref()).id,
                 vec![quote! {
@@ -1632,7 +1758,7 @@ pub fn generate_function(
                     fn #bracketed_func_name #fn_generic_params(
                         #( #api_params ),*
                     ) #arrow #quoted_return_type #unsatisfied_where_clause {
-                        #func_body
+                        self::#mod_name::#func_name(#( #method_delegation_args ),*)
                     }
                 }],
             );
@@ -1648,11 +1774,11 @@ pub fn generate_function(
             };
         }
         ImplKind::Trait {
-            record: trait_record,
-            trait_name,
+            record: ref trait_record,
+            ref trait_name,
             always_public,
             impl_for,
-            associated_return_type,
+            ref associated_return_type,
             ..
         } => {
             if !always_public && visibility == Visibility::PubCrate {
@@ -1688,8 +1814,10 @@ pub fn generate_function(
                 .target_crubit_features(&trait_record.owning_target)
                 .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
             // TODO(b/454627672): is it worth caching this?
+            let transformed_trait_record;
             let trait_record = if assume_lifetimes {
-                Rc::new(lifetime_defaults_transform_record(db, &*trait_record)?)
+                transformed_trait_record = lifetime_defaults_transform_record(db, trait_record)?;
+                &transformed_trait_record
             } else {
                 trait_record
             };
@@ -1834,6 +1962,7 @@ pub fn generate_function(
                     param_types[0].to_token_stream(db),
                 ),
             };
+            let func_body = create_func_body()?;
             api_func = quote! {
                 #unimplemented_trait_def
                 #doc_comment
@@ -1850,7 +1979,7 @@ pub fn generate_function(
                 }
                 #extra_items
             };
-            let record_qualifier = db.namespace_qualifier(&trait_record).format_for_rs();
+            let record_qualifier = db.namespace_qualifier(trait_record).format_for_rs();
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: {
@@ -1863,14 +1992,17 @@ pub fn generate_function(
 
     // If we are generating bindings for a derived record, we reuse the base
     // record's thunks, so we don't need to generate thunks.
-    let thunk_impl = if derived_record.is_some() || failed {
+    let thunk_impl = if failed || skip_thunk_generation {
         None
     } else {
         generate_function_thunk_impl(db, &func)?
     };
 
-    let function_assertation =
-        if failed { None } else { generate_function_assertation(db, &func)? };
+    let function_assertation = if failed || skip_thunk_generation {
+        None
+    } else {
+        generate_function_assertion(db, &func)?
+    };
 
     let cc_details = [thunk_impl, function_assertation].into_iter().flatten().collect();
 
@@ -1883,6 +2015,7 @@ pub fn generate_function(
         features,
         cc_details,
         member_functions: member_functions_map,
+        free_functions: free_functions_map,
         ..Default::default()
     };
 
@@ -1918,6 +2051,9 @@ struct BindingsSignature {
     /// For example, if `params` is `vec![quote!{mut self}]`, this might be
     /// `vec![quote!{&mut self}]` since the thunk takes non-C-ABI values by reference.
     thunk_args: Vec<TokenStream>,
+
+    /// Any features required by the function.
+    features: FlagSet<Feature>,
 }
 
 /// Reformats API parameters and return values to match Rust conventions and the
@@ -1934,7 +2070,6 @@ struct BindingsSignature {
 #[allow(clippy::too_many_arguments)]
 fn function_signature(
     db: &BindingsGenerator,
-    features: &mut FlagSet<Feature>,
     func: &Func,
     impl_kind: &ImplKind,
     param_idents: &[Ident],
@@ -1943,6 +2078,8 @@ fn function_signature(
     derived_record: Option<Rc<Record>>,
     errors: &Errors,
 ) -> Result<BindingsSignature> {
+    let mut features = FlagSet::<Feature>::empty();
+
     if let Some(derived_record) = derived_record.as_deref() {
         ensure!(
             db.ir()
@@ -2018,7 +2155,7 @@ fn function_signature(
                 if !type_.is_move_constructible() {
                     errors.add(anyhow!("Non-movable, non-trivial_abi type '{}' is not supported by value as parameter #{i}", type_.display(db)));
                 }
-                *features |= Feature::impl_trait_in_assoc_type;
+                features |= Feature::impl_trait_in_assoc_type;
                 api_params.push(quote! {#ident: ::ctor::Ctor![#quoted_type_or_self]});
                 thunk_args.push(
                     quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))},
@@ -2135,7 +2272,7 @@ fn function_signature(
             } else {
                 quote! {+ use<#(#lifetimes),*> }
             };
-            *features |= Feature::impl_trait_in_assoc_type;
+            features |= Feature::impl_trait_in_assoc_type;
             if extra_lifetimes.is_empty() {
                 quote! {::ctor::Ctor![#ty]}
             } else {
@@ -2168,7 +2305,7 @@ fn function_signature(
                         quote! { self }
                     };
                     api_params[0] = rs_snippet.tokens;
-                    *features |= rs_snippet.features;
+                    features |= rs_snippet.features;
                 } else {
                     api_params[0] = quote! { mut self };
                     if derived_record.is_some() {
@@ -2217,6 +2354,7 @@ fn function_signature(
         return_type_fragment,
         thunk_prepare,
         thunk_args,
+        features,
     })
 }
 

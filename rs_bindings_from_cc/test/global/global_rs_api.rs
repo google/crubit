@@ -118,9 +118,6 @@ impl Default for StructWithAnonEnum {
 }
 
 pub mod struct_with_anon_enum {
-    #[allow(unused_imports)]
-    use super::*;
-
     pub const kAnonEnumInStructConst: ::ffi_11::c_uint = ::ffi_11::new_c_uint(789);
 }
 

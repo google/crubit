@@ -50,10 +50,9 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
             impl __CcTemplateInst10MyTemplateIiE {
                 #[doc = " Generated from: test/dependency_header.h;l=5"]
                 #[inline(always)]
-                pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::ffi_11::c_int { unsafe {
-                    crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
-                        self)
-                }}
+                pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::ffi_11::c_int {
+                    self::cc_template_inst10_my_template_ii_e::GetValue(self)
+                }
             }
         }
     );
@@ -1639,7 +1638,7 @@ fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()
                 ...
                 #[inline(always)]
                 pub unsafe fn NonColliding(__this: *mut Self) {
-                    crate::detail::__rust_thunk___ZN4test5Base112NonCollidingEv(oops::UnsafeUpcast::<_>::unsafe_upcast(__this))
+                    self::derived::NonColliding(__this)
                 }
             }
             ...
@@ -1675,7 +1674,7 @@ fn test_member_in_derived_class_overwrites_inherited_ones() -> Result<()> {
                 ...
                 #[inline(always)]
                 pub unsafe fn Colliding(__this: *mut Self) {
-                    crate::detail::__rust_thunk___ZN4test7Derived9CollidingEv(__this)
+                    self::derived::Colliding(__this)
                 }
             }
             ...
@@ -1880,17 +1879,17 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
                 ...
                 #[inline(always)]
                 pub fn Method1<'a>(&'a mut self) {
-                    unsafe { crate::detail::__rust_thunk___ZN10SomeStruct7Method1Ev(self) }
+                    self::some_struct::Method1(self)
                 }
                 ...
                 #[inline(always)]
                 pub fn Method2<'a>(&'a mut self) {
-                    unsafe { crate::detail::__rust_thunk___ZN10SomeStruct7Method2Ev(self) }
+                    self::some_struct::Method2(self)
                 }
                 ...
                 #[inline(always)]
                 pub fn Method3<'a>(&'a mut self) {
-                    unsafe { crate::detail::__rust_thunk___ZN10SomeStruct7Method3Ev(self) }
+                    self::some_struct::Method3(self)
                 }
             }
         }

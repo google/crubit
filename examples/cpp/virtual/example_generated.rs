@@ -39,7 +39,7 @@ impl RustDerived {
     /// Generated from: examples/cpp/virtual/example.h;l=16
     #[inline(always)]
     pub unsafe fn Method1(__this: *const Self) -> ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this)
+        self::rust_derived::Method1(__this)
     }
     /// # Safety
     ///
@@ -49,7 +49,7 @@ impl RustDerived {
     /// Generated from: examples/cpp/virtual/example.h;l=18
     #[inline(always)]
     pub unsafe fn Upcast(__this: *mut Self) -> *mut ::base::ExampleBase {
-        crate::detail::__rust_thunk___ZN11RustDerived6UpcastEv(__this)
+        self::rust_derived::Upcast(__this)
     }
 }
 
@@ -129,6 +129,29 @@ unsafe impl ::operator::Delete for crate::RustDerived {
     #[inline(always)]
     unsafe fn delete(p: *mut Self) {
         crate::detail::__crubit_operator_delete__11RustDerived___2f_2fthird_5fparty_2fcrubit_2fexamples_2fcpp_2fvirtual_3aexample_5flib(p);
+    }
+}
+
+pub mod rust_derived {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    ///
+    /// Generated from: examples/cpp/virtual/example.h;l=16
+    #[inline(always)]
+    pub unsafe fn Method1(__this: *const crate::RustDerived) -> ::ffi_11::c_int {
+        crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this)
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    ///
+    /// Generated from: examples/cpp/virtual/example.h;l=18
+    #[inline(always)]
+    pub unsafe fn Upcast(__this: *mut crate::RustDerived) -> *mut ::base::ExampleBase {
+        crate::detail::__rust_thunk___ZN11RustDerived6UpcastEv(__this)
     }
 }
 

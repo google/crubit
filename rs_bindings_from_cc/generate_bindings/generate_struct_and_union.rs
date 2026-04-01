@@ -646,10 +646,9 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
             type_name = record.mangled_cc_name,
             odr_suffix = record.owning_target.convert_to_cc_identifier(),
         ));
-        api_snippets.thunks.push(Thunk::Fmt {
-            fmt_fn_name: fmt_fn_name.clone(),
-            param_type: qualified_ident.clone(),
-        });
+        let thunk =
+            Thunk::Fmt { fmt_fn_name: fmt_fn_name.clone(), param_type: qualified_ident.clone() };
+        api_snippets.thunks.push(thunk);
         api_snippets.cc_details.push(ThunkImpl::Fmt {
             fmt_fn_name: fmt_fn_name.clone(),
             param_type: cpp_type_name_for_record(&record, db)?,
@@ -697,6 +696,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
 
     let owned_type_name = record.owned_ptr_type.as_ref().map(|opt| make_rs_ident(opt.as_ref()));
     let member_methods = api_snippets.member_functions.remove(&record.id).unwrap_or_default();
+    let free_functions = api_snippets.free_functions.remove(&record.id).unwrap_or_default();
 
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
@@ -729,6 +729,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
             StructOrUnion::Struct
         },
         ident,
+        id: record.id,
         head_padding,
         field_definitions,
         implements_send: record.trait_derives.send,
@@ -743,6 +744,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         indirect_functions,
         owned_type_name,
         member_methods,
+        free_functions,
         delete: operator_delete_impl,
         lifetime_params,
     };

@@ -44,18 +44,12 @@ impl __CcTemplateInst10MyTemplateIiE {
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
     #[inline(always)]
     pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut __return as*mut::core::ffi::c_void,value);
-            __return.assume_init()
-        }
+        self::cc_template_inst10_my_template_ii_e::Create(value)
     }
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
     pub fn value<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(self)
-        }
+        self::cc_template_inst10_my_template_ii_e::value(self)
     }
 }
 
@@ -67,6 +61,28 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
         unsafe {
             crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut tmp as*mut _);
             tmp.assume_init()
+        }
+    }
+}
+
+pub mod cc_template_inst10_my_template_ii_e {
+    /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
+    #[inline(always)]
+    pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
+        unsafe {
+            let mut __return =
+                ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
+            crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut __return as*mut::core::ffi::c_void,value);
+            __return.assume_init()
+        }
+    }
+    /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
+    #[inline(always)]
+    pub fn value<'__this>(
+        __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
+    ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
+        unsafe {
+            crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(__this)
         }
     }
 }

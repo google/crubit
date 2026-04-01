@@ -37,7 +37,7 @@ pub mod foo {
         /// Generated from: examples/cpp/method/example.h;l=14
         #[inline(always)]
         pub unsafe fn MyMethod(__this: *mut Self) {
-            crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this)
+            self::bar::MyMethod(__this)
         }
     }
 
@@ -50,6 +50,19 @@ pub mod foo {
                 crate::detail::__rust_thunk___ZN3foo3BarC1Ev(&raw mut tmp as *mut _);
                 tmp.assume_init()
             }
+        }
+    }
+
+    pub mod bar {
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        ///
+        /// Generated from: examples/cpp/method/example.h;l=14
+        #[inline(always)]
+        pub unsafe fn MyMethod(__this: *mut crate::foo::Bar) {
+            crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this)
         }
     }
 }

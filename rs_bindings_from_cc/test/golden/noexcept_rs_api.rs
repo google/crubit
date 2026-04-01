@@ -28,7 +28,7 @@ unsafe impl ::cxx::ExternType for SomeClass {
 impl SomeClass {
     #[inline(always)]
     pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
-        unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
+        self::some_class::create(i, c)
     }
     /// # Safety
     ///
@@ -36,7 +36,7 @@ impl SomeClass {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_member(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this)
+        self::some_class::no_except_member(__this)
     }
     /// # Safety
     ///
@@ -44,7 +44,7 @@ impl SomeClass {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_true_member(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this)
+        self::some_class::no_except_true_member(__this)
     }
     /// # Safety
     ///
@@ -52,7 +52,7 @@ impl SomeClass {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_false_member(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this)
+        self::some_class::no_except_false_member(__this)
     }
 }
 
@@ -64,6 +64,37 @@ impl Default for SomeClass {
             crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
+    }
+}
+
+pub mod some_class {
+    #[inline(always)]
+    pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn no_except_member(__this: *mut crate::SomeClass) {
+        crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this)
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn no_except_true_member(__this: *mut crate::SomeClass) {
+        crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this)
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn no_except_false_member(__this: *mut crate::SomeClass) {
+        crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this)
     }
 }
 

@@ -38,9 +38,6 @@ impl Default for Foo {
 }
 
 pub mod foo {
-    #[allow(unused_imports)]
-    use super::*;
-
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar
@@ -66,9 +63,6 @@ pub mod foo {
     }
 
     pub mod bar {
-        #[allow(unused_imports)]
-        use super::*;
-
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar :: Baz
@@ -95,18 +89,11 @@ pub mod foo {
     }
 }
 
-/// # Safety
-///
-/// To call a function that accepts this type, you must uphold these requirements:
-/// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=already_snake_case
 pub struct already_snake_case {
-    /// Reason for representing this field as a blob of bytes:
-    /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
-    pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    pub i: crate::already_snake_case_items::Inner,
 }
 impl !Send for already_snake_case {}
 impl !Sync for already_snake_case {}
@@ -126,21 +113,39 @@ impl Default for already_snake_case {
     }
 }
 
-// error: struct `already_snake_case::Inner` could not be bound
-//   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+pub mod already_snake_case_items {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=already_snake_case :: Inner
+    pub struct Inner {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for Inner {}
+    impl !Sync for Inner {}
+    unsafe impl ::cxx::ExternType for Inner {
+        type Id = ::cxx::type_id!("already_snake_case :: Inner");
+        type Kind = ::cxx::kind::Trivial;
+    }
 
-/// # Safety
-///
-/// To call a function that accepts this type, you must uphold these requirements:
-/// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    impl Default for Inner {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN18already_snake_case5InnerC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+}
+
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames
 pub struct ConflictingSnakeCaseNames {
-    /// Reason for representing this field as a blob of bytes:
-    /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
-    pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    pub i: crate::conflicting_snake_case_names::Inner,
 }
 impl !Send for ConflictingSnakeCaseNames {}
 impl !Sync for ConflictingSnakeCaseNames {}
@@ -160,21 +165,39 @@ impl Default for ConflictingSnakeCaseNames {
     }
 }
 
-// error: struct `ConflictingSnakeCaseNames::Inner` could not be bound
-//   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+pub mod conflicting_snake_case_names {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames :: Inner
+    pub struct Inner {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for Inner {}
+    impl !Sync for Inner {}
+    unsafe impl ::cxx::ExternType for Inner {
+        type Id = ::cxx::type_id!("ConflictingSnakeCaseNames :: Inner");
+        type Kind = ::cxx::kind::Trivial;
+    }
 
-/// # Safety
-///
-/// To call a function that accepts this type, you must uphold these requirements:
-/// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    impl Default for Inner {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN25ConflictingSnakeCaseNames5InnerC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+}
+
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_
 pub struct ConflictingSnakeCaseNames_ {
-    /// Reason for representing this field as a blob of bytes:
-    /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
-    pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    pub i: crate::conflicting_snake_case_names_items::Inner,
 }
 impl !Send for ConflictingSnakeCaseNames_ {}
 impl !Sync for ConflictingSnakeCaseNames_ {}
@@ -196,8 +219,33 @@ impl Default for ConflictingSnakeCaseNames_ {
     }
 }
 
-// error: struct `ConflictingSnakeCaseNames_::Inner` could not be bound
-//   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+pub mod conflicting_snake_case_names_items {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_ :: Inner
+    pub struct Inner {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for Inner {}
+    impl !Sync for Inner {}
+    unsafe impl ::cxx::ExternType for Inner {
+        type Id = ::cxx::type_id!("ConflictingSnakeCaseNames_ :: Inner");
+        type Kind = ::cxx::kind::Trivial;
+    }
+
+    impl Default for Inner {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN26ConflictingSnakeCaseNames_5InnerC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -224,9 +272,6 @@ impl Default for OnlyOneHasNestedItems {
 }
 
 pub mod only_one_has_nested_items {
-    #[allow(unused_imports)]
-    use super::*;
-
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems :: Inner
@@ -280,18 +325,11 @@ impl Default for OnlyOneHasNestedItems_ {
 
 // no nested items
 
-/// # Safety
-///
-/// To call a function that accepts this type, you must uphold these requirements:
-/// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace
 pub struct SameNameAsNamespace {
-    /// Reason for representing this field as a blob of bytes:
-    /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
-    pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+    pub i: crate::same_name_as_namespace_items::Inner,
 }
 impl !Send for SameNameAsNamespace {}
 impl !Sync for SameNameAsNamespace {}
@@ -311,8 +349,33 @@ impl Default for SameNameAsNamespace {
     }
 }
 
-// error: struct `SameNameAsNamespace::Inner` could not be bound
-//   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+pub mod same_name_as_namespace_items {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace :: Inner
+    pub struct Inner {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for Inner {}
+    impl !Sync for Inner {}
+    unsafe impl ::cxx::ExternType for Inner {
+        type Id = ::cxx::type_id!("SameNameAsNamespace :: Inner");
+        type Kind = ::cxx::kind::Trivial;
+    }
+
+    impl Default for Inner {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN19SameNameAsNamespace5InnerC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+}
 
 // namespace same_name_as_namespace
 
@@ -373,18 +436,11 @@ pub mod same_name_as_namespace {
 // namespace same_name_as_namespace
 
 pub mod no_longer_top_level {
-    /// # Safety
-    ///
-    /// To call a function that accepts this type, you must uphold these requirements:
-    /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case
     pub struct already_snake_case {
-        /// Reason for representing this field as a blob of bytes:
-        /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
-        pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        pub i: crate::no_longer_top_level::already_snake_case_items::Inner,
     }
     impl !Send for already_snake_case {}
     impl !Sync for already_snake_case {}
@@ -406,21 +462,37 @@ pub mod no_longer_top_level {
         }
     }
 
-    // error: struct `no_longer_top_level::already_snake_case::Inner` could not be bound
-    //   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+    pub mod already_snake_case_items {
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case :: Inner
+        pub struct Inner {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        }
+        impl !Send for Inner {}
+        impl !Sync for Inner {}
+        unsafe impl ::cxx::ExternType for Inner {
+            type Id = ::cxx::type_id!("no_longer_top_level :: already_snake_case :: Inner");
+            type Kind = ::cxx::kind::Trivial;
+        }
 
-    /// # Safety
-    ///
-    /// To call a function that accepts this type, you must uphold these requirements:
-    /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+        impl Default for Inner {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN19no_longer_top_level18already_snake_case5InnerC1Ev(&raw mut tmp as*mut _);
+                    tmp.assume_init()
+                }
+            }
+        }
+    }
+
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames
     pub struct ConflictingSnakeCaseNames {
-        /// Reason for representing this field as a blob of bytes:
-        /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
-        pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        pub i: crate::no_longer_top_level::conflicting_snake_case_names::Inner,
     }
     impl !Send for ConflictingSnakeCaseNames {}
     impl !Sync for ConflictingSnakeCaseNames {}
@@ -440,21 +512,37 @@ pub mod no_longer_top_level {
         }
     }
 
-    // error: struct `no_longer_top_level::ConflictingSnakeCaseNames::Inner` could not be bound
-    //   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    pub mod conflicting_snake_case_names {
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames :: Inner
+        pub struct Inner {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        }
+        impl !Send for Inner {}
+        impl !Sync for Inner {}
+        unsafe impl ::cxx::ExternType for Inner {
+            type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames :: Inner");
+            type Kind = ::cxx::kind::Trivial;
+        }
 
-    /// # Safety
-    ///
-    /// To call a function that accepts this type, you must uphold these requirements:
-    /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+        impl Default for Inner {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNames5InnerC1Ev(&raw mut tmp as*mut _);
+                    tmp.assume_init()
+                }
+            }
+        }
+    }
+
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_
     pub struct ConflictingSnakeCaseNames_ {
-        /// Reason for representing this field as a blob of bytes:
-        /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
-        pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        pub i: crate::no_longer_top_level::conflicting_snake_case_names_items::Inner,
     }
     impl !Send for ConflictingSnakeCaseNames_ {}
     impl !Sync for ConflictingSnakeCaseNames_ {}
@@ -474,8 +562,31 @@ pub mod no_longer_top_level {
         }
     }
 
-    // error: struct `no_longer_top_level::ConflictingSnakeCaseNames_::Inner` could not be bound
-    //   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    pub mod conflicting_snake_case_names_items {
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner
+        pub struct Inner {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        }
+        impl !Send for Inner {}
+        impl !Sync for Inner {}
+        unsafe impl ::cxx::ExternType for Inner {
+            type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner");
+            type Kind = ::cxx::kind::Trivial;
+        }
+
+        impl Default for Inner {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_5InnerC1Ev(&raw mut tmp as*mut _);
+                    tmp.assume_init()
+                }
+            }
+        }
+    }
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
@@ -504,9 +615,6 @@ pub mod no_longer_top_level {
     }
 
     pub mod only_one_has_nested_items {
-        #[allow(unused_imports)]
-        use super::*;
-
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems :: Inner
@@ -560,18 +668,11 @@ pub mod no_longer_top_level {
 
     // no nested items
 
-    /// # Safety
-    ///
-    /// To call a function that accepts this type, you must uphold these requirements:
-    /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace
     pub struct SameNameAsNamespace {
-        /// Reason for representing this field as a blob of bytes:
-        /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
-        pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
+        pub i: crate::no_longer_top_level::same_name_as_namespace_items::Inner,
     }
     impl !Send for SameNameAsNamespace {}
     impl !Sync for SameNameAsNamespace {}
@@ -593,8 +694,31 @@ pub mod no_longer_top_level {
         }
     }
 
-    // error: struct `no_longer_top_level::SameNameAsNamespace::Inner` could not be bound
-    //   crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+    pub mod same_name_as_namespace_items {
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace :: Inner
+        pub struct Inner {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        }
+        impl !Send for Inner {}
+        impl !Sync for Inner {}
+        unsafe impl ::cxx::ExternType for Inner {
+            type Id = ::cxx::type_id!("no_longer_top_level :: SameNameAsNamespace :: Inner");
+            type Kind = ::cxx::kind::Trivial;
+        }
+
+        impl Default for Inner {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN19no_longer_top_level19SameNameAsNamespace5InnerC1Ev(&raw mut tmp as*mut _);
+                    tmp.assume_init()
+                }
+            }
+        }
+    }
 
     // namespace same_name_as_namespace
 
@@ -678,12 +802,33 @@ impl Default for ContainsForwardDeclared {
     }
 }
 
-// error: struct `ContainsForwardDeclared::Nested` could not be bound
-//   depends on type with missing bindings: crubit.rs/errors/nested_type: Could not find parent's module name.
-//     This is a bug. The parent's module name should always be
-//     in the list. More info:
-//       for item: ContainsForwardDeclared::Nested
-//       inside parent module contains_forward_declared (originally ContainsForwardDeclared)
+pub mod contains_forward_declared {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared :: Nested
+    pub struct Nested {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for Nested {}
+    impl !Sync for Nested {}
+    unsafe impl ::cxx::ExternType for Nested {
+        type Id = ::cxx::type_id!("ContainsForwardDeclared :: Nested");
+        type Kind = ::cxx::kind::Trivial;
+    }
+
+    impl Default for Nested {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23ContainsForwardDeclared6NestedC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -695,10 +840,19 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN18already_snake_caseC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN18already_snake_case5InnerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN25ConflictingSnakeCaseNamesC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN25ConflictingSnakeCaseNames5InnerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN26ConflictingSnakeCaseNames_C1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN26ConflictingSnakeCaseNames_5InnerC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN21OnlyOneHasNestedItemsC1Ev(
@@ -713,6 +867,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN19SameNameAsNamespaceC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN19SameNameAsNamespace5InnerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN22same_name_as_namespace3FooC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -722,10 +879,19 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level18already_snake_caseC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level18already_snake_case5InnerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNamesC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNames5InnerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_C1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_5InnerC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level21OnlyOneHasNestedItemsC1Ev(
@@ -740,6 +906,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level19SameNameAsNamespaceC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level19SameNameAsNamespace5InnerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level22same_name_as_namespace3FooC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -747,6 +916,9 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23ContainsForwardDeclaredC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23ContainsForwardDeclared6NestedC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
     }
@@ -768,16 +940,31 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Foo: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Foo: Drop);
     assert!(::core::mem::offset_of!(crate::Foo, foo) == 0);
+    assert!(::core::mem::size_of::<crate::already_snake_case_items::Inner>() == 1);
+    assert!(::core::mem::align_of::<crate::already_snake_case_items::Inner>() == 1);
+    static_assertions::assert_impl_all!(crate::already_snake_case_items::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::already_snake_case_items::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::already_snake_case>() == 1);
     assert!(::core::mem::align_of::<crate::already_snake_case>() == 1);
     static_assertions::assert_impl_all!(crate::already_snake_case: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::already_snake_case: Drop);
     assert!(::core::mem::offset_of!(crate::already_snake_case, i) == 0);
+    assert!(::core::mem::size_of::<crate::conflicting_snake_case_names::Inner>() == 1);
+    assert!(::core::mem::align_of::<crate::conflicting_snake_case_names::Inner>() == 1);
+    static_assertions::assert_impl_all!(crate::conflicting_snake_case_names::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::conflicting_snake_case_names::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::ConflictingSnakeCaseNames>() == 1);
     assert!(::core::mem::align_of::<crate::ConflictingSnakeCaseNames>() == 1);
     static_assertions::assert_impl_all!(crate::ConflictingSnakeCaseNames: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ConflictingSnakeCaseNames: Drop);
     assert!(::core::mem::offset_of!(crate::ConflictingSnakeCaseNames, i) == 0);
+    assert!(::core::mem::size_of::<crate::conflicting_snake_case_names_items::Inner>() == 1);
+    assert!(::core::mem::align_of::<crate::conflicting_snake_case_names_items::Inner>() == 1);
+    static_assertions::assert_impl_all!(crate::conflicting_snake_case_names_items::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::conflicting_snake_case_names_items::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::ConflictingSnakeCaseNames_>() == 1);
     assert!(::core::mem::align_of::<crate::ConflictingSnakeCaseNames_>() == 1);
     static_assertions::assert_impl_all!(crate::ConflictingSnakeCaseNames_: Copy,Clone);
@@ -798,6 +985,11 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::OnlyOneHasNestedItems_: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::OnlyOneHasNestedItems_: Drop);
 
+    assert!(::core::mem::size_of::<crate::same_name_as_namespace_items::Inner>() == 1);
+    assert!(::core::mem::align_of::<crate::same_name_as_namespace_items::Inner>() == 1);
+    static_assertions::assert_impl_all!(crate::same_name_as_namespace_items::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::same_name_as_namespace_items::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::SameNameAsNamespace>() == 1);
     assert!(::core::mem::align_of::<crate::SameNameAsNamespace>() == 1);
     static_assertions::assert_impl_all!(crate::SameNameAsNamespace: Copy,Clone);
@@ -813,16 +1005,48 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::same_name_as_namespace::Bar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::same_name_as_namespace::Bar: Drop);
 
+    assert!(
+        ::core::mem::size_of::<crate::no_longer_top_level::already_snake_case_items::Inner>() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::no_longer_top_level::already_snake_case_items::Inner>() == 1
+    );
+    static_assertions::assert_impl_all!(crate::no_longer_top_level::already_snake_case_items::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::no_longer_top_level::already_snake_case_items::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::no_longer_top_level::already_snake_case>() == 1);
     assert!(::core::mem::align_of::<crate::no_longer_top_level::already_snake_case>() == 1);
     static_assertions::assert_impl_all!(crate::no_longer_top_level::already_snake_case: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::no_longer_top_level::already_snake_case: Drop);
     assert!(::core::mem::offset_of!(crate::no_longer_top_level::already_snake_case, i) == 0);
+    assert!(
+        ::core::mem::size_of::<crate::no_longer_top_level::conflicting_snake_case_names::Inner>()
+            == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::no_longer_top_level::conflicting_snake_case_names::Inner>()
+            == 1
+    );
+    static_assertions::assert_impl_all!(crate::no_longer_top_level::conflicting_snake_case_names::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::no_longer_top_level::conflicting_snake_case_names::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::no_longer_top_level::ConflictingSnakeCaseNames>() == 1);
     assert!(::core::mem::align_of::<crate::no_longer_top_level::ConflictingSnakeCaseNames>() == 1);
     static_assertions::assert_impl_all!(crate::no_longer_top_level::ConflictingSnakeCaseNames: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::no_longer_top_level::ConflictingSnakeCaseNames: Drop);
     assert!(::core::mem::offset_of!(crate::no_longer_top_level::ConflictingSnakeCaseNames, i) == 0);
+    assert!(
+        ::core::mem::size_of::<crate::no_longer_top_level::conflicting_snake_case_names_items::Inner>(
+        ) == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::no_longer_top_level::conflicting_snake_case_names_items::Inner,
+        >() == 1
+    );
+    static_assertions::assert_impl_all!(crate::no_longer_top_level::conflicting_snake_case_names_items::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::no_longer_top_level::conflicting_snake_case_names_items::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::no_longer_top_level::ConflictingSnakeCaseNames_>() == 1);
     assert!(::core::mem::align_of::<crate::no_longer_top_level::ConflictingSnakeCaseNames_>() == 1);
     static_assertions::assert_impl_all!(crate::no_longer_top_level::ConflictingSnakeCaseNames_: Copy,Clone);
@@ -850,6 +1074,17 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::no_longer_top_level::OnlyOneHasNestedItems_: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::no_longer_top_level::OnlyOneHasNestedItems_: Drop);
 
+    assert!(
+        ::core::mem::size_of::<crate::no_longer_top_level::same_name_as_namespace_items::Inner>()
+            == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::no_longer_top_level::same_name_as_namespace_items::Inner>()
+            == 1
+    );
+    static_assertions::assert_impl_all!(crate::no_longer_top_level::same_name_as_namespace_items::Inner: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::no_longer_top_level::same_name_as_namespace_items::Inner: Drop);
+
     assert!(::core::mem::size_of::<crate::no_longer_top_level::SameNameAsNamespace>() == 1);
     assert!(::core::mem::align_of::<crate::no_longer_top_level::SameNameAsNamespace>() == 1);
     static_assertions::assert_impl_all!(crate::no_longer_top_level::SameNameAsNamespace: Copy,Clone);
@@ -868,6 +1103,11 @@ const _: () = {
     );
     static_assertions::assert_impl_all!(crate::no_longer_top_level::same_name_as_namespace::Bar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::no_longer_top_level::same_name_as_namespace::Bar: Drop);
+
+    assert!(::core::mem::size_of::<crate::contains_forward_declared::Nested>() == 1);
+    assert!(::core::mem::align_of::<crate::contains_forward_declared::Nested>() == 1);
+    static_assertions::assert_impl_all!(crate::contains_forward_declared::Nested: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::contains_forward_declared::Nested: Drop);
 
     assert!(::core::mem::size_of::<crate::ContainsForwardDeclared>() == 1);
     assert!(::core::mem::align_of::<crate::ContainsForwardDeclared>() == 1);

@@ -32,7 +32,7 @@ impl Struct {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessNone(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this)
+        self::r#struct::AccessNone(__this)
     }
     /// # Safety
     ///
@@ -40,7 +40,7 @@ impl Struct {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this)
+        self::r#struct::AccessPublic(__this)
     }
 }
 
@@ -52,6 +52,25 @@ impl Default for Struct {
             crate::detail::__rust_thunk___ZN6StructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
+    }
+}
+
+pub mod r#struct {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn AccessNone(__this: *mut crate::Struct) {
+        crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this)
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn AccessPublic(__this: *mut crate::Struct) {
+        crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this)
     }
 }
 
@@ -74,7 +93,7 @@ impl Class {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this)
+        self::class::AccessPublic(__this)
     }
 }
 
@@ -86,6 +105,17 @@ impl Default for Class {
             crate::detail::__rust_thunk___ZN5ClassC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
+    }
+}
+
+pub mod class {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn AccessPublic(__this: *mut crate::Class) {
+        crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this)
     }
 }
 

@@ -32,8 +32,35 @@ impl SomeClass {
     /// Example of a factory method.
     #[inline(always)]
     pub fn static_factory_method(initial_value_of_field: ::ffi_11::c_int) -> crate::SomeClass {
+        self::some_class::static_factory_method(initial_value_of_field)
+    }
+    /// Static method working on primitive types (and unrelated to the struct).
+    #[inline(always)]
+    pub fn static_method_that_multiplies_its_args(
+        x: ::ffi_11::c_int,
+        y: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
+        self::some_class::static_method_that_multiplies_its_args(x, y)
+    }
+}
+
+impl Default for SomeClass {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod some_class {
+    /// Example of a factory method.
+    #[inline(always)]
+    pub fn static_factory_method(initial_value_of_field: ::ffi_11::c_int) -> crate::SomeClass {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
                 &raw mut __return as *mut ::core::ffi::c_void,
                 initial_value_of_field,
@@ -51,17 +78,6 @@ impl SomeClass {
             crate::detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
                 x, y,
             )
-        }
-    }
-}
-
-impl Default for SomeClass {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
         }
     }
 }

@@ -33,25 +33,17 @@ impl DestructionOrderRecorder {
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
     #[inline(always)]
     pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
-                int_field,
-            )
-        }
+        self::destruction_order_recorder::RecordDestruction(int_field)
     }
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
     #[inline(always)]
     pub fn GetDestructionRecord() -> ::ffi_11::c_int {
-        unsafe {
-            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
-        }
+        self::destruction_order_recorder::GetDestructionRecord()
     }
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
     #[inline(always)]
     pub fn ClearDestructionRecord() {
-        unsafe {
-            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv()
-        }
+        self::destruction_order_recorder::ClearDestructionRecord()
     }
 }
 
@@ -121,6 +113,32 @@ impl Drop for DestructionOrderRecorder {
     }
 }
 
+pub mod destruction_order_recorder {
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
+    #[inline(always)]
+    pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
+                int_field,
+            )
+        }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
+    #[inline(always)]
+    pub fn GetDestructionRecord() -> ::ffi_11::c_int {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
+        }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
+    #[inline(always)]
+    pub fn ClearDestructionRecord() {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv()
+        }
+    }
+}
+
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
@@ -150,11 +168,7 @@ impl FieldDestructionOrderTester {
         field2: ::ffi_11::c_int,
         field3: ::ffi_11::c_int,
     ) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
-                field1, field2, field3,
-            )
-        }
+        self::field_destruction_order_tester::DestructFromCpp(field1, field2, field3)
     }
 }
 
@@ -246,6 +260,22 @@ impl
             crate::DestructionOrderRecorder,
             crate::DestructionOrderRecorder,
         )>>::from(args)
+    }
+}
+
+pub mod field_destruction_order_tester {
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=51
+    #[inline(always)]
+    pub fn DestructFromCpp(
+        field1: ::ffi_11::c_int,
+        field2: ::ffi_11::c_int,
+        field3: ::ffi_11::c_int,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
+                field1, field2, field3,
+            )
+        }
     }
 }
 

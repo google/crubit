@@ -32,14 +32,14 @@ unsafe impl ::cxx::ExternType for CompatibleType {
 impl CompatibleType {
     #[inline(always)]
     pub fn renamed_default_constructor<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(self) }
+        self::compatible_type::renamed_default_constructor(self)
     }
     #[inline(always)]
     pub fn renamed_constructor<'a>(
         self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ffi_11::c_int,
     ) {
-        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(self, __param_0) }
+        self::compatible_type::renamed_constructor(self, __param_0)
     }
 }
 
@@ -49,6 +49,22 @@ impl CompatibleType {
 // error: function `CompatibleType::operator=` could not be bound
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
+
+pub mod compatible_type {
+    #[inline(always)]
+    pub fn renamed_default_constructor<'a>(
+        __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(__this) }
+    }
+    #[inline(always)]
+    pub fn renamed_constructor<'a>(
+        __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+        __param_0: ::ffi_11::c_int,
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(__this, __param_0) }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]

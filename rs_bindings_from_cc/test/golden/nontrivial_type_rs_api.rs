@@ -34,19 +34,19 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 impl Nontrivial {
     #[inline(always)]
     pub fn Unqualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(self) }
+        self::nontrivial::Unqualified(self)
     }
     #[inline(always)]
     pub fn ConstQualified<'a>(&'a self) {
-        unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(self) }
+        self::nontrivial::ConstQualified(self)
     }
     #[inline(always)]
     pub fn LvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(self) }
+        self::nontrivial::LvalueRefQualified(self)
     }
     #[inline(always)]
     pub fn ConstLvalueRefQualified<'a>(&'a self) {
-        unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(self) }
+        self::nontrivial::ConstLvalueRefQualified(self)
     }
 }
 
@@ -168,6 +168,25 @@ impl ::ctor::PinnedDrop for Nontrivial {
 // error: function `Nontrivial::operator+=` could not be bound
 //   Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'a mut crate::Nontrivial>
 
+pub mod nontrivial {
+    #[inline(always)]
+    pub fn Unqualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
+        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(__this) }
+    }
+    #[inline(always)]
+    pub fn ConstQualified<'a>(__this: &'a crate::Nontrivial) {
+        unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(__this) }
+    }
+    #[inline(always)]
+    pub fn LvalueRefQualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
+        unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(__this) }
+    }
+    #[inline(always)]
+    pub fn ConstLvalueRefQualified<'a>(__this: &'a crate::Nontrivial) {
+        unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(__this) }
+    }
+}
+
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
@@ -188,7 +207,7 @@ unsafe impl ::cxx::ExternType for NontrivialInline {
 impl NontrivialInline {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
+        self::nontrivial_inline::MemberFunction(self)
     }
 }
 
@@ -276,6 +295,13 @@ impl ::ctor::PinnedDrop for NontrivialInline {
     }
 }
 
+pub mod nontrivial_inline {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::NontrivialInline>) {
+        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(__this) }
+    }
+}
+
 /// Nontrivial due to member variables.
 ///
 /// This changes how the destructor / drop impl work -- instead of calling
@@ -349,7 +375,7 @@ unsafe impl ::cxx::ExternType for NontrivialUnpin {
 impl NontrivialUnpin {
     #[inline(always)]
     pub fn MemberFunction<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(self) }
+        self::nontrivial_unpin::MemberFunction(self)
     }
 }
 
@@ -432,6 +458,13 @@ impl Drop for NontrivialUnpin {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpinD1Ev(self) }
+    }
+}
+
+pub mod nontrivial_unpin {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(__this: &'a mut crate::NontrivialUnpin) {
+        unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(__this) }
     }
 }
 
@@ -565,7 +598,7 @@ where
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
+                    If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
 }
@@ -585,7 +618,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
 impl Nonmovable {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(self) }
+        self::nonmovable::MemberFunction(self)
     }
 }
 
@@ -610,6 +643,13 @@ impl ::ctor::PinnedDrop for Nonmovable {
     }
 }
 
+pub mod nonmovable {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::Nonmovable>) {
+        unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(__this) }
+    }
+}
+
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nNon-movable, non-trivial_abi type 'crate::Nonmovable' is not supported by value as parameter #0"
 )]
@@ -622,7 +662,7 @@ where
     #![allow(unused_variables)]
     unreachable!(
         "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
+                    If this message appears at runtime, please report a crubit.rs-bug."
     )
 }
 

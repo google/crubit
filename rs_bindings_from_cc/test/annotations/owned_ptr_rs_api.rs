@@ -43,7 +43,7 @@ impl RawThing {
     /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
     #[inline(always)]
     pub unsafe fn Close(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this)
+        self::raw_thing::Close(__this)
     }
 }
 
@@ -83,6 +83,19 @@ impl ::ctor::CtorNew<i32> for RawThing {
     #[inline(always)]
     fn ctor_new(args: i32) -> Self::CtorType {
         <Self as From<i32>>::from(args)
+    }
+}
+
+pub mod raw_thing {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    ///
+    /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
+    #[inline(always)]
+    pub unsafe fn Close(__this: *mut crate::RawThing) {
+        crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this)
     }
 }
 

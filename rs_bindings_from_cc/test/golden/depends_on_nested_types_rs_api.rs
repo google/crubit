@@ -18,5 +18,7 @@
 pub type FooBar = ::nested_types_cc::foo::Bar;
 pub use ::nested_types_cc::foo::bar as foo_bar;
 
-// error: type alias `ConflictingSnakeCaseNamesInner` could not be bound
-//   crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+/// This should not have bindings because Bar is a nested item of Foo, and the
+/// module "conflicting_snake_case_names" cannot be generated because it
+/// conflicts with the child module of ConflictingSnakeCaseNames_.
+pub type ConflictingSnakeCaseNamesInner = ::nested_types_cc::conflicting_snake_case_names::Inner;

@@ -47,7 +47,7 @@ impl S {
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
+        self::s::const_method(__this, p1, p2)
     }
     /// # Safety
     ///
@@ -61,7 +61,7 @@ impl S {
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
+        self::s::method(__this, p1, p2)
     }
 }
 
@@ -73,6 +73,37 @@ impl Default for S {
             crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
+    }
+}
+
+pub mod s {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    /// * `p1`: raw pointer
+    /// * `p2`: raw pointer
+    #[inline(always)]
+    pub unsafe fn const_method(
+        __this: *const crate::S,
+        p1: *mut ::ffi_11::c_int,
+        p2: *mut ::ffi_11::c_int,
+    ) -> *mut ::ffi_11::c_int {
+        crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    /// * `p1`: raw pointer
+    /// * `p2`: raw pointer
+    #[inline(always)]
+    pub unsafe fn method(
+        __this: *mut crate::S,
+        p1: *mut ::ffi_11::c_int,
+        p2: *mut ::ffi_11::c_int,
+    ) -> *mut ::ffi_11::c_int {
+        crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
 

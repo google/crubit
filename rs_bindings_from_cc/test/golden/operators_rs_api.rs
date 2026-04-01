@@ -826,7 +826,7 @@ where
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
-                If this message appears at runtime, please report a crubit.rs-bug."
+                    If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
 }
@@ -889,14 +889,7 @@ unsafe impl ::cxx::ExternType for ManyOperators {
 impl ManyOperators {
     #[inline(always)]
     pub fn unary_plus<'a>(&'a self) -> crate::ManyOperators {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-            );
-            __return.assume_init()
-        }
+        self::many_operators::unary_plus(self)
     }
 }
 
@@ -1027,6 +1020,20 @@ impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
 // error: function `ManyOperators::operator>>=` could not be bound
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (rhs): references are not yet supported
+
+pub mod many_operators {
+    #[inline(always)]
+    pub fn unary_plus<'a>(__this: &'a crate::ManyOperators) -> crate::ManyOperators {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                __this,
+            );
+            __return.assume_init()
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]

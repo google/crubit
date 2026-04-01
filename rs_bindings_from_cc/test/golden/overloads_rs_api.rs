@@ -70,7 +70,7 @@ impl Foo {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn Bar(__this: *mut Self, __param_0: ::ffi_11::c_int) {
-        crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0)
+        self::foo::Bar(__this, __param_0)
     }
 }
 
@@ -92,6 +92,17 @@ impl Default for Foo {
 // error: function `Foo::Bar` could not be bound
 //   Unsupported parameter #1 (__param_0): template instantiation is not yet supported
 //   template instantiation is not yet supported
+
+pub mod foo {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    #[inline(always)]
+    pub unsafe fn Bar(__this: *mut crate::Foo, __param_0: ::ffi_11::c_int) {
+        crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0)
+    }
+}
 
 // error: struct `Sizeof<float>` could not be bound
 //   template instantiation is not yet supported

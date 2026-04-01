@@ -31,21 +31,19 @@ pub mod ns {
     impl Trivial {
         #[inline(always)]
         pub fn Unqualified<'a>(&'a mut self) {
-            unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(self) }
+            self::trivial::Unqualified(self)
         }
         #[inline(always)]
         pub fn ConstQualified<'a>(&'a self) {
-            unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(self) }
+            self::trivial::ConstQualified(self)
         }
         #[inline(always)]
         pub fn LvalueRefQualified<'a>(&'a mut self) {
-            unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(self) }
+            self::trivial::LvalueRefQualified(self)
         }
         #[inline(always)]
         pub fn ConstLvalueRefQualified<'a>(&'a self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(self)
-            }
+            self::trivial::ConstLvalueRefQualified(self)
         }
     }
 
@@ -79,6 +77,27 @@ pub mod ns {
 
     // error: function `ns::Trivial::ConstRvalueRefQualified` could not be bound
     //   Unsupported parameter #0 (__this): references are not yet supported
+
+    pub mod trivial {
+        #[inline(always)]
+        pub fn Unqualified<'a>(__this: &'a mut crate::ns::Trivial) {
+            unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(__this) }
+        }
+        #[inline(always)]
+        pub fn ConstQualified<'a>(__this: &'a crate::ns::Trivial) {
+            unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(__this) }
+        }
+        #[inline(always)]
+        pub fn LvalueRefQualified<'a>(__this: &'a mut crate::ns::Trivial) {
+            unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(__this) }
+        }
+        #[inline(always)]
+        pub fn ConstLvalueRefQualified<'a>(__this: &'a crate::ns::Trivial) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(__this)
+            }
+        }
+    }
 
     #[inline(always)]
     pub fn TakesByValue(mut trivial: crate::ns::Trivial) -> crate::ns::Trivial {

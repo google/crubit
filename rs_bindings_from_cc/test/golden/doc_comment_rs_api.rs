@@ -34,19 +34,17 @@ impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> ::ffi_11::c_int {
-        unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
+        self::doc_comment_slashes::get_field_value(self)
     }
     /// A non-static member function (non-`const` flavor).
     #[inline(always)]
     pub fn set_field_value<'a>(&'a mut self, new_value: ::ffi_11::c_int) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value)
-        }
+        self::doc_comment_slashes::set_field_value(self, new_value)
     }
     /// A static method.
     #[inline(always)]
     pub fn static_method() -> ::ffi_11::c_int {
-        unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
+        self::doc_comment_slashes::static_method()
     }
 }
 
@@ -99,6 +97,31 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for DocCommentSlashes {
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         <Self as From<::ffi_11::c_int>>::from(args)
+    }
+}
+
+pub mod doc_comment_slashes {
+    /// A non-static member function (`const` flavor).
+    #[inline(always)]
+    pub fn get_field_value<'a>(__this: &'a crate::DocCommentSlashes) -> ::ffi_11::c_int {
+        unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(__this) }
+    }
+    /// A non-static member function (non-`const` flavor).
+    #[inline(always)]
+    pub fn set_field_value<'a>(
+        __this: &'a mut crate::DocCommentSlashes,
+        new_value: ::ffi_11::c_int,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(
+                __this, new_value,
+            )
+        }
+    }
+    /// A static method.
+    #[inline(always)]
+    pub fn static_method() -> ::ffi_11::c_int {
+        unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
     }
 }
 

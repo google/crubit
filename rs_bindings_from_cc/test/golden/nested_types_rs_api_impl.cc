@@ -52,6 +52,14 @@ extern "C" void __rust_thunk___ZN18already_snake_caseC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct already_snake_case::Inner) == 1);
+static_assert(alignof(struct already_snake_case::Inner) == 1);
+
+extern "C" void __rust_thunk___ZN18already_snake_case5InnerC1Ev(
+    struct already_snake_case::Inner* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct ConflictingSnakeCaseNames) == 1);
 static_assert(alignof(struct ConflictingSnakeCaseNames) == 1);
 static_assert(CRUBIT_OFFSET_OF(i, struct ConflictingSnakeCaseNames) == 0);
@@ -61,12 +69,28 @@ extern "C" void __rust_thunk___ZN25ConflictingSnakeCaseNamesC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct ConflictingSnakeCaseNames::Inner) == 1);
+static_assert(alignof(struct ConflictingSnakeCaseNames::Inner) == 1);
+
+extern "C" void __rust_thunk___ZN25ConflictingSnakeCaseNames5InnerC1Ev(
+    struct ConflictingSnakeCaseNames::Inner* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct ConflictingSnakeCaseNames_) == 1);
 static_assert(alignof(struct ConflictingSnakeCaseNames_) == 1);
 static_assert(CRUBIT_OFFSET_OF(i, struct ConflictingSnakeCaseNames_) == 0);
 
 extern "C" void __rust_thunk___ZN26ConflictingSnakeCaseNames_C1Ev(
     struct ConflictingSnakeCaseNames_* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(struct ConflictingSnakeCaseNames_::Inner) == 1);
+static_assert(alignof(struct ConflictingSnakeCaseNames_::Inner) == 1);
+
+extern "C" void __rust_thunk___ZN26ConflictingSnakeCaseNames_5InnerC1Ev(
+    struct ConflictingSnakeCaseNames_::Inner* __this) {
   crubit::construct_at(__this);
 }
 
@@ -104,6 +128,14 @@ extern "C" void __rust_thunk___ZN19SameNameAsNamespaceC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct SameNameAsNamespace::Inner) == 1);
+static_assert(alignof(struct SameNameAsNamespace::Inner) == 1);
+
+extern "C" void __rust_thunk___ZN19SameNameAsNamespace5InnerC1Ev(
+    struct SameNameAsNamespace::Inner* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct same_name_as_namespace::Foo) == 1);
 static_assert(alignof(struct same_name_as_namespace::Foo) == 1);
 
@@ -130,6 +162,17 @@ extern "C" void __rust_thunk___ZN19no_longer_top_level18already_snake_caseC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct no_longer_top_level::already_snake_case::Inner) ==
+              1);
+static_assert(alignof(struct no_longer_top_level::already_snake_case::Inner) ==
+              1);
+
+extern "C" void
+__rust_thunk___ZN19no_longer_top_level18already_snake_case5InnerC1Ev(
+    struct no_longer_top_level::already_snake_case::Inner* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct no_longer_top_level::ConflictingSnakeCaseNames) ==
               1);
 static_assert(alignof(struct no_longer_top_level::ConflictingSnakeCaseNames) ==
@@ -144,6 +187,17 @@ __rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNamesC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(
+    sizeof(struct no_longer_top_level::ConflictingSnakeCaseNames::Inner) == 1);
+static_assert(
+    alignof(struct no_longer_top_level::ConflictingSnakeCaseNames::Inner) == 1);
+
+extern "C" void
+__rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNames5InnerC1Ev(
+    struct no_longer_top_level::ConflictingSnakeCaseNames::Inner* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct no_longer_top_level::ConflictingSnakeCaseNames_) ==
               1);
 static_assert(alignof(struct no_longer_top_level::ConflictingSnakeCaseNames_) ==
@@ -155,6 +209,18 @@ static_assert(CRUBIT_OFFSET_OF(
 extern "C" void
 __rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_C1Ev(
     struct no_longer_top_level::ConflictingSnakeCaseNames_* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(
+    sizeof(struct no_longer_top_level::ConflictingSnakeCaseNames_::Inner) == 1);
+static_assert(
+    alignof(struct no_longer_top_level::ConflictingSnakeCaseNames_::Inner) ==
+    1);
+
+extern "C" void
+__rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_5InnerC1Ev(
+    struct no_longer_top_level::ConflictingSnakeCaseNames_::Inner* __this) {
   crubit::construct_at(__this);
 }
 
@@ -199,6 +265,17 @@ extern "C" void __rust_thunk___ZN19no_longer_top_level19SameNameAsNamespaceC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct no_longer_top_level::SameNameAsNamespace::Inner) ==
+              1);
+static_assert(alignof(struct no_longer_top_level::SameNameAsNamespace::Inner) ==
+              1);
+
+extern "C" void
+__rust_thunk___ZN19no_longer_top_level19SameNameAsNamespace5InnerC1Ev(
+    struct no_longer_top_level::SameNameAsNamespace::Inner* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct no_longer_top_level::same_name_as_namespace::Foo) ==
               1);
 static_assert(
@@ -226,6 +303,14 @@ static_assert(alignof(struct ContainsForwardDeclared) == 1);
 
 extern "C" void __rust_thunk___ZN23ContainsForwardDeclaredC1Ev(
     struct ContainsForwardDeclared* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(struct ContainsForwardDeclared::Nested) == 1);
+static_assert(alignof(struct ContainsForwardDeclared::Nested) == 1);
+
+extern "C" void __rust_thunk___ZN23ContainsForwardDeclared6NestedC1Ev(
+    struct ContainsForwardDeclared::Nested* __this) {
   crubit::construct_at(__this);
 }
 

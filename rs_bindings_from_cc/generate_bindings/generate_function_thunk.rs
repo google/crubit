@@ -15,7 +15,7 @@ use ir::*;
 use itertools::Itertools;
 use lifetime_defaults_transform::lifetime_defaults_transform_func;
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote, ToTokens};
+use quote::{format_ident, quote};
 use std::borrow::Cow;
 use std::fmt::Write;
 use std::rc::Rc;
@@ -264,7 +264,7 @@ pub fn thunk_ident(func: &Func) -> Ident {
     )
 }
 
-fn generate_function_assertation_for_identifier(
+fn generate_function_assertion_for_identifier(
     db: &BindingsGenerator,
     func: &Func,
     id: &Identifier,
@@ -333,10 +333,10 @@ fn generate_function_assertation_for_identifier(
         #method_qualification
     };
 
-    Ok(ThunkImpl::FuntionTypeAssertation { cc_function_type, implementation_function })
+    Ok(ThunkImpl::FunctionTypeAssertion { cc_function_type, implementation_function })
 }
 
-pub fn generate_function_assertation(
+pub fn generate_function_assertion(
     db: &BindingsGenerator,
     func: &Func,
 ) -> Result<Option<ThunkImpl>> {
@@ -352,7 +352,7 @@ pub fn generate_function_assertation(
 
     match &func.cc_name {
         UnqualifiedIdentifier::Identifier(id) => {
-            Ok(Some(generate_function_assertation_for_identifier(db, func, id)?))
+            Ok(Some(generate_function_assertion_for_identifier(db, func, id)?))
         }
         // TODO: b/393169953 - support operators
         UnqualifiedIdentifier::Operator(_op) => Ok(None),

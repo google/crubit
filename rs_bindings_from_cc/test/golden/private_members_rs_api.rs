@@ -33,17 +33,11 @@ pub mod test_namespace_bindings {
     impl SomeClass {
         #[inline(always)]
         pub fn public_method<'a>(&'a mut self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv(
-                    self,
-                )
-            }
+            self::some_class::public_method(self)
         }
         #[inline(always)]
         pub fn public_static_method() {
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
-            }
+            self::some_class::public_static_method()
         }
     }
 
@@ -73,6 +67,23 @@ pub mod test_namespace_bindings {
     // error: function `test_namespace_bindings::SomeClass::operator=` could not be bound
     //   Unsupported return type: references are not yet supported
     //   Unsupported parameter #1 (__param_0): references are not yet supported
+
+    pub mod some_class {
+        #[inline(always)]
+        pub fn public_method<'a>(__this: &'a mut crate::test_namespace_bindings::SomeClass) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv(
+                    __this,
+                )
+            }
+        }
+        #[inline(always)]
+        pub fn public_static_method() {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
+            }
+        }
+    }
 }
 
 // namespace test_namespace_bindings

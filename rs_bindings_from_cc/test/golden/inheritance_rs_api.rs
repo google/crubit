@@ -346,7 +346,7 @@ unsafe impl ::cxx::ExternType for MethodBase1 {
 impl MethodBase1 {
     #[inline(always)]
     pub fn Public<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
+        self::method_base1::Public(self)
     }
     /// # Safety
     ///
@@ -354,15 +354,15 @@ impl MethodBase1 {
     /// * `__param_0`: raw pointer
     #[inline(always)]
     pub unsafe fn Equals<'a>(&'a mut self, __param_0: *const Self) {
-        crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(self, __param_0)
+        self::method_base1::Equals(self, __param_0)
     }
     #[inline(always)]
     pub fn Colliding1<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
+        self::method_base1::Colliding1(self)
     }
     #[inline(always)]
     pub fn Colliding2<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(self) }
+        self::method_base1::Colliding2(self)
     }
 }
 
@@ -391,6 +391,32 @@ impl Default for MethodBase1 {
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
 
+pub mod method_base1 {
+    #[inline(always)]
+    pub fn Public<'a>(__this: &'a mut crate::MethodBase1) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(__this) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__param_0`: raw pointer
+    #[inline(always)]
+    pub unsafe fn Equals<'a>(
+        __this: &'a mut crate::MethodBase1,
+        __param_0: *const crate::MethodBase1,
+    ) {
+        crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(__this, __param_0)
+    }
+    #[inline(always)]
+    pub fn Colliding1<'a>(__this: &'a mut crate::MethodBase1) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(__this) }
+    }
+    #[inline(always)]
+    pub fn Colliding2<'a>(__this: &'a mut crate::MethodBase1) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(__this) }
+    }
+}
+
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase2
@@ -406,11 +432,11 @@ unsafe impl ::cxx::ExternType for MethodBase2 {
 impl MethodBase2 {
     #[inline(always)]
     pub fn Colliding1<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(self) }
+        self::method_base2::Colliding1(self)
     }
     #[inline(always)]
     pub fn Colliding2<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(self) }
+        self::method_base2::Colliding2(self)
     }
 }
 
@@ -438,6 +464,17 @@ impl Default for MethodBase2 {
 // error: function `MethodBase2::operator=` could not be bound
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
+
+pub mod method_base2 {
+    #[inline(always)]
+    pub fn Colliding1<'a>(__this: &'a mut crate::MethodBase2) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(__this) }
+    }
+    #[inline(always)]
+    pub fn Colliding2<'a>(__this: &'a mut crate::MethodBase2) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(__this) }
+    }
+}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]

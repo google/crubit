@@ -41,15 +41,7 @@ unsafe impl ::cxx::ExternType for Struct {
 impl Struct {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN6Struct4MakeEic(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                f1,
-                f2,
-            );
-            __return.assume_init()
-        }
+        self::r#struct::Make(f1, f2)
     }
 }
 
@@ -78,6 +70,21 @@ impl Default for Struct {
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
 
+pub mod r#struct {
+    #[inline(always)]
+    pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::Struct>::uninit();
+            crate::detail::__rust_thunk___ZN6Struct4MakeEic(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                f1,
+                f2,
+            );
+            __return.assume_init()
+        }
+    }
+}
+
 /// Regression test for b/232418721.  This tests that the offset of `field2` is
 /// correct (given its alignment requirements there need to be 3 bytes of padding
 /// between `field1` and `field2`).  The verification is mostly done through
@@ -105,15 +112,7 @@ unsafe impl ::cxx::ExternType for PaddingBetweenFields {
 impl PaddingBetweenFields {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                f1,
-                f2,
-            );
-            __return.assume_init()
-        }
+        self::padding_between_fields::Make(f1, f2)
     }
 }
 
@@ -141,6 +140,21 @@ impl Default for PaddingBetweenFields {
 // error: function `PaddingBetweenFields::operator=` could not be bound
 //   Unsupported return type: references are not yet supported
 //   Unsupported parameter #1 (__param_0): references are not yet supported
+
+pub mod padding_between_fields {
+    #[inline(always)]
+    pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::PaddingBetweenFields>::uninit();
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                f1,
+                f2,
+            );
+            __return.assume_init()
+        }
+    }
+}
 
 /// Layout properties of FieldInTailPadding_InnerStruct look as follows:
 /// - alignment: 4 (because of `inner_int_field`)

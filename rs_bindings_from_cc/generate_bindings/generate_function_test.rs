@@ -1714,9 +1714,7 @@ fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn rvalue_ref_qualified_method<'a>(self: ::ctor::RvalueReference<'a, Self>) {
-                unsafe {
-                    crate::detail::__rust_thunk___ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv(self)
-                }
+                self::trivial_with_rvalue_ref_qualified_method::rvalue_ref_qualified_method(self)
             }
         }
     );
@@ -1746,9 +1744,7 @@ fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn rvalue_ref_const_qualified_method<'a>(self: ::ctor::ConstRvalueReference<'a, Self>) {
-                unsafe {
-                    crate::detail::__rust_thunk___ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv(self)
-                }
+                self::trivial_with_rvalue_ref_const_qualified_method::rvalue_ref_const_qualified_method(self)
             }
         }
     );
@@ -1907,9 +1903,7 @@ fn test_function_returning_rvalue_reference() -> Result<()> {
                 #[inline(always)]
                 pub fn GetRValueReference<'a>(&'a mut self)
                         -> ::ctor::RvalueReference<'a, crate::SomeStruct> {
-                    unsafe {
-                        crate::detail::__rust_thunk___ZN10SomeStruct18GetRValueReferenceEv(self)
-                    }
+                    self::some_struct::GetRValueReference(self)
                 }
             }
         }

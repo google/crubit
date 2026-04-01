@@ -38,9 +38,6 @@ impl Default for SomeStruct {
 }
 
 pub mod some_struct {
-    #[allow(unused_imports)]
-    use super::*;
-
     pub type nested_type = ::ffi_11::c_int;
 }
 

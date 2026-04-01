@@ -4,8 +4,8 @@
 
 use arc_anyhow::{Context, Error, Result};
 use database::code_snippet::{
-    required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature,
-    ResolvedTypeName, Visibility,
+    required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature, ResolvedName,
+    Visibility,
 };
 use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
@@ -68,39 +68,38 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                 // parent module, and it was unique, great! If it resolves to something else, that
                 // means it got overwritten. That would mean this item's parent cannot be generated,
                 // so we cannot generate this item.
-                let resolved_type_names = db
-                    .resolve_type_names(parent_record.clone())
+                let resolved_names = db
+                    .resolve_names(parent_record.clone())
                     .expect("enclosing_item_id should always be a record or a namespace");
 
-                let parent_module_name: Rc<str> =
-                    parent_record.rs_name.identifier.as_ref().to_snake_case().into();
-
-                let resolved_type_name = resolved_type_names.get(&parent_module_name).ok_or_else(||
-                    NoBindingsReason::DependencyFailed {
+                let (parent_module_name, parent_records_that_map_to_this_name) = resolved_names
+                    .iter()
+                    .find_map(|(name, resolved_name)| {
+                        if let ResolvedName::RecordNestedItems {
+                            parent_records_that_map_to_this_name,
+                        } = resolved_name
+                        {
+                            if parent_records_that_map_to_this_name.contains(&parent_record.id) {
+                                return Some((
+                                    name.clone(),
+                                    parent_records_that_map_to_this_name.clone(),
+                                ));
+                            }
+                        }
+                        None
+                    })
+                    .ok_or_else(|| NoBindingsReason::DependencyFailed {
                         context: db.debug_name(item.id()),
                         error: anyhow!(
                             "crubit.rs/errors/nested_type: Could not find parent's module name.\
-                            \n  This is a bug. The parent's module name should always be\
-                            \n  in the list. More info:\
-                            \n    for item: {item_name}\
-                            \n    inside parent module {parent_module_name} (originally {parent_name})",
+                                \n  This is a bug. The parent's module name should always be\
+                                \n  in the list. More info:\
+                                \n    for item: {item_name}\
+                                \n    inside parent record {parent_name}",
                             item_name = db.debug_name(item.id()),
-                            parent_name = db.debug_name(parent.id()),
+                            parent_name = db.debug_name(parent_record.id),
                         ),
                     })?;
-                let ResolvedTypeName::RecordNestedItems { parent_records_that_map_to_this_name } =
-                    resolved_type_name
-                else {
-                    // The parent module name was overwritten by something else.
-                    return Err(NoBindingsReason::ParentModuleNameOverwritten {
-                        conflicting_name: parent_module_name,
-                    });
-                };
-
-                assert!(
-                    parent_records_that_map_to_this_name.contains(&parent_record.id),
-                    "this parent module name should be in the list, this is a bug"
-                );
                 if parent_records_that_map_to_this_name.len() > 1 {
                     return Err(NoBindingsReason::ParentModuleNameNotUnique {
                         conflicting_name: parent_module_name,
@@ -407,17 +406,46 @@ fn type_visibility(
     }
 }
 
-/// Resolves type names to a map from name to ResolvedTypeName.
+enum NameConflictAction {
+    DoNotUpdate,
+    Overwrite,
+    Coalesce,
+}
+
+fn determine_name_conflict_action(
+    db: &BindingsGenerator,
+    old_resolved_name: &ResolvedName,
+    new_resolved_name: &ResolvedName,
+) -> NameConflictAction {
+    let ResolvedName::ExplicitItem(new_id) = new_resolved_name else {
+        return NameConflictAction::Coalesce;
+    };
+    let ResolvedName::ExplicitItem(old_id) = old_resolved_name else {
+        return NameConflictAction::Coalesce;
+    };
+    let old_item = db.find_untyped_decl(*old_id);
+    let new_item = db.find_untyped_decl(*new_id);
+    match (old_item, new_item) {
+        (Item::ExistingRustType(old_ert), Item::ExistingRustType(new_ert)) => {
+            if old_ert.rs_name == new_ert.rs_name {
+                NameConflictAction::DoNotUpdate
+            } else {
+                NameConflictAction::Coalesce
+            }
+        }
+        (Item::IncompleteRecord(_), Item::Record(_)) => NameConflictAction::Overwrite,
+        (Item::Record(_), Item::IncompleteRecord(_)) => NameConflictAction::DoNotUpdate,
+        _ => NameConflictAction::Coalesce,
+    }
+}
+
+/// Resolves names to a map from name to ResolvedName.
 ///
-/// This only checks the type namespace, as described here:
-/// https://doc.rust-lang.org/reference/names/namespaces.html.
-///
-/// In the future, we may want to extend this to check the value namespace for functions and
-/// global variables as well.
-pub fn resolve_type_names(
+/// This checks both type and value namespaces.
+pub fn resolve_names(
     db: &BindingsGenerator,
     parent: Rc<Record>,
-) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>> {
+) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
     let child_item_ids: &[ItemId] =
         match parent.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
             Some(Item::Namespace(ns)) => &ns.child_item_ids,
@@ -426,70 +454,119 @@ pub fn resolve_type_names(
             _ => bail!("not a parent namespace or record"),
         };
 
-    let mut names: HashMap<Rc<str>, ResolvedTypeName> = HashMap::new();
-    let mut insert = |name: Rc<str>, resolved_type_name: ResolvedTypeName| {
-        use std::collections::hash_map::Entry::*;
-        match names.entry(name) {
-            Vacant(vacant) => {
-                vacant.insert(resolved_type_name);
+    let mut names: HashMap<Rc<str>, ResolvedName> = HashMap::new();
+    {
+        let mut insert = |name: Rc<str>, resolved_type_name: ResolvedName| {
+            use std::collections::hash_map::Entry::*;
+            match names.entry(name) {
+                Vacant(vacant) => {
+                    vacant.insert(resolved_type_name);
+                }
+                Occupied(mut occupied) => {
+                    let action =
+                        determine_name_conflict_action(db, occupied.get(), &resolved_type_name);
+                    match action {
+                        NameConflictAction::DoNotUpdate => {}
+                        NameConflictAction::Overwrite => {
+                            occupied.insert(resolved_type_name);
+                        }
+                        NameConflictAction::Coalesce => {
+                            let name = occupied.key().clone();
+                            occupied.get_mut().coalesce(resolved_type_name).unwrap_or_else(|e| {
+                                panic!(
+                                    "name collision for '{}', this should never happen: {}",
+                                    name, e
+                                );
+                            });
+                        }
+                    }
+                }
             }
-            Occupied(mut occupied) => {
-                occupied
-                    .get_mut()
-                    .coalesce(resolved_type_name)
-                    .expect("name collision, this should never happen");
-            }
-        }
-    };
+        };
 
-    for &id in child_item_ids {
-        match db.find_untyped_decl(id) {
-            Item::IncompleteRecord(incomplete_record) => {
-                insert(
-                    incomplete_record.rs_name.identifier.clone(),
-                    ResolvedTypeName::ExplicitItem(id),
-                );
-            }
-            Item::Record(record) => {
-                insert(record.rs_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id));
-                let make_module_for_nested_items = record.child_item_ids.iter().any(|id| {
-                    db.find_untyped_decl(*id).place_in_nested_module_if_nested_in_record()
-                });
-                if make_module_for_nested_items {
+        for &id in child_item_ids {
+            match db.find_untyped_decl(id) {
+                Item::IncompleteRecord(incomplete_record) => {
                     insert(
-                        record.rs_name.identifier.as_ref().to_snake_case().into(),
-                        ResolvedTypeName::RecordNestedItems {
-                            parent_records_that_map_to_this_name: vec![id],
+                        incomplete_record.rs_name.identifier.clone(),
+                        ResolvedName::ExplicitItem(id),
+                    );
+                }
+                Item::Record(record) => {
+                    insert(record.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                }
+                Item::Enum(enum_) => {
+                    insert(enum_.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id))
+                }
+                Item::TypeAlias(type_alias) => {
+                    insert(type_alias.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                }
+                Item::Namespace(ns) => {
+                    insert(
+                        ns.rs_name.identifier.clone(),
+                        ResolvedName::Namespace {
+                            canonical_namespace_id: ns.canonical_namespace_id,
                         },
                     );
                 }
+                Item::UseMod(use_mod) => {
+                    insert(use_mod.mod_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                }
+                Item::ExistingRustType(existing_rust_type) => {
+                    insert(existing_rust_type.rs_name.clone(), ResolvedName::ExplicitItem(id));
+                }
+                Item::Func(func) => {
+                    if let ir::UnqualifiedIdentifier::Identifier(ident) = &func.rs_name {
+                        insert(ident.identifier.clone(), ResolvedName::ValueItem(id));
+                    }
+                }
+                Item::Constant(constant) => {
+                    insert(constant.rs_name.identifier.clone(), ResolvedName::ValueItem(id));
+                }
+                Item::GlobalVar(global_var) => {
+                    insert(global_var.rs_name.identifier.clone(), ResolvedName::ValueItem(id));
+                }
+                Item::Comment(_) | Item::UnsupportedItem(_) => {}
             }
-            Item::Enum(enum_) => {
-                insert(enum_.rs_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id))
-            }
-            Item::TypeAlias(type_alias) => {
-                insert(type_alias.rs_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id));
-            }
-            Item::Namespace(ns) => {
-                insert(
-                    ns.rs_name.identifier.clone(),
-                    ResolvedTypeName::Namespace {
-                        canonical_namespace_id: ns.canonical_namespace_id,
-                    },
-                );
-            }
-            Item::UseMod(use_mod) => {
-                insert(use_mod.mod_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id));
-            }
-            Item::ExistingRustType(existing_rust_type) => {
-                insert(existing_rust_type.rs_name.clone(), ResolvedTypeName::ExplicitItem(id));
-            }
-            Item::Comment(_)
-            | Item::Constant(_)
-            | Item::Func(_)
-            | Item::GlobalVar(_)
-            | Item::UnsupportedItem(_) => {
-                // Not in the type namespace.
+        }
+    }
+
+    // Pass 2: Insert module names for records, checking for conflicts.
+    for &id in child_item_ids {
+        if let Item::Record(record) = db.find_untyped_decl(id) {
+            let make_module_for_nested_items = record
+                .child_item_ids
+                .iter()
+                .any(|id| db.find_untyped_decl(*id).place_in_nested_module_if_nested_in_record());
+            if make_module_for_nested_items {
+                let mut name = record.rs_name.identifier.as_ref().to_snake_case();
+
+                // Disambiguation logic
+                if name == record.rs_name.identifier.as_ref() {
+                    name = format!("{}_items", name);
+                }
+
+                let is_used = |n: &str| names.contains_key(n);
+
+                if is_used(&name) {
+                    if !name.ends_with("_items") {
+                        name = format!("{}_items", name);
+                    }
+                    while is_used(&name) {
+                        name.push('_');
+                    }
+                }
+
+                match names.entry(name.into()) {
+                    std::collections::hash_map::Entry::Vacant(vacant) => {
+                        vacant.insert(ResolvedName::RecordNestedItems {
+                            parent_records_that_map_to_this_name: vec![id],
+                        });
+                    }
+                    std::collections::hash_map::Entry::Occupied(_) => {
+                        panic!("name collision after disambiguation");
+                    }
+                }
             }
         }
     }

@@ -26,7 +26,6 @@ use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
-use heck::ToSnakeCase;
 use ir::*;
 use itertools::Itertools;
 use kythe_metadata::rs_embed_provenance_map;
@@ -152,8 +151,7 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
     if let RsTypeKind::Record { record, crate_path, .. } = &underlying_type
         && generate_struct_and_union::child_items(record, db).any(|child_item| child_item.is_nested)
     {
-        let underlying_nested_module_name =
-            make_rs_ident(&record.rs_name.identifier.to_snake_case());
+        let underlying_nested_module_name = db.record_to_associated_module_name(record.clone())?;
         underlying_nested_module_path = Some(quote! { #crate_path #underlying_nested_module_name });
     }
 
@@ -403,7 +401,7 @@ pub fn new_database<'db>(
         generate_struct_and_union::collect_unqualified_member_functions,
         crubit_abi_type,
         has_bindings::type_target_restriction,
-        has_bindings::resolve_type_names,
+        has_bindings::resolve_names,
     )
 }
 
@@ -537,8 +535,11 @@ pub fn generate_bindings_tokens(
         assertions,
         cc_details,
         features,
+        // Member functions and free functions are consumed in generate_struct_and_union.rs.
         member_functions: _,
+        free_functions: _,
     } = snippets;
+
     let main_api = code_snippet::generated_items_to_token_stream(
         &generated_items,
         &db,

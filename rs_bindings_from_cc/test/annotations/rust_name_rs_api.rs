@@ -73,16 +73,7 @@ pub mod crubit {
                 b: ::ffi_11::c_int,
                 c: ::ffi_11::c_int,
             ) -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                unsafe {
-                    crate::detail::__rust_thunk___ZN6crubit4test10SomeStructC1Eiii(
-                        &raw mut tmp as *mut _,
-                        a,
-                        b,
-                        c,
-                    );
-                    tmp.assume_init()
-                }
+                self::some_struct::ConstructorNewName(a, b, c)
             }
             /// # Safety
             ///
@@ -93,7 +84,7 @@ pub mod crubit {
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const Self) {
-                crate::detail::__rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(__this)
+                self::some_struct::MethodNewName(__this)
             }
         }
 
@@ -108,6 +99,39 @@ pub mod crubit {
                     );
                     tmp.assume_init()
                 }
+            }
+        }
+
+        pub mod some_struct {
+            /// Generated from: support/annotations_internal.h;l=14
+            /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
+            #[inline(always)]
+            pub fn ConstructorNewName(
+                __this: ::ffi_11::c_int,
+                a: ::ffi_11::c_int,
+                b: ::ffi_11::c_int,
+            ) -> crate::crubit::test::SomeStruct {
+                let mut tmp = ::core::mem::MaybeUninit::<crate::crubit::test::SomeStruct>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test10SomeStructC1Eiii(
+                        &raw mut tmp as *mut _,
+                        __this,
+                        a,
+                        b,
+                    );
+                    tmp.assume_init()
+                }
+            }
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            ///
+            /// Generated from: support/annotations_internal.h;l=14
+            /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
+            #[inline(always)]
+            pub unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
+                crate::detail::__rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(__this)
             }
         }
     }

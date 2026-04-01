@@ -56,6 +56,8 @@ pub struct ApiSnippets {
     pub features: FlagSet<Feature>,
 
     pub member_functions: HashMap<ItemId, Vec<TokenStream>>,
+
+    pub free_functions: HashMap<ItemId, Vec<TokenStream>>,
 }
 
 impl ApiSnippets {
@@ -74,6 +76,9 @@ impl ApiSnippets {
         }
         for (item_id, member_functions) in other.member_functions {
             self.member_functions.entry(item_id).or_default().extend(member_functions);
+        }
+        for (item_id, free_methods) in other.free_functions {
+            self.free_functions.entry(item_id).or_default().extend(free_methods);
         }
         self.thunks.extend(other.thunks);
         self.assertions.extend(other.assertions);
@@ -443,9 +448,9 @@ impl From<NoBindingsReason> for Error {
     }
 }
 
-/// The thing that a type name resolves to.
+/// The thing that a name resolves to.
 #[derive(Debug)]
-pub enum ResolvedTypeName {
+pub enum ResolvedName {
     Namespace {
         /// Namespaces with the same canonical namespace id are coalesced together.
         canonical_namespace_id: ItemId,
@@ -453,6 +458,8 @@ pub enum ResolvedTypeName {
     /// An item that is explicitly generated (as opposed to RecordNestedItems, which is implicitly
     /// generated).
     ExplicitItem(ItemId),
+    /// An item that is in the value namespace (functions, constants, etc.).
+    ValueItem(ItemId),
     /// The module that is generated to hold the nested items of a record.
     /// If there's more than one, that means the multiple records with nested items, when
     /// snake_cased, map to the same name. For now, this is treated as an error, but we may want to
@@ -463,10 +470,10 @@ pub enum ResolvedTypeName {
     },
 }
 
-impl ResolvedTypeName {
-    /// If two names resolve to different ResolvedTypeNames, try and coalesce them together.
+impl ResolvedName {
+    /// If two names resolve to different ResolvedNames, try and coalesce them together.
     /// For example, namespaces that correspond to the same canonical namespace id can be flattened.
-    pub fn coalesce(&mut self, other: ResolvedTypeName) -> Result<()> {
+    pub fn coalesce(&mut self, other: ResolvedName) -> Result<()> {
         match (self, other) {
             // RecordNestedItems coalesce together. Right now, this is just to provide a better
             // error message ("several record nested items modules map to the same name"), but we
@@ -499,6 +506,12 @@ impl ResolvedTypeName {
                     *canonical_namespace_id == other_canonical_namespace_id,
                     "multiple namespaces with the same name but differing canonical namespace ids"
                 );
+                Ok(())
+            }
+            (Self::ValueItem(_), Self::ValueItem(_)) => Ok(()), // Keep first one
+            (Self::ExplicitItem(_), Self::ValueItem(_)) => Ok(()), // Keep ExplicitItem
+            (this @ Self::ValueItem(_), other @ Self::ExplicitItem(_)) => {
+                *this = other; // Overwrite with ExplicitItem!
                 Ok(())
             }
             // Everything else is a conflict, and should never happen.
@@ -586,6 +599,7 @@ pub fn generated_items_to_tokens<'db>(
                     visibility,
                     struct_or_union,
                     ident,
+                    id,
                     head_padding,
                     field_definitions,
                     implements_send,
@@ -601,6 +615,7 @@ pub fn generated_items_to_tokens<'db>(
                     delete,
                     owned_type_name,
                     member_methods,
+                    free_functions,
                     lifetime_params,
                 } = record_item.as_ref();
 
@@ -790,16 +805,15 @@ pub fn generated_items_to_tokens<'db>(
                     }
                     .to_tokens(tokens);
                 }
-
-                if !nested_items.is_empty() {
-                    let snake_case_name = make_rs_ident(&ident.to_string().to_snake_case());
+                let record_ir = db.find_decl::<Rc<ir::Record>>(*id).unwrap();
+                let module_name = db.record_to_associated_module_name(record_ir.clone()).unwrap();
+                if !free_functions.is_empty() || !nested_items.is_empty() {
                     let nested_items_to_tokens =
                         generated_items_to_token_stream(generated_items, db, nested_items);
                     quote! {
-                        pub mod #snake_case_name {
-                            #[allow(unused_imports)]
-                            use super::*; __NEWLINE__
+                        pub mod #module_name {
                             __NEWLINE__
+                            #( #free_functions )*
                             #nested_items_to_tokens
                         }
                     }
@@ -1011,6 +1025,7 @@ pub struct Record {
     pub visibility: Visibility,
     pub struct_or_union: StructOrUnion,
     pub ident: Ident,
+    pub id: ItemId,
     pub head_padding: Option<usize>,
     pub field_definitions: Vec<FieldDefinition>,
     pub implements_send: bool,
@@ -1028,6 +1043,7 @@ pub struct Record {
     /// The name of the owning wrapper type when the type was annotated with CRUBIT_OWNED_POINTEE.
     pub owned_type_name: Option<Ident>,
     pub member_methods: Vec<TokenStream>,
+    pub free_functions: Vec<TokenStream>,
     pub lifetime_params: Vec<syn::Lifetime>,
 }
 
@@ -1458,6 +1474,16 @@ pub enum Thunk {
     },
 }
 
+impl Thunk {
+    pub fn name(&self) -> &proc_macro2::Ident {
+        match self {
+            Thunk::Upcast { cast_fn_name, .. } => cast_fn_name,
+            Thunk::Fmt { fmt_fn_name, .. } => fmt_fn_name,
+            Thunk::Function { thunk_ident, .. } => thunk_ident,
+        }
+    }
+}
+
 impl ToTokens for Thunk {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
@@ -1539,7 +1565,7 @@ pub enum ThunkImpl {
         alignment: usize,
         fields_and_expected_offsets: Vec<(TokenStream, usize)>,
     },
-    FuntionTypeAssertation {
+    FunctionTypeAssertion {
         implementation_function: TokenStream,
         cc_function_type: TokenStream,
     },
@@ -1607,7 +1633,7 @@ impl ToTokens for ThunkImpl {
                     }.to_tokens(tokens);
                 }
             }
-            ThunkImpl::FuntionTypeAssertation { implementation_function, cc_function_type } => {
+            ThunkImpl::FunctionTypeAssertion { implementation_function, cc_function_type } => {
                 quote! {
                     static_assert( ( #cc_function_type ) & #implementation_function);
                 }

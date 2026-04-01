@@ -78,7 +78,7 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
 impl PolymorphicBase2 {
     #[inline(always)]
     pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(self) }
+        self::polymorphic_base2::Foo(self)
     }
 }
 
@@ -116,6 +116,13 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
     #[inline(always)]
     unsafe fn delete(p: *mut Self) {
         crate::detail::__crubit_operator_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(p);
+    }
+}
+
+pub mod polymorphic_base2 {
+    #[inline(always)]
+    pub fn Foo<'a>(__this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>) {
+        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(__this) }
     }
 }
 

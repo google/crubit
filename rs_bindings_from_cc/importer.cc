@@ -600,6 +600,12 @@ Importer::GetTopLevelItemIdsInSourceOrder(
 
   // Push all the other items
   for (auto& [decl, item_id] : decl_items.canonical_children) {
+    // Don't include nested records in the total set of top-level items,
+    // as they will be generated as part of their parents.
+    if (llvm::isa<clang::CXXRecordDecl>(decl) &&
+        llvm::isa<clang::CXXRecordDecl>(decl->getDeclContext())) {
+      continue;
+    }
     items[GetOwningTarget(decl)].push_back({GetSourceOrderKey(decl), item_id});
   }
 
@@ -632,6 +638,13 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   }
   for (auto& [decl, item_id] : decl_items.canonical_children) {
     if (IsUnsupportedAndAlien(item_id)) {
+      continue;
+    }
+    // Skip out-of-line defined children of records when listing children of
+    // namespaces!
+    if (decl->getDeclContext() !=
+            clang::cast<clang::DeclContext>(parent_decl) &&
+        llvm::isa<clang::CXXRecordDecl>(decl->getDeclContext())) {
       continue;
     }
     items.push_back({GetSourceOrderKey(decl), item_id});
@@ -700,6 +713,29 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   }
 
   ImportDeclsFromDeclContext(translation_unit_decl);
+
+  // Augment child_item_ids for records with out-of-line defined children, e.g.
+  // class A { class B; };   // declares A::B
+  // class A::B { ... };  // defines A::B
+  for (const auto& [decl, item] : import_cache_) {
+    if (!item.has_value()) continue;
+    if (auto* parent_record_decl =
+            llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext())) {
+      auto it = import_cache_.find(parent_record_decl);
+      if (it != import_cache_.end() && it->second.has_value()) {
+        if (auto* parent_item = std::get_if<Record>(&(it->second.value()))) {
+          auto child_id = GenerateItemId(decl);
+          if (!IsUnsupportedAndAlien(child_id) &&
+              std::find(parent_item->child_item_ids.begin(),
+                        parent_item->child_item_ids.end(),
+                        child_id) == parent_item->child_item_ids.end()) {
+            parent_item->child_item_ids.push_back(child_id);
+          }
+        }
+      }
+    }
+  }
+
   for (const auto& [decl, item] : import_cache_) {
     if (!item.has_value() || IsUnsupportedAndAlien(GenerateItemId(decl))) {
       continue;
