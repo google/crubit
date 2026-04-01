@@ -47,6 +47,10 @@ pub struct FullyQualifiedName {
     /// For example, this would be `std` for `std::cmp::Ordering`.
     pub krate: Symbol,
 
+    /// Number of the crate that defines the item.
+    /// This can be different from `def_id.krate` if the item is re-exported.
+    pub krate_num: CrateNum,
+
     /// Configurable top-level namespace of the C++ bindings.
     /// For example, this would be `::foo` for `foo::bar::baz::qux`.
     pub cpp_top_level_ns: Rc<[Symbol]>,

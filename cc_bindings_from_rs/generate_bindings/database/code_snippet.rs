@@ -14,7 +14,7 @@ use error_report::bail;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use rustc_middle::ty::Ty;
-use rustc_span::def_id::DefId;
+use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::Symbol;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
@@ -250,21 +250,19 @@ impl<'tcx> CcPrerequisites<'tcx> {
         db: &crate::BindingsGenerator<'tcx>,
         def_id: DefId,
     ) -> Result<()> {
-        // Local definitions can be immediately added to the `defs` set.
-        if def_id.krate == db.source_crate_num() {
+        let tcx = db.tcx();
+        let canonical_name = db.symbol_canonical_name(def_id).ok_or_else(|| {
+            anyhow!("Failed to generate canonical name for `{}`", tcx.def_path_str(def_id))
+        })?;
+        // Definition with a local canonical name can be immediately added to the `defs` set.
+        if canonical_name.krate_num == db.source_crate_num() {
             self.defs.insert(def_id);
             return Ok(());
         }
-
-        let canonical_name = db.symbol_canonical_name(def_id).ok_or_else(|| {
-            let tcx = db.tcx();
-            anyhow!("Failed to generate canonical name for `{}`", tcx.def_path_str(def_id))
-        })?;
         let other_crate_name = canonical_name.krate;
         let crate_name_to_include_paths = db.crate_name_to_include_paths();
         let includes =
             crate_name_to_include_paths.get(other_crate_name.as_str()).ok_or_else(|| {
-                let tcx = db.tcx();
                 anyhow!(
                     "Definition `{}` comes from the `{other_crate_name}` crate, \
                      but no `--crate-header` was specified for this crate",

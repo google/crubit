@@ -557,8 +557,8 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
                         std::mem::swap(existing_paths, &mut paths);
                         existing_paths.insert_aliases(paths);
                     } else {
-                        existing_paths.merge(paths);
                         // Merge paths together picking canonical by ordering.
+                        existing_paths.merge(paths);
                     }
                 }
             }
@@ -635,7 +635,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     // canonical name.
     let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
 
-    let (full_path_strs, type_alias_def_id, krate_id) = {
+    let (full_path_strs, type_alias_def_id, krate_num) = {
         let paths = db.all_public_paths_by_def_id().get(&def_id).cloned()?;
 
         // Select a canonical path for this symbol from available paths.
@@ -668,11 +668,11 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     // to include the `_rust_proto` suffix, but the rmeta file contains the unsuffixed crate name.
     // If we're naming a symbol from our source crate, use the source crate name as the krate name
     // to resolve any renaming issues.
-    let krate = (krate_id == db.source_crate_num())
+    let krate = (krate_num == db.source_crate_num())
         .then_some(())
         .and_then(|_| db.source_crate_name())
         .map(|source_crate_name| Symbol::intern(source_crate_name.as_ref()))
-        .unwrap_or_else(|| tcx.crate_name(krate_id));
+        .unwrap_or_else(|| tcx.crate_name(krate_num));
 
     if krate.as_str() == "polars_plan"
         && matches!(unqualified.rs_name.as_str(), "date_range" | "time_range")
@@ -704,8 +704,15 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
     let cpp_ns_path =
         NamespaceQualifier::new(full_path_strs.into_iter().map(rename_clang_builtin_macros));
-    let cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_id);
-    Some(FullyQualifiedName { krate, cpp_top_level_ns, cpp_ns_path, rs_mod_path, unqualified })
+    let cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_num);
+    Some(FullyQualifiedName {
+        krate,
+        krate_num,
+        cpp_top_level_ns,
+        cpp_ns_path,
+        rs_mod_path,
+        unqualified,
+    })
 }
 
 /// Checks whether a definition matches a specific qualified name by matching it's definition path
@@ -1804,7 +1811,8 @@ fn formatted_items_in_crate<'tcx>(
         .into_iter()
         .filter_map(|(def_id, paths)| {
             let mut snippets = None;
-            let aliases = if def_id.krate == db.source_crate_num() {
+            let canonical_name = db.symbol_canonical_name(def_id)?;
+            let aliases = if canonical_name.krate_num == db.source_crate_num() {
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
