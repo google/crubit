@@ -496,6 +496,7 @@ impl ReportFatalError for FatalErrors {
         let mut errors = self.fatal_errors.borrow_mut();
         errors.push('\n');
         errors.push_str(msg);
+        errors.push('\n');
     }
 }
 

@@ -339,15 +339,7 @@ pub(crate) fn generate_associated_item<'tcx>(
     match result {
         Err(err) => {
             if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
-                let self_name = crate::item_name(db, tcx.parent(def_id));
-                let item_name = crate::item_name(db, def_id);
-                let must_bind_message = format!(
-                    "Failed to generate bindings for `{self_name}::{item_name}`:\n\
-                    {err:?}\n\
-                    This is a hard error because `{self_name}::{item_name}` was annotated with \
-                    `#[crubit_annotate::must_bind]`"
-                );
-                db.fatal_errors().report(&must_bind_message);
+                crate::report_must_bind_error(db, def_id, &err);
             }
             Some(generate_unsupported_def(db, def_id, err).into_main_api())
         }

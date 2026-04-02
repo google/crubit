@@ -498,7 +498,17 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
 
             tcx.ensure_ok().analysis(());
             // Now that we've run analysis to prime the compiler, run our callback.
-            run_with_tcx(cmdline, tcx).expect("Binding generation failed")
+            if let Err(e) = run_with_tcx(cmdline, tcx) {
+                let bold = "\x1B[1m";
+                let italic = "\x1B[3m";
+                let reset = "\x1B[0m";
+                let red = "\x1B[31m";
+                eprintln!(
+                    "{bold}Crubit {italic}{red}failed{reset} to generate C++ bindings for Rust crate \
+                    {bold}`{crate_name}`{reset} due to the following errors:\n{e}"
+                );
+                std::process::exit(1);
+            }
         });
     });
     Ok(())

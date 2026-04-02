@@ -1550,6 +1550,39 @@ fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> erro
     error_report::ItemName { name, id, unique_name: None, defining_target }
 }
 
+pub(crate) fn report_must_bind_error<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    err: &Error,
+) {
+    let tcx = db.tcx();
+    let item_path = tcx.def_path_str(def_id);
+    let def_kind = tcx.def_kind(def_id);
+    let kind_str = match def_kind {
+        rustc_hir::def::DefKind::Struct => "struct",
+        rustc_hir::def::DefKind::Enum => "enum",
+        rustc_hir::def::DefKind::Union => "union",
+        rustc_hir::def::DefKind::Fn => "function",
+        rustc_hir::def::DefKind::TyAlias => "type alias",
+        rustc_hir::def::DefKind::Const { .. } => "constant",
+        rustc_hir::def::DefKind::Trait => "trait",
+        rustc_hir::def::DefKind::AssocFn => "function",
+        rustc_hir::def::DefKind::AssocConst { .. } => "constant",
+        rustc_hir::def::DefKind::AssocTy => "associated type",
+        _ => "item",
+    };
+    let error_details = format!("  {err:#}").replace('\n', "\n  ");
+    let bold = "\x1B[1m";
+    let reset = "\x1B[0m";
+    let red = "\x1B[31m";
+    let must_bind_message = format!(
+        "{bold}{red}error:{reset}{bold} {kind_str} `{item_path}` could not be bound{reset}\n\
+        {error_details}\n\
+        {bold}note:{reset} hard error because `#[crubit_annotate::must_bind]` was applied to `{item_path}`"
+    );
+    db.fatal_errors().report(&must_bind_message);
+}
+
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1560,14 +1593,7 @@ fn generate_item<'tcx>(
     let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
     if attributes.must_bind {
         if let Err(e) = &generated {
-            let item_name = item_name(db, def_id);
-            let must_bind_message = format!(
-                "Failed to generate bindings for `{item_name}`:\n\
-                {e:?}\n\
-                This is a hard error because `{item_name}` was annotated with \
-                `#[crubit_annotate::must_bind]`"
-            );
-            db.fatal_errors().report(&must_bind_message);
+            report_must_bind_error(db, def_id, e);
         }
     }
     generated
