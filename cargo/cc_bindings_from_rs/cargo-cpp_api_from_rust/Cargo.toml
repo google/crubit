@@ -21,6 +21,7 @@ doctest = false
 [dependencies]
 cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline", package = "cc_bindings_from_rs_cmdline"}
 cpp_api_from_rust_lib = { path = "../../../cargo/cc_bindings_from_rs/cpp_api_from_rust_lib", package = "cc_bindings_from_rs_cpp_api_from_rust_lib"}
+toposort = { path = "../../../cargo/cc_bindings_from_rs/toposort", package = "cc_bindings_from_rs_toposort"}
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 cargo_metadata.workspace = true
 clap.workspace = true

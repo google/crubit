@@ -42,12 +42,12 @@ fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify output files
     let target_dir = tmp_dir.path();
+    let debug_dir = target_dir.join("debug");
+    let headers_dir = debug_dir.join("headers");
 
     // We expect to find our generated bindings in the output and the final staticlib.
-    assert!(target_dir.join("debug/test_project.h").exists());
-    assert!(target_dir.join("debug/test_project_cc_api_impl.rs").exists());
-    assert!(target_dir.join("debug/test_project.cpp").exists());
-    assert!(target_dir.join("debug/libtest_project.a").exists());
+    assert!(headers_dir.join("test_project.h").exists());
+    assert!(debug_dir.join("libtest_project.a").exists());
 
     Ok(())
 }
@@ -73,10 +73,11 @@ fn test_subcommand_target_dir() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Verify output files in the explicit target dir
-    assert!(explicit_target_dir.join("debug/test_project.h").exists());
-    assert!(explicit_target_dir.join("debug/test_project_cc_api_impl.rs").exists());
-    assert!(explicit_target_dir.join("debug/test_project.cpp").exists());
-    assert!(explicit_target_dir.join("debug/libtest_project.a").exists());
+    let debug_dir = explicit_target_dir.join("debug");
+    let headers_dir = debug_dir.join("headers");
+
+    assert!(headers_dir.join("test_project.h").exists());
+    assert!(debug_dir.join("libtest_project.a").exists());
 
     Ok(())
 }
@@ -101,11 +102,11 @@ fn test_subcommand_build_args() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Verify output files in the release directory
-    let target_dir = tmp_dir.path();
-    assert!(target_dir.join("release/test_project.h").exists());
-    assert!(target_dir.join("release/test_project_cc_api_impl.rs").exists());
-    assert!(target_dir.join("release/test_project.cpp").exists());
-    assert!(target_dir.join("release/libtest_project.a").exists());
+    let release_dir = tmp_dir.path().join("release");
+    let headers_dir = release_dir.join("headers");
+
+    assert!(headers_dir.join("test_project.h").exists());
+    assert!(release_dir.join("libtest_project.a").exists());
 
     Ok(())
 }
@@ -125,12 +126,57 @@ fn test_subcommand_failing_project() -> Result<(), Box<dyn std::error::Error>> {
     assert!(!output.status.success());
 
     // Verify output files are NOT generated
-    let target_dir = tmp_dir.path();
-    assert!(!target_dir.join("debug/failing_project.h").exists());
-    assert!(!target_dir.join("debug/failing_project_cc_api_impl.rs").exists());
-    assert!(!target_dir.join("debug/failing_project.cpp").exists());
-    // Also the static library shouldn't be fully generated if rustc failed
-    // (though cargo might not reach the point where it creates the final `.a`).
+    let debug_dir = tmp_dir.path().join("debug");
+    let headers_dir = debug_dir.join("headers");
+
+    assert!(!headers_dir.join("failing_project.h").exists());
+    assert!(!debug_dir.join("libfailing_project.a").exists());
+
+    Ok(())
+}
+
+#[test] // allow_core_test
+fn test_subcommand_caching() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_project");
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+
+    // First run
+    let output = cmd.output().expect("Failed to execute");
+    assert!(output.status.success());
+
+    let debug_dir = tmp_dir.path().join("debug");
+    // Second run - should be cached
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+    let output = cmd.output().expect("Failed to execute");
+    assert!(output.status.success());
+
+    let deps_dir = debug_dir.join("deps");
+    let intermediate_h = std::fs::read_dir(&deps_dir)?
+        .filter_map(|e| e.ok())
+        .find(|e| {
+            e.file_name().to_string_lossy().starts_with("test_project-")
+                && e.file_name().to_string_lossy().ends_with(".h")
+        })
+        .unwrap()
+        .path();
+
+    let intermediate_mtime1 = std::fs::metadata(&intermediate_h)?.modified()?;
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+    cmd.output().expect("Failed to execute");
+
+    let intermediate_mtime2 = std::fs::metadata(&intermediate_h)?.modified()?;
+
+    assert_eq!(
+        intermediate_mtime1, intermediate_mtime2,
+        "Intermediate file was rewritten even though it should have been cached"
+    );
 
     Ok(())
 }

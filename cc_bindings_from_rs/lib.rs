@@ -338,7 +338,6 @@ pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_in
 /// we've migrated to rmetas entirely.
 fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     let early_dcx = EarlyDiagCtxt::new(ErrorOutputType::default());
-    rustc_driver::init_rustc_env_logger(&early_dcx);
     let at_args = &cmdline.rustc_args;
     let at_args = at_args.get(1..).unwrap_or_default();
 

@@ -54,6 +54,7 @@ crubit_rust_binary(
     deps = [
         ":cmdline",
         ":cpp_api_from_rust_lib",
+        ":toposort",
         "//common:arc_anyhow",
         "@crate_index//:cargo_metadata",  # v0_23
         "@crate_index//:clap",  # v4

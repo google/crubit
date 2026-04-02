@@ -20,17 +20,19 @@
 //! build.
 
 #![feature(rustc_private)]
-#![feature(never_type)]
 
-use arc_anyhow::{anyhow, bail, Error, Result};
+use arc_anyhow::{anyhow, bail, Result};
 use cargo_metadata::camino::Utf8PathBuf;
 use cargo_metadata::Message;
 use clap::Parser;
 use cmdline::Cmdline;
 
+use std::collections::HashMap;
 use std::env;
 use std::ffi;
+use std::fs;
 use std::process::{Command, Stdio};
+use toposort::{toposort, Dependency};
 
 #[derive(Debug, Parser)]
 #[clap(name = "cargo-cpp_api_from_rust")]
@@ -47,9 +49,13 @@ struct Cli {
     build_args: Vec<String>,
 }
 
-// TODO(b/448731652): This should support passthrough for arbitrary cargo commandline flags that
-// one might want to specify. This is important both for building target package initially, and
-// building the final static lib at the end.
+struct ArtifactInfo {
+    path: Utf8PathBuf,
+    name: String,
+    hash: String,
+    fresh: bool,
+}
+
 fn main() -> Result<()> {
     //! This subcommand executes three subtasks to generate bindings:
     //!
@@ -66,13 +72,9 @@ fn main() -> Result<()> {
     let root = metadata.root_package().ok_or_else(|| anyhow!("Failed to find root package"))?;
 
     let edition = root.edition;
-    let source_crate_name: &str = root.name.as_ref();
 
-    let mut args = vec![
-        // Make up a binary name for our call. This will get removed by Cmdline, so it doesn't matter
-        // but it must be here otherwise a real cmdline arg will get ate.
+    let args = vec![
         "cpp_api_from_rust".to_string(),
-        format!("--source-crate-name={}", source_crate_name),
         "--crubit-support-path-format=<{header}>".to_string(),
         "--enable-rmeta-interface".to_string(),
     ];
@@ -107,101 +109,168 @@ fn main() -> Result<()> {
         .spawn()
         .map_err(|err| anyhow!("Failed to spawn cargo: {}", err))?;
 
-    let mut profile_dir = None;
-    let mut source_crate_rlib = None;
+    let mut pkg_to_artifact = HashMap::new();
     let reader = std::io::BufReader::new(
         command.stdout.take().ok_or_else(|| anyhow!("Failed to open cargo stdout"))?,
     );
     for message in cargo_metadata::Message::parse_stream(reader) {
         let message = message.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
-        let Message::CompilerArtifact(artifact) = message else {
-            // We only care about compiler artifacts. Skip other messages, but display any text
-            // output from the build.
-            let output = match message {
-                Message::TextLine(line) => line,
-                Message::CompilerMessage(msg) => format!("{}", msg),
-                _ => continue,
-            };
-            eprintln!("{}", output);
-            continue;
-        };
-        let find_metadata_file = artifact.filenames.iter().find(|filename| {
-            filename.extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib")
-        });
-        let Some(filename) = find_metadata_file else {
-            continue;
-        };
-        let name = artifact.target.name;
-        if name == source_crate_name {
-            profile_dir = filename
-                .strip_prefix(&target_dir)
-                .ok()
-                // Remove the filename from the path.
-                .and_then(|path| path.parent())
-                .map(|path| path.to_owned());
-            source_crate_rlib = artifact
-                .filenames
-                .iter()
-                .find(|filename| filename.extension().is_some_and(|ext| ext == "rlib"))
-                .map(|filename| filename.as_str().to_owned());
+        if let Message::CompilerArtifact(artifact) = message {
+            let find_metadata_file = artifact.filenames.iter().find(|filename| {
+                filename.extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib")
+            });
+            if let Some(filename) = find_metadata_file {
+                let hash = filename
+                    .file_stem()
+                    .and_then(|s| s.rsplitn(2, '-').next())
+                    .unwrap_or("")
+                    .to_string();
+                pkg_to_artifact.insert(
+                    artifact.package_id.repr,
+                    ArtifactInfo {
+                        path: filename.clone(),
+                        name: artifact.target.name.clone(),
+                        hash,
+                        fresh: artifact.fresh,
+                    },
+                );
+            }
         }
-        args.push(format!("--extern={}={}", name, filename));
     }
 
-    let (Some(source_crate_rlib), Some(profile_dir)) = (source_crate_rlib, profile_dir) else {
-        bail!(
-            "Failed to find profile directory or rlib for target crate. Most likely \
-        cause is cargo failed to build the specified target."
-        );
-    };
-
-    let out_dir = target_dir.join(&profile_dir);
-
-    args.extend([
-        format!("--h-out={}", out_dir.join(format!("{}.h", source_crate_name))),
-        format!("--rs-out={}", out_dir.join(format!("{}_cc_api_impl.rs", source_crate_name))),
-        format!("--cpp-out={}", out_dir.join(format!("{}.cpp", source_crate_name))),
-        format!("-Ldependency={}", out_dir.join("deps")),
-    ]);
-
-    // Wait on `cargo build` to finish to ensure all our files are generated.
     let cargo_output =
         command.wait_with_output().map_err(|err| anyhow!("Failed to wait for cargo: {}", err))?;
     if !cargo_output.status.success() {
-        println!("{}", String::from_utf8_lossy(&cargo_output.stdout));
         eprintln!("{}", String::from_utf8_lossy(&cargo_output.stderr));
         bail!("Exiting early due to cargo build failure");
     }
 
-    // Step 2: Run `cpp_api_from_rust` on the rlib file, outputting C++, rs, and h files.
-    Cmdline::new(&args)
-        .map_err(|err| err.into())
-        .and_then(|cmdline| cpp_api_from_rust_lib::run_with_cmdline_args(&cmdline))
-        .map_err(|err: Error| match err.downcast_ref::<clap::Error>() {
-            // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
-            // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
-            Some(clap_err) => {
-                let _: ! = clap_err.exit();
+    // It's important we check the path of root (and not one of our dependencies) or else we'll get
+    // the wrong path.
+    let profile_dir = pkg_to_artifact
+        .get(&root.id.repr)
+        .and_then(|artifact_info| {
+            let path = &artifact_info.path;
+            let rel_path = path.strip_prefix(&target_dir).ok()?;
+            rel_path.parent().to_owned()
+        })
+        .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
+    let deps_dir = target_dir.join(&profile_dir).join("deps");
+
+    let resolve = metadata
+        .resolve
+        .as_ref()
+        .ok_or_else(|| anyhow!("Could not determine crate dependencies"))?;
+    let ordered = {
+        let nodes = resolve.nodes.iter().map(|n| n.id.clone()).collect::<Vec<_>>();
+        let deps = resolve
+            .nodes
+            .iter()
+            .flat_map(|n| {
+                n.dependencies
+                    .iter()
+                    .map(|dep| Dependency { predecessor: dep.clone(), successor: n.id.clone() })
+            })
+            .collect::<Vec<_>>();
+
+        let toposort::TopoSortResult { ordered, .. } = toposort(nodes, deps, |a, b| a.cmp(b));
+        ordered
+    };
+
+    let mut pkg_to_header = HashMap::new();
+    let headers_dir = target_dir.join(&profile_dir).join("headers");
+    fs::create_dir_all(&headers_dir)?;
+
+    let mut lib_rs_content = String::new();
+    for pkg_id in ordered {
+        let artifact_info = match pkg_to_artifact.get(&pkg_id.repr) {
+            Some(info) => info,
+            None => continue,
+        };
+
+        let crate_name = &artifact_info.name;
+        let rs_crate_name = crate_name.replace('-', "_");
+        let hash = &artifact_info.hash;
+        let intermediate_h = deps_dir.join(format!("{}-{}.h", crate_name, hash));
+        let intermediate_rs = deps_dir.join(format!("lib{}-{}.rs", crate_name, hash));
+
+        if artifact_info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
+            pkg_to_header.insert(pkg_id.repr, intermediate_h.to_string());
+            lib_rs_content.push_str(&format!(
+                "#[path = {:?}]pub mod r#{};\n",
+                intermediate_rs, rs_crate_name
+            ));
+            continue;
+        }
+
+        let mut current_args = args.clone();
+        current_args.extend([
+            format!("--source-crate-name={}", crate_name),
+            format!("--h-out={}", intermediate_h),
+            format!("--rs-out={}", intermediate_rs),
+            format!("--extern={}={}", crate_name, artifact_info.path),
+            format!("-Ldependency={}", deps_dir.as_str()),
+        ]);
+        lib_rs_content
+            .push_str(&format!("#[path = {:?}]pub mod r#{};\n", intermediate_rs, rs_crate_name));
+
+        let resolve_node = resolve
+            .nodes
+            .iter()
+            .find(|n| n.id == pkg_id)
+            .expect("Package must be in resolve graph");
+        for dep_pkg_id in &resolve_node.dependencies {
+            if let Some(dep_artifact) = pkg_to_artifact.get(&dep_pkg_id.repr) {
+                // TODO: Handle overlapping crate names better here.
+                current_args.push(format!("--extern={}={}", dep_artifact.name, dep_artifact.path));
+                if let Some(dep_header) = pkg_to_header.get(&dep_pkg_id.repr) {
+                    current_args
+                        .push(format!("--crate-header={}={}", dep_artifact.name, dep_header));
+                }
             }
+        }
 
-            // Return `err` from `main`.  This will print the error message (no color codes
-            // though) and terminate the process with a non-zero exit code.
-            None => err,
-        })?;
+        let cmdline =
+            Cmdline::new(&current_args).map_err(|err| match err.downcast_ref::<clap::Error>() {
+                // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
+                // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
+                Some(clap_err) => {
+                    let _: std::convert::Infallible = clap_err.exit();
+                }
 
-    // Step 3: Build a static lib out of the rs file generated in step 2.
-    let rustc_args = vec![
+                // Return `err` from `main`.  This will print the error message (no color codes
+                // though) and terminate the process with a non-zero exit code.
+                None => err,
+            })?;
+        cpp_api_from_rust_lib::run_with_cmdline_args(&cmdline)?;
+        pkg_to_header.insert(pkg_id.repr, intermediate_h.to_string());
+
+        // Final outputs: copy/rename from deps/ to their final locations.
+        fs::copy(&intermediate_h, headers_dir.join(format!("{}.h", crate_name)))?;
+    }
+
+    let root_name = &root.name;
+    let lib_rs_path = deps_dir.join(format!("{}_cc_api.rs", root_name));
+    let root_crate_name = root_name.replace('-', "_");
+    lib_rs_content.push_str(&format!("pub use r#{}::*;\n", root_crate_name));
+    fs::write(&lib_rs_path, lib_rs_content)?;
+
+    let static_lib_path = target_dir.join(&profile_dir).join(format!("lib{}.a", root_name));
+    let mut final_rustc_args = vec![
         "rustc".to_string(),
-        out_dir.join(format!("{}_cc_api_impl.rs", source_crate_name)).to_string(),
+        lib_rs_path.to_string(),
         format!("--edition={}", edition),
-        format!("--crate-name={}_cc_api", source_crate_name),
+        format!("--crate-name={}_cc_api", root_name),
         "--crate-type=staticlib".to_string(),
-        format!("--extern={}={}", source_crate_name, source_crate_rlib),
-        format!("-Ldependency={}", out_dir.join("deps")),
+        format!("-Ldependency={}", deps_dir.as_str()),
         "-o".to_string(),
-        out_dir.join(format!("lib{}.a", source_crate_name)).to_string(),
+        static_lib_path.to_string(),
     ];
-    cpp_api_from_rust_lib::run_rustc(&rustc_args);
+    for (_, artifact_info) in pkg_to_artifact.iter() {
+        final_rustc_args.push(format!("--extern={}={}", artifact_info.name, artifact_info.path));
+    }
+
+    cpp_api_from_rust_lib::run_rustc(&final_rustc_args);
 
     Ok(())
 }
