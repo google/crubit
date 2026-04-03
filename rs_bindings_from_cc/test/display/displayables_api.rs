@@ -816,7 +816,7 @@ impl Default for DisplayInRust {
 //   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__atomic/support.h;l=114
-// error: struct `std::__cxx_atomic_impl<base::scheduling::Schedulable *, std::__cxx_atomic_base_impl<base::scheduling::Schedulable *>>` could not be bound
+// error: struct `std::__cxx_atomic_impl<void *, std::__cxx_atomic_base_impl<void *>>` could not be bound
 //   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__atomic/support.h;l=114
@@ -1064,7 +1064,7 @@ impl Default for DisplayInRust {
 //   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__atomic/atomic.h;l=40
-// error: struct `std::__atomic_base<base::scheduling::Schedulable *, false>` could not be bound
+// error: struct `std::__atomic_base<void *, false>` could not be bound
 //   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__atomic/atomic.h;l=40
@@ -1252,7 +1252,7 @@ impl Default for DisplayInRust {
 //   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__atomic/atomic.h;l=267
-// error: struct `std::atomic<base::scheduling::Schedulable *>` could not be bound
+// error: struct `std::atomic<void *>` could not be bound
 //   template instantiation is not yet supported
 
 // Generated from: nowhere/llvm/src/libcxx/include/__fwd/ios.h;l=24
