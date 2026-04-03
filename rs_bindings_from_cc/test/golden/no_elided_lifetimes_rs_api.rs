@@ -19,7 +19,7 @@
 /// * `p1`: raw pointer
 #[inline(always)]
 pub unsafe fn free_function(p1: *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z13free_functionRi(p1)
+    unsafe { crate::detail::__rust_thunk___Z13free_functionRi(p1) }
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -47,7 +47,7 @@ impl S {
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
-        self::s::const_method(__this, p1, p2)
+        unsafe { self::s::const_method(__this, p1, p2) }
     }
     /// # Safety
     ///
@@ -61,7 +61,7 @@ impl S {
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
-        self::s::method(__this, p1, p2)
+        unsafe { self::s::method(__this, p1, p2) }
     }
 }
 
@@ -89,7 +89,7 @@ pub mod s {
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
+        unsafe { crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2) }
     }
     /// # Safety
     ///
@@ -103,7 +103,7 @@ pub mod s {
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
+        unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
     }
 }
 
@@ -140,7 +140,7 @@ impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
     fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(dest as*mut::core::ffi::c_void,__param_0);
             })
         }
@@ -161,7 +161,9 @@ impl<'__unelided> ::ctor::CtorNew<(&'__unelided Self,)>
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
+        unsafe {
+            crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
+        }
     }
 }
 
@@ -171,7 +173,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 /// * `p`: raw pointer
 #[inline(always)]
 pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
-    crate::detail::__rust_thunk___Z12take_pointerPi(p)
+    unsafe { crate::detail::__rust_thunk___Z12take_pointerPi(p) }
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]

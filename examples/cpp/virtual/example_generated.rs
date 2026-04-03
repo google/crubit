@@ -39,7 +39,7 @@ impl RustDerived {
     /// Generated from: examples/cpp/virtual/example.h;l=16
     #[inline(always)]
     pub unsafe fn Method1(__this: *const Self) -> ::ffi_11::c_int {
-        self::rust_derived::Method1(__this)
+        unsafe { self::rust_derived::Method1(__this) }
     }
     /// # Safety
     ///
@@ -49,7 +49,7 @@ impl RustDerived {
     /// Generated from: examples/cpp/virtual/example.h;l=18
     #[inline(always)]
     pub unsafe fn Upcast(__this: *mut Self) -> *mut ::base::ExampleBase {
-        self::rust_derived::Upcast(__this)
+        unsafe { self::rust_derived::Upcast(__this) }
     }
 }
 
@@ -61,7 +61,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN11RustDerivedC1EOS_(
                     dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -84,7 +84,7 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 impl ::ctor::PinnedDrop for RustDerived {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN11RustDerivedD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN11RustDerivedD1Ev(self) }
     }
 }
 
@@ -106,7 +106,7 @@ impl ::ctor::CtorNew<::definition::RustDerived> for RustDerived {
     fn ctor_new(args: ::definition::RustDerived) -> Self::CtorType {
         let mut rust = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN11RustDerivedC1EN10definition11RustDerivedE(
                     dest as *mut ::core::ffi::c_void,
                     &mut rust,
@@ -128,7 +128,9 @@ impl ::ctor::CtorNew<(::definition::RustDerived,)> for RustDerived {
 unsafe impl ::operator::Delete for crate::RustDerived {
     #[inline(always)]
     unsafe fn delete(p: *mut Self) {
-        crate::detail::__crubit_operator_delete__11RustDerived___2f_2fthird_5fparty_2fcrubit_2fexamples_2fcpp_2fvirtual_3aexample_5flib(p);
+        unsafe {
+            crate::detail::__crubit_operator_delete__11RustDerived___2f_2fthird_5fparty_2fcrubit_2fexamples_2fcpp_2fvirtual_3aexample_5flib(p);
+        }
     }
 }
 
@@ -141,7 +143,7 @@ pub mod rust_derived {
     /// Generated from: examples/cpp/virtual/example.h;l=16
     #[inline(always)]
     pub unsafe fn Method1(__this: *const crate::RustDerived) -> ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this)
+        unsafe { crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this) }
     }
     /// # Safety
     ///
@@ -151,7 +153,7 @@ pub mod rust_derived {
     /// Generated from: examples/cpp/virtual/example.h;l=18
     #[inline(always)]
     pub unsafe fn Upcast(__this: *mut crate::RustDerived) -> *mut ::base::ExampleBase {
-        crate::detail::__rust_thunk___ZN11RustDerived6UpcastEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN11RustDerived6UpcastEv(__this) }
     }
 }
 

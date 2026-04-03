@@ -71,7 +71,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Cloneable {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN9CloneableC1Ei(
                     dest as *mut ::core::ffi::c_void,
                     field,
@@ -98,7 +98,7 @@ impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for Cloneable {
     fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN9CloneableC1ERKS_(
                     dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -125,7 +125,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN9CloneableC1EOS_(
                     dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -168,7 +168,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Cloneable {
 impl ::ctor::PinnedDrop for Cloneable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN9CloneableD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN9CloneableD1Ev(self) }
     }
 }
 
@@ -197,7 +197,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Movable {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN7MovableC1Ei(
                     dest as *mut ::core::ffi::c_void,
                     field,
@@ -224,7 +224,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
         let mut other = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN7MovableC1EOS_(
                     dest as *mut ::core::ffi::c_void,
                     other,
@@ -257,7 +257,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Movable {
 impl ::ctor::PinnedDrop for Movable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN7MovableD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN7MovableD1Ev(self) }
     }
 }
 

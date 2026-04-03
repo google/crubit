@@ -1146,10 +1146,12 @@ fn generate_func_body(
                         CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                     quote! {
                         ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |__return_abi_buffer| {
-                            #crate_root_path::detail::#thunk_ident(
-                                __return_abi_buffer,
-                                #(#clone_prefixes #thunk_args #clone_suffixes ),*
-                            );
+                            unsafe {
+                                #crate_root_path::detail::#thunk_ident(
+                                    __return_abi_buffer,
+                                    #(#clone_prefixes #thunk_args #clone_suffixes ),*
+                                );
+                            }
                         })
                     }
                 }
@@ -1157,10 +1159,12 @@ fn generate_func_body(
                     quote! {
                         ::ctor::FnCtor::new(
                             move |dest: *mut #return_type_or_self| {
-                                #crate_root_path::detail::#thunk_ident(
-                                    dest as *mut ::core::ffi::c_void
-                                    #( , #thunk_args )*
-                                );
+                                unsafe {
+                                    #crate_root_path::detail::#thunk_ident(
+                                        dest as *mut ::core::ffi::c_void
+                                        #( , #thunk_args )*
+                                    );
+                                }
                             }
                         )
                     }
@@ -1192,11 +1196,9 @@ fn generate_func_body(
                 //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
                 let _ = return_type; // proof that we don't need to update it.
             }
-            // Only need to wrap everything in an `unsafe { ... }` block if
-            // the *whole* api function is safe.
-            if !impl_kind.is_unsafe() {
-                body = quote! { unsafe { #body } };
-            }
+            // In Rust 2024, `unsafe fn` bodies are not considered unsafe blocks,
+            // so we must always wrap the thunk call in an `unsafe { ... }` block.
+            body = quote! { unsafe { #body } };
             Ok(quote! {
                 #thunk_prepare
                 #body
@@ -1746,6 +1748,11 @@ pub fn generate_function(
 
             let target_record = derived_record.clone().unwrap_or_else(|| record.clone());
             let mod_name = db.record_to_associated_module_name(target_record)?;
+            let delegate_call = if impl_kind.is_unsafe() {
+                quote! { unsafe { self::#mod_name::#func_name(#( #method_delegation_args ),*) } }
+            } else {
+                quote! { self::#mod_name::#func_name(#( #method_delegation_args ),*) }
+            };
 
             member_functions_map.insert(
                 derived_record.as_deref().unwrap_or(record.as_ref()).id,
@@ -1758,7 +1765,7 @@ pub fn generate_function(
                     fn #bracketed_func_name #fn_generic_params(
                         #( #api_params ),*
                     ) #arrow #quoted_return_type #unsatisfied_where_clause {
-                        self::#mod_name::#func_name(#( #method_delegation_args ),*)
+                        #delegate_call
                     }
                 }],
             );

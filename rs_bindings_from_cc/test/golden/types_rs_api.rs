@@ -171,7 +171,7 @@ pub unsafe fn FunctionWithVoidPointers(
     __param_0: *mut ::ffi_11::c_void,
     __param_1: *const ::ffi_11::c_void,
 ) -> *mut ::ffi_11::c_void {
-    crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1)
+    unsafe { crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1) }
 }
 
 mod detail {

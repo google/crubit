@@ -23,7 +23,7 @@ use core::slice::SliceIndex;
 
 use crate::crubit_cc_std_internal::std_allocator as cpp_std_allocator;
 
-extern "C" {
+unsafe extern "C" {
     // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/compiler-rt/lib/sanitizer_common/sanitizer_interface_internal.h#L70
     #[cfg(sanitize = "address")]
     fn __sanitizer_annotate_contiguous_container(
@@ -658,7 +658,7 @@ unsafe fn create_vec_from_raw_parts<T>(
     if begin.is_null() {
         Vec::new_in(cpp_std_allocator::StdAllocator {})
     } else {
-        Vec::from_raw_parts_in(begin, len, capacity, cpp_std_allocator::StdAllocator {})
+        unsafe { Vec::from_raw_parts_in(begin, len, capacity, cpp_std_allocator::StdAllocator {}) }
     }
 }
 

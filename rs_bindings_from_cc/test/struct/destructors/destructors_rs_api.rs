@@ -33,17 +33,17 @@ impl DestructionOrderRecorder {
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
     #[inline(always)]
     pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
-        self::destruction_order_recorder::RecordDestruction(int_field)
+        unsafe { self::destruction_order_recorder::RecordDestruction(int_field) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
     #[inline(always)]
     pub fn GetDestructionRecord() -> ::ffi_11::c_int {
-        self::destruction_order_recorder::GetDestructionRecord()
+        unsafe { self::destruction_order_recorder::GetDestructionRecord() }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
     #[inline(always)]
     pub fn ClearDestructionRecord() {
-        self::destruction_order_recorder::ClearDestructionRecord()
+        unsafe { self::destruction_order_recorder::ClearDestructionRecord() }
     }
 }
 
@@ -168,7 +168,7 @@ impl FieldDestructionOrderTester {
         field2: ::ffi_11::c_int,
         field3: ::ffi_11::c_int,
     ) {
-        self::field_destruction_order_tester::DestructFromCpp(field1, field2, field3)
+        unsafe { self::field_destruction_order_tester::DestructFromCpp(field1, field2, field3) }
     }
 }
 

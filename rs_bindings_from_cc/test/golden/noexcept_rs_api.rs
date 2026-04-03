@@ -28,7 +28,7 @@ unsafe impl ::cxx::ExternType for SomeClass {
 impl SomeClass {
     #[inline(always)]
     pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
-        self::some_class::create(i, c)
+        unsafe { self::some_class::create(i, c) }
     }
     /// # Safety
     ///
@@ -36,7 +36,7 @@ impl SomeClass {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_member(__this: *mut Self) {
-        self::some_class::no_except_member(__this)
+        unsafe { self::some_class::no_except_member(__this) }
     }
     /// # Safety
     ///
@@ -44,7 +44,7 @@ impl SomeClass {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_true_member(__this: *mut Self) {
-        self::some_class::no_except_true_member(__this)
+        unsafe { self::some_class::no_except_true_member(__this) }
     }
     /// # Safety
     ///
@@ -52,7 +52,7 @@ impl SomeClass {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_false_member(__this: *mut Self) {
-        self::some_class::no_except_false_member(__this)
+        unsafe { self::some_class::no_except_false_member(__this) }
     }
 }
 
@@ -78,7 +78,7 @@ pub mod some_class {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_member(__this: *mut crate::SomeClass) {
-        crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this) }
     }
     /// # Safety
     ///
@@ -86,7 +86,7 @@ pub mod some_class {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_true_member(__this: *mut crate::SomeClass) {
-        crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this) }
     }
     /// # Safety
     ///
@@ -94,7 +94,7 @@ pub mod some_class {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_false_member(__this: *mut crate::SomeClass) {
-        crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this) }
     }
 }
 

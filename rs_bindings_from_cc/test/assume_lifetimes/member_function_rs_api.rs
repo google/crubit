@@ -31,12 +31,12 @@ impl S {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=9
     #[inline(always)]
     pub fn int_accessor<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-        self::s::int_accessor(self)
+        unsafe { self::s::int_accessor(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=10
     #[inline(always)]
     pub fn me<'__this>(&'__this mut self) -> ::cref::CMut<'__this, crate::S> {
-        self::s::me(self)
+        unsafe { self::s::me(self) }
     }
 }
 

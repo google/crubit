@@ -34,19 +34,19 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 impl Nontrivial {
     #[inline(always)]
     pub fn Unqualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nontrivial::Unqualified(self)
+        unsafe { self::nontrivial::Unqualified(self) }
     }
     #[inline(always)]
     pub fn ConstQualified<'a>(&'a self) {
-        self::nontrivial::ConstQualified(self)
+        unsafe { self::nontrivial::ConstQualified(self) }
     }
     #[inline(always)]
     pub fn LvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nontrivial::LvalueRefQualified(self)
+        unsafe { self::nontrivial::LvalueRefQualified(self) }
     }
     #[inline(always)]
     pub fn ConstLvalueRefQualified<'a>(&'a self) {
-        self::nontrivial::ConstLvalueRefQualified(self)
+        unsafe { self::nontrivial::ConstLvalueRefQualified(self) }
     }
 }
 
@@ -57,7 +57,7 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ev(dest as *mut ::core::ffi::c_void);
             })
         }
@@ -71,7 +71,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
                     dest as *mut ::core::ffi::c_void,
                     field,
@@ -97,7 +97,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
                     dest as *mut ::core::ffi::c_void,
                     field,
@@ -130,11 +130,13 @@ impl ::ctor::Assign<f32> for Nontrivial {
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: f32) {
         unsafe {
             let _ = ::ctor::emplace!(::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10NontrivialaSEf(
-                    dest as *mut ::core::ffi::c_void,
-                    self,
-                    __param_0,
-                );
+                unsafe {
+                    crate::detail::__rust_thunk___ZN10NontrivialaSEf(
+                        dest as *mut ::core::ffi::c_void,
+                        self,
+                        __param_0,
+                    );
+                }
             }));
         }
     }
@@ -143,7 +145,7 @@ impl ::ctor::Assign<f32> for Nontrivial {
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
     }
 }
 
@@ -207,7 +209,7 @@ unsafe impl ::cxx::ExternType for NontrivialInline {
 impl NontrivialInline {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nontrivial_inline::MemberFunction(self)
+        unsafe { self::nontrivial_inline::MemberFunction(self) }
     }
 }
 
@@ -218,7 +220,7 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );
@@ -234,7 +236,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialInline {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
                     dest as *mut ::core::ffi::c_void,
                     field,
@@ -260,7 +262,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
                     dest as *mut ::core::ffi::c_void,
                     field,
@@ -291,7 +293,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
 impl ::ctor::PinnedDrop for NontrivialInline {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
     }
 }
 
@@ -329,7 +331,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );
@@ -347,7 +349,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 impl ::ctor::PinnedDrop for NontrivialMembers {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
     }
 }
 
@@ -375,7 +377,7 @@ unsafe impl ::cxx::ExternType for NontrivialUnpin {
 impl NontrivialUnpin {
     #[inline(always)]
     pub fn MemberFunction<'a>(&'a mut self) {
-        self::nontrivial_unpin::MemberFunction(self)
+        unsafe { self::nontrivial_unpin::MemberFunction(self) }
     }
 }
 
@@ -473,7 +475,7 @@ pub fn TakesByValue(
     nontrivial: ::ctor::Ctor![crate::Nontrivial],
 ) -> ::ctor::Ctor![crate::Nontrivial] {
     unsafe {
-        ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
+        ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| unsafe {
             crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
                 dest as *mut ::core::ffi::c_void,
                 ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
@@ -487,7 +489,7 @@ pub fn TakesByValueInline(
     nontrivial: ::ctor::Ctor![crate::NontrivialInline],
 ) -> ::ctor::Ctor![crate::NontrivialInline] {
     unsafe {
-        ::ctor::FnCtor::new(move |dest: *mut crate::NontrivialInline| {
+        ::ctor::FnCtor::new(move |dest: *mut crate::NontrivialInline| unsafe {
             crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
                 dest as *mut ::core::ffi::c_void,
                 ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
@@ -618,7 +620,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
 impl Nonmovable {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nonmovable::MemberFunction(self)
+        unsafe { self::nonmovable::MemberFunction(self) }
     }
 }
 
@@ -629,7 +631,7 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN10NonmovableC1Ev(dest as *mut ::core::ffi::c_void);
             })
         }
@@ -639,7 +641,7 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 impl ::ctor::PinnedDrop for Nonmovable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self) }
     }
 }
 
@@ -669,7 +671,7 @@ where
 #[inline(always)]
 pub fn ReturnsNonmovableByValue() -> ::ctor::Ctor![crate::Nonmovable] {
     unsafe {
-        ::ctor::FnCtor::new(move |dest: *mut crate::Nonmovable| {
+        ::ctor::FnCtor::new(move |dest: *mut crate::Nonmovable| unsafe {
             crate::detail::__rust_thunk___Z24ReturnsNonmovableByValuev(
                 dest as *mut ::core::ffi::c_void,
             );

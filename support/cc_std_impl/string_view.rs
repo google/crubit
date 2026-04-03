@@ -265,7 +265,7 @@ impl raw_string_view {
     /// Similarly, the use of `&self` is not actually a protection against the bytes being
     /// concurrently modified.
     pub unsafe fn as_static_live(&'static self) -> string_view<'static> {
-        self.as_live()
+        unsafe { self.as_live() }
     }
 }
 

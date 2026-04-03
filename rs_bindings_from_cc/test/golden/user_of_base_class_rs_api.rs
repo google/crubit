@@ -39,7 +39,7 @@ impl ::ctor::CtorNew<()> for Derived2 {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN8Derived2C1Ev(dest as *mut ::core::ffi::c_void);
             })
         }
@@ -80,7 +80,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN15VirtualDerived2C1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );

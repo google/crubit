@@ -37,7 +37,7 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN10NonmovableC1Ev(dest as *mut ::core::ffi::c_void);
             })
         }
@@ -62,7 +62,7 @@ impl Base {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
-        self::base::has_bindings(self)
+        unsafe { self::base::has_bindings(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
@@ -70,7 +70,7 @@ impl Base {
     where
         for<'error> &'error (): BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable,
     {
-        self::base::no_bindings(self, __param_0)
+        unsafe { self::base::no_bindings(self, __param_0) }
     }
 }
 
@@ -129,7 +129,7 @@ impl Derived {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
-        self::derived::has_bindings(oops::Upcast::<_>::upcast(self))
+        unsafe { self::derived::has_bindings(oops::Upcast::<_>::upcast(self)) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
@@ -137,7 +137,7 @@ impl Derived {
     where
         for<'error> &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
     {
-        self::derived::no_bindings(oops::Upcast::<_>::upcast(self), __param_0)
+        unsafe { self::derived::no_bindings(oops::Upcast::<_>::upcast(self), __param_0) }
     }
 }
 
@@ -160,7 +160,7 @@ pub trait BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable {}
 
 unsafe impl oops::Inherits<crate::Base> for crate::Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base {
-        (derived as *const _ as *const u8).offset(0) as *const crate::Base
+        unsafe { (derived as *const _ as *const u8).offset(0) as *const crate::Base }
     }
 }
 

@@ -480,7 +480,7 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );
@@ -502,7 +502,7 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
 impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(self) }
     }
 }
 
@@ -889,7 +889,7 @@ unsafe impl ::cxx::ExternType for ManyOperators {
 impl ManyOperators {
     #[inline(always)]
     pub fn unary_plus<'a>(&'a self) -> crate::ManyOperators {
-        self::many_operators::unary_plus(self)
+        unsafe { self::many_operators::unary_plus(self) }
     }
 }
 

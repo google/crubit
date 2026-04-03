@@ -36,7 +36,7 @@ impl ::ctor::CtorNew<()> for Uncopyable {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN10UncopyableC1Ev(dest as *mut ::core::ffi::c_void);
             })
         }
@@ -64,7 +64,7 @@ unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
 impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclD1Ev(self) }
     }
 }
 
@@ -80,7 +80,7 @@ impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );

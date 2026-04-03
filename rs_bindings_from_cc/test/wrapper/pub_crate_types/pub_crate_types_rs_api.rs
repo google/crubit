@@ -64,7 +64,7 @@ pub(crate) fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
     }
 }
 
-extern "C" {
+unsafe extern "C" {
     pub(crate) static mut TemplateConstant: crate::__CcTemplateInst8TemplateIiE;
 }
 
@@ -89,7 +89,7 @@ forward_declare::forward_declare!(pub ForwardDeclared = forward_declare::symbol!
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=42
 #[inline(always)]
 pub unsafe fn OtherPubCrateTypes(__param_0: *mut ::other_pub_crate_types::ForwardDeclared2) {
-    crate::detail::__rust_thunk___Z18OtherPubCrateTypesP16ForwardDeclared2(__param_0)
+    unsafe { crate::detail::__rust_thunk___Z18OtherPubCrateTypesP16ForwardDeclared2(__param_0) }
 }
 
 /// Templates, otoh, are pub(crate), but work because templates are already

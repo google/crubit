@@ -34,17 +34,17 @@ impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> ::ffi_11::c_int {
-        self::doc_comment_slashes::get_field_value(self)
+        unsafe { self::doc_comment_slashes::get_field_value(self) }
     }
     /// A non-static member function (non-`const` flavor).
     #[inline(always)]
     pub fn set_field_value<'a>(&'a mut self, new_value: ::ffi_11::c_int) {
-        self::doc_comment_slashes::set_field_value(self, new_value)
+        unsafe { self::doc_comment_slashes::set_field_value(self, new_value) }
     }
     /// A static method.
     #[inline(always)]
     pub fn static_method() -> ::ffi_11::c_int {
-        self::doc_comment_slashes::static_method()
+        unsafe { self::doc_comment_slashes::static_method() }
     }
 }
 

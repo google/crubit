@@ -33,7 +33,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN15PolymorphicBaseC1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );
@@ -52,14 +52,16 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN15PolymorphicBaseD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN15PolymorphicBaseD1Ev(self) }
     }
 }
 
 unsafe impl ::operator::Delete for crate::PolymorphicBase {
     #[inline(always)]
     unsafe fn delete(p: *mut Self) {
-        crate::detail::__crubit_operator_delete__15PolymorphicBase___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(p);
+        unsafe {
+            crate::detail::__crubit_operator_delete__15PolymorphicBase___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(p);
+        }
     }
 }
 
@@ -78,7 +80,7 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
 impl PolymorphicBase2 {
     #[inline(always)]
     pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::polymorphic_base2::Foo(self)
+        unsafe { self::polymorphic_base2::Foo(self) }
     }
 }
 
@@ -89,7 +91,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN16PolymorphicBase2C1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );
@@ -108,14 +110,16 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN16PolymorphicBase2D1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase2D1Ev(self) }
     }
 }
 
 unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
     #[inline(always)]
     unsafe fn delete(p: *mut Self) {
-        crate::detail::__crubit_operator_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(p);
+        unsafe {
+            crate::detail::__crubit_operator_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(p);
+        }
     }
 }
 
@@ -146,7 +150,7 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |dest: *mut Self| unsafe {
                 crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1Ev(
                     dest as *mut ::core::ffi::c_void,
                 );
@@ -164,7 +168,7 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
 impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN18PolymorphicDerivedD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN18PolymorphicDerivedD1Ev(self) }
     }
 }
 
@@ -179,7 +183,9 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
 unsafe impl ::operator::Delete for crate::PolymorphicDerived {
     #[inline(always)]
     unsafe fn delete(p: *mut Self) {
-        crate::detail::__crubit_operator_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(p);
+        unsafe {
+            crate::detail::__crubit_operator_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(p);
+        }
     }
 }
 

@@ -14,11 +14,11 @@
 #![allow(unused)]
 #![deny(warnings)]
 
-extern "C" {
+unsafe extern "C" {
     pub static mut extern_int: ::ffi_11::c_int;
 }
 
-extern "C" {
+unsafe extern "C" {
     pub static kExternConstInt: ::ffi_11::c_int;
 }
 
@@ -73,12 +73,12 @@ pub fn GetInlineIntVal() -> ::ffi_11::c_int {
 pub const kAnonEnumConst: ::ffi_11::c_uint = ::ffi_11::new_c_uint(123);
 
 pub mod foo {
-    extern "C" {
+    unsafe extern "C" {
         #[link_name = "_ZN3foo21extern_int_namespacedE"]
         pub static mut extern_int_namespaced: ::ffi_11::c_int;
     }
 
-    extern "C" {
+    unsafe extern "C" {
         pub static mut extern_c_int_namespaced: ::ffi_11::c_int;
     }
 

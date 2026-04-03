@@ -74,7 +74,7 @@ pub fn map_bridged(
     arg: crate::RustBridged,
 ) -> crate::RustBridged {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::RustBridgedAbi,crate::RustBridgedAbi,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(__return_abi_buffer,::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(crate::RustBridged)->crate::RustBridged+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: crate::RustBridged|->crate::RustBridged{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(crate::RustBridged)->crate::RustBridged+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,::bridge_rust::unstable_encode!(@crate::RustBridgedAbi,crate::RustBridgedAbi,arg).as_ptr()as*const u8); })
+        ::bridge_rust::unstable_return!(@crate::RustBridgedAbi,crate::RustBridgedAbi,|__return_abi_buffer|{ unsafe{ crate::detail::__rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(__return_abi_buffer,::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(crate::RustBridged)->crate::RustBridged+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: crate::RustBridged|->crate::RustBridged{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(crate::RustBridged)->crate::RustBridged+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,::bridge_rust::unstable_encode!(@crate::RustBridgedAbi,crate::RustBridgedAbi,arg).as_ptr()as*const u8); } })
     }
 }
 
@@ -137,7 +137,7 @@ unsafe impl ::cxx::ExternType for LayoutCompatible {
 impl LayoutCompatible {
     #[inline(always)]
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
-        self::layout_compatible::Create(x)
+        unsafe { self::layout_compatible::Create(x) }
     }
     /// # Safety
     ///
@@ -145,7 +145,7 @@ impl LayoutCompatible {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn get(__this: *const Self) -> ::ffi_11::c_int {
-        self::layout_compatible::get(__this)
+        unsafe { self::layout_compatible::get(__this) }
     }
 }
 
@@ -167,7 +167,7 @@ pub mod layout_compatible {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn get(__this: *const crate::LayoutCompatible) -> ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this) }
     }
 }
 
