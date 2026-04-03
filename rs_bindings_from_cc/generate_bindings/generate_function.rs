@@ -2265,7 +2265,7 @@ pub fn generate_function(
                             #[inline (always)]
                             unsafe fn ctor_new(args: (#single_param_,)) -> Self::CtorType {
                                 let (arg,) = args;
-                                <Self as ::ctor::UnsafeCtorNew<#single_param_>>::ctor_new(arg)
+                                unsafe { <Self as ::ctor::UnsafeCtorNew<#single_param_>>::ctor_new(arg) }
                             }
                         }
                     }
@@ -2301,7 +2301,7 @@ pub fn generate_function(
 
                             #[inline (always)]
                             unsafe fn ctor_new(args: #single_param_) -> Self::CtorType {
-                                <Self as ::ctor::UnsafeFrom<#single_param_>>::unsafe_from(args)
+                                unsafe { <Self as ::ctor::UnsafeFrom<#single_param_>>::unsafe_from(args) }
                             }
                         }
                     }
