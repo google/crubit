@@ -418,6 +418,7 @@ rust_library(
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
+        "//common:crubit_feature",
         "//common:error_report",
         "//common:memoized",
         "//rs_bindings_from_cc:ir",

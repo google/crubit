@@ -227,11 +227,11 @@ pub fn format_generic_params<'a, T: ToTokens>(
 pub fn format_generic_params_replacing_by_self<'db, 'a>(
     db: impl Deref<Target = BindingsGenerator<'db>> + Copy,
     types: impl IntoIterator<Item = &'a RsTypeKind>,
-    trait_record: Option<&Record>,
+    trait_type: Option<&RsTypeKind>,
 ) -> TokenStream {
     format_generic_params(
         [],
-        types.into_iter().map(|ty| ty.to_token_stream_replacing_by_self(db, trait_record)),
+        types.into_iter().map(|ty| ty.to_token_stream_replacing_by_self(db, trait_type)),
     )
 }
 
@@ -1193,11 +1193,11 @@ impl RsTypeKind {
     pub fn format_as_return_type_fragment<'a>(
         &self,
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
-        self_record: Option<&Record>,
+        self_type: Option<&RsTypeKind>,
     ) -> Option<TokenStream> {
         match self.unalias() {
             RsTypeKind::Primitive(Primitive::Void) => None,
-            _ => Some(self.to_token_stream_replacing_by_self(db, self_record)),
+            _ => Some(self.to_token_stream_replacing_by_self(db, self_type)),
         }
     }
 
@@ -1384,6 +1384,14 @@ impl RsTypeKind {
                 Some(lifetime.clone())
             }
             Self::Record { uniform_repr_template_type: Some(template), .. } => template.lifetime(),
+            // TODO(zarko): Extend to allow multiple lifetimes.
+            Self::Record { lifetimes, .. } => {
+                if lifetimes.len() == 1 {
+                    Some(lifetimes[0].clone())
+                } else {
+                    None
+                }
+            }
             _ => None,
         }
     }
@@ -1412,17 +1420,17 @@ impl RsTypeKind {
         quote! { #crate_path #path }
     }
 
-    /// Similar to to_token_stream, but replacing RsTypeKind:Record with Self
-    /// when the underlying Record matches the given one.
+    /// Similar to to_token_stream, but replacing RsTypeKind with Self
+    /// when the underlying type matches the given one.
     pub fn to_token_stream_replacing_by_self<'a>(
         &self,
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
-        self_record: Option<&Record>,
+        self_type: Option<&RsTypeKind>,
     ) -> TokenStream {
         match self {
             RsTypeKind::Pointer { pointee, kind, mutability } => {
                 let mutability = mutability.format_for_pointer();
-                let pointee_ = pointee.to_token_stream_replacing_by_self(db, self_record);
+                let pointee_ = pointee.to_token_stream_replacing_by_self(db, self_type);
                 if let RustPtrKind::Slice = kind {
                     quote! {* #mutability [#pointee_] }
                 } else {
@@ -1432,7 +1440,7 @@ impl RsTypeKind {
             RsTypeKind::Reference { referent, mutability, lifetime, is_cref } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
-                let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
+                let referent_ = referent.to_token_stream_replacing_by_self(db, self_type);
                 let mut tokens = if *is_cref {
                     match mutability {
                         Mutability::Mut => quote! { ::cref::CMut<#lifetime, #referent_> },
@@ -1448,7 +1456,7 @@ impl RsTypeKind {
                 tokens
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
-                let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
+                let referent_ = referent.to_token_stream_replacing_by_self(db, self_type);
                 if mutability == &Mutability::Mut {
                     quote! {::ctor::RvalueReference<#lifetime, #referent_>}
                 } else {
@@ -1458,11 +1466,10 @@ impl RsTypeKind {
             RsTypeKind::FuncPtr { option, cc_calling_conv, return_type, param_types } => {
                 let param_types_ = param_types
                     .iter()
-                    .map(|type_| type_.to_token_stream_replacing_by_self(db, self_record));
+                    .map(|type_| type_.to_token_stream_replacing_by_self(db, self_type));
                 let abi = cc_calling_conv.rs_extern_abi();
                 let mut tokens = quote! { extern #abi fn( #( #param_types_ ),* ) };
-                if let Some(return_frag) =
-                    return_type.format_as_return_type_fragment(db, self_record)
+                if let Some(return_frag) = return_type.format_as_return_type_fragment(db, self_type)
                 {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
                 }
@@ -1474,8 +1481,8 @@ impl RsTypeKind {
                 }
                 tokens
             }
-            RsTypeKind::Record { record, .. } => {
-                if self_record == Some(record) {
+            RsTypeKind::Record { .. } => {
+                if Some(self) == self_type {
                     quote! { Self }
                 } else {
                     self.to_token_stream(db)

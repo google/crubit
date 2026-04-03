@@ -9,8 +9,10 @@ use ffi_types::Environment;
 use generate_bindings::new_database;
 use googletest::prelude::*;
 use ir_matchers::assert_ir_matches;
-use ir_testing::with_full_lifetime_macros;
-use lifetime_defaults_transform::{lifetime_defaults_transform, BindingContext};
+use ir_testing::{retrieve_record, with_full_lifetime_macros};
+use lifetime_defaults_transform::{
+    lifetime_defaults_transform, record_lifetime_arity, BindingContext,
+};
 use multiplatform_ir_testing::ir_from_assumed_lifetimes_cc;
 use quote::quote;
 use std::rc::Rc;
@@ -779,17 +781,32 @@ fn test_param_lifetimebound_to_this_in_constructor() -> Result<()> {
                 return_type: CcType { ... variant: Primitive(Void) ... }, ...
                 params: [
                     FuncParam {
-                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
-                        identifier: "__this", ...
+                        type_: CcType {
+                            ...
+                            variant: Pointer(PointerType {
+                                ...
+                                pointee_type: CcType {
+                                    ...
+                                    explicit_lifetimes: ["__implicit"]
+                                    ...
+                                },
+                                ...
+                            }),
+                            ...
+                            explicit_lifetimes: [],
+                            ...
+                        },
+                        identifier: "__this",
+                        ...
                     },
                     FuncParam {
-                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        type_: CcType { ... explicit_lifetimes: ["__implicit"] ... },
                         identifier: "i1", ...
                     },
                 ],
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this"],
+                lifetime_inputs: [],
                 ...
             }
         }
@@ -1260,5 +1277,124 @@ fn test_string_view_assumed_output_lifetime_matches_input() -> Result<()> {
             }
         }
     );
+    Ok(())
+}
+
+fn arity_of_record(ir: &ir::IR, record_name: &str) -> Result<usize> {
+    let record = retrieve_record(ir, record_name);
+    let errors = ErrorReport::new(SourceLanguage::Cpp);
+    let fatal_errors = FatalErrors::new();
+    let db = new_database(ir, &errors, &fatal_errors, Environment::Production, false);
+    record_lifetime_arity(&db, record)
+}
+
+#[gtest]
+fn test_arity_of_noparam_struct_is_zero() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { S(); };
+      "#),
+    )?;
+    assert_eq!(arity_of_record(&ir, "S"), Ok(0));
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    assert_eq!(arity_of_record(&dir, "S"), Ok(0));
+    Ok(())
+}
+
+#[gtest]
+fn test_arity_of_explicit_param_struct() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a", "b") S { S(); };
+      "#),
+    )?;
+    assert_eq!(arity_of_record(&ir, "S"), Ok(2));
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    assert_eq!(arity_of_record(&dir, "S"), Ok(2));
+    Ok(())
+}
+
+#[gtest]
+fn test_arity_of_simple_lifetimebound_constructor() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a", "b") R {};
+      struct S { S(R ref [[clang::lifetimebound]]); };
+      "#),
+    )?;
+    assert_eq!(arity_of_record(&ir, "S"), Ok(2));
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    assert_eq!(arity_of_record(&dir, "S"), Ok(2));
+    Ok(())
+}
+
+#[gtest]
+fn test_arity_of_simple_lifetimebound_return() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a", "b") R {};
+      struct S { R f() [[clang::lifetimebound]]; };
+      "#),
+    )?;
+    assert_eq!(arity_of_record(&ir, "S"), Ok(2));
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    assert_eq!(arity_of_record(&dir, "S"), Ok(2));
+    Ok(())
+}
+
+#[gtest]
+fn test_spurious_lifetimebound_on_return() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+        struct PlainStruct {};
+        struct DropStructWithRefCtorAndMemberFunction {
+            explicit DropStructWithRefCtorAndMemberFunction(const PlainStruct& s
+                                                            [[clang::lifetimebound]]) {}
+            const PlainStruct f() const [[clang::lifetimebound]];
+            ~DropStructWithRefCtorAndMemberFunction();
+        };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    // Check that the return type doesn't incorrectly get the __implicit lifetime applied.
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: [/*"__implicit"*/] ... }, ...
+                lifetime_inputs: ["__this"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_lifetimebound_cycle() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+        struct Impossible {
+            Impossible f() [[clang::lifetimebound]];
+            Impossible() = delete;
+            ~Impossible() = delete;
+            Impossible(const Impossible&) = delete;
+            Impossible(Impossible&&) = delete;
+            Impossible& operator=(const Impossible&) = delete;
+            Impossible& operator=(Impossible&&) = delete;
+        };
+      "#),
+    )?;
+    let error_message =
+        lifetime_defaults_transform_ir(&ir).expect_err("Expected an error").to_string();
+    assert_that!(error_message, contains_substring("Cycle detected: decl_lifetime_arity"));
     Ok(())
 }

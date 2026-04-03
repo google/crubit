@@ -1256,6 +1256,31 @@ impl Record {
         self.is_trivial_abi
     }
 
+    // TODO(b/498977848): The record with cc_name
+    // "std::basic_string_view<char8_t, std::char_traits<char8_t>>" with
+    // rs_name "__CcTemplateInstNSt3__u17basic_string_viewIDuNS_11char_traitsIDuEEEE" is given
+    // TemplateSpecialization kind NonSpecial. This is unfortunate, since we want to exclude all
+    // flavors of string_view because of our special-casing.
+    pub fn is_string_view(&self) -> bool {
+        match &self.template_specialization {
+            Some(TemplateSpecialization { defining_target, kind, .. }) => {
+                let is_in_cc_std = *defining_target
+                    == BazelLabel("//support/cc_std:cc_std".into());
+                if is_in_cc_std {
+                    let is_string_view = *kind == TemplateSpecializationKind::StdStringView
+                        || *kind == TemplateSpecializationKind::StdWStringView;
+                    if is_string_view {
+                        return true;
+                    };
+                    self.cc_name.as_str().starts_with("std::basic_string_view<")
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
+    }
+
     pub fn is_union(&self) -> bool {
         match self.record_type {
             RecordType::Union => true,

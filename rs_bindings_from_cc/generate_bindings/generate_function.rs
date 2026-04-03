@@ -40,7 +40,7 @@ use std::sync::LazyLock;
 fn trait_name_to_token_stream_removing_trait_record(
     db: &BindingsGenerator,
     trait_name: &TraitName,
-    trait_record: Option<&Record>,
+    self_type: Option<&RsTypeKind>,
 ) -> TokenStream {
     use TraitName::*;
     match trait_name {
@@ -52,34 +52,34 @@ fn trait_name_to_token_stream_removing_trait_record(
         }
         CtorNew(arg_types) => {
             let formatted_arg_types =
-                format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
+                format_tuple_except_singleton_replacing_by_self(db, arg_types, self_type);
             quote! { ::ctor::CtorNew < #formatted_arg_types > }
         }
         From(arg_types) => {
             let formatted_arg_types =
-                format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
+                format_tuple_except_singleton_replacing_by_self(db, arg_types, self_type);
             quote! { From < #formatted_arg_types > }
         }
         PartialEq { param, .. } => {
-            if trait_record.is_some_and(|trait_record| param.is_record(trait_record)) {
+            if self_type.is_some_and(|self_type| param.as_ref() == self_type) {
                 quote! {PartialEq}
             } else {
                 let formatted_params = format_generic_params_replacing_by_self(
                     db,
                     core::slice::from_ref(&**param),
-                    trait_record,
+                    self_type,
                 );
                 quote! {PartialEq #formatted_params}
             }
         }
         PartialOrd { param } => {
-            if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
+            if self_type.is_some_and(|self_type| param.as_ref() == self_type) {
                 quote! {PartialOrd}
             } else {
                 let formatted_params = format_generic_params_replacing_by_self(
                     db,
                     core::slice::from_ref(&**param),
-                    trait_record,
+                    self_type,
                 );
                 quote! {PartialOrd #formatted_params}
             }
@@ -87,7 +87,7 @@ fn trait_name_to_token_stream_removing_trait_record(
         Other { name, params, .. } => {
             let name_as_token_stream = name.parse::<TokenStream>().unwrap();
             let formatted_params =
-                format_generic_params_replacing_by_self(db, &**params, trait_record);
+                format_generic_params_replacing_by_self(db, &**params, self_type);
             quote! {#name_as_token_stream #formatted_params}
         }
         Delete => {
@@ -1081,13 +1081,15 @@ fn generate_func_body(
     //
     // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
     let return_type_or_self = {
-        let record = match impl_kind {
+        let self_type = match impl_kind {
             // Only use `Self` inside trait impls, and then only if the `Self` type is the same
             // as the trait implementation record type.
-            ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
+            ImplKind::Trait { record, impl_for: ImplFor::T, .. } => {
+                db.rs_type_kind((&**record).into()).ok()
+            }
             _ => None,
         };
-        return_type.to_token_stream_replacing_by_self(db, record)
+        return_type.to_token_stream_replacing_by_self(db, self_type.as_ref())
     };
 
     match &impl_kind {
@@ -1495,6 +1497,7 @@ pub fn generate_function(
 
     let BindingsSignature {
         lifetimes,
+        lifetimes_including_impl: _lifetimes_including_impl,
         params: api_params,
         return_type_fragment: mut quoted_return_type,
         thunk_prepare,
@@ -1511,7 +1514,18 @@ pub fn generate_function(
         &errors,
     ))?;
 
-    if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
+    if let ImplKind::Trait { drop_return: true, ref record, .. } = impl_kind {
+        let assume_lifetimes = db
+            .ir()
+            .target_crubit_features(&func.owning_target)
+            .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+        let mut self_type = db.rs_type_kind((&**record).into())?;
+        if assume_lifetimes {
+            let record = lifetime_defaults_transform_record(db, record)?;
+            if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
+                *lifetimes = record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+            }
+        }
         quoted_return_type = quote! {};
     }
 
@@ -1667,7 +1681,8 @@ pub fn generate_function(
             // checked parameters.
             let free_errors = Errors::new();
             let BindingsSignature {
-                lifetimes: free_lifetimes,
+                lifetimes: _free_lifetimes,
+                lifetimes_including_impl,
                 params: free_api_params,
                 return_type_fragment: free_return_type_fragment,
                 thunk_prepare: free_thunk_prepare,
@@ -1705,7 +1720,7 @@ pub fn generate_function(
             };
 
             let free_fn_generic_params =
-                format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
+                format_generic_params(&lifetimes_including_impl, std::iter::empty::<syn::Ident>());
 
             // Add the free method to the mapping, which we will extract and put into
             // snippets inside db later.
@@ -1822,6 +1837,12 @@ pub fn generate_function(
                 trait_record
             };
 
+            let mut trait_lifetime_params: Vec<Lifetime> = vec![];
+            if assume_lifetimes {
+                trait_lifetime_params =
+                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+            }
+
             let mut extra_body = if let Some(name) = associated_return_type {
                 let associated_type;
                 if quoted_return_type.is_empty() {
@@ -1832,8 +1853,12 @@ pub fn generate_function(
                 };
                 associated_type
             } else if let TraitName::PartialOrd { param } = &trait_name {
+                let mut self_type = db.rs_type_kind(trait_record.into())?;
+                if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
+                    *lifetimes = trait_lifetime_params.clone();
+                }
                 let quoted_param_or_self = match impl_for {
-                    ImplFor::T => param.to_token_stream_replacing_by_self(db, Some(&trait_record)),
+                    ImplFor::T => param.to_token_stream_replacing_by_self(db, Some(&self_type)),
                     ImplFor::RefT => param.to_token_stream(db),
                 };
                 quote! {
@@ -1881,15 +1906,20 @@ pub fn generate_function(
             // NOTE: `trait_generic_params` may include lifetimes!
             let formatted_trait_generic_params =
                 format_generic_params(&trait_lifetime_params, &*trait_generic_params);
+            let mut self_type_for_extra = db.rs_type_kind(trait_record.into())?;
+            if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type_for_extra {
+                *lifetimes = trait_lifetime_params.clone();
+            }
+
             let extra_items = match &trait_name {
                 TraitName::CtorNew(params) if params.len() == 1 => {
                     let single_param_ = format_tuple_except_singleton_replacing_by_self(
                         db,
                         params,
-                        Some(&trait_record),
+                        Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
                             #extra_body
 
                             #[inline (always)]
@@ -1904,10 +1934,10 @@ pub fn generate_function(
                     let single_param_ = format_tuple_except_singleton_replacing_by_self(
                         db,
                         params,
-                        Some(&trait_record),
+                        Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
                             type CtorType = Self;
                             type Error = ::ctor::Infallible;
 
@@ -1948,12 +1978,17 @@ pub fn generate_function(
                 let t = db.rs_type_kind((&*trait_record).into())?;
                 t.to_token_stream(db)
             };
+            let mut self_type = db.rs_type_kind(trait_record.into())?;
+            if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
+                *lifetimes = trait_lifetime_params.clone();
+            }
+
             let (trait_name_without_trait_record, impl_for) = match impl_for {
                 ImplFor::T => (
                     trait_name_to_token_stream_removing_trait_record(
                         db,
                         &trait_name,
-                        Some(&trait_record),
+                        Some(&self_type),
                     ),
                     qualified_record_name,
                 ),
@@ -2031,6 +2066,10 @@ struct BindingsSignature {
     /// The lifetime parameters for the Rust function.
     lifetimes: Vec<Lifetime>,
 
+    /// The lifetime parameters for the Rust function, if it were a free function (e.g., rebinding
+    /// the parameters that would be bound in an impl block).
+    lifetimes_including_impl: Vec<Lifetime>,
+
     /// The parameter list for the Rust function.
     ///
     /// For example, `vec![quote!{self}, quote!{x: &i32}]`.
@@ -2054,6 +2093,34 @@ struct BindingsSignature {
 
     /// Any features required by the function.
     features: FlagSet<Feature>,
+}
+
+fn collect_parent_lifetime_bindings(
+    db: &BindingsGenerator,
+    func: &Func,
+) -> Result<HashSet<String>> {
+    let mut unordered_lifetimes: HashSet<String> = HashSet::new();
+    let mut parent_id = func.enclosing_item_id;
+    loop {
+        if let Some(parent) = parent_id {
+            let decl = db.find_untyped_decl(parent);
+            if let Item::Record(r) = decl {
+                let assume_lifetimes = db
+                    .ir()
+                    .target_crubit_features(&r.owning_target)
+                    .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+                if assume_lifetimes {
+                    let r = lifetime_defaults_transform_record(db, r)?;
+                    for lifetime in r.lifetime_inputs {
+                        unordered_lifetimes.insert(lifetime.to_string());
+                    }
+                }
+            };
+            parent_id = decl.enclosing_item_id();
+        } else {
+            return Ok(unordered_lifetimes);
+        }
+    }
 }
 
 /// Reformats API parameters and return values to match Rust conventions and the
@@ -2106,6 +2173,18 @@ fn function_signature(
         }
         _ => None,
     };
+    let self_type = if let Some(record) = impl_kind_record {
+        let mut t = db.rs_type_kind((&**record).into())?;
+        if assume_lifetimes {
+            let record = lifetime_defaults_transform_record(db, record)?;
+            if let RsTypeKind::Record { ref mut lifetimes, .. } = t {
+                *lifetimes = record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+            }
+        }
+        Some(t)
+    } else {
+        None
+    };
 
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
         // If we are generating bindings for a derived record, parameter types should be
@@ -2117,8 +2196,8 @@ fn function_signature(
             errors.add(err);
         }
         let quoted_type_or_self =
-            if let (Some(impl_record), true) = (impl_kind_record, should_replace_by_self) {
-                type_.to_token_stream_replacing_by_self(db, Some(impl_record))
+            if let (Some(self_type), true) = (self_type.as_ref(), should_replace_by_self) {
+                type_.to_token_stream_replacing_by_self(db, Some(self_type))
             } else {
                 type_.to_token_stream_with_owned_ptr_type(db)
             };
@@ -2171,8 +2250,25 @@ fn function_signature(
         }
     }
 
-    let mut lifetimes: Vec<Lifetime> =
+    // We guarantee that all transformed lifetimes are unique, so all we need to do here is to
+    // make sure that we don't rebind an existing lifetime.
+    let parent_lifetimes = collect_parent_lifetime_bindings(db, func)?;
+
+    let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types, &func.lifetime_inputs)
+        .filter(|lifetime| !parent_lifetimes.contains(lifetime.0.as_ref()))
+        .collect();
+
+    let mut lifetimes_including_impl: Vec<Lifetime> =
         unique_lifetimes(&*param_types, &func.lifetime_inputs).collect();
+
+    let mut lifetime_inputs_and_parents = func.lifetime_inputs.clone();
+    for lifetime in parent_lifetimes {
+        lifetime_inputs_and_parents.push(lifetime.into());
+    }
+    let all_lifetimes: Vec<Lifetime> =
+        unique_lifetimes(&*param_types, &lifetime_inputs_and_parents)
+            .filter(|lifetime| !lifetime.is_elided())
+            .collect();
 
     let mut quoted_return_type = None;
 
@@ -2220,12 +2316,8 @@ fn function_signature(
 
             // CtorNew and From group parameters into a tuple.
             if let Some(TraitName::CtorNew(args_type) | TraitName::From(args_type)) = trait_name {
-                let args_type = if let Some(impl_record) = impl_kind_record {
-                    format_tuple_except_singleton_replacing_by_self(
-                        db,
-                        args_type,
-                        Some(impl_record),
-                    )
+                let args_type = if let Some(self_type) = self_type.as_ref() {
+                    format_tuple_except_singleton_replacing_by_self(db, args_type, Some(self_type))
                 } else {
                     format_tuple_except_singleton(
                         args_type.iter().map(|rs_type_kind| rs_type_kind.to_token_stream(db)),
@@ -2267,10 +2359,18 @@ fn function_signature(
             // similar to top-level functions.)
 
             // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = if lifetimes.is_empty() {
-                quote! {}
+            let extra_lifetimes = if assume_lifetimes {
+                if all_lifetimes.is_empty() {
+                    quote! {}
+                } else {
+                    quote! {+ use<#(#all_lifetimes),*> }
+                }
             } else {
-                quote! {+ use<#(#lifetimes),*> }
+                if lifetimes.is_empty() {
+                    quote! {}
+                } else {
+                    quote! {+ use<#(#lifetimes),*> }
+                }
             };
             features |= Feature::impl_trait_in_assoc_type;
             if extra_lifetimes.is_empty() {
@@ -2348,8 +2448,11 @@ fn function_signature(
     }
 
     lifetimes.retain(|lifetime| !lifetime.is_elided());
+    lifetimes_including_impl.retain(|lifetime| !lifetime.is_elided());
+
     Ok(BindingsSignature {
         lifetimes,
+        lifetimes_including_impl,
         params: api_params,
         return_type_fragment,
         thunk_prepare,
@@ -2443,14 +2546,14 @@ fn format_tuple_except_singleton(iter: impl IntoIterator<Item = TokenStream>) ->
 fn format_tuple_except_singleton_replacing_by_self(
     db: &BindingsGenerator,
     items: &[RsTypeKind],
-    trait_record: Option<&Record>,
+    self_type: Option<&RsTypeKind>,
 ) -> TokenStream {
     match items {
-        [singleton] => singleton.to_token_stream_replacing_by_self(db, trait_record),
+        [singleton] => singleton.to_token_stream_replacing_by_self(db, self_type),
         items => {
             let mut elements_of_tuple = quote! {};
             for (type_index, type_) in items.iter().enumerate() {
-                let quoted_type_or_self = type_.to_token_stream_replacing_by_self(db, trait_record);
+                let quoted_type_or_self = type_.to_token_stream_replacing_by_self(db, self_type);
                 if type_index > 0 {
                     (quote! {, #quoted_type_or_self }).to_tokens(&mut elements_of_tuple);
                 } else {

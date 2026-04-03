@@ -162,6 +162,24 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
         | Item::Enum(_)
         | Item::TypeAlias(_)
         | Item::ExistingRustType(_) => {
+            // decl_lifetime_arity is safe to call on non-AssumeLifetimes Items (inasmuch as it
+            // won't panic), but doing so may change the behavior of programs that don't have the
+            // feature turned on.
+            if matches!(item, Item::Record(_)) {
+                // Only check those item kinds that decl_lifetime_arity explicitly supports.
+                if let Some(ot) = &item.owning_target()
+                    && db
+                        .ir()
+                        .target_crubit_features(ot)
+                        .contains(crubit_feature::CrubitFeature::AssumeLifetimes)
+                    && let Err(error) = (db.codegen_functions().decl_lifetime_arity)(db, item.id())
+                {
+                    return Err(NoBindingsReason::Unsupported {
+                        context: db.debug_name(item.id()),
+                        error,
+                    });
+                }
+            }
             // has_bindings is called from `rs_type_kind()`, so we can't use
             // `BindingsGenerator::rs_type_kind()` here.
             match RsTypeKind::from_item_raw(

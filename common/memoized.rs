@@ -322,6 +322,7 @@ macro_rules! query_group {
 #[macro_export]
 macro_rules! memoized {
   (
+    $error_handler:ident,
     $vis:vis fn $memoized_ident:ident(
       db: $db_type:ty
       $(, $arg:ident : $arg_type:ty)*
@@ -356,9 +357,7 @@ macro_rules! memoized {
             $original_fn(db, $($arg),*)
           },
           &db.__unwinding_cycles,
-        ).unwrap_or_else(
-          || panic!("Cycle detected: '{}' depends on its own return value", stringify!($memoized_ident)),
-        )
+        ).unwrap_or_else(|| $error_handler(stringify!($memoized_ident)))
       })
     }
   }
@@ -748,7 +747,10 @@ pub mod tests {
             db.call_counter().set(db.call_counter().get() + 1);
             arg + 10
         }
-        crate::memoized!(pub fn add10(db: &Add10, arg: i32) -> i32 = add10_impl);
+        fn panic_on_error(s: &str) -> i32 {
+            panic!("Cycle detected: '{}' depends on its own return value", s)
+        }
+        crate::memoized!(panic_on_error, pub fn add10(db: &Add10, arg: i32) -> i32 = add10_impl);
         let db = Add10::new(Rc::new(Cell::new(0)));
 
         assert_eq!(add10(&db, 100), 110);

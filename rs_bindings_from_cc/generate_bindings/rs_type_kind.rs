@@ -9,6 +9,20 @@ use database::BindingsGenerator;
 use ir::{CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
 
+fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
+    match ty.variant {
+        CcTypeVariant::Decl(id) => {
+            let item = db.find_untyped_decl(id);
+            if let ir::Item::Record(record) = item {
+                record.is_string_view()
+            } else {
+                false
+            }
+        }
+        _ => false,
+    }
+}
+
 /// Implementation of `BindingsGenerator::rs_type_kind`.
 pub fn rs_type_kind_with_lifetime_elision(
     db: &BindingsGenerator,
@@ -34,7 +48,14 @@ pub fn rs_type_kind_with_lifetime_elision(
             // mutability of the Rust pointer, e.g. ty.is_const).
             let mutability =
                 if pointer.pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
-            let mut pointee = db.rs_type_kind(pointer.pointee_type.as_ref().clone())?;
+            let mut pointee = db.rs_type_kind_with_lifetime_elision(
+                pointer.pointee_type.as_ref().clone(),
+                LifetimeOptions {
+                    assume_lifetimes: lifetime_options.assume_lifetimes
+                        && !pointee_is_string_view(db, &pointer.pointee_type),
+                    ..LifetimeOptions::default()
+                },
+            )?;
 
             // TODO(b/464492052): Support bridge types by pointer/reference.
             if let RsTypeKind::BridgeType { original_type, .. } = pointee.unalias() {

@@ -186,3 +186,35 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_test_cc_library(
+    name = "struct_with_lifetimebound",
+    srcs = ["struct_with_lifetimebound.cc"],
+    hdrs = ["struct_with_lifetimebound.h"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:assume_lifetimes",
+    ],
+)
+
+golden_test(
+    name = "struct_with_lifetimebound_golden_test",
+    basename = "struct_with_lifetimebound",
+    cc_library = "struct_with_lifetimebound",
+    golden_cc = "struct_with_lifetimebound_api_impl.cc",
+    golden_rs = "struct_with_lifetimebound_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "struct_with_lifetimebound_test",
+    srcs = ["struct_with_lifetimebound_test.rs"],
+    cc_deps = [
+        ":struct_with_lifetimebound",
+        "//support/cc_std",
+    ],
+    deps = [
+        "//support:cref",
+        "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)

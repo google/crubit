@@ -41,9 +41,65 @@ fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
     }
 }
 
-fn record_lifetime_arity(_db: &BindingsGenerator, rc: &Record) -> Result<usize, arc_anyhow::Error> {
-    // TODO(zarko): Handle the effects of [[lifetimebound]] et al on arity.
-    Ok(rc.lifetime_inputs.len())
+pub fn record_lifetime_arity(
+    db: &BindingsGenerator,
+    rc: &Record,
+) -> Result<usize, arc_anyhow::Error> {
+    // Do nothing if this record isn't opted into assumed lifetimes.
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(&rc.owning_target)
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    if !assume_lifetimes {
+        return Ok(0);
+    }
+
+    // If the record has explicit lifetime inputs set, use those.
+    if !rc.lifetime_inputs.is_empty() {
+        return Ok(rc.lifetime_inputs.len());
+    }
+
+    // TODO(b/498977848): string_view shouldn't be special.
+    if rc.is_string_view() {
+        return Ok(0);
+    }
+
+    // Otherwise, we need to handle the various ways that a lifetime parameter may be implied.
+    for cid in &rc.child_item_ids {
+        let child = db.find_untyped_decl(*cid);
+        if let Item::Func(f) = child {
+            // There are three cases for [[lifetimebound]] on a member function f. (We're loose
+            // here in that "the arity of X" means "the lifetime arity of the type of X".)
+            // - If f is a constructor, the arity of a [[lifetimebound]] parameter must match
+            //   the arity of *this.
+            // - If the implicit parameter of f is marked [[lifetimebound]], then the arity
+            //   of the return type must match the arity of *this.
+            // - If an arbitrary parameter is marked with [[lifetimebound]], then the arity of
+            //   the return type must match the arity of that parameter. For the moment we
+            //   ignore this case.
+            //
+            // We'll pick the first [[lifetimebound]] we can find an arity for. (Even if we
+            // chose the type with the highest arity, we wouldn't be able to find a suitable
+            // assignment for those parameters later on; users need to annotate their code.)
+            if f.params.is_empty() {
+                continue;
+            }
+            let this_param = &f.params[0];
+            if this_param.identifier != "__this" {
+                continue;
+            }
+            if f.cc_name == ir::UnqualifiedIdentifier::Constructor {
+                for param in &f.params[1..] {
+                    if param.clang_lifetimebound {
+                        return lifetime_arity(db, &param.type_);
+                    }
+                }
+            } else if this_param.clang_lifetimebound {
+                return lifetime_arity(db, &f.return_type);
+            }
+        }
+    }
+    Ok(0)
 }
 
 fn decl_lifetime_arity_impl(
@@ -53,22 +109,23 @@ fn decl_lifetime_arity_impl(
     let item = db.find_untyped_decl(item_id);
     match item {
         Item::TypeAlias(ta) if ta.rs_name == "raw_string_view" => Ok(1),
-        // We seem to lose the typedef sugar if it's annotated.
+        // TODO(b/498977848): We seem to lose the typedef sugar if it's annotated. Note that we
+        // explicitly only need to check for StdStringView here (and not the more general
+        // rc.is_string_view()).
         Item::Record(rc)
             if matches!(
-                **rc,
-                Record {
-                    template_specialization: Some(ir::TemplateSpecialization {
-                        kind: ir::TemplateSpecializationKind::StdStringView,
-                        ..
-                    }),
+                rc.template_specialization,
+                Some(ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::StdStringView,
                     ..
-                }
+                })
             ) =>
         {
             Ok(1)
         }
         Item::TypeAlias(_ta) => {
+            // Here and elsewhere in this function: change has_bindings.rs to check for additional
+            // Item kinds when they are supported.
             bail!("Type aliases unhandled for lifetimes: {:?}", item.cc_name_as_str())
         }
         Item::Record(rc) => record_lifetime_arity(db, rc),
@@ -103,7 +160,11 @@ fn decl_lifetime_arity_impl(
     }
 }
 
-memoized!(pub fn decl_lifetime_arity(db: &BindingsGenerator, item_id: ir::ItemId) -> Result<usize, arc_anyhow::Error> = decl_lifetime_arity_impl);
+fn return_err(e: &str) -> Result<usize, arc_anyhow::Error> {
+    bail!("Cycle detected: {}", e)
+}
+
+memoized!(return_err, pub fn decl_lifetime_arity(db: &BindingsGenerator, item_id: ir::ItemId) -> Result<usize, arc_anyhow::Error> = decl_lifetime_arity_impl);
 
 /// Manages bindings for lifetime names. We expect to start with a `new` `BindingContext` for each
 /// item I being imported. This `BindingContext` should contain bindings for all parent items of I.
@@ -260,9 +321,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     }
 
     fn decl_binds_lifetimes(&mut self, id: &ItemId) -> Result<bool> {
-        // TODO(zarko): We currently only expect 0 or 1 lifetimes per type, and even then
-        // `decl_lifetime_arity` only expects to see string_view. This function will probably
-        // go away entirely and be replaced with decl_lifetime_arity or lifetime_arity.
+        // TODO(zarko): We currently only expect 0 or 1 lifetimes per type. This function will
+        // probably go away entirely and be replaced with decl_lifetime_arity or lifetime_arity.
         Ok(decl_lifetime_arity(self.db, *id) == Ok(1))
     }
 
@@ -414,9 +474,39 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         lifetime_arity(self.db, ty)
     }
 
+    fn inject_lifetimes_into_this(
+        &mut self,
+        param: &mut ir::FuncParam,
+        lifetimes: &[Rc<str>],
+    ) -> Result<()> {
+        match param.type_.variant {
+            CcTypeVariant::Pointer(ref mut pty) => {
+                if !pty.pointee_type.explicit_lifetimes.is_empty()
+                    && pty.pointee_type.explicit_lifetimes != lifetimes
+                {
+                    bail!("lifetime mismatch on implicit `this`: provided in code: {:#?} vs expected by inference: {:#?}", pty.pointee_type.explicit_lifetimes, lifetimes);
+                }
+                pty.pointee_type = Rc::new(CcType {
+                    explicit_lifetimes: lifetimes.to_vec(),
+                    ..pty.pointee_type.as_ref().clone()
+                });
+                Ok(())
+            }
+            _ => {
+                bail!("the implicit `this` parameter did not have pointer type");
+            }
+        }
+    }
+
     /// Transforms a function with Clang lifetime annotations into a function with Crubit-style
-    /// lifetime annotations. This function will not rename any existing lifetimes.
-    fn lower_clang_annotations(&mut self, func: &mut Func) -> Result<()> {
+    /// lifetime annotations. `this_lifetimebound_names` is a slice of all lifetimes that are
+    /// applied to `*this`. (If `func` is not a member function, then `this_lifetimebound_names`
+    /// should be empty.) This function will not rename any existing lifetimes.
+    fn lower_clang_annotations(
+        &mut self,
+        func: &mut Func,
+        this_lifetimebound_names: &[Rc<str>],
+    ) -> Result<()> {
         // TODO(b/475407556): Support lifetime_capture_by.
         let mut return_lifetime: Vec<Rc<str>> = func.return_type.explicit_lifetimes.clone();
         let mut has_lifetimebound = false;
@@ -450,37 +540,58 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             // If there are no [[lifetimebound]] parameters, we don't need to change anything.
             return Ok(());
         }
+        // We have at least one parameter because `has_lifetimebound`.
+        let is_member_function = &func.params[0].identifier == "__this";
         if return_lifetime.is_empty() {
-            // Since there are [[lifetimebound]] parameters but none were given lifetime
-            // annotations, we need to create new lifetime variables for the return value.
-            // Use a reserved name for these so we don't conflict with lifetimes embedded in
-            // types or on non-[[lifetimebound]] parameters.
-            let arity = self.get_lifetime_arity(if is_constructor {
-                &func.params[0].type_
+            // We still don't have any explicit annotations.
+            // Below, `L(v)` returns the ordered list of lifetimes for the type of value `v`.
+            // `L(x) : L(y)` indicates that the lifetimes of value `x` pairwise outlast the
+            // lifetimes of value `y`. Since we don't currently keep track of constraints, we
+            // effectively require `L(x) = L(y)`.
+            if is_constructor {
+                // Forall lifetimebound parameters P, L(P) : L(*this).
+                return_lifetime = this_lifetimebound_names.to_vec();
+            } else if is_member_function && func.params[0].clang_lifetimebound {
+                // Here, the implicit object parameter was annotated with [[lifetimebound]].
+                // In this case, forall lifetimebound parameters P, L(*this) : L(P)
+                return_lifetime = this_lifetimebound_names.to_vec();
             } else {
-                &func.return_type
-            })?;
-            for _ in 0..arity {
-                let name = if is_constructor { &Rc::from("__this") } else { &Rc::from("__rv") };
-                return_lifetime.push(self.bindings.fresh_name_for(name))
+                // Otherwise, for return value R and forall lifetimebound parameters P, L(P) : L(R).
+                for _ in 0..self.get_lifetime_arity(&func.return_type)? {
+                    return_lifetime.push(self.bindings.fresh_name_for(&Rc::from("__rv")))
+                }
             }
         }
         for (ix, param) in func.params.iter_mut().enumerate() {
             if param.clang_lifetimebound || (is_constructor && ix == 0) {
-                param.type_.explicit_lifetimes = return_lifetime.clone();
+                if is_member_function && ix == 0 {
+                    self.inject_lifetimes_into_this(param, &return_lifetime)?;
+                } else {
+                    param.type_.explicit_lifetimes = return_lifetime.clone();
+                }
             }
         }
         if !is_constructor {
-            func.return_type.explicit_lifetimes = return_lifetime;
+            // It's possible here that [[lifetimebound]] was used incorrectly, and that the
+            // return type doesn't bind |return_lifetime| lifetimes. Don't reject the program.
+            // Instead, if we can detect the arity mismatch, clear out the return type's lifetimes
+            // (effectively treating the return type as a raw type).
+            let return_arity = self.get_lifetime_arity(&func.return_type)?;
+            if return_arity != return_lifetime.len() {
+                func.return_type.explicit_lifetimes.clear();
+            } else {
+                func.return_type.explicit_lifetimes = return_lifetime;
+            }
         }
         Ok(())
     }
 
-    fn bind_lifetime_inputs(&mut self, id: Option<ItemId>) -> Result<()> {
+    fn bind_lifetime_inputs(&mut self, id: Option<ItemId>) -> Result<Vec<Rc<str>>> {
+        let mut this_lifetimebound_names = vec![];
         let item = if let Some(id) = id {
             self.find_untyped_decl(id)
         } else {
-            return Ok(());
+            return Ok(this_lifetimebound_names);
         };
         // Bind inputs from ancestors first.
         self.bind_lifetime_inputs(item.enclosing_item_id())?;
@@ -491,13 +602,21 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 });
             }
             Item::Record(record) => {
-                record.lifetime_inputs.iter().for_each(|name| {
-                    self.bindings.push_new_binding(name);
-                });
+                let arity = record_lifetime_arity(self.db, record)?;
+                if arity != record.lifetime_inputs.len() {
+                    for _ in 0..arity {
+                        this_lifetimebound_names
+                            .push(self.bindings.push_new_binding(&Rc::from("__implicit")));
+                    }
+                } else {
+                    record.lifetime_inputs.iter().for_each(|name| {
+                        this_lifetimebound_names.push(self.bindings.push_new_binding(name));
+                    });
+                }
             }
             _ => (),
         };
-        Ok(())
+        Ok(this_lifetimebound_names)
     }
 
     /// Transforms a function to use default lifetime rules.
@@ -511,12 +630,12 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         // Note that we generate a new LifetimeDefaults per Item that we're importing, so we don't
         // need to pop these bindings. (We *do* need to worry about unbinding names for internal
         // binders, like function types.)
-        self.bind_lifetime_inputs(func.enclosing_item_id)?;
+        let this_lifetimebound_names = self.bind_lifetime_inputs(func.enclosing_item_id)?;
         // Rename local bindings (and remember how we've renamed them).
         func.lifetime_inputs
             .iter()
             .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
-        self.lower_clang_annotations(&mut new_func)?;
+        self.lower_clang_annotations(&mut new_func, &this_lifetimebound_names)?;
         for (ix, param) in new_func.params.iter_mut().enumerate() {
             let is_constructor = func.cc_name == ir::UnqualifiedIdentifier::Constructor;
             // `this` in a constructor is strange. The !is_constructor restriction fixes some
@@ -560,13 +679,22 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// Transforms a record to use default lifetime rules.
     fn add_lifetime_to_record(&mut self, record: &Record) -> Result<Record> {
         let mut new_record = record.clone();
-        new_record.lifetime_inputs.clear();
         self.bind_lifetime_inputs(record.enclosing_item_id)?;
-        // Rename local bindings (and remember how we've renamed them).
-        record
-            .lifetime_inputs
-            .iter()
-            .for_each(|name| new_record.lifetime_inputs.push(self.bindings.push_new_binding(name)));
+        if new_record.lifetime_inputs.is_empty() {
+            // Record any implicit lifetime parameters.
+            let arity = record_lifetime_arity(self.db, record)?;
+            for _ in 0..arity {
+                new_record
+                    .lifetime_inputs
+                    .push(self.bindings.push_new_binding(&Rc::from("__implicit")));
+            }
+        } else {
+            new_record.lifetime_inputs.clear();
+            // Rename local bindings (and remember how we've renamed them).
+            record.lifetime_inputs.iter().for_each(|name| {
+                new_record.lifetime_inputs.push(self.bindings.push_new_binding(name))
+            });
+        }
         Ok(new_record)
     }
 
