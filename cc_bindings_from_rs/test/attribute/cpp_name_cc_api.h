@@ -44,7 +44,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   Replaced(const Replaced&) = delete;
   Replaced& operator=(const Replaced&) = delete;
   Replaced(::crubit::UnsafeRelocateTag, Replaced&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: cpp_name=create
@@ -56,7 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/attribute/cpp_name.rs;l=7
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -69,9 +69,9 @@ static_assert(
 static_assert(
     alignof(Replaced) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Replaced>);
-static_assert(std::is_trivially_move_constructible_v<::cpp_name::Replaced>);
-static_assert(std::is_trivially_move_assignable_v<::cpp_name::Replaced>);
+static_assert(::std::is_trivially_destructible_v<Replaced>);
+static_assert(::std::is_trivially_move_constructible_v<::cpp_name::Replaced>);
+static_assert(::std::is_trivially_move_assignable_v<::cpp_name::Replaced>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::cpp_name::Replaced* __ret_ptr);
 }
@@ -79,7 +79,7 @@ inline ::cpp_name::Replaced Replaced::create() {
   crubit::Slot<::cpp_name::Replaced> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Replaced::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Replaced, x));

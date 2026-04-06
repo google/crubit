@@ -45,12 +45,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonTrivialStruct(const NonTrivialStruct&) = delete;
   NonTrivialStruct& operator=(const NonTrivialStruct&) = delete;
   NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // examples/rust/non_trivial_struct/example.rs;l=7
-    std::int32_t a;
+    ::std::int32_t a;
   };
 
  private:
@@ -79,7 +79,7 @@ inline NonTrivialStruct::~NonTrivialStruct() {
 inline ::example_crate::NonTrivialStruct::NonTrivialStruct(
     NonTrivialStruct&& other)
     : NonTrivialStruct() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline ::example_crate::NonTrivialStruct& ::example_crate::NonTrivialStruct::
 operator=(NonTrivialStruct&& other) {

@@ -176,7 +176,7 @@ pub fn format_ty_for_cc<'tcx>(
                             .into_tokens(&mut prereqs),
                     );
                 }
-                CcSnippet { prereqs, tokens: quote! { std::tuple<#(#cc_types),*> } }
+                CcSnippet { prereqs, tokens: quote! { ::std::tuple<#(#cc_types),*> } }
             }
         }
         ty::TyKind::Array(element_type, length) => {
@@ -192,7 +192,7 @@ pub fn format_ty_for_cc<'tcx>(
             let cc_element_ty =
                 db.format_ty_for_cc(element_type, location)?.into_tokens(&mut prereqs);
             let c_int = Literal::u64_unsuffixed(target_size);
-            CcSnippet { prereqs, tokens: quote! { std::array<#cc_element_ty, #c_int> } }
+            CcSnippet { prereqs, tokens: quote! { ::std::array<#cc_element_ty, #c_int> } }
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#bool documents
@@ -250,20 +250,20 @@ pub fn format_ty_for_cc<'tcx>(
         // documents that "Rust does not support C platforms on which the C native integer type are
         // not compatible with any of Rust's fixed-width integer type (e.g. because of
         // padding-bits, lack of 2's complement, etc.)."
-        ty::TyKind::Int(ty::IntTy::I8) => cstdint(quote! { std::int8_t }),
-        ty::TyKind::Int(ty::IntTy::I16) => cstdint(quote! { std::int16_t }),
-        ty::TyKind::Int(ty::IntTy::I32) => cstdint(quote! { std::int32_t }),
-        ty::TyKind::Int(ty::IntTy::I64) => cstdint(quote! { std::int64_t }),
-        ty::TyKind::Uint(ty::UintTy::U8) => cstdint(quote! { std::uint8_t }),
-        ty::TyKind::Uint(ty::UintTy::U16) => cstdint(quote! { std::uint16_t }),
-        ty::TyKind::Uint(ty::UintTy::U32) => cstdint(quote! { std::uint32_t }),
-        ty::TyKind::Uint(ty::UintTy::U64) => cstdint(quote! { std::uint64_t }),
+        ty::TyKind::Int(ty::IntTy::I8) => cstdint(quote! { ::std::int8_t }),
+        ty::TyKind::Int(ty::IntTy::I16) => cstdint(quote! { ::std::int16_t }),
+        ty::TyKind::Int(ty::IntTy::I32) => cstdint(quote! { ::std::int32_t }),
+        ty::TyKind::Int(ty::IntTy::I64) => cstdint(quote! { ::std::int64_t }),
+        ty::TyKind::Uint(ty::UintTy::U8) => cstdint(quote! { ::std::uint8_t }),
+        ty::TyKind::Uint(ty::UintTy::U16) => cstdint(quote! { ::std::uint16_t }),
+        ty::TyKind::Uint(ty::UintTy::U32) => cstdint(quote! { ::std::uint32_t }),
+        ty::TyKind::Uint(ty::UintTy::U64) => cstdint(quote! { ::std::uint64_t }),
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
         // documents that "The isize and usize types are [...] layout compatible with C's uintptr_t
         // and intptr_t types.".
-        ty::TyKind::Int(ty::IntTy::Isize) => cstdint(quote! { std::intptr_t }),
-        ty::TyKind::Uint(ty::UintTy::Usize) => cstdint(quote! { std::uintptr_t }),
+        ty::TyKind::Int(ty::IntTy::Isize) => cstdint(quote! { ::std::intptr_t }),
+        ty::TyKind::Uint(ty::UintTy::Usize) => cstdint(quote! { ::std::uintptr_t }),
 
         ty::TyKind::Int(ty::IntTy::I128) | ty::TyKind::Uint(ty::UintTy::U128) => {
             // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
@@ -934,19 +934,19 @@ pub fn crubit_abi_type_from_ty<'tcx>(
         ty::TyKind::Bool => CrubitAbiType::transmute("bool", "bool"),
         ty::TyKind::Char => CrubitAbiType::transmute("char", "::rs_std::char_"),
         ty::TyKind::Int(int_ty) => match int_ty {
-            ty::IntTy::Isize => CrubitAbiType::transmute("isize", "std::intptr_t"),
-            ty::IntTy::I8 => CrubitAbiType::transmute("i8", "std::int8_t"),
-            ty::IntTy::I16 => CrubitAbiType::transmute("i16", "std::int16_t"),
-            ty::IntTy::I32 => CrubitAbiType::transmute("i32", "std::int32_t"),
-            ty::IntTy::I64 => CrubitAbiType::transmute("i64", "std::int64_t"),
+            ty::IntTy::Isize => CrubitAbiType::transmute("isize", "::std::intptr_t"),
+            ty::IntTy::I8 => CrubitAbiType::transmute("i8", "::std::int8_t"),
+            ty::IntTy::I16 => CrubitAbiType::transmute("i16", "::std::int16_t"),
+            ty::IntTy::I32 => CrubitAbiType::transmute("i32", "::std::int32_t"),
+            ty::IntTy::I64 => CrubitAbiType::transmute("i64", "::std::int64_t"),
             _ => bail!("Unsupported bridge type: {int_ty:?}"),
         },
         ty::TyKind::Uint(uint_ty) => match uint_ty {
-            ty::UintTy::Usize => CrubitAbiType::transmute("usize", "std::uintptr_t"),
-            ty::UintTy::U8 => CrubitAbiType::transmute("u8", "std::uint8_t"),
-            ty::UintTy::U16 => CrubitAbiType::transmute("u16", "std::uint16_t"),
-            ty::UintTy::U32 => CrubitAbiType::transmute("u32", "std::uint32_t"),
-            ty::UintTy::U64 => CrubitAbiType::transmute("u64", "std::uint64_t"),
+            ty::UintTy::Usize => CrubitAbiType::transmute("usize", "::std::uintptr_t"),
+            ty::UintTy::U8 => CrubitAbiType::transmute("u8", "::std::uint8_t"),
+            ty::UintTy::U16 => CrubitAbiType::transmute("u16", "::std::uint16_t"),
+            ty::UintTy::U32 => CrubitAbiType::transmute("u32", "::std::uint32_t"),
+            ty::UintTy::U64 => CrubitAbiType::transmute("u64", "::std::uint64_t"),
             _ => bail!("Unsupported bridge type: {uint_ty:?}"),
         },
         ty::TyKind::Float(float_ty) => match float_ty {
@@ -1094,7 +1094,7 @@ impl BridgedBuiltin {
     pub fn cpp_name(self) -> FullyQualifiedPath {
         match self {
             BridgedBuiltin::Result => todo!(),
-            BridgedBuiltin::Option => FullyQualifiedPath::new("std::optional"),
+            BridgedBuiltin::Option => FullyQualifiedPath::new("::std::optional"),
         }
     }
 

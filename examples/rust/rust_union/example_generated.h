@@ -42,12 +42,12 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   ReprRustUnion(const ReprRustUnion&) = delete;
   ReprRustUnion& operator=(const ReprRustUnion&) = delete;
   ReprRustUnion(::crubit::UnsafeRelocateTag, ReprRustUnion&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // examples/rust/rust_union/example.rs;l=21
-  void set_a(std::int32_t a);
+  void set_a(::std::int32_t a);
 
   // Generated from:
   // examples/rust/rust_union/example.rs;l=25
@@ -57,7 +57,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // examples/rust/rust_union/example.rs;l=6
   struct {
-    std::int32_t value;
+    ::std::int32_t value;
   } a;
   // Generated from:
   // examples/rust/rust_union/example.rs;l=7
@@ -82,16 +82,16 @@ extern "C" void __crubit_thunk_default(
 inline ::example_crate::ReprRustUnion::ReprRustUnion() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<ReprRustUnion>);
+static_assert(::std::is_trivially_destructible_v<ReprRustUnion>);
 static_assert(
-    std::is_trivially_move_constructible_v<::example_crate::ReprRustUnion>);
+    ::std::is_trivially_move_constructible_v<::example_crate::ReprRustUnion>);
 static_assert(
-    std::is_trivially_move_assignable_v<::example_crate::ReprRustUnion>);
+    ::std::is_trivially_move_assignable_v<::example_crate::ReprRustUnion>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ua(::example_crate::ReprRustUnion&,
-                                      std::int32_t);
+                                      ::std::int32_t);
 }
-inline void ReprRustUnion::set_a(std::int32_t a) {
+inline void ReprRustUnion::set_a(::std::int32_t a) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ua(self, a);
 }

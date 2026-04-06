@@ -44,12 +44,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
   ::example_crate::Struct& operator=(const Struct&);
 
   Struct(::crubit::UnsafeRelocateTag, Struct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // examples/rust/struct/example.rs;l=7
-    std::int32_t a;
+    ::std::int32_t a;
   };
 
  private:
@@ -68,9 +68,10 @@ extern "C" void __crubit_thunk_default(::example_crate::Struct* __ret_ptr);
 inline ::example_crate::Struct::Struct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<Struct>);
-static_assert(std::is_trivially_move_constructible_v<::example_crate::Struct>);
-static_assert(std::is_trivially_move_assignable_v<::example_crate::Struct>);
+static_assert(::std::is_trivially_destructible_v<Struct>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::example_crate::Struct>);
+static_assert(::std::is_trivially_move_assignable_v<::example_crate::Struct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::example_crate::Struct const&,
                                      ::example_crate::Struct* __ret_ptr);

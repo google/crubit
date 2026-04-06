@@ -48,7 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonFreezeType(const NonFreezeType&) = delete;
   NonFreezeType& operator=(const NonFreezeType&) = delete;
   NonFreezeType(::crubit::UnsafeRelocateTag, NonFreezeType&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   //  # Safety
@@ -58,17 +58,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   //
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=35
-  std::int32_t& $(__anon1)
+  ::std::int32_t& $(__anon1)
       as_mut_unchecked() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=38
-  void shared_self_mut_ref_allows_alias(std::int32_t& __param_1) const;
+  void shared_self_mut_ref_allows_alias(::std::int32_t& __param_1) const;
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  std::array<unsigned char, 4> __field0;
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -93,30 +93,30 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = default;
   SomeStruct& operator=(const SomeStruct&) = default;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=20
-  void mut_self_and_mut_ref(std::int32_t& __param_1);
+  void mut_self_and_mut_ref(::std::int32_t& __param_1);
 
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=21
-  void mut_self_and_shared_ref(std::int32_t const& __param_1);
+  void mut_self_and_shared_ref(::std::int32_t const& __param_1);
 
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=22
-  void shared_self_and_mut_ref(std::int32_t& __param_1) const;
+  void shared_self_and_mut_ref(::std::int32_t& __param_1) const;
 
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=23
   void shared_self_and_shared_ref_allows_alias(
-      std::int32_t const& __param_1) const;
+      ::std::int32_t const& __param_1) const;
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=16
-    std::int32_t field;
+    ::std::int32_t field;
   };
 
  private:
@@ -125,27 +125,27 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // Generated from:
 // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=10
-void mut_ref_and_mut_slice(std::int32_t& __param_0,
-                           rs_std::SliceRef<std::int32_t> __param_1);
+void mut_ref_and_mut_slice(::std::int32_t& __param_0,
+                           rs_std::SliceRef<::std::int32_t> __param_1);
 
 // Generated from:
 // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=9
-void mut_ref_and_shared_refs(std::int32_t& __param_0,
-                             std::int32_t const& __param_1,
-                             std::int32_t const& __param_2);
+void mut_ref_and_shared_refs(::std::int32_t& __param_0,
+                             ::std::int32_t const& __param_1,
+                             ::std::int32_t const& __param_2);
 
 // Generated from:
 // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=11
-void mut_ref_and_shared_slice(std::int32_t& __param_0,
-                              rs_std::SliceRef<const std::int32_t> __param_1);
+void mut_ref_and_shared_slice(::std::int32_t& __param_0,
+                              rs_std::SliceRef<const ::std::int32_t> __param_1);
 
 // Generated from:
 // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=12
-void mut_ref_and_str(std::int32_t& __param_0, rs_std::StrRef __param_1);
+void mut_ref_and_str(::std::int32_t& __param_0, rs_std::StrRef __param_1);
 
 // Generated from:
 // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=8
-void mut_refs(std::int32_t& __param_0, std::int32_t& __param_1);
+void mut_refs(::std::int32_t& __param_0, ::std::int32_t& __param_1);
 
 static_assert(
     sizeof(NonFreezeType) == 4,
@@ -160,16 +160,16 @@ extern "C" void __crubit_thunk_default(
 inline ::aliasing_references::NonFreezeType::NonFreezeType() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<NonFreezeType>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<NonFreezeType>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::aliasing_references::NonFreezeType>);
-static_assert(
-    std::is_trivially_move_assignable_v<::aliasing_references::NonFreezeType>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::aliasing_references::NonFreezeType>);
 namespace __crubit_internal {
-extern "C" std::int32_t& $(__anon1) __crubit_thunk_as_umut_uunchecked(
+extern "C" ::std::int32_t& $(__anon1) __crubit_thunk_as_umut_uunchecked(
     ::aliasing_references::NonFreezeType const&);
 }
-inline std::int32_t& $(__anon1)
+inline ::std::int32_t& $(__anon1)
     NonFreezeType::as_mut_unchecked() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_as_umut_uunchecked(self);
@@ -177,10 +177,10 @@ inline std::int32_t& $(__anon1)
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_shared_uself_umut_uref_uallows_ualias(
-    ::aliasing_references::NonFreezeType const&, std::int32_t&);
+    ::aliasing_references::NonFreezeType const&, ::std::int32_t&);
 }
 inline void NonFreezeType::shared_self_mut_ref_allows_alias(
-    std::int32_t& __param_1) const {
+    ::std::int32_t& __param_1) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_shared_uself_umut_uref_uallows_ualias(self, __param_1);
@@ -201,24 +201,24 @@ extern "C" void __crubit_thunk_default(
 inline ::aliasing_references::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::aliasing_references::SomeStruct>);
 static_assert(
-    std::is_trivially_move_constructible_v<::aliasing_references::SomeStruct>);
+    ::std::is_trivially_move_assignable_v<::aliasing_references::SomeStruct>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::aliasing_references::SomeStruct>);
 static_assert(
-    std::is_trivially_move_assignable_v<::aliasing_references::SomeStruct>);
-static_assert(
-    std::is_trivially_copy_constructible_v<::aliasing_references::SomeStruct>);
-static_assert(
-    std::is_trivially_copy_assignable_v<::aliasing_references::SomeStruct>);
+    ::std::is_trivially_copy_assignable_v<::aliasing_references::SomeStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uself_uand_umut_uref(
-    ::aliasing_references::SomeStruct&, std::int32_t&);
+    ::aliasing_references::SomeStruct&, ::std::int32_t&);
 }
-inline void SomeStruct::mut_self_and_mut_ref(std::int32_t& __param_1) {
+inline void SomeStruct::mut_self_and_mut_ref(::std::int32_t& __param_1) {
   auto&& self = *this;
   crubit::internal::CheckNoMutableAliasing(
       crubit::internal::AsMutPtrDatas<::aliasing_references::SomeStruct&,
-                                      std::int32_t&>(self, __param_1),
+                                      ::std::int32_t&>(self, __param_1),
       crubit::internal::AsPtrDatas<>());
   return __crubit_internal::__crubit_thunk_mut_uself_uand_umut_uref(self,
                                                                     __param_1);
@@ -226,25 +226,27 @@ inline void SomeStruct::mut_self_and_mut_ref(std::int32_t& __param_1) {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uself_uand_ushared_uref(
-    ::aliasing_references::SomeStruct&, std::int32_t const&);
+    ::aliasing_references::SomeStruct&, ::std::int32_t const&);
 }
-inline void SomeStruct::mut_self_and_shared_ref(std::int32_t const& __param_1) {
+inline void SomeStruct::mut_self_and_shared_ref(
+    ::std::int32_t const& __param_1) {
   auto&& self = *this;
   crubit::internal::CheckNoMutableAliasing(
       crubit::internal::AsMutPtrDatas<::aliasing_references::SomeStruct&>(self),
-      crubit::internal::AsPtrDatas<std::int32_t const&>(__param_1));
+      crubit::internal::AsPtrDatas<::std::int32_t const&>(__param_1));
   return __crubit_internal::__crubit_thunk_mut_uself_uand_ushared_uref(
       self, __param_1);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_shared_uself_uand_umut_uref(
-    ::aliasing_references::SomeStruct const&, std::int32_t&);
+    ::aliasing_references::SomeStruct const&, ::std::int32_t&);
 }
-inline void SomeStruct::shared_self_and_mut_ref(std::int32_t& __param_1) const {
+inline void SomeStruct::shared_self_and_mut_ref(
+    ::std::int32_t& __param_1) const {
   auto&& self = *this;
   crubit::internal::CheckNoMutableAliasing(
-      crubit::internal::AsMutPtrDatas<std::int32_t&>(__param_1),
+      crubit::internal::AsMutPtrDatas<::std::int32_t&>(__param_1),
       crubit::internal::AsPtrDatas<::aliasing_references::SomeStruct const&>(
           self));
   return __crubit_internal::__crubit_thunk_shared_uself_uand_umut_uref(
@@ -253,10 +255,10 @@ inline void SomeStruct::shared_self_and_mut_ref(std::int32_t& __param_1) const {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_shared_uself_uand_ushared_uref_uallows_ualias(
-    ::aliasing_references::SomeStruct const&, std::int32_t const&);
+    ::aliasing_references::SomeStruct const&, ::std::int32_t const&);
 }
 inline void SomeStruct::shared_self_and_shared_ref_allows_alias(
-    std::int32_t const& __param_1) const {
+    ::std::int32_t const& __param_1) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_shared_uself_uand_ushared_uref_uallows_ualias(self,
@@ -267,13 +269,13 @@ inline void SomeStruct::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uref_uand_umut_uslice(
-    std::int32_t&, rs_std::SliceRef<std::int32_t>);
+    ::std::int32_t&, rs_std::SliceRef<::std::int32_t>);
 }
-inline void mut_ref_and_mut_slice(std::int32_t& __param_0,
-                                  rs_std::SliceRef<std::int32_t> __param_1) {
+inline void mut_ref_and_mut_slice(::std::int32_t& __param_0,
+                                  rs_std::SliceRef<::std::int32_t> __param_1) {
   crubit::internal::CheckNoMutableAliasing(
-      crubit::internal::AsMutPtrDatas<std::int32_t&,
-                                      rs_std::SliceRef<std::int32_t>>(
+      crubit::internal::AsMutPtrDatas<::std::int32_t&,
+                                      rs_std::SliceRef<::std::int32_t>>(
           __param_0, __param_1),
       crubit::internal::AsPtrDatas<>());
   return __crubit_internal::__crubit_thunk_mut_uref_uand_umut_uslice(__param_0,
@@ -281,54 +283,56 @@ inline void mut_ref_and_mut_slice(std::int32_t& __param_0,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_mut_uref_uand_ushared_urefs(std::int32_t&,
-                                                           std::int32_t const&,
-                                                           std::int32_t const&);
+extern "C" void __crubit_thunk_mut_uref_uand_ushared_urefs(
+    ::std::int32_t&, ::std::int32_t const&, ::std::int32_t const&);
 }
-inline void mut_ref_and_shared_refs(std::int32_t& __param_0,
-                                    std::int32_t const& __param_1,
-                                    std::int32_t const& __param_2) {
+inline void mut_ref_and_shared_refs(::std::int32_t& __param_0,
+                                    ::std::int32_t const& __param_1,
+                                    ::std::int32_t const& __param_2) {
   crubit::internal::CheckNoMutableAliasing(
-      crubit::internal::AsMutPtrDatas<std::int32_t&>(__param_0),
-      crubit::internal::AsPtrDatas<std::int32_t const&, std::int32_t const&>(
-          __param_1, __param_2));
+      crubit::internal::AsMutPtrDatas<::std::int32_t&>(__param_0),
+      crubit::internal::AsPtrDatas<::std::int32_t const&,
+                                   ::std::int32_t const&>(__param_1,
+                                                          __param_2));
   return __crubit_internal::__crubit_thunk_mut_uref_uand_ushared_urefs(
       __param_0, __param_1, __param_2);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uref_uand_ushared_uslice(
-    std::int32_t&, rs_std::SliceRef<const std::int32_t>);
+    ::std::int32_t&, rs_std::SliceRef<const ::std::int32_t>);
 }
 inline void mut_ref_and_shared_slice(
-    std::int32_t& __param_0, rs_std::SliceRef<const std::int32_t> __param_1) {
+    ::std::int32_t& __param_0,
+    rs_std::SliceRef<const ::std::int32_t> __param_1) {
   crubit::internal::CheckNoMutableAliasing(
-      crubit::internal::AsMutPtrDatas<std::int32_t&>(__param_0),
-      crubit::internal::AsPtrDatas<rs_std::SliceRef<const std::int32_t>>(
+      crubit::internal::AsMutPtrDatas<::std::int32_t&>(__param_0),
+      crubit::internal::AsPtrDatas<rs_std::SliceRef<const ::std::int32_t>>(
           __param_1));
   return __crubit_internal::__crubit_thunk_mut_uref_uand_ushared_uslice(
       __param_0, __param_1);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_mut_uref_uand_ustr(std::int32_t&,
+extern "C" void __crubit_thunk_mut_uref_uand_ustr(::std::int32_t&,
                                                   rs_std::StrRef);
 }
-inline void mut_ref_and_str(std::int32_t& __param_0, rs_std::StrRef __param_1) {
+inline void mut_ref_and_str(::std::int32_t& __param_0,
+                            rs_std::StrRef __param_1) {
   crubit::internal::CheckNoMutableAliasing(
-      crubit::internal::AsMutPtrDatas<std::int32_t&>(__param_0),
+      crubit::internal::AsMutPtrDatas<::std::int32_t&>(__param_0),
       crubit::internal::AsPtrDatas<rs_std::StrRef>(__param_1));
   return __crubit_internal::__crubit_thunk_mut_uref_uand_ustr(__param_0,
                                                               __param_1);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_mut_urefs(std::int32_t&, std::int32_t&);
+extern "C" void __crubit_thunk_mut_urefs(::std::int32_t&, ::std::int32_t&);
 }
-inline void mut_refs(std::int32_t& __param_0, std::int32_t& __param_1) {
+inline void mut_refs(::std::int32_t& __param_0, ::std::int32_t& __param_1) {
   crubit::internal::CheckNoMutableAliasing(
-      crubit::internal::AsMutPtrDatas<std::int32_t&, std::int32_t&>(__param_0,
-                                                                    __param_1),
+      crubit::internal::AsMutPtrDatas<::std::int32_t&, ::std::int32_t&>(
+          __param_0, __param_1),
       crubit::internal::AsPtrDatas<>());
   return __crubit_internal::__crubit_thunk_mut_urefs(__param_0, __param_1);
 }

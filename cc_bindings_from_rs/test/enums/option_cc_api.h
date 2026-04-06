@@ -52,12 +52,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
   ::option::CloneNoDefault& operator=(const CloneNoDefault&);
 
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=121
-    std::uint8_t val;
+    ::std::uint8_t val;
   };
 
  private:
@@ -82,12 +82,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
   CopyNoDefault(const CopyNoDefault&) = default;
   CopyNoDefault& operator=(const CopyNoDefault&) = default;
   CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=136
-    std::uint8_t val;
+    ::std::uint8_t val;
   };
 
  private:
@@ -112,7 +112,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   HasDefault(const HasDefault&) = delete;
   HasDefault& operator=(const HasDefault&) = delete;
   HasDefault(::crubit::UnsafeRelocateTag, HasDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -128,7 +128,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  std::array<unsigned char, 24> foo;
+  ::std::array<unsigned char, 24> foo;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -154,7 +154,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   HasNoDefault(const HasNoDefault&) = delete;
   HasNoDefault& operator=(const HasNoDefault&) = delete;
   HasNoDefault(::crubit::UnsafeRelocateTag, HasNoDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -170,13 +170,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  std::array<unsigned char, 24> foo;
+  ::std::array<unsigned char, 24> foo;
 
  public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=94
-    std::uint32_t a;
+    ::std::uint32_t a;
   };
 
  private:
@@ -203,18 +203,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: NonMaxU8") alignas(1)
   NonMaxU8(const NonMaxU8&) = delete;
   NonMaxU8& operator=(const NonMaxU8&) = delete;
   NonMaxU8(::crubit::UnsafeRelocateTag, NonMaxU8&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=12
-  std::uint8_t value() const;
+  ::std::uint8_t value() const;
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=9
-    std::uint8_t __field0;
+    ::std::uint8_t __field0;
   };
 
  private:
@@ -242,14 +242,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   OptZst(const OptZst&) = delete;
   OptZst& operator=(const OptZst&) = delete;
   OptZst(::crubit::UnsafeRelocateTag, OptZst&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   // Field type has been replaced with a blob of bytes: Failed to format type
   // for the definition of `option_golden::Unit`: Zero-sized types (ZSTs) are
   // not supported (b/258259459)
-  std::array<unsigned char, 1> val;
+  ::std::array<unsigned char, 1> val;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -274,16 +274,16 @@ OptionWithSizeTypes final {
   OptionWithSizeTypes& operator=(const OptionWithSizeTypes&) = delete;
   OptionWithSizeTypes(::crubit::UnsafeRelocateTag,
                       OptionWithSizeTypes&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   // Field type has been replaced with a blob of bytes: b/491106325 - isize and
   // usize types are not yet supported as generic type arguments.
-  std::array<unsigned char, 16> uval;
+  ::std::array<unsigned char, 16> uval;
   // Field type has been replaced with a blob of bytes: b/491106325 - isize and
   // usize types are not yet supported as generic type arguments.
-  std::array<unsigned char, 16> ival;
+  ::std::array<unsigned char, 16> ival;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -316,28 +316,28 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
   Option(::option::CloneNoDefault&& value) noexcept;
   Option& operator=(::option::CloneNoDefault&& value) noexcept;
 
-  explicit Option(std::optional<::option::CloneNoDefault>&& value) noexcept;
-  Option& operator=(std::optional<::option::CloneNoDefault>&& value) noexcept;
+  explicit Option(::std::optional<::option::CloneNoDefault>&& value) noexcept;
+  Option& operator=(::std::optional<::option::CloneNoDefault>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator std::optional<::option::CloneNoDefault>() && noexcept;
+  operator ::std::optional<::option::CloneNoDefault>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint8_t tag() const& noexcept;
-  constexpr void set_tag(std::uint8_t tag) noexcept;
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
   unsigned char storage_[2];
@@ -367,12 +367,12 @@ OptCloneNoDefault final {
   ::option::OptCloneNoDefault& operator=(const OptCloneNoDefault&);
 
   OptCloneNoDefault(::crubit::UnsafeRelocateTag, OptCloneNoDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=129
-  static ::option::OptCloneNoDefault new_(std::uint8_t x);
+  static ::option::OptCloneNoDefault new_(::std::uint8_t x);
 
   union {
     // Generated from:
@@ -401,28 +401,28 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
   Option(::option::CopyNoDefault&& value) noexcept;
   Option& operator=(::option::CopyNoDefault&& value) noexcept;
 
-  explicit Option(std::optional<::option::CopyNoDefault>&& value) noexcept;
-  Option& operator=(std::optional<::option::CopyNoDefault>&& value) noexcept;
+  explicit Option(::std::optional<::option::CopyNoDefault>&& value) noexcept;
+  Option& operator=(::std::optional<::option::CopyNoDefault>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator std::optional<::option::CopyNoDefault>() && noexcept;
+  operator ::std::optional<::option::CopyNoDefault>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint8_t tag() const& noexcept;
-  constexpr void set_tag(std::uint8_t tag) noexcept;
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
   unsigned char storage_[2];
@@ -450,12 +450,12 @@ OptCopyNoDefault final {
   OptCopyNoDefault(const OptCopyNoDefault&) = default;
   OptCopyNoDefault& operator=(const OptCopyNoDefault&) = default;
   OptCopyNoDefault(::crubit::UnsafeRelocateTag, OptCopyNoDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=145
-  static ::option::OptCopyNoDefault new_(std::uint8_t x);
+  static ::option::OptCopyNoDefault new_(::std::uint8_t x);
 
   union {
     // Generated from:
@@ -482,28 +482,28 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&);
   rs_std::Option<::option::HasDefault>& operator=(Option&&);
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
   Option(::option::HasDefault&& value) noexcept;
   Option& operator=(::option::HasDefault&& value) noexcept;
 
-  explicit Option(std::optional<::option::HasDefault>&& value) noexcept;
-  Option& operator=(std::optional<::option::HasDefault>&& value) noexcept;
+  explicit Option(::std::optional<::option::HasDefault>&& value) noexcept;
+  Option& operator=(::std::optional<::option::HasDefault>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   constexpr ~Option() noexcept;
-  operator std::optional<::option::HasDefault>() && noexcept;
+  operator ::std::optional<::option::HasDefault>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(std::uint64_t tag) noexcept;
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
 
  private:
   unsigned char storage_[24];
@@ -533,7 +533,7 @@ OptDefaultWithDrop final {
   OptDefaultWithDrop(const OptDefaultWithDrop&) = delete;
   OptDefaultWithDrop& operator=(const OptDefaultWithDrop&) = delete;
   OptDefaultWithDrop(::crubit::UnsafeRelocateTag, OptDefaultWithDrop&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -552,7 +552,7 @@ OptDefaultWithDrop final {
 
 // Generated from:
 // cc_bindings_from_rs/test/enums/option.rs;l=165
-std::optional<std::uint32_t> stringify_len(
+::std::optional<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x);
 
 }  // namespace option
@@ -570,25 +570,25 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&);
   rs_std::Option<::option::HasNoDefault>& operator=(Option&&);
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
-  explicit Option(std::optional<::option::HasNoDefault>&& value) noexcept;
-  Option& operator=(std::optional<::option::HasNoDefault>&& value) noexcept;
+  explicit Option(::std::optional<::option::HasNoDefault>&& value) noexcept;
+  Option& operator=(::std::optional<::option::HasNoDefault>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   constexpr ~Option() noexcept;
-  operator std::optional<::option::HasNoDefault>() && noexcept;
+  operator ::std::optional<::option::HasNoDefault>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(std::uint64_t tag) noexcept;
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
 
  private:
   unsigned char storage_[32];
@@ -619,7 +619,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   OptNoDefaultWithDrop& operator=(const OptNoDefaultWithDrop&) = delete;
   OptNoDefaultWithDrop(::crubit::UnsafeRelocateTag,
                        OptNoDefaultWithDrop&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -657,28 +657,28 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
   Option(::option::HasOptions&& value) noexcept;
   Option& operator=(::option::HasOptions&& value) noexcept;
 
-  explicit Option(std::optional<::option::HasOptions>&& value) noexcept;
-  Option& operator=(std::optional<::option::HasOptions>&& value) noexcept;
+  explicit Option(::std::optional<::option::HasOptions>&& value) noexcept;
+  Option& operator=(::std::optional<::option::HasOptions>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator std::optional<::option::HasOptions>() && noexcept;
+  operator ::std::optional<::option::HasOptions>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint8_t tag() const& noexcept;
-  constexpr void set_tag(std::uint8_t tag) noexcept;
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
   unsigned char storage_[4];
@@ -699,28 +699,28 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
   Option(::option::NonMaxU8&& value) noexcept;
   Option& operator=(::option::NonMaxU8&& value) noexcept;
 
-  explicit Option(std::optional<::option::NonMaxU8>&& value) noexcept;
-  Option& operator=(std::optional<::option::NonMaxU8>&& value) noexcept;
+  explicit Option(::std::optional<::option::NonMaxU8>&& value) noexcept;
+  Option& operator=(::std::optional<::option::NonMaxU8>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator std::optional<::option::NonMaxU8>() && noexcept;
+  operator ::std::optional<::option::NonMaxU8>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint8_t tag() const& noexcept;
-  constexpr void set_tag(std::uint8_t tag) noexcept;
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
   unsigned char storage_[1];
@@ -741,41 +741,41 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
   Option(rs_std::Option<::option::NonMaxU8>&& value) noexcept;
   Option& operator=(rs_std::Option<::option::NonMaxU8>&& value) noexcept;
 
   explicit Option(
-      std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept;
+      ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept;
   Option& operator=(
-      std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept;
+      ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator std::optional<rs_std::Option<::option::NonMaxU8>>() && noexcept;
+  operator ::std::optional<rs_std::Option<::option::NonMaxU8>>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint8_t tag() const& noexcept;
-  constexpr void set_tag(std::uint8_t tag) noexcept;
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
   unsigned char storage_[1];
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < u8 >") rs_std::Option<std::uint8_t> {
+    "std :: option :: Option < u8 >") rs_std::Option<::std::uint8_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -785,28 +785,28 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   constexpr Option();
 
-  constexpr explicit Option(std::nullopt_t) noexcept;
-  constexpr Option& operator=(std::nullopt_t) noexcept;
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
 
-  Option(std::uint8_t&& value) noexcept;
-  Option& operator=(std::uint8_t&& value) noexcept;
+  Option(::std::uint8_t&& value) noexcept;
+  Option& operator=(::std::uint8_t&& value) noexcept;
 
-  explicit Option(std::optional<std::uint8_t>&& value) noexcept;
-  Option& operator=(std::optional<std::uint8_t>&& value) noexcept;
+  explicit Option(::std::optional<::std::uint8_t>&& value) noexcept;
+  Option& operator=(::std::optional<::std::uint8_t>&& value) noexcept;
 
   template <typename... Args>
-  Option(std::in_place_t, Args&&... args) noexcept;
+  Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator std::optional<std::uint8_t>() && noexcept;
+  operator ::std::optional<::std::uint8_t>() && noexcept;
   bool has_value() noexcept;
 
  private:
-  constexpr std::uint8_t tag() const& noexcept;
-  constexpr void set_tag(std::uint8_t tag) noexcept;
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
   unsigned char storage_[2];
@@ -832,21 +832,22 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   HasOptions(const HasOptions&) = delete;
   HasOptions& operator=(const HasOptions&) = delete;
   HasOptions(::crubit::UnsafeRelocateTag, HasOptions&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=24
-  static ::option::HasOptions new_(std::uint8_t value);
+  static ::option::HasOptions new_(::std::uint8_t value);
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=35
-  static ::option::HasOptions with_option(std::optional<std::uint8_t> value);
+  static ::option::HasOptions with_option(
+      ::std::optional<::std::uint8_t> value);
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=46
   static ::option::HasOptions from_ref(
-      rs_std::Option<std::uint8_t> const& value);
+      rs_std::Option<::std::uint8_t> const& value);
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=53
@@ -855,7 +856,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=20
-    rs_std::Option<std::uint8_t> direct;
+    rs_std::Option<::std::uint8_t> direct;
   };
   union {
     // Generated from:
@@ -889,12 +890,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
   HasHasOptions(const HasHasOptions&) = delete;
   HasHasOptions& operator=(const HasHasOptions&) = delete;
   HasHasOptions(::crubit::UnsafeRelocateTag, HasHasOptions&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=63
-  static ::option::HasHasOptions new_(std::uint8_t value);
+  static ::option::HasHasOptions new_(::std::uint8_t value);
 
   union {
     // Generated from:
@@ -912,9 +913,10 @@ static_assert(
 static_assert(
     alignof(CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<CloneNoDefault>);
-static_assert(std::is_trivially_move_constructible_v<::option::CloneNoDefault>);
-static_assert(std::is_trivially_move_assignable_v<::option::CloneNoDefault>);
+static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::option::CloneNoDefault>);
+static_assert(::std::is_trivially_move_assignable_v<::option::CloneNoDefault>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::option::CloneNoDefault const&,
                                      ::option::CloneNoDefault* __ret_ptr);
@@ -942,11 +944,13 @@ static_assert(
 static_assert(
     alignof(CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<CopyNoDefault>);
-static_assert(std::is_trivially_move_constructible_v<::option::CopyNoDefault>);
-static_assert(std::is_trivially_move_assignable_v<::option::CopyNoDefault>);
-static_assert(std::is_trivially_copy_constructible_v<::option::CopyNoDefault>);
-static_assert(std::is_trivially_copy_assignable_v<::option::CopyNoDefault>);
+static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::option::CopyNoDefault>);
+static_assert(::std::is_trivially_move_assignable_v<::option::CopyNoDefault>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::option::CopyNoDefault>);
+static_assert(::std::is_trivially_copy_assignable_v<::option::CopyNoDefault>);
 inline void CopyNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CopyNoDefault, val));
 }
@@ -969,7 +973,7 @@ inline HasDefault::~HasDefault() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 inline ::option::HasDefault::HasDefault(HasDefault&& other) : HasDefault() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline ::option::HasDefault& ::option::HasDefault::operator=(
     HasDefault&& other) {
@@ -984,7 +988,7 @@ inline ::option::HasDefault HasDefault::new_(rs_std::StrRef s) {
   crubit::Slot<::option::HasDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(s, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -1005,18 +1009,19 @@ static_assert(
 static_assert(
     alignof(HasHasOptions) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<HasHasOptions>);
-static_assert(std::is_trivially_move_constructible_v<::option::HasHasOptions>);
-static_assert(std::is_trivially_move_assignable_v<::option::HasHasOptions>);
+static_assert(::std::is_trivially_destructible_v<HasHasOptions>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::option::HasHasOptions>);
+static_assert(::std::is_trivially_move_assignable_v<::option::HasHasOptions>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::uint8_t,
+extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasHasOptions* __ret_ptr);
 }
-inline ::option::HasHasOptions HasHasOptions::new_(std::uint8_t value) {
+inline ::option::HasHasOptions HasHasOptions::new_(::std::uint8_t value) {
   crubit::Slot<::option::HasHasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasHasOptions::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasHasOptions, me));
@@ -1041,7 +1046,7 @@ inline ::option::HasNoDefault HasNoDefault::new_(rs_std::StrRef s) {
   crubit::Slot<::option::HasNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(s, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -1063,18 +1068,18 @@ static_assert(
 static_assert(
     alignof(HasOptions) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<HasOptions>);
-static_assert(std::is_trivially_move_constructible_v<::option::HasOptions>);
-static_assert(std::is_trivially_move_assignable_v<::option::HasOptions>);
+static_assert(::std::is_trivially_destructible_v<HasOptions>);
+static_assert(::std::is_trivially_move_constructible_v<::option::HasOptions>);
+static_assert(::std::is_trivially_move_assignable_v<::option::HasOptions>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::uint8_t,
+extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasOptions* __ret_ptr);
 }
-inline ::option::HasOptions HasOptions::new_(std::uint8_t value) {
+inline ::option::HasOptions HasOptions::new_(::std::uint8_t value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -1082,31 +1087,31 @@ extern "C" void __crubit_thunk_with_uoption(unsigned char*,
                                             ::option::HasOptions* __ret_ptr);
 }
 inline ::option::HasOptions HasOptions::with_option(
-    std::optional<std::uint8_t> value) {
+    ::std::optional<::std::uint8_t> value) {
   unsigned char value_buffer
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint8_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint8_t>>::kSize];
   ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint8_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint8_t>>(
-          ::crubit::TransmuteAbi<std::uint8_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint8_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint8_t>>(
+          ::crubit::TransmuteAbi<::std::uint8_t>()),
       value_buffer, value);
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_with_uoption(value_buffer,
                                                  __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_uref(rs_std::Option<std::uint8_t> const&,
+extern "C" void __crubit_thunk_from_uref(rs_std::Option<::std::uint8_t> const&,
                                          ::option::HasOptions* __ret_ptr);
 }
 inline ::option::HasOptions HasOptions::from_ref(
-    rs_std::Option<std::uint8_t> const& value) {
+    rs_std::Option<::std::uint8_t> const& value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_uref(value, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -1116,7 +1121,7 @@ inline ::option::HasOptions HasOptions::with_none() {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_with_unone(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasOptions::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasOptions, direct));
@@ -1129,13 +1134,13 @@ static_assert(
 static_assert(
     alignof(NonMaxU8) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<NonMaxU8>);
-static_assert(std::is_trivially_move_constructible_v<::option::NonMaxU8>);
-static_assert(std::is_trivially_move_assignable_v<::option::NonMaxU8>);
+static_assert(::std::is_trivially_destructible_v<NonMaxU8>);
+static_assert(::std::is_trivially_move_constructible_v<::option::NonMaxU8>);
+static_assert(::std::is_trivially_move_assignable_v<::option::NonMaxU8>);
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_value(::option::NonMaxU8 const&);
+extern "C" ::std::uint8_t __crubit_thunk_value(::option::NonMaxU8 const&);
 }
-inline std::uint8_t NonMaxU8::value() const {
+inline ::std::uint8_t NonMaxU8::value() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_value(self);
 }
@@ -1148,10 +1153,11 @@ static_assert(
 static_assert(
     alignof(OptCloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<OptCloneNoDefault>);
+static_assert(::std::is_trivially_destructible_v<OptCloneNoDefault>);
 static_assert(
-    std::is_trivially_move_constructible_v<::option::OptCloneNoDefault>);
-static_assert(std::is_trivially_move_assignable_v<::option::OptCloneNoDefault>);
+    ::std::is_trivially_move_constructible_v<::option::OptCloneNoDefault>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::option::OptCloneNoDefault>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::option::OptCloneNoDefault const&,
                                      ::option::OptCloneNoDefault* __ret_ptr);
@@ -1172,14 +1178,14 @@ inline ::option::OptCloneNoDefault& ::option::OptCloneNoDefault::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::uint8_t,
+extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCloneNoDefault* __ret_ptr);
 }
-inline ::option::OptCloneNoDefault OptCloneNoDefault::new_(std::uint8_t x) {
+inline ::option::OptCloneNoDefault OptCloneNoDefault::new_(::std::uint8_t x) {
   crubit::Slot<::option::OptCloneNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void OptCloneNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptCloneNoDefault, val));
@@ -1190,22 +1196,24 @@ static_assert(
 static_assert(
     alignof(OptCopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<OptCopyNoDefault>);
+static_assert(::std::is_trivially_destructible_v<OptCopyNoDefault>);
 static_assert(
-    std::is_trivially_move_constructible_v<::option::OptCopyNoDefault>);
-static_assert(std::is_trivially_move_assignable_v<::option::OptCopyNoDefault>);
+    ::std::is_trivially_move_constructible_v<::option::OptCopyNoDefault>);
 static_assert(
-    std::is_trivially_copy_constructible_v<::option::OptCopyNoDefault>);
-static_assert(std::is_trivially_copy_assignable_v<::option::OptCopyNoDefault>);
+    ::std::is_trivially_move_assignable_v<::option::OptCopyNoDefault>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::option::OptCopyNoDefault>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::option::OptCopyNoDefault>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::uint8_t,
+extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCopyNoDefault* __ret_ptr);
 }
-inline ::option::OptCopyNoDefault OptCopyNoDefault::new_(std::uint8_t x) {
+inline ::option::OptCopyNoDefault OptCopyNoDefault::new_(::std::uint8_t x) {
   crubit::Slot<::option::OptCopyNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void OptCopyNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptCopyNoDefault, val));
@@ -1230,7 +1238,7 @@ inline ::option::OptDefaultWithDrop OptDefaultWithDrop::new_(rs_std::StrRef s) {
   crubit::Slot<::option::OptDefaultWithDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(s, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void OptDefaultWithDrop::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptDefaultWithDrop, opt));
@@ -1256,7 +1264,7 @@ inline ::option::OptNoDefaultWithDrop OptNoDefaultWithDrop::new_(
   crubit::Slot<::option::OptNoDefaultWithDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(s, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -1283,9 +1291,9 @@ extern "C" void __crubit_thunk_default(::option::OptZst* __ret_ptr);
 inline ::option::OptZst::OptZst() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<OptZst>);
-static_assert(std::is_trivially_move_constructible_v<::option::OptZst>);
-static_assert(std::is_trivially_move_assignable_v<::option::OptZst>);
+static_assert(::std::is_trivially_destructible_v<OptZst>);
+static_assert(::std::is_trivially_move_constructible_v<::option::OptZst>);
+static_assert(::std::is_trivially_move_assignable_v<::option::OptZst>);
 inline void OptZst::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptZst, val));
 }
@@ -1295,11 +1303,11 @@ static_assert(
 static_assert(
     alignof(OptionWithSizeTypes) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<OptionWithSizeTypes>);
+static_assert(::std::is_trivially_destructible_v<OptionWithSizeTypes>);
 static_assert(
-    std::is_trivially_move_constructible_v<::option::OptionWithSizeTypes>);
+    ::std::is_trivially_move_constructible_v<::option::OptionWithSizeTypes>);
 static_assert(
-    std::is_trivially_move_assignable_v<::option::OptionWithSizeTypes>);
+    ::std::is_trivially_move_assignable_v<::option::OptionWithSizeTypes>);
 inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptionWithSizeTypes, uval));
   static_assert(16 == offsetof(OptionWithSizeTypes, ival));
@@ -1308,15 +1316,15 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_stringify_ulen(
     rs_std::Option<::option::HasDefault> const&, unsigned char* __ret_ptr);
 }
-inline std::optional<std::uint32_t> stringify_len(
+inline ::std::optional<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x) {
   unsigned char __return_value_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint32_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint32_t>>::kSize];
   __crubit_internal::__crubit_thunk_stringify_ulen(x, __return_value_storage);
   return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::uint32_t>>(
-          ::crubit::TransmuteAbi<std::uint32_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint32_t>>(
+          ::crubit::TransmuteAbi<::std::uint32_t>()),
       __return_value_storage);
 }
 
@@ -1344,21 +1352,22 @@ rs_std::Option<::option::CloneNoDefault>::operator=(const Option& other) {
   }
   return *this;
 }
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::option::CloneNoDefault>>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::option::CloneNoDefault>>);
 inline constexpr rs_std::Option<::option::CloneNoDefault>::Option() {
   set_tag(0);
 }
 inline constexpr rs_std::Option<::option::CloneNoDefault>::Option(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   set_tag(0);
 }
 inline constexpr rs_std::Option<::option::CloneNoDefault>&
-rs_std::Option<::option::CloneNoDefault>::operator=(std::nullopt_t) noexcept {
+rs_std::Option<::option::CloneNoDefault>::operator=(::std::nullopt_t) noexcept {
   if (tag() != 0) {
-    std::destroy_at(reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1));
+    ::std::destroy_at(
+        reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1));
   }
   set_tag(0);
   return *this;
@@ -1366,46 +1375,48 @@ rs_std::Option<::option::CloneNoDefault>::operator=(std::nullopt_t) noexcept {
 inline rs_std::Option<::option::CloneNoDefault>::Option(
     ::option::CloneNoDefault&& value) noexcept {
   set_tag(1);
-  std::construct_at(reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1),
-                    std::move(value));
+  ::std::construct_at(reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1),
+                      ::std::move(value));
 }
 inline rs_std::Option<::option::CloneNoDefault>&
 rs_std::Option<::option::CloneNoDefault>::operator=(
     ::option::CloneNoDefault&& value) noexcept {
   if (tag() != 0) {
     *reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1) =
-        std::move(value);
+        ::std::move(value);
   } else {
     set_tag(1);
-    std::construct_at(reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1),
-                      std::move(value));
+    ::std::construct_at(
+        reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1),
+        ::std::move(value));
   }
   return *this;
 }
 inline rs_std::Option<::option::CloneNoDefault>::Option(
-    std::optional<::option::CloneNoDefault>&& value) noexcept {
+    ::std::optional<::option::CloneNoDefault>&& value) noexcept {
   if (value.has_value()) {
     set_tag(1);
     ::option::CloneNoDefault* some =
         reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(0);
   }
 }
 inline rs_std::Option<::option::CloneNoDefault>&
 rs_std::Option<::option::CloneNoDefault>::operator=(
-    std::optional<::option::CloneNoDefault>&& value) noexcept {
+    ::std::optional<::option::CloneNoDefault>&& value) noexcept {
   if (tag() != 0) {
-    std::destroy_at(reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1));
+    ::std::destroy_at(
+        reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1));
   }
   if (value.has_value()) {
     set_tag(1);
     ::option::CloneNoDefault* some =
         reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(0);
   }
@@ -1413,17 +1424,17 @@ rs_std::Option<::option::CloneNoDefault>::operator=(
 }
 template <typename... Args>
 inline rs_std::Option<::option::CloneNoDefault>::Option(
-    std::in_place_t, Args&&... args) noexcept {
+    ::std::in_place_t, Args&&... args) noexcept {
   set_tag(1);
-  std::construct_at(reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1),
-                    std::forward<Args>(args)...);
+  ::std::construct_at(reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1),
+                      ::std::forward<Args>(args)...);
 }
-static_assert(
-    std::is_trivially_destructible_v<rs_std::Option<::option::CloneNoDefault>>);
-inline rs_std::Option<::option::CloneNoDefault>::operator std::optional<
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Option<::option::CloneNoDefault>>);
+inline rs_std::Option<::option::CloneNoDefault>::operator ::std::optional<
     ::option::CloneNoDefault>() && noexcept {
   if (tag() == 0) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::CloneNoDefault>* _value;
@@ -1432,29 +1443,30 @@ inline rs_std::Option<::option::CloneNoDefault>::operator std::optional<
       ~DeferSetTagNone() { set_tag(0); }
 
      private:
-      void set_tag(std::uint8_t tag) { _value->set_tag(tag); }
+      void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return std::make_optional<::option::CloneNoDefault>(
+    return ::std::make_optional<::option::CloneNoDefault>(
         crubit::UnsafeRelocateTag{},
-        std::move(*reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1)));
+        ::std::move(
+            *reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1)));
   }
 }
 inline bool rs_std::Option<::option::CloneNoDefault>::has_value() noexcept {
   return tag() != 0;
 }
-inline constexpr std::uint8_t rs_std::Option<::option::CloneNoDefault>::tag()
+inline constexpr ::std::uint8_t rs_std::Option<::option::CloneNoDefault>::tag()
     const& noexcept {
-  std::array<unsigned char, sizeof(std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint8_t>(__bytes);
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
 inline constexpr void rs_std::Option<::option::CloneNoDefault>::set_tag(
-    std::uint8_t tag) noexcept {
+    ::std::uint8_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }
@@ -1462,25 +1474,25 @@ inline constexpr void rs_std::Option<::option::CloneNoDefault>::set_tag(
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000003e
-static_assert(std::is_trivially_copy_constructible_v<
+static_assert(::std::is_trivially_copy_constructible_v<
               rs_std::Option<::option::CopyNoDefault>>);
-static_assert(std::is_trivially_copy_assignable_v<
+static_assert(::std::is_trivially_copy_assignable_v<
               rs_std::Option<::option::CopyNoDefault>>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::option::CopyNoDefault>>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::option::CopyNoDefault>>);
 inline constexpr rs_std::Option<::option::CopyNoDefault>::Option() {
   set_tag(0);
 }
 inline constexpr rs_std::Option<::option::CopyNoDefault>::Option(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   set_tag(0);
 }
 inline constexpr rs_std::Option<::option::CopyNoDefault>&
-rs_std::Option<::option::CopyNoDefault>::operator=(std::nullopt_t) noexcept {
+rs_std::Option<::option::CopyNoDefault>::operator=(::std::nullopt_t) noexcept {
   if (tag() != 0) {
-    std::destroy_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1));
+    ::std::destroy_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1));
   }
   set_tag(0);
   return *this;
@@ -1488,46 +1500,47 @@ rs_std::Option<::option::CopyNoDefault>::operator=(std::nullopt_t) noexcept {
 inline rs_std::Option<::option::CopyNoDefault>::Option(
     ::option::CopyNoDefault&& value) noexcept {
   set_tag(1);
-  std::construct_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1),
-                    std::move(value));
+  ::std::construct_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1),
+                      ::std::move(value));
 }
 inline rs_std::Option<::option::CopyNoDefault>&
 rs_std::Option<::option::CopyNoDefault>::operator=(
     ::option::CopyNoDefault&& value) noexcept {
   if (tag() != 0) {
     *reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1) =
-        std::move(value);
+        ::std::move(value);
   } else {
     set_tag(1);
-    std::construct_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1),
-                      std::move(value));
+    ::std::construct_at(
+        reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1),
+        ::std::move(value));
   }
   return *this;
 }
 inline rs_std::Option<::option::CopyNoDefault>::Option(
-    std::optional<::option::CopyNoDefault>&& value) noexcept {
+    ::std::optional<::option::CopyNoDefault>&& value) noexcept {
   if (value.has_value()) {
     set_tag(1);
     ::option::CopyNoDefault* some =
         reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(0);
   }
 }
 inline rs_std::Option<::option::CopyNoDefault>&
 rs_std::Option<::option::CopyNoDefault>::operator=(
-    std::optional<::option::CopyNoDefault>&& value) noexcept {
+    ::std::optional<::option::CopyNoDefault>&& value) noexcept {
   if (tag() != 0) {
-    std::destroy_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1));
+    ::std::destroy_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1));
   }
   if (value.has_value()) {
     set_tag(1);
     ::option::CopyNoDefault* some =
         reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(0);
   }
@@ -1535,17 +1548,17 @@ rs_std::Option<::option::CopyNoDefault>::operator=(
 }
 template <typename... Args>
 inline rs_std::Option<::option::CopyNoDefault>::Option(
-    std::in_place_t, Args&&... args) noexcept {
+    ::std::in_place_t, Args&&... args) noexcept {
   set_tag(1);
-  std::construct_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1),
-                    std::forward<Args>(args)...);
+  ::std::construct_at(reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1),
+                      ::std::forward<Args>(args)...);
 }
-static_assert(
-    std::is_trivially_destructible_v<rs_std::Option<::option::CopyNoDefault>>);
-inline rs_std::Option<::option::CopyNoDefault>::operator std::optional<
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Option<::option::CopyNoDefault>>);
+inline rs_std::Option<::option::CopyNoDefault>::operator ::std::optional<
     ::option::CopyNoDefault>() && noexcept {
   if (tag() == 0) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::CopyNoDefault>* _value;
@@ -1554,29 +1567,29 @@ inline rs_std::Option<::option::CopyNoDefault>::operator std::optional<
       ~DeferSetTagNone() { set_tag(0); }
 
      private:
-      void set_tag(std::uint8_t tag) { _value->set_tag(tag); }
+      void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return std::make_optional<::option::CopyNoDefault>(
+    return ::std::make_optional<::option::CopyNoDefault>(
         crubit::UnsafeRelocateTag{},
-        std::move(*reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1)));
+        ::std::move(*reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1)));
   }
 }
 inline bool rs_std::Option<::option::CopyNoDefault>::has_value() noexcept {
   return tag() != 0;
 }
-inline constexpr std::uint8_t rs_std::Option<::option::CopyNoDefault>::tag()
+inline constexpr ::std::uint8_t rs_std::Option<::option::CopyNoDefault>::tag()
     const& noexcept {
-  std::array<unsigned char, sizeof(std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint8_t>(__bytes);
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
 inline constexpr void rs_std::Option<::option::CopyNoDefault>::set_tag(
-    std::uint8_t tag) noexcept {
+    ::std::uint8_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }
@@ -1585,7 +1598,7 @@ inline constexpr void rs_std::Option<::option::CopyNoDefault>::set_tag(
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 inline rs_std::Option<::option::HasDefault>::Option(Option&& other) : Option() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline rs_std::Option<::option::HasDefault>&
 rs_std::Option<::option::HasDefault>::operator=(Option&& other) {
@@ -1596,74 +1609,74 @@ inline constexpr rs_std::Option<::option::HasDefault>::Option() {
   set_tag(UINT64_C(9223372036854775808));
 }
 inline constexpr rs_std::Option<::option::HasDefault>::Option(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   set_tag(UINT64_C(9223372036854775808));
 }
 inline constexpr rs_std::Option<::option::HasDefault>&
-rs_std::Option<::option::HasDefault>::operator=(std::nullopt_t) noexcept {
+rs_std::Option<::option::HasDefault>::operator=(::std::nullopt_t) noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
   }
   set_tag(UINT64_C(9223372036854775808));
   return *this;
 }
 inline rs_std::Option<::option::HasDefault>::Option(
     ::option::HasDefault&& value) noexcept {
-  std::construct_at(reinterpret_cast<::option::HasDefault*>(storage_),
-                    std::move(value));
+  ::std::construct_at(reinterpret_cast<::option::HasDefault*>(storage_),
+                      ::std::move(value));
 }
 inline rs_std::Option<::option::HasDefault>& rs_std::Option<
     ::option::HasDefault>::operator=(::option::HasDefault&& value) noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    *reinterpret_cast<::option::HasDefault*>(storage_) = std::move(value);
+    *reinterpret_cast<::option::HasDefault*>(storage_) = ::std::move(value);
   } else {
-    std::construct_at(reinterpret_cast<::option::HasDefault*>(storage_),
-                      std::move(value));
+    ::std::construct_at(reinterpret_cast<::option::HasDefault*>(storage_),
+                        ::std::move(value));
   }
   return *this;
 }
 inline rs_std::Option<::option::HasDefault>::Option(
-    std::optional<::option::HasDefault>&& value) noexcept {
+    ::std::optional<::option::HasDefault>&& value) noexcept {
   if (value.has_value()) {
     ::option::HasDefault* some =
         reinterpret_cast<::option::HasDefault*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(UINT64_C(9223372036854775808));
   }
 }
 inline rs_std::Option<::option::HasDefault>&
 rs_std::Option<::option::HasDefault>::operator=(
-    std::optional<::option::HasDefault>&& value) noexcept {
+    ::std::optional<::option::HasDefault>&& value) noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
   }
   if (value.has_value()) {
     ::option::HasDefault* some =
         reinterpret_cast<::option::HasDefault*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(UINT64_C(9223372036854775808));
   }
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::option::HasDefault>::Option(std::in_place_t,
+inline rs_std::Option<::option::HasDefault>::Option(::std::in_place_t,
                                                     Args&&... args) noexcept {
-  std::construct_at(reinterpret_cast<::option::HasDefault*>(storage_),
-                    std::forward<Args>(args)...);
+  ::std::construct_at(reinterpret_cast<::option::HasDefault*>(storage_),
+                      ::std::forward<Args>(args)...);
 }
 inline constexpr rs_std::Option<::option::HasDefault>::~Option() noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
   }
 }
-inline rs_std::Option<::option::HasDefault>::operator std::optional<
+inline rs_std::Option<::option::HasDefault>::operator ::std::optional<
     ::option::HasDefault>() && noexcept {
   if (tag() == UINT64_C(9223372036854775808)) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::HasDefault>* _value;
@@ -1672,29 +1685,30 @@ inline rs_std::Option<::option::HasDefault>::operator std::optional<
       ~DeferSetTagNone() { set_tag(UINT64_C(9223372036854775808)); }
 
      private:
-      void set_tag(std::uint64_t tag) { _value->set_tag(tag); }
+      void set_tag(::std::uint64_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return std::make_optional<::option::HasDefault>(
+    return ::std::make_optional<::option::HasDefault>(
         crubit::UnsafeRelocateTag{},
-        std::move(*reinterpret_cast<::option::HasDefault*>(storage_)));
+        ::std::move(*reinterpret_cast<::option::HasDefault*>(storage_)));
   }
 }
 inline bool rs_std::Option<::option::HasDefault>::has_value() noexcept {
   return tag() != UINT64_C(9223372036854775808);
 }
-inline constexpr std::uint64_t rs_std::Option<::option::HasDefault>::tag()
+inline constexpr ::std::uint64_t rs_std::Option<::option::HasDefault>::tag()
     const& noexcept {
-  std::array<unsigned char, sizeof(std::uint64_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint64_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint64_t>(__bytes);
+  return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
 inline constexpr void rs_std::Option<::option::HasDefault>::set_tag(
-    std::uint64_t tag) noexcept {
+    ::std::uint64_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint64_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint64_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }
@@ -1704,7 +1718,7 @@ inline constexpr void rs_std::Option<::option::HasDefault>::set_tag(
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
 inline rs_std::Option<::option::HasNoDefault>::Option(Option&& other)
     : Option() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline rs_std::Option<::option::HasNoDefault>&
 rs_std::Option<::option::HasNoDefault>::operator=(Option&& other) {
@@ -1715,59 +1729,59 @@ inline constexpr rs_std::Option<::option::HasNoDefault>::Option() {
   set_tag(UINT64_C(9223372036854775808));
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>::Option(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   set_tag(UINT64_C(9223372036854775808));
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>&
-rs_std::Option<::option::HasNoDefault>::operator=(std::nullopt_t) noexcept {
+rs_std::Option<::option::HasNoDefault>::operator=(::std::nullopt_t) noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
   }
   set_tag(UINT64_C(9223372036854775808));
   return *this;
 }
 inline rs_std::Option<::option::HasNoDefault>::Option(
-    std::optional<::option::HasNoDefault>&& value) noexcept {
+    ::std::optional<::option::HasNoDefault>&& value) noexcept {
   if (value.has_value()) {
     ::option::HasNoDefault* some =
         reinterpret_cast<::option::HasNoDefault*>(storage_);
-    std::construct_at(some, crubit::UnsafeRelocateTag{}, std::move(*value));
-    std::construct_at(&value, std::nullopt);
+    ::std::construct_at(some, crubit::UnsafeRelocateTag{}, ::std::move(*value));
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(UINT64_C(9223372036854775808));
   }
 }
 inline rs_std::Option<::option::HasNoDefault>&
 rs_std::Option<::option::HasNoDefault>::operator=(
-    std::optional<::option::HasNoDefault>&& value) noexcept {
+    ::std::optional<::option::HasNoDefault>&& value) noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
   }
   if (value.has_value()) {
     ::option::HasNoDefault* some =
         reinterpret_cast<::option::HasNoDefault*>(storage_);
-    std::construct_at(some, crubit::UnsafeRelocateTag{}, std::move(*value));
-    std::construct_at(&value, std::nullopt);
+    ::std::construct_at(some, crubit::UnsafeRelocateTag{}, ::std::move(*value));
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(UINT64_C(9223372036854775808));
   }
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::option::HasNoDefault>::Option(std::in_place_t,
+inline rs_std::Option<::option::HasNoDefault>::Option(::std::in_place_t,
                                                       Args&&... args) noexcept {
-  std::construct_at(reinterpret_cast<::option::HasNoDefault*>(storage_),
-                    std::forward<Args>(args)...);
+  ::std::construct_at(reinterpret_cast<::option::HasNoDefault*>(storage_),
+                      ::std::forward<Args>(args)...);
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>::~Option() noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
   }
 }
-inline rs_std::Option<::option::HasNoDefault>::operator std::optional<
+inline rs_std::Option<::option::HasNoDefault>::operator ::std::optional<
     ::option::HasNoDefault>() && noexcept {
   if (tag() == UINT64_C(9223372036854775808)) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::HasNoDefault>* _value;
@@ -1776,29 +1790,30 @@ inline rs_std::Option<::option::HasNoDefault>::operator std::optional<
       ~DeferSetTagNone() { set_tag(UINT64_C(9223372036854775808)); }
 
      private:
-      void set_tag(std::uint64_t tag) { _value->set_tag(tag); }
+      void set_tag(::std::uint64_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return std::make_optional<::option::HasNoDefault>(
+    return ::std::make_optional<::option::HasNoDefault>(
         crubit::UnsafeRelocateTag{},
-        std::move(*reinterpret_cast<::option::HasNoDefault*>(storage_)));
+        ::std::move(*reinterpret_cast<::option::HasNoDefault*>(storage_)));
   }
 }
 inline bool rs_std::Option<::option::HasNoDefault>::has_value() noexcept {
   return tag() != UINT64_C(9223372036854775808);
 }
-inline constexpr std::uint64_t rs_std::Option<::option::HasNoDefault>::tag()
+inline constexpr ::std::uint64_t rs_std::Option<::option::HasNoDefault>::tag()
     const& noexcept {
-  std::array<unsigned char, sizeof(std::uint64_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint64_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint64_t>(__bytes);
+  return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
 inline constexpr void rs_std::Option<::option::HasNoDefault>::set_tag(
-    std::uint64_t tag) noexcept {
+    ::std::uint64_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint64_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint64_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }
@@ -1806,77 +1821,77 @@ inline constexpr void rs_std::Option<::option::HasNoDefault>::set_tag(
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasOptions_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasOptions_x00000020_x0000003e
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::option::HasOptions>>);
-static_assert(
-    std::is_trivially_move_assignable_v<rs_std::Option<::option::HasOptions>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Option<::option::HasOptions>>);
 inline constexpr rs_std::Option<::option::HasOptions>::Option() { set_tag(2); }
 inline constexpr rs_std::Option<::option::HasOptions>::Option(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   set_tag(2);
 }
 inline constexpr rs_std::Option<::option::HasOptions>&
-rs_std::Option<::option::HasOptions>::operator=(std::nullopt_t) noexcept {
+rs_std::Option<::option::HasOptions>::operator=(::std::nullopt_t) noexcept {
   if (tag() != 2) {
-    std::destroy_at(reinterpret_cast<::option::HasOptions*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasOptions*>(storage_));
   }
   set_tag(2);
   return *this;
 }
 inline rs_std::Option<::option::HasOptions>::Option(
     ::option::HasOptions&& value) noexcept {
-  std::construct_at(reinterpret_cast<::option::HasOptions*>(storage_),
-                    std::move(value));
+  ::std::construct_at(reinterpret_cast<::option::HasOptions*>(storage_),
+                      ::std::move(value));
 }
 inline rs_std::Option<::option::HasOptions>& rs_std::Option<
     ::option::HasOptions>::operator=(::option::HasOptions&& value) noexcept {
   if (tag() != 2) {
-    *reinterpret_cast<::option::HasOptions*>(storage_) = std::move(value);
+    *reinterpret_cast<::option::HasOptions*>(storage_) = ::std::move(value);
   } else {
-    std::construct_at(reinterpret_cast<::option::HasOptions*>(storage_),
-                      std::move(value));
+    ::std::construct_at(reinterpret_cast<::option::HasOptions*>(storage_),
+                        ::std::move(value));
   }
   return *this;
 }
 inline rs_std::Option<::option::HasOptions>::Option(
-    std::optional<::option::HasOptions>&& value) noexcept {
+    ::std::optional<::option::HasOptions>&& value) noexcept {
   if (value.has_value()) {
     ::option::HasOptions* some =
         reinterpret_cast<::option::HasOptions*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(2);
   }
 }
 inline rs_std::Option<::option::HasOptions>&
 rs_std::Option<::option::HasOptions>::operator=(
-    std::optional<::option::HasOptions>&& value) noexcept {
+    ::std::optional<::option::HasOptions>&& value) noexcept {
   if (tag() != 2) {
-    std::destroy_at(reinterpret_cast<::option::HasOptions*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::HasOptions*>(storage_));
   }
   if (value.has_value()) {
     ::option::HasOptions* some =
         reinterpret_cast<::option::HasOptions*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(2);
   }
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::option::HasOptions>::Option(std::in_place_t,
+inline rs_std::Option<::option::HasOptions>::Option(::std::in_place_t,
                                                     Args&&... args) noexcept {
-  std::construct_at(reinterpret_cast<::option::HasOptions*>(storage_),
-                    std::forward<Args>(args)...);
+  ::std::construct_at(reinterpret_cast<::option::HasOptions*>(storage_),
+                      ::std::forward<Args>(args)...);
 }
 static_assert(
-    std::is_trivially_destructible_v<rs_std::Option<::option::HasOptions>>);
-inline rs_std::Option<::option::HasOptions>::operator std::optional<
+    ::std::is_trivially_destructible_v<rs_std::Option<::option::HasOptions>>);
+inline rs_std::Option<::option::HasOptions>::operator ::std::optional<
     ::option::HasOptions>() && noexcept {
   if (tag() == 2) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::HasOptions>* _value;
@@ -1885,29 +1900,29 @@ inline rs_std::Option<::option::HasOptions>::operator std::optional<
       ~DeferSetTagNone() { set_tag(2); }
 
      private:
-      void set_tag(std::uint8_t tag) { _value->set_tag(tag); }
+      void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return std::make_optional<::option::HasOptions>(
+    return ::std::make_optional<::option::HasOptions>(
         crubit::UnsafeRelocateTag{},
-        std::move(*reinterpret_cast<::option::HasOptions*>(storage_)));
+        ::std::move(*reinterpret_cast<::option::HasOptions*>(storage_)));
   }
 }
 inline bool rs_std::Option<::option::HasOptions>::has_value() noexcept {
   return tag() != 2;
 }
-inline constexpr std::uint8_t rs_std::Option<::option::HasOptions>::tag()
+inline constexpr ::std::uint8_t rs_std::Option<::option::HasOptions>::tag()
     const& noexcept {
-  std::array<unsigned char, sizeof(std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint8_t>(__bytes);
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
 inline constexpr void rs_std::Option<::option::HasOptions>::set_tag(
-    std::uint8_t tag) noexcept {
+    ::std::uint8_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }
@@ -1915,75 +1930,75 @@ inline constexpr void rs_std::Option<::option::HasOptions>::set_tag(
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Option<::option::NonMaxU8>>);
 static_assert(
-    std::is_trivially_move_constructible_v<rs_std::Option<::option::NonMaxU8>>);
-static_assert(
-    std::is_trivially_move_assignable_v<rs_std::Option<::option::NonMaxU8>>);
+    ::std::is_trivially_move_assignable_v<rs_std::Option<::option::NonMaxU8>>);
 inline constexpr rs_std::Option<::option::NonMaxU8>::Option() { set_tag(251); }
 inline constexpr rs_std::Option<::option::NonMaxU8>::Option(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   set_tag(251);
 }
 inline constexpr rs_std::Option<::option::NonMaxU8>&
-rs_std::Option<::option::NonMaxU8>::operator=(std::nullopt_t) noexcept {
+rs_std::Option<::option::NonMaxU8>::operator=(::std::nullopt_t) noexcept {
   if (tag() != 251) {
-    std::destroy_at(reinterpret_cast<::option::NonMaxU8*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::NonMaxU8*>(storage_));
   }
   set_tag(251);
   return *this;
 }
 inline rs_std::Option<::option::NonMaxU8>::Option(
     ::option::NonMaxU8&& value) noexcept {
-  std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
-                    std::move(value));
+  ::std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
+                      ::std::move(value));
 }
 inline rs_std::Option<::option::NonMaxU8>& rs_std::Option<
     ::option::NonMaxU8>::operator=(::option::NonMaxU8&& value) noexcept {
   if (tag() != 251) {
-    *reinterpret_cast<::option::NonMaxU8*>(storage_) = std::move(value);
+    *reinterpret_cast<::option::NonMaxU8*>(storage_) = ::std::move(value);
   } else {
-    std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
-                      std::move(value));
+    ::std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
+                        ::std::move(value));
   }
   return *this;
 }
 inline rs_std::Option<::option::NonMaxU8>::Option(
-    std::optional<::option::NonMaxU8>&& value) noexcept {
+    ::std::optional<::option::NonMaxU8>&& value) noexcept {
   if (value.has_value()) {
     ::option::NonMaxU8* some = reinterpret_cast<::option::NonMaxU8*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(251);
   }
 }
 inline rs_std::Option<::option::NonMaxU8>&
 rs_std::Option<::option::NonMaxU8>::operator=(
-    std::optional<::option::NonMaxU8>&& value) noexcept {
+    ::std::optional<::option::NonMaxU8>&& value) noexcept {
   if (tag() != 251) {
-    std::destroy_at(reinterpret_cast<::option::NonMaxU8*>(storage_));
+    ::std::destroy_at(reinterpret_cast<::option::NonMaxU8*>(storage_));
   }
   if (value.has_value()) {
     ::option::NonMaxU8* some = reinterpret_cast<::option::NonMaxU8*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(251);
   }
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::option::NonMaxU8>::Option(std::in_place_t,
+inline rs_std::Option<::option::NonMaxU8>::Option(::std::in_place_t,
                                                   Args&&... args) noexcept {
-  std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
-                    std::forward<Args>(args)...);
+  ::std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
+                      ::std::forward<Args>(args)...);
 }
 static_assert(
-    std::is_trivially_destructible_v<rs_std::Option<::option::NonMaxU8>>);
-inline rs_std::Option<::option::NonMaxU8>::operator std::optional<
+    ::std::is_trivially_destructible_v<rs_std::Option<::option::NonMaxU8>>);
+inline rs_std::Option<::option::NonMaxU8>::operator ::std::optional<
     ::option::NonMaxU8>() && noexcept {
   if (tag() == 251) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::NonMaxU8>* _value;
@@ -1992,29 +2007,29 @@ inline rs_std::Option<::option::NonMaxU8>::operator std::optional<
       ~DeferSetTagNone() { set_tag(251); }
 
      private:
-      void set_tag(std::uint8_t tag) { _value->set_tag(tag); }
+      void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return std::make_optional<::option::NonMaxU8>(
+    return ::std::make_optional<::option::NonMaxU8>(
         crubit::UnsafeRelocateTag{},
-        std::move(*reinterpret_cast<::option::NonMaxU8*>(storage_)));
+        ::std::move(*reinterpret_cast<::option::NonMaxU8*>(storage_)));
   }
 }
 inline bool rs_std::Option<::option::NonMaxU8>::has_value() noexcept {
   return tag() != 251;
 }
-inline constexpr std::uint8_t rs_std::Option<::option::NonMaxU8>::tag()
+inline constexpr ::std::uint8_t rs_std::Option<::option::NonMaxU8>::tag()
     const& noexcept {
-  std::array<unsigned char, sizeof(std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint8_t>(__bytes);
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
 inline constexpr void rs_std::Option<::option::NonMaxU8>::set_tag(
-    std::uint8_t tag) noexcept {
+    ::std::uint8_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }
@@ -2022,22 +2037,22 @@ inline constexpr void rs_std::Option<::option::NonMaxU8>::set_tag(
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e_x00000020_x0000003e
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<rs_std::Option<::option::NonMaxU8>>>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<rs_std::Option<::option::NonMaxU8>>>);
 inline constexpr rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option() {
   set_tag(252);
 }
 inline constexpr rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   set_tag(252);
 }
 inline constexpr rs_std::Option<rs_std::Option<::option::NonMaxU8>>&
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
-    std::nullopt_t) noexcept {
+    ::std::nullopt_t) noexcept {
   if (tag() != 252) {
-    std::destroy_at(
+    ::std::destroy_at(
         reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_));
   }
   set_tag(252);
@@ -2045,46 +2060,46 @@ rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
 }
 inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
     rs_std::Option<::option::NonMaxU8>&& value) noexcept {
-  std::construct_at(
+  ::std::construct_at(
       reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
-      std::move(value));
+      ::std::move(value));
 }
 inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>&
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
     rs_std::Option<::option::NonMaxU8>&& value) noexcept {
   if (tag() != 252) {
     *reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_) =
-        std::move(value);
+        ::std::move(value);
   } else {
-    std::construct_at(
+    ::std::construct_at(
         reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
-        std::move(value));
+        ::std::move(value));
   }
   return *this;
 }
 inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
-    std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept {
+    ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept {
   if (value.has_value()) {
     rs_std::Option<::option::NonMaxU8>* some =
         reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(252);
   }
 }
 inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>&
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
-    std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept {
+    ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept {
   if (tag() != 252) {
-    std::destroy_at(
+    ::std::destroy_at(
         reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_));
   }
   if (value.has_value()) {
     rs_std::Option<::option::NonMaxU8>* some =
         reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(252);
   }
@@ -2092,17 +2107,17 @@ rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
 }
 template <typename... Args>
 inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
-    std::in_place_t, Args&&... args) noexcept {
-  std::construct_at(
+    ::std::in_place_t, Args&&... args) noexcept {
+  ::std::construct_at(
       reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
-      std::forward<Args>(args)...);
+      ::std::forward<Args>(args)...);
 }
-static_assert(std::is_trivially_destructible_v<
+static_assert(::std::is_trivially_destructible_v<
               rs_std::Option<rs_std::Option<::option::NonMaxU8>>>);
-inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator std::
+inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator ::std::
     optional<rs_std::Option<::option::NonMaxU8>>() && noexcept {
   if (tag() == 252) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<rs_std::Option<::option::NonMaxU8>>* _value;
@@ -2111,11 +2126,11 @@ inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator std::
       ~DeferSetTagNone() { set_tag(252); }
 
      private:
-      void set_tag(std::uint8_t tag) { _value->set_tag(tag); }
+      void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return std::make_optional<rs_std::Option<::option::NonMaxU8>>(
+    return ::std::make_optional<rs_std::Option<::option::NonMaxU8>>(
         crubit::UnsafeRelocateTag{},
-        std::move(
+        ::std::move(
             *reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_)));
   }
 }
@@ -2123,124 +2138,127 @@ inline bool
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::has_value() noexcept {
   return tag() != 252;
 }
-inline constexpr std::uint8_t
+inline constexpr ::std::uint8_t
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint8_t>(__bytes);
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
 inline constexpr void rs_std::Option<
-    rs_std::Option<::option::NonMaxU8>>::set_tag(std::uint8_t tag) noexcept {
+    rs_std::Option<::option::NonMaxU8>>::set_tag(::std::uint8_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 static_assert(
-    std::is_trivially_copy_constructible_v<rs_std::Option<std::uint8_t>>);
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::uint8_t>>);
 static_assert(
-    std::is_trivially_copy_assignable_v<rs_std::Option<std::uint8_t>>);
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::uint8_t>>);
 static_assert(
-    std::is_trivially_move_constructible_v<rs_std::Option<std::uint8_t>>);
+    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::uint8_t>>);
 static_assert(
-    std::is_trivially_move_assignable_v<rs_std::Option<std::uint8_t>>);
-inline constexpr rs_std::Option<std::uint8_t>::Option() { set_tag(0); }
-inline constexpr rs_std::Option<std::uint8_t>::Option(std::nullopt_t) noexcept {
+    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::uint8_t>>);
+inline constexpr rs_std::Option<::std::uint8_t>::Option() { set_tag(0); }
+inline constexpr rs_std::Option<::std::uint8_t>::Option(
+    ::std::nullopt_t) noexcept {
   set_tag(0);
 }
-inline constexpr rs_std::Option<std::uint8_t>&
-rs_std::Option<std::uint8_t>::operator=(std::nullopt_t) noexcept {
+inline constexpr rs_std::Option<::std::uint8_t>&
+rs_std::Option<::std::uint8_t>::operator=(::std::nullopt_t) noexcept {
   if (tag() != 0) {
-    std::destroy_at(reinterpret_cast<std::uint8_t*>(storage_ + 1));
+    ::std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1));
   }
   set_tag(0);
   return *this;
 }
-inline rs_std::Option<std::uint8_t>::Option(std::uint8_t&& value) noexcept {
+inline rs_std::Option<::std::uint8_t>::Option(::std::uint8_t&& value) noexcept {
   set_tag(1);
-  std::construct_at(reinterpret_cast<std::uint8_t*>(storage_ + 1),
-                    std::move(value));
+  ::std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1),
+                      ::std::move(value));
 }
-inline rs_std::Option<std::uint8_t>& rs_std::Option<std::uint8_t>::operator=(
-    std::uint8_t&& value) noexcept {
+inline rs_std::Option<::std::uint8_t>&
+rs_std::Option<::std::uint8_t>::operator=(::std::uint8_t&& value) noexcept {
   if (tag() != 0) {
-    *reinterpret_cast<std::uint8_t*>(storage_ + 1) = std::move(value);
+    *reinterpret_cast<::std::uint8_t*>(storage_ + 1) = ::std::move(value);
   } else {
     set_tag(1);
-    std::construct_at(reinterpret_cast<std::uint8_t*>(storage_ + 1),
-                      std::move(value));
+    ::std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1),
+                        ::std::move(value));
   }
   return *this;
 }
-inline rs_std::Option<std::uint8_t>::Option(
-    std::optional<std::uint8_t>&& value) noexcept {
+inline rs_std::Option<::std::uint8_t>::Option(
+    ::std::optional<::std::uint8_t>&& value) noexcept {
   if (value.has_value()) {
     set_tag(1);
-    std::uint8_t* some = reinterpret_cast<std::uint8_t*>(storage_ + 1);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    ::std::uint8_t* some = reinterpret_cast<::std::uint8_t*>(storage_ + 1);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(0);
   }
 }
-inline rs_std::Option<std::uint8_t>& rs_std::Option<std::uint8_t>::operator=(
-    std::optional<std::uint8_t>&& value) noexcept {
+inline rs_std::Option<::std::uint8_t>&
+rs_std::Option<::std::uint8_t>::operator=(
+    ::std::optional<::std::uint8_t>&& value) noexcept {
   if (tag() != 0) {
-    std::destroy_at(reinterpret_cast<std::uint8_t*>(storage_ + 1));
+    ::std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1));
   }
   if (value.has_value()) {
     set_tag(1);
-    std::uint8_t* some = reinterpret_cast<std::uint8_t*>(storage_ + 1);
-    *some = std::move(value.value());
-    std::construct_at(&value, std::nullopt);
+    ::std::uint8_t* some = reinterpret_cast<::std::uint8_t*>(storage_ + 1);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(0);
   }
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<std::uint8_t>::Option(std::in_place_t,
-                                            Args&&... args) noexcept {
+inline rs_std::Option<::std::uint8_t>::Option(::std::in_place_t,
+                                              Args&&... args) noexcept {
   set_tag(1);
-  std::construct_at(reinterpret_cast<std::uint8_t*>(storage_ + 1),
-                    std::forward<Args>(args)...);
+  ::std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1),
+                      ::std::forward<Args>(args)...);
 }
-static_assert(std::is_trivially_destructible_v<rs_std::Option<std::uint8_t>>);
-inline rs_std::Option<std::uint8_t>::operator std::optional<
-    std::uint8_t>() && noexcept {
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Option<::std::uint8_t>>);
+inline rs_std::Option<::std::uint8_t>::operator ::std::optional<
+    ::std::uint8_t>() && noexcept {
   if (tag() == 0) {
-    return std::nullopt;
+    return ::std::nullopt;
   } else {
-    std::uint8_t& value = *reinterpret_cast<std::uint8_t*>(storage_ + 1);
-    std::optional<std::uint8_t> return_value(std::move(value));
-    std::destroy_at(&value);
+    ::std::uint8_t& value = *reinterpret_cast<::std::uint8_t*>(storage_ + 1);
+    ::std::optional<::std::uint8_t> return_value(::std::move(value));
+    ::std::destroy_at(&value);
     set_tag(0);
     return return_value;
   }
 }
-inline bool rs_std::Option<std::uint8_t>::has_value() noexcept {
+inline bool rs_std::Option<::std::uint8_t>::has_value() noexcept {
   return tag() != 0;
 }
-inline constexpr std::uint8_t rs_std::Option<std::uint8_t>::tag()
+inline constexpr ::std::uint8_t rs_std::Option<::std::uint8_t>::tag()
     const& noexcept {
-  std::array<unsigned char, sizeof(std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
-  return std::bit_cast<std::uint8_t>(__bytes);
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline constexpr void rs_std::Option<std::uint8_t>::set_tag(
-    std::uint8_t tag) noexcept {
+inline constexpr void rs_std::Option<::std::uint8_t>::set_tag(
+    ::std::uint8_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(std::uint8_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }

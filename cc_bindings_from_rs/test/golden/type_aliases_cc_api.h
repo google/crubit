@@ -26,7 +26,7 @@ namespace type_aliases_rust::test_deprecated_type_alias {
 // cc_bindings_from_rs/test/golden/type_aliases.rs;l=16
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_deprecated_type_alias :: TypeAlias")
-    [[deprecated("Use `OtherTypeAlias` instead")]] = std::int32_t;
+    [[deprecated("Use `OtherTypeAlias` instead")]] = ::std::int32_t;
 }  // namespace type_aliases_rust::test_deprecated_type_alias
 
 namespace type_aliases_rust::test_type_aliases {
@@ -35,25 +35,25 @@ namespace type_aliases_rust::test_type_aliases {
 // cc_bindings_from_rs/test/golden/type_aliases.rs;l=7
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias") =
-    std::int32_t;
+    ::std::int32_t;
 // Generated from:
 // cc_bindings_from_rs/test/golden/type_aliases.rs;l=6
 using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias2") =
-    std::int32_t;
+    ::std::int32_t;
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/type_aliases.rs;l=9
-std::int32_t func_using_alias();
+::std::int32_t func_using_alias();
 
 }  // namespace type_aliases_rust::test_type_aliases
 
 namespace type_aliases_rust::test_type_aliases {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_func_uusing_ualias();
+extern "C" ::std::int32_t __crubit_thunk_func_uusing_ualias();
 }
-inline std::int32_t func_using_alias() {
+inline ::std::int32_t func_using_alias() {
   return __crubit_internal::__crubit_thunk_func_uusing_ualias();
 }
 

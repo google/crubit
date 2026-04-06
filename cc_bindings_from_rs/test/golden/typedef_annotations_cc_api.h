@@ -28,7 +28,7 @@ namespace typedef_annotations_rust {
 // Generated from:
 // cc_bindings_from_rs/test/golden/typedef_annotations.rs;l=5
 using Alias CRUBIT_INTERNAL_RUST_TYPE(
-    ":: typedef_annotations_rust_golden :: Alias") = std::int32_t;
+    ":: typedef_annotations_rust_golden :: Alias") = ::std::int32_t;
 }  // namespace typedef_annotations_rust
 
 #pragma clang diagnostic pop

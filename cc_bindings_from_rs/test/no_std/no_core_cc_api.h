@@ -46,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
   Test(const Test&) = delete;
   Test& operator=(const Test&) = delete;
   Test(::crubit::UnsafeRelocateTag, Test&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -61,7 +61,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
   // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  std::array<unsigned char, 24> s_;
+  ::std::array<unsigned char, 24> s_;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -84,7 +84,7 @@ inline ::no_core::Test Test::new_() {
   crubit::Slot<::no_core::Test> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

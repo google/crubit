@@ -46,12 +46,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   ArrayStruct(const ArrayStruct&) = default;
   ArrayStruct& operator=(const ArrayStruct&) = default;
   ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/arrays/arrays.rs;l=42
-    std::array<std::int32_t, 2> array;
+    ::std::array<::std::int32_t, 2> array;
   };
 
  private:
@@ -78,17 +78,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   HasDrop(const HasDrop&) = delete;
   HasDrop& operator=(const HasDrop&) = delete;
   HasDrop(::crubit::UnsafeRelocateTag, HasDrop&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/arrays/arrays.rs;l=55
-  static ::arrays::HasDrop new_(std::int32_t x);
+  static ::arrays::HasDrop new_(::std::int32_t x);
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/arrays/arrays.rs;l=51
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -114,12 +114,12 @@ HasDropAndDefault final {
   HasDropAndDefault(const HasDropAndDefault&) = delete;
   HasDropAndDefault& operator=(const HasDropAndDefault&) = delete;
   HasDropAndDefault(::crubit::UnsafeRelocateTag, HasDropAndDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/arrays/arrays.rs;l=78
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -130,8 +130,8 @@ HasDropAndDefault final {
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=16
-std::array<std::int32_t, 2> function_with_array_id(
-    std::array<std::int32_t, 2> array);
+::std::array<::std::int32_t, 2> function_with_array_id(
+    ::std::array<::std::int32_t, 2> array);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -144,67 +144,68 @@ std::array<std::int32_t, 2> function_with_array_id(
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=21
-std::tuple<std::array<std::int32_t, 2>, std::array<std::int32_t, 2>>
-function_with_array_tuple_id(
-    std::tuple<std::array<std::int32_t, 2>, std::array<std::int32_t, 2>>
-        array_tup);
+::std::tuple<::std::array<::std::int32_t, 2>, ::std::array<::std::int32_t, 2>>
+function_with_array_tuple_id(::std::tuple<::std::array<::std::int32_t, 2>,
+                                          ::std::array<::std::int32_t, 2>>
+                                 array_tup);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=11
-std::array<std::int32_t, 2> const* function_with_const_array_ptr_id(
-    std::array<std::int32_t, 2> const* array_ptr);
+::std::array<::std::int32_t, 2> const* function_with_const_array_ptr_id(
+    ::std::array<::std::int32_t, 2> const* array_ptr);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=118
-std::array<std::int32_t, 0> function_with_empty_array(
-    std::array<std::int32_t, 0> array);
+::std::array<::std::int32_t, 0> function_with_empty_array(
+    ::std::array<::std::int32_t, 0> array);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=86
-std::array<::arrays::HasDropAndDefault, 2>
+::std::array<::arrays::HasDropAndDefault, 2>
 function_with_has_drop_and_default_array_id(
-    std::array<::arrays::HasDropAndDefault, 2> array);
+    ::std::array<::arrays::HasDropAndDefault, 2> array);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=65
-std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
-    std::array<::arrays::HasDrop, 2> array);
+::std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
+    ::std::array<::arrays::HasDrop, 2> array);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=72
-std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only();
+::std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only();
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=34
-std::array<std::int32_t, 3> const* function_with_mut_array_named_size_ptr_id(
-    std::array<std::int32_t, 3> const* array_ptr);
+::std::array<::std::int32_t, 3> const*
+function_with_mut_array_named_size_ptr_id(
+    ::std::array<::std::int32_t, 3> const* array_ptr);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=93
-std::array<std::array<std::int32_t, 2>, 2> function_with_nested_arrays(
-    std::array<std::array<std::int32_t, 2>, 2> array);
+::std::array<::std::array<::std::int32_t, 2>, 2> function_with_nested_arrays(
+    ::std::array<::std::array<::std::int32_t, 2>, 2> array);
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=111
-std::array<std::array<::arrays::HasDropAndDefault, 2>, 2>
+::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2>
 function_with_nested_drop_default_arrays(
-    std::array<std::array<::arrays::HasDropAndDefault, 2>, 2> array);
+    ::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2> array);
 
 // Error generating bindings for
 // `arrays_golden::function_with_nested_droponly_arrays` defined at
@@ -236,11 +237,11 @@ extern "C" void __crubit_thunk_default(::arrays::ArrayStruct* __ret_ptr);
 inline ::arrays::ArrayStruct::ArrayStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<ArrayStruct>);
-static_assert(std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
-static_assert(std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
-static_assert(std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);
-static_assert(std::is_trivially_copy_assignable_v<::arrays::ArrayStruct>);
+static_assert(::std::is_trivially_destructible_v<ArrayStruct>);
+static_assert(::std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
+static_assert(::std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);
+static_assert(::std::is_trivially_copy_assignable_v<::arrays::ArrayStruct>);
 inline void ArrayStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ArrayStruct, array));
 }
@@ -255,13 +256,14 @@ extern "C" void __crubit_thunk_drop(::arrays::HasDrop&);
 }
 inline HasDrop::~HasDrop() { __crubit_internal::__crubit_thunk_drop(*this); }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::int32_t, ::arrays::HasDrop* __ret_ptr);
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::arrays::HasDrop* __ret_ptr);
 }
-inline ::arrays::HasDrop HasDrop::new_(std::int32_t x) {
+inline ::arrays::HasDrop HasDrop::new_(::std::int32_t x) {
   crubit::Slot<::arrays::HasDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasDrop::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasDrop, x));
@@ -286,7 +288,7 @@ inline HasDropAndDefault::~HasDropAndDefault() {
 }
 inline ::arrays::HasDropAndDefault::HasDropAndDefault(HasDropAndDefault&& other)
     : HasDropAndDefault() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline ::arrays::HasDropAndDefault& ::arrays::HasDropAndDefault::operator=(
     HasDropAndDefault&& other) {
@@ -300,13 +302,13 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_uid(void*,
                                                          void* __ret_ptr);
 }
-inline std::array<std::int32_t, 2> function_with_array_id(
-    std::array<std::int32_t, 2> array) {
-  crubit::Slot<std::array<std::int32_t, 2>> __return_value_ret_val_holder;
+inline ::std::array<::std::int32_t, 2> function_with_array_id(
+    ::std::array<::std::int32_t, 2> array) {
+  crubit::Slot<::std::array<::std::int32_t, 2>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_function_uwith_uarray_uid(
       &array, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -319,42 +321,43 @@ inline ::arrays::ArrayStruct function_with_array_struct_id(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_function_uwith_uarray_ustruct_uid(
       &array_struct, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_utuple_uid(
     void**, void** __ret_ptr);
 }
-inline std::tuple<std::array<std::int32_t, 2>, std::array<std::int32_t, 2>>
-function_with_array_tuple_id(
-    std::tuple<std::array<std::int32_t, 2>, std::array<std::int32_t, 2>>
-        array_tup) {
-  auto&& array_tup_0 = std::get<0>(array_tup);
+inline ::std::tuple<::std::array<::std::int32_t, 2>,
+                    ::std::array<::std::int32_t, 2>>
+function_with_array_tuple_id(::std::tuple<::std::array<::std::int32_t, 2>,
+                                          ::std::array<::std::int32_t, 2>>
+                                 array_tup) {
+  auto&& array_tup_0 = ::std::get<0>(array_tup);
   auto&& array_tup_cabi_0 = &array_tup_0;
-  auto&& array_tup_1 = std::get<1>(array_tup);
+  auto&& array_tup_1 = ::std::get<1>(array_tup);
   auto&& array_tup_cabi_1 = &array_tup_1;
   void* array_tup_cabi[] = {&array_tup_cabi_0, &array_tup_cabi_1};
-  crubit::Slot<std::array<std::int32_t, 2>> __return_value_0_ret_val_holder;
+  crubit::Slot<::std::array<::std::int32_t, 2>> __return_value_0_ret_val_holder;
   auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
-  crubit::Slot<std::array<std::int32_t, 2>> __return_value_1_ret_val_holder;
+  crubit::Slot<::std::array<::std::int32_t, 2>> __return_value_1_ret_val_holder;
   auto* __return_value_1_storage = __return_value_1_ret_val_holder.Get();
   void* __return_value_storage[] = {__return_value_0_storage,
                                     __return_value_1_storage};
   __crubit_internal::__crubit_thunk_function_uwith_uarray_utuple_uid(
       array_tup_cabi, __return_value_storage);
-  return std::make_tuple(
-      std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue(),
-      std::move(__return_value_1_ret_val_holder).AssumeInitAndTakeValue());
+  return ::std::make_tuple(
+      ::std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue(),
+      ::std::move(__return_value_1_ret_val_holder).AssumeInitAndTakeValue());
 }
 
 namespace __crubit_internal {
-extern "C" std::array<std::int32_t, 2> const*
+extern "C" ::std::array<::std::int32_t, 2> const*
 __crubit_thunk_function_uwith_uconst_uarray_uptr_uid(
-    std::array<std::int32_t, 2> const*);
+    ::std::array<::std::int32_t, 2> const*);
 }
-inline std::array<std::int32_t, 2> const* function_with_const_array_ptr_id(
-    std::array<std::int32_t, 2> const* array_ptr) {
+inline ::std::array<::std::int32_t, 2> const* function_with_const_array_ptr_id(
+    ::std::array<::std::int32_t, 2> const* array_ptr) {
   return __crubit_internal::
       __crubit_thunk_function_uwith_uconst_uarray_uptr_uid(array_ptr);
 }
@@ -363,13 +366,13 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uempty_uarray(void*,
                                                             void* __ret_ptr);
 }
-inline std::array<std::int32_t, 0> function_with_empty_array(
-    std::array<std::int32_t, 0> array) {
-  crubit::Slot<std::array<std::int32_t, 0>> __return_value_ret_val_holder;
+inline ::std::array<::std::int32_t, 0> function_with_empty_array(
+    ::std::array<::std::int32_t, 0> array) {
+  crubit::Slot<::std::array<::std::int32_t, 0>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_function_uwith_uempty_uarray(
       &array, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -377,53 +380,55 @@ extern "C" void
 __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarray_uid(
     void*, void* __ret_ptr);
 }
-inline std::array<::arrays::HasDropAndDefault, 2>
+inline ::std::array<::arrays::HasDropAndDefault, 2>
 function_with_has_drop_and_default_array_id(
-    std::array<::arrays::HasDropAndDefault, 2> array) {
-  crubit::Slot array_slot((std::move(array)));
-  crubit::Slot<std::array<::arrays::HasDropAndDefault, 2>>
+    ::std::array<::arrays::HasDropAndDefault, 2> array) {
+  crubit::Slot array_slot((::std::move(array)));
+  crubit::Slot<::std::array<::arrays::HasDropAndDefault, 2>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarray_uid(
           array_slot.Get(), __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uhas_udrop_uarray_uid(
     void*, void* __ret_ptr);
 }
-inline std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
-    std::array<::arrays::HasDrop, 2> array) {
-  crubit::Slot array_slot((std::move(array)));
-  crubit::Slot<std::array<::arrays::HasDrop, 2>> __return_value_ret_val_holder;
+inline ::std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
+    ::std::array<::arrays::HasDrop, 2> array) {
+  crubit::Slot array_slot((::std::move(array)));
+  crubit::Slot<::std::array<::arrays::HasDrop, 2>>
+      __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_function_uwith_uhas_udrop_uarray_uid(
       array_slot.Get(), __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uhas_udrop_uret_uonly(
     void* __ret_ptr);
 }
-inline std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only() {
-  crubit::Slot<std::array<::arrays::HasDrop, 2>> __return_value_ret_val_holder;
+inline ::std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only() {
+  crubit::Slot<::std::array<::arrays::HasDrop, 2>>
+      __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_function_uwith_uhas_udrop_uret_uonly(
       __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" std::array<std::int32_t, 3> const*
+extern "C" ::std::array<::std::int32_t, 3> const*
 __crubit_thunk_function_uwith_umut_uarray_unamed_usize_uptr_uid(
-    std::array<std::int32_t, 3> const*);
+    ::std::array<::std::int32_t, 3> const*);
 }
-inline std::array<std::int32_t, 3> const*
+inline ::std::array<::std::int32_t, 3> const*
 function_with_mut_array_named_size_ptr_id(
-    std::array<std::int32_t, 3> const* array_ptr) {
+    ::std::array<::std::int32_t, 3> const* array_ptr) {
   return __crubit_internal::
       __crubit_thunk_function_uwith_umut_uarray_unamed_usize_uptr_uid(
           array_ptr);
@@ -433,31 +438,32 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_unested_uarrays(void*,
                                                               void* __ret_ptr);
 }
-inline std::array<std::array<std::int32_t, 2>, 2> function_with_nested_arrays(
-    std::array<std::array<std::int32_t, 2>, 2> array) {
-  crubit::Slot<std::array<std::array<std::int32_t, 2>, 2>>
+inline ::std::array<::std::array<::std::int32_t, 2>, 2>
+function_with_nested_arrays(
+    ::std::array<::std::array<::std::int32_t, 2>, 2> array) {
+  crubit::Slot<::std::array<::std::array<::std::int32_t, 2>, 2>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_function_uwith_unested_uarrays(
       &array, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
     void*, void* __ret_ptr);
 }
-inline std::array<std::array<::arrays::HasDropAndDefault, 2>, 2>
+inline ::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2>
 function_with_nested_drop_default_arrays(
-    std::array<std::array<::arrays::HasDropAndDefault, 2>, 2> array) {
-  crubit::Slot array_slot((std::move(array)));
-  crubit::Slot<std::array<std::array<::arrays::HasDropAndDefault, 2>, 2>>
+    ::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2> array) {
+  crubit::Slot array_slot((::std::move(array)));
+  crubit::Slot<::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
           array_slot.Get(), __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace arrays

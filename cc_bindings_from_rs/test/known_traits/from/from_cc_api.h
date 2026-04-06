@@ -46,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe(const NotFfiSafe&) = delete;
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -57,13 +57,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=78
-  explicit operator std::int32_t();
+  explicit operator ::std::int32_t();
 
  private:
   // Field type has been replaced with a blob of bytes: Function pointers can't
   // have a thunk: Any calling convention other than `extern "C"` requires a
   // thunk
-  std::array<unsigned char, 8> __field0;
+  ::std::array<unsigned char, 8> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -80,7 +80,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   Opaque() = delete;
 
   // Synthesized tuple constructor
-  explicit Opaque(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit Opaque(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~Opaque() = default;
@@ -91,15 +91,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   Opaque(const Opaque&) = delete;
   Opaque& operator=(const Opaque&) = delete;
   Opaque(::crubit::UnsafeRelocateTag, Opaque&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=13
-  explicit operator std::int32_t();
+  explicit operator ::std::int32_t();
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=19
-  explicit operator std::int64_t();
+  explicit operator ::std::int64_t();
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=25
@@ -107,7 +107,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=32
-  explicit operator std::int16_t();
+  explicit operator ::std::int16_t();
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=38
@@ -116,7 +116,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/from/from.rs;l=11
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -142,7 +142,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   OpaqueRef(const OpaqueRef&) = delete;
   OpaqueRef& operator=(const OpaqueRef&) = delete;
   OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -178,9 +178,9 @@ static_assert(
 static_assert(
     alignof(NotFfiSafe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_constructible_v<::from::NotFfiSafe>);
-static_assert(std::is_trivially_move_assignable_v<::from::NotFfiSafe>);
+static_assert(::std::is_trivially_destructible_v<NotFfiSafe>);
+static_assert(::std::is_trivially_move_constructible_v<::from::NotFfiSafe>);
+static_assert(::std::is_trivially_move_assignable_v<::from::NotFfiSafe>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::from::NotFfiSafe* __ret_ptr);
 }
@@ -188,12 +188,12 @@ inline ::from::NotFfiSafe NotFfiSafe::create() {
   crubit::Slot<::from::NotFfiSafe> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(::from::NotFfiSafe*);
+extern "C" ::std::int32_t __crubit_thunk_into_ui32(::from::NotFfiSafe*);
 }
-inline NotFfiSafe::operator std::int32_t() {
+inline NotFfiSafe::operator ::std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
@@ -206,20 +206,20 @@ static_assert(
 static_assert(
     alignof(Opaque) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Opaque>);
-static_assert(std::is_trivially_move_constructible_v<::from::Opaque>);
-static_assert(std::is_trivially_move_assignable_v<::from::Opaque>);
+static_assert(::std::is_trivially_destructible_v<Opaque>);
+static_assert(::std::is_trivially_move_constructible_v<::from::Opaque>);
+static_assert(::std::is_trivially_move_assignable_v<::from::Opaque>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(::from::Opaque*);
+extern "C" ::std::int32_t __crubit_thunk_into_ui32(::from::Opaque*);
 }
-inline Opaque::operator std::int32_t() {
+inline Opaque::operator ::std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 namespace __crubit_internal {
-extern "C" std::int64_t __crubit_thunk_into_ui64(::from::Opaque*);
+extern "C" ::std::int64_t __crubit_thunk_into_ui64(::from::Opaque*);
 }
-inline Opaque::operator std::int64_t() {
+inline Opaque::operator ::std::int64_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }
@@ -233,9 +233,9 @@ inline Opaque::operator rs_std::StrRef() {
       __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(&self);
 }
 namespace __crubit_internal {
-extern "C" std::int16_t __crubit_thunk_into_ui16(::from::Opaque*);
+extern "C" ::std::int16_t __crubit_thunk_into_ui16(::from::Opaque*);
 }
-inline Opaque::operator std::int16_t() {
+inline Opaque::operator ::std::int16_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui16(&self);
 }
@@ -251,7 +251,7 @@ inline Opaque::operator ::from::OpaqueRef() {
   __crubit_internal::
       __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
           &self, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Opaque::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Opaque, __field0));
@@ -262,9 +262,9 @@ static_assert(
 static_assert(
     alignof(OpaqueRef) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<OpaqueRef>);
-static_assert(std::is_trivially_move_constructible_v<::from::OpaqueRef>);
-static_assert(std::is_trivially_move_assignable_v<::from::OpaqueRef>);
+static_assert(::std::is_trivially_destructible_v<OpaqueRef>);
+static_assert(::std::is_trivially_move_constructible_v<::from::OpaqueRef>);
+static_assert(::std::is_trivially_move_assignable_v<::from::OpaqueRef>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::from::OpaqueRef* __ret_ptr);
@@ -273,7 +273,7 @@ inline ::from::OpaqueRef OpaqueRef::create(rs_std::StrRef s) {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

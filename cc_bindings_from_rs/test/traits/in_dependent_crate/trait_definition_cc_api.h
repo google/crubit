@@ -43,14 +43,14 @@ MyStruct final {
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=10
-    std::int32_t y;
+    ::std::int32_t y;
   };
 
  private:
@@ -73,7 +73,7 @@ struct rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=14
-  static std::int32_t do_something(::trait_definition::MyStruct const& self);
+  static ::std::int32_t do_something(::trait_definition::MyStruct const& self);
 };
 
 namespace trait_definition {
@@ -84,11 +84,11 @@ static_assert(
 static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<MyStruct>);
 static_assert(
-    std::is_trivially_move_constructible_v<::trait_definition::MyStruct>);
+    ::std::is_trivially_move_constructible_v<::trait_definition::MyStruct>);
 static_assert(
-    std::is_trivially_move_assignable_v<::trait_definition::MyStruct>);
+    ::std::is_trivially_move_assignable_v<::trait_definition::MyStruct>);
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, y));
 }
@@ -96,11 +96,11 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 
 namespace trait_definition {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_udo_usomething(
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_udo_usomething(
     ::trait_definition::MyStruct const&);
 }
 }  // namespace trait_definition
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait>::
     do_something(::trait_definition::MyStruct const& self) {
   return trait_definition::__crubit_internal::

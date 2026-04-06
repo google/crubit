@@ -38,8 +38,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
   CustomIndex() = delete;
 
   // Synthesized tuple constructor
-  explicit CustomIndex(std::uintptr_t __field0)
-      : __field0(std::move(__field0)) {}
+  explicit CustomIndex(::std::uintptr_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~CustomIndex() = default;
@@ -51,17 +51,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
   CustomIndex(const CustomIndex&) = default;
   CustomIndex& operator=(const CustomIndex&) = default;
   CustomIndex(::crubit::UnsafeRelocateTag, CustomIndex&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=69
-  static ::rs_index::CustomIndex new_(std::uintptr_t index);
+  static ::rs_index::CustomIndex new_(::std::uintptr_t index);
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=67
-    std::uintptr_t __field0;
+    ::std::uintptr_t __field0;
   };
 
  private:
@@ -85,16 +85,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   IntPair(const IntPair&) = delete;
   IntPair& operator=(const IntPair&) = delete;
   IntPair(::crubit::UnsafeRelocateTag, IntPair&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=16
-  static ::rs_index::IntPair new_(std::int32_t x, std::int32_t y);
+  static ::rs_index::IntPair new_(::std::int32_t x, ::std::int32_t y);
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=22
-  std::int32_t const& operator[](std::uintptr_t index) const&;
+  ::std::int32_t const& operator[](::std::uintptr_t index) const&;
 
   // Error generating bindings for `<rs_index_golden::IntPair as
   // std::ops::Index<u64>>` defined at
@@ -104,11 +104,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=75
-  std::int32_t const& operator[](::rs_index::CustomIndex index) const&;
+  ::std::int32_t const& operator[](::rs_index::CustomIndex index) const&;
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=34
-  std::int32_t& operator[](std::uintptr_t index) &;
+  ::std::int32_t& operator[](::std::uintptr_t index) &;
 
   // Error generating bindings for `<rs_index_golden::IntPair as
   // std::ops::IndexMut<u64>>` defined at
@@ -118,17 +118,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=87
-  std::int32_t& operator[](::rs_index::CustomIndex index) &;
+  ::std::int32_t& operator[](::rs_index::CustomIndex index) &;
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=11
-    std::int32_t x;
+    ::std::int32_t x;
   };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=12
-    std::int32_t y;
+    ::std::int32_t y;
   };
 
  private:
@@ -155,17 +155,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
   Map(const Map&) = delete;
   Map& operator=(const Map&) = delete;
   Map(::crubit::UnsafeRelocateTag, Map&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=103
-  static ::rs_index::Map new_(std::uintptr_t row_size, std::uintptr_t col_size);
+  static ::rs_index::Map new_(::std::uintptr_t row_size,
+                              ::std::uintptr_t col_size);
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=113
   rs_std::StrRef operator[](
-      std::tuple<std::uintptr_t, std::uintptr_t> index) const&;
+      ::std::tuple<::std::uintptr_t, ::std::uintptr_t> index) const&;
 
   // Error generating bindings for `<rs_index_golden::Map as
   // std::ops::IndexMut<(usize, usize)>>` defined at
@@ -175,11 +176,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  std::array<unsigned char, 24> data;
+  ::std::array<unsigned char, 24> data;
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=98
-    std::uintptr_t row_size;
+    ::std::uintptr_t row_size;
   };
 
  private:
@@ -192,20 +193,22 @@ static_assert(
 static_assert(
     alignof(CustomIndex) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<CustomIndex>);
-static_assert(std::is_trivially_move_constructible_v<::rs_index::CustomIndex>);
-static_assert(std::is_trivially_move_assignable_v<::rs_index::CustomIndex>);
-static_assert(std::is_trivially_copy_constructible_v<::rs_index::CustomIndex>);
-static_assert(std::is_trivially_copy_assignable_v<::rs_index::CustomIndex>);
+static_assert(::std::is_trivially_destructible_v<CustomIndex>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::rs_index::CustomIndex>);
+static_assert(::std::is_trivially_move_assignable_v<::rs_index::CustomIndex>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::rs_index::CustomIndex>);
+static_assert(::std::is_trivially_copy_assignable_v<::rs_index::CustomIndex>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::uintptr_t,
+extern "C" void __crubit_thunk_new(::std::uintptr_t,
                                    ::rs_index::CustomIndex* __ret_ptr);
 }
-inline ::rs_index::CustomIndex CustomIndex::new_(std::uintptr_t index) {
+inline ::rs_index::CustomIndex CustomIndex::new_(::std::uintptr_t index) {
   crubit::Slot<::rs_index::CustomIndex> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(index, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void CustomIndex::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CustomIndex, __field0));
@@ -216,53 +219,54 @@ static_assert(
 static_assert(
     alignof(IntPair) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<IntPair>);
-static_assert(std::is_trivially_move_constructible_v<::rs_index::IntPair>);
-static_assert(std::is_trivially_move_assignable_v<::rs_index::IntPair>);
+static_assert(::std::is_trivially_destructible_v<IntPair>);
+static_assert(::std::is_trivially_move_constructible_v<::rs_index::IntPair>);
+static_assert(::std::is_trivially_move_assignable_v<::rs_index::IntPair>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::int32_t, std::int32_t,
+extern "C" void __crubit_thunk_new(::std::int32_t, ::std::int32_t,
                                    ::rs_index::IntPair* __ret_ptr);
 }
-inline ::rs_index::IntPair IntPair::new_(std::int32_t x, std::int32_t y) {
+inline ::rs_index::IntPair IntPair::new_(::std::int32_t x, ::std::int32_t y) {
   crubit::Slot<::rs_index::IntPair> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, y, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
-extern "C" std::int32_t const& $(__anon1)
-    __crubit_thunk_index_uusize(::rs_index::IntPair const&, std::uintptr_t);
+extern "C" ::std::int32_t const& $(__anon1)
+    __crubit_thunk_index_uusize(::rs_index::IntPair const&, ::std::uintptr_t);
 }
-inline std::int32_t const& IntPair::operator[](std::uintptr_t index) const& {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+inline ::std::int32_t const& IntPair::operator[](
+    ::std::uintptr_t index) const& {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_index_uusize(self, index);
 }
 namespace __crubit_internal {
-extern "C" std::int32_t const& $(__anon1)
+extern "C" ::std::int32_t const& $(__anon1)
     __crubit_thunk_index_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
         ::rs_index::IntPair const&, ::rs_index::CustomIndex*);
 }
-inline std::int32_t const& IntPair::operator[](
+inline ::std::int32_t const& IntPair::operator[](
     ::rs_index::CustomIndex index) const& {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
       __crubit_thunk_index_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
           self, &index);
 }
 namespace __crubit_internal {
-extern "C" std::int32_t& $(__anon1)
-    __crubit_thunk_index_umut_uusize(::rs_index::IntPair&, std::uintptr_t);
+extern "C" ::std::int32_t& $(__anon1)
+    __crubit_thunk_index_umut_uusize(::rs_index::IntPair&, ::std::uintptr_t);
 }
-inline std::int32_t& IntPair::operator[](std::uintptr_t index) & {
+inline ::std::int32_t& IntPair::operator[](::std::uintptr_t index) & {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_index_umut_uusize(self, index);
 }
 namespace __crubit_internal {
-extern "C" std::int32_t& $(__anon1)
+extern "C" ::std::int32_t& $(__anon1)
     __crubit_thunk_index_umut_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
         ::rs_index::IntPair&, ::rs_index::CustomIndex*);
 }
-inline std::int32_t& IntPair::operator[](::rs_index::CustomIndex index) & {
+inline ::std::int32_t& IntPair::operator[](::rs_index::CustomIndex index) & {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_index_umut_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
@@ -283,16 +287,16 @@ extern "C" void __crubit_thunk_drop(::rs_index::Map&);
 }
 inline Map::~Map() { __crubit_internal::__crubit_thunk_drop(*this); }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::uintptr_t, std::uintptr_t,
+extern "C" void __crubit_thunk_new(::std::uintptr_t, ::std::uintptr_t,
                                    ::rs_index::Map* __ret_ptr);
 }
-inline ::rs_index::Map Map::new_(std::uintptr_t row_size,
-                                 std::uintptr_t col_size) {
+inline ::rs_index::Map Map::new_(::std::uintptr_t row_size,
+                                 ::std::uintptr_t col_size) {
   crubit::Slot<::rs_index::Map> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(row_size, col_size,
                                         __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
 extern "C" rs_std::StrRef
@@ -300,11 +304,11 @@ __crubit_thunk_index_u_x00000028usize_x0000002c_x00000020usize_x00000029(
     ::rs_index::Map const&, void**);
 }
 inline rs_std::StrRef Map::operator[](
-    std::tuple<std::uintptr_t, std::uintptr_t> index) const& {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
-  auto&& index_0 = std::get<0>(index);
+    ::std::tuple<::std::uintptr_t, ::std::uintptr_t> index) const& {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  auto&& index_0 = ::std::get<0>(index);
   auto&& index_cabi_0 = index_0;
-  auto&& index_1 = std::get<1>(index);
+  auto&& index_1 = ::std::get<1>(index);
   auto&& index_cabi_1 = index_1;
   void* index_cabi[] = {&index_cabi_0, &index_cabi_1};
   return __crubit_internal::

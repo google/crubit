@@ -35,7 +35,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CppMovable();
 
   // Synthesized tuple constructor
-  explicit CppMovable(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit CppMovable(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // Drop::drop
   ~CppMovable();
@@ -48,12 +49,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CppMovable(const CppMovable&) = delete;
   CppMovable& operator=(const CppMovable&) = delete;
   CppMovable(::crubit::UnsafeRelocateTag, CppMovable&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=8
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -71,8 +72,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NotCppMovable() = delete;
 
   // Synthesized tuple constructor
-  explicit NotCppMovable(std::int32_t __field0)
-      : __field0(std::move(__field0)) {}
+  explicit NotCppMovable(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // Drop::drop
   ~NotCppMovable();
@@ -87,12 +88,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NotCppMovable(const NotCppMovable&) = delete;
   NotCppMovable& operator=(const NotCppMovable&) = delete;
   NotCppMovable(::crubit::UnsafeRelocateTag, NotCppMovable&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=17
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -131,7 +132,7 @@ inline CppMovable::~CppMovable() {
 }
 inline ::pass_by_value_unmovable::CppMovable::CppMovable(CppMovable&& other)
     : CppMovable() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline ::pass_by_value_unmovable::CppMovable& ::pass_by_value_unmovable::
     CppMovable::operator=(CppMovable&& other) {

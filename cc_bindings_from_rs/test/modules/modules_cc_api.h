@@ -27,7 +27,7 @@ namespace modules::basic_module {
 
 // Generated from:
 // cc_bindings_from_rs/test/modules/modules.rs;l=9
-std::int32_t add_i32(std::int32_t x, std::int32_t y);
+::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
 
 }  // namespace modules::basic_module
 
@@ -37,7 +37,7 @@ namespace [[deprecated]] deprecated_module {
 
 // Generated from:
 // cc_bindings_from_rs/test/modules/modules.rs;l=16
-[[deprecated]] std::int32_t add_i32(std::int32_t x, std::int32_t y);
+[[deprecated]] ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
 
 }  // namespace deprecated_module
 
@@ -56,7 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Foo() = delete;
 
   // Synthesized tuple constructor
-  explicit Foo(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit Foo(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
@@ -68,22 +68,23 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/modules/modules.rs;l=55
-  static ::modules::impl_in_separate_private_module::Foo create(std::int32_t i);
+  static ::modules::impl_in_separate_private_module::Foo create(
+      ::std::int32_t i);
 
   // Generated from:
   // cc_bindings_from_rs/test/modules/modules.rs;l=59
-  static std::int32_t into_i32(
+  static ::std::int32_t into_i32(
       ::modules::impl_in_separate_private_module::Foo s);
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/modules/modules.rs;l=48
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -121,9 +122,10 @@ namespace [[deprecated]] innermost_deprecated {
 namespace modules::basic_module {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_add_ui32(std::int32_t, std::int32_t);
+extern "C" ::std::int32_t __crubit_thunk_add_ui32(::std::int32_t,
+                                                  ::std::int32_t);
 }
-inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
+inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
 
@@ -134,9 +136,10 @@ namespace modules {
 namespace [[deprecated]] deprecated_module {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_add_ui32(std::int32_t, std::int32_t);
+extern "C" ::std::int32_t __crubit_thunk_add_ui32(::std::int32_t,
+                                                  ::std::int32_t);
 }
-inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
+inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
 
@@ -152,29 +155,29 @@ static_assert(
 static_assert(
     alignof(Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Foo>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<Foo>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::modules::impl_in_separate_private_module::Foo>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               ::modules::impl_in_separate_private_module::Foo>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);
+    ::std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);
 }
 inline ::modules::impl_in_separate_private_module::Foo Foo::create(
-    std::int32_t i) {
+    ::std::int32_t i) {
   crubit::Slot<::modules::impl_in_separate_private_module::Foo>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(i, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(
+extern "C" ::std::int32_t __crubit_thunk_into_ui32(
     ::modules::impl_in_separate_private_module::Foo*);
 }
-inline std::int32_t Foo::into_i32(
+inline ::std::int32_t Foo::into_i32(
     ::modules::impl_in_separate_private_module::Foo s) {
   return __crubit_internal::__crubit_thunk_into_ui32(&s);
 }

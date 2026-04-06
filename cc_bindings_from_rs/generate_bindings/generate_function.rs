@@ -197,7 +197,7 @@ fn cc_param_to_c_abi<'tcx>(
             // Needed to avoid `proc_macro2` interpolating `1usize` instead of `1`.
             let i_literal = Literal::usize_unsuffixed(i);
             statements.extend(quote! {
-                auto&& #tuple_element_name = std::get<#i_literal>(#cc_ident);
+                auto&& #tuple_element_name = ::std::get<#i_literal>(#cc_ident);
             });
             let converted_value = cc_param_to_c_abi(
                 db,
@@ -244,7 +244,7 @@ fn cc_param_to_c_abi<'tcx>(
         includes.insert(db.support_header("internal/slot.h"));
         let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
         statements.extend(quote! {
-            crubit::Slot #slot_name((std::move(#cc_ident)));
+            crubit::Slot #slot_name((::std::move(#cc_ident)));
         });
         quote! { #slot_name.Get() }
     })
@@ -296,7 +296,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 storage_statements.extend(quote! {
                     union #union_type {
                         constexpr #union_type() {}
-                        ~#union_type() { std::destroy_at(&this->val); }
+                        ~#union_type() { ::std::destroy_at(&this->val); }
                         #cpp_type val;
                     } #local_name;
                     auto* #storage_name = &#local_name.val;
@@ -304,7 +304,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 Ok(ReturnConversion {
                     storage_name: storage_name.clone(),
                     unpack_expr: quote! {
-                        std::move(#local_name.val)
+                        ::std::move(#local_name.val)
                     },
                 })
             }
@@ -362,7 +362,7 @@ fn cc_return_value_from_c_abi<'tcx>(
         });
         Ok(ReturnConversion {
             storage_name: storage_name.clone(),
-            unpack_expr: quote! { std::make_tuple(#(#unpack_exprs),*) },
+            unpack_expr: quote! { ::std::make_tuple(#(#unpack_exprs),*) },
         })
     } else {
         if recursive {
@@ -385,7 +385,7 @@ fn cc_return_value_from_c_abi<'tcx>(
         Ok(ReturnConversion {
             storage_name: storage_name.clone(),
             unpack_expr: quote! {
-                std::move(#local_name).AssumeInitAndTakeValue()
+                ::std::move(#local_name).AssumeInitAndTakeValue()
             },
         })
     }
@@ -587,7 +587,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
                     // the by-value method.
                     tokens.extend(quote! {
                         auto& #cc_name = const_cast<
-                            std::remove_cvref_t<decltype(*this)>&>(*this);
+                            ::std::remove_cvref_t<decltype(*this)>&>(*this);
                     });
                 } else {
                     tokens.extend(quote! { auto&& #cc_name = *this; });

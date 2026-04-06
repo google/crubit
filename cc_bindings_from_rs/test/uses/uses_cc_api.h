@@ -48,17 +48,17 @@ AliasOfExportedStruct final {
   AliasOfExportedStruct& operator=(const AliasOfExportedStruct&) = delete;
   AliasOfExportedStruct(::crubit::UnsafeRelocateTag,
                         AliasOfExportedStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/uses/uses.rs;l=26
-  static ::uses::AliasOfExportedStruct create(std::int32_t field);
+  static ::uses::AliasOfExportedStruct create(::std::int32_t field);
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/uses/uses.rs;l=22
-    std::int32_t field;
+    ::std::int32_t field;
   };
 
  private:
@@ -88,12 +88,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   Original(const Original&) = delete;
   Original& operator=(const Original&) = delete;
   Original(::crubit::UnsafeRelocateTag, Original&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/uses/uses.rs;l=64
-    std::int32_t field;
+    ::std::int32_t field;
   };
 
  private:
@@ -113,8 +113,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   OtherPublicName() = delete;
 
   // Synthesized tuple constructor
-  explicit OtherPublicName(std::int32_t __field0)
-      : __field0(std::move(__field0)) {}
+  explicit OtherPublicName(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~OtherPublicName() = default;
@@ -125,12 +125,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   OtherPublicName(const OtherPublicName&) = delete;
   OtherPublicName& operator=(const OtherPublicName&) = delete;
   OtherPublicName(::crubit::UnsafeRelocateTag, OtherPublicName&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/uses/uses.rs;l=74
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -145,7 +145,7 @@ namespace uses::a::c {
 //
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=109
-std::int32_t private_middle_path();
+::std::int32_t private_middle_path();
 
 }  // namespace uses::a::c
 
@@ -155,7 +155,7 @@ namespace uses::doc_hidden_test::visible {
 //
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=90
-std::int32_t private_fn();
+::std::int32_t private_fn();
 
 }  // namespace uses::doc_hidden_test::visible
 
@@ -165,7 +165,7 @@ namespace uses {
 //
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=14
-std::int32_t f();
+::std::int32_t f();
 
 }  // namespace uses
 
@@ -181,7 +181,7 @@ namespace uses {
 
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=31
-std::int32_t private_fn();
+::std::int32_t private_fn();
 
 }  // namespace uses
 
@@ -215,21 +215,21 @@ static_assert(
 static_assert(
     alignof(AliasOfExportedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<AliasOfExportedStruct>);
+static_assert(::std::is_trivially_destructible_v<AliasOfExportedStruct>);
 static_assert(
-    std::is_trivially_move_constructible_v<::uses::AliasOfExportedStruct>);
+    ::std::is_trivially_move_constructible_v<::uses::AliasOfExportedStruct>);
 static_assert(
-    std::is_trivially_move_assignable_v<::uses::AliasOfExportedStruct>);
+    ::std::is_trivially_move_assignable_v<::uses::AliasOfExportedStruct>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(std::int32_t,
+extern "C" void __crubit_thunk_create(::std::int32_t,
                                       ::uses::AliasOfExportedStruct* __ret_ptr);
 }
 inline ::uses::AliasOfExportedStruct AliasOfExportedStruct::create(
-    std::int32_t field) {
+    ::std::int32_t field) {
   crubit::Slot<::uses::AliasOfExportedStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(field, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void AliasOfExportedStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(AliasOfExportedStruct, field));
@@ -256,9 +256,9 @@ static_assert(
 static_assert(
     alignof(Original) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Original>);
-static_assert(std::is_trivially_move_constructible_v<::uses::Original>);
-static_assert(std::is_trivially_move_assignable_v<::uses::Original>);
+static_assert(::std::is_trivially_destructible_v<Original>);
+static_assert(::std::is_trivially_move_constructible_v<::uses::Original>);
+static_assert(::std::is_trivially_move_assignable_v<::uses::Original>);
 inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, field));
 }
@@ -276,9 +276,10 @@ static_assert(
 static_assert(
     alignof(OtherPublicName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<OtherPublicName>);
-static_assert(std::is_trivially_move_constructible_v<::uses::OtherPublicName>);
-static_assert(std::is_trivially_move_assignable_v<::uses::OtherPublicName>);
+static_assert(::std::is_trivially_destructible_v<OtherPublicName>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::uses::OtherPublicName>);
+static_assert(::std::is_trivially_move_assignable_v<::uses::OtherPublicName>);
 inline void OtherPublicName::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OtherPublicName, __field0));
 }
@@ -298,9 +299,9 @@ using XFromExternCrate CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") =
 namespace uses::a::c {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_private_umiddle_upath();
+extern "C" ::std::int32_t __crubit_thunk_private_umiddle_upath();
 }
-inline std::int32_t private_middle_path() {
+inline ::std::int32_t private_middle_path() {
   return __crubit_internal::__crubit_thunk_private_umiddle_upath();
 }
 
@@ -313,9 +314,9 @@ using ::uses::doc_hidden_test::visible::private_fn;
 namespace uses::doc_hidden_test::visible {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_private_ufn();
+extern "C" ::std::int32_t __crubit_thunk_private_ufn();
 }
-inline std::int32_t private_fn() {
+inline ::std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
 
@@ -328,9 +329,9 @@ using ::uses::f;
 namespace uses {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_f();
+extern "C" ::std::int32_t __crubit_thunk_f();
 }
-inline std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
+inline ::std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 
 }  // namespace uses
 
@@ -348,9 +349,9 @@ inline void other_public_name() {
 namespace uses {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_private_ufn();
+extern "C" ::std::int32_t __crubit_thunk_private_ufn();
 }
-inline std::int32_t private_fn() {
+inline ::std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
 
@@ -365,7 +366,7 @@ inline ::extern_crate::X return_x() {
   crubit::Slot<::extern_crate::X> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_ux(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -375,7 +376,7 @@ inline ::extern_crate::Y return_y() {
   crubit::Slot<::extern_crate::Y> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uy(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace uses

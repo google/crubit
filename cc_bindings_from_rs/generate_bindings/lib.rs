@@ -43,8 +43,8 @@ use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
 };
 use database::{
-    AdtCoreBindings, ExportedPath, FineGrainedFeature, FullyQualifiedName, NoMoveOrAssign,
-    PublicPaths, TypeLocation, UnqualifiedName,
+    rename_clang_builtin_macros, AdtCoreBindings, ExportedPath, FineGrainedFeature,
+    FullyQualifiedName, NoMoveOrAssign, PublicPaths, TypeLocation, UnqualifiedName,
 };
 pub use database::{BindingsGenerator, CopyCtorStyle, IncludeGuard, MoveCtorStyle};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
@@ -412,6 +412,7 @@ fn public_paths_by_def_id(
     use std::collections::vec_deque::VecDeque;
 
     let tcx = db.tcx();
+    let crate_name = tcx.crate_name(crate_num);
     let mut visible_parent_map = HashMap::default();
 
     let bfs_queue = &mut VecDeque::new();
@@ -476,6 +477,20 @@ fn public_paths_by_def_id(
             if let crate::ty::TyKind::Adt(def, _) = underlying_type.kind() {
                 type_alias_def_id = Some(def_id);
                 def_id = def.did();
+            }
+        }
+
+        // Don't include paths for definitions inside of `std::os`.
+        // These collide with definitions in the C++ standard library that provide OS functionality.
+        if crate_name.as_str() == "std" {
+            let path = tcx
+                .def_path(def_id)
+                .data
+                .iter()
+                .map(|seg| seg.as_sym(/*verbose=*/ false))
+                .collect::<Vec<_>>();
+            if path.first().is_some_and(|p| p.as_str() == "os") {
+                return;
             }
         }
 
@@ -687,18 +702,6 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         if matches!(&*path_strs, ["dsl"]) {
             return None;
         }
-    }
-
-    // Checks for a list of known clang builtin macros and renames their namespaces to avoid
-    // collisions. Generating a namespace with the same name as a macro causes the namespace to
-    // expand during preprocessing, producing an ill-formed program.
-    fn rename_clang_builtin_macros(ns: Rc<str>) -> Rc<str> {
-        let builtin_macros: HashSet<&str> =
-            ["unix", "linux", "WIN32", "WINNT", "WIN64", "spirv", "sun"].into_iter().collect();
-        if builtin_macros.contains(ns.as_ref()) {
-            return Rc::from(format!("rs_{}", ns.as_ref()));
-        }
-        ns
     }
 
     let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
@@ -1218,8 +1221,8 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                 });
                 let cc_details = CcSnippet::with_include(
                     quote! {
-                        static_assert(std::is_trivially_copy_constructible_v<#qualified_adt_name>);
-                        static_assert(std::is_trivially_copy_assignable_v<#qualified_adt_name>);
+                        static_assert(::std::is_trivially_copy_constructible_v<#qualified_adt_name>);
+                        static_assert(::std::is_trivially_copy_assignable_v<#qualified_adt_name>);
                     },
                     CcInclude::type_traits(),
                 );
@@ -1350,7 +1353,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
                 let tokens = quote! {
                     inline #qualified_adt_name::#adt_cc_name(#adt_cc_name&& other)
                             : #adt_cc_name() {
-                        *this = std::move(other);
+                        *this = ::std::move(other);
                     }
                     inline #qualified_adt_name& #qualified_adt_name::operator=(#adt_cc_name&& other) {
                         crubit::MemSwap(*this, other);
@@ -1396,8 +1399,8 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
                 });
                 let cc_details = CcSnippet::with_include(
                     quote! {
-                        static_assert(std::is_trivially_move_constructible_v<#qualified_adt_name>);
-                        static_assert(std::is_trivially_move_assignable_v<#qualified_adt_name>);
+                        static_assert(::std::is_trivially_move_constructible_v<#qualified_adt_name>);
+                        static_assert(::std::is_trivially_move_assignable_v<#qualified_adt_name>);
                     },
                     CcInclude::type_traits(),
                 );
@@ -2071,16 +2074,14 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             .map(|(node, tokens)| match node {
                 Node::Def(def_id) => (
                     tcx.opt_parent(def_id),
-                    NamespaceQualifier::new(
-                        cpp_top_level_ns.iter().cloned().chain(
-                            db.symbol_canonical_name(def_id)
-                                .unwrap_or_else(|| {
-                                    panic!("Exported item {def_id:?} should have a canonical name")
-                                })
-                                .cpp_ns_path
-                                .namespaces,
-                        ),
-                    ),
+                    NamespaceQualifier::new(cpp_top_level_ns.iter().cloned().chain({
+                        db.symbol_canonical_name(def_id)
+                            .unwrap_or_else(|| {
+                                panic!("Exported item {def_id:?} should have a canonical name")
+                            })
+                            .cpp_ns_path
+                            .namespaces
+                    })),
                     tokens,
                 ),
                 // Specializations always live in the top-level namespace.

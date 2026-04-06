@@ -41,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   NeverStruct(const NeverStruct&) = delete;
   NeverStruct& operator=(const NeverStruct&) = delete;
   NeverStruct(::crubit::UnsafeRelocateTag, NeverStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -56,7 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/never/never.rs;l=21
-    std::int32_t _non_zst_field;
+    ::std::int32_t _non_zst_field;
   };
 
  private:
@@ -83,9 +83,9 @@ extern "C" void __crubit_thunk_default(::never::NeverStruct* __ret_ptr);
 inline ::never::NeverStruct::NeverStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<NeverStruct>);
-static_assert(std::is_trivially_move_constructible_v<::never::NeverStruct>);
-static_assert(std::is_trivially_move_assignable_v<::never::NeverStruct>);
+static_assert(::std::is_trivially_destructible_v<NeverStruct>);
+static_assert(::std::is_trivially_move_constructible_v<::never::NeverStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::never::NeverStruct>);
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_associated_ufn_unever_ureturn();
 }

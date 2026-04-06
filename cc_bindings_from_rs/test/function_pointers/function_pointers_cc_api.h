@@ -60,12 +60,12 @@ CStruct final {
   CStruct(const CStruct&) = default;
   CStruct& operator=(const CStruct&) = default;
   CStruct(::crubit::UnsafeRelocateTag, CStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=58
-    std::int32_t field;
+    ::std::int32_t field;
   };
 
  private:
@@ -94,7 +94,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   HasFnPtrField(const HasFnPtrField&) = default;
   HasFnPtrField& operator=(const HasFnPtrField&) = default;
   HasFnPtrField(::crubit::UnsafeRelocateTag, HasFnPtrField&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -104,7 +104,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     // Generated from:
     // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=13
-    crubit::type_identity_t<std::int32_t(std::int32_t)>* ptr;
+    crubit::type_identity_t<::std::int32_t(::std::int32_t)>* ptr;
   };
 
  private:
@@ -121,8 +121,8 @@ void call_fn_ptr_no_args_or_return(crubit::type_identity_t<void()>& fn_ptr);
 //
 // Generated from:
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=40
-std::int32_t call_fn_ptr_with_five(
-    crubit::type_identity_t<std::int32_t(std::int32_t)>& fn_ptr);
+::std::int32_t call_fn_ptr_with_five(
+    crubit::type_identity_t<::std::int32_t(::std::int32_t)>& fn_ptr);
 
 // Error generating bindings for
 // `function_pointers_golden::call_fn_ptr_with_five_reference` defined at
@@ -147,9 +147,9 @@ std::int32_t call_fn_ptr_with_five(
 //
 // Generated from:
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=62
-std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
-    crubit::type_identity_t<std::int32_t(::function_pointers::CStruct const*)>&
-        fn_ptr);
+::std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
+    crubit::type_identity_t<
+        ::std::int32_t(::function_pointers::CStruct const*)>& fn_ptr);
 
 // Error generating bindings for
 // `function_pointers_golden::call_fn_ptr_with_repr_c_struct_ref` defined at
@@ -176,15 +176,15 @@ extern "C" void __crubit_thunk_default(::function_pointers::CStruct* __ret_ptr);
 inline ::function_pointers::CStruct::CStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<CStruct>);
+static_assert(::std::is_trivially_destructible_v<CStruct>);
 static_assert(
-    std::is_trivially_move_constructible_v<::function_pointers::CStruct>);
+    ::std::is_trivially_move_constructible_v<::function_pointers::CStruct>);
 static_assert(
-    std::is_trivially_move_assignable_v<::function_pointers::CStruct>);
+    ::std::is_trivially_move_assignable_v<::function_pointers::CStruct>);
 static_assert(
-    std::is_trivially_copy_constructible_v<::function_pointers::CStruct>);
+    ::std::is_trivially_copy_constructible_v<::function_pointers::CStruct>);
 static_assert(
-    std::is_trivially_copy_assignable_v<::function_pointers::CStruct>);
+    ::std::is_trivially_copy_assignable_v<::function_pointers::CStruct>);
 inline void CStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CStruct, field));
 }
@@ -194,15 +194,15 @@ static_assert(
 static_assert(
     alignof(HasFnPtrField) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<HasFnPtrField>);
+static_assert(::std::is_trivially_destructible_v<HasFnPtrField>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::function_pointers::HasFnPtrField>);
 static_assert(
-    std::is_trivially_move_constructible_v<::function_pointers::HasFnPtrField>);
+    ::std::is_trivially_move_assignable_v<::function_pointers::HasFnPtrField>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::function_pointers::HasFnPtrField>);
 static_assert(
-    std::is_trivially_move_assignable_v<::function_pointers::HasFnPtrField>);
-static_assert(
-    std::is_trivially_copy_constructible_v<::function_pointers::HasFnPtrField>);
-static_assert(
-    std::is_trivially_copy_assignable_v<::function_pointers::HasFnPtrField>);
+    ::std::is_trivially_copy_assignable_v<::function_pointers::HasFnPtrField>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_uadd_uten(
     ::function_pointers::HasFnPtrField* __ret_ptr);
@@ -212,7 +212,7 @@ inline ::function_pointers::HasFnPtrField HasFnPtrField::with_add_ten() {
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_with_uadd_uten(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasFnPtrField::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasFnPtrField, ptr));
@@ -228,23 +228,23 @@ inline void call_fn_ptr_no_args_or_return(
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_call_ufn_uptr_uwith_ufive(
-    crubit::type_identity_t<std::int32_t(std::int32_t)>&);
+extern "C" ::std::int32_t __crubit_thunk_call_ufn_uptr_uwith_ufive(
+    crubit::type_identity_t<::std::int32_t(::std::int32_t)>&);
 }
-inline std::int32_t call_fn_ptr_with_five(
-    crubit::type_identity_t<std::int32_t(std::int32_t)>& fn_ptr) {
+inline ::std::int32_t call_fn_ptr_with_five(
+    crubit::type_identity_t<::std::int32_t(::std::int32_t)>& fn_ptr) {
   return __crubit_internal::__crubit_thunk_call_ufn_uptr_uwith_ufive(fn_ptr);
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t
+extern "C" ::std::int32_t
 __crubit_thunk_call_ufn_uptr_uwith_urepr_uc_ustruct_uptr_ucontaining_useven(
     crubit::type_identity_t<
-        std::int32_t(::function_pointers::CStruct const*)>&);
+        ::std::int32_t(::function_pointers::CStruct const*)>&);
 }
-inline std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
-    crubit::type_identity_t<std::int32_t(::function_pointers::CStruct const*)>&
-        fn_ptr) {
+inline ::std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
+    crubit::type_identity_t<
+        ::std::int32_t(::function_pointers::CStruct const*)>& fn_ptr) {
   return __crubit_internal::
       __crubit_thunk_call_ufn_uptr_uwith_urepr_uc_ustruct_uptr_ucontaining_useven(
           fn_ptr);

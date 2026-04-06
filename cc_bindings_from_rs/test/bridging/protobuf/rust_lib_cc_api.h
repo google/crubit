@@ -46,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   FooService(const FooService&) = delete;
   FooService& operator=(const FooService&) = delete;
   FooService(::crubit::UnsafeRelocateTag, FooService&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -71,7 +71,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   // Field type has been replaced with a blob of bytes: Field is a bridged type
   // and might not be layout-compatible
   //                                     with the C++ type (b/400633609)
-  std::array<unsigned char, 8> stats;
+  ::std::array<unsigned char, 8> stats;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -96,7 +96,7 @@ inline FooService::~FooService() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 inline ::rust_lib::FooService::FooService(FooService&& other) : FooService() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline ::rust_lib::FooService& ::rust_lib::FooService::operator=(
     FooService&& other) {
@@ -124,13 +124,13 @@ inline const ::foo_service::FooRequestStats* FooService::request_stats()
   auto&& self = *this;
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
     const ::foo_service::FooRequestStats* val;
   } __return_value_ret_val_holder;
   auto* __return_value_storage = &__return_value_ret_val_holder.val;
   __crubit_internal::__crubit_thunk_request_ustats(self,
                                                    __return_value_storage);
-  return std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder.val);
 }
 
 namespace __crubit_internal {
@@ -141,13 +141,13 @@ inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
   auto&& self = *this;
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
     ::foo_service::FooRequestStats val;
   } __return_value_ret_val_holder;
   auto* __return_value_storage = &__return_value_ret_val_holder.val;
   __crubit_internal::__crubit_thunk_clone_urequest_ustats(
       self, __return_value_storage);
-  return std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder.val);
 }
 
 namespace __crubit_internal {

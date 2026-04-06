@@ -41,11 +41,11 @@ ReprCUnion final {
   ReprCUnion(const ReprCUnion&) = delete;
   ReprCUnion& operator=(const ReprCUnion&) = delete;
   ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // examples/rust/union/example.rs;l=7
-  std::int32_t a;
+  ::std::int32_t a;
   // Generated from:
   // examples/rust/union/example.rs;l=8
   double b;
@@ -66,10 +66,11 @@ extern "C" void __crubit_thunk_default(::example_crate::ReprCUnion* __ret_ptr);
 inline ::example_crate::ReprCUnion::ReprCUnion() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<ReprCUnion>);
+static_assert(::std::is_trivially_destructible_v<ReprCUnion>);
 static_assert(
-    std::is_trivially_move_constructible_v<::example_crate::ReprCUnion>);
-static_assert(std::is_trivially_move_assignable_v<::example_crate::ReprCUnion>);
+    ::std::is_trivially_move_constructible_v<::example_crate::ReprCUnion>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::example_crate::ReprCUnion>);
 inline void ReprCUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ReprCUnion, a));
   static_assert(0 == offsetof(ReprCUnion, b));

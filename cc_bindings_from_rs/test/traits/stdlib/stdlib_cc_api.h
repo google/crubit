@@ -42,12 +42,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=17
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -73,9 +73,9 @@ extern "C" void __crubit_thunk_default(::stdlib::MyStruct* __ret_ptr);
 inline ::stdlib::MyStruct::MyStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<MyStruct>);
-static_assert(std::is_trivially_move_constructible_v<::stdlib::MyStruct>);
-static_assert(std::is_trivially_move_assignable_v<::stdlib::MyStruct>);
+static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_move_constructible_v<::stdlib::MyStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::stdlib::MyStruct>);
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
 }

@@ -70,7 +70,7 @@ inline ::direct::Transitive direct_to_transitive(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_direct_uto_utransitive(
       direct, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -83,7 +83,7 @@ inline ::direct::TransitiveGlobA direct_to_transitive_glob_a(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_direct_uto_utransitive_uglob_ua(
       direct, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -97,7 +97,7 @@ inline ::direct::Transitive direct_to_transitive_private_type_alias(
   __crubit_internal::
       __crubit_thunk_direct_uto_utransitive_uprivate_utype_ualias(
           direct, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -110,7 +110,7 @@ inline ::direct::Transitive direct_to_transitive_use_alias(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_direct_uto_utransitive_uuse_ualias(
       direct, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -123,7 +123,7 @@ inline ::direct::Transitive direct_to_transittive_type_alias(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_direct_uto_utransittive_utype_ualias(
       direct, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace transitive_reexports

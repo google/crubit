@@ -153,16 +153,16 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "bool", cc:  "bool"),
         case!(rs: "f32", cc: "float"),
         case!(rs: "f64", cc: "double"),
-        case!(rs: "i8", cc: "std::int8_t", includes: ["<cstdint>"]),
-        case!(rs: "i16", cc:  "std::int16_t", includes: ["<cstdint>"]),
-        case!(rs: "i32", cc:  "std::int32_t", includes: ["<cstdint>"]),
-        case!(rs: "i64", cc:  "std::int64_t", includes: ["<cstdint>"]),
-        case!(rs: "isize", cc: "std::intptr_t", includes: ["<cstdint>"]),
-        case!(rs: "u8", cc: "std::uint8_t", includes: ["<cstdint>"]),
-        case!(rs: "u16", cc: "std::uint16_t", includes: ["<cstdint>"]),
-        case!(rs: "u32", cc: "std::uint32_t", includes: ["<cstdint>"]),
-        case!(rs: "u64", cc: "std::uint64_t", includes: ["<cstdint>"]),
-        case!(rs: "usize", cc: "std::uintptr_t", includes: ["<cstdint>"]),
+        case!(rs: "i8", cc: "::std::int8_t", includes: ["<cstdint>"]),
+        case!(rs: "i16", cc:  "::std::int16_t", includes: ["<cstdint>"]),
+        case!(rs: "i32", cc:  "::std::int32_t", includes: ["<cstdint>"]),
+        case!(rs: "i64", cc:  "::std::int64_t", includes: ["<cstdint>"]),
+        case!(rs: "isize", cc: "::std::intptr_t", includes: ["<cstdint>"]),
+        case!(rs: "u8", cc: "::std::uint8_t", includes: ["<cstdint>"]),
+        case!(rs: "u16", cc: "::std::uint16_t", includes: ["<cstdint>"]),
+        case!(rs: "u32", cc: "::std::uint32_t", includes: ["<cstdint>"]),
+        case!(rs: "u64", cc: "::std::uint64_t", includes: ["<cstdint>"]),
+        case!(rs: "usize", cc: "::std::uintptr_t", includes: ["<cstdint>"]),
         case!(
             rs: "char",
             cc: "rs_std::char_",
@@ -171,32 +171,32 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
         case!(rs: "SomeEnum", cc: "::rust_out::SomeEnum", includes: [], prereq_def: "SomeEnum"),
         case!(rs: "SomeUnion", cc: "::rust_out::SomeUnion", includes: [], prereq_def: "SomeUnion"),
-        case!(rs: "*const i32", cc: "std :: int32_t const *", includes: ["<cstdint>"]),
-        case!(rs: "*mut i32", cc: "std :: int32_t *", includes: ["<cstdint>"]),
+        case!(rs: "*const i32", cc: "::std :: int32_t const *", includes: ["<cstdint>"]),
+        case!(rs: "*mut i32", cc: "::std :: int32_t *", includes: ["<cstdint>"]),
         case!(
             rs: "&'static i32",
-            cc: "std :: int32_t const * $static crubit_nonnull",
+            cc: "::std :: int32_t const * $static crubit_nonnull",
             includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
         ),
         case!(
             rs: "&'static mut i32",
-            cc: "std :: int32_t * $static crubit_nonnull",
+            cc: "::std :: int32_t * $static crubit_nonnull",
             includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
         ),
         case!(
             rs: "&'static &'static i32",
-            cc: "std :: int32_t const * $ static crubit_nonnull const * $ static crubit_nonnull",
+            cc: "::std :: int32_t const * $ static crubit_nonnull const * $ static crubit_nonnull",
             includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
         ),
         // Slice pointers:
         case!(
             rs: "*const [i8]",
-            cc: "rs_std::SliceRef<const std::int8_t>",
+            cc: "rs_std::SliceRef< const ::std::int8_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [i64]",
-            cc: "rs_std::SliceRef<std::int64_t>",
+            cc: "rs_std::SliceRef< ::std::int64_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
@@ -208,12 +208,12 @@ fn test_format_ty_for_cc_successes() {
         ),
         case!(
             rs: "&'static [i32]",
-            cc: "rs_std::SliceRef<const std::int32_t>",
+            cc: "rs_std::SliceRef< const ::std::int32_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [i32]",
-            cc: "rs_std::SliceRef<std::int32_t>",
+            cc: "rs_std::SliceRef< ::std::int32_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
@@ -260,43 +260,43 @@ fn test_format_ty_for_cc_successes() {
         // References to MaybeUninit:
         case!(
             rs: "*const std::mem::MaybeUninit<i32>",
-            cc: "std :: int32_t const *",
+            cc: "::std :: int32_t const *",
             includes: ["<cstdint>"]
         ),
         case!(
             rs: "&mut std::mem::MaybeUninit<i32>",
-            cc: "std :: int32_t &",
+            cc: "::std :: int32_t &",
             includes: ["<cstdint>"]
         ),
         case!(
             rs: "()",
-            cc: "std::tuple < >",
+            cc: "::std::tuple < >",
             includes: ["<tuple>"]
         ),
         case!(
             rs: "(i32,)",
-            cc: "std::tuple<std::int32_t>",
+            cc: "::std::tuple < ::std::int32_t>",
             includes: ["<cstdint>", "<tuple>"]
         ),
         case!(
             rs: "(i32, i32)",
-            cc: "std::tuple<std::int32_t, std::int32_t>",
+            cc: "::std::tuple < ::std::int32_t, ::std::int32_t>",
             includes: ["<cstdint>", "<tuple>"]
         ),
         // TyKind::Array
         case!(
             rs: "*mut [i32; 42]",
-            cc: "std::array<std::int32_t, 42> *",
+            cc: "::std::array < ::std::int32_t, 42> *",
             includes: ["<array>", "<cstdint>"]
         ),
         case!(
             rs: "*const [i32; 42]",
-            cc: "std::array<std::int32_t, 42> const *",
+            cc: "::std::array < ::std::int32_t, 42> const *",
             includes: ["<array>", "<cstdint>"]
         ),
         case!(
             rs: "[i32; 42]",
-            cc: "std::array<std::int32_t, 42>",
+            cc: "::std::array < ::std::int32_t, 42>",
             includes: ["<array>", "<cstdint>"]
         ),
     ];

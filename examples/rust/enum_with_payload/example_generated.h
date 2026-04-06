@@ -44,15 +44,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   //
   // Generated from:
   // examples/rust/enum_with_payload/example.rs;l=10
-  static ::example_crate::Color MakeGrayscale(std::uint8_t __param_0);
+  static ::example_crate::Color MakeGrayscale(::std::uint8_t __param_0);
 
   //  Red, Green, and Blue values from 0 to 255
   //
   // Generated from:
   // examples/rust/enum_with_payload/example.rs;l=12
-  static ::example_crate::Color MakeRgb(std::uint8_t __param_0,
-                                        std::uint8_t __param_1,
-                                        std::uint8_t __param_2);
+  static ::example_crate::Color MakeRgb(::std::uint8_t __param_0,
+                                        ::std::uint8_t __param_1,
+                                        ::std::uint8_t __param_2);
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
@@ -64,17 +64,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   Color(const Color&) = default;
   Color& operator=(const Color&) = default;
   Color(::crubit::UnsafeRelocateTag, Color&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  std::array<unsigned char, 4> __opaque_blob_of_bytes;
+  ::std::array<unsigned char, 4> __opaque_blob_of_bytes;
 
  private:
   struct PrivateBytesTag {};
-  constexpr Color(PrivateBytesTag, std::array<unsigned char, 4> bytes)
+  constexpr Color(PrivateBytesTag, ::std::array<unsigned char, 4> bytes)
       : __opaque_blob_of_bytes(bytes) {}
 
  private:
@@ -94,35 +94,36 @@ inline constexpr Color Color::MakeTransparent() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_Grayscale(std::uint8_t,
+extern "C" void __crubit_thunk_Grayscale(::std::uint8_t,
                                          ::example_crate::Color* __ret_ptr);
 }
-inline ::example_crate::Color Color::MakeGrayscale(std::uint8_t __param_0) {
+inline ::example_crate::Color Color::MakeGrayscale(::std::uint8_t __param_0) {
   crubit::Slot<::example_crate::Color> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_Grayscale(__param_0,
                                               __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_Rgb(std::uint8_t, std::uint8_t, std::uint8_t,
+extern "C" void __crubit_thunk_Rgb(::std::uint8_t, ::std::uint8_t,
+                                   ::std::uint8_t,
                                    ::example_crate::Color* __ret_ptr);
 }
-inline ::example_crate::Color Color::MakeRgb(std::uint8_t __param_0,
-                                             std::uint8_t __param_1,
-                                             std::uint8_t __param_2) {
+inline ::example_crate::Color Color::MakeRgb(::std::uint8_t __param_0,
+                                             ::std::uint8_t __param_1,
+                                             ::std::uint8_t __param_2) {
   crubit::Slot<::example_crate::Color> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_Rgb(__param_0, __param_1, __param_2,
                                         __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-static_assert(std::is_trivially_destructible_v<Color>);
-static_assert(std::is_trivially_move_constructible_v<::example_crate::Color>);
-static_assert(std::is_trivially_move_assignable_v<::example_crate::Color>);
-static_assert(std::is_trivially_copy_constructible_v<::example_crate::Color>);
-static_assert(std::is_trivially_copy_assignable_v<::example_crate::Color>);
+static_assert(::std::is_trivially_destructible_v<Color>);
+static_assert(::std::is_trivially_move_constructible_v<::example_crate::Color>);
+static_assert(::std::is_trivially_move_assignable_v<::example_crate::Color>);
+static_assert(::std::is_trivially_copy_constructible_v<::example_crate::Color>);
+static_assert(::std::is_trivially_copy_assignable_v<::example_crate::Color>);
 inline void Color::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
 }

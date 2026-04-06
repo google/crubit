@@ -38,7 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   Convert() = delete;
 
   // Synthesized tuple constructor
-  explicit Convert(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit Convert(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~Convert() = default;
@@ -49,15 +49,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   Convert(const Convert&) = delete;
   Convert& operator=(const Convert&) = delete;
   Convert(::crubit::UnsafeRelocateTag, Convert&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=16
-  explicit operator std::int32_t();
+  explicit operator ::std::int32_t();
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=23
-  explicit operator std::int64_t();
+  explicit operator ::std::int64_t();
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=30
@@ -65,12 +65,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=38
-  explicit operator std::int16_t();
+  explicit operator ::std::int16_t();
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/into/into.rs;l=14
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -88,8 +88,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   ConvertModule() = delete;
 
   // Synthesized tuple constructor
-  explicit ConvertModule(std::int32_t __field0)
-      : __field0(std::move(__field0)) {}
+  explicit ConvertModule(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~ConvertModule() = default;
@@ -100,20 +100,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   ConvertModule(const ConvertModule&) = delete;
   ConvertModule& operator=(const ConvertModule&) = delete;
   ConvertModule(::crubit::UnsafeRelocateTag, ConvertModule&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=91
-  explicit operator std::int32_t();
+  explicit operator ::std::int32_t();
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=103
-  explicit operator std::int64_t();
+  explicit operator ::std::int64_t();
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/into/into.rs;l=85
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -139,7 +139,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   ConvertRef(const ConvertRef&) = delete;
   ConvertRef& operator=(const ConvertRef&) = delete;
   ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -192,14 +192,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe(const NotFfiSafe&) = delete;
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   // Field type has been replaced with a blob of bytes: Function pointers can't
   // have a thunk: Any calling convention other than `extern "C"` requires a
   // thunk
-  std::array<unsigned char, 8> __field0;
+  ::std::array<unsigned char, 8> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -211,20 +211,20 @@ static_assert(
 static_assert(
     alignof(Convert) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Convert>);
-static_assert(std::is_trivially_move_constructible_v<::into::Convert>);
-static_assert(std::is_trivially_move_assignable_v<::into::Convert>);
+static_assert(::std::is_trivially_destructible_v<Convert>);
+static_assert(::std::is_trivially_move_constructible_v<::into::Convert>);
+static_assert(::std::is_trivially_move_assignable_v<::into::Convert>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(::into::Convert*);
+extern "C" ::std::int32_t __crubit_thunk_into_ui32(::into::Convert*);
 }
-inline Convert::operator std::int32_t() {
+inline Convert::operator ::std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 namespace __crubit_internal {
-extern "C" std::int64_t __crubit_thunk_into_ui64(::into::Convert*);
+extern "C" ::std::int64_t __crubit_thunk_into_ui64(::into::Convert*);
 }
-inline Convert::operator std::int64_t() {
+inline Convert::operator ::std::int64_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }
@@ -238,9 +238,9 @@ inline Convert::operator rs_std::StrRef() {
       __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(&self);
 }
 namespace __crubit_internal {
-extern "C" std::int16_t __crubit_thunk_into_ui16(::into::Convert*);
+extern "C" ::std::int16_t __crubit_thunk_into_ui16(::into::Convert*);
 }
-inline Convert::operator std::int16_t() {
+inline Convert::operator ::std::int16_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui16(&self);
 }
@@ -253,20 +253,20 @@ static_assert(
 static_assert(
     alignof(ConvertModule) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<ConvertModule>);
-static_assert(std::is_trivially_move_constructible_v<::into::ConvertModule>);
-static_assert(std::is_trivially_move_assignable_v<::into::ConvertModule>);
+static_assert(::std::is_trivially_destructible_v<ConvertModule>);
+static_assert(::std::is_trivially_move_constructible_v<::into::ConvertModule>);
+static_assert(::std::is_trivially_move_assignable_v<::into::ConvertModule>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(::into::ConvertModule*);
+extern "C" ::std::int32_t __crubit_thunk_into_ui32(::into::ConvertModule*);
 }
-inline ConvertModule::operator std::int32_t() {
+inline ConvertModule::operator ::std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 namespace __crubit_internal {
-extern "C" std::int64_t __crubit_thunk_into_ui64(::into::ConvertModule*);
+extern "C" ::std::int64_t __crubit_thunk_into_ui64(::into::ConvertModule*);
 }
-inline ConvertModule::operator std::int64_t() {
+inline ConvertModule::operator ::std::int64_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }
@@ -279,9 +279,9 @@ static_assert(
 static_assert(
     alignof(ConvertRef) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<ConvertRef>);
-static_assert(std::is_trivially_move_constructible_v<::into::ConvertRef>);
-static_assert(std::is_trivially_move_assignable_v<::into::ConvertRef>);
+static_assert(::std::is_trivially_destructible_v<ConvertRef>);
+static_assert(::std::is_trivially_move_constructible_v<::into::ConvertRef>);
+static_assert(::std::is_trivially_move_assignable_v<::into::ConvertRef>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::into::ConvertRef* __ret_ptr);
@@ -290,7 +290,7 @@ inline ::into::ConvertRef ConvertRef::create(rs_std::StrRef s) {
   crubit::Slot<::into::ConvertRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -302,7 +302,7 @@ inline ::into::Convert ConvertRef::transmigrate() && {
   crubit::Slot<::into::Convert> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_transmigrate(&self, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
 extern "C" rs_std::StrRef
@@ -324,7 +324,7 @@ inline ConvertRef::operator ::into::Convert() {
   __crubit_internal::
       __crubit_thunk_into_uinto_ugolden_x0000003a_x0000003aConvert(
           &self, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ConvertRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ConvertRef, __field0));
@@ -335,9 +335,9 @@ static_assert(
 static_assert(
     alignof(NotFfiSafe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_constructible_v<::into::NotFfiSafe>);
-static_assert(std::is_trivially_move_assignable_v<::into::NotFfiSafe>);
+static_assert(::std::is_trivially_destructible_v<NotFfiSafe>);
+static_assert(::std::is_trivially_move_constructible_v<::into::NotFfiSafe>);
+static_assert(::std::is_trivially_move_assignable_v<::into::NotFfiSafe>);
 inline void NotFfiSafe::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotFfiSafe, __field0));
 }

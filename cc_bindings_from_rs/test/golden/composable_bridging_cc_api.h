@@ -39,65 +39,69 @@ namespace composable_bridging_rust {
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=41
-std::optional<std::int32_t> make_my_option_rust();
+std::optional<::std::int32_t> make_my_option_rust();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=45
-std::optional<rs_std::SliceRef<const std::int32_t>> maybe_int_slice();
+::std::optional<rs_std::SliceRef<const ::std::int32_t>> maybe_int_slice();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=29
-std::optional<std::int32_t* $(__anon1) crubit_nonnull> option_adds_one_to_ref(
-    std::optional<std::int32_t* $(__anon1) crubit_nonnull> x);
+::std::optional<::std::int32_t* $(__anon1) crubit_nonnull>
+option_adds_one_to_ref(
+    ::std::optional<::std::int32_t* $(__anon1) crubit_nonnull> x);
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=20
-std::optional<std::int32_t> option_increments(std::optional<std::int32_t> x);
+::std::optional<::std::int32_t> option_increments(
+    ::std::optional<::std::int32_t> x);
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=24
-std::optional<rs_std::SliceRef<const std::int32_t>> option_slice_without_first(
-    std::optional<rs_std::SliceRef<const std::int32_t>> x);
+::std::optional<rs_std::SliceRef<const ::std::int32_t>>
+option_slice_without_first(
+    ::std::optional<rs_std::SliceRef<const ::std::int32_t>> x);
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=12
-std::optional<std::int32_t> returns_no_int();
+::std::optional<::std::int32_t> returns_no_int();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=8
-std::optional<std::int32_t> returns_some_int();
+::std::optional<::std::int32_t> returns_some_int();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=16
-std::int32_t unwrap_or_zero(std::optional<std::int32_t> x);
+::std::int32_t unwrap_or_zero(::std::optional<::std::int32_t> x);
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_umy_uoption_urust(unsigned char* __ret_ptr);
 }
-inline std::optional<std::int32_t> make_my_option_rust() {
+inline std::optional<::std::int32_t> make_my_option_rust() {
   unsigned char __return_value_storage
-      [crubit::OptionalAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
+      [crubit::OptionalAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
   __crubit_internal::__crubit_thunk_make_umy_uoption_urust(
       __return_value_storage);
   return ::crubit::internal::Decode<
-      crubit::OptionalAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      crubit::OptionalAbi<::crubit::TransmuteAbi<std::int32_t>>(
-          ::crubit::TransmuteAbi<std::int32_t>()),
+      crubit::OptionalAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      crubit::OptionalAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
       __return_value_storage);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_maybe_uint_uslice(unsigned char* __ret_ptr);
 }
-inline std::optional<rs_std::SliceRef<const std::int32_t>> maybe_int_slice() {
+inline ::std::optional<rs_std::SliceRef<const ::std::int32_t>>
+maybe_int_slice() {
   unsigned char __return_value_storage[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<::rs_std::SliceRef<const std::int32_t>>>::kSize];
+      ::crubit::TransmuteAbi<::rs_std::SliceRef<const ::std::int32_t>>>::kSize];
   __crubit_internal::__crubit_thunk_maybe_uint_uslice(__return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<::rs_std::SliceRef<const std::int32_t>>>>(
+      ::crubit::TransmuteAbi<::rs_std::SliceRef<const ::std::int32_t>>>>(
       ::crubit::OptionAbi<
-          ::crubit::TransmuteAbi<::rs_std::SliceRef<const std::int32_t>>>(
-          ::crubit::TransmuteAbi<::rs_std::SliceRef<const std::int32_t>>()),
+          ::crubit::TransmuteAbi<::rs_std::SliceRef<const ::std::int32_t>>>(
+          ::crubit::TransmuteAbi<::rs_std::SliceRef<const ::std::int32_t>>()),
       __return_value_storage);
 }
 
@@ -105,26 +109,26 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_option_uadds_uone_uto_uref(
     unsigned char*, unsigned char* __ret_ptr);
 }
-inline std::optional<std::int32_t* $(__anon1) crubit_nonnull>
+inline ::std::optional<::std::int32_t* $(__anon1) crubit_nonnull>
 option_adds_one_to_ref(
-    std::optional<std::int32_t* $(__anon1) crubit_nonnull> x) {
+    ::std::optional<::std::int32_t* $(__anon1) crubit_nonnull> x) {
   unsigned char x_buffer[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>>::kSize];
+      ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>::kSize];
   ::crubit::internal::Encode<::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>>>(
+      ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>>(
       ::crubit::OptionAbi<
-          ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>>(
-          ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>()),
+          ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>(
+          ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>()),
       x_buffer, x);
   unsigned char __return_value_storage[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>>::kSize];
+      ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>::kSize];
   __crubit_internal::__crubit_thunk_option_uadds_uone_uto_uref(
       x_buffer, __return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>>>(
+      ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>>(
       ::crubit::OptionAbi<
-          ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>>(
-          ::crubit::TransmuteAbi<std::int32_t* $static crubit_nonnull>()),
+          ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>(
+          ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>()),
       __return_value_storage);
 }
 
@@ -132,23 +136,23 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_option_uincrements(unsigned char*,
                                                   unsigned char* __ret_ptr);
 }
-inline std::optional<std::int32_t> option_increments(
-    std::optional<std::int32_t> x) {
+inline ::std::optional<::std::int32_t> option_increments(
+    ::std::optional<::std::int32_t> x) {
   unsigned char x_buffer
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
   ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>(
-          ::crubit::TransmuteAbi<std::int32_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
       x_buffer, x);
   unsigned char __return_value_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
   __crubit_internal::__crubit_thunk_option_uincrements(x_buffer,
                                                        __return_value_storage);
   return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>(
-          ::crubit::TransmuteAbi<std::int32_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
       __return_value_storage);
 }
 
@@ -156,67 +160,67 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_option_uslice_uwithout_ufirst(
     unsigned char*, unsigned char* __ret_ptr);
 }
-inline std::optional<rs_std::SliceRef<const std::int32_t>>
+inline ::std::optional<rs_std::SliceRef<const ::std::int32_t>>
 option_slice_without_first(
-    std::optional<rs_std::SliceRef<const std::int32_t>> x) {
+    ::std::optional<rs_std::SliceRef<const ::std::int32_t>> x) {
   unsigned char x_buffer[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>>::kSize];
+      ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>>::kSize];
   ::crubit::internal::Encode<::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>>>(
+      ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>>>(
       ::crubit::OptionAbi<
-          ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>>(
-          ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>()),
+          ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>>(
+          ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>()),
       x_buffer, x);
   unsigned char __return_value_storage[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>>::kSize];
+      ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>>::kSize];
   __crubit_internal::__crubit_thunk_option_uslice_uwithout_ufirst(
       x_buffer, __return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>>>(
+      ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>>>(
       ::crubit::OptionAbi<
-          ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>>(
-          ::crubit::TransmuteAbi<rs_std::SliceRef<const std::int32_t>>()),
+          ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>>(
+          ::crubit::TransmuteAbi<rs_std::SliceRef<const ::std::int32_t>>()),
       __return_value_storage);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_returns_uno_uint(unsigned char* __ret_ptr);
 }
-inline std::optional<std::int32_t> returns_no_int() {
+inline ::std::optional<::std::int32_t> returns_no_int() {
   unsigned char __return_value_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
   __crubit_internal::__crubit_thunk_returns_uno_uint(__return_value_storage);
   return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>(
-          ::crubit::TransmuteAbi<std::int32_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
       __return_value_storage);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_returns_usome_uint(unsigned char* __ret_ptr);
 }
-inline std::optional<std::int32_t> returns_some_int() {
+inline ::std::optional<::std::int32_t> returns_some_int() {
   unsigned char __return_value_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
   __crubit_internal::__crubit_thunk_returns_usome_uint(__return_value_storage);
   return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>(
-          ::crubit::TransmuteAbi<std::int32_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
       __return_value_storage);
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_unwrap_uor_uzero(unsigned char*);
+extern "C" ::std::int32_t __crubit_thunk_unwrap_uor_uzero(unsigned char*);
 }
-inline std::int32_t unwrap_or_zero(std::optional<std::int32_t> x) {
+inline ::std::int32_t unwrap_or_zero(::std::optional<::std::int32_t> x) {
   unsigned char x_buffer
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
   ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>(
-          ::crubit::TransmuteAbi<std::int32_t>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
       x_buffer, x);
   return __crubit_internal::__crubit_thunk_unwrap_uor_uzero(x_buffer);
 }

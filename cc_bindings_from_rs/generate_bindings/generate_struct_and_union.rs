@@ -171,7 +171,7 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
 /// This will generate (approximately) the following C++ code:
 ///
 /// ```c++
-/// enum class MyEnum : std::int32_t {
+/// enum class MyEnum : ::std::int32_t {
 ///     VARIANT_0 = 0,
 ///     VARIANT_1 = 1,
 ///     // ...
@@ -785,7 +785,7 @@ pub fn generate_adt<'tcx>(
             ~#adt_cc_name() = default; __NEWLINE__
         });
         let cc_details = CcSnippet::with_include(
-            quote! { static_assert(std::is_trivially_destructible_v<#adt_cc_name>); },
+            quote! { static_assert(::std::is_trivially_destructible_v<#adt_cc_name>); },
             CcInclude::type_traits(),
         );
         ApiSnippets { main_api, cc_details, ..Default::default() }
@@ -1223,7 +1223,7 @@ fn generate_variant_ctor<'tcx>(
             let explicit = (main_api_params.len() == 1).then_some(quote! { explicit });
             let initializer_list = (0..main_api_params.len()).map(|i| {
                 let cc_name = anonymous_field_ident(i);
-                quote! { #cc_name ( std::move ( #cc_name ) ) }
+                quote! { #cc_name ( ::std::move ( #cc_name ) ) }
             });
             Ok(ApiSnippets {
                 main_api: CcSnippet {
@@ -1776,7 +1776,7 @@ pub(crate) fn generate_fields<'tcx>(
                         let tokens = quote! {
                             #visibility __NEWLINE__
                                 __COMMENT__ #msg
-                                std::array<unsigned char, #size> #cc_name;
+                                ::std::array<unsigned char, #size> #cc_name;
                         };
                         prereqs.includes.insert(CcInclude::array());
                         tokens
@@ -2065,7 +2065,7 @@ pub(crate) fn generate_fields<'tcx>(
                 private:
                     struct PrivateBytesTag {};
                     constexpr #cc_short_name(PrivateBytesTag,
-                                             std::array<unsigned char, #adt_size> bytes)
+                                             ::std::array<unsigned char, #adt_size> bytes)
                         : __opaque_blob_of_bytes(bytes) {}
             },
             Some(EnumKind::ReprC) => quote! {
@@ -2107,7 +2107,7 @@ pub(crate) fn generate_relocating_ctor<'tcx>(
                 // union.)
                 //
                 // So while `memcpy` doesn't usually work, it does here.
-                std::memcpy(this, &value, sizeof(value));
+                ::std::memcpy(this, &value, sizeof(value));
             }
         },
         db.support_header("internal/slot.h"),

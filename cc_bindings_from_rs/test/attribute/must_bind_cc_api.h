@@ -44,7 +44,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   Original(const Original&) = delete;
   Original& operator=(const Original&) = delete;
   Original(::crubit::UnsafeRelocateTag, Original&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -56,7 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/attribute/must_bind.rs;l=8
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -75,9 +75,9 @@ static_assert(
 static_assert(
     alignof(Original) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Original>);
-static_assert(std::is_trivially_move_constructible_v<::must_bind::Original>);
-static_assert(std::is_trivially_move_assignable_v<::must_bind::Original>);
+static_assert(::std::is_trivially_destructible_v<Original>);
+static_assert(::std::is_trivially_move_constructible_v<::must_bind::Original>);
+static_assert(::std::is_trivially_move_assignable_v<::must_bind::Original>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::must_bind::Original* __ret_ptr);
 }
@@ -85,7 +85,7 @@ inline ::must_bind::Original Original::new_() {
   crubit::Slot<::must_bind::Original> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, x));

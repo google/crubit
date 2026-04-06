@@ -45,12 +45,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   Copyable(const Copyable&) = default;
   Copyable& operator=(const Copyable&) = default;
   Copyable(::crubit::UnsafeRelocateTag, Copyable&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=35
-  static ::move::Copyable from_byte(std::uint8_t byte);
+  static ::move::Copyable from_byte(::std::uint8_t byte);
 
   //  Typically, `self`-by-value methods turn into `&&`-qualified methods in
   //  C++. However, for `Copy` types, there's no need to consume the argument,
@@ -58,12 +58,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   //
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=42
-  std::uint8_t consume_self() const;
+  ::std::uint8_t consume_self() const;
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/move_semantics/move.rs;l=31
-    std::uint8_t field;
+    ::std::uint8_t field;
   };
 
  private:
@@ -88,25 +88,25 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=14
-  static ::move::Foo from_byte(std::uint8_t byte);
+  static ::move::Foo from_byte(::std::uint8_t byte);
 
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=18
-  std::uint8_t read_byte() const;
+  ::std::uint8_t read_byte() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=22
-  std::uint8_t into_byte() &&;
+  ::std::uint8_t into_byte() &&;
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
   // supported yet (b/259749095)
-  std::array<unsigned char, 8> buf;
+  ::std::array<unsigned char, 8> buf;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -128,27 +128,27 @@ extern "C" void __crubit_thunk_default(::move::Copyable* __ret_ptr);
 inline ::move::Copyable::Copyable() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<Copyable>);
-static_assert(std::is_trivially_move_constructible_v<::move::Copyable>);
-static_assert(std::is_trivially_move_assignable_v<::move::Copyable>);
-static_assert(std::is_trivially_copy_constructible_v<::move::Copyable>);
-static_assert(std::is_trivially_copy_assignable_v<::move::Copyable>);
+static_assert(::std::is_trivially_destructible_v<Copyable>);
+static_assert(::std::is_trivially_move_constructible_v<::move::Copyable>);
+static_assert(::std::is_trivially_move_assignable_v<::move::Copyable>);
+static_assert(::std::is_trivially_copy_constructible_v<::move::Copyable>);
+static_assert(::std::is_trivially_copy_assignable_v<::move::Copyable>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ubyte(std::uint8_t,
+extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Copyable* __ret_ptr);
 }
-inline ::move::Copyable Copyable::from_byte(std::uint8_t byte) {
+inline ::move::Copyable Copyable::from_byte(::std::uint8_t byte) {
   crubit::Slot<::move::Copyable> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_consume_uself(::move::Copyable*);
+extern "C" ::std::uint8_t __crubit_thunk_consume_uself(::move::Copyable*);
 }
-inline std::uint8_t Copyable::consume_self() const {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+inline ::std::uint8_t Copyable::consume_self() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_consume_uself(&self);
 }
 inline void Copyable::__crubit_field_offset_assertions() {
@@ -168,35 +168,36 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(::move::Foo&);
 }
 inline Foo::~Foo() { __crubit_internal::__crubit_thunk_drop(*this); }
-inline ::move::Foo::Foo(Foo&& other) : Foo() { *this = std::move(other); }
+inline ::move::Foo::Foo(Foo&& other) : Foo() { *this = ::std::move(other); }
 inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ubyte(std::uint8_t, ::move::Foo* __ret_ptr);
+extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
+                                          ::move::Foo* __ret_ptr);
 }
-inline ::move::Foo Foo::from_byte(std::uint8_t byte) {
+inline ::move::Foo Foo::from_byte(::std::uint8_t byte) {
   crubit::Slot<::move::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_read_ubyte(::move::Foo const&);
+extern "C" ::std::uint8_t __crubit_thunk_read_ubyte(::move::Foo const&);
 }
-inline std::uint8_t Foo::read_byte() const {
+inline ::std::uint8_t Foo::read_byte() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_read_ubyte(self);
 }
 
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_into_ubyte(::move::Foo*);
+extern "C" ::std::uint8_t __crubit_thunk_into_ubyte(::move::Foo*);
 }
-inline std::uint8_t Foo::into_byte() && {
+inline ::std::uint8_t Foo::into_byte() && {
   auto&& self = *this;
-  crubit::Slot self_slot((std::move(self)));
+  crubit::Slot self_slot((::std::move(self)));
   return __crubit_internal::__crubit_thunk_into_ubyte(self_slot.Get());
 }
 inline void Foo::__crubit_field_offset_assertions() {
@@ -206,7 +207,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_consume_ufoo(::move::Foo*);
 }
 inline void consume_foo(::move::Foo _foo) {
-  crubit::Slot _foo_slot((std::move(_foo)));
+  crubit::Slot _foo_slot((::std::move(_foo)));
   return __crubit_internal::__crubit_thunk_consume_ufoo(_foo_slot.Get());
 }
 

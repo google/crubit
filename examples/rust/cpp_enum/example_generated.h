@@ -25,7 +25,7 @@ namespace example_crate {
 // Generated from:
 // examples/rust/cpp_enum/example.rs;l=13
 enum class CRUBIT_INTERNAL_RUST_TYPE(
-    ":: example_crate_golden :: Color") Color : std::int32_t {
+    ":: example_crate_golden :: Color") Color : ::std::int32_t {
   Red = INT32_C(0),
   Blue = INT32_C(1),
   Green = INT32_C(5),

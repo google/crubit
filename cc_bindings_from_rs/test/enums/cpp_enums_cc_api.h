@@ -19,7 +19,7 @@
 #include <cstdint>
 
 namespace cpp_enums::forward_declared_enum {
-enum class B : std::uint8_t;
+enum class B : ::std::uint8_t;
 }
 
 namespace cpp_enums::classless_enum {
@@ -29,7 +29,7 @@ namespace cpp_enums::classless_enum {
 // Generated from:
 // cc_bindings_from_rs/test/enums/cpp_enums.rs;l=11
 enum CRUBIT_INTERNAL_RUST_TYPE(
-    ":: cpp_enums_golden :: classless_enum :: Color") Color : std::int32_t {
+    ":: cpp_enums_golden :: classless_enum :: Color") Color : ::std::int32_t {
   RED = INT32_C(0),
   BLUE = INT32_C(2),
 };
@@ -43,7 +43,7 @@ namespace cpp_enums::cpp_enum {
 // Generated from:
 // cc_bindings_from_rs/test/enums/cpp_enums.rs;l=22
 enum class CRUBIT_INTERNAL_RUST_TYPE(
-    ":: cpp_enums_golden :: cpp_enum :: Color") Color : std::int32_t {
+    ":: cpp_enums_golden :: cpp_enum :: Color") Color : ::std::int32_t {
   RED = INT32_C(0),
   BLUE = INT32_C(2),
 };
@@ -58,7 +58,7 @@ namespace cpp_enums::deprecated_enum {
 // cc_bindings_from_rs/test/enums/cpp_enums.rs;l=38
 enum class CRUBIT_INTERNAL_RUST_TYPE(
     ":: cpp_enums_golden :: deprecated_enum :: Color")
-    [[nodiscard]] [[deprecated("Use NewColor")]] Color : std::int32_t{
+    [[nodiscard]] [[deprecated("Use NewColor")]] Color : ::std::int32_t{
         RED = INT32_C(0),
         BLUE = INT32_C(2),
     };
@@ -76,7 +76,7 @@ namespace cpp_enums::forward_declared_enum {
 // Generated from:
 // cc_bindings_from_rs/test/enums/cpp_enums.rs;l=56
 enum class CRUBIT_INTERNAL_RUST_TYPE(
-    ":: cpp_enums_golden :: forward_declared_enum :: B") B : std::uint8_t {
+    ":: cpp_enums_golden :: forward_declared_enum :: B") B : ::std::uint8_t {
   ONE = 1,
   TWO = 2,
 };

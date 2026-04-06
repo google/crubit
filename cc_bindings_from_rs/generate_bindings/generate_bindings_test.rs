@@ -938,12 +938,12 @@ fn test_format_bridged_return_type_pointer_like() {
                 inline CppType* foo() {
                   union __return_value_crubit_return_union {
                     constexpr __return_value_crubit_return_union() {}
-                    ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+                    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
                     CppType* val;
                   } __return_value_ret_val_holder;
                   auto* __return_value_storage = &__return_value_ret_val_holder.val;
                   __crubit_internal::__crubit_thunk_foo(__return_value_storage);
-                  return std::move(__return_value_ret_val_holder.val);
+                  return ::std::move(__return_value_ret_val_holder.val);
                 }
             }
         );
@@ -1061,12 +1061,12 @@ fn test_format_bridged_return_type_by_pointer() {
                 inline CppType* foo() {
                     union __return_value_crubit_return_union {
                       constexpr __return_value_crubit_return_union() {}
-                      ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+                      ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
                       CppType* val;
                     } __return_value_ret_val_holder;
                     auto* __return_value_storage = &__return_value_ret_val_holder.val;
                     __crubit_internal::__crubit_thunk_foo(__return_value_storage);
-                    return std::move(__return_value_ret_val_holder.val);
+                    return ::std::move(__return_value_ret_val_holder.val);
                 }
             }
         );
@@ -1149,12 +1149,12 @@ fn test_format_bridged_return_type_by_value() {
                 inline cpp_ns::CppType foo() {
                     union __return_value_crubit_return_union {
                       constexpr __return_value_crubit_return_union() {}
-                      ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+                      ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
                       cpp_ns::CppType val;
                     } __return_value_ret_val_holder;
                     auto* __return_value_storage = &__return_value_ret_val_holder.val;
                     __crubit_internal::__crubit_thunk_foo(__return_value_storage);
-                    return std::move(__return_value_ret_val_holder.val);
+                    return ::std::move(__return_value_ret_val_holder.val);
                 }
             }
         );
@@ -1243,9 +1243,9 @@ fn test_format_item_slice() {
             quote! {
               void
               foo(
-                rs_std::SliceRef<const std::uint32_t> _a,
-                rs_std::SliceRef<const std::uint8_t> _b,
-                rs_std::SliceRef<std::int16_t> _c,
+                rs_std::SliceRef<const ::std::uint32_t> _a,
+                rs_std::SliceRef<const ::std::uint8_t> _b,
+                rs_std::SliceRef<::std::int16_t> _c,
                 rs_std::SliceRef<bool> _d
               );
             }
@@ -1370,8 +1370,8 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
                 ...
                 struct ... SomeStruct final {
                     ...
-                    static std::int32_t fn_taking_reference(
-                        std::int32_t const* $a crubit_nonnull x);
+                    static ::std::int32_t fn_taking_reference(
+                        ::std::int32_t const* $a crubit_nonnull x);
                     ...
                 };
                 ...
@@ -1381,11 +1381,11 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" std::int32_t ...(
-                    std::int32_t const* $a crubit_nonnull);
+                extern "C" ::std::int32_t ...(
+                    ::std::int32_t const* $a crubit_nonnull);
                 }
-                inline std::int32_t SomeStruct::fn_taking_reference(
-                    std::int32_t const* $a crubit_nonnull x) {
+                inline ::std::int32_t SomeStruct::fn_taking_reference(
+                    ::std::int32_t const* $a crubit_nonnull x) {
                   return __crubit_internal::...(x);
                 }
             },
@@ -1424,8 +1424,8 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_impl_level
                 ...
                 struct ... SomeStruct final {
                     ...
-                    static std::int32_t fn_taking_reference(
-                        std::int32_t const* $a crubit_nonnull x);
+                    static ::std::int32_t fn_taking_reference(
+                        ::std::int32_t const* $a crubit_nonnull x);
                     ...
                 };
                 ...
@@ -1770,7 +1770,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
                     crubit::Slot<::rust_out::TypeUnderTest> __return_value_ret_val_holder;
                     auto* __return_value_storage = __return_value_ret_val_holder.Get();
                     __crubit_internal::__crubit_thunk_pass_uby_uvalue(__return_value_storage);
-                    return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+                    return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
                 }
                 ...
             }
@@ -2042,7 +2042,7 @@ fn test_format_item_type_alias() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias") = std::int32_t;
+                using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias") = ::std::int32_t;
             }
         );
     });
@@ -2068,7 +2068,7 @@ fn test_format_item_type_alias_with_kythe_annotations() {
                     __CAPTURE_TAG__ "<crubit_unittests.rs>" "22" "31"
                     __COMMENT__ "Generated from: <crubit_unittests.rs>;l=2"
                     using __CAPTURE_BEGIN__ TypeAlias __CAPTURE_END__
-                    CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias") = std::int32_t;
+                    CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias") = ::std::int32_t;
                 }
             );
         },
@@ -2088,7 +2088,7 @@ fn test_format_item_type_alias_should_give_underlying_type() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias2") = std::int32_t;
+                using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias2") = ::std::int32_t;
             }
         );
     });
@@ -2166,7 +2166,7 @@ fn test_format_item_type_alias_deprecated() {
                 using TypeAlias
                     CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias")
                     [[deprecated("Use `OtherTypeAlias` instead")]]
-                    = std::int32_t;
+                    = ::std::int32_t;
             }
         );
     });
@@ -2194,7 +2194,7 @@ fn test_format_item_generate_bindings_for_top_level_type_alias() {
         assert_cc_not_matches!(
             main_api.tokens,
             quote! {
-                std::int64_t
+                ::std::int64_t
             }
         );
     });
@@ -2259,7 +2259,7 @@ fn test_multiple_attributes() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                [[nodiscard("Must use")]] [[deprecated("Deprecated")]] std::int32_t add(std::int32_t x, std::int32_t y);
+                [[nodiscard("Must use")]] [[deprecated("Deprecated")]] ::std::int32_t add(::std::int32_t x, ::std::int32_t y);
                     ...
             }
         )

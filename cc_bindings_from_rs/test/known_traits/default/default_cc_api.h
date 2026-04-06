@@ -34,7 +34,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct();
 
   // Synthesized tuple constructor
-  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit SomeStruct(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
@@ -46,17 +47,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=31
-  static std::int32_t extract_int(::rs_default::derived_impl::SomeStruct s);
+  static ::std::int32_t extract_int(::rs_default::derived_impl::SomeStruct s);
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=28
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -77,7 +78,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct();
 
   // Synthesized tuple constructor
-  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit SomeStruct(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
@@ -89,17 +91,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=19
-  static std::int32_t extract_int(::rs_default::explicit_impl::SomeStruct s);
+  static ::std::int32_t extract_int(::rs_default::explicit_impl::SomeStruct s);
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=10
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -136,14 +138,14 @@ StructWithoutDefault final {
   StructWithoutDefault& operator=(const StructWithoutDefault&) = delete;
   StructWithoutDefault(::crubit::UnsafeRelocateTag,
                        StructWithoutDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=53
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -173,12 +175,12 @@ StructWithFieldWithNoDefault final {
       delete;
   StructWithFieldWithNoDefault(::crubit::UnsafeRelocateTag,
                                StructWithFieldWithNoDefault&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=56
-  static std::int32_t extract_int(
+  static ::std::int32_t extract_int(
       ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s);
 
   union {
@@ -206,7 +208,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct() = delete;
 
   // Synthesized tuple constructor
-  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit SomeStruct(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
@@ -218,12 +221,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=64
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -244,7 +247,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct();
 
   // Synthesized tuple constructor
-  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+  explicit SomeStruct(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
@@ -256,17 +260,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=73
-  std::int32_t extract_int() const;
+  ::std::int32_t extract_int() const;
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=70
-    std::int32_t __field0;
+    ::std::int32_t __field0;
   };
 
  private:
@@ -290,16 +294,16 @@ extern "C" void __crubit_thunk_default(
 inline ::rs_default::derived_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::derived_impl::SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::derived_impl::SomeStruct>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_extract_uint(
+extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::derived_impl::SomeStruct*);
 }
-inline std::int32_t SomeStruct::extract_int(
+inline ::std::int32_t SomeStruct::extract_int(
     ::rs_default::derived_impl::SomeStruct s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
@@ -323,16 +327,16 @@ extern "C" void __crubit_thunk_default(
 inline ::rs_default::explicit_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::explicit_impl::SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::explicit_impl::SomeStruct>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_extract_uint(
+extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::explicit_impl::SomeStruct*);
 }
-inline std::int32_t SomeStruct::extract_int(
+inline ::std::int32_t SomeStruct::extract_int(
     ::rs_default::explicit_impl::SomeStruct s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
@@ -358,18 +362,18 @@ inline ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
     StructWithFieldWithNoDefault() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<StructWithFieldWithNoDefault>);
+static_assert(::std::is_trivially_destructible_v<StructWithFieldWithNoDefault>);
 static_assert(
-    std::is_trivially_move_constructible_v<
+    ::std::is_trivially_move_constructible_v<
         ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
 static_assert(
-    std::is_trivially_move_assignable_v<
+    ::std::is_trivially_move_assignable_v<
         ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_extract_uint(
+extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*);
 }
-inline std::int32_t StructWithFieldWithNoDefault::extract_int(
+inline ::std::int32_t StructWithFieldWithNoDefault::extract_int(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
@@ -382,10 +386,10 @@ static_assert(
 static_assert(
     alignof(StructWithoutDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<StructWithoutDefault>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<StructWithoutDefault>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::field_with_no_default::StructWithoutDefault>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::field_with_no_default::StructWithoutDefault>);
 inline void StructWithoutDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithoutDefault, __field0));
@@ -400,11 +404,11 @@ static_assert(
 static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::rs_default::no_impl::SomeStruct>);
 static_assert(
-    std::is_trivially_move_constructible_v<::rs_default::no_impl::SomeStruct>);
-static_assert(
-    std::is_trivially_move_assignable_v<::rs_default::no_impl::SomeStruct>);
+    ::std::is_trivially_move_assignable_v<::rs_default::no_impl::SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, __field0));
 }
@@ -425,16 +429,16 @@ __crubit_thunk_default();
 inline ::rs_default::transparent_struct::SomeStruct::SomeStruct() {
   *this = __crubit_internal::__crubit_thunk_default();
 }
-static_assert(std::is_trivially_destructible_v<SomeStruct>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::transparent_struct::SomeStruct>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::transparent_struct::SomeStruct>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_extract_uint(
+extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::transparent_struct::SomeStruct const&);
 }
-inline std::int32_t SomeStruct::extract_int() const {
+inline ::std::int32_t SomeStruct::extract_int() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_extract_uint(self);
 }

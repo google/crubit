@@ -83,11 +83,11 @@ fn test_generated_bindings_impl() {
                         // No point replicating test coverage of
                         // `test_format_item_static_method`.
                         ...
-                        std::int32_t public_static_method();
+                        ::std::int32_t public_static_method();
                         ...
                     };
                     ...
-                    std::int32_t SomeStruct::public_static_method() {
+                    ::std::int32_t SomeStruct::public_static_method() {
                         ...
                     }
                     ...
@@ -124,9 +124,9 @@ fn test_generated_bindings_includes() {
                 namespace ... {
                     ...
                     extern "C" void public_function(
-                        std::int32_t i,
-                        std::intptr_t d,
-                        std::uint64_t u);
+                        ::std::int32_t i,
+                        ::std::intptr_t d,
+                        ::std::uint64_t u);
                 }
             }
         );
@@ -349,7 +349,7 @@ fn test_format_item_fn_references() {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    void foo(std::int32_t const& _x, std::int32_t const& _y);
+                    void foo(::std::int32_t const& _x, ::std::int32_t const& _y);
                 }
             );
         },
@@ -379,7 +379,7 @@ fn test_format_item_fn_static_reference() {
         test_src,
         "foo",
         quote! {
-            void foo(std::int32_t const* ... _x);
+            void foo(::std::int32_t const* ... _x);
         },
     )
 }
@@ -394,7 +394,7 @@ fn test_format_item_fn_returned_static_reference() {
         test_src,
         "foo",
         quote! {
-            std::int32_t const& ... foo();
+            ::std::int32_t const& ... foo();
         },
     );
 }
@@ -409,7 +409,7 @@ fn test_format_item_fn_reused_reference_lifetime() {
         test_src,
         "foo",
         quote! {
-            void foo(std::int32_t const* ... _x, std::int32_t const* ... _y);
+            void foo(::std::int32_t const* ... _x, ::std::int32_t const* ... _y);
         },
     );
 }
@@ -494,7 +494,7 @@ fn test_format_item_fn_const() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                std::int32_t foo(std::int32_t i);
+                ::std::int32_t foo(::std::int32_t i);
             }
         );
         assert!(!result.cc_details.prereqs.is_empty());
@@ -502,10 +502,10 @@ fn test_format_item_fn_const() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" std::int32_t ...( std::int32_t);
+                    extern "C" ::std::int32_t ...( ::std::int32_t);
                 }
                 ...
-                inline std::int32_t foo(std::int32_t i) {
+                inline ::std::int32_t foo(::std::int32_t i) {
                     return __crubit_internal::...(i);
                 }
             }
@@ -563,8 +563,8 @@ fn test_format_item_fn_cc_prerequisites_if_cpp_definition_needed() {
         //
         // Note that this is a definition, and therefore `S` should be defined
         // earlier (not just forward declared).
-        assert_cc_matches!(main_api.tokens, quote! { S foo(std::int32_t _i);});
-        assert_cc_matches!(result.cc_details.tokens, quote! { S foo(std::int32_t _i) { ... }});
+        assert_cc_matches!(main_api.tokens, quote! { S foo(::std::int32_t _i);});
+        assert_cc_matches!(result.cc_details.tokens, quote! { S foo(::std::int32_t _i) { ... }});
 
         // Main checks: `CcPrerequisites::includes`.
         assert_cc_matches!(
@@ -799,8 +799,8 @@ fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                std::int32_t const& $(__anon1)
-                foo(std::int32_t const* $(__anon1) crubit_nonnull arg CRUBIT_LIFETIME_BOUND);
+                ::std::int32_t const& $(__anon1)
+                foo(::std::int32_t const* $(__anon1) crubit_nonnull arg CRUBIT_LIFETIME_BOUND);
             }
         );
         assert_cc_matches!(
@@ -808,12 +808,12 @@ fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
             quote! {
                 namespace __crubit_internal {
                 extern "C"
-                std::int32_t const& $(__anon1) ...(
-                    std::int32_t const* $(__anon1) crubit_nonnull);
+                ::std::int32_t const& $(__anon1) ...(
+                    ::std::int32_t const* $(__anon1) crubit_nonnull);
                 }
                 inline
-                std::int32_t const& $(__anon1)
-                foo(std::int32_t const* $(__anon1) crubit_nonnull arg CRUBIT_LIFETIME_BOUND) {
+                ::std::int32_t const& $(__anon1)
+                foo(::std::int32_t const* $(__anon1) crubit_nonnull arg CRUBIT_LIFETIME_BOUND) {
                   return __crubit_internal::...(arg);
                 }
             }
@@ -863,14 +863,14 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-              std::int32_t const& $(foo)
+              ::std::int32_t const& $(foo)
               foo(
-                std::int32_t const* $a crubit_nonnull arg1,
-                std::int32_t const* $(foo) crubit_nonnull arg2,
-                std::int32_t const* $(foo) crubit_nonnull arg3,
-                std::int32_t const* $static crubit_nonnull arg4,
-                std::int32_t const& arg5,
-                std::int32_t const& arg6);
+                ::std::int32_t const* $a crubit_nonnull arg1,
+                ::std::int32_t const* $(foo) crubit_nonnull arg2,
+                ::std::int32_t const* $(foo) crubit_nonnull arg3,
+                ::std::int32_t const* $static crubit_nonnull arg4,
+                ::std::int32_t const& arg5,
+                ::std::int32_t const& arg6);
             }
         );
         assert_cc_matches!(
@@ -878,24 +878,24 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
             quote! {
                 namespace __crubit_internal {
                 extern "C"
-                std::int32_t const& $(foo)
+                ::std::int32_t const& $(foo)
                 ...(
-                    std::int32_t const* $a crubit_nonnull,
-                    std::int32_t const* $(foo) crubit_nonnull,
-                    std::int32_t const* $(foo) crubit_nonnull,
-                    std::int32_t const* $static crubit_nonnull,
-                    std::int32_t const&,
-                    std::int32_t const&);
+                    ::std::int32_t const* $a crubit_nonnull,
+                    ::std::int32_t const* $(foo) crubit_nonnull,
+                    ::std::int32_t const* $(foo) crubit_nonnull,
+                    ::std::int32_t const* $static crubit_nonnull,
+                    ::std::int32_t const&,
+                    ::std::int32_t const&);
                 }
                 inline
-                std::int32_t const& $(foo)
+                ::std::int32_t const& $(foo)
                 foo(
-                    std::int32_t const* $a crubit_nonnull arg1,
-                    std::int32_t const* $(foo) crubit_nonnull arg2,
-                    std::int32_t const* $(foo) crubit_nonnull arg3,
-                    std::int32_t const* $static crubit_nonnull arg4,
-                    std::int32_t const& arg5,
-                    std::int32_t const& arg6) {
+                    ::std::int32_t const* $a crubit_nonnull arg1,
+                    ::std::int32_t const* $(foo) crubit_nonnull arg2,
+                    ::std::int32_t const* $(foo) crubit_nonnull arg3,
+                    ::std::int32_t const* $static crubit_nonnull arg4,
+                    ::std::int32_t const& arg5,
+                    ::std::int32_t const& arg6) {
                   return __crubit_internal::...(arg1, arg2, arg3, arg4, arg5, arg6);
                 }
             }
@@ -930,7 +930,7 @@ fn test_format_item_generic_fn_into_trait_basic_replacement() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-              void generic_function(std::int32_t arg);
+              void generic_function(::std::int32_t arg);
             }
         );
         assert_rs_matches!(
@@ -955,7 +955,7 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-              void generic_function(rs_std::SliceRef<const std::uint8_t> arg);
+              void generic_function(rs_std::SliceRef<const ::std::uint8_t> arg);
             }
         );
         assert_rs_matches!(
@@ -1133,17 +1133,17 @@ fn test_format_item_fn_rust_abi_with_param_taking_struct_by_value() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                std::int32_t into_i32(::rust_out::S s);
+                ::std::int32_t into_i32(::rust_out::S s);
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" std::int32_t ...(::rust_out::S*);
+                    extern "C" ::std::int32_t ...(::rust_out::S*);
                 }
                 ...
-                inline std::int32_t into_i32(::rust_out::S s) {
+                inline ::std::int32_t into_i32(::rust_out::S s) {
                     return __crubit_internal::...(&s);
                 }
             }
@@ -1178,21 +1178,21 @@ fn test_format_item_fn_rust_abi_returning_struct_by_value() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                ::rust_out::S create(std::int32_t i);
+                ::rust_out::S create(::std::int32_t i);
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void ...(std::int32_t, ::rust_out::S* __ret_ptr);
+                    extern "C" void ...(::std::int32_t, ::rust_out::S* __ret_ptr);
                 }
                 ...
-                inline ::rust_out::S create(std::int32_t i) {
+                inline ::rust_out::S create(::std::int32_t i) {
                     crubit::Slot<::rust_out::S> __return_value_ret_val_holder;
                     auto* __return_value_storage = __return_value_ret_val_holder.Get();
                     __crubit_internal::...(i, __return_value_storage);
-                    return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+                    return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
                 }
             }
         );
@@ -1389,17 +1389,17 @@ fn test_format_item_fn_with_destructuring_parameter_name() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                std::int32_t func(::rust_out::S __param_0);
+                ::std::int32_t func(::rust_out::S __param_0);
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" std::int32_t ...(::rust_out::S*);
+                    extern "C" ::std::int32_t ...(::rust_out::S*);
                 }
                 ...
-                inline std::int32_t func(::rust_out::S __param_0) {
+                inline ::std::int32_t func(::rust_out::S __param_0) {
                     return __crubit_internal::...(&__param_0);
                 }
             }
@@ -1454,7 +1454,7 @@ fn test_must_use_attr_for_fn_no_msg() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                [[nodiscard]] std::int32_t add(std::int32_t x, std::int32_t y);
+                [[nodiscard]] ::std::int32_t add(::std::int32_t x, ::std::int32_t y);
             }
         )
     })
@@ -1475,7 +1475,7 @@ fn test_must_use_attr_for_fn_msg() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                [[nodiscard("hello!")]] std::int32_t add(std::int32_t x, std::int32_t y);
+                [[nodiscard("hello!")]] ::std::int32_t add(::std::int32_t x, ::std::int32_t y);
             }
         )
     })
@@ -1496,7 +1496,7 @@ fn test_deprecated_attr_for_fn_no_args() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                [[deprecated]] std::int32_t add(std::int32_t x, std::int32_t y);
+                [[deprecated]] ::std::int32_t add(::std::int32_t x, ::std::int32_t y);
             }
         )
     })
@@ -1517,7 +1517,7 @@ fn test_deprecated_attr_for_fn_with_message() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                [[deprecated("Use add_i32 instead")]] std::int32_t add(std::int32_t x, std::int32_t y);
+                [[deprecated("Use add_i32 instead")]] ::std::int32_t add(::std::int32_t x, ::std::int32_t y);
             }
         )
     })
@@ -1538,7 +1538,7 @@ fn test_deprecated_attr_for_fn_with_named_args() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                [[deprecated("Use add_i32 instead")]] std::int32_t add(std::int32_t x, std::int32_t y);
+                [[deprecated("Use add_i32 instead")]] ::std::int32_t add(::std::int32_t x, ::std::int32_t y);
             }
         )
     })

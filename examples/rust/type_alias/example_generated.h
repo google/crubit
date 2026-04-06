@@ -23,7 +23,7 @@ namespace example_crate {
 // Generated from:
 // examples/rust/type_alias/example.rs;l=5
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
-    ":: example_crate_golden :: TypeAlias") = std::int32_t;
+    ":: example_crate_golden :: TypeAlias") = ::std::int32_t;
 }  // namespace example_crate
 
 #pragma clang diagnostic pop

@@ -60,17 +60,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   LeafRsEnum(const LeafRsEnum&) = default;
   LeafRsEnum& operator=(const LeafRsEnum&) = default;
   LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  std::array<unsigned char, 1> __opaque_blob_of_bytes;
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
 
  private:
   struct PrivateBytesTag {};
-  constexpr LeafRsEnum(PrivateBytesTag, std::array<unsigned char, 1> bytes)
+  constexpr LeafRsEnum(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
       : __opaque_blob_of_bytes(bytes) {}
 
  private:
@@ -95,14 +95,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   LeafRsType(const LeafRsType&) = default;
   LeafRsType& operator=(const LeafRsType&) = default;
   LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   union {
     // Generated from:
     // common/test/bidirectional_deps/leaf_rs_lib.rs;l=8
-    std::uint8_t field;
+    ::std::uint8_t field;
   };
 
  private:
@@ -111,19 +111,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
 
 // Generated from:
 // common/test/bidirectional_deps/leaf_rs_lib.rs;l=15
-std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x);
+::std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x);
 
 // Generated from:
 // common/test/bidirectional_deps/leaf_rs_lib.rs;l=37
-std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x);
+::std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x);
 
 // Generated from:
 // common/test/bidirectional_deps/leaf_rs_lib.rs;l=11
-::leaf_rs_lib::LeafRsType wrap(std::uint8_t x);
+::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x);
 
 // Generated from:
 // common/test/bidirectional_deps/leaf_rs_lib.rs;l=28
-::leaf_rs_lib::LeafRsEnum wrap_enum(std::uint8_t x);
+::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x);
 
 static_assert(
     sizeof(LeafRsEnum) == 1,
@@ -151,13 +151,13 @@ inline constexpr LeafRsEnum LeafRsEnum::MakeKValue2() {
 inline constexpr LeafRsEnum LeafRsEnum::MakeKValue3() {
   return LeafRsEnum(PrivateBytesTag{}, {3});
 }
-static_assert(std::is_trivially_destructible_v<LeafRsEnum>);
+static_assert(::std::is_trivially_destructible_v<LeafRsEnum>);
 static_assert(
-    std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsEnum>);
-static_assert(std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsEnum>);
+    ::std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsEnum>);
+static_assert(::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsEnum>);
 static_assert(
-    std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsEnum>);
-static_assert(std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsEnum>);
+    ::std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsEnum>);
+static_assert(::std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsEnum>);
 inline void LeafRsEnum::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsEnum, __opaque_blob_of_bytes));
 }
@@ -177,50 +177,51 @@ extern "C" void __crubit_thunk_default(::leaf_rs_lib::LeafRsType* __ret_ptr);
 inline ::leaf_rs_lib::LeafRsType::LeafRsType() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<LeafRsType>);
+static_assert(::std::is_trivially_destructible_v<LeafRsType>);
 static_assert(
-    std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsType>);
-static_assert(std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsType>);
+    ::std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsType>);
+static_assert(::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsType>);
 static_assert(
-    std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsType>);
-static_assert(std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsType>);
+    ::std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsType>);
+static_assert(::std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsType>);
 inline void LeafRsType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsType, field));
 }
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_unwrap(::leaf_rs_lib::LeafRsType*);
+extern "C" ::std::uint8_t __crubit_thunk_unwrap(::leaf_rs_lib::LeafRsType*);
 }
-inline std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x) {
+inline ::std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x) {
   return __crubit_internal::__crubit_thunk_unwrap(&x);
 }
 
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_unwrap_uenum(::leaf_rs_lib::LeafRsEnum*);
+extern "C" ::std::uint8_t __crubit_thunk_unwrap_uenum(
+    ::leaf_rs_lib::LeafRsEnum*);
 }
-inline std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x) {
+inline ::std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x) {
   return __crubit_internal::__crubit_thunk_unwrap_uenum(&x);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_wrap(std::uint8_t,
+extern "C" void __crubit_thunk_wrap(::std::uint8_t,
                                     ::leaf_rs_lib::LeafRsType* __ret_ptr);
 }
-inline ::leaf_rs_lib::LeafRsType wrap(std::uint8_t x) {
+inline ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x) {
   crubit::Slot<::leaf_rs_lib::LeafRsType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_wrap(x, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_wrap_uenum(std::uint8_t,
+extern "C" void __crubit_thunk_wrap_uenum(::std::uint8_t,
                                           ::leaf_rs_lib::LeafRsEnum* __ret_ptr);
 }
-inline ::leaf_rs_lib::LeafRsEnum wrap_enum(std::uint8_t x) {
+inline ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x) {
   crubit::Slot<::leaf_rs_lib::LeafRsEnum> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_wrap_uenum(x, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace leaf_rs_lib

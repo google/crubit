@@ -45,18 +45,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
   MyStruct(const MyStruct&) = default;
   MyStruct& operator=(const MyStruct&) = default;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // examples/rust/trait/example.rs;l=17
-  static ::example_crate::MyStruct new_(std::int32_t x);
+  static ::example_crate::MyStruct new_(::std::int32_t x);
 
  private:
   union {
     // Generated from:
     // examples/rust/trait/example.rs;l=13
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -77,8 +77,8 @@ struct rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
 
   // Generated from:
   // examples/rust/trait/example.rs;l=23
-  static std::int32_t add_with(::example_crate::MyStruct const& self,
-                               std::int32_t y);
+  static ::std::int32_t add_with(::example_crate::MyStruct const& self,
+                                 ::std::int32_t y);
 
   // Generated from:
   // examples/rust/trait/example.rs;l=27
@@ -99,22 +99,22 @@ extern "C" void __crubit_thunk_default(::example_crate::MyStruct* __ret_ptr);
 inline ::example_crate::MyStruct::MyStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<MyStruct>);
 static_assert(
-    std::is_trivially_move_constructible_v<::example_crate::MyStruct>);
-static_assert(std::is_trivially_move_assignable_v<::example_crate::MyStruct>);
+    ::std::is_trivially_move_constructible_v<::example_crate::MyStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::example_crate::MyStruct>);
 static_assert(
-    std::is_trivially_copy_constructible_v<::example_crate::MyStruct>);
-static_assert(std::is_trivially_copy_assignable_v<::example_crate::MyStruct>);
+    ::std::is_trivially_copy_constructible_v<::example_crate::MyStruct>);
+static_assert(::std::is_trivially_copy_assignable_v<::example_crate::MyStruct>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::int32_t,
+extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::example_crate::MyStruct* __ret_ptr);
 }
-inline ::example_crate::MyStruct MyStruct::new_(std::int32_t x) {
+inline ::example_crate::MyStruct MyStruct::new_(::std::int32_t x) {
   crubit::Slot<::example_crate::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
@@ -123,13 +123,13 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 
 namespace example_crate {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_uadd_uwith(
-    ::example_crate::MyStruct const&, std::int32_t);
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_uadd_uwith(
+    ::example_crate::MyStruct const&, ::std::int32_t);
 }
 }  // namespace example_crate
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with(
-    ::example_crate::MyStruct const& self, std::int32_t y) {
+    ::example_crate::MyStruct const& self, ::std::int32_t y) {
   return example_crate::__crubit_internal::__crubit_thunk_MyTrait_uadd_uwith(
       self, y);
 }

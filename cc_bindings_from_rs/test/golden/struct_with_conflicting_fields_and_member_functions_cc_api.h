@@ -46,33 +46,33 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   X(const X&) = delete;
   X& operator=(const X&) = delete;
   X(::crubit::UnsafeRelocateTag, X&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=13
-  std::int32_t a() const;
+  ::std::int32_t a() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=16
-  std::int32_t b() const;
+  ::std::int32_t b() const;
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=7
-    std::int32_t a_;
+    ::std::int32_t a_;
   };
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=8
-    std::int32_t b_;
+    ::std::int32_t b_;
   };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=9
-    std::int32_t c;
+    ::std::int32_t c;
   };
 
  private:
@@ -85,25 +85,25 @@ static_assert(
 static_assert(
     alignof(X) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<X>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<X>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::struct_with_conflicting_fields_and_member_functions_rust::X>);
-static_assert(std::is_trivially_move_assignable_v<
+static_assert(::std::is_trivially_move_assignable_v<
               ::struct_with_conflicting_fields_and_member_functions_rust::X>);
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_a(
+extern "C" ::std::int32_t __crubit_thunk_a(
     ::struct_with_conflicting_fields_and_member_functions_rust::X const&);
 }
-inline std::int32_t X::a() const {
+inline ::std::int32_t X::a() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_a(self);
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_b(
+extern "C" ::std::int32_t __crubit_thunk_b(
     ::struct_with_conflicting_fields_and_member_functions_rust::X const&);
 }
-inline std::int32_t X::b() const {
+inline ::std::int32_t X::b() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_b(self);
 }

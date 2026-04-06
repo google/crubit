@@ -130,10 +130,24 @@ pub struct ExportedPath {
     pub krate: CrateNum,
 }
 
+// Checks for a list of known clang builtin macros and renames their namespaces to avoid
+// collisions. Generating a namespace with the same name as a macro causes the namespace to
+// expand during preprocessing, producing an ill-formed program.
+pub fn rename_clang_builtin_macros(ns: Rc<str>) -> Rc<str> {
+    if matches!(ns.as_ref(), "unix" | "linux" | "WIN32" | "WINNT" | "WIN64" | "spirv" | "sun") {
+        return Rc::from(format!("rs_{}", ns.as_ref()));
+    }
+    ns
+}
+
 impl From<&ExportedPath> for NamespaceQualifier {
     fn from(this: &ExportedPath) -> Self {
         NamespaceQualifier::new(
-            this.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
+            this.path
+                .iter()
+                .map(|s| Rc::<str>::from(s.as_str()))
+                .map(rename_clang_builtin_macros)
+                .collect::<Vec<_>>(),
         )
     }
 }

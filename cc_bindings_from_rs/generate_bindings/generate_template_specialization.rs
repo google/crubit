@@ -235,9 +235,9 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
         };
         let set_some_from_std_optional = {
             let write_some = if has_move_ctor {
-                quote! { *some = std::move(value.value()); }
+                quote! { *some = ::std::move(value.value()); }
             } else if has_relocating_ctor {
-                quote! { std::construct_at(some, crubit::UnsafeRelocateTag{}, std::move(*value)); }
+                quote! { ::std::construct_at(some, crubit::UnsafeRelocateTag{}, ::std::move(*value)); }
             } else {
                 quote! { *some = value.value(); }
             };
@@ -245,7 +245,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                 #write_some_to_tag
                 #arg_ty* some = #some_ptr_val;
                 #write_some
-                std::construct_at(&value, std::nullopt);
+                ::std::construct_at(&value, ::std::nullopt);
             }
         };
         let take_some = if has_relocating_ctor {
@@ -262,13 +262,13 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                         _value->set_tag(tag);
                     }
                 } defer(this);
-                return std::make_optional<#arg_ty>(crubit::UnsafeRelocateTag{}, std::move(*#some_ptr_val));
+                return ::std::make_optional<#arg_ty>(crubit::UnsafeRelocateTag{}, ::std::move(*#some_ptr_val));
             }
         } else {
             quote! {
                 #arg_ty& value = *#some_ptr_val;
-                std::optional<#arg_ty> return_value(std::move(value));
-                std::destroy_at(&value);
+                ::std::optional<#arg_ty> return_value(::std::move(value));
+                ::std::destroy_at(&value);
                 #set_none
                 return return_value;
             }
@@ -277,7 +277,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
         // Destruct a some value if present.
         let reset = quote! {
             if (tag() != #none_val) {
-                std::destroy_at(#some_ptr_val);
+                ::std::destroy_at(#some_ptr_val);
             }
         };
 
@@ -298,7 +298,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                 quote! {
                     ~Option() noexcept = default;
                 },
-                quote! { static_assert(std::is_trivially_destructible_v<rs_std::Option<#arg_ty>>); },
+                quote! { static_assert(::std::is_trivially_destructible_v<rs_std::Option<#arg_ty>>); },
             )
         };
 
@@ -314,14 +314,14 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                 quote! {
                     inline rs_std::Option<#arg_ty>::Option(#arg_ty&& value) noexcept {
                         #write_some_to_tag
-                        std::construct_at(#some_ptr_val, std::move(value));
+                        ::std::construct_at(#some_ptr_val, ::std::move(value));
                     } __NEWLINE__
                     inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(#arg_ty&& value) noexcept {
                         if (tag() != #none_val) {
-                          *#some_ptr_val = std::move(value);
+                          *#some_ptr_val = ::std::move(value);
                         } else {
                           #write_some_to_tag
-                          std::construct_at(#some_ptr_val, std::move(value));
+                          ::std::construct_at(#some_ptr_val, ::std::move(value));
                         }
                         return *this;
                     } __NEWLINE__
@@ -334,20 +334,20 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
             tokens: quote! {
                 constexpr Option();  __NEWLINE__ __NEWLINE__
 
-                constexpr explicit Option(std::nullopt_t) noexcept; __NEWLINE__
-                constexpr Option& operator=(std::nullopt_t) noexcept; __NEWLINE__ __NEWLINE__
+                constexpr explicit Option(::std::nullopt_t) noexcept; __NEWLINE__
+                constexpr Option& operator=(::std::nullopt_t) noexcept; __NEWLINE__ __NEWLINE__
 
                 #value_move_ctor_and_assign
 
-                explicit Option(std::optional<#arg_ty>&& value) noexcept; __NEWLINE__
-                Option& operator=(std::optional<#arg_ty>&& value) noexcept; __NEWLINE__ __NEWLINE__
+                explicit Option(::std::optional<#arg_ty>&& value) noexcept; __NEWLINE__
+                Option& operator=(::std::optional<#arg_ty>&& value) noexcept; __NEWLINE__ __NEWLINE__
 
                 template<typename... Args>
-                Option(std::in_place_t, Args&&... args) noexcept;
+                Option(::std::in_place_t, Args&&... args) noexcept;
 
                 #drop
 
-                operator std::optional<#arg_ty>() && noexcept;
+                operator ::std::optional<#arg_ty>() && noexcept;
 
                 bool has_value() noexcept;
             private:
@@ -365,10 +365,10 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                     #set_none
                 } __NEWLINE__
 
-                inline constexpr rs_std::Option<#arg_ty>::Option(std::nullopt_t) noexcept {
+                inline constexpr rs_std::Option<#arg_ty>::Option(::std::nullopt_t) noexcept {
                     #set_none
                 } __NEWLINE__
-                inline constexpr rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(std::nullopt_t) noexcept {
+                inline constexpr rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(::std::nullopt_t) noexcept {
                     #reset
                     #set_none
                     return *this;
@@ -376,14 +376,14 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
 
                 #value_move_ctor_and_assign_details
 
-                inline rs_std::Option<#arg_ty>::Option(std::optional<#arg_ty>&& value) noexcept {
+                inline rs_std::Option<#arg_ty>::Option(::std::optional<#arg_ty>&& value) noexcept {
                     if (value.has_value()) {
                         #set_some_from_std_optional
                     } else {
                         #set_none
                     }
                 } __NEWLINE__
-                inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(std::optional<#arg_ty>&& value) noexcept {
+                inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(::std::optional<#arg_ty>&& value) noexcept {
                     #reset
                     if (value.has_value()) {
                         #set_some_from_std_optional
@@ -394,16 +394,16 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                 } __NEWLINE__
 
                 template<typename... Args>
-                inline rs_std::Option<#arg_ty>::Option(std::in_place_t, Args&&... args) noexcept {
+                inline rs_std::Option<#arg_ty>::Option(::std::in_place_t, Args&&... args) noexcept {
                     #write_some_to_tag
-                    std::construct_at(#some_ptr_val, std::forward<Args>(args)...);
+                    ::std::construct_at(#some_ptr_val, ::std::forward<Args>(args)...);
                 } __NEWLINE__
 
                 #drop_details
 
-                inline rs_std::Option<#arg_ty>::operator std::optional<#arg_ty>() && noexcept {
+                inline rs_std::Option<#arg_ty>::operator ::std::optional<#arg_ty>() && noexcept {
                     if (tag() == #none_val) {
-                        return std::nullopt;
+                        return ::std::nullopt;
                     } else {
                         #take_some
                     }
@@ -506,9 +506,9 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                 quote! {
                     inline #full_self_ty::~Result() noexcept {
                         if (has_value()) {
-                            std::destroy_at(#ok_ptr);
+                            ::std::destroy_at(#ok_ptr);
                         } else {
-                            std::destroy_at(#err_ptr);
+                            ::std::destroy_at(#err_ptr);
                         }
                     }
                 },
@@ -516,7 +516,7 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
         } else {
             (
                 quote! { ~Result() noexcept = default; },
-                quote! { static_assert(std::is_trivially_destructible_v<#full_self_ty>); },
+                quote! { static_assert(::std::is_trivially_destructible_v<#full_self_ty>); },
             )
         }
     }
@@ -545,17 +545,17 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
             cc_details: CcSnippet::new(quote! {
                 inline #full_self_ty::Result(#ok_ty_cpp&& ok) noexcept {
                     #write_ok_to_tag
-                    std::construct_at(#ok_ptr, std::move(ok));
+                    ::std::construct_at(#ok_ptr, ::std::move(ok));
                 } __NEWLINE__
 
                 inline #full_self_ty& #full_self_ty::operator=(#ok_ty_cpp&& ok) noexcept {
                     if (!has_value()) {
-                        std::destroy_at(#err_ptr);
+                        ::std::destroy_at(#err_ptr);
                         #write_ok_to_tag
-                        std::construct_at(#ok_ptr, std::move(ok));
+                        ::std::construct_at(#ok_ptr, ::std::move(ok));
                     } else {
                         #write_ok_to_tag
-                        *#ok_ptr = std::move(ok);
+                        *#ok_ptr = ::std::move(ok);
                     }
                     return *this;
                 } __NEWLINE__
@@ -585,17 +585,17 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                 cc_details: CcSnippet::new(quote! {
                     inline #full_self_ty::Result(rs_std::unexpected<#err_ty_cpp>&& err) noexcept {
                         #write_err_to_tag
-                        std::construct_at(#err_ptr, std::move(err.error()));
+                        ::std::construct_at(#err_ptr, ::std::move(err.error()));
                     } __NEWLINE__
 
                     inline #full_self_ty& #full_self_ty::operator=(rs_std::unexpected<#err_ty_cpp>&& err) noexcept {
                         if (has_value()) {
-                            std::destroy_at(#ok_ptr_val);
+                            ::std::destroy_at(#ok_ptr_val);
                             #write_err_to_tag
-                            std::construct_at(#err_ptr, std::move(err.error()));
+                            ::std::construct_at(#err_ptr, ::std::move(err.error()));
                         } else {
                             #write_err_to_tag
-                            *#err_ptr = std::move(err.error());
+                            *#err_ptr = ::std::move(err.error());
                         }
                         return *this;
                     } __NEWLINE__
@@ -634,7 +634,7 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                 #move_construct_err __NEWLINE__
 
                 template <typename... Args>
-                Result(std::in_place_t, Args&&... args); __NEWLINE__
+                Result(::std::in_place_t, Args&&... args); __NEWLINE__
 
                 template <typename... Args>
                 Result(rs_std::unexpect_t, Args&&... args); __NEWLINE__
@@ -698,7 +698,7 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
 
                 inline #ok_ty_cpp&& #full_self_ty::value() && {
                     check_has_ok();
-                    return std::move(*reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val));
+                    return ::std::move(*reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val));
                 } __NEWLINE__
 
                 inline #err_ty_cpp& #full_self_ty::err() & {
@@ -708,7 +708,7 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
 
                 inline #err_ty_cpp&& #full_self_ty::err() && {
                     check_has_err();
-                    return std::move(*reinterpret_cast<#err_ty_cpp*>(#err_ptr_val));
+                    return ::std::move(*reinterpret_cast<#err_ty_cpp*>(#err_ptr_val));
                 } __NEWLINE__
 
 
@@ -1007,16 +1007,16 @@ fn specialize_option<'tcx>(
         }),
         cc_details: CcSnippet::new(quote! {
             inline constexpr #tag_type_cc rs_std::Option<#ty_tokens>::tag() const& noexcept {
-                std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
-                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                ::std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
+                for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
                     __bytes[#endian_index] = storage_[#tag_offset + i];
                 }
-                return std::bit_cast<#tag_type_cc>(__bytes);
+                return ::std::bit_cast<#tag_type_cc>(__bytes);
             }
             __NEWLINE__
             inline constexpr void rs_std::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
-                auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
-                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
+                for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
                     storage_[#tag_offset + i] = __bytes[#endian_index];
                 }
             }

@@ -25,7 +25,7 @@ use std::ops::{Add, AddAssign};
 
 /// A CrubitAbiType that has C++ prerequisites.
 /// This type just serves as a named pair for CrubitAbiType and CcPrerequisites, and is useful
-/// for when we build up a CrubitAbiType where some of the inner types (e.g. std::string_view)
+/// for when we build up a CrubitAbiType where some of the inner types (e.g. ::std::string_view)
 /// might have C++ prerequisites (e.g. <string>) that need to be included to work.
 #[derive(Clone)]
 pub struct CrubitAbiTypeWithCcPrereqs<'tcx> {

@@ -53,17 +53,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   Color(const Color&) = default;
   Color& operator=(const Color&) = default;
   Color(::crubit::UnsafeRelocateTag, Color&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  std::array<unsigned char, 1> __opaque_blob_of_bytes;
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
 
  private:
   struct PrivateBytesTag {};
-  constexpr Color(PrivateBytesTag, std::array<unsigned char, 1> bytes)
+  constexpr Color(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
       : __opaque_blob_of_bytes(bytes) {}
 
  private:
@@ -96,11 +96,11 @@ inline constexpr Color Color::MakeBlue() {
 inline constexpr Color Color::MakeGreen() {
   return Color(PrivateBytesTag{}, {2});
 }
-static_assert(std::is_trivially_destructible_v<Color>);
-static_assert(std::is_trivially_move_constructible_v<::example_crate::Color>);
-static_assert(std::is_trivially_move_assignable_v<::example_crate::Color>);
-static_assert(std::is_trivially_copy_constructible_v<::example_crate::Color>);
-static_assert(std::is_trivially_copy_assignable_v<::example_crate::Color>);
+static_assert(::std::is_trivially_destructible_v<Color>);
+static_assert(::std::is_trivially_move_constructible_v<::example_crate::Color>);
+static_assert(::std::is_trivially_move_assignable_v<::example_crate::Color>);
+static_assert(::std::is_trivially_copy_constructible_v<::example_crate::Color>);
+static_assert(::std::is_trivially_copy_assignable_v<::example_crate::Color>);
 inline void Color::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
 }

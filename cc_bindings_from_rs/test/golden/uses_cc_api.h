@@ -44,14 +44,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   Bar(const Bar&) = delete;
   Bar& operator=(const Bar&) = delete;
   Bar(::crubit::UnsafeRelocateTag, Bar&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=33
-    std::int32_t i;
+    ::std::int32_t i;
   };
 
  private:
@@ -75,7 +75,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -90,7 +90,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=36
-    std::int32_t i;
+    ::std::int32_t i;
   };
 
  public:
@@ -125,12 +125,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
   G(const G&) = delete;
   G& operator=(const G&) = delete;
   G(::crubit::UnsafeRelocateTag, G&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=78
-    std::int32_t field;
+    ::std::int32_t field;
   };
 
  private:
@@ -158,12 +158,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   InnerX(const InnerX&) = delete;
   InnerX& operator=(const InnerX&) = delete;
   InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=68
-    std::int32_t field;
+    ::std::int32_t field;
   };
 
  private:
@@ -191,14 +191,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
   X1(const X1&) = delete;
   X1& operator=(const X1&) = delete;
   X1(::crubit::UnsafeRelocateTag, X1&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=21
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -207,11 +207,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=8
-std::int32_t f1();
+::std::int32_t f1();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=12
-std::int32_t f2();
+::std::int32_t f2();
 
 }  // namespace uses_rust
 
@@ -219,11 +219,11 @@ namespace uses_rust {
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=54
-std::int32_t g1();
+::std::int32_t g1();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=58
-std::int32_t g2();
+::std::int32_t g2();
 
 static_assert(
     sizeof(Bar) == 4,
@@ -231,9 +231,9 @@ static_assert(
 static_assert(
     alignof(Bar) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Bar>);
-static_assert(std::is_trivially_move_constructible_v<::uses_rust::Bar>);
-static_assert(std::is_trivially_move_assignable_v<::uses_rust::Bar>);
+static_assert(::std::is_trivially_destructible_v<Bar>);
+static_assert(::std::is_trivially_move_constructible_v<::uses_rust::Bar>);
+static_assert(::std::is_trivially_move_assignable_v<::uses_rust::Bar>);
 inline void Bar::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Bar, i));
 }
@@ -243,9 +243,9 @@ static_assert(
 static_assert(
     alignof(Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Foo>);
-static_assert(std::is_trivially_move_constructible_v<::uses_rust::Foo>);
-static_assert(std::is_trivially_move_assignable_v<::uses_rust::Foo>);
+static_assert(::std::is_trivially_destructible_v<Foo>);
+static_assert(::std::is_trivially_move_constructible_v<::uses_rust::Foo>);
+static_assert(::std::is_trivially_move_assignable_v<::uses_rust::Foo>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::uses_rust::Foo* __ret_ptr);
 }
@@ -253,7 +253,7 @@ inline ::uses_rust::Foo Foo::create() {
   crubit::Slot<::uses_rust::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -263,7 +263,7 @@ inline ::uses_rust::Bar Foo::bar() {
   crubit::Slot<::uses_rust::Bar> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_bar(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, i));
@@ -286,9 +286,9 @@ static_assert(
 static_assert(
     alignof(G) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<G>);
-static_assert(std::is_trivially_move_constructible_v<::uses_rust::G>);
-static_assert(std::is_trivially_move_assignable_v<::uses_rust::G>);
+static_assert(::std::is_trivially_destructible_v<G>);
+static_assert(::std::is_trivially_move_constructible_v<::uses_rust::G>);
+static_assert(::std::is_trivially_move_assignable_v<::uses_rust::G>);
 inline void G::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(G, field));
 }
@@ -302,9 +302,9 @@ static_assert(
 static_assert(
     alignof(InnerX) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<InnerX>);
-static_assert(std::is_trivially_move_constructible_v<::uses_rust::InnerX>);
-static_assert(std::is_trivially_move_assignable_v<::uses_rust::InnerX>);
+static_assert(::std::is_trivially_destructible_v<InnerX>);
+static_assert(::std::is_trivially_move_constructible_v<::uses_rust::InnerX>);
+static_assert(::std::is_trivially_move_assignable_v<::uses_rust::InnerX>);
 inline void InnerX::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(InnerX, field));
 }
@@ -326,9 +326,9 @@ static_assert(
 static_assert(
     alignof(X1) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<X1>);
-static_assert(std::is_trivially_move_constructible_v<::uses_rust::X1>);
-static_assert(std::is_trivially_move_assignable_v<::uses_rust::X1>);
+static_assert(::std::is_trivially_destructible_v<X1>);
+static_assert(::std::is_trivially_move_constructible_v<::uses_rust::X1>);
+static_assert(::std::is_trivially_move_assignable_v<::uses_rust::X1>);
 inline void X1::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(X1, x));
 }
@@ -341,9 +341,9 @@ using ::uses_rust::f1;
 namespace uses_rust {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_f1();
+extern "C" ::std::int32_t __crubit_thunk_f1();
 }
-inline std::int32_t f1() { return __crubit_internal::__crubit_thunk_f1(); }
+inline ::std::int32_t f1() { return __crubit_internal::__crubit_thunk_f1(); }
 
 }  // namespace uses_rust
 
@@ -354,23 +354,23 @@ using ::uses_rust::f2;
 namespace uses_rust {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_f2();
+extern "C" ::std::int32_t __crubit_thunk_f2();
 }
-inline std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
+inline ::std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
 
 }  // namespace uses_rust
 
 namespace uses_rust {
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_g1();
+extern "C" ::std::int32_t __crubit_thunk_g1();
 }
-inline std::int32_t g1() { return __crubit_internal::__crubit_thunk_g1(); }
+inline ::std::int32_t g1() { return __crubit_internal::__crubit_thunk_g1(); }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_g2();
+extern "C" ::std::int32_t __crubit_thunk_g2();
 }
-inline std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
+inline ::std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
 }  // namespace uses_rust
 

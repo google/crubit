@@ -47,12 +47,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
   NoStdStruct(const NoStdStruct&) = delete;
   NoStdStruct& operator=(const NoStdStruct&) = delete;
   NoStdStruct(::crubit::UnsafeRelocateTag, NoStdStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/no_std/no_std.rs;l=14
-  static ::no_std::NoStdStruct new_(std::int32_t x, float y);
+  static ::no_std::NoStdStruct new_(::std::int32_t x, float y);
 
   // Generated from:
   // cc_bindings_from_rs/test/no_std/no_std.rs;l=18
@@ -62,7 +62,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
   // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  std::array<unsigned char, 24> test;
+  ::std::array<unsigned char, 24> test;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -81,14 +81,14 @@ inline NoStdStruct::~NoStdStruct() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::int32_t, float,
+extern "C" void __crubit_thunk_new(::std::int32_t, float,
                                    ::no_std::NoStdStruct* __ret_ptr);
 }
-inline ::no_std::NoStdStruct NoStdStruct::new_(std::int32_t x, float y) {
+inline ::no_std::NoStdStruct NoStdStruct::new_(::std::int32_t x, float y) {
   crubit::Slot<::no_std::NoStdStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, y, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

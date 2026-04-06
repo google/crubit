@@ -47,25 +47,25 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructWithLifetime(const StructWithLifetime&) = default;
   StructWithLifetime& operator=(const StructWithLifetime&) = default;
   StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=32
   static ::lifetimes::StructWithLifetime from_ref(
-      std::int32_t const* $a crubit_nonnull field_with_lifetime);
+      ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=36
-  std::int32_t const& $a into_ref() const;
+  ::std::int32_t const& $a into_ref() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=40
-  std::int32_t value() const;
+  ::std::int32_t value() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=44
-  std::int32_t const& $(__anon1)
+  ::std::int32_t const& $(__anon1)
       borrow_from_self() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // Generated from:
@@ -75,29 +75,29 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=54
   static ::lifetimes::StructWithLifetime from_static_ref(
-      std::int32_t const* $static crubit_nonnull field_with_lifetime);
+      ::std::int32_t const* $static crubit_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=58
   static ::lifetimes::StructWithLifetime from_static_ref_where_bound(
-      std::int32_t const* $a crubit_nonnull field_with_lifetime);
+      ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=65
-  std::int32_t const& $static borrow_from_static_self() const& $static;
+  ::std::int32_t const& $static borrow_from_static_self() const& $static;
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=19
-  explicit operator std::int32_t const& $a();
+  explicit operator ::std::int32_t const& $a();
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=25
-  explicit operator std::int32_t();
+  explicit operator ::std::int32_t();
 
   union {
     // Generated from:
     // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=10
-    std::int32_t const* crubit_nonnull field_with_lifetime;
+    ::std::int32_t const* crubit_nonnull field_with_lifetime;
   };
 
  private:
@@ -130,7 +130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const StructWithLifetimeAndDropGlue&) = delete;
   StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
                                 StructWithLifetimeAndDropGlue&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
@@ -141,13 +141,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  std::array<unsigned char, 24> field_with_drop_glue;
+  ::std::array<unsigned char, 24> field_with_drop_glue;
 
  public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=73
-    std::int32_t const* crubit_nonnull field_with_lifetime;
+    ::std::int32_t const* crubit_nonnull field_with_lifetime;
   };
 
  private:
@@ -157,7 +157,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Generated from:
 // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=70
 void function_with_trivial_unnamed_lifetime_param(
-    std::int32_t const& __param_0);
+    ::std::int32_t const& __param_0);
 
 static_assert(
     sizeof(StructWithLifetime) == 8,
@@ -165,51 +165,52 @@ static_assert(
 static_assert(
     alignof(StructWithLifetime) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<StructWithLifetime>);
+static_assert(::std::is_trivially_destructible_v<StructWithLifetime>);
 static_assert(
-    std::is_trivially_move_constructible_v<::lifetimes::StructWithLifetime>);
+    ::std::is_trivially_move_constructible_v<::lifetimes::StructWithLifetime>);
 static_assert(
-    std::is_trivially_move_assignable_v<::lifetimes::StructWithLifetime>);
+    ::std::is_trivially_move_assignable_v<::lifetimes::StructWithLifetime>);
 static_assert(
-    std::is_trivially_copy_constructible_v<::lifetimes::StructWithLifetime>);
+    ::std::is_trivially_copy_constructible_v<::lifetimes::StructWithLifetime>);
 static_assert(
-    std::is_trivially_copy_assignable_v<::lifetimes::StructWithLifetime>);
+    ::std::is_trivially_copy_assignable_v<::lifetimes::StructWithLifetime>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
-    std::int32_t const* $a crubit_nonnull,
+    ::std::int32_t const* $a crubit_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
-    std::int32_t const* $a crubit_nonnull field_with_lifetime) {
+    ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_uref(field_with_lifetime,
                                               __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& $a
+extern "C" ::std::int32_t const& $a
 __crubit_thunk_into_uref(::lifetimes::StructWithLifetime*);
 }
-inline std::int32_t const& $a StructWithLifetime::into_ref() const {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+inline ::std::int32_t const& $a StructWithLifetime::into_ref() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_into_uref(&self);
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_value(::lifetimes::StructWithLifetime*);
+extern "C" ::std::int32_t __crubit_thunk_value(
+    ::lifetimes::StructWithLifetime*);
 }
-inline std::int32_t StructWithLifetime::value() const {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+inline ::std::int32_t StructWithLifetime::value() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_value(&self);
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& $(__anon1)
+extern "C" ::std::int32_t const& $(__anon1)
     __crubit_thunk_borrow_ufrom_uself(::lifetimes::StructWithLifetime const&);
 }
-inline std::int32_t const& $(__anon1) StructWithLifetime::borrow_from_self()
+inline ::std::int32_t const& $(__anon1) StructWithLifetime::borrow_from_self()
     const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_borrow_ufrom_uself(self);
@@ -223,64 +224,64 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::make_static_42() {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref(
-    std::int32_t const* $static crubit_nonnull,
+    ::std::int32_t const* $static crubit_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
-    std::int32_t const* $static crubit_nonnull field_with_lifetime) {
+    ::std::int32_t const* $static crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref(field_with_lifetime,
                                                       __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref_uwhere_ubound(
-    std::int32_t const* $a crubit_nonnull,
+    ::std::int32_t const* $a crubit_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime
 StructWithLifetime::from_static_ref_where_bound(
-    std::int32_t const* $a crubit_nonnull field_with_lifetime) {
+    ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref_uwhere_ubound(
       field_with_lifetime, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& $static
+extern "C" ::std::int32_t const& $static
 __crubit_thunk_borrow_ufrom_ustatic_uself(
     ::lifetimes::StructWithLifetime const&);
 }
-inline std::int32_t const& $static
+inline ::std::int32_t const& $static
 StructWithLifetime::borrow_from_static_self() const& $static {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_borrow_ufrom_ustatic_uself(self);
 }
 namespace __crubit_internal {
-extern "C" std::int32_t const& $a
+extern "C" ::std::int32_t const& $a
 __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(
     ::lifetimes::StructWithLifetime*);
 }
-inline StructWithLifetime::operator std::int32_t const& $a() {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+inline StructWithLifetime::operator ::std::int32_t const& $a() {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(&self);
 }
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(
+extern "C" ::std::int32_t __crubit_thunk_into_ui32(
     ::lifetimes::StructWithLifetime*);
 }
-inline StructWithLifetime::operator std::int32_t() {
-  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+inline StructWithLifetime::operator ::std::int32_t() {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
@@ -309,7 +310,7 @@ StructWithLifetimeAndDropGlue::make_static_42() {
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void StructWithLifetimeAndDropGlue::__crubit_field_offset_assertions() {
   static_assert(0 ==
@@ -320,10 +321,10 @@ inline void StructWithLifetimeAndDropGlue::__crubit_field_offset_assertions() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
-    std::int32_t const&);
+    ::std::int32_t const&);
 }
 inline void function_with_trivial_unnamed_lifetime_param(
-    std::int32_t const& __param_0) {
+    ::std::int32_t const& __param_0) {
   return __crubit_internal::
       __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
           __param_0);

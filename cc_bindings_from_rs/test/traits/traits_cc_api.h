@@ -55,18 +55,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   AssociatedTypeStruct(::crubit::UnsafeRelocateTag,
                        AssociatedTypeStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   // Field type has been replaced with a blob of bytes: Definition
   // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
   // was specified for this crate
-  std::array<unsigned char, 24> a;
+  ::std::array<unsigned char, 24> a;
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/traits.rs;l=149
-    std::int32_t b;
+    ::std::int32_t b;
   };
   unsigned char __padding0[4];
 
@@ -108,18 +108,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   Foo(const Foo&) = default;
   Foo& operator=(const Foo&) = default;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=29
-  static ::traits::Foo new_(std::int32_t x, std::int32_t y);
+  static ::traits::Foo new_(::std::int32_t x, ::std::int32_t y);
 
  private:
   // Field type has been replaced with a blob of bytes: Tuple types cannot be
   // used inside of compound data types, because std::tuple is not
   // layout-compatible with a Rust tuple.
-  std::array<unsigned char, 8> a;
+  ::std::array<unsigned char, 8> a;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -142,14 +142,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   LifetimeStruct(const LifetimeStruct&) = delete;
   LifetimeStruct& operator=(const LifetimeStruct&) = delete;
   LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/traits.rs;l=91
-    std::int32_t const* crubit_nonnull x;
+    ::std::int32_t const* crubit_nonnull x;
   };
 
  private:
@@ -182,18 +182,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   MyStruct(const MyStruct&) = default;
   MyStruct& operator=(const MyStruct&) = default;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=51
-  static ::traits::MyStruct new_(std::int32_t x);
+  static ::traits::MyStruct new_(::std::int32_t x);
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/traits.rs;l=47
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -218,14 +218,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
   MyStruct2(const MyStruct2&) = default;
   MyStruct2& operator=(const MyStruct2&) = default;
   MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
 
  private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/traits.rs;l=106
-    std::int32_t y;
+    ::std::int32_t y;
   };
 
  private:
@@ -262,12 +262,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       default;
   StructWithAssociatedConst(::crubit::UnsafeRelocateTag,
                             StructWithAssociatedConst&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/traits.rs;l=174
-    std::int32_t x;
+    ::std::int32_t x;
   };
 
  private:
@@ -292,11 +292,11 @@ struct rs_std::impl<::traits::AssociatedTypeStruct,
   // cc_bindings_from_rs/test/traits/traits.rs;l=154
   using MyAssocType CRUBIT_INTERNAL_RUST_TYPE(
       "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
-      "AssociatedTypeTrait>::MyAssocType") = std::int32_t;
+      "AssociatedTypeTrait>::MyAssocType") = ::std::int32_t;
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=155
-  static std::int32_t get_my_assoc_type(
+  static ::std::int32_t get_my_assoc_type(
       ::traits::AssociatedTypeStruct const& self);
 
   // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
@@ -319,12 +319,12 @@ struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=95
-  static std::int32_t const& $a
+  static ::std::int32_t const& $a
   trait_do_something(::traits::LifetimeStruct const& self);
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=99
-  static std::int32_t const& $(__anon1)
+  static ::std::int32_t const& $(__anon1)
       function_do_something(::traits::LifetimeStruct const& self);
 };
 
@@ -334,7 +334,7 @@ struct rs_std::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=79
-  static std::int32_t do_something(::traits::MyStruct const& self);
+  static ::std::int32_t do_something(::traits::MyStruct const& self);
 };
 
 template <>
@@ -343,11 +343,11 @@ struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=57
-  static std::int32_t do_something(::traits::MyStruct const& self);
+  static ::std::int32_t do_something(::traits::MyStruct const& self);
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=61
-  static std::int32_t consume_self(::traits::MyStruct self);
+  static ::std::int32_t consume_self(::traits::MyStruct self);
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=65
@@ -356,12 +356,12 @@ struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=69
-  static std::int32_t no_self();
+  static ::std::int32_t no_self();
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=73
-  static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
-      ::traits::MyStruct const& self, ::traits::Foo x);
+  static ::std::tuple<::std::int32_t, ::std::int32_t>
+  take_and_return_other_types(::traits::MyStruct const& self, ::traits::Foo x);
 };
 
 template <>
@@ -370,11 +370,11 @@ struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=110
-  static std::int32_t do_something(::traits::MyStruct2 const& self);
+  static ::std::int32_t do_something(::traits::MyStruct2 const& self);
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=114
-  static std::int32_t consume_self(::traits::MyStruct2 self);
+  static ::std::int32_t consume_self(::traits::MyStruct2 self);
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=118
@@ -383,19 +383,19 @@ struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=122
-  static std::int32_t no_self();
+  static ::std::int32_t no_self();
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/traits.rs;l=126
-  static std::tuple<std::int32_t, std::int32_t> take_and_return_other_types(
-      ::traits::MyStruct2 const& self, ::traits::Foo x);
+  static ::std::tuple<::std::int32_t, ::std::int32_t>
+  take_and_return_other_types(::traits::MyStruct2 const& self, ::traits::Foo x);
 };
 
 template <>
 struct rs_std::impl<::traits::StructWithAssociatedConst,
                     ::traits::TraitWithAssociatedConst> {
   static constexpr bool kIsImplemented = true;
-  static constexpr std::int32_t CONST_INT = INT32_C(10);
+  static constexpr ::std::int32_t CONST_INT = INT32_C(10);
 
   // Error generating bindings for `<traits_golden::StructWithAssociatedConst as
   // traits_golden::TraitWithAssociatedConst>::CONST_STRUCT` defined at
@@ -427,7 +427,7 @@ inline AssociatedTypeStruct::~AssociatedTypeStruct() {
 inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
     AssociatedTypeStruct&& other)
     : AssociatedTypeStruct() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline ::traits::AssociatedTypeStruct& ::traits::AssociatedTypeStruct::
 operator=(AssociatedTypeStruct&& other) {
@@ -467,20 +467,20 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(::traits::Foo* __ret_ptr);
 }
 inline ::traits::Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
-static_assert(std::is_trivially_destructible_v<Foo>);
-static_assert(std::is_trivially_move_constructible_v<::traits::Foo>);
-static_assert(std::is_trivially_move_assignable_v<::traits::Foo>);
-static_assert(std::is_trivially_copy_constructible_v<::traits::Foo>);
-static_assert(std::is_trivially_copy_assignable_v<::traits::Foo>);
+static_assert(::std::is_trivially_destructible_v<Foo>);
+static_assert(::std::is_trivially_move_constructible_v<::traits::Foo>);
+static_assert(::std::is_trivially_move_assignable_v<::traits::Foo>);
+static_assert(::std::is_trivially_copy_constructible_v<::traits::Foo>);
+static_assert(::std::is_trivially_copy_assignable_v<::traits::Foo>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::int32_t, std::int32_t,
+extern "C" void __crubit_thunk_new(::std::int32_t, ::std::int32_t,
                                    ::traits::Foo* __ret_ptr);
 }
-inline ::traits::Foo Foo::new_(std::int32_t x, std::int32_t y) {
+inline ::traits::Foo Foo::new_(::std::int32_t x, ::std::int32_t y) {
   crubit::Slot<::traits::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, y, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, a));
@@ -491,9 +491,10 @@ static_assert(
 static_assert(
     alignof(LifetimeStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<LifetimeStruct>);
-static_assert(std::is_trivially_move_constructible_v<::traits::LifetimeStruct>);
-static_assert(std::is_trivially_move_assignable_v<::traits::LifetimeStruct>);
+static_assert(::std::is_trivially_destructible_v<LifetimeStruct>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::traits::LifetimeStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::traits::LifetimeStruct>);
 inline void LifetimeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LifetimeStruct, x));
 }
@@ -509,19 +510,20 @@ extern "C" void __crubit_thunk_default(::traits::MyStruct* __ret_ptr);
 inline ::traits::MyStruct::MyStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<MyStruct>);
-static_assert(std::is_trivially_move_constructible_v<::traits::MyStruct>);
-static_assert(std::is_trivially_move_assignable_v<::traits::MyStruct>);
-static_assert(std::is_trivially_copy_constructible_v<::traits::MyStruct>);
-static_assert(std::is_trivially_copy_assignable_v<::traits::MyStruct>);
+static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::traits::MyStruct>);
+static_assert(::std::is_trivially_copy_constructible_v<::traits::MyStruct>);
+static_assert(::std::is_trivially_copy_assignable_v<::traits::MyStruct>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(std::int32_t, ::traits::MyStruct* __ret_ptr);
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::traits::MyStruct* __ret_ptr);
 }
-inline ::traits::MyStruct MyStruct::new_(std::int32_t x) {
+inline ::traits::MyStruct MyStruct::new_(::std::int32_t x) {
   crubit::Slot<::traits::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
@@ -538,11 +540,11 @@ extern "C" void __crubit_thunk_default(::traits::MyStruct2* __ret_ptr);
 inline ::traits::MyStruct2::MyStruct2() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<MyStruct2>);
-static_assert(std::is_trivially_move_constructible_v<::traits::MyStruct2>);
-static_assert(std::is_trivially_move_assignable_v<::traits::MyStruct2>);
-static_assert(std::is_trivially_copy_constructible_v<::traits::MyStruct2>);
-static_assert(std::is_trivially_copy_assignable_v<::traits::MyStruct2>);
+static_assert(::std::is_trivially_destructible_v<MyStruct2>);
+static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct2>);
+static_assert(::std::is_trivially_move_assignable_v<::traits::MyStruct2>);
+static_assert(::std::is_trivially_copy_constructible_v<::traits::MyStruct2>);
+static_assert(::std::is_trivially_copy_assignable_v<::traits::MyStruct2>);
 inline void MyStruct2::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct2, y));
 }
@@ -568,15 +570,15 @@ extern "C" void __crubit_thunk_default(
 inline ::traits::StructWithAssociatedConst::StructWithAssociatedConst() {
   __crubit_internal::__crubit_thunk_default(this);
 }
-static_assert(std::is_trivially_destructible_v<StructWithAssociatedConst>);
-static_assert(std::is_trivially_move_constructible_v<
+static_assert(::std::is_trivially_destructible_v<StructWithAssociatedConst>);
+static_assert(::std::is_trivially_move_constructible_v<
               ::traits::StructWithAssociatedConst>);
 static_assert(
-    std::is_trivially_move_assignable_v<::traits::StructWithAssociatedConst>);
-static_assert(std::is_trivially_copy_constructible_v<
+    ::std::is_trivially_move_assignable_v<::traits::StructWithAssociatedConst>);
+static_assert(::std::is_trivially_copy_constructible_v<
               ::traits::StructWithAssociatedConst>);
 static_assert(
-    std::is_trivially_copy_assignable_v<::traits::StructWithAssociatedConst>);
+    ::std::is_trivially_copy_assignable_v<::traits::StructWithAssociatedConst>);
 inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithAssociatedConst, x));
 }
@@ -584,12 +586,12 @@ inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t
+extern "C" ::std::int32_t
 __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
     ::traits::AssociatedTypeStruct const&);
 }
 }  // namespace traits
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
     get_my_assoc_type(::traits::AssociatedTypeStruct const& self) {
   return traits::__crubit_internal::
@@ -598,12 +600,12 @@ rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t const& $a
+extern "C" ::std::int32_t const& $a
 __crubit_thunk_LifetimeTrait_utrait_udo_usomething(
     ::traits::LifetimeStruct const&);
 }
 }  // namespace traits
-inline std::int32_t const& $a
+inline ::std::int32_t const& $a
 rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
     trait_do_something(::traits::LifetimeStruct const& self) {
   return traits::__crubit_internal::
@@ -612,12 +614,12 @@ rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t const& $(__anon1)
+extern "C" ::std::int32_t const& $(__anon1)
     __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
         ::traits::LifetimeStruct const&);
 }
 }  // namespace traits
-inline std::int32_t const& $(
+inline ::std::int32_t const& $(
     __anon1) rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
     function_do_something(::traits::LifetimeStruct const& self) {
   return traits::__crubit_internal::
@@ -626,11 +628,11 @@ inline std::int32_t const& $(
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_DifferentTraitSameName_udo_usomething(
+extern "C" ::std::int32_t __crubit_thunk_DifferentTraitSameName_udo_usomething(
     ::traits::MyStruct const&);
 }
 }  // namespace traits
-inline std::int32_t rs_std::
+inline ::std::int32_t rs_std::
     impl<::traits::MyStruct, ::traits::DifferentTraitSameName>::do_something(
         ::traits::MyStruct const& self) {
   return traits::__crubit_internal::
@@ -639,11 +641,11 @@ inline std::int32_t rs_std::
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_udo_usomething(
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_udo_usomething(
     ::traits::MyStruct const&);
 }
 }  // namespace traits
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::do_something(
     ::traits::MyStruct const& self) {
   return traits::__crubit_internal::__crubit_thunk_MyTrait_udo_usomething(self);
@@ -651,11 +653,11 @@ rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::do_something(
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_uconsume_uself(
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_uconsume_uself(
     ::traits::MyStruct*);
 }
 }  // namespace traits
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::consume_self(
     ::traits::MyStruct self) {
   return traits::__crubit_internal::__crubit_thunk_MyTrait_uconsume_uself(
@@ -676,10 +678,10 @@ inline ::traits::MyStruct const& $(__anon1)
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_uno_uself();
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_uno_uself();
 }
 }  // namespace traits
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::no_self() {
   return traits::__crubit_internal::__crubit_thunk_MyTrait_uno_uself();
 }
@@ -690,28 +692,29 @@ extern "C" void __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
     ::traits::MyStruct const&, ::traits::Foo*, void** __ret_ptr);
 }
 }  // namespace traits
-inline std::tuple<std::int32_t, std::int32_t> rs_std::
+inline ::std::tuple<::std::int32_t, ::std::int32_t> rs_std::
     impl<::traits::MyStruct, ::traits::MyTrait>::take_and_return_other_types(
         ::traits::MyStruct const& self, ::traits::Foo x) {
-  std::int32_t __return_value_0_ret_val_holder;
-  std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
-  std::int32_t __return_value_1_ret_val_holder;
-  std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
+  ::std::int32_t __return_value_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  ::std::int32_t __return_value_1_ret_val_holder;
+  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
   void* __return_value_storage[] = {__return_value_0_storage,
                                     __return_value_1_storage};
   traits::__crubit_internal::
       __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
           self, &x, __return_value_storage);
-  return std::make_tuple(*__return_value_0_storage, *__return_value_1_storage);
+  return ::std::make_tuple(*__return_value_0_storage,
+                           *__return_value_1_storage);
 }
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_udo_usomething(
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_udo_usomething(
     ::traits::MyStruct2 const&);
 }
 }  // namespace traits
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::do_something(
     ::traits::MyStruct2 const& self) {
   return traits::__crubit_internal::__crubit_thunk_MyTrait_udo_usomething(self);
@@ -719,11 +722,11 @@ rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::do_something(
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_uconsume_uself(
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_uconsume_uself(
     ::traits::MyStruct2*);
 }
 }  // namespace traits
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::consume_self(
     ::traits::MyStruct2 self) {
   return traits::__crubit_internal::__crubit_thunk_MyTrait_uconsume_uself(
@@ -744,10 +747,10 @@ inline ::traits::MyStruct2 const& $(__anon1)
 
 namespace traits {
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_MyTrait_uno_uself();
+extern "C" ::std::int32_t __crubit_thunk_MyTrait_uno_uself();
 }
 }  // namespace traits
-inline std::int32_t
+inline ::std::int32_t
 rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::no_self() {
   return traits::__crubit_internal::__crubit_thunk_MyTrait_uno_uself();
 }
@@ -758,19 +761,20 @@ extern "C" void __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
     ::traits::MyStruct2 const&, ::traits::Foo*, void** __ret_ptr);
 }
 }  // namespace traits
-inline std::tuple<std::int32_t, std::int32_t> rs_std::
+inline ::std::tuple<::std::int32_t, ::std::int32_t> rs_std::
     impl<::traits::MyStruct2, ::traits::MyTrait>::take_and_return_other_types(
         ::traits::MyStruct2 const& self, ::traits::Foo x) {
-  std::int32_t __return_value_0_ret_val_holder;
-  std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
-  std::int32_t __return_value_1_ret_val_holder;
-  std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
+  ::std::int32_t __return_value_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  ::std::int32_t __return_value_1_ret_val_holder;
+  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
   void* __return_value_storage[] = {__return_value_0_storage,
                                     __return_value_1_storage};
   traits::__crubit_internal::
       __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
           self, &x, __return_value_storage);
-  return std::make_tuple(*__return_value_0_storage, *__return_value_1_storage);
+  return ::std::make_tuple(*__return_value_0_storage,
+                           *__return_value_1_storage);
 }
 
 #pragma clang diagnostic pop

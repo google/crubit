@@ -156,7 +156,7 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
                       union {
                         __CAPTURE_TAG__ "<crubit_unittests.rs>" "101" "102"
                         __COMMENT__ #field_comment
-                        std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__;
+                        ::std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__;
                       };
                       ...
                     };
@@ -208,8 +208,8 @@ fn test_format_item_unsupported_lifetime_generic_struct() {
                  public:
                   ...
                   static ::rust_out::Point new_(
-                    std::int32_t const* $b crubit_nonnull _x,
-                    std::int32_t const* $c crubit_nonnull _y);
+                    ::std::int32_t const* $b crubit_nonnull _x,
+                    ::std::int32_t const* $c crubit_nonnull _y);
                   ...
                 };
             }
@@ -263,7 +263,7 @@ fn test_format_item_struct_with_tuple_fields() {
             quote! {
                 {
                     ...
-                    std::array<unsigned char, 4> tuple_field;
+                    ::std::array<unsigned char, 4> tuple_field;
                     __COMMENT__ "Skipped bindings for field `empty_tuple_field`: ZST fields are not supported (b/258259459)"
                     ...
                 }
@@ -420,11 +420,11 @@ fn test_format_item_struct_fields_with_doc_comments() {
                     ...
                     private:
                         __COMMENT__ #comment_for_unsupported_field
-                        std::array<unsigned char, 8> unsupported_field;
+                        ::std::array<unsigned char, 8> unsupported_field;
                     public:
                         union {
                             __COMMENT__ #comment_for_successful_field
-                            std::int32_t successful_field;
+                            ::std::int32_t successful_field;
                         };
                         ...
                     private:
@@ -655,7 +655,7 @@ fn test_cpp_enum_fails_for_rust_union() {
             quote! {
                 ...
                 __COMMENT__ "CRUBIT_ANNOTATE: cpp_enum=enum class\n\nGenerated from: <crubit_unittests.rs>;l=6"
-                union CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Color") Color : std::int32_t {};
+                union CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Color") Color : ::std::int32_t {};
                 ...
             }
         );
@@ -701,7 +701,7 @@ fn test_repr_c_union_unknown_fields() {
                         ...
                     private:
                         __COMMENT__ "Field type has been replaced with a blob of bytes: Generic types are not supported yet (b/259749095)"
-                        std::array<unsigned char, 8> z;
+                        ::std::array<unsigned char, 8> z;
                     ...
                 };
             }
@@ -795,19 +795,19 @@ fn test_format_item_rename_field_with_conflicting_name() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                std::int32_t a_;
+                ::std::int32_t a_;
             }
         );
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                std::int32_t b_;
+                ::std::int32_t b_;
             }
         );
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                std::int32_t c;
+                ::std::int32_t c;
             }
         );
         // Check that the fields are not renamed in the Rust side.
@@ -1085,12 +1085,12 @@ fn test_deprecated_attr_for_struct_fields() {
                     ...
                     union {
                         ...
-                        [[deprecated("Use `y` instead")]] std::uint32_t x;
+                        [[deprecated("Use `y` instead")]] ::std::uint32_t x;
                     }
                     ...
                     union {
                         ...
-                        std::uint32_t y;
+                        ::std::uint32_t y;
                     }
                     ...
                 };
@@ -1127,9 +1127,9 @@ fn test_deprecated_attr_for_impl_block() {
             quote! {
                 struct ... SomeStruct final {
                     ...
-                    ... [[deprecated("Use AnotherStruct instead")]] std::uint32_t sum() const ...
+                    ... [[deprecated("Use AnotherStruct instead")]] ::std::uint32_t sum() const ...
                     ...
-                    ... [[deprecated("Use AnotherStruct instead")]] std::uint32_t product() const ...
+                    ... [[deprecated("Use AnotherStruct instead")]] ::std::uint32_t product() const ...
                     ...
                 };
             }

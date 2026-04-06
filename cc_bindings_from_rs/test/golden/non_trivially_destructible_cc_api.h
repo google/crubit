@@ -53,12 +53,12 @@ NonTriviallyDestructable final {
 
   NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
                            NonTriviallyDestructable&& value) {
-    std::memcpy(this, &value, sizeof(value));
+    ::std::memcpy(this, &value, sizeof(value));
   }
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=7
-    std::int32_t field;
+    ::std::int32_t field;
   };
 
  private:
@@ -98,7 +98,7 @@ inline NonTriviallyDestructable::~NonTriviallyDestructable() {
 inline ::non_trivially_destructible_rust::NonTriviallyDestructable::
     NonTriviallyDestructable(NonTriviallyDestructable&& other)
     : NonTriviallyDestructable() {
-  *this = std::move(other);
+  *this = ::std::move(other);
 }
 inline ::non_trivially_destructible_rust::NonTriviallyDestructable& ::
 non_trivially_destructible_rust::NonTriviallyDestructable::operator=(
@@ -141,7 +141,7 @@ return_by_value() {
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uby_uvalue(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -150,7 +150,7 @@ extern "C" void __crubit_thunk_take_uby_uvalue(
 }
 inline void take_by_value(
     ::non_trivially_destructible_rust::NonTriviallyDestructable _x) {
-  crubit::Slot _x_slot((std::move(_x)));
+  crubit::Slot _x_slot((::std::move(_x)));
   return __crubit_internal::__crubit_thunk_take_uby_uvalue(_x_slot.Get());
 }
 
