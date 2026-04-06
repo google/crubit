@@ -57,7 +57,9 @@ pub mod foo {
         /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=15
         #[inline(always)]
         pub unsafe fn GetStructValue1(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
-            crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue1EPKNS0_8MyStructE(s)
+            unsafe {
+                crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue1EPKNS0_8MyStructE(s)
+            }
         }
 
         /// # Safety
@@ -68,7 +70,9 @@ pub mod foo {
         /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=17
         #[inline(always)]
         pub unsafe fn GetStructValue2(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
-            crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue2EPKNS0_8MyStructE(s)
+            unsafe {
+                crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue2EPKNS0_8MyStructE(s)
+            }
         }
 
         /// # Safety
@@ -79,7 +83,9 @@ pub mod foo {
         /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=26
         #[inline(always)]
         pub unsafe fn GetStructValue3(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
-            crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue3EPKNS0_8MyStructE(s)
+            unsafe {
+                crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue3EPKNS0_8MyStructE(s)
+            }
         }
 
         /// # Safety
@@ -90,7 +96,9 @@ pub mod foo {
         /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=27
         #[inline(always)]
         pub unsafe fn GetStructValue4(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
-            crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue4EPKNS0_8MyStructE(s)
+            unsafe {
+                crate::detail::__rust_thunk___ZN3foo7inline115GetStructValue4EPKNS0_8MyStructE(s)
+            }
         }
     }
     #[allow(unused_imports)]

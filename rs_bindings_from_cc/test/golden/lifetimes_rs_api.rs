@@ -43,7 +43,7 @@ pub fn AddAnotherHookWithTypedef(hook: extern "C" fn()) {
 /// * `pair`: raw pointer
 #[inline(always)]
 pub unsafe fn ConsumeArray(pair: *mut ::ffi_11::c_int) {
-    crate::detail::__rust_thunk___Z12ConsumeArrayPi(pair)
+    unsafe { crate::detail::__rust_thunk___Z12ConsumeArrayPi(pair) }
 }
 
 // error: type alias `Arr` could not be bound
@@ -55,7 +55,7 @@ pub unsafe fn ConsumeArray(pair: *mut ::ffi_11::c_int) {
 /// * `__param_0`: raw pointer
 #[inline(always)]
 pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut ::ffi_11::c_int) {
-    crate::detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0)
+    unsafe { crate::detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0) }
 }
 
 mod detail {

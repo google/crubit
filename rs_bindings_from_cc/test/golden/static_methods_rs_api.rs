@@ -32,7 +32,7 @@ impl SomeClass {
     /// Example of a factory method.
     #[inline(always)]
     pub fn static_factory_method(initial_value_of_field: ::ffi_11::c_int) -> crate::SomeClass {
-        self::some_class::static_factory_method(initial_value_of_field)
+        unsafe { self::some_class::static_factory_method(initial_value_of_field) }
     }
     /// Static method working on primitive types (and unrelated to the struct).
     #[inline(always)]
@@ -40,7 +40,7 @@ impl SomeClass {
         x: ::ffi_11::c_int,
         y: ::ffi_11::c_int,
     ) -> ::ffi_11::c_int {
-        self::some_class::static_method_that_multiplies_its_args(x, y)
+        unsafe { self::some_class::static_method_that_multiplies_its_args(x, y) }
     }
 }
 

@@ -773,7 +773,7 @@ pub fn generated_items_to_tokens<'db>(
                             quote! {
                                 unsafe impl oops::Inherits<#base_name> for #derived_name {
                                     unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
-                                        #body
+                                        unsafe { #body }
                                     }
                                 }
                                 __NEWLINE__
@@ -797,7 +797,7 @@ pub fn generated_items_to_tokens<'db>(
                         unsafe impl ::operator::Delete for #record_type {
                             #[inline(always)]
                             unsafe fn delete(p: *mut Self) {
-                                #crate_root_path::detail::#thunk_ident(p);
+                                unsafe { #crate_root_path::detail::#thunk_ident(p); }
                             }
                         }
                         __NEWLINE__
@@ -902,7 +902,7 @@ pub fn generated_items_to_tokens<'db>(
                     link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
                 let mut_kw = if *is_mut { Some(quote! { mut }) } else { None };
                 quote! {
-                    extern "C" {
+                    unsafe extern "C" {
                         #link_name_attr
                         #visibility static #mut_kw #ident: #type_tokens;
                     }

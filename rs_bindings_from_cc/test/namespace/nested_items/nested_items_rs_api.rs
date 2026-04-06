@@ -46,7 +46,7 @@ impl Same {
     /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=25
     #[inline(always)]
     pub unsafe fn Method(__this: *mut Self) -> ::ffi_11::c_int {
-        self::same_items::Method(__this)
+        unsafe { self::same_items::Method(__this) }
     }
 }
 
@@ -71,7 +71,7 @@ pub mod same_items {
     /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=25
     #[inline(always)]
     pub unsafe fn Method(__this: *mut crate::Same) -> ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZN4Same6MethodEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN4Same6MethodEv(__this) }
     }
     /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=16
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -95,7 +95,7 @@ pub mod same_items {
         /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=17
         #[inline(always)]
         pub unsafe fn NestedItemFunction(__this: *mut Self) -> ::ffi_11::c_int {
-            self::nested_item::NestedItemFunction(__this)
+            unsafe { self::nested_item::NestedItemFunction(__this) }
         }
     }
 
@@ -122,7 +122,9 @@ pub mod same_items {
         pub unsafe fn NestedItemFunction(
             __this: *mut crate::same_items::NestedItem,
         ) -> ::ffi_11::c_int {
-            crate::detail::__rust_thunk___ZN4Same10NestedItem18NestedItemFunctionEv(__this)
+            unsafe {
+                crate::detail::__rust_thunk___ZN4Same10NestedItem18NestedItemFunctionEv(__this)
+            }
         }
     }
 
@@ -192,7 +194,7 @@ pub mod foo {
             /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=32
             #[inline(always)]
             pub fn BFunction() -> ::ffi_11::c_int {
-                self::foo_items::BFunction()
+                unsafe { self::foo_items::BFunction() }
             }
         }
 

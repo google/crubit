@@ -32,7 +32,7 @@ pub(crate) unsafe fn SetValue(
     x: *mut ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()>,
     value: ::ffi_11::c_int,
 ) {
-    crate::detail::__rust_thunk___Z8SetValueR15UnsupportedTypei(x, value)
+    unsafe { crate::detail::__rust_thunk___Z8SetValueR15UnsupportedTypei(x, value) }
 }
 
 /// # Safety
@@ -45,7 +45,7 @@ pub(crate) unsafe fn SetValue(
 pub(crate) unsafe fn GetValue(
     x: *const ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()>,
 ) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z8GetValueRK15UnsupportedType(x)
+    unsafe { crate::detail::__rust_thunk___Z8GetValueRK15UnsupportedType(x) }
 }
 
 #[path = "rs_bindings_from_cc/test/wrapper/fallback_types/wrapper_library_extra.rs"]

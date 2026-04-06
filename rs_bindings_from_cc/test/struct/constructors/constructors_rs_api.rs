@@ -639,7 +639,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int,)> for NonTrivialStructWithConstructors {
 impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
     #[inline(always)]
     unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
-        crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev(self) }
     }
 }
 

@@ -41,7 +41,7 @@ unsafe impl ::cxx::ExternType for Struct {
 impl Struct {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
-        self::r#struct::Make(f1, f2)
+        unsafe { self::r#struct::Make(f1, f2) }
     }
 }
 
@@ -112,7 +112,7 @@ unsafe impl ::cxx::ExternType for PaddingBetweenFields {
 impl PaddingBetweenFields {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
-        self::padding_between_fields::Make(f1, f2)
+        unsafe { self::padding_between_fields::Make(f1, f2) }
     }
 }
 
@@ -205,7 +205,7 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
 impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev(self) }
     }
 }
 
@@ -244,7 +244,7 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding {
 impl ::ctor::PinnedDrop for FieldInTailPadding {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN18FieldInTailPaddingD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN18FieldInTailPaddingD1Ev(self) }
     }
 }
 

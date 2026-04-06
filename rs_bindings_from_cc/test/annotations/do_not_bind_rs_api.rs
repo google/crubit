@@ -146,7 +146,7 @@ pub mod crubit {
                 __this: *mut Self,
                 mut __param_0: crate::crubit::test::ArgumentToBoundOverload,
             ) {
-                self::struct_with_do_not_bind_method::DoNotBindMethod(__this, __param_0)
+                unsafe { self::struct_with_do_not_bind_method::DoNotBindMethod(__this, __param_0) }
             }
         }
 
@@ -176,7 +176,9 @@ pub mod crubit {
                 __this: *mut crate::crubit::test::StructWithDoNotBindMethod,
                 mut __param_0: crate::crubit::test::ArgumentToBoundOverload,
             ) {
-                crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(__this,&mut __param_0)
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(__this,&mut __param_0)
+                }
             }
         }
     }

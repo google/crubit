@@ -386,7 +386,7 @@ fn test_impl_drop_user_defined_destructor() -> Result<()> {
             impl ::ctor::PinnedDrop for UserDefinedDestructor {
                 #[inline(always)]
                 unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-                    crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self)
+                    unsafe { crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self) }
                 }
             }
         }
@@ -424,7 +424,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
             impl ::ctor::PinnedDrop for NontrivialMembers {
                 #[inline(always)]
                 unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-                    crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
+                    unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
                 }
             }
         }

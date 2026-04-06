@@ -237,7 +237,7 @@ fn test_ptr_func() -> Result<()> {
         quote! {
             #[inline(always)]
             pub unsafe fn Deref(p: *const *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
-                crate::detail::__rust_thunk___Z5DerefPKPi(p)
+                unsafe { crate::detail::__rust_thunk___Z5DerefPKPi(p) }
             }
         }
     );
@@ -280,7 +280,7 @@ fn test_const_char_ptr_func() -> Result<()> {
         quote! {
             #[inline(always)]
             pub unsafe fn f(str: *const ::ffi_11::c_schar) {
-                crate::detail::__rust_thunk___Z1fPKa(str)
+                unsafe { crate::detail::__rust_thunk___Z1fPKa(str) }
             }
         }
     );
@@ -1714,7 +1714,7 @@ fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn rvalue_ref_qualified_method<'a>(self: ::ctor::RvalueReference<'a, Self>) {
-                self::trivial_with_rvalue_ref_qualified_method::rvalue_ref_qualified_method(self)
+                unsafe { self::trivial_with_rvalue_ref_qualified_method::rvalue_ref_qualified_method(self) }
             }
         }
     );
@@ -1744,7 +1744,7 @@ fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn rvalue_ref_const_qualified_method<'a>(self: ::ctor::ConstRvalueReference<'a, Self>) {
-                self::trivial_with_rvalue_ref_const_qualified_method::rvalue_ref_const_qualified_method(self)
+                unsafe { self::trivial_with_rvalue_ref_const_qualified_method::rvalue_ref_const_qualified_method(self) }
             }
         }
     );
@@ -1903,7 +1903,7 @@ fn test_function_returning_rvalue_reference() -> Result<()> {
                 #[inline(always)]
                 pub fn GetRValueReference<'a>(&'a mut self)
                         -> ::ctor::RvalueReference<'a, crate::SomeStruct> {
-                    self::some_struct::GetRValueReference(self)
+                    unsafe { self::some_struct::GetRValueReference(self) }
                 }
             }
         }

@@ -1194,11 +1194,9 @@ fn generate_func_body(
                 //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
                 let _ = return_type; // proof that we don't need to update it.
             }
-            // Only need to wrap everything in an `unsafe { ... }` block if
-            // the *whole* api function is safe.
-            if !impl_kind.is_unsafe() {
-                body = quote! { unsafe { #body } };
-            }
+            // Rust 2024 requires that bodies of unsafe functions are not exempt from having unsafe
+            // blocks.
+            body = quote! { unsafe { #body } };
             Ok(quote! {
                 #thunk_prepare
                 #body
@@ -1773,7 +1771,7 @@ pub fn generate_function(
                     fn #bracketed_func_name #fn_generic_params(
                         #( #api_params ),*
                     ) #arrow #quoted_return_type #unsatisfied_where_clause {
-                        self::#mod_name::#func_name(#( #method_delegation_args ),*)
+                        unsafe { self::#mod_name::#func_name(#( #method_delegation_args ),*) }
                     }
                 }],
             );

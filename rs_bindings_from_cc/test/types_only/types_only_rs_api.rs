@@ -168,7 +168,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Cloneable {
 impl ::ctor::PinnedDrop for Cloneable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN9CloneableD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN9CloneableD1Ev(self) }
     }
 }
 
@@ -257,7 +257,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Movable {
 impl ::ctor::PinnedDrop for Movable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN7MovableD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN7MovableD1Ev(self) }
     }
 }
 

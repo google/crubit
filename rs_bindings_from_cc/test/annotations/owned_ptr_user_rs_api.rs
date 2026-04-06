@@ -37,7 +37,9 @@ pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=18
 #[inline(always)]
 pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z12ThingToValueP5Thing(::core::mem::transmute(thingptr))
+    unsafe {
+        crate::detail::__rust_thunk___Z12ThingToValueP5Thing(::core::mem::transmute(thingptr))
+    }
 }
 
 /// # Safety
@@ -48,7 +50,7 @@ pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=20
 #[inline(always)]
 pub unsafe fn GetThingValue(thingptr: *mut ::owned_ptr::RawThing) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z13GetThingValueP5Thing(thingptr)
+    unsafe { crate::detail::__rust_thunk___Z13GetThingValueP5Thing(thingptr) }
 }
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21

@@ -32,7 +32,7 @@ impl Noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
-        self::noninline::UnqualifiedMethod(__this)
+        unsafe { self::noninline::UnqualifiedMethod(__this) }
     }
     /// # Safety
     ///
@@ -40,7 +40,7 @@ impl Noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut Self) {
-        self::noninline::LvalueMethod(__this)
+        unsafe { self::noninline::LvalueMethod(__this) }
     }
     /// # Safety
     ///
@@ -48,7 +48,7 @@ impl Noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const Self) {
-        self::noninline::LvalueMethodConst(__this)
+        unsafe { self::noninline::LvalueMethodConst(__this) }
     }
     /// # Safety
     ///
@@ -56,7 +56,7 @@ impl Noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut Self) {
-        self::noninline::RvalueMethod(__this)
+        unsafe { self::noninline::RvalueMethod(__this) }
     }
     /// # Safety
     ///
@@ -64,7 +64,7 @@ impl Noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const Self) {
-        self::noninline::RvalueMethodConst(__this)
+        unsafe { self::noninline::RvalueMethodConst(__this) }
     }
 }
 
@@ -86,7 +86,7 @@ pub mod noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut crate::Noninline) {
-        crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this) }
     }
     /// # Safety
     ///
@@ -94,7 +94,7 @@ pub mod noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut crate::Noninline) {
-        crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this) }
     }
     /// # Safety
     ///
@@ -102,7 +102,7 @@ pub mod noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const crate::Noninline) {
-        crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this) }
     }
     /// # Safety
     ///
@@ -110,7 +110,7 @@ pub mod noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut crate::Noninline) {
-        crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this) }
     }
     /// # Safety
     ///
@@ -118,7 +118,7 @@ pub mod noninline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const crate::Noninline) {
-        crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this) }
     }
 }
 
@@ -141,7 +141,7 @@ impl Inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
-        self::inline::UnqualifiedMethod(__this)
+        unsafe { self::inline::UnqualifiedMethod(__this) }
     }
     /// # Safety
     ///
@@ -149,7 +149,7 @@ impl Inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut Self) {
-        self::inline::LvalueMethod(__this)
+        unsafe { self::inline::LvalueMethod(__this) }
     }
     /// # Safety
     ///
@@ -157,7 +157,7 @@ impl Inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const Self) {
-        self::inline::LvalueMethodConst(__this)
+        unsafe { self::inline::LvalueMethodConst(__this) }
     }
     /// # Safety
     ///
@@ -165,7 +165,7 @@ impl Inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut Self) {
-        self::inline::RvalueMethod(__this)
+        unsafe { self::inline::RvalueMethod(__this) }
     }
     /// # Safety
     ///
@@ -173,7 +173,7 @@ impl Inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const Self) {
-        self::inline::RvalueMethodConst(__this)
+        unsafe { self::inline::RvalueMethodConst(__this) }
     }
 }
 
@@ -195,7 +195,7 @@ pub mod inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut crate::Inline) {
-        crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this) }
     }
     /// # Safety
     ///
@@ -203,7 +203,7 @@ pub mod inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut crate::Inline) {
-        crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this) }
     }
     /// # Safety
     ///
@@ -211,7 +211,7 @@ pub mod inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const crate::Inline) {
-        crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this) }
     }
     /// # Safety
     ///
@@ -219,7 +219,7 @@ pub mod inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut crate::Inline) {
-        crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this) }
     }
     /// # Safety
     ///
@@ -227,7 +227,7 @@ pub mod inline {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const crate::Inline) {
-        crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this) }
     }
 }
 
