@@ -54,4 +54,5 @@
 - [Struct Layout](./design/struct_layout.md)
 - [Thunks for class template member functions](./design/thunks_for_class_template_member_functions.md)
 - [`Unpin` for C++ Types](./design/unpin.md)
+- [Problem Description: forward-declared types](./design/forward_declarations.md)
 
