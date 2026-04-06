@@ -696,7 +696,30 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safe
                 db.rs_type_kind_safety(result_type.as_ref().clone())
             }
         },
-        RsTypeKind::Record { record, .. } => {
+        RsTypeKind::Record { record, lifetimes, .. } => {
+            if !record.is_raw_string_view()
+                && db
+                    .ir()
+                    .target_crubit_features(&record.owning_target)
+                    .contains(crubit_feature::CrubitFeature::AssumeLifetimes)
+            {
+                match (db.codegen_functions().decl_lifetime_arity)(db, record.id()) {
+                    Ok(arity) => {
+                        if arity != 0 && lifetimes.len() != arity {
+                            return Safety::unsafe_because(format!(
+                                "type {} has {} lifetime parameter{}, but {} {} provided; callers must ensure that arguments have the appropriate lifetime",
+                                record.rs_name, arity, if arity == 1 { "" } else { "s" }, lifetimes.len(), if lifetimes.len() == 1 { "was" } else { "were" }
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Safety::unsafe_because(format!(
+                            "unable to determine lifetime how many lifetime parameters {} accepts; callers must ensure that arguments have the appropriate lifetime",
+                            record.rs_name
+                        ));
+                    }
+                }
+            }
             if record_safety(db, record.clone()).is_safe() {
                 Safety::Safe
             } else {

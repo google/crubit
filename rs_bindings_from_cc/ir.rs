@@ -1281,6 +1281,15 @@ impl Record {
         }
     }
 
+    /// Detect whether a `Record` is *specifically* the raw projection of `std::string_view`, as we
+    /// special-case this.
+    pub fn is_raw_string_view(&self) -> bool {
+        matches!(
+            self.template_specialization,
+            Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
+        ) && self.rs_name.identifier.as_ref() == "raw_string_view"
+    }
+
     pub fn is_union(&self) -> bool {
         match self.record_type {
             RecordType::Union => true,

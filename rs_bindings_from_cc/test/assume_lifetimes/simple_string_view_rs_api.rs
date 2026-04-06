@@ -57,9 +57,14 @@ pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `s`: type SV has 1 lifetime parameter, but 0 were provided; callers must ensure that arguments have the appropriate lifetime
+///
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=14
 #[inline(always)]
-pub fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> {
+pub unsafe fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> {
     unsafe {
         let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
         crate::detail::__rust_thunk___Z16sv_ident_unknown2SV(
@@ -70,9 +75,14 @@ pub fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `s`: type SV has 1 lifetime parameter, but 0 were provided; callers must ensure that arguments have the appropriate lifetime
+///
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=15
 #[inline(always)]
-pub fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'static> {
+pub unsafe fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'static> {
     unsafe {
         let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
         crate::detail::__rust_thunk___Z23sv_ident_unknown_elided2SV(

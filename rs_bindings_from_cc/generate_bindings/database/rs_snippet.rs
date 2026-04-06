@@ -1693,14 +1693,6 @@ impl PrimitiveName {
     }
 }
 
-/// Detect whether a `Record` is the projection of `std::string_view`, as we special-case this.
-fn record_is_raw_string_view(record: &ir::Record) -> bool {
-    matches!(
-        record.template_specialization,
-        Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
-    ) && record.rs_name.identifier.as_ref() == "raw_string_view"
-}
-
 impl RsTypeKind {
     pub fn to_token_stream<'a>(
         &self,
@@ -1778,7 +1770,7 @@ impl RsTypeKind {
                     return generic_monomorphization.to_token_stream(&db);
                 }
                 let arity = (db.codegen_functions().decl_lifetime_arity)(&*db, record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
-                if arity == 0 || lifetimes.len() == arity || record_is_raw_string_view(record) {
+                if arity == 0 || lifetimes.len() == arity || record.is_raw_string_view() {
                     // Use the safe projection.
                     let lts = if lifetimes.is_empty() {
                         quote! {}
