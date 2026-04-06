@@ -35,41 +35,45 @@ impl UnpinStructWithRefQualifiedMethods {
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=12
     #[inline(always)]
     pub fn increment_i<'a>(&'a mut self) {
-        self::unpin_struct_with_ref_qualified_methods::increment_i(self)
+        unsafe { self::unpin_struct_with_ref_qualified_methods::increment_i(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=13
     #[inline(always)]
     pub fn unqualified_get_i<'a>(&'a mut self) -> ::ffi_11::c_int {
-        self::unpin_struct_with_ref_qualified_methods::unqualified_get_i(self)
+        unsafe { self::unpin_struct_with_ref_qualified_methods::unqualified_get_i(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=14
     #[inline(always)]
     pub fn const_qualified_get_i<'a>(&'a self) -> ::ffi_11::c_int {
-        self::unpin_struct_with_ref_qualified_methods::const_qualified_get_i(self)
+        unsafe { self::unpin_struct_with_ref_qualified_methods::const_qualified_get_i(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=15
     #[inline(always)]
     pub fn lvalue_ref_qualified_get_i<'a>(&'a mut self) -> ::ffi_11::c_int {
-        self::unpin_struct_with_ref_qualified_methods::lvalue_ref_qualified_get_i(self)
+        unsafe { self::unpin_struct_with_ref_qualified_methods::lvalue_ref_qualified_get_i(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=16
     #[inline(always)]
     pub fn const_lvalue_ref_qualified_get_i<'a>(&'a self) -> ::ffi_11::c_int {
-        self::unpin_struct_with_ref_qualified_methods::const_lvalue_ref_qualified_get_i(self)
+        unsafe {
+            self::unpin_struct_with_ref_qualified_methods::const_lvalue_ref_qualified_get_i(self)
+        }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=17
     #[inline(always)]
     pub fn rvalue_ref_qualified_get_i<'a>(
         self: ::ctor::RvalueReference<'a, Self>,
     ) -> ::ffi_11::c_int {
-        self::unpin_struct_with_ref_qualified_methods::rvalue_ref_qualified_get_i(self)
+        unsafe { self::unpin_struct_with_ref_qualified_methods::rvalue_ref_qualified_get_i(self) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=18
     #[inline(always)]
     pub fn const_rvalue_ref_qualified_get_i<'a>(
         self: ::ctor::ConstRvalueReference<'a, Self>,
     ) -> ::ffi_11::c_int {
-        self::unpin_struct_with_ref_qualified_methods::const_rvalue_ref_qualified_get_i(self)
+        unsafe {
+            self::unpin_struct_with_ref_qualified_methods::const_rvalue_ref_qualified_get_i(self)
+        }
     }
 }
 

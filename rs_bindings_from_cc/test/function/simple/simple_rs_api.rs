@@ -40,7 +40,7 @@ pub fn return_reference() -> *mut ::ffi_11::c_int {
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=13
 #[inline(always)]
 pub unsafe fn take_pointer(i: *mut ::ffi_11::c_int) {
-    crate::detail::__rust_thunk___Z12take_pointerPi(i)
+    unsafe { crate::detail::__rust_thunk___Z12take_pointerPi(i) }
 }
 
 /// # Safety
@@ -51,7 +51,7 @@ pub unsafe fn take_pointer(i: *mut ::ffi_11::c_int) {
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=14
 #[inline(always)]
 pub unsafe fn take_reference(i: *mut ::ffi_11::c_int) {
-    crate::detail::__rust_thunk___Z14take_referenceRi(i)
+    unsafe { crate::detail::__rust_thunk___Z14take_referenceRi(i) }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=15
@@ -68,7 +68,7 @@ pub fn forward_pointer(i: *const ::ffi_11::c_int) -> *const ::ffi_11::c_int {
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=17
 #[inline(always)]
 pub unsafe fn forward_reference(i: *const ::ffi_11::c_int) -> *const ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z17forward_referenceRKi(i)
+    unsafe { crate::detail::__rust_thunk___Z17forward_referenceRKi(i) }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=18

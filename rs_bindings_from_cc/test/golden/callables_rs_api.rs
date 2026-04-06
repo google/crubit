@@ -137,7 +137,7 @@ unsafe impl ::cxx::ExternType for LayoutCompatible {
 impl LayoutCompatible {
     #[inline(always)]
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
-        self::layout_compatible::Create(x)
+        unsafe { self::layout_compatible::Create(x) }
     }
     /// # Safety
     ///
@@ -145,7 +145,7 @@ impl LayoutCompatible {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn get(__this: *const Self) -> ::ffi_11::c_int {
-        self::layout_compatible::get(__this)
+        unsafe { self::layout_compatible::get(__this) }
     }
 }
 
@@ -167,7 +167,7 @@ pub mod layout_compatible {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn get(__this: *const crate::LayoutCompatible) -> ::ffi_11::c_int {
-        crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this) }
     }
 }
 

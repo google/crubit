@@ -32,7 +32,7 @@ impl Struct {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessNone(__this: *mut Self) {
-        self::r#struct::AccessNone(__this)
+        unsafe { self::r#struct::AccessNone(__this) }
     }
     /// # Safety
     ///
@@ -40,7 +40,7 @@ impl Struct {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut Self) {
-        self::r#struct::AccessPublic(__this)
+        unsafe { self::r#struct::AccessPublic(__this) }
     }
 }
 
@@ -62,7 +62,7 @@ pub mod r#struct {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessNone(__this: *mut crate::Struct) {
-        crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this) }
     }
     /// # Safety
     ///
@@ -70,7 +70,7 @@ pub mod r#struct {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut crate::Struct) {
-        crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this) }
     }
 }
 
@@ -93,7 +93,7 @@ impl Class {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut Self) {
-        self::class::AccessPublic(__this)
+        unsafe { self::class::AccessPublic(__this) }
     }
 }
 
@@ -115,7 +115,7 @@ pub mod class {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut crate::Class) {
-        crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this) }
     }
 }
 

@@ -32,14 +32,14 @@ unsafe impl ::cxx::ExternType for CompatibleType {
 impl CompatibleType {
     #[inline(always)]
     pub fn renamed_default_constructor<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::compatible_type::renamed_default_constructor(self)
+        unsafe { self::compatible_type::renamed_default_constructor(self) }
     }
     #[inline(always)]
     pub fn renamed_constructor<'a>(
         self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ffi_11::c_int,
     ) {
-        self::compatible_type::renamed_constructor(self, __param_0)
+        unsafe { self::compatible_type::renamed_constructor(self, __param_0) }
     }
 }
 

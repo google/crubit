@@ -64,7 +64,7 @@ unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
 impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclD1Ev(self) }
     }
 }
 

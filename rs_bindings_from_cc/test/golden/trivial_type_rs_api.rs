@@ -31,19 +31,19 @@ pub mod ns {
     impl Trivial {
         #[inline(always)]
         pub fn Unqualified<'a>(&'a mut self) {
-            self::trivial::Unqualified(self)
+            unsafe { self::trivial::Unqualified(self) }
         }
         #[inline(always)]
         pub fn ConstQualified<'a>(&'a self) {
-            self::trivial::ConstQualified(self)
+            unsafe { self::trivial::ConstQualified(self) }
         }
         #[inline(always)]
         pub fn LvalueRefQualified<'a>(&'a mut self) {
-            self::trivial::LvalueRefQualified(self)
+            unsafe { self::trivial::LvalueRefQualified(self) }
         }
         #[inline(always)]
         pub fn ConstLvalueRefQualified<'a>(&'a self) {
-            self::trivial::ConstLvalueRefQualified(self)
+            unsafe { self::trivial::ConstLvalueRefQualified(self) }
         }
     }
 

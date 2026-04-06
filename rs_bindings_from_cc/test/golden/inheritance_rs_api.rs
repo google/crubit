@@ -346,7 +346,7 @@ unsafe impl ::cxx::ExternType for MethodBase1 {
 impl MethodBase1 {
     #[inline(always)]
     pub fn Public<'a>(&'a mut self) {
-        self::method_base1::Public(self)
+        unsafe { self::method_base1::Public(self) }
     }
     /// # Safety
     ///
@@ -354,15 +354,15 @@ impl MethodBase1 {
     /// * `__param_0`: raw pointer
     #[inline(always)]
     pub unsafe fn Equals<'a>(&'a mut self, __param_0: *const Self) {
-        self::method_base1::Equals(self, __param_0)
+        unsafe { self::method_base1::Equals(self, __param_0) }
     }
     #[inline(always)]
     pub fn Colliding1<'a>(&'a mut self) {
-        self::method_base1::Colliding1(self)
+        unsafe { self::method_base1::Colliding1(self) }
     }
     #[inline(always)]
     pub fn Colliding2<'a>(&'a mut self) {
-        self::method_base1::Colliding2(self)
+        unsafe { self::method_base1::Colliding2(self) }
     }
 }
 
@@ -405,7 +405,7 @@ pub mod method_base1 {
         __this: &'a mut crate::MethodBase1,
         __param_0: *const crate::MethodBase1,
     ) {
-        crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(__this, __param_0)
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(__this, __param_0) }
     }
     #[inline(always)]
     pub fn Colliding1<'a>(__this: &'a mut crate::MethodBase1) {
@@ -432,11 +432,11 @@ unsafe impl ::cxx::ExternType for MethodBase2 {
 impl MethodBase2 {
     #[inline(always)]
     pub fn Colliding1<'a>(&'a mut self) {
-        self::method_base2::Colliding1(self)
+        unsafe { self::method_base2::Colliding1(self) }
     }
     #[inline(always)]
     pub fn Colliding2<'a>(&'a mut self) {
-        self::method_base2::Colliding2(self)
+        unsafe { self::method_base2::Colliding2(self) }
     }
 }
 

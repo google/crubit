@@ -43,7 +43,7 @@ impl RawThing {
     /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
     #[inline(always)]
     pub unsafe fn Close(__this: *mut Self) {
-        self::raw_thing::Close(__this)
+        unsafe { self::raw_thing::Close(__this) }
     }
 }
 
@@ -95,7 +95,7 @@ pub mod raw_thing {
     /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
     #[inline(always)]
     pub unsafe fn Close(__this: *mut crate::RawThing) {
-        crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this)
+        unsafe { crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this) }
     }
 }
 

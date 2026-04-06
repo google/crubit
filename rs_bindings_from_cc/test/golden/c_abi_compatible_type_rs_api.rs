@@ -52,7 +52,7 @@ pub type MyTypedefDecl = ::ffi_11::c_int;
 /// * `b`: raw pointer
 #[inline(always)]
 pub unsafe fn f(a: crate::MyTypedefDecl, b: *mut ::ffi_11::c_void, c: ::ffi_11::c_int) {
-    crate::detail::__rust_thunk___Z1fiPvi(a, b, c)
+    unsafe { crate::detail::__rust_thunk___Z1fiPvi(a, b, c) }
 }
 
 mod detail {

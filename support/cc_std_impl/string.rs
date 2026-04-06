@@ -304,8 +304,11 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
     // SAFETY: `input` is a valid `std::string` so it can be safely moved.
     let owned_cpp_string = unsafe { conversion_function_helpers::StringMoveOwnedPtr(input) };
     if let Some(ptr) = NonNull::new(owned_cpp_string) {
-        let output = &mut *(output as *mut MaybeUninit<string_wrapper>);
-        output.as_mut_ptr().write(string_wrapper { owned_cpp_string: ptr });
+        // SAFETY: `output` is a valid buffer for a `string_wrapper`.
+        unsafe {
+            let output = &mut *(output as *mut MaybeUninit<string_wrapper>);
+            output.as_mut_ptr().write(string_wrapper { owned_cpp_string: ptr });
+        }
     } else {
         panic!("Failed to create owned string");
     }

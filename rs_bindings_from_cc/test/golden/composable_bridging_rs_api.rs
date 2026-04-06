@@ -92,7 +92,9 @@ pub fn MakeMyI8Struct() -> crate::MyOption<i8> {
 /// * `slice`: raw pointer
 #[inline(always)]
 pub unsafe fn InspectStringViews(slice: *mut [::cc_std::std::__u::raw_string_view]) {
-    crate::detail::__rust_thunk___Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(slice)
+    unsafe {
+        crate::detail::__rust_thunk___Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(slice)
+    }
 }
 
 #[inline(always)]
@@ -110,7 +112,9 @@ pub fn MaybeVoidPtr() -> crate::MyOption<*mut ::ffi_11::c_void> {
 pub unsafe fn AcceptsSliceAndReturnsStatusErrorIfEmpty(
     slice: *const [::ffi_11::c_int],
 ) -> crate::MyOption<*const [::ffi_11::c_int]> {
-    ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::ffi_11::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__return_abi_buffer,slice); })
+    unsafe {
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::ffi_11::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__return_abi_buffer,slice); })
+    }
 }
 
 #[inline(always)]

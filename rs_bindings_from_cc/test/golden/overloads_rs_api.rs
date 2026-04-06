@@ -70,7 +70,7 @@ impl Foo {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn Bar(__this: *mut Self, __param_0: ::ffi_11::c_int) {
-        self::foo::Bar(__this, __param_0)
+        unsafe { self::foo::Bar(__this, __param_0) }
     }
 }
 
@@ -100,7 +100,7 @@ pub mod foo {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn Bar(__this: *mut crate::Foo, __param_0: ::ffi_11::c_int) {
-        crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0)
+        unsafe { crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0) }
     }
 }
 

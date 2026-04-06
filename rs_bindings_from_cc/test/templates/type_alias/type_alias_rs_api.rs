@@ -44,12 +44,12 @@ impl __CcTemplateInst10MyTemplateIiE {
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
     #[inline(always)]
     pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
-        self::cc_template_inst10_my_template_ii_e::Create(value)
+        unsafe { self::cc_template_inst10_my_template_ii_e::Create(value) }
     }
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
     pub fn value<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-        self::cc_template_inst10_my_template_ii_e::value(self)
+        unsafe { self::cc_template_inst10_my_template_ii_e::value(self) }
     }
 }
 

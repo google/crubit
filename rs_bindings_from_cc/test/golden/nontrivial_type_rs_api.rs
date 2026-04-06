@@ -34,19 +34,19 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 impl Nontrivial {
     #[inline(always)]
     pub fn Unqualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nontrivial::Unqualified(self)
+        unsafe { self::nontrivial::Unqualified(self) }
     }
     #[inline(always)]
     pub fn ConstQualified<'a>(&'a self) {
-        self::nontrivial::ConstQualified(self)
+        unsafe { self::nontrivial::ConstQualified(self) }
     }
     #[inline(always)]
     pub fn LvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nontrivial::LvalueRefQualified(self)
+        unsafe { self::nontrivial::LvalueRefQualified(self) }
     }
     #[inline(always)]
     pub fn ConstLvalueRefQualified<'a>(&'a self) {
-        self::nontrivial::ConstLvalueRefQualified(self)
+        unsafe { self::nontrivial::ConstLvalueRefQualified(self) }
     }
 }
 
@@ -143,7 +143,7 @@ impl ::ctor::Assign<f32> for Nontrivial {
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
     }
 }
 
@@ -207,7 +207,7 @@ unsafe impl ::cxx::ExternType for NontrivialInline {
 impl NontrivialInline {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nontrivial_inline::MemberFunction(self)
+        unsafe { self::nontrivial_inline::MemberFunction(self) }
     }
 }
 
@@ -291,7 +291,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
 impl ::ctor::PinnedDrop for NontrivialInline {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
     }
 }
 
@@ -347,7 +347,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 impl ::ctor::PinnedDrop for NontrivialMembers {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
     }
 }
 
@@ -375,7 +375,7 @@ unsafe impl ::cxx::ExternType for NontrivialUnpin {
 impl NontrivialUnpin {
     #[inline(always)]
     pub fn MemberFunction<'a>(&'a mut self) {
-        self::nontrivial_unpin::MemberFunction(self)
+        unsafe { self::nontrivial_unpin::MemberFunction(self) }
     }
 }
 
@@ -618,7 +618,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
 impl Nonmovable {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        self::nonmovable::MemberFunction(self)
+        unsafe { self::nonmovable::MemberFunction(self) }
     }
 }
 
@@ -639,7 +639,7 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 impl ::ctor::PinnedDrop for Nonmovable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self) }
     }
 }
 

@@ -139,7 +139,7 @@ impl Default for Union {
 /// * `p`: raw pointer
 #[inline(always)]
 pub unsafe fn DerefPointer(p: *mut ::ffi_11::c_int) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z12DerefPointerPi(p)
+    unsafe { crate::detail::__rust_thunk___Z12DerefPointerPi(p) }
 }
 
 /// # Safety
@@ -148,7 +148,7 @@ pub unsafe fn DerefPointer(p: *mut ::ffi_11::c_int) -> ::ffi_11::c_int {
 /// * `p`: unsafe struct or union
 #[inline(always)]
 pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p)
+    unsafe { crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p) }
 }
 
 /// # Safety
@@ -159,7 +159,11 @@ pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::ffi_11::c_int
 pub unsafe fn DerefTransitivePublicPointer(
     mut p: crate::TransitivePublicPointer,
 ) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(&mut p)
+    unsafe {
+        crate::detail::__rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(
+            &mut p,
+        )
+    }
 }
 
 /// # Safety
@@ -168,7 +172,7 @@ pub unsafe fn DerefTransitivePublicPointer(
 /// * `u`: unsafe struct or union
 #[inline(always)]
 pub unsafe fn ReadUnion(mut u: crate::Union) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z9ReadUnion5Union(&mut u)
+    unsafe { crate::detail::__rust_thunk___Z9ReadUnion5Union(&mut u) }
 }
 
 mod detail {

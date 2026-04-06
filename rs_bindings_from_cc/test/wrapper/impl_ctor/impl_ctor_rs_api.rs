@@ -98,7 +98,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Nontrivial {
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self)
+        unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
     }
 }
 

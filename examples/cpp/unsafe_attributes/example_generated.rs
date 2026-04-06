@@ -27,7 +27,7 @@ pub fn SafeSignatureWithoutAnnotation() {
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=11
 #[inline(always)]
 pub unsafe fn SafeSignatureButAnnotatedUnsafe() {
-    crate::detail::__rust_thunk___Z31SafeSignatureButAnnotatedUnsafev()
+    unsafe { crate::detail::__rust_thunk___Z31SafeSignatureButAnnotatedUnsafev() }
 }
 
 /// # Safety
@@ -38,7 +38,7 @@ pub unsafe fn SafeSignatureButAnnotatedUnsafe() {
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=13
 #[inline(always)]
 pub unsafe fn UnsafeSignatureWithoutAnnotation(__param_0: *mut ::ffi_11::c_void) {
-    crate::detail::__rust_thunk___Z32UnsafeSignatureWithoutAnnotationPv(__param_0)
+    unsafe { crate::detail::__rust_thunk___Z32UnsafeSignatureWithoutAnnotationPv(__param_0) }
 }
 
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=14
@@ -64,7 +64,7 @@ pub fn SafeBasedOnBoolean() {
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=17
 #[inline(always)]
 pub unsafe fn UnsafeBasedOnBoolean() {
-    crate::detail::__rust_thunk___Z20UnsafeBasedOnBooleanv()
+    unsafe { crate::detail::__rust_thunk___Z20UnsafeBasedOnBooleanv() }
 }
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21

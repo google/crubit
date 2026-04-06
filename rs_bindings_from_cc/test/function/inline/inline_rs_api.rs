@@ -57,7 +57,7 @@ impl Default for SomeStruct {
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=15
 #[inline(always)]
 pub unsafe fn take_struct_by_const_ptr(s: *const crate::SomeStruct) -> ::ffi_11::c_int {
-    crate::detail::__rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(s)
+    unsafe { crate::detail::__rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(s) }
 }
 
 /// This testcase helps verify that thunks correctly work with primitive types

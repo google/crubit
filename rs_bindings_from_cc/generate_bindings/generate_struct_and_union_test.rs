@@ -51,7 +51,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
                 #[doc = " Generated from: test/dependency_header.h;l=5"]
                 #[inline(always)]
                 pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::ffi_11::c_int {
-                    self::cc_template_inst10_my_template_ii_e::GetValue(self)
+                    unsafe { self::cc_template_inst10_my_template_ii_e::GetValue(self) }
                 }
             }
         }
@@ -1361,7 +1361,7 @@ fn test_unambiguous_public_bases() -> Result<()> {
         quote! {
             unsafe impl oops::Inherits<crate::VirtualBase> for crate::Derived {
                 unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase {
-                    crate::detail::__crubit_dynamic_upcast__7Derived__to__11VirtualBase___2f_2ftest_3atesting_5ftarget(derived)
+                    unsafe { crate::detail::__crubit_dynamic_upcast__7Derived__to__11VirtualBase___2f_2ftest_3atesting_5ftarget(derived) }
                 }
             }
         }
@@ -1638,7 +1638,7 @@ fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()
                 ...
                 #[inline(always)]
                 pub unsafe fn NonColliding(__this: *mut Self) {
-                    self::derived::NonColliding(__this)
+                    unsafe { self::derived::NonColliding(__this) }
                 }
             }
             ...
@@ -1674,7 +1674,7 @@ fn test_member_in_derived_class_overwrites_inherited_ones() -> Result<()> {
                 ...
                 #[inline(always)]
                 pub unsafe fn Colliding(__this: *mut Self) {
-                    self::derived::Colliding(__this)
+                    unsafe { self::derived::Colliding(__this) }
                 }
             }
             ...
@@ -1879,17 +1879,17 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
                 ...
                 #[inline(always)]
                 pub fn Method1<'a>(&'a mut self) {
-                    self::some_struct::Method1(self)
+                    unsafe { self::some_struct::Method1(self) }
                 }
                 ...
                 #[inline(always)]
                 pub fn Method2<'a>(&'a mut self) {
-                    self::some_struct::Method2(self)
+                    unsafe { self::some_struct::Method2(self) }
                 }
                 ...
                 #[inline(always)]
                 pub fn Method3<'a>(&'a mut self) {
-                    self::some_struct::Method3(self)
+                    unsafe { self::some_struct::Method3(self) }
                 }
             }
         }

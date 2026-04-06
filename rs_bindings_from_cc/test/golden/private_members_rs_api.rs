@@ -33,11 +33,11 @@ pub mod test_namespace_bindings {
     impl SomeClass {
         #[inline(always)]
         pub fn public_method<'a>(&'a mut self) {
-            self::some_class::public_method(self)
+            unsafe { self::some_class::public_method(self) }
         }
         #[inline(always)]
         pub fn public_static_method() {
-            self::some_class::public_static_method()
+            unsafe { self::some_class::public_static_method() }
         }
     }
 

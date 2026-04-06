@@ -73,7 +73,7 @@ pub mod crubit {
                 b: ::ffi_11::c_int,
                 c: ::ffi_11::c_int,
             ) -> Self {
-                self::some_struct::ConstructorNewName(a, b, c)
+                unsafe { self::some_struct::ConstructorNewName(a, b, c) }
             }
             /// # Safety
             ///
@@ -84,7 +84,7 @@ pub mod crubit {
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const Self) {
-                self::some_struct::MethodNewName(__this)
+                unsafe { self::some_struct::MethodNewName(__this) }
             }
         }
 
@@ -131,7 +131,11 @@ pub mod crubit {
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
-                crate::detail::__rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(__this)
+                unsafe {
+                    crate::detail::__rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(
+                        __this,
+                    )
+                }
             }
         }
     }
