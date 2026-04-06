@@ -15,6 +15,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Type.h"
@@ -89,8 +90,16 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
                                          enumerator_name.status().message()));
     }
 
+    std::optional<std::string> deprecated;
     absl::StatusOr<std::optional<std::string>> unknown_attr =
-        CollectUnknownAttrs(*enumerator);
+        CollectUnknownAttrs(*enumerator, [&](const clang::Attr& attr) {
+          if (auto* deprecated_attr =
+                  clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+            deprecated.emplace(deprecated_attr->getMessage());
+            return true;
+          }
+          return false;
+        });
     if (!unknown_attr.ok()) {
       return unsupported(
           FormattedError::FromStatus(std::move(unknown_attr.status())));
@@ -105,11 +114,26 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         .identifier = (*enumerator_name).rs_identifier(),
         .value = std::move(*value),
         .unknown_attr = std::move(*unknown_attr),
+        .deprecated = std::move(deprecated),
+        .doc_comment = ictx_.GetComment(enumerator),
     });
   }
 
+  std::optional<std::string> nodiscard;
+  std::optional<std::string> deprecated;
   absl::StatusOr<std::optional<std::string>> unknown_attr =
-      CollectUnknownAttrs(*enum_decl);
+      CollectUnknownAttrs(*enum_decl, [&](const clang::Attr& attr) {
+        if (auto* unused_attr =
+                clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
+          nodiscard.emplace(unused_attr->getMessage());
+          return true;
+        } else if (auto* deprecated_attr =
+                       clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+          deprecated.emplace(deprecated_attr->getMessage());
+          return true;
+        }
+        return false;
+      });
   if (!unknown_attr.ok()) {
     return unsupported(
         FormattedError::FromStatus(std::move(unknown_attr.status())));
@@ -162,6 +186,8 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     }
   }
 
+  std::optional<std::string> doc_comment = ictx_.GetComment(enum_decl);
+
   ictx_.MarkAsSuccessfullyImported(enum_decl);
   clang::DeclarationNameInfo name_info(enum_decl->getDeclName(),
                                        enum_decl->getLocation());
@@ -180,6 +206,9 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),
       .detected_formatter = *detected_formatter,
+      .nodiscard = std::move(nodiscard),
+      .deprecated = std::move(deprecated),
+      .doc_comment = std::move(doc_comment),
   };
 }
 

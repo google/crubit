@@ -75,6 +75,7 @@ cc_library(
         "//rs_bindings_from_cc:decl_importer",
         "@abseil-cpp//absl/status:statusor",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -89,6 +90,7 @@ cc_library(
         "//rs_bindings_from_cc:decl_importer",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )

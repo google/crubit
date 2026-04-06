@@ -20,24 +20,24 @@
 //   [[deprecated]] attribute
 
 // error: struct `DeprecatedStruct` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // error: struct `DeprecatedStructWithMessage` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // error: enum `DeprecatedEnum` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // error: enum `DeprecatedEnumWithMessage` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // error: namespace `DeprecatedNamespace` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // namespace DeprecatedNamespace
 
 // error: namespace `DeprecatedNamespaceWithMessage` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // namespace DeprecatedNamespaceWithMessage
 
@@ -47,9 +47,9 @@
 pub struct DeprecatedEnumerators(::ffi_11::c_uint);
 impl DeprecatedEnumerators {
     // Omitting bindings for kDeprecatedEnumerator
-    // reason: unknown attribute(s): deprecated
+    // reason: marked as deprecated; requires experimental
     // Omitting bindings for kDeprecatedEnumeratorWithMessage
-    // reason: unknown attribute(s): deprecated
+    // reason: marked as deprecated; requires experimental
 }
 impl From<::ffi_11::c_uint> for DeprecatedEnumerators {
     fn from(value: ::ffi_11::c_uint) -> DeprecatedEnumerators {
@@ -63,22 +63,20 @@ impl From<DeprecatedEnumerators> for ::ffi_11::c_uint {
 }
 
 // error: type alias `DeprecatedUsing` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // error: type alias `DeprecatedUsingWithMessage` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedFields
 pub struct DeprecatedFields {
     /// Reason for representing this field as a blob of bytes:
-    /// crubit.rs/errors/unknown_attribute: unknown field attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:deprecated_cc
-    /// Unknown attribute: deprecated`
+    /// field is marked as deprecated; requires experimental features on //rs_bindings_from_cc/test/golden:deprecated_cc
     pub(crate) no_message: [::core::mem::MaybeUninit<u8>; 4],
     /// Reason for representing this field as a blob of bytes:
-    /// crubit.rs/errors/unknown_attribute: unknown field attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:deprecated_cc
-    /// Unknown attribute: deprecated`
+    /// field is marked as deprecated; requires experimental features on //rs_bindings_from_cc/test/golden:deprecated_cc
     pub(crate) message: [::core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for DeprecatedFields {}
@@ -100,10 +98,10 @@ impl Default for DeprecatedFields {
 }
 
 // error: global variable `global_var` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // error: global variable `global_var_with_message` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): deprecated
+//   [[deprecated]] attribute
 
 // error: class `SomeTotalSpecialization` could not be bound
 //   Class templates are not yet supported

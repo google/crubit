@@ -41,6 +41,16 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
                     __COMMENT__ #comment
                 }
             };
+            if enumerator.deprecated.is_some()
+                && !db
+                    .ir()
+                    .target_crubit_features(&enum_.owning_target)
+                    .contains(CrubitFeature::Experimental)
+            {
+                return omitting_bindings_comment(format!(
+                    "marked as deprecated; requires experimental"
+                ));
+            }
             if let Some(unknown_attr) = &enumerator.unknown_attr {
                 return omitting_bindings_comment(format!("unknown attribute(s): {unknown_attr}"));
             }

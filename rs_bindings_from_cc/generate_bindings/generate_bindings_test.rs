@@ -981,7 +981,7 @@ fn test_supported_unknown_attr_enumerator() -> Result<()> {
     let mut ir = ir_from_cc(
         r#"
         enum Enum {
-            kHidden [[deprecated]],
+            kHidden [[maybe_unused]] = 1,
         };
         "#,
     )?;
@@ -1002,7 +1002,7 @@ fn test_supported_unknown_attr_namespace() -> Result<()> {
     {
         let mut ir = ir_from_cc(&format!(
             r#"
-            namespace [[deprecated]] unknown_attr_namespace {{
+            namespace [[gnu::visibility("default")]] unknown_attr_namespace {{
                 {nested_notpresent}
             }}
             extern "C" {{
@@ -1031,7 +1031,7 @@ fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
         namespace unknown_attr_namespace {
             enum Present {};
         }
-        namespace [[deprecated]] unknown_attr_namespace {
+        namespace [[gnu::visibility("default")]] unknown_attr_namespace {
             enum NotPresent {};
         }
         namespace unknown_attr_namespace {
@@ -1056,7 +1056,7 @@ fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
 fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
     let mut ir = ir_from_cc(
         r#"
-        namespace [[deprecated]] unknown_attr_namespace {
+        namespace [[gnu::visibility("default")]] unknown_attr_namespace {
             using NotPresent = int;
         }
         extern "C" {

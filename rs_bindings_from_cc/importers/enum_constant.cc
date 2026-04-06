@@ -11,7 +11,9 @@
 #include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
+#include "clang/Basic/LLVM.h"
 #include "llvm/Support/Casting.h"
 
 namespace crubit {
@@ -55,8 +57,16 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
         FormattedError::FromStatus(std::move(type.status())));
   }
 
+  std::optional<std::string> deprecated;
   absl::StatusOr<std::optional<std::string>> unknown_attr =
-      CollectUnknownAttrs(*enum_constant_decl);
+      CollectUnknownAttrs(*enum_constant_decl, [&](const clang::Attr& attr) {
+        if (auto* deprecated_attr =
+                clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+          deprecated.emplace(deprecated_attr->getMessage());
+          return true;
+        }
+        return false;
+      });
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
@@ -83,6 +93,8 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
       .type = *std::move(type),
       .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),
+      .deprecated = std::move(deprecated),
+      .doc_comment = ictx_.GetComment(enum_constant_decl),
   };
 }
 

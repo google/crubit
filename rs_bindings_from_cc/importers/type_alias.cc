@@ -19,6 +19,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -162,8 +163,16 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   }
   ictx_.MarkAsSuccessfullyImported(decl);
 
+  std::optional<std::string> deprecated;
   absl::StatusOr<std::optional<std::string>> unknown_attr =
-      CollectUnknownAttrs(*decl);
+      CollectUnknownAttrs(*decl, [&](const clang::Attr& attr) {
+        if (auto* deprecated_attr =
+                clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+          deprecated.emplace(deprecated_attr->getMessage());
+          return true;
+        }
+        return false;
+      });
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *decl,
@@ -183,6 +192,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       .underlying_type = *underlying_type,
       .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc(), nullptr),
       .enclosing_item_id = *std::move(enclosing_item_id),
+      .deprecated = std::move(deprecated),
   };
 }
 

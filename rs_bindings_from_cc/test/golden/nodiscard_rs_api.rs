@@ -64,10 +64,10 @@ impl Default for NoDiscardWithMessage {
 }
 
 // error: enum `NoDiscardEnum` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): nodiscard
+//   [[nodiscard]] attribute
 
 // error: enum `NoDiscardEnumWithMessage` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): nodiscard
+//   [[nodiscard]] attribute
 
 // error: function `crubit_nodiscard` could not be bound
 //   [[nodiscard]] attribute

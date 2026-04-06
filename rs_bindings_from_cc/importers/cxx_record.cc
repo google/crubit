@@ -805,7 +805,6 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::PointerAttr>(attr) ||
          clang::isa<clang::PreferredNameAttr>(attr) ||
          clang::isa<clang::TrivialABIAttr>(attr) ||
-         clang::isa<clang::WarnUnusedResultAttr>(attr) ||
          clang::isa<clang::TypeNullableAttr>(attr) ||
          clang::isa<clang::ScopedLockableAttr>(attr) ||
          clang::isa<clang::CapabilityAttr>(attr) ||
@@ -843,6 +842,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   std::optional<IR::Item> attr_error_item;
+  std::optional<std::string> nodiscard;
+  std::optional<std::string> deprecated;
   absl::StatusOr<std::optional<std::string>> unknown_attr =
       CollectUnknownAttrs(*record_decl, [&](const clang::Attr& attr) {
         if (IsKnownAttr(attr)) {
@@ -857,6 +858,14 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                 FormattedError::Static("Records from the standard library with "
                                        "hidden visibility are not supported"));
           }
+          return true;
+        } else if (auto* unused_attr =
+                       clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
+          nodiscard.emplace(unused_attr->getMessage());
+          return true;
+        } else if (auto* deprecated_attr =
+                       clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+          deprecated.emplace(deprecated_attr->getMessage());
           return true;
         }
         return false;
@@ -1095,12 +1104,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool is_effectively_final =
       record_decl->isEffectivelyFinal() || record_decl->isUnion();
 
-  std::optional<std::string> nodiscard;
-  if (const auto* attr = record_decl->getAttr<clang::WarnUnusedResultAttr>();
-      attr != nullptr) {
-    nodiscard.emplace(attr->getMessage());
-  }
-
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
@@ -1188,6 +1191,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
       .detected_formatter = *detected_formatter,
       .lifetime_inputs = std::move(lifetime_inputs),
+      .deprecated = std::move(deprecated),
   };
 
   // If the align attribute was attached to the typedef decl, we should
@@ -1286,6 +1290,17 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
       size = ictx_.ctx_.getTypeSize(field_decl->getType());
     }
 
+    std::optional<std::string> deprecated;
+    absl::StatusOr<std::optional<std::string>> unknown_attr =
+        CollectUnknownAttrs(*field_decl, [&](const clang::Attr& attr) {
+          if (auto* deprecated_attr =
+                  clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+            deprecated.emplace(deprecated_attr->getMessage());
+            return true;
+          }
+          return false;
+        });
+
     fields.push_back(
         {.rust_identifier = GetTranslatedFieldName(field_decl),
          .cpp_identifier = StringRefToOptionalIdentifier(field_decl->getName()),
@@ -1294,11 +1309,12 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
          .size = size,
-         .unknown_attr = CollectUnknownAttrs(*field_decl),
+         .unknown_attr = unknown_attr,
          .is_no_unique_address =
              field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
          .is_bitfield = field_decl->isBitField(),
-         .is_inheritable = is_inheritable});
+         .is_inheritable = is_inheritable,
+         .deprecated = std::move(deprecated)});
   }
   return fields;
 }

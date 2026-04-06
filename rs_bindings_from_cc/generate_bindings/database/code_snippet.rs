@@ -216,11 +216,25 @@ pub fn required_crubit_features(
         );
     }
     match item {
-        Item::Constant(_)
-        | Item::Comment { .. }
-        | Item::GlobalVar(_)
-        | Item::UnsupportedItem(..)
-        | Item::UseMod { .. } => {}
+        Item::Constant(c) => {
+            if c.deprecated.is_some() {
+                require_any_feature(
+                    &mut missing_features,
+                    crubit_feature::CrubitFeature::Experimental.into(),
+                    &|| "[[deprecated]] attribute".into(),
+                );
+            }
+        }
+        Item::GlobalVar(g) => {
+            if g.deprecated.is_some() {
+                require_any_feature(
+                    &mut missing_features,
+                    crubit_feature::CrubitFeature::Experimental.into(),
+                    &|| "[[deprecated]] attribute".into(),
+                );
+            }
+        }
+        Item::Comment { .. } | Item::UnsupportedItem(..) | Item::UseMod { .. } => {}
 
         Item::Func(func) => {
             if func.rs_name == UnqualifiedIdentifier::Destructor {
@@ -310,8 +324,39 @@ pub fn required_crubit_features(
                 )?,
                 &|| "".into(),
             );
+            let deprecated = match item {
+                Item::Record(r) => r.deprecated.clone(),
+                Item::TypeAlias(t) => t.deprecated.clone(),
+                Item::Enum(e) => {
+                    if e.nodiscard.is_some() {
+                        require_any_feature(
+                            &mut missing_features,
+                            crubit_feature::CrubitFeature::Experimental.into(),
+                            &|| "[[nodiscard]] attribute".into(),
+                        );
+                    };
+                    e.deprecated.clone()
+                }
+                Item::ExistingRustType(_) => None,
+                _ => unreachable!(),
+            };
+            if deprecated.is_some() {
+                require_any_feature(
+                    &mut missing_features,
+                    crubit_feature::CrubitFeature::Experimental.into(),
+                    &|| "[[deprecated]] attribute".into(),
+                );
+            }
         }
-        Item::Namespace(_) => {}
+        Item::Namespace(n) => {
+            if n.deprecated.is_some() {
+                require_any_feature(
+                    &mut missing_features,
+                    crubit_feature::CrubitFeature::Experimental.into(),
+                    &|| "[[deprecated]] attribute".into(),
+                );
+            }
+        }
         Item::IncompleteRecord(_) => {
             require_any_feature(
                 &mut missing_features,
