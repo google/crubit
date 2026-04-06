@@ -180,3 +180,35 @@ fn test_subcommand_caching() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test] // allow_core_test
+fn test_subcommand_with_dependency() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_with_dependency");
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+
+    let output = cmd.output().expect("Failed to execute");
+
+    if !output.status.success() {
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        panic!("cargo-cpp_api_from_rust failed");
+    }
+
+    // Verify output files
+    let target_dir = tmp_dir.path();
+    let debug_dir = target_dir.join("debug");
+    let headers_dir = debug_dir.join("headers");
+
+    // We expect to find headers for both the root crate and its dependency.
+    assert!(headers_dir.join("test_with_dependency.h").exists());
+    assert!(headers_dir.join("test_dependency.h").exists());
+
+    // We expect the final staticlib for the root crate.
+    assert!(debug_dir.join("libtest_with_dependency.a").exists());
+
+    Ok(())
+}

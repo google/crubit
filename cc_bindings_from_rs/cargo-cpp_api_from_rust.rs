@@ -192,6 +192,7 @@ fn main() -> Result<()> {
         let rs_crate_name = crate_name.replace('-', "_");
         let hash = &artifact_info.hash;
         let intermediate_h = deps_dir.join(format!("{}-{}.h", crate_name, hash));
+        let final_h = headers_dir.join(format!("{}.h", crate_name));
         let intermediate_rs = deps_dir.join(format!("lib{}-{}.rs", crate_name, hash));
 
         if artifact_info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
@@ -200,6 +201,10 @@ fn main() -> Result<()> {
                 "#[path = {:?}]pub mod r#{};\n",
                 intermediate_rs, rs_crate_name
             ));
+            // Final outputs: copy/rename from deps/ to their final locations.
+            if !final_h.exists() {
+                fs::copy(&intermediate_h, &final_h)?;
+            }
             continue;
         }
 
@@ -246,7 +251,7 @@ fn main() -> Result<()> {
         pkg_to_header.insert(pkg_id.repr, intermediate_h.to_string());
 
         // Final outputs: copy/rename from deps/ to their final locations.
-        fs::copy(&intermediate_h, headers_dir.join(format!("{}.h", crate_name)))?;
+        fs::copy(&intermediate_h, &final_h)?;
     }
 
     let root_name = &root.name;
