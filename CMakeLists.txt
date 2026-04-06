@@ -5,7 +5,6 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(crubit LANGUAGES CXX)
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -18,8 +17,6 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(absl)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(CRUBIT_SUBDIRS
   support
@@ -38,3 +35,4 @@ endforeach()
 add_library(crubit_support INTERFACE)
 set_target_properties(crubit_support PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(crubit_support INTERFACE ${ALL_TARGETS})
+target_include_directories(crubit_support INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

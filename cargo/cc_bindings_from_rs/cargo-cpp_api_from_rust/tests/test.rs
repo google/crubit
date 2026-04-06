@@ -43,7 +43,7 @@ fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
     // Verify output files
     let target_dir = tmp_dir.path();
     let debug_dir = target_dir.join("debug");
-    let headers_dir = debug_dir.join("headers");
+    let headers_dir = debug_dir.join("include");
 
     // We expect to find our generated bindings in the output and the final staticlib.
     assert!(headers_dir.join("test_project.h").exists());
@@ -74,7 +74,7 @@ fn test_subcommand_target_dir() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify output files in the explicit target dir
     let debug_dir = explicit_target_dir.join("debug");
-    let headers_dir = debug_dir.join("headers");
+    let headers_dir = debug_dir.join("include");
 
     assert!(headers_dir.join("test_project.h").exists());
     assert!(debug_dir.join("libtest_project.a").exists());
@@ -103,7 +103,7 @@ fn test_subcommand_build_args() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify output files in the release directory
     let release_dir = tmp_dir.path().join("release");
-    let headers_dir = release_dir.join("headers");
+    let headers_dir = release_dir.join("include");
 
     assert!(headers_dir.join("test_project.h").exists());
     assert!(release_dir.join("libtest_project.a").exists());
@@ -127,7 +127,7 @@ fn test_subcommand_failing_project() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify output files are NOT generated
     let debug_dir = tmp_dir.path().join("debug");
-    let headers_dir = debug_dir.join("headers");
+    let headers_dir = debug_dir.join("include");
 
     assert!(!headers_dir.join("failing_project.h").exists());
     assert!(!debug_dir.join("libfailing_project.a").exists());
@@ -201,7 +201,7 @@ fn test_subcommand_with_dependency() -> Result<(), Box<dyn std::error::Error>> {
     // Verify output files
     let target_dir = tmp_dir.path();
     let debug_dir = target_dir.join("debug");
-    let headers_dir = debug_dir.join("headers");
+    let headers_dir = debug_dir.join("include");
 
     // We expect to find headers for both the root crate and its dependency.
     assert!(headers_dir.join("test_with_dependency.h").exists());

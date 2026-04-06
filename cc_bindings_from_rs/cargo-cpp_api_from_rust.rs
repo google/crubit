@@ -73,12 +73,6 @@ fn main() -> Result<()> {
 
     let edition = root.edition;
 
-    let args = vec![
-        "cpp_api_from_rust".to_string(),
-        "--crubit-support-path-format=<{header}>".to_string(),
-        "--enable-rmeta-interface".to_string(),
-    ];
-
     let mut build_args = vec![];
     let mut target_dir = &metadata.target_directory;
     if let Some(cli_target_dir) = &cli.target_dir {
@@ -126,7 +120,7 @@ fn main() -> Result<()> {
                     .unwrap_or("")
                     .to_string();
                 pkg_to_artifact.insert(
-                    artifact.package_id.repr,
+                    artifact.package_id.repr.clone(),
                     ArtifactInfo {
                         path: filename.clone(),
                         name: artifact.target.name.clone(),
@@ -178,7 +172,7 @@ fn main() -> Result<()> {
     };
 
     let mut pkg_to_header = HashMap::new();
-    let headers_dir = target_dir.join(&profile_dir).join("headers");
+    let headers_dir = target_dir.join(&profile_dir).join("include");
     fs::create_dir_all(&headers_dir)?;
 
     let mut lib_rs_content = String::new();
@@ -197,10 +191,8 @@ fn main() -> Result<()> {
 
         if artifact_info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
             pkg_to_header.insert(pkg_id.repr, intermediate_h.to_string());
-            lib_rs_content.push_str(&format!(
-                "#[path = {:?}]pub mod r#{};\n",
-                intermediate_rs, rs_crate_name
-            ));
+            lib_rs_content
+                .push_str(&format!("#[path = {:?}]\nmod r#{};\n", intermediate_rs, rs_crate_name));
             // Final outputs: copy/rename from deps/ to their final locations.
             if !final_h.exists() {
                 fs::copy(&intermediate_h, &final_h)?;
@@ -208,17 +200,16 @@ fn main() -> Result<()> {
             continue;
         }
 
-        let mut current_args = args.clone();
-        current_args.extend([
+        let mut current_args = vec![
+            "cpp_api_from_rust".to_string(),
+            "--crubit-support-path-format=<support/{header}>".to_string(),
+            "--enable-rmeta-interface".to_string(),
             format!("--source-crate-name={}", crate_name),
             format!("--h-out={}", intermediate_h),
             format!("--rs-out={}", intermediate_rs),
             format!("--extern={}={}", crate_name, artifact_info.path),
             format!("-Ldependency={}", deps_dir.as_str()),
-        ]);
-        lib_rs_content
-            .push_str(&format!("#[path = {:?}]pub mod r#{};\n", intermediate_rs, rs_crate_name));
-
+        ];
         let resolve_node = resolve
             .nodes
             .iter()
@@ -234,6 +225,8 @@ fn main() -> Result<()> {
                 }
             }
         }
+        lib_rs_content
+            .push_str(&format!("#[path = {:?}]\nmod r#{};\n", intermediate_rs, rs_crate_name));
 
         let cmdline =
             Cmdline::new(&current_args).map_err(|err| match err.downcast_ref::<clap::Error>() {
@@ -248,7 +241,7 @@ fn main() -> Result<()> {
                 None => err,
             })?;
         cpp_api_from_rust_lib::run_with_cmdline_args(&cmdline)?;
-        pkg_to_header.insert(pkg_id.repr, intermediate_h.to_string());
+        pkg_to_header.insert(pkg_id.repr, format!("{}.h", crate_name));
 
         // Final outputs: copy/rename from deps/ to their final locations.
         fs::copy(&intermediate_h, &final_h)?;
