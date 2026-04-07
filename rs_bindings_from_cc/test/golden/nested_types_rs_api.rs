@@ -777,7 +777,6 @@ pub mod no_longer_top_level {
 
 // namespace no_longer_top_level
 
-/// TODO(b/481667188): Nested should get bindings.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared

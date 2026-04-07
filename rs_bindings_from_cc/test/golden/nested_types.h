@@ -91,7 +91,6 @@ struct Bar {};
 
 }  // namespace no_longer_top_level
 
-// TODO(b/481667188): Nested should get bindings.
 struct ContainsForwardDeclared {
   struct Nested;
 };
