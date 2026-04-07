@@ -423,9 +423,6 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
 }
 
 const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
-  if (decl == nullptr) {
-    return nullptr;
-  }
   if (auto* namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
     return namespace_decl;
   }
@@ -783,13 +780,6 @@ void Importer::ImportDeclsFromDeclContext(
 }
 
 std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
-  // We canonicalize the declaration to ensure that redeclarations (e.g. a
-  // forward declaration and its definition) hit the same cache entry and the
-  // same ItemId.
-  decl = CanonicalizeDecl(decl);
-  if (decl == nullptr) {
-    return std::nullopt;
-  }
   if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
     return it->second;
   }
@@ -965,15 +955,6 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
 
 std::optional<IR::Item> Importer::GetImportedItem(
     const clang::Decl* decl) const {
-  // We canonicalize the declaration to ensure that redeclarations (e.g. a
-  // forward declaration and its definition) hit the same cache entry.
-  // This ensures that lookups for a non-canonical declaration (like a forward
-  // declaration) correctly find the entry created for the canonical
-  // declaration (the definition).
-  decl = CanonicalizeDecl(decl);
-  if (decl == nullptr) {
-    return std::nullopt;
-  }
   auto it = import_cache_.find(decl);
   if (it != import_cache_.end()) {
     return it->second;
