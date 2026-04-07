@@ -74,14 +74,17 @@ The functions must be usable. Users must be able to call every combination of
 functions from these three libraries, though perhaps not with the same syntax as
 C++. For example:
 
-|     | Operation               | Example code                              |
-| --- | ----------------------- | ----------------------------------------- |
-| A   | Incomplete → Incomplete | `ConsumeIncomplete1(CreateIncomplete1())` |
-:     : (same library)          :                                           :
-| B   | Incomplete → Incomplete | `ConsumeIncomplete1(CreateIncomplete2())`|
-| C   | Incomplete → Complete   | `ConsumeComplete(CreateIncomplete1())`  |
-| D   | Complete → Incomplete   | `ConsumeIncomplete1(CreateComplete())`    |
-| E   | Complete → Complete     | `ConsumeComplete(CreateComplete())`       |
+<!-- mdformat off(multiline tables) -->
+
+|     | Operation                              | Example code                              |
+| --- | -------------------------------------- | ----------------------------------------- |
+| A   | Incomplete → Incomplete (same library) | `ConsumeIncomplete1(CreateIncomplete1())` |
+| B   | Incomplete → Incomplete                | `ConsumeIncomplete1(CreateIncomplete2())` |
+| C   | Incomplete → Complete                  | `ConsumeComplete(CreateIncomplete1())`    |
+| D   | Complete → Incomplete                  | `ConsumeIncomplete1(CreateComplete())`    |
+| E   | Complete → Complete                    | `ConsumeComplete(CreateComplete())`       |
+
+<!-- mdformat on -->
 
 ### 3. Code Maintenance {#code-maintenance}
 
@@ -164,17 +167,42 @@ should evade this problem somehow! Some options:
     2.  Store the answer to the question and make it available to people that
         depend on you. (Linearize the build.)
 
+## Non-solution: extern types
+
+Rust has an (unstable) "extern types" feature, usable as so:
+
+```rust
+unsafe extern "C" {
+  type Foo;
+}
+```
+
+This defines a `PointeeSized` type `Foo` -- analogous to C++'s "incomplete type",
+a `PointeeSized` type has no known size/alignment and cannot be held by value,
+only behind a pointer.
+
+This does not, by itself, present a solution to the design problem above. Two
+different crates which define an extern type `Foo` are not, from Rust's point of
+view, defining the *same* type `Foo`, and there is no way to define a non-extern
+type `Foo` which is the same ("completed") type. This means that, absent
+additional work, design axiom 2 (and/or 1) are not satisfied. However, we can
+build on it to define an auxiliary wrapper type or set of conversions.
+
+(Extern types also do not help with opaque enums, or the related problem of
+"redeclared" template instantiations.)
+
 ## Existing Solution: `forward_declare.rs` {#existing-solution}
 
-How did we solve this in `forward_declare.rs`?
-
 Very briefly, `forward_declare` currently only supports forward-declared struct
-types (not opaque enum definitions). The core idea is to define equivalence
-classes of "types which are different in Rust, but the same type in C++", via
-the `CppCast` trait. If two types are the same type in C++, but forced to be
-different types in Rust, then you should be able to call `.cpp_cast()` to
-perform the conversion. For example, the equivalent of C++
-`ConsumeIncomplete1(CreateComplete())` is
+types (not opaque enum definitions), which is present as a simple wrapper around
+an extern type with conversions and reasonably safe type properties (e.g.
+`!Send`, `!Sync`, `!Unpin`).
+
+The core idea is to define equivalence classes of "types which are different in
+Rust, but the same type in C++", via the `CppCast` trait. If two types are the
+same type in C++, but forced to be different types in Rust, then you should be
+able to call `.cpp_cast()` to perform the conversion. For example, the
+equivalent of C++ `ConsumeIncomplete1(CreateComplete())` is
 `ConsumeIncomplete1(CreateComplete().cpp_cast())`.
 
 For the sake of code maintenance concerns, above, always use a unique per-crate
@@ -189,22 +217,17 @@ it ever becomes necessary later.
 This means that the table of calls above, in [2. Fidelity](#fidelity), is as
 follows:
 
-|     | Operation  | Example code                                         |
-| --- | ---------- | ---------------------------------------------------- |
-| A   | Incomplete | `ConsumeIncomplete1(CreateIncomplete1())`            |
-:     : →          :                                                      :
-:     : Incomplete :                                                      :
-:     : (same      :                                                      :
-:     : library)   :                                                      :
-| B   | Incomplete | `ConsumeIncomplete1(CreateIncomplete2().cpp_cast())` |
-:     : →          :                                                      :
-:     : Incomplete :                                                      :
-| C   | Incomplete | `ConsumeComplete(CreateIncomplete1().cpp_cast())`    |
-:     : → Complete :                                                      :
-| D   | Complete → | `ConsumeIncomplete1(CreateComplete().cpp_cast())`    |
-:     : Incomplete :                                                      :
-| E   | Complete → | `ConsumeComplete(CreateComplete())`                  |
-:     : Complete   :                                                      :
+<!-- mdformat off(multiline tables) -->
+
+|     | Operation                              | Example code                                         |
+| --- | -------------------------------------- | ---------------------------------------------------- |
+| A   | Incomplete → Incomplete (same library) | `ConsumeIncomplete1(CreateIncomplete1())`            |
+| B   | Incomplete → Incomplete                | `ConsumeIncomplete1(CreateIncomplete2().cpp_cast())` |
+| C   | Incomplete → Complete                  | `ConsumeComplete(CreateIncomplete1().cpp_cast())`    |
+| D   | Complete → Incomplete                  | `ConsumeIncomplete1(CreateComplete().cpp_cast())`    |
+| E   | Complete → Complete                    | `ConsumeComplete(CreateComplete())`                  |
+
+<!-- mdformat on -->
 
 In theory we could have dropped the requirement for `.cpp_cast()` from case B,
 but this would make it a backwards-**incompatible** change to do any of B→C or
@@ -232,7 +255,9 @@ targets.
 In particular, today, `forward_declare` does the following:
 
 ```rust
-/// X : CppType<Name=Y> -> X has the same layout as everything with name Y
+/// # Safety
+/// if `X : CppType<Name=Y>`, then `X` has the same layout and set of valid
+/// representations as everything with name `Y`
 pub unsafe trait CppType {
   type Name;
 }
@@ -397,18 +422,13 @@ is the same syntax as `cpp_cast`-conversion of `&mut T` to itself.
 
 Full matrix, in the presence of a reborrow:
 
-|     | Operation                     | Example code                          |
-| --- | ----------------------------- | ------------------------------------- |
-| A   | Incomplete → Incomplete (same | `ConsumeIncomplete1(                  |
-:     : library)                      : CreateIncomplete1() .as_mut() )`      :
-| B   | Incomplete → Incomplete       | `ConsumeIncomplete1(                  |
-:     :                               : CreateIncomplete2() .as_mut()         :
-:     :                               : .cpp_cast() )`                        :
-| C   | Incomplete → Complete         | `ConsumeComplete( CreateIncomplete1() |
-:     :                               : .as_mut() .cpp_cast() )`              :
-| D   | Complete → Incomplete         | `ConsumeIncomplete1( CreateComplete() |
-:     :                               : .cpp_cast() )`                        :
-| E   | Complete → Complete           | `ConsumeComplete( CreateComplete() )` |
+    | Operation                              | Example code
+--- | -------------------------------------- | ------------
+A   | Incomplete → Incomplete (same library) | `ConsumeIncomplete1(CreateIncomplete1().as_mut())`
+B   | Incomplete → Incomplete                | `ConsumeIncomplete1(CreateIncomplete2().as_mut().cpp_cast())`
+C   | Incomplete → Complete                  | `ConsumeComplete(CreateIncomplete1().as_mut().cpp_cast())`
+D   | Complete → Incomplete                  | `ConsumeIncomplete1(CreateComplete().cpp_cast())`
+E   | Complete → Complete                    | `ConsumeComplete(CreateComplete())`
 
 Moving from A/B/C to D/E is compatibility breaking if a call to `.as_mut()` was
 present.
