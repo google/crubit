@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{Context, Error, Result};
+use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature, ResolvedName,
     Visibility,
@@ -168,10 +169,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             if matches!(item, Item::Record(_)) {
                 // Only check those item kinds that decl_lifetime_arity explicitly supports.
                 if let Some(ot) = &item.owning_target()
-                    && db
-                        .ir()
-                        .target_crubit_features(ot)
-                        .contains(crubit_feature::CrubitFeature::AssumeLifetimes)
+                    && db.ir().target_crubit_features(ot).contains(CrubitFeature::AssumeLifetimes)
                     && let Err(error) = (db.codegen_functions().decl_lifetime_arity)(db, item.id())
                 {
                     return Err(NoBindingsReason::Unsupported {
@@ -248,12 +246,12 @@ fn func_has_bindings(
 
     if func.is_member_or_descendant_of_class_template
         && func.rs_name != ir::UnqualifiedIdentifier::Destructor
-        && !enabled_features.contains(crubit_feature::CrubitFeature::Experimental)
+        && !enabled_features.contains(CrubitFeature::Experimental)
     {
         missing_features.push(RequiredCrubitFeature {
             target: target.clone(),
             item: db.debug_name(func.id()),
-            missing_features: crubit_feature::CrubitFeature::Experimental.into(),
+            missing_features: CrubitFeature::Experimental.into(),
             capability_description:
                 "b/248542210: template instantiation of member function cannot reliably get bindings".into(),
         });
@@ -386,14 +384,10 @@ fn type_target_restriction_shallow(
     }
 
     // Targets with experimental features generate `pub` bindings (for now?), no matter what.
-    if let Some(some_target) = target {
-        if db
-            .ir()
-            .target_crubit_features(some_target)
-            .contains(crubit_feature::CrubitFeature::Experimental)
-        {
-            target = None;
-        }
+    if target.is_some_and(|some_target| {
+        db.ir().target_crubit_features(some_target).contains(CrubitFeature::Experimental)
+    }) {
+        target = None;
     }
     TargetRestriction { target: target.cloned(), exemplar_type: rs_type_kind }
 }
@@ -415,7 +409,7 @@ fn type_visibility(
                 // is causing a visibility restriction, but we can stringify the whole type.
                 item: rs_type_kind.display(db).to_string().into(),
                 // All visibility restrictions are turned off in `:experimental`.
-                missing_features: crubit_feature::CrubitFeature::Experimental.into(),
+                missing_features: CrubitFeature::Experimental.into(),
                 // again a slight hack.
                 capability_description: error.to_string().into(),
             }];
