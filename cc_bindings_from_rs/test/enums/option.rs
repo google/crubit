@@ -171,3 +171,12 @@ pub struct OptionWithSizeTypes {
     pub uval: Option<usize>,
     pub ival: Option<isize>,
 }
+
+#[doc = "CRUBIT_ANNOTATE: cpp_type=int"]
+#[doc = "CRUBIT_ANNOTATE: include_path=unused_include.h"]
+#[repr(transparent)]
+pub struct BridgedType(i32);
+
+pub fn take_option_bridged(x: Option<BridgedType>) -> i32 {
+    x.map(|b| b.0).unwrap_or(-1)
+}

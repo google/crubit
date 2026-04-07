@@ -32,6 +32,12 @@
 
 namespace option {
 struct HasOptions;
+
+// Error generating bindings for `option_golden::BridgedType` defined at
+// cc_bindings_from_rs/test/enums/option.rs;l=178:
+// Type bindings for option_golden::BridgedType suppressed due to being mapped
+// to an existing C++ type (int)
+
 // Generated from:
 // cc_bindings_from_rs/test/enums/option.rs;l=120
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
@@ -296,6 +302,14 @@ OptionWithSizeTypes final {
 // Error generating bindings for `option_golden::Unit` defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=158:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
+
+// Error generating bindings for `option_golden::take_option_bridged` defined at
+// cc_bindings_from_rs/test/enums/option.rs;l=180:
+// Error handling parameter #0 of type
+// `std::option::Option<option_golden::BridgedType>`: Failed to format type for
+// the definition of `option_golden::BridgedType`: Error formatting the
+// fully-qualified C++ name of `BridgedType`: `int` is a C++ reserved keyword
+// and can't be used as a C++ identifier
 
 }  // namespace option
 

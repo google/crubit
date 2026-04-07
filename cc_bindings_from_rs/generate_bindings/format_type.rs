@@ -292,12 +292,15 @@ pub fn format_ty_for_cc<'tcx>(
 
             let specialization = db.parse_rs_std_template_specialization(ty);
             if specialization.as_ref().is_some_and(|specialization| {
-                specialization.is_err()
-                    || specialization.as_ref().is_ok_and(|rs_std_enum| {
-                        (matches!(rs_std_enum.kind, TemplateSpecializationKind::Option { .. })
-                            && !location.is_bridgeable())
-                            || matches!(rs_std_enum.kind, TemplateSpecializationKind::Result { .. })
-                    })
+                // We only want to consider errors when bridging could not occur.
+                // Otherwise, fallthrough to the normal bridging logic.
+                let error_occurred = !location.is_bridgeable() && specialization.is_err();
+                let is_option_or_result = specialization.as_ref().is_ok_and(|rs_std_enum| {
+                    !location.is_bridgeable()
+                        && matches!(rs_std_enum.kind, TemplateSpecializationKind::Option { .. })
+                        || matches!(rs_std_enum.kind, TemplateSpecializationKind::Result { .. })
+                });
+                error_occurred || is_option_or_result
             }) {
                 let rs_std_enum = specialization.unwrap()?;
                 let tokens = rs_std_enum.core.self_ty_cc.clone().into_tokens(&mut prereqs);

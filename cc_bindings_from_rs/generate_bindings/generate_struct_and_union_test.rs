@@ -89,7 +89,8 @@ fn test_format_bridged_type_in_generic_types() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: Generic types are not supported yet (b/259749095)" 
+            "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: \
+            Failed to construct CrubitAbiType for std::boxed::Box<std::result::Result<RustType, ()>> because it does not have a move ctor or assignment operator."
         );
     });
 }
