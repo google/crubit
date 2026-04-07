@@ -74,12 +74,3 @@ add_library(crubit_support_rs_std_result STATIC
 )
 set_target_properties(crubit_support_rs_std_result PROPERTIES LINKER_LANGUAGE CXX)
 
-add_library(crubit_support_rs_std_lossy_formatter_for_bindings STATIC
-"lossy_formatter_for_bindings.h"
-)
-set_target_properties(crubit_support_rs_std_lossy_formatter_for_bindings PROPERTIES LINKER_LANGUAGE CXX)
-
-target_link_libraries(crubit_support_rs_std_lossy_formatter_for_bindings PUBLIC
-crubit_support_rs_std_lossy_formatter_cc
-)
-
