@@ -1265,7 +1265,12 @@ impl Record {
         match &self.template_specialization {
             Some(TemplateSpecialization { defining_target, kind, .. }) => {
                 let is_in_cc_std = *defining_target
-                    == BazelLabel("//support/cc_std:cc_std".into());
+                    == BazelLabel("//support/cc_std:cc_std".into())
+                    || *defining_target
+                        == BazelLabel(
+                            "//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std"
+                                .into(),
+                        );
                 if is_in_cc_std {
                     let is_string_view = *kind == TemplateSpecializationKind::StdStringView
                         || *kind == TemplateSpecializationKind::StdWStringView;
