@@ -123,3 +123,18 @@ impl IndexMut<(usize, usize)> for Map {
         &mut self.data[index.0 * self.row_size + index.1]
     }
 }
+
+pub struct Id(pub i32);
+impl Id {
+    pub fn new(id: i32) -> Self {
+        Self(id)
+    }
+}
+
+impl Index<&Id> for Map {
+    type Output = str;
+
+    fn index(&self, _index: &Id) -> &Self::Output {
+        &self.data[0]
+    }
+}

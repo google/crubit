@@ -8,7 +8,7 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::format_cc_ident;
-use crate::format_type::CcParamTy;
+use crate::format_type::{format_param_types_for_cc, CcParamTy};
 use crate::generate_doc_comment;
 use crate::generate_function::{
     format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
@@ -26,12 +26,17 @@ use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::post_analysis_typing_env;
+use query_compiler::{
+    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, try_normalize,
+};
 use quote::{format_ident, quote};
 use rustc_abi::{Endian, FieldsShape, VariantIdx, Variants};
+use rustc_infer::infer::{RegionVariableOrigin, TyCtxtInferExt};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
-use rustc_middle::ty::{self, AssocKind, IntTy, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv, UintTy};
+use rustc_middle::ty::{
+    self, AssocKind, IntTy, Region, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv, TypingMode, UintTy,
+};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::sym;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -574,7 +579,7 @@ fn generate_index_impls<'tcx>(
 
     let query_index_impls = |index_trait: DefId,
                              method_this_qualifier: TokenStream,
-                             to_ref: fn(TyCtxt<'tcx>, Ty<'tcx>) -> Ty<'tcx>|
+                             to_ref: fn(TyCtxt<'tcx>, Region<'tcx>, Ty<'tcx>) -> Ty<'tcx>|
      -> IndexImpls<'tcx> {
         let mut has_usize_impl = false;
         let mut has_isize_impl = false;
@@ -588,32 +593,37 @@ fn generate_index_impls<'tcx>(
                 .expect("DefId for an `Index` trait impl lacked a trait header");
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
-            let index_element_ty =
-                middle_trait_header.trait_ref.instantiate_identity().args.type_at(1);
+            let trait_args = middle_trait_header.trait_ref.instantiate_identity().args;
+            let index_element_ty = trait_args.type_at(1);
+            if index_element_ty.flags().intersects(has_type_or_const_vars()) {
+                return Err((anyhow!("Index trait impl has uninstantiated generic parameters, which is not yet supported {index_element_ty}"), index_impl_id));
+            }
 
             if index_element_ty.is_usize() {
                 has_usize_impl = true;
             } else if matches!(index_element_ty.kind(), TyKind::Int(IntTy::Isize)) {
                 has_isize_impl = true;
             }
-            let index_cc_ty = db
-                .format_ty_for_cc(index_element_ty, TypeLocation::FnParam { is_self_param: false, elided_is_output: false })
-                .map_err(|e| (e, index_impl_id))?;
 
-            let index_assoc_fn = tcx.associated_items(index_impl_id)
+            let index_trait_assoc_fn = tcx.associated_items(index_trait)
                 .in_definition_order()
                 .filter(|assoc_item| matches!(assoc_item.kind, AssocKind::Fn { .. }))
                 // For `Index` or `IndexMut`, we expect exactly one associated fn.
                 .exactly_one()
-                .map_err(|_| (anyhow!("{} impl expected to have a single function", tcx.def_path_str(index_trait)), index_impl_id))?;
+                .map_err(|_| (anyhow!("{} impl expected to have a single function", tcx.def_path_str(index_trait)), index_trait))?;
 
-            let output_unnorm = tcx.fn_sig(index_assoc_fn.def_id)
-                // Assuming that the impl is monomorphic but we might need to provide substs here.
-                .instantiate_identity()
-                .output();
-            let output_ty = tcx.normalize_erasing_late_bound_regions(
-                TypingEnv::fully_monomorphized(),
-                output_unnorm);
+            let unnorm_fn_sig =
+                liberate_and_deanonymize_late_bound_regions(
+                    tcx,
+                    tcx.fn_sig(index_trait_assoc_fn.def_id).instantiate(tcx, trait_args),
+                    index_trait_assoc_fn.def_id);
+            println!("unnorm_fn_sig: {:?}", unnorm_fn_sig);
+            let fn_sig = try_normalize(tcx,
+                ty::PseudoCanonicalInput {
+                    typing_env: TypingEnv::fully_monomorphized(),
+                    value: unnorm_fn_sig,
+                }).expect("Please file a bug at crubit.rs-bug. We failed to normalize the function signature of an `Index` impl.");
+            let output_ty = fn_sig.output();
 
             // Index::Output isn't the real return type of our index method. We need to wrap it in a
             // reference before formatting, so that Output types like `str` are formatted correctly as
@@ -644,16 +654,13 @@ fn generate_index_impls<'tcx>(
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
             let doc_comment = generate_doc_comment(db, index_impl_id);
 
-            let self_by_ref = to_ref(tcx, core.self_ty);
-            let self_cpp_ty = db
-                .format_ty_for_cc(
-                    self_by_ref,
-                    TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
-                )
-                .expect(
-                    "ADT's self type should be C++-convertible after generate_adt_core succeeds",
-                );
-            let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
+            let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
+            let lifetime = infcx.next_region_var(RegionVariableOrigin::Autoref(tcx.def_span(index_impl_id)));
+
+            let self_by_ref = to_ref(tcx, lifetime, core.self_ty);
+            // We know index has two params, and we use that assumption below to construct our
+            // &[Param] slice with direct indexing.
+            let params = format_param_types_for_cc(db, &fn_sig, /*has_self_param=*/ true).map_err(|e| (e, index_impl_id))?;
             let impl_body = generate_thunk_call(
                 db,
                 index_impl_id,
@@ -666,22 +673,16 @@ fn generate_index_impls<'tcx>(
                 ),
                 &[Param {
                     cc_name: format_ident!("self"),
-                    cpp_type: CcParamTy {
-                        snippet: CcSnippet::new(self_cpp_ty),
-                        is_lifetime_bound: false,
-                    },
-                    ty: self_by_ref,
+                    cpp_type: params[0].clone(),
+                    ty: fn_sig.inputs()[0],
                 }, Param {
                     cc_name: format_ident!("index"),
-                    cpp_type: CcParamTy {
-                        snippet: index_cc_ty.clone(),
-                        is_lifetime_bound: false,
-                    },
-                    ty: index_element_ty,
+                    cpp_type: params[1].clone(),
+                    ty: fn_sig.inputs()[1],
                 }],
             ).map_err(|e| (e, index_impl_id))?;
 
-            let index_cc_ty = index_cc_ty.into_tokens(&mut prereqs);
+            let index_cc_ty = params[1].snippet.clone().into_tokens(&mut prereqs);
             let impl_body_tokens = impl_body.into_tokens(&mut prereqs);
             prereqs.move_defs_to_fwd_decls();
 
@@ -716,12 +717,12 @@ fn generate_index_impls<'tcx>(
     let index_impls: IndexImpls<'tcx> = query_index_impls(
         tcx.lang_items().index_trait().expect("Could not find Index trait"),
         quote! { const& },
-        |tcx, ty| Ty::new_imm_ref(tcx, tcx.lifetimes.re_static, ty),
+        Ty::new_imm_ref,
     );
     let index_mut_impls: IndexImpls<'tcx> = query_index_impls(
         tcx.lang_items().index_mut_trait().expect("Could not find IndexMut trait"),
         quote! { & },
-        |tcx, ty| Ty::new_mut_ref(tcx, tcx.lifetimes.re_static, ty),
+        Ty::new_mut_ref,
     );
 
     index_impls.into_iter(db).chain(index_mut_impls.into_iter(db)).collect()

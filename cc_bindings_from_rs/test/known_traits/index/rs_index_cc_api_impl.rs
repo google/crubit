@@ -22,6 +22,16 @@ unsafe extern "C" fn __crubit_thunk_new(index: usize, __ret_ptr: *mut core::ffi:
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::CustomIndex, 0) == 0);
+const _: () = assert!(::std::mem::size_of::<::rs_index_golden::Id>() == 4);
+const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Id>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(id: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::rs_index_golden::Id::new(id);
+        (__ret_ptr as *mut ::rs_index_golden::Id).write(__rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::Id, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::rs_index_golden::IntPair>() == 8);
 const _: () = assert!(::std::mem::align_of::<::rs_index_golden::IntPair>() == 4);
 #[unsafe(no_mangle)]
@@ -107,5 +117,16 @@ unsafe extern "C" fn __crubit_thunk_index_u_x00000028usize_x0000002c_x00000020us
             },
         );
         <::rs_index_golden::Map as ::core::ops::Index<(usize, usize)>>::index(__self, index)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_index_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+    __self: &'static ::rs_index_golden::Map,
+    index: &'static ::rs_index_golden::Id,
+) -> &'static str {
+    unsafe {
+        <::rs_index_golden::Map as ::core::ops::Index<&'static ::rs_index_golden::Id>>::index(
+            __self, index,
+        )
     }
 }

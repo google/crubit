@@ -126,6 +126,8 @@ pub struct ExportedPath {
     /// True if any segment of this path is marked #[doc(hidden)] making it a less preferable path
     /// than any non-hidden path regardless of length.
     pub is_doc_hidden: bool,
+    /// True if this path is a reexport.
+    pub is_reexport: bool,
     /// The crate that defines this path.
     pub krate: CrateNum,
 }
@@ -164,6 +166,12 @@ impl Ord for ExportedPath {
             .then_with(|| match (self.type_alias_def_id, other.type_alias_def_id) {
                 (Some(_), None) => Ordering::Greater,
                 (None, Some(_)) => Ordering::Less,
+                _ => Ordering::Equal,
+            })
+            // Between two paths of the same length, prefer the one that is not a reexport.
+            .then_with(|| match (self.is_reexport, other.is_reexport) {
+                (true, false) => Ordering::Greater,
+                (false, true) => Ordering::Less,
                 _ => Ordering::Equal,
             })
             // Failing all else, choose the lexicographically smallest path.

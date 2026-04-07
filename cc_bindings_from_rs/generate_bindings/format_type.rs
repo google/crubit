@@ -594,6 +594,7 @@ pub fn region_is_elided<'tcx>(tcx: TyCtxt<'tcx>, region: ty::Region<'tcx>) -> bo
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct CcParamTy<'tcx> {
     pub snippet: CcSnippet<'tcx>,
     pub is_lifetime_bound: bool,

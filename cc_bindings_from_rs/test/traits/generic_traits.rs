@@ -53,3 +53,14 @@ pub trait TraitWithConst<const N: usize> {
 }
 
 impl TraitWithConst<42> for StructGeneric {}
+
+// This alias should not receive bindings.
+pub use crate::TraitWithGeneric as TraitAlias;
+
+pub struct StructWithAlias;
+
+impl TraitAlias<i32> for StructWithAlias {
+    fn foo(&self, t: i32) -> i32 {
+        t
+    }
+}

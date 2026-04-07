@@ -69,6 +69,43 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
 };
 
 // Generated from:
+// cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=127
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
+    [[clang::trivial_abi]] Id final {
+ public:
+  // `rs_index_golden::Id` doesn't implement the `Default` trait
+  Id() = delete;
+
+  // Synthesized tuple constructor
+  explicit Id(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~Id() = default;
+  Id(Id&&) = default;
+  Id& operator=(Id&&) = default;
+
+  // `rs_index_golden::Id` doesn't implement the `Clone` trait
+  Id(const Id&) = delete;
+  Id& operator=(const Id&) = delete;
+  Id(::crubit::UnsafeRelocateTag, Id&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=129
+  static ::rs_index::Id new_(::std::int32_t id);
+
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=127
+    ::std::int32_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Generated from:
 // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=10
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
     [[clang::trivial_abi]] IntPair final {
@@ -94,7 +131,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=22
-  ::std::int32_t const& operator[](::std::uintptr_t index) const&;
+  ::std::int32_t const& $(__anon1) operator[](::std::uintptr_t index) const&;
 
   // Error generating bindings for `<rs_index_golden::IntPair as
   // std::ops::Index<u64>>` defined at
@@ -104,11 +141,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=75
-  ::std::int32_t const& operator[](::rs_index::CustomIndex index) const&;
+  ::std::int32_t const& $(__anon1) operator[](
+      ::rs_index::CustomIndex index) const&;
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=34
-  ::std::int32_t& operator[](::std::uintptr_t index) &;
+  ::std::int32_t& $(__anon1) operator[](::std::uintptr_t index) &;
 
   // Error generating bindings for `<rs_index_golden::IntPair as
   // std::ops::IndexMut<u64>>` defined at
@@ -118,7 +156,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=87
-  ::std::int32_t& operator[](::rs_index::CustomIndex index) &;
+  ::std::int32_t& $(__anon1) operator[](::rs_index::CustomIndex index) &;
 
   union {
     // Generated from:
@@ -168,6 +206,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
   rs_std::StrRef operator[](
       ::std::tuple<::std::uintptr_t, ::std::uintptr_t> index) const&;
 
+  // Generated from:
+  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=134
+  rs_std::StrRef operator[](::rs_index::Id const* crubit_nonnull index) const&;
+
   // Error generating bindings for `<rs_index_golden::Map as
   // std::ops::IndexMut<(usize, usize)>>` defined at
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=121:
@@ -214,6 +256,27 @@ inline void CustomIndex::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CustomIndex, __field0));
 }
 static_assert(
+    sizeof(Id) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(Id) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<Id>);
+static_assert(::std::is_trivially_move_constructible_v<::rs_index::Id>);
+static_assert(::std::is_trivially_move_assignable_v<::rs_index::Id>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::std::int32_t, ::rs_index::Id* __ret_ptr);
+}
+inline ::rs_index::Id Id::new_(::std::int32_t id) {
+  crubit::Slot<::rs_index::Id> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(id, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void Id::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Id, __field0));
+}
+static_assert(
     sizeof(IntPair) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
@@ -236,7 +299,7 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t const& $(__anon1)
     __crubit_thunk_index_uusize(::rs_index::IntPair const&, ::std::uintptr_t);
 }
-inline ::std::int32_t const& IntPair::operator[](
+inline ::std::int32_t const& $(__anon1) IntPair::operator[](
     ::std::uintptr_t index) const& {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_index_uusize(self, index);
@@ -246,7 +309,7 @@ extern "C" ::std::int32_t const& $(__anon1)
     __crubit_thunk_index_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
         ::rs_index::IntPair const&, ::rs_index::CustomIndex*);
 }
-inline ::std::int32_t const& IntPair::operator[](
+inline ::std::int32_t const& $(__anon1) IntPair::operator[](
     ::rs_index::CustomIndex index) const& {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
@@ -257,7 +320,8 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t& $(__anon1)
     __crubit_thunk_index_umut_uusize(::rs_index::IntPair&, ::std::uintptr_t);
 }
-inline ::std::int32_t& IntPair::operator[](::std::uintptr_t index) & {
+inline ::std::int32_t& $(__anon1) IntPair::operator[](
+    ::std::uintptr_t index) & {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_index_umut_uusize(self, index);
 }
@@ -266,7 +330,8 @@ extern "C" ::std::int32_t& $(__anon1)
     __crubit_thunk_index_umut_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
         ::rs_index::IntPair&, ::rs_index::CustomIndex*);
 }
-inline ::std::int32_t& IntPair::operator[](::rs_index::CustomIndex index) & {
+inline ::std::int32_t& $(__anon1) IntPair::operator[](
+    ::rs_index::CustomIndex index) & {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_index_umut_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
@@ -314,6 +379,18 @@ inline rs_std::StrRef Map::operator[](
   return __crubit_internal::
       __crubit_thunk_index_u_x00000028usize_x0000002c_x00000020usize_x00000029(
           self, index_cabi);
+}
+namespace __crubit_internal {
+extern "C" rs_std::StrRef
+__crubit_thunk_index_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+    ::rs_index::Map const&, ::rs_index::Id const* crubit_nonnull);
+}
+inline rs_std::StrRef Map::operator[](
+    ::rs_index::Id const* crubit_nonnull index) const& {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::
+      __crubit_thunk_index_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+          self, index);
 }
 inline void Map::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Map, data));

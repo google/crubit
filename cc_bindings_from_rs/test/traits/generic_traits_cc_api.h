@@ -95,6 +95,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// Error generating bindings for `generic_traits_golden::StructWithAlias`
+// defined at
+// cc_bindings_from_rs/test/traits/generic_traits.rs;l=60:
+// Zero-sized types (ZSTs) are not supported (b/258259459)
+
 // Error generating bindings for `generic_traits_golden::TraitWithConst` defined
 // at
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=49:
@@ -188,6 +193,13 @@ inline ::generic_traits::StructGeneric StructGeneric::new_(::std::int32_t x) {
 inline void StructGeneric::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructGeneric, x));
 }
+
+// Error generating bindings for `generic_traits_golden::TraitWithGeneric`
+// defined at
+// cc_bindings_from_rs/test/traits/generic_traits.rs;l=5:
+// Aliases to generic trait `generic_traits_golden::TraitWithGeneric` are not
+// supported.
+
 }  // namespace generic_traits
 
 namespace generic_traits {

@@ -499,6 +499,7 @@ fn public_paths_by_def_id(
             name: child.ident.name,
             type_alias_def_id,
             is_doc_hidden,
+            is_reexport: !child.reexport_chain.is_empty(),
             krate: crate_num,
         };
         use std::collections::hash_map::Entry;
@@ -872,6 +873,21 @@ fn generate_using<'tcx>(
                     "Trait {} is not yet supported, so we're not generating a using for it.",
                     tcx.def_path_str(def_id)
                 )
+            }
+            let generics = tcx.generics_of(def_id);
+            // Traits do not support const generics.
+            let generic_ty_args_count = generics
+                .own_params
+                .iter()
+                .filter(|param| matches!(param.kind, GenericParamDefKind::Type { .. }))
+                .count();
+            let has_generic_ty_args = if generics.has_self {
+                generic_ty_args_count > 1
+            } else {
+                generic_ty_args_count > 0
+            };
+            if has_generic_ty_args {
+                bail!("Aliases to generic trait `{}` are not supported.", tcx.def_path_str(def_id))
             }
             let canonical_name = db.symbol_canonical_name(def_id).expect(
                 "generate_trait was unexpectedly called on an item without a canonical name",
