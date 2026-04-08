@@ -686,3 +686,11 @@ fn test_move_params() {
     let composite = emplace!(returns_ctor(MyRustStruct(42)));
     assert_eq!(composite.0 .0, 42);
 }
+
+#[gtest]
+fn test_ctor_macro_generic_tuple_struct() {
+    #[recursively_pinned]
+    struct MyStruct<T>(T);
+    let my_struct = emplace!(ctor!(MyStruct::<u32>(42)));
+    assert_eq!(my_struct.0, 42);
+}
