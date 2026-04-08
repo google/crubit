@@ -36,7 +36,6 @@ cc_library(
     deps = [
         ":type_nullability",
         "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",

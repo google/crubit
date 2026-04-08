@@ -9,12 +9,12 @@
 #include <ostream>
 
 #include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/CachedConstAccessorsLattice.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "llvm/ADT/DenseMap.h"
 
 namespace clang::tidy::nullability {
 class PointerNullabilityLatticeBase {
@@ -23,12 +23,12 @@ class PointerNullabilityLatticeBase {
     // Nullability interpretation of types as set e.g. by per-file #pragmas.
     TypeNullabilityDefaults Defaults;
 
-    absl::flat_hash_map<const Expr *, TypeNullability> ExprToNullability;
+    llvm::DenseMap<const Expr*, TypeNullability> ExprToNullability;
 
     // Overridden symbolic nullability for pointer-typed decls.
     // These are set by PointerNullabilityAnalysis::assignNullabilityVariable,
     // and take precedence over the declared type.
-    absl::flat_hash_map<const ValueDecl *absl_nonnull, PointerTypeNullability>
+    llvm::DenseMap<const ValueDecl* absl_nonnull, PointerTypeNullability>
         DeclTopLevelNullability;
   };
 
