@@ -1268,7 +1268,7 @@ macro_rules! ctor {
     };
 
     // Unit struct ctor.
-    ($t:ident $(:: $ts:ident)*) => {$crate::ctor!($t $(:: $ts)* {  })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? {  })};
 
     // Conventional tuple struct syntax (with parens, no integer names) supported for < 8 fields.
     // Otherwise, use MyTupleStruct{0: ..., 1: ...} syntax, which works for any number of fields.
@@ -1276,15 +1276,15 @@ macro_rules! ctor {
     /* python3 -c 'for i in range(8):
         ctor_ins = ", ".join(f"$ctor_{j}:expr" for j in range(i))
         ctor_outs = ", ".join(f"{j}: $ctor_{j}" for j in range(i))
-        print(f"    ($t:ident $(:: $ts:ident)* ({ctor_ins})) => {{$crate::ctor!($t $(:: $ts)* {{ {ctor_outs} }})}};")' */
-    ($t:ident $(:: $ts:ident)* ()) => {$crate::ctor!($t $(:: $ts)* {  })};
-    ($t:ident $(:: $ts:ident)* ($ctor_0:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0 })};
-    ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1 })};
-    ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2 })};
-    ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3 })};
-    ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4 })};
-    ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5 })};
-    ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr, $ctor_6:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5, 6: $ctor_6 })};
+        print(f"    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ({ctor_ins})) => {{$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? {{ {ctor_outs} }})}};")' */
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ()) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? {  })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0 })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1 })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2 })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3 })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4 })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5 })};
+    ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr, $ctor_6:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5, 6: $ctor_6 })};
 }
 
 /// The `raw_ctor!` macro evaluates to a `Ctor` for a Rust struct, with
