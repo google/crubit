@@ -131,3 +131,12 @@ fn test_nontrivial_struct() {
     let s_clone = emplace!(ctor::copy(&*s));
     assert_eq!(s_clone.int_field, 123);
 }
+
+// Ideally, this test would work.
+//
+// // TODO(b/331685208): make this test compile and pass.
+//
+// #[gest]
+// fn test_span_constructors() {
+//     let _ = span_constructors::MyStruct::new(...);
+// }

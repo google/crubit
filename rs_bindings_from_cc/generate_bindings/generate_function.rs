@@ -785,17 +785,32 @@ fn api_func_shape_for_constructor(
 
     if !record.is_unpin() {
         let func_name = make_rs_ident("ctor_new");
+
         let [_this, params @ ..] = param_types else {
-            panic!("Missing `__this` parameter in a constructor: {:?}", func)
+            errors.add(anyhow!(
+                "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {:?}",
+                func
+            ));
+            return None;
         };
         // Elided lifetimes won't "just work" when split across the `Ctor` trait impl, so we replace
         // them with a single named lifetime.
+        // TODO(b/331685208): instead, return `impl Ctor` from `ctor_new`. It's infeasible (and
+        // expensive) to deep-copy the RsTypeKind and mutate all sublifetimes.
         for param in &mut params[..] {
             if let RsTypeKind::Reference { lifetime, .. }
             | RsTypeKind::RvalueReference { lifetime, .. } = param
             {
                 if lifetime.is_elided() {
                     *lifetime = Lifetime::new("__unelided");
+                }
+            }
+        }
+        // Check if there's still any elided lifetimes after the minimal transform above:
+        for param in &params[..] {
+            for lifetime in param.lifetimes() {
+                if lifetime.is_elided() {
+                    errors.add(anyhow!("b/331685208: Found a lifetime in a function parameter type {}, which prevents CtorNew bindings", param.display(db)));
                 }
             }
         }
@@ -814,7 +829,13 @@ fn api_func_shape_for_constructor(
         return Some((func_name, impl_kind));
     }
     match func.params.len() {
-        0 => panic!("Missing `__this` parameter in a constructor: {:?}", func),
+        0 => {
+            errors.add(anyhow!(
+                "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {:?}",
+                func
+            ));
+            None
+        }
         1 => {
             let func_name = make_rs_ident("default");
             let impl_kind = ImplKind::new_trait(

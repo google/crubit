@@ -17,6 +17,14 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+crubit_test_cc_library(
+    name = "span_constructors",
+    hdrs = ["span_constructors.h"],
+    # operator lifetime inference and ctor
+    aspect_hints = ["//features:experimental"],
+    deps = ["@abseil-cpp//absl/types:span"],
+)
+
 golden_test(
     name = "constructors_golden_test",
     basename = "constructors",
@@ -30,6 +38,7 @@ crubit_rust_test(
     srcs = ["test.rs"],
     cc_deps = [
         ":constructors",
+        ":span_constructors",
     ],
     deps = [
         "//support:ctor",
