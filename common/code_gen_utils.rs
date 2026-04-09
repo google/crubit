@@ -385,9 +385,9 @@ impl NamespaceQualifier {
         quote! { #(#rust_parts::)* }
     }
 
-    /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
+    /// Returns `::foo::bar::baz::` (reporting errors for C++ keywords).
     pub fn format_for_cc(&self) -> Result<TokenStream> {
-        let mut path = quote! {};
+        let mut path = quote! {::};
         for namespace in &self.namespaces {
             let namespace = format_cc_ident(namespace)?;
             path.extend(quote! { #namespace :: });
@@ -749,7 +749,7 @@ pub mod tests {
         let actual_rs = ns.format_for_rs();
         assert!(actual_rs.is_empty());
         let actual_cc = ns.format_for_cc().unwrap();
-        assert!(actual_cc.is_empty());
+        assert_cc_matches!(actual_cc, quote! { :: });
     }
 
     #[gtest]

@@ -1749,7 +1749,9 @@ pub fn generate_function(
                     #capture_tags
                     #doc_comment
                     #[inline(always)]
-                    #visibility
+                    // Not public API because we don't want cc_bindings_from_rs to make bindings to
+                    // this.
+                    pub(crate)
                     #unsafety
                     fn #bracketed_func_name #free_fn_generic_params(
                         #( #free_api_params ),*

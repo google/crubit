@@ -271,7 +271,7 @@ fn generate_function_assertion_for_identifier(
 ) -> Result<ThunkImpl> {
     let fn_ident = format_cc_ident(&id.identifier)?;
     let path_to_func = db.namespace_qualifier(func).format_for_cc()?;
-    let implementation_function = quote! { :: #path_to_func #fn_ident };
+    let implementation_function = quote! { #path_to_func #fn_ident };
     let method_qualification;
     let member_function_prefix;
     let func_params;
