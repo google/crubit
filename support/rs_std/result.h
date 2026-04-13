@@ -22,7 +22,10 @@ struct Result final {
 #if __cplusplus >= 202302L
 using std::unexpect;
 using std::unexpect_t;
-using std::unexpected;
+// Not using a more straightforward `using std::unexpected` to avoid ambiguity
+// from https://crbug.com/501547639
+template <typename E>
+using unexpected = std::expected<int, E>::unexpected_type;
 #else
 struct unexpect_t {
   explicit unexpect_t() = default;
