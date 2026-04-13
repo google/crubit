@@ -617,7 +617,6 @@ fn generate_index_impls<'tcx>(
                     tcx,
                     tcx.fn_sig(index_trait_assoc_fn.def_id).instantiate(tcx, trait_args),
                     index_trait_assoc_fn.def_id);
-            println!("unnorm_fn_sig: {:?}", unnorm_fn_sig);
             let fn_sig = try_normalize(tcx,
                 ty::PseudoCanonicalInput {
                     typing_env: TypingEnv::fully_monomorphized(),
