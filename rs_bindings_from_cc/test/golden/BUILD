@@ -71,6 +71,12 @@ ASPECT_HINTS = {
     "callables": [
         "//features:callables",
     ],
+    "deprecated_experimental": [
+        "//features:experimental",
+    ],
+    "nodiscard_experimental": [
+        "//features:experimental",
+    ],
     # "callables_supported" intentionally does not have the callables feature, only supported.
 }
 
