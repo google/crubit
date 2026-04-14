@@ -11,6 +11,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 /// Tests that no bindings are generated when an overload set includes

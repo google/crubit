@@ -11,6 +11,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 // Type bindings for MyI8 suppressed due to being mapped to an existing Rust type (i8)

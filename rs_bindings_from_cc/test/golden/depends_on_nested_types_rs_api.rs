@@ -11,6 +11,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 /// This should have bindings because Bar is a nested item of Foo, and the module

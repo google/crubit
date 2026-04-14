@@ -11,6 +11,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 // Note: a real example would require that Crubit implements CrubitAbiTrait in

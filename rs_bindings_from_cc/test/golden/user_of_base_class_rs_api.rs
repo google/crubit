@@ -11,6 +11,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 /// The same as Derived from inheritance.h, but in a different build target.

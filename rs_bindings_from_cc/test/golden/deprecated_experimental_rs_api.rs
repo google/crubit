@@ -11,6 +11,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 #[inline(always)]
@@ -24,6 +25,7 @@ pub fn deprecated_function_with_message() {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[deprecated]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedStruct
 pub struct DeprecatedStruct {
@@ -52,6 +54,7 @@ impl Default for DeprecatedStruct {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[deprecated = "old"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedStructWithMessage
 pub struct DeprecatedStructWithMessage {
@@ -83,6 +86,7 @@ impl Default for DeprecatedStructWithMessage {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[deprecated]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnum
 pub struct DeprecatedEnum(::ffi_11::c_uint);
 impl DeprecatedEnum {}
@@ -99,6 +103,7 @@ impl From<DeprecatedEnum> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[deprecated = "old"]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumWithMessage
 pub struct DeprecatedEnumWithMessage(::ffi_11::c_uint);
 impl DeprecatedEnumWithMessage {}
@@ -136,8 +141,10 @@ pub mod DeprecatedNamespaceWithMessage {
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumerators
 pub struct DeprecatedEnumerators(::ffi_11::c_uint);
 impl DeprecatedEnumerators {
+    #[deprecated]
     pub const kDeprecatedEnumerator: DeprecatedEnumerators =
         DeprecatedEnumerators(::ffi_11::new_c_uint(0));
+    #[deprecated = "old"]
     pub const kDeprecatedEnumeratorWithMessage: DeprecatedEnumerators =
         DeprecatedEnumerators(::ffi_11::new_c_uint(1));
 }
@@ -160,7 +167,9 @@ pub type DeprecatedUsingWithMessage = ::ffi_11::c_int;
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedFields
 pub struct DeprecatedFields {
+    #[deprecated]
     pub no_message: ::ffi_11::c_int,
+    #[deprecated = "old"]
     pub message: ::ffi_11::c_int,
 }
 impl !Send for DeprecatedFields {}

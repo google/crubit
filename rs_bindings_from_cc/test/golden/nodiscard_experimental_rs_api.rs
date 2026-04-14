@@ -11,6 +11,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -70,6 +71,7 @@ impl Default for NoDiscardWithMessage {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[must_use]
 ///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnum
 pub struct NoDiscardEnum(::ffi_11::c_uint);
 impl NoDiscardEnum {
@@ -88,6 +90,7 @@ impl From<NoDiscardEnum> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[must_use = "You really should use this"]
 ///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnumWithMessage
 pub struct NoDiscardEnumWithMessage(::ffi_11::c_uint);
 impl NoDiscardEnumWithMessage {

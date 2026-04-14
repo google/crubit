@@ -12,6 +12,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 /// `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent

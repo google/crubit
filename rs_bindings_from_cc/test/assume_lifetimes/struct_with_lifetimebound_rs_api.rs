@@ -12,6 +12,7 @@
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(unused)]
+#![allow(deprecated)]
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=8

@@ -7,10 +7,10 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, make_rs_lifetime_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
-    ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeleteImpl, DeriveAttr,
-    DisplayImpl, DocCommentAttr, Feature, FieldDefinition, FieldType, GeneratedItem, MustUseAttr,
-    NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk, ThunkImpl,
-    UpcastImpl, UpcastImplBody, Visibility,
+    ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeleteImpl,
+    DeprecatedAttr, DeriveAttr, DisplayImpl, DocCommentAttr, Feature, FieldDefinition, FieldType,
+    GeneratedItem, MustUseAttr, NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl,
+    StructOrUnion, Thunk, ThunkImpl, UpcastImpl, UpcastImplBody, Visibility,
 };
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::BindingsGenerator;
@@ -311,6 +311,18 @@ fn field_definition(
         });
     };
 
+    let mut deprecated_attr: Option<DeprecatedAttr> = None;
+    if let Some(deprecated) = &field.deprecated {
+        for target in
+            db.defining_target(record.id()).as_ref().into_iter().chain([&record.owning_target])
+        {
+            let enabled_features = db.ir().target_crubit_features(target);
+            if enabled_features.contains(crubit_feature::CrubitFeature::Experimental) {
+                deprecated_attr = Some(DeprecatedAttr(deprecated.clone()));
+                break;
+            }
+        }
+    };
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
     let doc_comment = match &field_rs_type_kind {
@@ -375,7 +387,15 @@ fn field_definition(
         }
     };
 
-    Ok(FieldDefinition::Field { field_index, padding, doc_comment, visibility, ident, field_type })
+    Ok(FieldDefinition::Field {
+        field_index,
+        padding,
+        doc_comment,
+        deprecated_attr,
+        visibility,
+        ident,
+        field_type,
+    })
 }
 
 /// Implementation of `BindingsGenerator::generate_record`.
@@ -720,6 +740,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         derive_attr: generate_derives(&record),
         recursively_pinned_attr,
         must_use_attr: record.nodiscard.clone().map(MustUseAttr),
+        deprecated_attr: record.deprecated.clone().map(DeprecatedAttr),
         align: if override_alignment && record.size_align.alignment > 1 {
             Some(record.size_align.alignment)
         } else {

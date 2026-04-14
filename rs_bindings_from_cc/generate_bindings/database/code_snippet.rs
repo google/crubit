@@ -638,6 +638,7 @@ pub fn generated_items_to_tokens<'db>(
                     derive_attr,
                     recursively_pinned_attr,
                     must_use_attr,
+                    deprecated_attr,
                     align,
                     internally_mutable_unknown_fields,
                     crubit_annotation,
@@ -768,6 +769,7 @@ pub fn generated_items_to_tokens<'db>(
                     #derive_attr
                     #recursively_pinned_attr
                     #must_use_attr
+                    #deprecated_attr
                     #[repr(#(#repr_attrs),*)]
                     #crubit_annotation
                     #visibility #struct_or_union #ident #type_param_tokens {
@@ -1064,6 +1066,7 @@ pub struct Record {
     pub derive_attr: DeriveAttr,
     pub recursively_pinned_attr: Option<RecursivelyPinnedAttr>,
     pub must_use_attr: Option<MustUseAttr>,
+    pub deprecated_attr: Option<DeprecatedAttr>,
     pub align: Option<usize>,
     pub internally_mutable_unknown_fields: bool,
     pub crubit_annotation: DocCommentAttr,
@@ -1188,6 +1191,19 @@ impl ToTokens for MustUseAttr {
 }
 
 #[derive(Clone, Debug)]
+pub struct DeprecatedAttr(pub Rc<str>);
+
+impl ToTokens for DeprecatedAttr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self.0.as_ref() {
+            "" => quote! { #[deprecated] },
+            message => quote! { #[deprecated = #message] },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct CxxExternTypeImpl {
     pub id: Rc<str>,
     pub kind: CxxKind,
@@ -1275,6 +1291,7 @@ pub enum FieldDefinition {
         field_index: usize,
         padding: Option<BitPadding>,
         doc_comment: Option<DocCommentAttr>,
+        deprecated_attr: Option<DeprecatedAttr>,
         visibility: Visibility,
         ident: Ident,
         field_type: FieldType,
@@ -1303,6 +1320,7 @@ impl ToTokens for FieldDefinition {
                 field_index,
                 padding,
                 doc_comment,
+                deprecated_attr,
                 visibility,
                 ident,
                 field_type,
@@ -1315,6 +1333,7 @@ impl ToTokens for FieldDefinition {
                 quote! {
                     #padding_field
                     #doc_comment
+                    #deprecated_attr
                     #visibility #ident: #field_type,
                 }
                 .to_tokens(tokens);
