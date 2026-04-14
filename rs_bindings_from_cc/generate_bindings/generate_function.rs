@@ -5,7 +5,9 @@
 use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::{make_rs_ident, make_rs_lifetime_ident};
 use crubit_abi_type::{CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens};
-use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibility};
+use database::code_snippet::{
+    ApiSnippets, DeprecatedAttr, Feature, GeneratedItem, MustUseAttr, Thunk, Visibility,
+};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
@@ -1622,6 +1624,9 @@ pub fn generate_function(
         db.kythe_annotations(),
     );
 
+    let deprecated_attr = func.deprecated.clone().map(DeprecatedAttr);
+    let must_use_attr = func.nodiscard.clone().map(MustUseAttr);
+
     // If there are no bindings, use `Public` for the sake of "keeping on going" when
     // collecting errors for items that will not actually be generated.
     let visibility = db.has_bindings(ir::Item::Func(func.clone())).unwrap_or_default().visibility;
@@ -1656,6 +1661,8 @@ pub fn generate_function(
                 #unimplemented_trait_def
                 #capture_tags
                 #doc_comment
+                #deprecated_attr
+                #must_use_attr
                 #[inline(always)]
                 #visibility
                 #unsafety
@@ -1748,6 +1755,8 @@ pub fn generate_function(
                 vec![quote! {
                     #capture_tags
                     #doc_comment
+                    #deprecated_attr
+                    #must_use_attr
                     #[inline(always)]
                     #visibility
                     #unsafety
@@ -1786,6 +1795,8 @@ pub fn generate_function(
                 vec![quote! {
                     #capture_tags
                     #doc_comment
+                    #deprecated_attr
+                    #must_use_attr
                     #[inline(always)]
                     #visibility
                     #unsafety
@@ -2022,6 +2033,8 @@ pub fn generate_function(
                 #doc_comment
                 impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for #trait_record_param_tokens #unsatisfied_where_clause {
                     #extra_body
+                    #deprecated_attr
+                    #must_use_attr
                     #[inline(always)]
                     #unsafety
                     fn #bracketed_func_name #fn_generic_params(

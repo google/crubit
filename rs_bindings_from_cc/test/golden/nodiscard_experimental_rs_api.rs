@@ -108,11 +108,13 @@ impl From<NoDiscardEnumWithMessage> for ::ffi_11::c_uint {
     }
 }
 
+#[must_use]
 #[inline(always)]
 pub fn crubit_nodiscard() -> *mut ::ffi_11::c_void {
     unsafe { crate::detail::__rust_thunk___Z16crubit_nodiscardv() }
 }
 
+#[must_use = "You really should use this"]
 #[inline(always)]
 pub fn crubit_nodiscard_message() -> *mut ::ffi_11::c_void {
     unsafe { crate::detail::__rust_thunk___Z24crubit_nodiscard_messagev() }
@@ -133,6 +135,7 @@ unsafe impl ::cxx::ExternType for NodiscardCtor {
 forward_declare::unsafe_define!(forward_declare::symbol!("NodiscardCtor"), crate::NodiscardCtor);
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
+    #[must_use]
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
         let (mut x, mut y) = args;
@@ -170,6 +173,7 @@ forward_declare::unsafe_define!(
 );
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtorWithMessage {
+    #[must_use = "You really should use this"]
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
         let (mut x, mut y) = args;

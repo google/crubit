@@ -14,11 +14,13 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
+#[deprecated]
 #[inline(always)]
 pub fn deprecated_function() {
     unsafe { crate::detail::__rust_thunk___Z19deprecated_functionv() }
 }
 
+#[deprecated = "old"]
 #[inline(always)]
 pub fn deprecated_function_with_message() {
     unsafe { crate::detail::__rust_thunk___Z32deprecated_function_with_messagev() }
