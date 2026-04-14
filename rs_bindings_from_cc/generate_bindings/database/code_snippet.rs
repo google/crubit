@@ -894,7 +894,7 @@ pub fn generated_items_to_tokens<'db>(
                 // It is the representative, so we generate all the items keyed under the
                 // canonical namespace id.
 
-                let Some(GeneratedItem::CanonicalNamespace { items }) =
+                let Some(GeneratedItem::CanonicalNamespace { items, deprecated_attr }) =
                     generated_items.get(&current_namespace.canonical_namespace_id)
                 else {
                     panic!("the entry we generated for the canonical namespace should be a GeneratedItem::CanonicalNamespace");
@@ -908,6 +908,7 @@ pub fn generated_items_to_tokens<'db>(
                 let name = make_rs_ident(&canonical_namespace.rs_name.identifier);
 
                 quote! {
+                    #deprecated_attr
                     pub mod #name {
                         #namespace_tokens
                     }
@@ -940,17 +941,26 @@ pub fn generated_items_to_tokens<'db>(
                 pub use #mod_name::*;
             }
             .to_tokens(tokens),
-            GeneratedItem::Constant { ident, type_tokens, value } => quote! {
+            GeneratedItem::Constant { ident, type_tokens, value, deprecated_attr } => quote! {
+                #deprecated_attr
                 pub const #ident: #type_tokens = #value;
             }
             .to_tokens(tokens),
-            GeneratedItem::GlobalVar { link_name, visibility, is_mut, ident, type_tokens } => {
+            GeneratedItem::GlobalVar {
+                link_name,
+                visibility,
+                is_mut,
+                ident,
+                type_tokens,
+                deprecated_attr,
+            } => {
                 let link_name_attr =
                     link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
                 let mut_kw = if *is_mut { Some(quote! { mut }) } else { None };
                 quote! {
                     unsafe extern "C" {
                         #link_name_attr
+                        #deprecated_attr
                         #visibility static #mut_kw #ident: #type_tokens;
                     }
                 }
@@ -962,9 +972,11 @@ pub fn generated_items_to_tokens<'db>(
                 ident,
                 underlying_type,
                 underlying_nested_module_path,
+                deprecated_attr,
             } => {
                 quote! {
                     #doc_comment
+                    #deprecated_attr
                     #visibility type #ident = #underlying_type;
                 }
                 .to_tokens(tokens);
@@ -1002,6 +1014,7 @@ pub enum GeneratedItem {
         ident: Ident,
         type_tokens: TokenStream,
         value: TokenStream,
+        deprecated_attr: Option<DeprecatedAttr>,
     },
     Enum(TokenStream),
     Func(TokenStream),
@@ -1011,6 +1024,7 @@ pub enum GeneratedItem {
     CanonicalNamespace {
         /// List of all the items from all the namespaces
         items: Vec<ItemId>,
+        deprecated_attr: Option<DeprecatedAttr>,
     },
     ForwardDeclare {
         visibility: Visibility,
@@ -1027,6 +1041,7 @@ pub enum GeneratedItem {
         is_mut: bool,
         ident: Ident,
         type_tokens: TokenStream,
+        deprecated_attr: Option<DeprecatedAttr>,
     },
     TypeAlias {
         doc_comment: Option<DocCommentAttr>,
@@ -1034,17 +1049,38 @@ pub enum GeneratedItem {
         ident: Ident,
         underlying_type: TokenStream,
         underlying_nested_module_path: Option<TokenStream>,
+        deprecated_attr: Option<DeprecatedAttr>,
     },
 }
 
 impl GeneratedItem {
     fn merge(&mut self, other: GeneratedItem) {
+        fn merge_deprecated_text(s1: &str, s2: &str) -> String {
+            match (s1, s2) {
+                ("", s2) => s2.to_string(),
+                (s1, "") => s1.to_string(),
+                (s1, s2) => format!("{}, {}", s1, s2),
+            }
+        }
         match (self, other) {
             (
-                GeneratedItem::CanonicalNamespace { items },
-                GeneratedItem::CanonicalNamespace { items: other_items },
+                GeneratedItem::CanonicalNamespace { items, deprecated_attr },
+                GeneratedItem::CanonicalNamespace {
+                    items: other_items,
+                    deprecated_attr: other_deprecated_attr,
+                },
             ) => {
                 items.extend(other_items);
+                match (&deprecated_attr, &other_deprecated_attr) {
+                    (Some(a), Some(b)) => {
+                        if a.0 != b.0 {
+                            *deprecated_attr =
+                                Some(DeprecatedAttr(merge_deprecated_text(&a.0, &b.0).into()))
+                        }
+                    }
+                    (_, None) => (),
+                    (None, _) => *deprecated_attr = other_deprecated_attr,
+                };
             }
             (
                 GeneratedItem::Comment { message },

@@ -120,6 +120,7 @@ impl From<DeprecatedEnumWithMessage> for ::ffi_11::c_uint {
     }
 }
 
+#[deprecated]
 pub mod DeprecatedNamespace {
     #[inline(always)]
     pub fn f() {
@@ -129,6 +130,7 @@ pub mod DeprecatedNamespace {
 
 // namespace DeprecatedNamespace
 
+#[deprecated = "old"]
 pub mod DeprecatedNamespaceWithMessage {
     #[inline(always)]
     pub fn f() {
@@ -137,6 +139,41 @@ pub mod DeprecatedNamespaceWithMessage {
 }
 
 // namespace DeprecatedNamespaceWithMessage
+
+#[deprecated]
+pub mod MergeEmptyDeprecatedWithUndeprecatedNamespace {
+    pub const kOne: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
+
+    pub const kTwo: ::ffi_11::c_int = ::ffi_11::new_c_int(2);
+}
+
+#[deprecated = "old"]
+pub mod MergeDeprecatedWithUndeprecatedNamespace {
+    pub const kOne: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
+
+    pub const kTwo: ::ffi_11::c_int = ::ffi_11::new_c_int(2);
+}
+
+#[deprecated = "old"]
+pub mod MergeEmptyDeprecatedWithDeprecatedNamespace {
+    pub const kOne: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
+
+    pub const kTwo: ::ffi_11::c_int = ::ffi_11::new_c_int(2);
+}
+
+#[deprecated = "old"]
+pub mod MergeDeprecatedWithSameDeprecatedNamespace {
+    pub const kOne: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
+
+    pub const kTwo: ::ffi_11::c_int = ::ffi_11::new_c_int(2);
+}
+
+#[deprecated = "old1, old2"]
+pub mod MergeDeprecatedWithDeprecatedNamespace {
+    pub const kOne: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
+
+    pub const kTwo: ::ffi_11::c_int = ::ffi_11::new_c_int(2);
+}
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
@@ -161,8 +198,10 @@ impl From<DeprecatedEnumerators> for ::ffi_11::c_uint {
     }
 }
 
+#[deprecated]
 pub type DeprecatedUsing = ::ffi_11::c_int;
 
+#[deprecated = "old"]
 pub type DeprecatedUsingWithMessage = ::ffi_11::c_int;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -197,12 +236,20 @@ impl Default for DeprecatedFields {
 }
 
 unsafe extern "C" {
+    #[deprecated]
     pub static mut global_var: ::ffi_11::c_int;
 }
 
 unsafe extern "C" {
+    #[deprecated = "old"]
     pub static mut global_var_with_message: ::ffi_11::c_int;
 }
+
+#[deprecated]
+pub const kConstant: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
+
+#[deprecated = "old"]
+pub const kConstantWithMessage: ::ffi_11::c_int = ::ffi_11::new_c_int(2);
 
 // error: class `SomeTotalSpecialization` could not be bound
 //   Class templates are not yet supported

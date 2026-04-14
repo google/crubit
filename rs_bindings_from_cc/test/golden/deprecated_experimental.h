@@ -22,6 +22,46 @@ namespace [[deprecated("old")]] DeprecatedNamespaceWithMessage {
 inline void f() {}
 }  // namespace DeprecatedNamespaceWithMessage
 
+namespace [[deprecated]] MergeEmptyDeprecatedWithUndeprecatedNamespace {
+constexpr int kOne = 1;
+}
+
+namespace MergeEmptyDeprecatedWithUndeprecatedNamespace {
+constexpr int kTwo = 2;
+}
+
+namespace [[deprecated("old")]] MergeDeprecatedWithUndeprecatedNamespace {
+constexpr int kOne = 1;
+}
+
+namespace MergeDeprecatedWithUndeprecatedNamespace {
+constexpr int kTwo = 2;
+}
+
+namespace [[deprecated]] MergeEmptyDeprecatedWithDeprecatedNamespace {
+constexpr int kOne = 1;
+}
+
+namespace [[deprecated("old")]] MergeEmptyDeprecatedWithDeprecatedNamespace {
+constexpr int kTwo = 2;
+}
+
+namespace [[deprecated("old")]] MergeDeprecatedWithSameDeprecatedNamespace {
+constexpr int kOne = 1;
+}
+
+namespace [[deprecated("old")]] MergeDeprecatedWithSameDeprecatedNamespace {
+constexpr int kTwo = 2;
+}
+
+namespace [[deprecated("old1")]] MergeDeprecatedWithDeprecatedNamespace {
+constexpr int kOne = 1;
+}
+
+namespace [[deprecated("old2")]] MergeDeprecatedWithDeprecatedNamespace {
+constexpr int kTwo = 2;
+}
+
 enum DeprecatedEnumerators {
   kDeprecatedEnumerator [[deprecated]] = 0,
   kDeprecatedEnumeratorWithMessage [[deprecated("old")]] = 1,
@@ -37,6 +77,9 @@ struct DeprecatedFields {
 
 extern int global_var [[deprecated]];
 extern int global_var_with_message [[deprecated("old")]];
+
+constexpr int kConstant [[deprecated]] = 1;
+constexpr int kConstantWithMessage [[deprecated("old")]] = 2;
 
 template <typename T>
 struct SomeTotalSpecialization {};

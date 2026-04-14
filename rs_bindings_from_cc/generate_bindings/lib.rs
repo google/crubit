@@ -13,7 +13,7 @@ use crubit_abi_type::{
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     self, integer_constant_to_token_stream, ApiSnippets, Bindings, BindingsTokens, CppDetails,
-    CppIncludes, Feature, GeneratedItem,
+    CppIncludes, DeprecatedAttr, Feature, GeneratedItem,
 };
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
@@ -167,6 +167,7 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
         ident: make_rs_ident(&type_alias.rs_name.identifier),
         underlying_type: underlying_type.to_token_stream(db),
         underlying_nested_module_path,
+        deprecated_attr: type_alias.deprecated.clone().map(DeprecatedAttr),
     };
     Ok(ApiSnippets {
         generated_items: HashMap::from([(type_alias.id, generated_item)]),
@@ -196,6 +197,7 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
                 ident: make_rs_ident(&constant.rs_name.identifier),
                 type_tokens: type_.to_token_stream(db),
                 value,
+                deprecated_attr: constant.deprecated.clone().map(DeprecatedAttr),
             },
         )]),
         ..Default::default()
@@ -215,6 +217,7 @@ fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSni
                 ident: make_rs_ident(&var.rs_name.identifier),
                 type_tokens: type_.to_token_stream(db),
                 visibility: db.type_visibility(&var.owning_target, type_).unwrap_or_default(),
+                deprecated_attr: var.deprecated.clone().map(DeprecatedAttr),
             },
         )]),
         ..Default::default()
@@ -234,7 +237,10 @@ fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Resul
     api_snippets.generated_items.insert(namespace.id, GeneratedItem::NonCanonicalNamespace);
     api_snippets.generated_items.insert(
         namespace.canonical_namespace_id,
-        GeneratedItem::CanonicalNamespace { items: namespace.child_item_ids.to_vec() },
+        GeneratedItem::CanonicalNamespace {
+            items: namespace.child_item_ids.to_vec(),
+            deprecated_attr: namespace.deprecated.clone().map(DeprecatedAttr),
+        },
     );
     Ok(api_snippets)
 }
