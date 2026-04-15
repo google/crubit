@@ -46,6 +46,12 @@ extern "C" void __rust_thunk___ZN27DeprecatedStructWithMessageC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct StructWithDeprecatedCtor) == 1);
+static_assert(alignof(struct StructWithDeprecatedCtor) == 1);
+
+static_assert(sizeof(struct StructWithDeprecatedCtorWithMessage) == 1);
+static_assert(alignof(struct StructWithDeprecatedCtorWithMessage) == 1);
+
 extern "C" void __rust_thunk___ZN19DeprecatedNamespace1fEv() {
   DeprecatedNamespace::f();
 }

@@ -14,6 +14,14 @@ struct [[deprecated("old")]] DeprecatedStructWithMessage {};
 enum [[deprecated]] DeprecatedEnum {};
 enum [[deprecated("old")]] DeprecatedEnumWithMessage {};
 
+struct StructWithDeprecatedCtor {
+  [[deprecated]] StructWithDeprecatedCtor();
+};
+
+struct StructWithDeprecatedCtorWithMessage {
+  [[deprecated("old")]] StructWithDeprecatedCtorWithMessage();
+};
+
 namespace [[deprecated]] DeprecatedNamespace {
 inline void f() {}
 }  // namespace DeprecatedNamespace

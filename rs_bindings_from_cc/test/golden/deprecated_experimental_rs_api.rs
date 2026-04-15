@@ -120,6 +120,64 @@ impl From<DeprecatedEnumWithMessage> for ::ffi_11::c_uint {
     }
 }
 
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=StructWithDeprecatedCtor
+pub struct StructWithDeprecatedCtor {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for StructWithDeprecatedCtor {}
+impl !Sync for StructWithDeprecatedCtor {}
+unsafe impl ::cxx::ExternType for StructWithDeprecatedCtor {
+    type Id = ::cxx::type_id!("StructWithDeprecatedCtor");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithDeprecatedCtor"),
+    crate::StructWithDeprecatedCtor
+);
+
+impl Default for StructWithDeprecatedCtor {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN24StructWithDeprecatedCtorC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=StructWithDeprecatedCtorWithMessage
+pub struct StructWithDeprecatedCtorWithMessage {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for StructWithDeprecatedCtorWithMessage {}
+impl !Sync for StructWithDeprecatedCtorWithMessage {}
+unsafe impl ::cxx::ExternType for StructWithDeprecatedCtorWithMessage {
+    type Id = ::cxx::type_id!("StructWithDeprecatedCtorWithMessage");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithDeprecatedCtorWithMessage"),
+    crate::StructWithDeprecatedCtorWithMessage
+);
+
+impl Default for StructWithDeprecatedCtorWithMessage {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN35StructWithDeprecatedCtorWithMessageC1Ev(
+                &raw mut tmp as *mut _,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+
 #[deprecated]
 pub mod DeprecatedNamespace {
     #[inline(always)]
@@ -275,6 +333,14 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN27DeprecatedStructWithMessageC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        #[link_name = "_ZN24StructWithDeprecatedCtorC1Ev"]
+        pub(crate) unsafe fn __rust_thunk___ZN24StructWithDeprecatedCtorC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        #[link_name = "_ZN35StructWithDeprecatedCtorWithMessageC1Ev"]
+        pub(crate) unsafe fn __rust_thunk___ZN35StructWithDeprecatedCtorWithMessageC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN19DeprecatedNamespace1fEv();
         pub(crate) unsafe fn __rust_thunk___ZN30DeprecatedNamespaceWithMessage1fEv();
         pub(crate) unsafe fn __rust_thunk___ZN16DeprecatedFieldsC1Ev(
@@ -293,6 +359,16 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::DeprecatedStructWithMessage>() == 1);
     static_assertions::assert_impl_all!(crate::DeprecatedStructWithMessage: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::DeprecatedStructWithMessage: Drop);
+
+    assert!(::core::mem::size_of::<crate::StructWithDeprecatedCtor>() == 1);
+    assert!(::core::mem::align_of::<crate::StructWithDeprecatedCtor>() == 1);
+    static_assertions::assert_impl_all!(crate::StructWithDeprecatedCtor: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithDeprecatedCtor: Drop);
+
+    assert!(::core::mem::size_of::<crate::StructWithDeprecatedCtorWithMessage>() == 1);
+    assert!(::core::mem::align_of::<crate::StructWithDeprecatedCtorWithMessage>() == 1);
+    static_assertions::assert_impl_all!(crate::StructWithDeprecatedCtorWithMessage: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithDeprecatedCtorWithMessage: Drop);
 
     assert!(::core::mem::size_of::<crate::DeprecatedFields>() == 8);
     assert!(::core::mem::align_of::<crate::DeprecatedFields>() == 4);

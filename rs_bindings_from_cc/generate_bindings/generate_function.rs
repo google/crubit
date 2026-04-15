@@ -2033,7 +2033,6 @@ pub fn generate_function(
                 #doc_comment
                 impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for #trait_record_param_tokens #unsatisfied_where_clause {
                     #extra_body
-                    #deprecated_attr
                     #must_use_attr
                     #[inline(always)]
                     #unsafety
