@@ -94,7 +94,7 @@ def _get_dep_bindings_infos(attr):
     """
     return [
         dep[CcBindingsFromRustInfo]
-        for dep in attr.deps + getattr(attr, "cc_deps", [])
+        for dep in getattr(attr, "deps", []) + getattr(attr, "cc_deps", [])
         if CcBindingsFromRustInfo in dep
     ]
 
@@ -469,7 +469,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr)
     config = crate_name_to_library_config(
         aspect_hints = ctx.rule.attr.aspect_hints,
-        deps = ctx.rule.attr.deps,
+        deps = getattr(ctx.rule.attr, "deps", []),
     )
     bindings_info, features, config, output_depset = _generate_bindings(
         ctx,
