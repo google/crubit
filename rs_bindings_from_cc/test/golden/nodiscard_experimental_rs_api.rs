@@ -135,7 +135,6 @@ unsafe impl ::cxx::ExternType for NodiscardCtor {
 forward_declare::unsafe_define!(forward_declare::symbol!(":: NodiscardCtor"), crate::NodiscardCtor);
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
-    #[must_use]
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
         let (mut x, mut y) = args;
@@ -173,7 +172,6 @@ forward_declare::unsafe_define!(
 );
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtorWithMessage {
-    #[must_use = "You really should use this"]
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
         let (mut x, mut y) = args;
