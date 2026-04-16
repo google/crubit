@@ -19,14 +19,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TopLevel
+///CRUBIT_ANNOTATE: cpp_type=:: TopLevel
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TopLevel {}
 impl !Sync for TopLevel {}
 unsafe impl ::cxx::ExternType for TopLevel {
-    type Id = ::cxx::type_id!("TopLevel");
+    type Id = ::cxx::type_id!(":: TopLevel");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -62,14 +62,14 @@ impl Default for TopLevel {
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: Inner
+    ///CRUBIT_ANNOTATE: cpp_type=:: test_namespace_bindings :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("test_namespace_bindings :: Inner");
+        type Id = ::cxx::type_id!(":: test_namespace_bindings :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
 

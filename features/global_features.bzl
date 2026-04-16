@@ -8,5 +8,6 @@ visibility(["//..."])
 
 SUPPORTED_FEATURES = [
     "supported",
+    "leading_colons_for_cpp_type",
     "fmt",
 ]

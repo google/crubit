@@ -16,7 +16,7 @@
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=Color
+///CRUBIT_ANNOTATE: cpp_type=:: Color
 pub struct Color(::ffi_11::c_uint);
 impl Color {
     pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
@@ -36,7 +36,7 @@ impl From<Color> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EnumToRename
+///CRUBIT_ANNOTATE: cpp_type=:: EnumToRename
 pub struct RenamedEnum(::ffi_11::c_uint);
 impl RenamedEnum {}
 impl From<::ffi_11::c_uint> for RenamedEnum {
@@ -52,7 +52,7 @@ impl From<RenamedEnum> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EnumWithRenamedVariants
+///CRUBIT_ANNOTATE: cpp_type=:: EnumWithRenamedVariants
 pub struct EnumWithRenamedVariants(::ffi_11::c_uint);
 impl EnumWithRenamedVariants {
     pub const FOO: EnumWithRenamedVariants = EnumWithRenamedVariants(::ffi_11::new_c_uint(0));
@@ -71,7 +71,7 @@ impl From<EnumWithRenamedVariants> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=Empty
+///CRUBIT_ANNOTATE: cpp_type=:: Empty
 pub struct Empty(::ffi_11::c_uint);
 impl Empty {}
 impl From<::ffi_11::c_uint> for Empty {
@@ -87,7 +87,7 @@ impl From<Empty> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyBool
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyBool
 pub struct EmptyBool(bool);
 impl EmptyBool {}
 impl From<bool> for EmptyBool {
@@ -103,7 +103,7 @@ impl From<EmptyBool> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyInt
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyInt
 pub struct EmptyInt(::ffi_11::c_uint);
 impl EmptyInt {}
 impl From<::ffi_11::c_uint> for EmptyInt {
@@ -119,7 +119,7 @@ impl From<EmptyInt> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyChar
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyChar
 pub struct EmptyChar(::ffi_11::c_char);
 impl EmptyChar {}
 impl From<::ffi_11::c_char> for EmptyChar {
@@ -135,7 +135,7 @@ impl From<EmptyChar> for ::ffi_11::c_char {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyBool
+///CRUBIT_ANNOTATE: cpp_type=:: NonEmptyBool
 pub struct NonEmptyBool(bool);
 impl NonEmptyBool {
     pub const kBool1: NonEmptyBool = NonEmptyBool(false);
@@ -154,7 +154,7 @@ impl From<NonEmptyBool> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyInt
+///CRUBIT_ANNOTATE: cpp_type=:: NonEmptyInt
 pub struct NonEmptyInt(::ffi_11::c_uint);
 impl NonEmptyInt {
     pub const kInt1: NonEmptyInt = NonEmptyInt(::ffi_11::new_c_uint(0));
@@ -173,7 +173,7 @@ impl From<NonEmptyInt> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyChar
+///CRUBIT_ANNOTATE: cpp_type=:: NonEmptyChar
 pub struct NonEmptyChar(::ffi_11::c_char);
 impl NonEmptyChar {
     pub const kChar1: NonEmptyChar = NonEmptyChar(::ffi_11::new_c_char(0 as u8));
@@ -192,7 +192,7 @@ impl From<NonEmptyChar> for ::ffi_11::c_char {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyClass
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyClass
 pub struct EmptyClass(::ffi_11::c_int);
 impl EmptyClass {}
 impl From<::ffi_11::c_int> for EmptyClass {
@@ -208,7 +208,7 @@ impl From<EmptyClass> for ::ffi_11::c_int {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyBoolClass
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyBoolClass
 pub struct EmptyBoolClass(bool);
 impl EmptyBoolClass {}
 impl From<bool> for EmptyBoolClass {
@@ -224,7 +224,7 @@ impl From<EmptyBoolClass> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyIntClass
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyIntClass
 pub struct EmptyIntClass(::ffi_11::c_int);
 impl EmptyIntClass {}
 impl From<::ffi_11::c_int> for EmptyIntClass {
@@ -240,7 +240,7 @@ impl From<EmptyIntClass> for ::ffi_11::c_int {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyCharClass
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyCharClass
 pub struct EmptyCharClass(::ffi_11::c_char);
 impl EmptyCharClass {}
 impl From<::ffi_11::c_char> for EmptyCharClass {
@@ -256,7 +256,7 @@ impl From<EmptyCharClass> for ::ffi_11::c_char {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyBoolClass
+///CRUBIT_ANNOTATE: cpp_type=:: NonEmptyBoolClass
 pub struct NonEmptyBoolClass(bool);
 impl NonEmptyBoolClass {
     pub const k1: NonEmptyBoolClass = NonEmptyBoolClass(false);
@@ -275,7 +275,7 @@ impl From<NonEmptyBoolClass> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyIntClass
+///CRUBIT_ANNOTATE: cpp_type=:: NonEmptyIntClass
 pub struct NonEmptyIntClass(::ffi_11::c_uint);
 impl NonEmptyIntClass {
     pub const k1: NonEmptyIntClass = NonEmptyIntClass(::ffi_11::new_c_uint(0));
@@ -294,7 +294,7 @@ impl From<NonEmptyIntClass> for ::ffi_11::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyCharClass
+///CRUBIT_ANNOTATE: cpp_type=:: NonEmptyCharClass
 pub struct NonEmptyCharClass(::ffi_11::c_char);
 impl NonEmptyCharClass {
     pub const k1: NonEmptyCharClass = NonEmptyCharClass(::ffi_11::new_c_char(0 as u8));

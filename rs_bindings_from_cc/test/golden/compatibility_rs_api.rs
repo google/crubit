@@ -20,14 +20,14 @@
 /// additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl
 #[::ctor::recursively_pinned]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=CompatibleType
+///CRUBIT_ANNOTATE: cpp_type=:: CompatibleType
 pub struct CompatibleType {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for CompatibleType {}
 impl !Sync for CompatibleType {}
 unsafe impl ::cxx::ExternType for CompatibleType {
-    type Id = ::cxx::type_id!("CompatibleType");
+    type Id = ::cxx::type_id!(":: CompatibleType");
     type Kind = ::cxx::kind::Opaque;
 }
 impl CompatibleType {

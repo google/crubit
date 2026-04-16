@@ -17,7 +17,7 @@
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C, align(4))]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: SomeClass
+    ///CRUBIT_ANNOTATE: cpp_type=:: test_namespace_bindings :: SomeClass
     pub struct SomeClass {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         pub public_member_variable_: ::ffi_11::c_int,
@@ -28,7 +28,7 @@ pub mod test_namespace_bindings {
     impl !Send for SomeClass {}
     impl !Sync for SomeClass {}
     unsafe impl ::cxx::ExternType for SomeClass {
-        type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");
+        type Id = ::cxx::type_id!(":: test_namespace_bindings :: SomeClass");
         type Kind = ::cxx::kind::Trivial;
     }
     impl SomeClass {

@@ -21,7 +21,7 @@
 /// inspect and verify the expected layout of the generated Rust struct.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=Struct
+///CRUBIT_ANNOTATE: cpp_type=:: Struct
 pub struct Struct {
     /// Nobody would ever use a no_unique_address int/char field, this is just
     /// enough to test that the transmute is correct.
@@ -36,7 +36,7 @@ pub struct Struct {
 impl !Send for Struct {}
 impl !Sync for Struct {}
 unsafe impl ::cxx::ExternType for Struct {
-    type Id = ::cxx::type_id!("Struct");
+    type Id = ::cxx::type_id!(":: Struct");
     type Kind = ::cxx::kind::Trivial;
 }
 impl Struct {
@@ -99,7 +99,7 @@ pub mod r#struct {
 /// cl/448287893 `field2` would be incorrectly placed at offset 1.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=PaddingBetweenFields
+///CRUBIT_ANNOTATE: cpp_type=:: PaddingBetweenFields
 pub struct PaddingBetweenFields {
     /// size: 1, alignment: 1 => offset: 0
     pub field1: ::ffi_11::c_char,
@@ -113,7 +113,7 @@ pub struct PaddingBetweenFields {
 impl !Send for PaddingBetweenFields {}
 impl !Sync for PaddingBetweenFields {}
 unsafe impl ::cxx::ExternType for PaddingBetweenFields {
-    type Id = ::cxx::type_id!("PaddingBetweenFields");
+    type Id = ::cxx::type_id!(":: PaddingBetweenFields");
     type Kind = ::cxx::kind::Trivial;
 }
 impl PaddingBetweenFields {
@@ -177,7 +177,7 @@ pub mod padding_between_fields {
 /// - size: 8 (dsize adjusted up to account for alignment)
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding_InnerStruct
+///CRUBIT_ANNOTATE: cpp_type=:: FieldInTailPadding_InnerStruct
 pub struct FieldInTailPadding_InnerStruct {
     /// size: 4, alignment: 4 => offset: 0
     pub inner_int_field: ::ffi_11::c_int,
@@ -187,7 +187,7 @@ pub struct FieldInTailPadding_InnerStruct {
 impl !Send for FieldInTailPadding_InnerStruct {}
 impl !Sync for FieldInTailPadding_InnerStruct {}
 unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
-    type Id = ::cxx::type_id!("FieldInTailPadding_InnerStruct");
+    type Id = ::cxx::type_id!(":: FieldInTailPadding_InnerStruct");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -236,7 +236,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 /// put `char_in_tail_padding_of_prev_field` at offset 8.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding
+///CRUBIT_ANNOTATE: cpp_type=:: FieldInTailPadding
 pub struct FieldInTailPadding {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -248,7 +248,7 @@ pub struct FieldInTailPadding {
 impl !Send for FieldInTailPadding {}
 impl !Sync for FieldInTailPadding {}
 unsafe impl ::cxx::ExternType for FieldInTailPadding {
-    type Id = ::cxx::type_id!("FieldInTailPadding");
+    type Id = ::cxx::type_id!(":: FieldInTailPadding");
     type Kind = ::cxx::kind::Opaque;
 }
 

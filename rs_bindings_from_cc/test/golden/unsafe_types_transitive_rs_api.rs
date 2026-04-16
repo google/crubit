@@ -21,14 +21,14 @@
 ///   * `p`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=PublicPointer
+///CRUBIT_ANNOTATE: cpp_type=:: PublicPointer
 pub struct PublicPointer {
     pub p: *mut ::ffi_11::c_int,
 }
 impl !Send for PublicPointer {}
 impl !Sync for PublicPointer {}
 unsafe impl ::cxx::ExternType for PublicPointer {
-    type Id = ::cxx::type_id!("PublicPointer");
+    type Id = ::cxx::type_id!(":: PublicPointer");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -45,7 +45,7 @@ impl Default for PublicPointer {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=PrivatePointer
+///CRUBIT_ANNOTATE: cpp_type=:: PrivatePointer
 pub struct PrivatePointer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -55,7 +55,7 @@ pub struct PrivatePointer {
 impl !Send for PrivatePointer {}
 impl !Sync for PrivatePointer {}
 unsafe impl ::cxx::ExternType for PrivatePointer {
-    type Id = ::cxx::type_id!("PrivatePointer");
+    type Id = ::cxx::type_id!(":: PrivatePointer");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -82,7 +82,7 @@ pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
 ///   * `pub`: unsafe struct or union
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TransitivePublicPointer
+///CRUBIT_ANNOTATE: cpp_type=:: TransitivePublicPointer
 pub struct TransitivePublicPointer {
     pub r#pub: crate::PublicPointer,
     pub r#priv: crate::PrivatePointer,
@@ -90,7 +90,7 @@ pub struct TransitivePublicPointer {
 impl !Send for TransitivePublicPointer {}
 impl !Sync for TransitivePublicPointer {}
 unsafe impl ::cxx::ExternType for TransitivePublicPointer {
-    type Id = ::cxx::type_id!("TransitivePublicPointer");
+    type Id = ::cxx::type_id!(":: TransitivePublicPointer");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -111,7 +111,7 @@ impl Default for TransitivePublicPointer {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Union
+///CRUBIT_ANNOTATE: cpp_type=:: Union
 pub union Union {
     pub i: ::ffi_11::c_int,
     pub f: f32,
@@ -119,7 +119,7 @@ pub union Union {
 impl !Send for Union {}
 impl !Sync for Union {}
 unsafe impl ::cxx::ExternType for Union {
-    type Id = ::cxx::type_id!("Union");
+    type Id = ::cxx::type_id!(":: Union");
     type Kind = ::cxx::kind::Trivial;
 }
 

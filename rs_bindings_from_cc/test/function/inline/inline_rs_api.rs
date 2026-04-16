@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/inline:inline
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -27,14 +27,14 @@ pub fn hello_world_inline() -> ::ffi_11::c_int {
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeStruct
+///CRUBIT_ANNOTATE: cpp_type=:: SomeStruct
 pub struct SomeStruct {
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
 unsafe impl ::cxx::ExternType for SomeStruct {
-    type Id = ::cxx::type_id!("SomeStruct");
+    type Id = ::cxx::type_id!(":: SomeStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 

@@ -18,24 +18,24 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct X) == 4);
-static_assert(alignof(struct X) == 4);
-static_assert(CRUBIT_OFFSET_OF(a, struct X) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::X) == 4);
+static_assert(alignof(struct ::X) == 4);
+static_assert(CRUBIT_OFFSET_OF(a, struct ::X) == 0);
 
-extern "C" void __rust_thunk___ZN1XC1Ev(struct X* __this) {
+extern "C" void __rust_thunk___ZN1XC1Ev(struct ::X* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" MyI8 __rust_thunk___Z3ffi4MyI81X(MyI8 a, struct X* b) {
-  return ffi(std::move(a), std::move(*b));
+extern "C" MyI8 __rust_thunk___Z3ffi4MyI81X(MyI8 a, struct ::X* b) {
+  return ::ffi(std::move(a), std::move(*b));
 }
 
-static_assert((MyI8 (*)(MyI8, struct X)) & ::ffi);
+static_assert((MyI8 (*)(MyI8, struct ::X)) & ::ffi);
 
-extern "C" void __rust_thunk___Z1fiPvi(MyTypedefDecl a, void* b, int c) {
-  f(a, b, c);
+extern "C" void __rust_thunk___Z1fiPvi(::MyTypedefDecl a, void* b, int c) {
+  ::f(a, b, c);
 }
 
-static_assert((void (*)(MyTypedefDecl, void*, int)) & ::f);
+static_assert((void (*)(::MyTypedefDecl, void*, int)) & ::f);
 
 #pragma clang diagnostic pop

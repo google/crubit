@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // const_field_golden
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_CONST_FIELD_CONST_FIELD_GOLDEN
@@ -102,14 +102,14 @@ __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uoption(
 inline ::std::optional<::struct_with_const_field>
 return_struct_with_const_field_by_value_in_option() {
   unsigned char __return_value_storage[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<struct_with_const_field>>::kSize];
+      ::crubit::TransmuteAbi<::struct_with_const_field>>::kSize];
   __crubit_internal::
       __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uoption(
           __return_value_storage);
   return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<struct_with_const_field>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<struct_with_const_field>>(
-          ::crubit::TransmuteAbi<struct_with_const_field>()),
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::struct_with_const_field>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::struct_with_const_field>>(
+          ::crubit::TransmuteAbi<::struct_with_const_field>()),
       __return_value_storage);
 }
 

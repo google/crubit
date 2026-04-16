@@ -18,7 +18,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class CompatibleType) == 1);
-static_assert(alignof(class CompatibleType) == 1);
+static_assert(sizeof(class ::CompatibleType) == 1);
+static_assert(alignof(class ::CompatibleType) == 1);
 
 #pragma clang diagnostic pop

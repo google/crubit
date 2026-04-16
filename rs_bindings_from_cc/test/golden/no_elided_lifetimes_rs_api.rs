@@ -25,14 +25,14 @@ pub unsafe fn free_function(p1: *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=S
+///CRUBIT_ANNOTATE: cpp_type=:: S
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for S {}
 impl !Sync for S {}
 unsafe impl ::cxx::ExternType for S {
-    type Id = ::cxx::type_id!("S");
+    type Id = ::cxx::type_id!(":: S");
     type Kind = ::cxx::kind::Trivial;
 }
 impl S {
@@ -110,14 +110,14 @@ pub mod s {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
+///CRUBIT_ANNOTATE: cpp_type=:: TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
 unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
-    type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
+    type Id = ::cxx::type_id!(":: TriviallyCopyableButNontriviallyDestructible");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -179,7 +179,7 @@ pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=WrappedValue
+///CRUBIT_ANNOTATE: cpp_type=:: WrappedValue
 pub struct WrappedValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -189,7 +189,7 @@ pub struct WrappedValue {
 impl !Send for WrappedValue {}
 impl !Sync for WrappedValue {}
 unsafe impl ::cxx::ExternType for WrappedValue {
-    type Id = ::cxx::type_id!("WrappedValue");
+    type Id = ::cxx::type_id!(":: WrappedValue");
     type Kind = ::cxx::kind::Trivial;
 }
 

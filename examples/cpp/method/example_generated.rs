@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/method:example_lib
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -19,14 +19,14 @@ pub mod foo {
     /// Generated from: examples/cpp/method/example.h;l=12
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=foo :: Bar
+    ///CRUBIT_ANNOTATE: cpp_type=:: foo :: Bar
     pub struct Bar {
         pub x: ::ffi_11::c_int,
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
     unsafe impl ::cxx::ExternType for Bar {
-        type Id = ::cxx::type_id!("foo :: Bar");
+        type Id = ::cxx::type_id!(":: foo :: Bar");
         type Kind = ::cxx::kind::Trivial;
     }
     impl Bar {

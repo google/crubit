@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/operator_and:operator_and
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -19,24 +19,24 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class MyBadClass) == 1);
-static_assert(alignof(class MyBadClass) == 1);
+static_assert(sizeof(class ::MyBadClass) == 1);
+static_assert(alignof(class ::MyBadClass) == 1);
 
-extern "C" void __rust_thunk___ZN10MyBadClassC1Ev(class MyBadClass* __this) {
+extern "C" void __rust_thunk___ZN10MyBadClassC1Ev(class ::MyBadClass* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" class MyBadClass* __rust_thunk___ZN10MyBadClass7ReturnsEv() {
-  return std::addressof(MyBadClass::Returns());
+extern "C" class ::MyBadClass* __rust_thunk___ZN10MyBadClass7ReturnsEv() {
+  return std::addressof(::MyBadClass::Returns());
 }
 
-static_assert((class MyBadClass & (*)()) & ::MyBadClass::Returns);
+static_assert((class ::MyBadClass & (*)()) & ::MyBadClass::Returns);
 
 extern "C" void __rust_thunk___ZN10MyBadClass7AcceptsERS_(
-    class MyBadClass* __param_0) {
-  MyBadClass::Accepts(*__param_0);
+    class ::MyBadClass* __param_0) {
+  ::MyBadClass::Accepts(*__param_0);
 }
 
-static_assert((void (*)(class MyBadClass&)) & ::MyBadClass::Accepts);
+static_assert((void (*)(class ::MyBadClass&)) & ::MyBadClass::Accepts);
 
 #pragma clang diagnostic pop

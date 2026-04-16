@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:struct_with_lifetimebound
-// Features: assume_lifetimes, fmt, supported, types
+// Features: assume_lifetimes, fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -18,14 +18,14 @@
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=PlainStruct
+///CRUBIT_ANNOTATE: cpp_type=:: PlainStruct
 pub struct PlainStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for PlainStruct {}
 impl !Sync for PlainStruct {}
 unsafe impl ::cxx::ExternType for PlainStruct {
-    type Id = ::cxx::type_id!("PlainStruct");
+    type Id = ::cxx::type_id!(":: PlainStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -44,14 +44,14 @@ impl Default for PlainStruct {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=10
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithLifetimeboundMemberFunction
 pub struct StructWithLifetimeboundMemberFunction {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for StructWithLifetimeboundMemberFunction {}
 impl !Sync for StructWithLifetimeboundMemberFunction {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundMemberFunction {
-    type Id = ::cxx::type_id!("StructWithLifetimeboundMemberFunction");
+    type Id = ::cxx::type_id!(":: StructWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Trivial;
 }
 impl StructWithLifetimeboundMemberFunction {
@@ -96,7 +96,7 @@ pub mod struct_with_lifetimebound_member_function {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=14
 #[derive(Clone, Copy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithLifetimeboundRefMemberFunction
 pub struct StructWithLifetimeboundRefMemberFunction<'__implicit> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
@@ -106,7 +106,7 @@ impl<'__implicit> !Sync for StructWithLifetimeboundRefMemberFunction<'__implicit
 unsafe impl<'__implicit> ::cxx::ExternType
     for StructWithLifetimeboundRefMemberFunction<'__implicit>
 {
-    type Id = ::cxx::type_id!("StructWithLifetimeboundRefMemberFunction");
+    type Id = ::cxx::type_id!(":: StructWithLifetimeboundRefMemberFunction");
     type Kind = ::cxx::kind::Trivial;
 }
 impl<'__implicit> StructWithLifetimeboundRefMemberFunction<'__implicit> {
@@ -146,14 +146,14 @@ pub mod struct_with_lifetimebound_ref_member_function {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=18
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: DropClassWithLifetimeboundMemberFunction
 pub struct DropClassWithLifetimeboundMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for DropClassWithLifetimeboundMemberFunction {}
 impl !Sync for DropClassWithLifetimeboundMemberFunction {}
 unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundMemberFunction {
-    type Id = ::cxx::type_id!("DropClassWithLifetimeboundMemberFunction");
+    type Id = ::cxx::type_id!(":: DropClassWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
 impl DropClassWithLifetimeboundMemberFunction {
@@ -250,7 +250,7 @@ pub mod drop_class_with_lifetimebound_member_function {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=24
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundRefMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: DropClassWithLifetimeboundRefMemberFunction
 pub struct DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
@@ -260,7 +260,7 @@ impl<'__implicit> !Sync for DropClassWithLifetimeboundRefMemberFunction<'__impli
 unsafe impl<'__implicit> ::cxx::ExternType
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
 {
-    type Id = ::cxx::type_id!("DropClassWithLifetimeboundRefMemberFunction");
+    type Id = ::cxx::type_id!(":: DropClassWithLifetimeboundRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
 impl<'__implicit> DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
@@ -371,14 +371,14 @@ pub mod drop_class_with_lifetimebound_ref_member_function {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=30
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundCtor
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithLifetimeboundCtor
 pub struct StructWithLifetimeboundCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for StructWithLifetimeboundCtor {}
 impl !Sync for StructWithLifetimeboundCtor {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundCtor {
-    type Id = ::cxx::type_id!("StructWithLifetimeboundCtor");
+    type Id = ::cxx::type_id!(":: StructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -409,7 +409,7 @@ impl ::ctor::CtorNew<crate::PlainStruct> for StructWithLifetimeboundCtor {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=35
 #[derive(Clone, Copy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefCtor
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithLifetimeboundRefCtor
 pub struct StructWithLifetimeboundRefCtor<'__implicit> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
@@ -417,7 +417,7 @@ pub struct StructWithLifetimeboundRefCtor<'__implicit> {
 impl<'__implicit> !Send for StructWithLifetimeboundRefCtor<'__implicit> {}
 impl<'__implicit> !Sync for StructWithLifetimeboundRefCtor<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType for StructWithLifetimeboundRefCtor<'__implicit> {
-    type Id = ::cxx::type_id!("StructWithLifetimeboundRefCtor");
+    type Id = ::cxx::type_id!(":: StructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -454,14 +454,14 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=40
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundCtor
+///CRUBIT_ANNOTATE: cpp_type=:: DropStructWithLifetimeboundCtor
 pub struct DropStructWithLifetimeboundCtor {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for DropStructWithLifetimeboundCtor {}
 impl !Sync for DropStructWithLifetimeboundCtor {}
 unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundCtor {
-    type Id = ::cxx::type_id!("DropStructWithLifetimeboundCtor");
+    type Id = ::cxx::type_id!(":: DropStructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -542,7 +542,7 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=46
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundRefCtor
+///CRUBIT_ANNOTATE: cpp_type=:: DropStructWithLifetimeboundRefCtor
 pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
@@ -550,7 +550,7 @@ pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
 impl<'__implicit> !Send for DropStructWithLifetimeboundRefCtor<'__implicit> {}
 impl<'__implicit> !Sync for DropStructWithLifetimeboundRefCtor<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithLifetimeboundRefCtor<'__implicit> {
-    type Id = ::cxx::type_id!("DropStructWithLifetimeboundRefCtor");
+    type Id = ::cxx::type_id!(":: DropStructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -656,7 +656,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor<'__i
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=52
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndRefMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: DropStructWithRefCtorAndRefMemberFunction
 pub struct DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
@@ -666,7 +666,7 @@ impl<'__implicit> !Sync for DropStructWithRefCtorAndRefMemberFunction<'__implici
 unsafe impl<'__implicit> ::cxx::ExternType
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
 {
-    type Id = ::cxx::type_id!("DropStructWithRefCtorAndRefMemberFunction");
+    type Id = ::cxx::type_id!(":: DropStructWithRefCtorAndRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
 impl<'__implicit> DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
@@ -793,14 +793,14 @@ pub mod drop_struct_with_ref_ctor_and_ref_member_function {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=60
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: DropStructWithCtorAndMemberFunction
 pub struct DropStructWithCtorAndMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for DropStructWithCtorAndMemberFunction {}
 impl !Sync for DropStructWithCtorAndMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithCtorAndMemberFunction {
-    type Id = ::cxx::type_id!("DropStructWithCtorAndMemberFunction");
+    type Id = ::cxx::type_id!(":: DropStructWithCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
 impl DropStructWithCtorAndMemberFunction {
@@ -902,14 +902,14 @@ pub mod drop_struct_with_ctor_and_member_function {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=67
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndRefMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: DropStructWithCtorAndRefMemberFunction
 pub struct DropStructWithCtorAndRefMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for DropStructWithCtorAndRefMemberFunction {}
 impl !Sync for DropStructWithCtorAndRefMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithCtorAndRefMemberFunction {
-    type Id = ::cxx::type_id!("DropStructWithCtorAndRefMemberFunction");
+    type Id = ::cxx::type_id!(":: DropStructWithCtorAndRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
 impl DropStructWithCtorAndRefMemberFunction {
@@ -1008,7 +1008,7 @@ pub mod drop_struct_with_ctor_and_ref_member_function {
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=74
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndMemberFunction
+///CRUBIT_ANNOTATE: cpp_type=:: DropStructWithRefCtorAndMemberFunction
 pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
@@ -1016,7 +1016,7 @@ pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {
 impl<'__implicit> !Send for DropStructWithRefCtorAndMemberFunction<'__implicit> {}
 impl<'__implicit> !Sync for DropStructWithRefCtorAndMemberFunction<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithRefCtorAndMemberFunction<'__implicit> {
-    type Id = ::cxx::type_id!("DropStructWithRefCtorAndMemberFunction");
+    type Id = ::cxx::type_id!(":: DropStructWithRefCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
 impl<'__implicit> DropStructWithRefCtorAndMemberFunction<'__implicit> {

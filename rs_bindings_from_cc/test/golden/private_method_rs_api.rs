@@ -19,14 +19,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Outer
+///CRUBIT_ANNOTATE: cpp_type=:: Outer
 pub struct Outer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Outer {}
 impl !Sync for Outer {}
 unsafe impl ::cxx::ExternType for Outer {
-    type Id = ::cxx::type_id!("Outer");
+    type Id = ::cxx::type_id!(":: Outer");
     type Kind = ::cxx::kind::Trivial;
 }
 

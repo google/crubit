@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=FirstStruct
+///CRUBIT_ANNOTATE: cpp_type=:: FirstStruct
 pub struct FirstStruct {
     pub field: ::ffi_11::c_int,
 }
 impl !Send for FirstStruct {}
 impl !Sync for FirstStruct {}
 unsafe impl ::cxx::ExternType for FirstStruct {
-    type Id = ::cxx::type_id!("FirstStruct");
+    type Id = ::cxx::type_id!(":: FirstStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -45,14 +45,14 @@ pub fn first_func() -> ::ffi_11::c_int {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SecondStruct
+///CRUBIT_ANNOTATE: cpp_type=:: SecondStruct
 pub struct SecondStruct {
     pub field: ::ffi_11::c_int,
 }
 impl !Send for SecondStruct {}
 impl !Sync for SecondStruct {}
 unsafe impl ::cxx::ExternType for SecondStruct {
-    type Id = ::cxx::type_id!("SecondStruct");
+    type Id = ::cxx::type_id!(":: SecondStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 

@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ForwardDeclaredStruct
+///CRUBIT_ANNOTATE: cpp_type=:: ForwardDeclaredStruct
 pub struct ForwardDeclaredStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ForwardDeclaredStruct {}
 impl !Sync for ForwardDeclaredStruct {}
 unsafe impl ::cxx::ExternType for ForwardDeclaredStruct {
-    type Id = ::cxx::type_id!("ForwardDeclaredStruct");
+    type Id = ::cxx::type_id!(":: ForwardDeclaredStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 

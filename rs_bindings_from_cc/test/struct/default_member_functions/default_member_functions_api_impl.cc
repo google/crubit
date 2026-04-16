@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -19,23 +19,23 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class Uncopyable) == 1);
-static_assert(alignof(class Uncopyable) == 1);
+static_assert(sizeof(class ::Uncopyable) == 1);
+static_assert(alignof(class ::Uncopyable) == 1);
 
-extern "C" void __rust_thunk___ZN10UncopyableC1Ev(class Uncopyable* __this) {
+extern "C" void __rust_thunk___ZN10UncopyableC1Ev(class ::Uncopyable* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(class UncopyableDespiteDecl) == 24);
-static_assert(alignof(class UncopyableDespiteDecl) == 8);
+static_assert(CRUBIT_SIZEOF(class ::UncopyableDespiteDecl) == 24);
+static_assert(alignof(class ::UncopyableDespiteDecl) == 8);
 
 extern "C" void __rust_thunk___ZN21UncopyableDespiteDeclD1Ev(
-    class UncopyableDespiteDecl* __this) {
+    class ::UncopyableDespiteDecl* __this) {
   std::destroy_at(__this);
 }
 
 extern "C" void __rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
-    class UncopyableDespiteDecl* __this) {
+    class ::UncopyableDespiteDecl* __this) {
   crubit::construct_at(__this);
 }
 

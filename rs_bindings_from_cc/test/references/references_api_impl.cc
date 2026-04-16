@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/references:references
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -35,11 +35,11 @@ extern "C" void __rust_thunk___ZN29TypeWithNonNullPtrConstructorC1EPi(
   crubit::construct_at(__this, ptr);
 }
 
-static_assert(sizeof(class TypeWithReferenceConstructor) == 1);
-static_assert(alignof(class TypeWithReferenceConstructor) == 1);
+static_assert(sizeof(class ::TypeWithReferenceConstructor) == 1);
+static_assert(alignof(class ::TypeWithReferenceConstructor) == 1);
 
 extern "C" void __rust_thunk___ZN28TypeWithReferenceConstructorC1ERi(
-    class TypeWithReferenceConstructor* __this, int* ref) {
+    class ::TypeWithReferenceConstructor* __this, int* ref) {
   crubit::construct_at(__this, *ref);
 }
 

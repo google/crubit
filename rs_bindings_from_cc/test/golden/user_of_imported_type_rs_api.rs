@@ -34,14 +34,14 @@ pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type
 ///   * `trivial`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UserOfImportedType
+///CRUBIT_ANNOTATE: cpp_type=:: UserOfImportedType
 pub struct UserOfImportedType {
     pub trivial: *mut ::trivial_type_cc::ns::Trivial,
 }
 impl !Send for UserOfImportedType {}
 impl !Sync for UserOfImportedType {}
 unsafe impl ::cxx::ExternType for UserOfImportedType {
-    type Id = ::cxx::type_id!("UserOfImportedType");
+    type Id = ::cxx::type_id!(":: UserOfImportedType");
     type Kind = ::cxx::kind::Trivial;
 }
 

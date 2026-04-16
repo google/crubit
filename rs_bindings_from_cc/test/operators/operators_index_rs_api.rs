@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/operators:operators_index
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -20,14 +20,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=10
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemUnpin
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ItemUnpin
         pub struct ItemUnpin {
             pub value: ::ffi_11::c_int,
         }
         impl !Send for ItemUnpin {}
         impl !Sync for ItemUnpin {}
         unsafe impl ::cxx::ExternType for ItemUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ItemUnpin");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ItemUnpin");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -48,14 +48,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=14
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemNonUnpin
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ItemNonUnpin
         pub struct ItemNonUnpin {
             pub value: ::ffi_11::c_int,
         }
         impl !Send for ItemNonUnpin {}
         impl !Sync for ItemNonUnpin {}
         unsafe impl ::cxx::ExternType for ItemNonUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ItemNonUnpin");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ItemNonUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
 
@@ -128,7 +128,7 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=20
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemUnpin
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerUnpinItemUnpin
         pub struct ContainerUnpinItemUnpin {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -138,7 +138,7 @@ pub mod crubit {
         impl !Send for ContainerUnpinItemUnpin {}
         impl !Sync for ContainerUnpinItemUnpin {}
         unsafe impl ::cxx::ExternType for ContainerUnpinItemUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemUnpin");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerUnpinItemUnpin");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -209,7 +209,7 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=32
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C, align(8))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemNonUnpin
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerUnpinItemNonUnpin
         pub struct ContainerUnpinItemNonUnpin {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -220,7 +220,7 @@ pub mod crubit {
         impl !Send for ContainerUnpinItemNonUnpin {}
         impl !Sync for ContainerUnpinItemNonUnpin {}
         unsafe impl ::cxx::ExternType for ContainerUnpinItemNonUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemNonUnpin");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerUnpinItemNonUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
 
@@ -401,7 +401,7 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=47
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemUnpin
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerNonUnpinItemUnpin
         pub struct ContainerNonUnpinItemUnpin {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -411,7 +411,7 @@ pub mod crubit {
         impl !Send for ContainerNonUnpinItemUnpin {}
         impl !Sync for ContainerNonUnpinItemUnpin {}
         unsafe impl ::cxx::ExternType for ContainerNonUnpinItemUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemUnpin");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerNonUnpinItemUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
 
@@ -527,7 +527,7 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=62
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemNonUnpin
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerNonUnpinItemNonUnpin
         pub struct ContainerNonUnpinItemNonUnpin {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -537,7 +537,7 @@ pub mod crubit {
         impl !Send for ContainerNonUnpinItemNonUnpin {}
         impl !Sync for ContainerNonUnpinItemNonUnpin {}
         unsafe impl ::cxx::ExternType for ContainerNonUnpinItemNonUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemNonUnpin");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerNonUnpinItemNonUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
 
@@ -645,14 +645,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=77
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerValue
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerValue
         pub struct ContainerValue {
             pub value: ::ffi_11::c_int,
         }
         impl !Send for ContainerValue {}
         impl !Sync for ContainerValue {}
         unsafe impl ::cxx::ExternType for ContainerValue {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerValue");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerValue");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -679,14 +679,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=84
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerRvalue
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerRvalue
         pub struct ContainerRvalue {
             pub value: ::ffi_11::c_int,
         }
         impl !Send for ContainerRvalue {}
         impl !Sync for ContainerRvalue {}
         unsafe impl ::cxx::ExternType for ContainerRvalue {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerRvalue");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerRvalue");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -716,14 +716,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=93
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerMutRefFromConst
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerMutRefFromConst
         pub struct ContainerMutRefFromConst {
             pub value: ::ffi_11::c_int,
         }
         impl !Send for ContainerMutRefFromConst {}
         impl !Sync for ContainerMutRefFromConst {}
         unsafe impl ::cxx::ExternType for ContainerMutRefFromConst {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerMutRefFromConst");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerMutRefFromConst");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -751,14 +751,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=98
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerConstRefFromMut
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ContainerConstRefFromMut
         pub struct ContainerConstRefFromMut {
             pub value: ::ffi_11::c_int,
         }
         impl !Send for ContainerConstRefFromMut {}
         impl !Sync for ContainerConstRefFromMut {}
         unsafe impl ::cxx::ExternType for ContainerConstRefFromMut {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerConstRefFromMut");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ContainerConstRefFromMut");
             type Kind = ::cxx::kind::Trivial;
         }
 

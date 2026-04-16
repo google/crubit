@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types
-// Features: fmt, supported, types, wrapper
+// Features: fmt, leading_colons_for_cpp_type, supported, types, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -25,18 +25,18 @@ pub(crate) type TemplateIntAlias = crate::__CcTemplateInst8TemplateIiE;
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=CompoundDataType
+///CRUBIT_ANNOTATE: cpp_type=:: CompoundDataType
 pub struct CompoundDataType {
     pub(crate) template_int: crate::__CcTemplateInst8TemplateIiE,
 }
 impl !Send for CompoundDataType {}
 impl !Sync for CompoundDataType {}
 unsafe impl ::cxx::ExternType for CompoundDataType {
-    type Id = ::cxx::type_id!("CompoundDataType");
+    type Id = ::cxx::type_id!(":: CompoundDataType");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("CompoundDataType"),
+    forward_declare::symbol!(":: CompoundDataType"),
     crate::CompoundDataType
 );
 
@@ -77,7 +77,7 @@ pub fn ConsumeCompoundDataType(mut container: crate::CompoundDataType) -> ::ffi_
     }
 }
 
-forward_declare::forward_declare!(pub ForwardDeclared = forward_declare::symbol!("ForwardDeclared"));
+forward_declare::forward_declare!(pub ForwardDeclared = forward_declare::symbol!(":: ForwardDeclared"));
 
 /// Forward declared types are not pub(crate) so that they can work across
 /// module boundaries like this.
@@ -119,14 +119,14 @@ pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Template2 < int >
+///CRUBIT_ANNOTATE: cpp_type=:: Template2 < int >
 pub(crate) struct __CcTemplateInst9Template2IiE {
     pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst9Template2IiE {}
 impl !Sync for __CcTemplateInst9Template2IiE {}
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("Template2 < int >"),
+    forward_declare::symbol!(":: Template2 < int >"),
     crate::__CcTemplateInst9Template2IiE
 );
 
@@ -153,14 +153,14 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Template < int >
+///CRUBIT_ANNOTATE: cpp_type=:: Template < int >
 pub(crate) struct __CcTemplateInst8TemplateIiE {
     pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst8TemplateIiE {}
 impl !Sync for __CcTemplateInst8TemplateIiE {}
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("Template < int >"),
+    forward_declare::symbol!(":: Template < int >"),
     crate::__CcTemplateInst8TemplateIiE
 );
 

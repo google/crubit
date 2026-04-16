@@ -20,7 +20,7 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithBridgeField
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithBridgeField
 pub struct StructWithBridgeField {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is a bridge type, but fields must be layout compatible between Rust and C++.
@@ -29,7 +29,7 @@ pub struct StructWithBridgeField {
 impl !Send for StructWithBridgeField {}
 impl !Sync for StructWithBridgeField {}
 unsafe impl ::cxx::ExternType for StructWithBridgeField {
-    type Id = ::cxx::type_id!("StructWithBridgeField");
+    type Id = ::cxx::type_id!(":: StructWithBridgeField");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -66,7 +66,7 @@ pub fn TakeCppStruct(__param_0: crate::RustStruct) {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Vec3
+///CRUBIT_ANNOTATE: cpp_type=:: Vec3
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
@@ -75,7 +75,7 @@ pub struct Vec3 {
 impl !Send for Vec3 {}
 impl !Sync for Vec3 {}
 unsafe impl ::cxx::ExternType for Vec3 {
-    type Id = ::cxx::type_id!("Vec3");
+    type Id = ::cxx::type_id!(":: Vec3");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -153,7 +153,7 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=DefaultEnum
+///CRUBIT_ANNOTATE: cpp_type=:: DefaultEnum
 pub struct DefaultEnum(::ffi_11::c_int);
 impl DefaultEnum {
     pub const kZero: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(0));
@@ -180,7 +180,7 @@ pub fn ReturnsDefaultEnumInComposableBridgeType() -> crate::MyOption<crate::Defa
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=I64Enum
+///CRUBIT_ANNOTATE: cpp_type=:: I64Enum
 pub struct I64Enum(::ffi_11::c_long);
 impl I64Enum {
     pub const kNegOne: I64Enum = I64Enum(::ffi_11::new_c_long(-1));
@@ -208,7 +208,7 @@ pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum>
 pub mod some_namespace {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-    ///CRUBIT_ANNOTATE: cpp_type=some_namespace :: EnumInNamespace
+    ///CRUBIT_ANNOTATE: cpp_type=:: some_namespace :: EnumInNamespace
     pub struct EnumInNamespace(::ffi_11::c_int);
     impl EnumInNamespace {
         pub const kZero: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(0));

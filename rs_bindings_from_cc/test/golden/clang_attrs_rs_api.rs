@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(64))]
-///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignment
+///CRUBIT_ANNOTATE: cpp_type=:: HasCustomAlignment
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
 impl !Send for HasCustomAlignment {}
 impl !Sync for HasCustomAlignment {}
 unsafe impl ::cxx::ExternType for HasCustomAlignment {
-    type Id = ::cxx::type_id!("HasCustomAlignment");
+    type Id = ::cxx::type_id!(":: HasCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -40,14 +40,14 @@ impl Default for HasCustomAlignment {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=HasFieldWithCustomAlignment
+///CRUBIT_ANNOTATE: cpp_type=:: HasFieldWithCustomAlignment
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
 impl !Send for HasFieldWithCustomAlignment {}
 impl !Sync for HasFieldWithCustomAlignment {}
 unsafe impl ::cxx::ExternType for HasFieldWithCustomAlignment {
-    type Id = ::cxx::type_id!("HasFieldWithCustomAlignment");
+    type Id = ::cxx::type_id!(":: HasFieldWithCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -66,14 +66,14 @@ impl Default for HasFieldWithCustomAlignment {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(64))]
-///CRUBIT_ANNOTATE: cpp_type=InheritsFromBaseWithCustomAlignment
+///CRUBIT_ANNOTATE: cpp_type=:: InheritsFromBaseWithCustomAlignment
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
 impl !Send for InheritsFromBaseWithCustomAlignment {}
 impl !Sync for InheritsFromBaseWithCustomAlignment {}
 unsafe impl ::cxx::ExternType for InheritsFromBaseWithCustomAlignment {
-    type Id = ::cxx::type_id!("InheritsFromBaseWithCustomAlignment");
+    type Id = ::cxx::type_id!(":: InheritsFromBaseWithCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -92,14 +92,14 @@ impl Default for InheritsFromBaseWithCustomAlignment {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(64))]
-///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr
+///CRUBIT_ANNOTATE: cpp_type=:: HasCustomAlignmentWithGnuAttr
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
 impl !Send for HasCustomAlignmentWithGnuAttr {}
 impl !Sync for HasCustomAlignmentWithGnuAttr {}
 unsafe impl ::cxx::ExternType for HasCustomAlignmentWithGnuAttr {
-    type Id = ::cxx::type_id!("HasCustomAlignmentWithGnuAttr");
+    type Id = ::cxx::type_id!(":: HasCustomAlignmentWithGnuAttr");
     type Kind = ::cxx::kind::Trivial;
 }
 

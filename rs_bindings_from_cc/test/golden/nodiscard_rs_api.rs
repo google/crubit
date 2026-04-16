@@ -17,14 +17,14 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[must_use]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscard
+///CRUBIT_ANNOTATE: cpp_type=:: NoDiscard
 pub struct NoDiscard {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for NoDiscard {}
 impl !Sync for NoDiscard {}
 unsafe impl ::cxx::ExternType for NoDiscard {
-    type Id = ::cxx::type_id!("NoDiscard");
+    type Id = ::cxx::type_id!(":: NoDiscard");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -42,14 +42,14 @@ impl Default for NoDiscard {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[must_use = "You really should use this"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscardWithMessage
+///CRUBIT_ANNOTATE: cpp_type=:: NoDiscardWithMessage
 pub struct NoDiscardWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for NoDiscardWithMessage {}
 impl !Sync for NoDiscardWithMessage {}
 unsafe impl ::cxx::ExternType for NoDiscardWithMessage {
-    type Id = ::cxx::type_id!("NoDiscardWithMessage");
+    type Id = ::cxx::type_id!(":: NoDiscardWithMessage");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -67,7 +67,7 @@ impl Default for NoDiscardWithMessage {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[must_use]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnum
+///CRUBIT_ANNOTATE: cpp_type=:: NoDiscardEnum
 pub struct NoDiscardEnum(::ffi_11::c_uint);
 impl NoDiscardEnum {
     pub const kConstant: NoDiscardEnum = NoDiscardEnum(::ffi_11::new_c_uint(0));
@@ -86,7 +86,7 @@ impl From<NoDiscardEnum> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[must_use = "You really should use this"]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnumWithMessage
+///CRUBIT_ANNOTATE: cpp_type=:: NoDiscardEnumWithMessage
 pub struct NoDiscardEnumWithMessage(::ffi_11::c_uint);
 impl NoDiscardEnumWithMessage {
     pub const kConstantWithMessage: NoDiscardEnumWithMessage =
@@ -117,14 +117,14 @@ pub fn crubit_nodiscard_message() -> *mut ::ffi_11::c_void {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NodiscardCtor
+///CRUBIT_ANNOTATE: cpp_type=:: NodiscardCtor
 pub struct NodiscardCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for NodiscardCtor {}
 impl !Sync for NodiscardCtor {}
 unsafe impl ::cxx::ExternType for NodiscardCtor {
-    type Id = ::cxx::type_id!("NodiscardCtor");
+    type Id = ::cxx::type_id!(":: NodiscardCtor");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -150,14 +150,14 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NodiscardCtorWithMessage
+///CRUBIT_ANNOTATE: cpp_type=:: NodiscardCtorWithMessage
 pub struct NodiscardCtorWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for NodiscardCtorWithMessage {}
 impl !Sync for NodiscardCtorWithMessage {}
 unsafe impl ::cxx::ExternType for NodiscardCtorWithMessage {
-    type Id = ::cxx::type_id!("NodiscardCtorWithMessage");
+    type Id = ::cxx::type_id!(":: NodiscardCtorWithMessage");
     type Kind = ::cxx::kind::Trivial;
 }
 

@@ -22,7 +22,7 @@ pub mod ns {
     /// Foo
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: Foo
+    ///CRUBIT_ANNOTATE: cpp_type=:: ns :: Foo
     pub struct Foo {
         /// A field
         pub i: ::ffi_11::c_int,
@@ -32,7 +32,7 @@ pub mod ns {
     impl !Send for Foo {}
     impl !Sync for Foo {}
     unsafe impl ::cxx::ExternType for Foo {
-        type Id = ::cxx::type_id!("ns :: Foo");
+        type Id = ::cxx::type_id!(":: ns :: Foo");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -72,14 +72,14 @@ pub fn foo() {
 /// Bar
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Bar
+///CRUBIT_ANNOTATE: cpp_type=:: Bar
 pub struct Bar {
     pub i: ::ffi_11::c_int,
 }
 impl !Send for Bar {}
 impl !Sync for Bar {}
 unsafe impl ::cxx::ExternType for Bar {
-    type Id = ::cxx::type_id!("Bar");
+    type Id = ::cxx::type_id!(":: Bar");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -97,14 +97,14 @@ impl Default for Bar {
 /// d
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=HasNoComments
+///CRUBIT_ANNOTATE: cpp_type=:: HasNoComments
 pub struct HasNoComments {
     pub i: ::ffi_11::c_int,
 }
 impl !Send for HasNoComments {}
 impl !Sync for HasNoComments {}
 unsafe impl ::cxx::ExternType for HasNoComments {
-    type Id = ::cxx::type_id!("HasNoComments");
+    type Id = ::cxx::type_id!(":: HasNoComments");
     type Kind = ::cxx::kind::Trivial;
 }
 

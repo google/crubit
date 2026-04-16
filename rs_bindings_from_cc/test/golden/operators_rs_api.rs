@@ -16,7 +16,7 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=AddableConstMember
+///CRUBIT_ANNOTATE: cpp_type=:: AddableConstMember
 pub struct AddableConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -26,7 +26,7 @@ pub struct AddableConstMember {
 impl !Send for AddableConstMember {}
 impl !Sync for AddableConstMember {}
 unsafe impl ::cxx::ExternType for AddableConstMember {
-    type Id = ::cxx::type_id!("AddableConstMember");
+    type Id = ::cxx::type_id!(":: AddableConstMember");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -67,7 +67,7 @@ impl Default for AddableConstMember {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=AddableNonConstMember
+///CRUBIT_ANNOTATE: cpp_type=:: AddableNonConstMember
 pub struct AddableNonConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -77,7 +77,7 @@ pub struct AddableNonConstMember {
 impl !Send for AddableNonConstMember {}
 impl !Sync for AddableNonConstMember {}
 unsafe impl ::cxx::ExternType for AddableNonConstMember {
-    type Id = ::cxx::type_id!("AddableNonConstMember");
+    type Id = ::cxx::type_id!(":: AddableNonConstMember");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -118,7 +118,7 @@ impl Default for AddableNonConstMember {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=AddableFriend
+///CRUBIT_ANNOTATE: cpp_type=:: AddableFriend
 pub struct AddableFriend {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -128,7 +128,7 @@ pub struct AddableFriend {
 impl !Send for AddableFriend {}
 impl !Sync for AddableFriend {}
 unsafe impl ::cxx::ExternType for AddableFriend {
-    type Id = ::cxx::type_id!("AddableFriend");
+    type Id = ::cxx::type_id!(":: AddableFriend");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -171,14 +171,14 @@ impl Default for AddableFriend {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddableFreeByConstRef
+///CRUBIT_ANNOTATE: cpp_type=:: AddableFreeByConstRef
 pub struct AddableFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByConstRef {}
 impl !Sync for AddableFreeByConstRef {}
 unsafe impl ::cxx::ExternType for AddableFreeByConstRef {
-    type Id = ::cxx::type_id!("AddableFreeByConstRef");
+    type Id = ::cxx::type_id!(":: AddableFreeByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -215,14 +215,14 @@ impl Default for AddableFreeByConstRef {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddableFreeByMutRef
+///CRUBIT_ANNOTATE: cpp_type=:: AddableFreeByMutRef
 pub struct AddableFreeByMutRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByMutRef {}
 impl !Sync for AddableFreeByMutRef {}
 unsafe impl ::cxx::ExternType for AddableFreeByMutRef {
-    type Id = ::cxx::type_id!("AddableFreeByMutRef");
+    type Id = ::cxx::type_id!(":: AddableFreeByMutRef");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -259,14 +259,14 @@ impl Default for AddableFreeByMutRef {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddableFreeByValue
+///CRUBIT_ANNOTATE: cpp_type=:: AddableFreeByValue
 pub struct AddableFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByValue {}
 impl !Sync for AddableFreeByValue {}
 unsafe impl ::cxx::ExternType for AddableFreeByValue {
-    type Id = ::cxx::type_id!("AddableFreeByValue");
+    type Id = ::cxx::type_id!(":: AddableFreeByValue");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -303,14 +303,14 @@ impl Default for AddableFreeByValue {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddableFreeByRValueRef
+///CRUBIT_ANNOTATE: cpp_type=:: AddableFreeByRValueRef
 pub struct AddableFreeByRValueRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddableFreeByRValueRef {}
 impl !Sync for AddableFreeByRValueRef {}
 unsafe impl ::cxx::ExternType for AddableFreeByRValueRef {
-    type Id = ::cxx::type_id!("AddableFreeByRValueRef");
+    type Id = ::cxx::type_id!(":: AddableFreeByRValueRef");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -378,14 +378,14 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Overloaded
+///CRUBIT_ANNOTATE: cpp_type=:: Overloaded
 pub struct Overloaded {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Overloaded {}
 impl !Sync for Overloaded {}
 unsafe impl ::cxx::ExternType for Overloaded {
-    type Id = ::cxx::type_id!("Overloaded");
+    type Id = ::cxx::type_id!(":: Overloaded");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -430,14 +430,14 @@ impl Default for Overloaded {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=IncompatibleLHS
+///CRUBIT_ANNOTATE: cpp_type=:: IncompatibleLHS
 pub struct IncompatibleLHS {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for IncompatibleLHS {}
 impl !Sync for IncompatibleLHS {}
 unsafe impl ::cxx::ExternType for IncompatibleLHS {
-    type Id = ::cxx::type_id!("IncompatibleLHS");
+    type Id = ::cxx::type_id!(":: IncompatibleLHS");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -480,7 +480,7 @@ impl Default for IncompatibleLHS {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=AddableReturnsVoid
+///CRUBIT_ANNOTATE: cpp_type=:: AddableReturnsVoid
 pub struct AddableReturnsVoid {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -490,7 +490,7 @@ pub struct AddableReturnsVoid {
 impl !Send for AddableReturnsVoid {}
 impl !Sync for AddableReturnsVoid {}
 unsafe impl ::cxx::ExternType for AddableReturnsVoid {
-    type Id = ::cxx::type_id!("AddableReturnsVoid");
+    type Id = ::cxx::type_id!(":: AddableReturnsVoid");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -531,7 +531,7 @@ impl Default for AddableReturnsVoid {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=AddableConstMemberNonunpin
+///CRUBIT_ANNOTATE: cpp_type=:: AddableConstMemberNonunpin
 pub struct AddableConstMemberNonunpin {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -541,7 +541,7 @@ pub struct AddableConstMemberNonunpin {
 impl !Send for AddableConstMemberNonunpin {}
 impl !Sync for AddableConstMemberNonunpin {}
 unsafe impl ::cxx::ExternType for AddableConstMemberNonunpin {
-    type Id = ::cxx::type_id!("AddableConstMemberNonunpin");
+    type Id = ::cxx::type_id!(":: AddableConstMemberNonunpin");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -584,14 +584,14 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberInt
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignMemberInt
 pub struct AddAssignMemberInt {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignMemberInt {}
 impl !Sync for AddAssignMemberInt {}
 unsafe impl ::cxx::ExternType for AddAssignMemberInt {
-    type Id = ::cxx::type_id!("AddAssignMemberInt");
+    type Id = ::cxx::type_id!(":: AddAssignMemberInt");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -637,14 +637,14 @@ impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberByConstRef
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignMemberByConstRef
 pub struct AddAssignMemberByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignMemberByConstRef {}
 impl !Sync for AddAssignMemberByConstRef {}
 unsafe impl ::cxx::ExternType for AddAssignMemberByConstRef {
-    type Id = ::cxx::type_id!("AddAssignMemberByConstRef");
+    type Id = ::cxx::type_id!(":: AddAssignMemberByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -687,14 +687,14 @@ impl Default for AddAssignMemberByConstRef {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByConstRef
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignFreeByConstRef
 pub struct AddAssignFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFreeByConstRef {}
 impl !Sync for AddAssignFreeByConstRef {}
 unsafe impl ::cxx::ExternType for AddAssignFreeByConstRef {
-    type Id = ::cxx::type_id!("AddAssignFreeByConstRef");
+    type Id = ::cxx::type_id!(":: AddAssignFreeByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -740,14 +740,14 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByValue
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignFreeByValue
 pub struct AddAssignFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFreeByValue {}
 impl !Sync for AddAssignFreeByValue {}
 unsafe impl ::cxx::ExternType for AddAssignFreeByValue {
-    type Id = ::cxx::type_id!("AddAssignFreeByValue");
+    type Id = ::cxx::type_id!(":: AddAssignFreeByValue");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -790,14 +790,14 @@ impl Default for AddAssignFreeByValue {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByConstRef
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignFriendByConstRef
 pub struct AddAssignFriendByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFriendByConstRef {}
 impl !Sync for AddAssignFriendByConstRef {}
 unsafe impl ::cxx::ExternType for AddAssignFriendByConstRef {
-    type Id = ::cxx::type_id!("AddAssignFriendByConstRef");
+    type Id = ::cxx::type_id!(":: AddAssignFriendByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -843,14 +843,14 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByValue
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignFriendByValue
 pub struct AddAssignFriendByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignFriendByValue {}
 impl !Sync for AddAssignFriendByValue {}
 unsafe impl ::cxx::ExternType for AddAssignFriendByValue {
-    type Id = ::cxx::type_id!("AddAssignFriendByValue");
+    type Id = ::cxx::type_id!(":: AddAssignFriendByValue");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -893,14 +893,14 @@ impl Default for AddAssignFriendByValue {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedConstMember
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignProhibitedConstMember
 pub struct AddAssignProhibitedConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignProhibitedConstMember {}
 impl !Sync for AddAssignProhibitedConstMember {}
 unsafe impl ::cxx::ExternType for AddAssignProhibitedConstMember {
-    type Id = ::cxx::type_id!("AddAssignProhibitedConstMember");
+    type Id = ::cxx::type_id!(":: AddAssignProhibitedConstMember");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -957,14 +957,14 @@ where
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedFriendConstLhs
+///CRUBIT_ANNOTATE: cpp_type=:: AddAssignProhibitedFriendConstLhs
 pub struct AddAssignProhibitedFriendConstLhs {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for AddAssignProhibitedFriendConstLhs {}
 impl !Sync for AddAssignProhibitedFriendConstLhs {}
 unsafe impl ::cxx::ExternType for AddAssignProhibitedFriendConstLhs {
-    type Id = ::cxx::type_id!("AddAssignProhibitedFriendConstLhs");
+    type Id = ::cxx::type_id!(":: AddAssignProhibitedFriendConstLhs");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -1007,14 +1007,14 @@ impl Default for AddAssignProhibitedFriendConstLhs {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ManyOperators
+///CRUBIT_ANNOTATE: cpp_type=:: ManyOperators
 pub struct ManyOperators {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ManyOperators {}
 impl !Sync for ManyOperators {}
 unsafe impl ::cxx::ExternType for ManyOperators {
-    type Id = ::cxx::type_id!("ManyOperators");
+    type Id = ::cxx::type_id!(":: ManyOperators");
     type Kind = ::cxx::kind::Trivial;
 }
 impl ManyOperators {

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:owned_ptr
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -19,16 +19,16 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct Thing) == 4);
-static_assert(alignof(struct Thing) == 4);
-static_assert(CRUBIT_OFFSET_OF(value, struct Thing) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::Thing) == 4);
+static_assert(alignof(struct ::Thing) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct ::Thing) == 0);
 
-extern "C" void __rust_thunk___ZN5ThingC1Ei(struct Thing* __this,
+extern "C" void __rust_thunk___ZN5ThingC1Ei(struct ::Thing* __this,
                                             int32_t value) {
   crubit::construct_at(__this, value);
 }
 
-extern "C" void __rust_thunk___ZN5Thing5CloseEv(struct Thing* __this) {
+extern "C" void __rust_thunk___ZN5Thing5CloseEv(struct ::Thing* __this) {
   __this->Close();
 }
 

@@ -18,11 +18,11 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct ForwardDeclaredStruct) == 1);
-static_assert(alignof(struct ForwardDeclaredStruct) == 1);
+static_assert(sizeof(struct ::ForwardDeclaredStruct) == 1);
+static_assert(alignof(struct ::ForwardDeclaredStruct) == 1);
 
 extern "C" void __rust_thunk___ZN21ForwardDeclaredStructC1Ev(
-    struct ForwardDeclaredStruct* __this) {
+    struct ::ForwardDeclaredStruct* __this) {
   crubit::construct_at(__this);
 }
 

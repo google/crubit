@@ -21,7 +21,7 @@
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nontrivial
+///CRUBIT_ANNOTATE: cpp_type=:: Nontrivial
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -29,7 +29,7 @@ pub struct Nontrivial {
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
 unsafe impl ::cxx::ExternType for Nontrivial {
-    type Id = ::cxx::type_id!("Nontrivial");
+    type Id = ::cxx::type_id!(":: Nontrivial");
     type Kind = ::cxx::kind::Opaque;
 }
 impl Nontrivial {
@@ -209,7 +209,7 @@ pub mod nontrivial {
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
+///CRUBIT_ANNOTATE: cpp_type=:: NontrivialInline
 pub struct NontrivialInline {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -217,7 +217,7 @@ pub struct NontrivialInline {
 impl !Send for NontrivialInline {}
 impl !Sync for NontrivialInline {}
 unsafe impl ::cxx::ExternType for NontrivialInline {
-    type Id = ::cxx::type_id!("NontrivialInline");
+    type Id = ::cxx::type_id!(":: NontrivialInline");
     type Kind = ::cxx::kind::Opaque;
 }
 impl NontrivialInline {
@@ -332,7 +332,7 @@ pub mod nontrivial_inline {
 /// each field.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialMembers
+///CRUBIT_ANNOTATE: cpp_type=:: NontrivialMembers
 pub struct NontrivialMembers {
     /// Reason for representing this field as a blob of bytes:
     /// nontrivial fields would be destroyed in the wrong order
@@ -341,7 +341,7 @@ pub struct NontrivialMembers {
 impl !Send for NontrivialMembers {}
 impl !Sync for NontrivialMembers {}
 unsafe impl ::cxx::ExternType for NontrivialMembers {
-    type Id = ::cxx::type_id!("NontrivialMembers");
+    type Id = ::cxx::type_id!(":: NontrivialMembers");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -390,7 +390,7 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
+///CRUBIT_ANNOTATE: cpp_type=:: NontrivialUnpin
 pub struct NontrivialUnpin {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -398,7 +398,7 @@ pub struct NontrivialUnpin {
 impl !Send for NontrivialUnpin {}
 impl !Sync for NontrivialUnpin {}
 unsafe impl ::cxx::ExternType for NontrivialUnpin {
-    type Id = ::cxx::type_id!("NontrivialUnpin");
+    type Id = ::cxx::type_id!(":: NontrivialUnpin");
     type Kind = ::cxx::kind::Trivial;
 }
 impl NontrivialUnpin {
@@ -596,14 +596,14 @@ pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::Nontr
 /// Finally, testing for strange by-value APIs.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
+///CRUBIT_ANNOTATE: cpp_type=:: NontrivialByValue
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for NontrivialByValue {}
 impl !Sync for NontrivialByValue {}
 unsafe impl ::cxx::ExternType for NontrivialByValue {
-    type Id = ::cxx::type_id!("NontrivialByValue");
+    type Id = ::cxx::type_id!(":: NontrivialByValue");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -664,14 +664,14 @@ where
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nonmovable
+///CRUBIT_ANNOTATE: cpp_type=:: Nonmovable
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
 unsafe impl ::cxx::ExternType for Nonmovable {
-    type Id = ::cxx::type_id!("Nonmovable");
+    type Id = ::cxx::type_id!(":: Nonmovable");
     type Kind = ::cxx::kind::Opaque;
 }
 impl Nonmovable {

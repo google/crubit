@@ -19,14 +19,14 @@
 /// objects, even if the POD type is potentially-overlapping.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Base0
+///CRUBIT_ANNOTATE: cpp_type=:: Base0
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Base0 {}
 impl !Sync for Base0 {}
 unsafe impl ::cxx::ExternType for Base0 {
-    type Id = ::cxx::type_id!("Base0");
+    type Id = ::cxx::type_id!(":: Base0");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -63,7 +63,7 @@ impl Default for Base0 {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Base1
+///CRUBIT_ANNOTATE: cpp_type=:: Base1
 pub struct Base1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -76,7 +76,7 @@ pub struct Base1 {
 impl !Send for Base1 {}
 impl !Sync for Base1 {}
 unsafe impl ::cxx::ExternType for Base1 {
-    type Id = ::cxx::type_id!("Base1");
+    type Id = ::cxx::type_id!(":: Base1");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -113,7 +113,7 @@ impl Default for Base1 {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(2))]
-///CRUBIT_ANNOTATE: cpp_type=Base2
+///CRUBIT_ANNOTATE: cpp_type=:: Base2
 pub struct Base2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -123,7 +123,7 @@ pub struct Base2 {
 impl !Send for Base2 {}
 impl !Sync for Base2 {}
 unsafe impl ::cxx::ExternType for Base2 {
-    type Id = ::cxx::type_id!("Base2");
+    type Id = ::cxx::type_id!(":: Base2");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -160,7 +160,7 @@ impl Default for Base2 {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Derived
+///CRUBIT_ANNOTATE: cpp_type=:: Derived
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
     pub derived_1: ::ffi_11::c_char,
@@ -168,7 +168,7 @@ pub struct Derived {
 impl !Send for Derived {}
 impl !Sync for Derived {}
 unsafe impl ::cxx::ExternType for Derived {
-    type Id = ::cxx::type_id!("Derived");
+    type Id = ::cxx::type_id!(":: Derived");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -205,14 +205,14 @@ impl Default for Derived {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
+///CRUBIT_ANNOTATE: cpp_type=:: VirtualBase1
 pub struct VirtualBase1 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for VirtualBase1 {}
 impl !Sync for VirtualBase1 {}
 unsafe impl ::cxx::ExternType for VirtualBase1 {
-    type Id = ::cxx::type_id!("VirtualBase1");
+    type Id = ::cxx::type_id!(":: VirtualBase1");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -254,14 +254,14 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
+///CRUBIT_ANNOTATE: cpp_type=:: VirtualBase2
 pub struct VirtualBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for VirtualBase2 {}
 impl !Sync for VirtualBase2 {}
 unsafe impl ::cxx::ExternType for VirtualBase2 {
-    type Id = ::cxx::type_id!("VirtualBase2");
+    type Id = ::cxx::type_id!(":: VirtualBase2");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -303,14 +303,14 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
+///CRUBIT_ANNOTATE: cpp_type=:: VirtualDerived
 pub struct VirtualDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }
 impl !Send for VirtualDerived {}
 impl !Sync for VirtualDerived {}
 unsafe impl ::cxx::ExternType for VirtualDerived {
-    type Id = ::cxx::type_id!("VirtualDerived");
+    type Id = ::cxx::type_id!(":: VirtualDerived");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -352,14 +352,14 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=MyAbstractClass
+///CRUBIT_ANNOTATE: cpp_type=:: MyAbstractClass
 pub struct MyAbstractClass {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
 impl !Send for MyAbstractClass {}
 impl !Sync for MyAbstractClass {}
 unsafe impl ::cxx::ExternType for MyAbstractClass {
-    type Id = ::cxx::type_id!("MyAbstractClass");
+    type Id = ::cxx::type_id!(":: MyAbstractClass");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -378,14 +378,14 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 /// Method inheritance
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MethodBase1
+///CRUBIT_ANNOTATE: cpp_type=:: MethodBase1
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for MethodBase1 {}
 impl !Sync for MethodBase1 {}
 unsafe impl ::cxx::ExternType for MethodBase1 {
-    type Id = ::cxx::type_id!("MethodBase1");
+    type Id = ::cxx::type_id!(":: MethodBase1");
     type Kind = ::cxx::kind::Trivial;
 }
 impl MethodBase1 {
@@ -470,14 +470,14 @@ pub mod method_base1 {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MethodBase2
+///CRUBIT_ANNOTATE: cpp_type=:: MethodBase2
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for MethodBase2 {}
 impl !Sync for MethodBase2 {}
 unsafe impl ::cxx::ExternType for MethodBase2 {
-    type Id = ::cxx::type_id!("MethodBase2");
+    type Id = ::cxx::type_id!(":: MethodBase2");
     type Kind = ::cxx::kind::Trivial;
 }
 impl MethodBase2 {
@@ -535,14 +535,14 @@ pub mod method_base2 {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MethodDerived
+///CRUBIT_ANNOTATE: cpp_type=:: MethodDerived
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for MethodDerived {}
 impl !Sync for MethodDerived {}
 unsafe impl ::cxx::ExternType for MethodDerived {
-    type Id = ::cxx::type_id!("MethodDerived");
+    type Id = ::cxx::type_id!(":: MethodDerived");
     type Kind = ::cxx::kind::Trivial;
 }
 

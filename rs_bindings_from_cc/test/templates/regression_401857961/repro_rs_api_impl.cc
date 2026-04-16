@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -19,12 +19,12 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct repro::Interval) == 1);
-static_assert(alignof(struct repro::Interval) == 1);
-static_assert(CRUBIT_OFFSET_OF(nanos, struct repro::Interval) == 0);
+static_assert(sizeof(struct ::repro::Interval) == 1);
+static_assert(alignof(struct ::repro::Interval) == 1);
+static_assert(CRUBIT_OFFSET_OF(nanos, struct ::repro::Interval) == 0);
 
 extern "C" void __rust_thunk___ZN5repro8IntervalC1Ev(
-    struct repro::Interval* __this) {
+    struct ::repro::Interval* __this) {
   crubit::construct_at(__this);
 }
 

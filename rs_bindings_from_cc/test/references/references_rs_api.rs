@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/references:references
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -18,14 +18,14 @@
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypeWithPtrConstructor
+///CRUBIT_ANNOTATE: cpp_type=:: TypeWithPtrConstructor
 pub struct TypeWithPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TypeWithPtrConstructor {}
 impl !Sync for TypeWithPtrConstructor {}
 unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
-    type Id = ::cxx::type_id!("TypeWithPtrConstructor");
+    type Id = ::cxx::type_id!(":: TypeWithPtrConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -56,14 +56,14 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=13
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypeWithNonNullPtrConstructor
+///CRUBIT_ANNOTATE: cpp_type=:: TypeWithNonNullPtrConstructor
 pub struct TypeWithNonNullPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TypeWithNonNullPtrConstructor {}
 impl !Sync for TypeWithNonNullPtrConstructor {}
 unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
-    type Id = ::cxx::type_id!("TypeWithNonNullPtrConstructor");
+    type Id = ::cxx::type_id!(":: TypeWithNonNullPtrConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -94,14 +94,14 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstruct
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=18
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypeWithReferenceConstructor
+///CRUBIT_ANNOTATE: cpp_type=:: TypeWithReferenceConstructor
 pub struct TypeWithReferenceConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for TypeWithReferenceConstructor {}
 impl !Sync for TypeWithReferenceConstructor {}
 unsafe impl ::cxx::ExternType for TypeWithReferenceConstructor {
-    type Id = ::cxx::type_id!("TypeWithReferenceConstructor");
+    type Id = ::cxx::type_id!(":: TypeWithReferenceConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
 

@@ -18,14 +18,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=X
+///CRUBIT_ANNOTATE: cpp_type=:: X
 pub struct X {
     pub a: ::ffi_11::c_int,
 }
 impl !Send for X {}
 impl !Sync for X {}
 unsafe impl ::cxx::ExternType for X {
-    type Id = ::cxx::type_id!("X");
+    type Id = ::cxx::type_id!(":: X");
     type Kind = ::cxx::kind::Trivial;
 }
 

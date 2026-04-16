@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/impl_ctor:impl_ctor
-// Features: fmt, supported, types, wrapper
+// Features: fmt, leading_colons_for_cpp_type, supported, types, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -18,7 +18,7 @@
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=8
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nontrivial
+///CRUBIT_ANNOTATE: cpp_type=:: Nontrivial
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub value: ::ffi_11::c_int,
@@ -26,10 +26,10 @@ pub struct Nontrivial {
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
 unsafe impl ::cxx::ExternType for Nontrivial {
-    type Id = ::cxx::type_id!("Nontrivial");
+    type Id = ::cxx::type_id!(":: Nontrivial");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
+forward_declare::unsafe_define!(forward_declare::symbol!(":: Nontrivial"), crate::Nontrivial);
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
 impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {

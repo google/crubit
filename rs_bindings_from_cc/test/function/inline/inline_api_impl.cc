@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/inline:inline
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -20,35 +20,36 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 extern "C" int __rust_thunk___Z18hello_world_inlinev() {
-  return hello_world_inline();
+  return ::hello_world_inline();
 }
 
 static_assert((int (*)()) & ::hello_world_inline);
 
-static_assert(CRUBIT_SIZEOF(struct SomeStruct) == 4);
-static_assert(alignof(struct SomeStruct) == 4);
-static_assert(CRUBIT_OFFSET_OF(int_field, struct SomeStruct) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::SomeStruct) == 4);
+static_assert(alignof(struct ::SomeStruct) == 4);
+static_assert(CRUBIT_OFFSET_OF(int_field, struct ::SomeStruct) == 0);
 
-extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
+extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct ::SomeStruct* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" int __rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(
-    struct SomeStruct const* s) {
-  return take_struct_by_const_ptr(s);
+    struct ::SomeStruct const* s) {
+  return ::take_struct_by_const_ptr(s);
 }
 
-static_assert((int (*)(struct SomeStruct const*)) & ::take_struct_by_const_ptr);
+static_assert((int (*)(struct ::SomeStruct const*)) &
+              ::take_struct_by_const_ptr);
 
 extern "C" unsigned int __rust_thunk___Z19double_unsigned_intj(unsigned int i) {
-  return double_unsigned_int(i);
+  return ::double_unsigned_int(i);
 }
 
 static_assert((unsigned int (*)(unsigned int)) & ::double_unsigned_int);
 
 extern "C" int __rust_thunk___ZN10namespaced24forward_declared_doublerEi(
     int x) {
-  return namespaced::forward_declared_doubler(x);
+  return ::namespaced::forward_declared_doubler(x);
 }
 
 static_assert((int (*)(int)) & ::namespaced::forward_declared_doubler);

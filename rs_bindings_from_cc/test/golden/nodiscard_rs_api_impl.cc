@@ -18,46 +18,46 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct NoDiscard) == 1);
-static_assert(alignof(struct NoDiscard) == 1);
+static_assert(sizeof(struct ::NoDiscard) == 1);
+static_assert(alignof(struct ::NoDiscard) == 1);
 
-extern "C" void __rust_thunk___ZN9NoDiscardC1Ev(struct NoDiscard* __this) {
+extern "C" void __rust_thunk___ZN9NoDiscardC1Ev(struct ::NoDiscard* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert(sizeof(struct NoDiscardWithMessage) == 1);
-static_assert(alignof(struct NoDiscardWithMessage) == 1);
+static_assert(sizeof(struct ::NoDiscardWithMessage) == 1);
+static_assert(alignof(struct ::NoDiscardWithMessage) == 1);
 
 extern "C" void __rust_thunk___ZN20NoDiscardWithMessageC1Ev(
-    struct NoDiscardWithMessage* __this) {
+    struct ::NoDiscardWithMessage* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void* __rust_thunk___Z16crubit_nodiscardv() {
-  return crubit_nodiscard();
+  return ::crubit_nodiscard();
 }
 
 static_assert((void* (*)()) & ::crubit_nodiscard);
 
 extern "C" void* __rust_thunk___Z24crubit_nodiscard_messagev() {
-  return crubit_nodiscard_message();
+  return ::crubit_nodiscard_message();
 }
 
 static_assert((void* (*)()) & ::crubit_nodiscard_message);
 
-static_assert(sizeof(struct NodiscardCtor) == 1);
-static_assert(alignof(struct NodiscardCtor) == 1);
+static_assert(sizeof(struct ::NodiscardCtor) == 1);
+static_assert(alignof(struct ::NodiscardCtor) == 1);
 
 extern "C" void __rust_thunk___ZN13NodiscardCtorC1Eii(
-    struct NodiscardCtor* __this, int x, int y) {
+    struct ::NodiscardCtor* __this, int x, int y) {
   crubit::construct_at(__this, x, y);
 }
 
-static_assert(sizeof(struct NodiscardCtorWithMessage) == 1);
-static_assert(alignof(struct NodiscardCtorWithMessage) == 1);
+static_assert(sizeof(struct ::NodiscardCtorWithMessage) == 1);
+static_assert(alignof(struct ::NodiscardCtorWithMessage) == 1);
 
 extern "C" void __rust_thunk___ZN24NodiscardCtorWithMessageC1Eii(
-    struct NodiscardCtorWithMessage* __this, int x, int y) {
+    struct ::NodiscardCtorWithMessage* __this, int x, int y) {
   crubit::construct_at(__this, x, y);
 }
 

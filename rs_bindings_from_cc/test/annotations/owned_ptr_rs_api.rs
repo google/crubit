@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:owned_ptr
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -24,7 +24,7 @@
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=17
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Thing
+///CRUBIT_ANNOTATE: cpp_type=:: Thing
 pub struct RawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
@@ -32,7 +32,7 @@ pub struct RawThing {
 impl !Send for RawThing {}
 impl !Sync for RawThing {}
 unsafe impl ::cxx::ExternType for RawThing {
-    type Id = ::cxx::type_id!("Thing");
+    type Id = ::cxx::type_id!(":: Thing");
     type Kind = ::cxx::kind::Trivial;
 }
 impl RawThing {

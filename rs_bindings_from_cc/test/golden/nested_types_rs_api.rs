@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Foo
+///CRUBIT_ANNOTATE: cpp_type=:: Foo
 pub struct Foo {
     pub foo: ::ffi_11::c_int,
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
 unsafe impl ::cxx::ExternType for Foo {
-    type Id = ::cxx::type_id!("Foo");
+    type Id = ::cxx::type_id!(":: Foo");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -41,14 +41,14 @@ impl Default for Foo {
 pub mod foo {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar
+    ///CRUBIT_ANNOTATE: cpp_type=:: Foo :: Bar
     pub struct Bar {
         pub bar: ::ffi_11::c_int,
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
     unsafe impl ::cxx::ExternType for Bar {
-        type Id = ::cxx::type_id!("Foo :: Bar");
+        type Id = ::cxx::type_id!(":: Foo :: Bar");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -66,14 +66,14 @@ pub mod foo {
     pub mod bar {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar :: Baz
+        ///CRUBIT_ANNOTATE: cpp_type=:: Foo :: Bar :: Baz
         pub struct Baz {
             pub baz: ::ffi_11::c_int,
         }
         impl !Send for Baz {}
         impl !Sync for Baz {}
         unsafe impl ::cxx::ExternType for Baz {
-            type Id = ::cxx::type_id!("Foo :: Bar :: Baz");
+            type Id = ::cxx::type_id!(":: Foo :: Bar :: Baz");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -92,14 +92,14 @@ pub mod foo {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=already_snake_case
+///CRUBIT_ANNOTATE: cpp_type=:: already_snake_case
 pub struct already_snake_case {
     pub i: crate::already_snake_case_items::Inner,
 }
 impl !Send for already_snake_case {}
 impl !Sync for already_snake_case {}
 unsafe impl ::cxx::ExternType for already_snake_case {
-    type Id = ::cxx::type_id!("already_snake_case");
+    type Id = ::cxx::type_id!(":: already_snake_case");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -117,14 +117,14 @@ impl Default for already_snake_case {
 pub mod already_snake_case_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=already_snake_case :: Inner
+    ///CRUBIT_ANNOTATE: cpp_type=:: already_snake_case :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("already_snake_case :: Inner");
+        type Id = ::cxx::type_id!(":: already_snake_case :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -144,14 +144,14 @@ pub mod already_snake_case_items {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames
+///CRUBIT_ANNOTATE: cpp_type=:: ConflictingSnakeCaseNames
 pub struct ConflictingSnakeCaseNames {
     pub i: crate::conflicting_snake_case_names::Inner,
 }
 impl !Send for ConflictingSnakeCaseNames {}
 impl !Sync for ConflictingSnakeCaseNames {}
 unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames {
-    type Id = ::cxx::type_id!("ConflictingSnakeCaseNames");
+    type Id = ::cxx::type_id!(":: ConflictingSnakeCaseNames");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -169,14 +169,14 @@ impl Default for ConflictingSnakeCaseNames {
 pub mod conflicting_snake_case_names {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames :: Inner
+    ///CRUBIT_ANNOTATE: cpp_type=:: ConflictingSnakeCaseNames :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("ConflictingSnakeCaseNames :: Inner");
+        type Id = ::cxx::type_id!(":: ConflictingSnakeCaseNames :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -196,14 +196,14 @@ pub mod conflicting_snake_case_names {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_
+///CRUBIT_ANNOTATE: cpp_type=:: ConflictingSnakeCaseNames_
 pub struct ConflictingSnakeCaseNames_ {
     pub i: crate::conflicting_snake_case_names_items::Inner,
 }
 impl !Send for ConflictingSnakeCaseNames_ {}
 impl !Sync for ConflictingSnakeCaseNames_ {}
 unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames_ {
-    type Id = ::cxx::type_id!("ConflictingSnakeCaseNames_");
+    type Id = ::cxx::type_id!(":: ConflictingSnakeCaseNames_");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -223,14 +223,14 @@ impl Default for ConflictingSnakeCaseNames_ {
 pub mod conflicting_snake_case_names_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_ :: Inner
+    ///CRUBIT_ANNOTATE: cpp_type=:: ConflictingSnakeCaseNames_ :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("ConflictingSnakeCaseNames_ :: Inner");
+        type Id = ::cxx::type_id!(":: ConflictingSnakeCaseNames_ :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -250,14 +250,14 @@ pub mod conflicting_snake_case_names_items {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems
+///CRUBIT_ANNOTATE: cpp_type=:: OnlyOneHasNestedItems
 pub struct OnlyOneHasNestedItems {
     pub i: crate::only_one_has_nested_items::Inner,
 }
 impl !Send for OnlyOneHasNestedItems {}
 impl !Sync for OnlyOneHasNestedItems {}
 unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems {
-    type Id = ::cxx::type_id!("OnlyOneHasNestedItems");
+    type Id = ::cxx::type_id!(":: OnlyOneHasNestedItems");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -275,14 +275,14 @@ impl Default for OnlyOneHasNestedItems {
 pub mod only_one_has_nested_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems :: Inner
+    ///CRUBIT_ANNOTATE: cpp_type=:: OnlyOneHasNestedItems :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("OnlyOneHasNestedItems :: Inner");
+        type Id = ::cxx::type_id!(":: OnlyOneHasNestedItems :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -302,14 +302,14 @@ pub mod only_one_has_nested_items {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems_
+///CRUBIT_ANNOTATE: cpp_type=:: OnlyOneHasNestedItems_
 pub struct OnlyOneHasNestedItems_ {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for OnlyOneHasNestedItems_ {}
 impl !Sync for OnlyOneHasNestedItems_ {}
 unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems_ {
-    type Id = ::cxx::type_id!("OnlyOneHasNestedItems_");
+    type Id = ::cxx::type_id!(":: OnlyOneHasNestedItems_");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -328,14 +328,14 @@ impl Default for OnlyOneHasNestedItems_ {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace
+///CRUBIT_ANNOTATE: cpp_type=:: SameNameAsNamespace
 pub struct SameNameAsNamespace {
     pub i: crate::same_name_as_namespace_items::Inner,
 }
 impl !Send for SameNameAsNamespace {}
 impl !Sync for SameNameAsNamespace {}
 unsafe impl ::cxx::ExternType for SameNameAsNamespace {
-    type Id = ::cxx::type_id!("SameNameAsNamespace");
+    type Id = ::cxx::type_id!(":: SameNameAsNamespace");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -353,14 +353,14 @@ impl Default for SameNameAsNamespace {
 pub mod same_name_as_namespace_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace :: Inner
+    ///CRUBIT_ANNOTATE: cpp_type=:: SameNameAsNamespace :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("SameNameAsNamespace :: Inner");
+        type Id = ::cxx::type_id!(":: SameNameAsNamespace :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -383,14 +383,14 @@ pub mod same_name_as_namespace_items {
 pub mod same_name_as_namespace {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Foo
+    ///CRUBIT_ANNOTATE: cpp_type=:: same_name_as_namespace :: Foo
     pub struct Foo {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
     unsafe impl ::cxx::ExternType for Foo {
-        type Id = ::cxx::type_id!("same_name_as_namespace :: Foo");
+        type Id = ::cxx::type_id!(":: same_name_as_namespace :: Foo");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -409,14 +409,14 @@ pub mod same_name_as_namespace {
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Bar
+    ///CRUBIT_ANNOTATE: cpp_type=:: same_name_as_namespace :: Bar
     pub struct Bar {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
     unsafe impl ::cxx::ExternType for Bar {
-        type Id = ::cxx::type_id!("same_name_as_namespace :: Bar");
+        type Id = ::cxx::type_id!(":: same_name_as_namespace :: Bar");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -439,14 +439,14 @@ pub mod same_name_as_namespace {
 pub mod no_longer_top_level {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case
+    ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: already_snake_case
     pub struct already_snake_case {
         pub i: crate::no_longer_top_level::already_snake_case_items::Inner,
     }
     impl !Send for already_snake_case {}
     impl !Sync for already_snake_case {}
     unsafe impl ::cxx::ExternType for already_snake_case {
-        type Id = ::cxx::type_id!("no_longer_top_level :: already_snake_case");
+        type Id = ::cxx::type_id!(":: no_longer_top_level :: already_snake_case");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -466,14 +466,14 @@ pub mod no_longer_top_level {
     pub mod already_snake_case_items {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case :: Inner
+        ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: already_snake_case :: Inner
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
         unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: already_snake_case :: Inner");
+            type Id = ::cxx::type_id!(":: no_longer_top_level :: already_snake_case :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -491,14 +491,14 @@ pub mod no_longer_top_level {
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames
+    ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: ConflictingSnakeCaseNames
     pub struct ConflictingSnakeCaseNames {
         pub i: crate::no_longer_top_level::conflicting_snake_case_names::Inner,
     }
     impl !Send for ConflictingSnakeCaseNames {}
     impl !Sync for ConflictingSnakeCaseNames {}
     unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames {
-        type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames");
+        type Id = ::cxx::type_id!(":: no_longer_top_level :: ConflictingSnakeCaseNames");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -516,14 +516,15 @@ pub mod no_longer_top_level {
     pub mod conflicting_snake_case_names {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames :: Inner
+        ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: ConflictingSnakeCaseNames :: Inner
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
         unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames :: Inner");
+            type Id =
+                ::cxx::type_id!(":: no_longer_top_level :: ConflictingSnakeCaseNames :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -541,14 +542,14 @@ pub mod no_longer_top_level {
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_
+    ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: ConflictingSnakeCaseNames_
     pub struct ConflictingSnakeCaseNames_ {
         pub i: crate::no_longer_top_level::conflicting_snake_case_names_items::Inner,
     }
     impl !Send for ConflictingSnakeCaseNames_ {}
     impl !Sync for ConflictingSnakeCaseNames_ {}
     unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames_ {
-        type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames_");
+        type Id = ::cxx::type_id!(":: no_longer_top_level :: ConflictingSnakeCaseNames_");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -566,14 +567,15 @@ pub mod no_longer_top_level {
     pub mod conflicting_snake_case_names_items {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner
+        ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
         unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner");
+            type Id =
+                ::cxx::type_id!(":: no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -591,14 +593,14 @@ pub mod no_longer_top_level {
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems
+    ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: OnlyOneHasNestedItems
     pub struct OnlyOneHasNestedItems {
         pub i: crate::no_longer_top_level::only_one_has_nested_items::Inner,
     }
     impl !Send for OnlyOneHasNestedItems {}
     impl !Sync for OnlyOneHasNestedItems {}
     unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems {
-        type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems");
+        type Id = ::cxx::type_id!(":: no_longer_top_level :: OnlyOneHasNestedItems");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -618,14 +620,14 @@ pub mod no_longer_top_level {
     pub mod only_one_has_nested_items {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems :: Inner
+        ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: OnlyOneHasNestedItems :: Inner
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
         unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems :: Inner");
+            type Id = ::cxx::type_id!(":: no_longer_top_level :: OnlyOneHasNestedItems :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -643,14 +645,14 @@ pub mod no_longer_top_level {
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems_
+    ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: OnlyOneHasNestedItems_
     pub struct OnlyOneHasNestedItems_ {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for OnlyOneHasNestedItems_ {}
     impl !Sync for OnlyOneHasNestedItems_ {}
     unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems_ {
-        type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems_");
+        type Id = ::cxx::type_id!(":: no_longer_top_level :: OnlyOneHasNestedItems_");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -671,14 +673,14 @@ pub mod no_longer_top_level {
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace
+    ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: SameNameAsNamespace
     pub struct SameNameAsNamespace {
         pub i: crate::no_longer_top_level::same_name_as_namespace_items::Inner,
     }
     impl !Send for SameNameAsNamespace {}
     impl !Sync for SameNameAsNamespace {}
     unsafe impl ::cxx::ExternType for SameNameAsNamespace {
-        type Id = ::cxx::type_id!("no_longer_top_level :: SameNameAsNamespace");
+        type Id = ::cxx::type_id!(":: no_longer_top_level :: SameNameAsNamespace");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -698,14 +700,14 @@ pub mod no_longer_top_level {
     pub mod same_name_as_namespace_items {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace :: Inner
+        ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: SameNameAsNamespace :: Inner
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
         unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: SameNameAsNamespace :: Inner");
+            type Id = ::cxx::type_id!(":: no_longer_top_level :: SameNameAsNamespace :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -726,14 +728,14 @@ pub mod no_longer_top_level {
     pub mod same_name_as_namespace {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Foo
+        ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: same_name_as_namespace :: Foo
         pub struct Foo {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for Foo {}
         impl !Sync for Foo {}
         unsafe impl ::cxx::ExternType for Foo {
-            type Id = ::cxx::type_id!("no_longer_top_level :: same_name_as_namespace :: Foo");
+            type Id = ::cxx::type_id!(":: no_longer_top_level :: same_name_as_namespace :: Foo");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -750,14 +752,14 @@ pub mod no_longer_top_level {
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Bar
+        ///CRUBIT_ANNOTATE: cpp_type=:: no_longer_top_level :: same_name_as_namespace :: Bar
         pub struct Bar {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for Bar {}
         impl !Sync for Bar {}
         unsafe impl ::cxx::ExternType for Bar {
-            type Id = ::cxx::type_id!("no_longer_top_level :: same_name_as_namespace :: Bar");
+            type Id = ::cxx::type_id!(":: no_longer_top_level :: same_name_as_namespace :: Bar");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -780,14 +782,14 @@ pub mod no_longer_top_level {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared
+///CRUBIT_ANNOTATE: cpp_type=:: ContainsForwardDeclared
 pub struct ContainsForwardDeclared {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ContainsForwardDeclared {}
 impl !Sync for ContainsForwardDeclared {}
 unsafe impl ::cxx::ExternType for ContainsForwardDeclared {
-    type Id = ::cxx::type_id!("ContainsForwardDeclared");
+    type Id = ::cxx::type_id!(":: ContainsForwardDeclared");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -805,14 +807,14 @@ impl Default for ContainsForwardDeclared {
 pub mod contains_forward_declared {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared :: Nested
+    ///CRUBIT_ANNOTATE: cpp_type=:: ContainsForwardDeclared :: Nested
     pub struct Nested {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Nested {}
     impl !Sync for Nested {}
     unsafe impl ::cxx::ExternType for Nested {
-        type Id = ::cxx::type_id!("ContainsForwardDeclared :: Nested");
+        type Id = ::cxx::type_id!(":: ContainsForwardDeclared :: Nested");
         type Kind = ::cxx::kind::Trivial;
     }
 
