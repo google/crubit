@@ -79,8 +79,41 @@ fn format_ns_path_for_cc(
 impl FullyQualifiedName {
     pub fn format_for_cc(&self, db: &BindingsGenerator<'_>) -> Result<TokenStream> {
         if let Some(path) = self.unqualified.cpp_type {
-            let path = format_cc_type_name(path.as_str())?;
-            return Ok(path);
+            // TODO(b/502939407): Until this bug is fixed and cpp_type comes pre-prefixed with `::`,
+            // we use this hack here to add the prefix on to generated code manually. This should
+            // typically be applied to all types, but because ffi_11 is special and maps to builtin
+            // types, we use a match expression to filter those out to avoid things like `::long`.
+            return match path.as_str() {
+                "decltype(char(0))"
+                | "signed char"
+                | "unsigned char"
+                | "short"
+                | "unsigned short"
+                | "int"
+                | "unsigned int"
+                | "long"
+                | "unsigned long"
+                | "long long"
+                | "unsigned long long"
+                | "decltype(long(0))"
+                | "decltype(nullptr)"
+                | "decltype(char8_t(0))"
+                | "decltype(char16_t(0))"
+                | "decltype(char32_t(0))"
+                | "decltype(wchar_t(0))"
+                | "wchar_t" => format_cc_type_name(path.as_str()),
+                path => {
+                    let (maybe_const_prefix, path) = if let Some(path) = path.strip_prefix("const ")
+                    {
+                        ("const ", path)
+                    } else {
+                        ("", path)
+                    };
+                    let (universal_qualifier, path) =
+                        if path.trim_start().starts_with("::") { ("", path) } else { ("::", path) };
+                    format_cc_type_name(&format!("{maybe_const_prefix}{universal_qualifier}{path}"))
+                }
+            };
         }
 
         let name = self.unqualified.cpp_name;

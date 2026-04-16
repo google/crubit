@@ -59,7 +59,9 @@ impl Default for SomeClass {
 pub mod some_class {
     /// Example of a factory method.
     #[inline(always)]
-    pub fn static_factory_method(initial_value_of_field: ::ffi_11::c_int) -> crate::SomeClass {
+    pub(crate) fn static_factory_method(
+        initial_value_of_field: ::ffi_11::c_int,
+    ) -> crate::SomeClass {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
@@ -71,7 +73,7 @@ pub mod some_class {
     }
     /// Static method working on primitive types (and unrelated to the struct).
     #[inline(always)]
-    pub fn static_method_that_multiplies_its_args(
+    pub(crate) fn static_method_that_multiplies_its_args(
         x: ::ffi_11::c_int,
         y: ::ffi_11::c_int,
     ) -> ::ffi_11::c_int {

@@ -53,13 +53,13 @@ impl CompatibleType {
 
 pub mod compatible_type {
     #[inline(always)]
-    pub fn renamed_default_constructor<'a>(
+    pub(crate) fn renamed_default_constructor<'a>(
         __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(__this) }
     }
     #[inline(always)]
-    pub fn renamed_constructor<'a>(
+    pub(crate) fn renamed_constructor<'a>(
         __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
         __param_0: ::ffi_11::c_int,
     ) {

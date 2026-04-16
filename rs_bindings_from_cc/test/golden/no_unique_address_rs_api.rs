@@ -73,7 +73,7 @@ impl Default for Struct {
 
 pub mod r#struct {
     #[inline(always)]
-    pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
+    pub(crate) fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::Struct>::uninit();
             crate::detail::__rust_thunk___ZN6Struct4MakeEic(
@@ -144,7 +144,7 @@ impl Default for PaddingBetweenFields {
 
 pub mod padding_between_fields {
     #[inline(always)]
-    pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
+    pub(crate) fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::PaddingBetweenFields>::uninit();
             crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(

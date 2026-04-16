@@ -71,7 +71,7 @@ pub mod test_namespace_bindings {
 
     pub mod some_class {
         #[inline(always)]
-        pub fn public_method<'a>(__this: &'a mut crate::test_namespace_bindings::SomeClass) {
+        pub(crate) fn public_method<'a>(__this: &'a mut crate::test_namespace_bindings::SomeClass) {
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv(
                     __this,
@@ -79,7 +79,7 @@ pub mod test_namespace_bindings {
             }
         }
         #[inline(always)]
-        pub fn public_static_method() {
+        pub(crate) fn public_static_method() {
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
             }

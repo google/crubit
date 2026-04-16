@@ -62,7 +62,7 @@ pub mod r#struct {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn AccessNone(__this: *mut crate::Struct) {
+    pub(crate) unsafe fn AccessNone(__this: *mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this) }
     }
     /// # Safety
@@ -70,7 +70,7 @@ pub mod r#struct {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn AccessPublic(__this: *mut crate::Struct) {
+    pub(crate) unsafe fn AccessPublic(__this: *mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this) }
     }
 }
@@ -115,7 +115,7 @@ pub mod class {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn AccessPublic(__this: *mut crate::Class) {
+    pub(crate) unsafe fn AccessPublic(__this: *mut crate::Class) {
         unsafe { crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this) }
     }
 }

@@ -85,7 +85,7 @@ pub mod s {
     /// * `p1`: raw pointer
     /// * `p2`: raw pointer
     #[inline(always)]
-    pub unsafe fn const_method(
+    pub(crate) unsafe fn const_method(
         __this: *const crate::S,
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,
@@ -99,7 +99,7 @@ pub mod s {
     /// * `p1`: raw pointer
     /// * `p2`: raw pointer
     #[inline(always)]
-    pub unsafe fn method(
+    pub(crate) unsafe fn method(
         __this: *mut crate::S,
         p1: *mut ::ffi_11::c_int,
         p2: *mut ::ffi_11::c_int,

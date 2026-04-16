@@ -1758,7 +1758,9 @@ pub fn generate_function(
                     #deprecated_attr
                     #must_use_attr
                     #[inline(always)]
-                    #visibility
+                    // TODO(b/503015646): Re-allow these function to have `#visibility` once we can
+                    // ensure that cc_bindings_from_rs will not generate bindings to them.
+                    pub(crate)
                     #unsafety
                     fn #bracketed_func_name #free_fn_generic_params(
                         #( #free_api_params ),*

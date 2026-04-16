@@ -67,7 +67,9 @@ impl Default for SomeClass {
 pub mod some_class {
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=10
     #[inline(always)]
-    pub fn static_factory_method(int_var_initial_value: ::ffi_11::c_int) -> crate::SomeClass {
+    pub(crate) fn static_factory_method(
+        int_var_initial_value: ::ffi_11::c_int,
+    ) -> crate::SomeClass {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
@@ -79,7 +81,7 @@ pub mod some_class {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=11
     #[inline(always)]
-    pub fn static_method_that_multiplies_its_args(
+    pub(crate) fn static_method_that_multiplies_its_args(
         x: ::ffi_11::c_int,
         y: ::ffi_11::c_int,
     ) -> ::ffi_11::c_int {
@@ -94,7 +96,7 @@ pub mod some_class {
     ///
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=16
     #[inline(always)]
-    pub fn static_inline_method(arg: ::ffi_11::c_int) -> ::ffi_11::c_int {
+    pub(crate) fn static_inline_method(arg: ::ffi_11::c_int) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass20static_inline_methodEi(arg) }
     }
 }
@@ -178,26 +180,29 @@ impl Default for InstanceMethods {
 pub mod instance_methods {
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=26
     #[inline(always)]
-    pub fn get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
+    pub(crate) fn get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK15InstanceMethods13get_int_fieldEv(__this) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=27
     #[inline(always)]
-    pub fn set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
+    pub(crate) fn set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN15InstanceMethods13set_int_fieldEi(__this, new_value)
         }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=29
     #[inline(always)]
-    pub fn inline_get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
+    pub(crate) fn inline_get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(__this)
         }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=30
     #[inline(always)]
-    pub fn inline_set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
+    pub(crate) fn inline_set_int_field(
+        __this: &mut crate::InstanceMethods,
+        new_value: ::ffi_11::c_int,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN15InstanceMethods20inline_set_int_fieldEi(
                 __this, new_value,
@@ -211,7 +216,7 @@ pub mod instance_methods {
     ///
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=31
     #[inline(always)]
-    pub unsafe fn takes_and_returns_ref(
+    pub(crate) unsafe fn takes_and_returns_ref(
         __this: &mut crate::InstanceMethods,
         input_ref: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
@@ -223,19 +228,19 @@ pub mod instance_methods {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=32
     #[inline(always)]
-    pub fn ref_qualified(__this: &mut crate::InstanceMethods) {
+    pub(crate) fn ref_qualified(__this: &mut crate::InstanceMethods) {
         unsafe { crate::detail::__rust_thunk___ZNR15InstanceMethods13ref_qualifiedEv(__this) }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=33
     #[inline(always)]
-    pub fn const_ref_qualified(__this: &crate::InstanceMethods) {
+    pub(crate) fn const_ref_qualified(__this: &crate::InstanceMethods) {
         unsafe {
             crate::detail::__rust_thunk___ZNKR15InstanceMethods19const_ref_qualifiedEv(__this)
         }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=34
     #[inline(always)]
-    pub fn rvalue_qualified(__this: &mut crate::InstanceMethods) {
+    pub(crate) fn rvalue_qualified(__this: &mut crate::InstanceMethods) {
         unsafe { crate::detail::__rust_thunk___ZNO15InstanceMethods16rvalue_qualifiedEv(__this) }
     }
 }

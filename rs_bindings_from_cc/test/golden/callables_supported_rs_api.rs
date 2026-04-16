@@ -88,7 +88,7 @@ impl LayoutCompatible {
 
 pub mod layout_compatible {
     #[inline(always)]
-    pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
+    pub(crate) fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::LayoutCompatible>::uninit();
             crate::detail::__rust_thunk___ZN16LayoutCompatible6CreateEi(
@@ -103,7 +103,7 @@ pub mod layout_compatible {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn get(__this: *const crate::LayoutCompatible) -> ::ffi_11::c_int {
+    pub(crate) unsafe fn get(__this: *const crate::LayoutCompatible) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this) }
     }
 }

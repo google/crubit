@@ -107,7 +107,7 @@ pub mod crubit {
             /// Generated from: support/annotations_internal.h;l=14
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
-            pub fn ConstructorNewName(
+            pub(crate) fn ConstructorNewName(
                 __this: ::ffi_11::c_int,
                 a: ::ffi_11::c_int,
                 b: ::ffi_11::c_int,
@@ -131,7 +131,7 @@ pub mod crubit {
             /// Generated from: support/annotations_internal.h;l=14
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
-            pub unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
+            pub(crate) unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
                 unsafe {
                     crate::detail::__rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(
                         __this,

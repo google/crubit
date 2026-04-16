@@ -81,19 +81,19 @@ pub mod ns {
 
     pub mod trivial {
         #[inline(always)]
-        pub fn Unqualified<'a>(__this: &'a mut crate::ns::Trivial) {
+        pub(crate) fn Unqualified<'a>(__this: &'a mut crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(__this) }
         }
         #[inline(always)]
-        pub fn ConstQualified<'a>(__this: &'a crate::ns::Trivial) {
+        pub(crate) fn ConstQualified<'a>(__this: &'a crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(__this) }
         }
         #[inline(always)]
-        pub fn LvalueRefQualified<'a>(__this: &'a mut crate::ns::Trivial) {
+        pub(crate) fn LvalueRefQualified<'a>(__this: &'a mut crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(__this) }
         }
         #[inline(always)]
-        pub fn ConstLvalueRefQualified<'a>(__this: &'a crate::ns::Trivial) {
+        pub(crate) fn ConstLvalueRefQualified<'a>(__this: &'a crate::ns::Trivial) {
             unsafe {
                 crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(__this)
             }

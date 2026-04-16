@@ -1024,7 +1024,7 @@ impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
 
 pub mod many_operators {
     #[inline(always)]
-    pub fn unary_plus<'a>(__this: &'a crate::ManyOperators) -> crate::ManyOperators {
+    pub(crate) fn unary_plus<'a>(__this: &'a crate::ManyOperators) -> crate::ManyOperators {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(

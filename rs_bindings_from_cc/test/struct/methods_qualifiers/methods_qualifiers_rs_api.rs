@@ -95,7 +95,7 @@ impl Default for UnpinStructWithRefQualifiedMethods {
 pub mod unpin_struct_with_ref_qualified_methods {
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=12
     #[inline(always)]
-    pub fn increment_i<'a>(__this: &'a mut crate::UnpinStructWithRefQualifiedMethods) {
+    pub(crate) fn increment_i<'a>(__this: &'a mut crate::UnpinStructWithRefQualifiedMethods) {
         unsafe {
             crate::detail::__rust_thunk___ZN34UnpinStructWithRefQualifiedMethods11increment_iEv(
                 __this,
@@ -104,7 +104,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=13
     #[inline(always)]
-    pub fn unqualified_get_i<'a>(
+    pub(crate) fn unqualified_get_i<'a>(
         __this: &'a mut crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
@@ -113,7 +113,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=14
     #[inline(always)]
-    pub fn const_qualified_get_i<'a>(
+    pub(crate) fn const_qualified_get_i<'a>(
         __this: &'a crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
@@ -122,7 +122,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=15
     #[inline(always)]
-    pub fn lvalue_ref_qualified_get_i<'a>(
+    pub(crate) fn lvalue_ref_qualified_get_i<'a>(
         __this: &'a mut crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
@@ -131,7 +131,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=16
     #[inline(always)]
-    pub fn const_lvalue_ref_qualified_get_i<'a>(
+    pub(crate) fn const_lvalue_ref_qualified_get_i<'a>(
         __this: &'a crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
@@ -140,7 +140,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=17
     #[inline(always)]
-    pub fn rvalue_ref_qualified_get_i<'a>(
+    pub(crate) fn rvalue_ref_qualified_get_i<'a>(
         __this: ::ctor::RvalueReference<'a, crate::UnpinStructWithRefQualifiedMethods>,
     ) -> ::ffi_11::c_int {
         unsafe {
@@ -149,7 +149,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=18
     #[inline(always)]
-    pub fn const_rvalue_ref_qualified_get_i<'a>(
+    pub(crate) fn const_rvalue_ref_qualified_get_i<'a>(
         __this: ::ctor::ConstRvalueReference<'a, crate::UnpinStructWithRefQualifiedMethods>,
     ) -> ::ffi_11::c_int {
         unsafe {

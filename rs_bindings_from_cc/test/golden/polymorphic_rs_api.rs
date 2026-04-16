@@ -126,7 +126,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
 
 pub mod polymorphic_base2 {
     #[inline(always)]
-    pub fn Foo<'a>(__this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>) {
+    pub(crate) fn Foo<'a>(__this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(__this) }
     }
 }

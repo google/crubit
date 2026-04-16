@@ -69,7 +69,7 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
 pub mod cc_template_inst10_my_template_ii_e {
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
     #[inline(always)]
-    pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
+    pub(crate) fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
         unsafe {
             let mut __return =
                 ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
@@ -79,7 +79,7 @@ pub mod cc_template_inst10_my_template_ii_e {
     }
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
-    pub fn value<'__this>(
+    pub(crate) fn value<'__this>(
         __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe {

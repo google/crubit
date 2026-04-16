@@ -394,7 +394,7 @@ impl Default for MethodBase1 {
 
 pub mod method_base1 {
     #[inline(always)]
-    pub fn Public<'a>(__this: &'a mut crate::MethodBase1) {
+    pub(crate) fn Public<'a>(__this: &'a mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(__this) }
     }
     /// # Safety
@@ -402,18 +402,18 @@ pub mod method_base1 {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__param_0`: raw pointer
     #[inline(always)]
-    pub unsafe fn Equals<'a>(
+    pub(crate) unsafe fn Equals<'a>(
         __this: &'a mut crate::MethodBase1,
         __param_0: *const crate::MethodBase1,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(__this, __param_0) }
     }
     #[inline(always)]
-    pub fn Colliding1<'a>(__this: &'a mut crate::MethodBase1) {
+    pub(crate) fn Colliding1<'a>(__this: &'a mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(__this) }
     }
     #[inline(always)]
-    pub fn Colliding2<'a>(__this: &'a mut crate::MethodBase1) {
+    pub(crate) fn Colliding2<'a>(__this: &'a mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(__this) }
     }
 }
@@ -468,11 +468,11 @@ impl Default for MethodBase2 {
 
 pub mod method_base2 {
     #[inline(always)]
-    pub fn Colliding1<'a>(__this: &'a mut crate::MethodBase2) {
+    pub(crate) fn Colliding1<'a>(__this: &'a mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(__this) }
     }
     #[inline(always)]
-    pub fn Colliding2<'a>(__this: &'a mut crate::MethodBase2) {
+    pub(crate) fn Colliding2<'a>(__this: &'a mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(__this) }
     }
 }

@@ -86,7 +86,7 @@ pub mod noninline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn UnqualifiedMethod(__this: *mut crate::Noninline) {
+    pub(crate) unsafe fn UnqualifiedMethod(__this: *mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this) }
     }
     /// # Safety
@@ -94,7 +94,7 @@ pub mod noninline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn LvalueMethod(__this: *mut crate::Noninline) {
+    pub(crate) unsafe fn LvalueMethod(__this: *mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this) }
     }
     /// # Safety
@@ -102,7 +102,7 @@ pub mod noninline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn LvalueMethodConst(__this: *const crate::Noninline) {
+    pub(crate) unsafe fn LvalueMethodConst(__this: *const crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this) }
     }
     /// # Safety
@@ -110,7 +110,7 @@ pub mod noninline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn RvalueMethod(__this: *mut crate::Noninline) {
+    pub(crate) unsafe fn RvalueMethod(__this: *mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this) }
     }
     /// # Safety
@@ -118,7 +118,7 @@ pub mod noninline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn RvalueMethodConst(__this: *const crate::Noninline) {
+    pub(crate) unsafe fn RvalueMethodConst(__this: *const crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this) }
     }
 }
@@ -195,7 +195,7 @@ pub mod inline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn UnqualifiedMethod(__this: *mut crate::Inline) {
+    pub(crate) unsafe fn UnqualifiedMethod(__this: *mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this) }
     }
     /// # Safety
@@ -203,7 +203,7 @@ pub mod inline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn LvalueMethod(__this: *mut crate::Inline) {
+    pub(crate) unsafe fn LvalueMethod(__this: *mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this) }
     }
     /// # Safety
@@ -211,7 +211,7 @@ pub mod inline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn LvalueMethodConst(__this: *const crate::Inline) {
+    pub(crate) unsafe fn LvalueMethodConst(__this: *const crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this) }
     }
     /// # Safety
@@ -219,7 +219,7 @@ pub mod inline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn RvalueMethod(__this: *mut crate::Inline) {
+    pub(crate) unsafe fn RvalueMethod(__this: *mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this) }
     }
     /// # Safety
@@ -227,7 +227,7 @@ pub mod inline {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn RvalueMethodConst(__this: *const crate::Inline) {
+    pub(crate) unsafe fn RvalueMethodConst(__this: *const crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this) }
     }
 }

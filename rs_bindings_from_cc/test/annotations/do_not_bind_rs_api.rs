@@ -173,7 +173,7 @@ pub mod crubit {
             ///
             /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
             #[inline(always)]
-            pub unsafe fn DoNotBindMethod(
+            pub(crate) unsafe fn DoNotBindMethod(
                 __this: *mut crate::crubit::test::StructWithDoNotBindMethod,
                 mut __param_0: crate::crubit::test::ArgumentToBoundOverload,
             ) {

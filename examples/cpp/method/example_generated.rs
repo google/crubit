@@ -62,7 +62,7 @@ pub mod foo {
         ///
         /// Generated from: examples/cpp/method/example.h;l=14
         #[inline(always)]
-        pub unsafe fn MyMethod(__this: *mut crate::foo::Bar) {
+        pub(crate) unsafe fn MyMethod(__this: *mut crate::foo::Bar) {
             unsafe { crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this) }
         }
     }

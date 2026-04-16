@@ -79,7 +79,7 @@ impl Default for StructWithLifetimeboundMemberFunction {
 pub mod struct_with_lifetimebound_member_function {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=11
     #[inline(always)]
-    pub fn f<'__this>(
+    pub(crate) fn f<'__this>(
         __this: &'__this crate::StructWithLifetimeboundMemberFunction,
     ) -> crate::PlainStruct {
         unsafe {
@@ -134,7 +134,7 @@ impl<'__implicit> Default for StructWithLifetimeboundRefMemberFunction<'__implic
 pub mod struct_with_lifetimebound_ref_member_function {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=15
     #[inline(always)]
-    pub fn f<'__implicit, '__this>(
+    pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::StructWithLifetimeboundRefMemberFunction<'__implicit>,
     ) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe {
@@ -233,7 +233,7 @@ impl ::ctor::PinnedDrop for DropClassWithLifetimeboundMemberFunction {
 pub mod drop_class_with_lifetimebound_member_function {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=20
     #[inline(always)]
-    pub fn f<'__this>(
+    pub(crate) fn f<'__this>(
         __this: &'__this crate::DropClassWithLifetimeboundMemberFunction,
     ) -> crate::PlainStruct {
         unsafe {
@@ -357,7 +357,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropClassWithLifetimeboundRefMemberFunc
 pub mod drop_class_with_lifetimebound_ref_member_function {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=26
     #[inline(always)]
-    pub fn f<'__implicit, '__this>(
+    pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
     ) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe {
@@ -777,7 +777,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndRefMemberFuncti
 pub mod drop_struct_with_ref_ctor_and_ref_member_function {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=56
     #[inline(always)]
-    pub fn f<'__implicit, '__this>(
+    pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
     ) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe {
@@ -881,7 +881,7 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndMemberFunction {
 pub mod drop_struct_with_ctor_and_member_function {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=63
     #[inline(always)]
-    pub fn f<'__this>(
+    pub(crate) fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndMemberFunction,
     ) -> crate::PlainStruct {
         unsafe {
@@ -992,7 +992,7 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndRefMemberFunction {
 pub mod drop_struct_with_ctor_and_ref_member_function {
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=70
     #[inline(always)]
-    pub fn f<'__this>(
+    pub(crate) fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndRefMemberFunction,
     ) -> ::cref::CRef<'__this, crate::PlainStruct> {
         unsafe {
@@ -1129,7 +1129,7 @@ pub mod drop_struct_with_ref_ctor_and_member_function {
     ///
     /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=78
     #[inline(always)]
-    pub fn f<'__implicit, '__this>(
+    pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,
     ) -> crate::PlainStruct {
         unsafe {

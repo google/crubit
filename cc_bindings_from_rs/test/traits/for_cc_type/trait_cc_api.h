@@ -33,21 +33,21 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_golden :: Trait") Trait {
 }  // namespace trait
 
 template <>
-struct rs_std::impl<CcType, ::trait::Trait> {
+struct rs_std::impl<::CcType, ::trait::Trait> {
   static constexpr bool kIsImplemented = true;
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/for_cc_type/trait.rs;l=10
-  static ::std::int32_t get_value(CcType const& self);
+  static ::std::int32_t get_value(::CcType const& self);
 };
 
 namespace trait {
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_Trait_uget_uvalue(CcType const&);
+extern "C" ::std::int32_t __crubit_thunk_Trait_uget_uvalue(::CcType const&);
 }
 }  // namespace trait
-inline ::std::int32_t rs_std::impl<CcType, ::trait::Trait>::get_value(
-    CcType const& self) {
+inline ::std::int32_t rs_std::impl<::CcType, ::trait::Trait>::get_value(
+    ::CcType const& self) {
   return trait::__crubit_internal::__crubit_thunk_Trait_uget_uvalue(self);
 }
 

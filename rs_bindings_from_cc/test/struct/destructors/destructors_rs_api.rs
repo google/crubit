@@ -117,7 +117,7 @@ impl Drop for DestructionOrderRecorder {
 pub mod destruction_order_recorder {
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
     #[inline(always)]
-    pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
+    pub(crate) fn RecordDestruction(int_field: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
                 int_field,
@@ -126,14 +126,14 @@ pub mod destruction_order_recorder {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
     #[inline(always)]
-    pub fn GetDestructionRecord() -> ::ffi_11::c_int {
+    pub(crate) fn GetDestructionRecord() -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
         }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
     #[inline(always)]
-    pub fn ClearDestructionRecord() {
+    pub(crate) fn ClearDestructionRecord() {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv()
         }
@@ -267,7 +267,7 @@ impl
 pub mod field_destruction_order_tester {
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=51
     #[inline(always)]
-    pub fn DestructFromCpp(
+    pub(crate) fn DestructFromCpp(
         field1: ::ffi_11::c_int,
         field2: ::ffi_11::c_int,
         field3: ::ffi_11::c_int,

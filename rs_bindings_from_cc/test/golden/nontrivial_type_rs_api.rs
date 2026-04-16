@@ -171,19 +171,19 @@ impl ::ctor::PinnedDrop for Nontrivial {
 
 pub mod nontrivial {
     #[inline(always)]
-    pub fn Unqualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
+    pub(crate) fn Unqualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(__this) }
     }
     #[inline(always)]
-    pub fn ConstQualified<'a>(__this: &'a crate::Nontrivial) {
+    pub(crate) fn ConstQualified<'a>(__this: &'a crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(__this) }
     }
     #[inline(always)]
-    pub fn LvalueRefQualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
+    pub(crate) fn LvalueRefQualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(__this) }
     }
     #[inline(always)]
-    pub fn ConstLvalueRefQualified<'a>(__this: &'a crate::Nontrivial) {
+    pub(crate) fn ConstLvalueRefQualified<'a>(__this: &'a crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(__this) }
     }
 }
@@ -298,7 +298,7 @@ impl ::ctor::PinnedDrop for NontrivialInline {
 
 pub mod nontrivial_inline {
     #[inline(always)]
-    pub fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::NontrivialInline>) {
+    pub(crate) fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::NontrivialInline>) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(__this) }
     }
 }
@@ -464,7 +464,7 @@ impl Drop for NontrivialUnpin {
 
 pub mod nontrivial_unpin {
     #[inline(always)]
-    pub fn MemberFunction<'a>(__this: &'a mut crate::NontrivialUnpin) {
+    pub(crate) fn MemberFunction<'a>(__this: &'a mut crate::NontrivialUnpin) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(__this) }
     }
 }
@@ -646,7 +646,7 @@ impl ::ctor::PinnedDrop for Nonmovable {
 
 pub mod nonmovable {
     #[inline(always)]
-    pub fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::Nonmovable>) {
+    pub(crate) fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::Nonmovable>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(__this) }
     }
 }

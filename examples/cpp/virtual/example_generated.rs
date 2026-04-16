@@ -143,7 +143,7 @@ pub mod rust_derived {
     ///
     /// Generated from: examples/cpp/virtual/example.h;l=16
     #[inline(always)]
-    pub unsafe fn Method1(__this: *const crate::RustDerived) -> ::ffi_11::c_int {
+    pub(crate) unsafe fn Method1(__this: *const crate::RustDerived) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this) }
     }
     /// # Safety
@@ -153,7 +153,7 @@ pub mod rust_derived {
     ///
     /// Generated from: examples/cpp/virtual/example.h;l=18
     #[inline(always)]
-    pub unsafe fn Upcast(__this: *mut crate::RustDerived) -> *mut ::base::ExampleBase {
+    pub(crate) unsafe fn Upcast(__this: *mut crate::RustDerived) -> *mut ::base::ExampleBase {
         unsafe { crate::detail::__rust_thunk___ZN11RustDerived6UpcastEv(__this) }
     }
 }

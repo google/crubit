@@ -680,7 +680,7 @@ fn test_format_bridged_func_arg_pointer_like() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                void foo(const CppType* __param_0);
+                void foo(const ::CppType* __param_0);
             }
         );
 
@@ -688,10 +688,10 @@ fn test_format_bridged_func_arg_pointer_like() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void __crubit_thunk_foo(const CppType*);
+                    extern "C" void __crubit_thunk_foo(const ::CppType*);
                 }
 
-                inline void foo(const CppType* __param_0) {
+                inline void foo(const ::CppType* __param_0) {
                     return __crubit_internal::__crubit_thunk_foo(__param_0);
                 }
             }
@@ -749,7 +749,7 @@ fn test_format_bridged_func_arg_by_pointer() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                void foo(CppType const* __param_0);
+                void foo(::CppType const* __param_0);
             }
         );
 
@@ -757,10 +757,10 @@ fn test_format_bridged_func_arg_by_pointer() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void __crubit_thunk_foo(CppType const*);
+                    extern "C" void __crubit_thunk_foo(::CppType const*);
                 }
 
-                inline void foo(CppType const* __param_0) {
+                inline void foo(::CppType const* __param_0) {
                     return __crubit_internal::__crubit_thunk_foo(__param_0);
                 }
             }
@@ -862,7 +862,7 @@ fn test_format_bridged_func_arg_by_value() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                void foo(cpp_ns::CppType _a);
+                void foo(::cpp_ns::CppType _a);
             }
         );
 
@@ -870,10 +870,10 @@ fn test_format_bridged_func_arg_by_value() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void __crubit_thunk_foo(cpp_ns::CppType*);
+                    extern "C" void __crubit_thunk_foo(::cpp_ns::CppType*);
                 }
 
-                inline void foo(cpp_ns::CppType _a) {
+                inline void foo(::cpp_ns::CppType _a) {
                     return __crubit_internal::__crubit_thunk_foo(&_a);
                 }
             }
@@ -932,10 +932,10 @@ fn test_format_bridged_return_type_pointer_like() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void __crubit_thunk_foo(CppType** __ret_ptr);
+                    extern "C" void __crubit_thunk_foo(::CppType** __ret_ptr);
                 }
 
-                inline CppType* foo() {
+                inline ::CppType* foo() {
                   union __return_value_crubit_return_union {
                     constexpr __return_value_crubit_return_union() {}
                     ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
@@ -1055,10 +1055,10 @@ fn test_format_bridged_return_type_by_pointer() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void __crubit_thunk_foo(CppType** __ret_ptr);
+                    extern "C" void __crubit_thunk_foo(::CppType** __ret_ptr);
                 }
 
-                inline CppType* foo() {
+                inline ::CppType* foo() {
                     union __return_value_crubit_return_union {
                       constexpr __return_value_crubit_return_union() {}
                       ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
@@ -1143,10 +1143,10 @@ fn test_format_bridged_return_type_by_value() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void __crubit_thunk_foo(cpp_ns::CppType* __ret_ptr);
+                    extern "C" void __crubit_thunk_foo(::cpp_ns::CppType* __ret_ptr);
                 }
 
-                inline cpp_ns::CppType foo() {
+                inline ::cpp_ns::CppType foo() {
                     union __return_value_crubit_return_union {
                       constexpr __return_value_crubit_return_union() {}
                       ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
