@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/methods_qualifiers:methods_qualifiers
-// Features: assume_this_lifetimes, callables, check_default_initialized, experimental, fmt, supported, types, unsafe_view, wrapper
+// Features: assume_this_lifetimes, callables, check_default_initialized, experimental, fmt, leading_colons_for_cpp_type, supported, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(arbitrary_self_types, custom_inner_attributes, negative_impls)]

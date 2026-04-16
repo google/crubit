@@ -134,6 +134,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling leading colons for C++ type paths in annotations.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "leading_colons_for_cpp_type",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["leading_colons_for_cpp_type"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
