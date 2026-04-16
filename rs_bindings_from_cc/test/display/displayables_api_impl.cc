@@ -126,7 +126,7 @@ static_assert(alignof(struct TemplatedStringView) == 8);
 
 extern "C" void
 __rust_thunk___ZN19TemplatedStringViewC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(
-    struct TemplatedStringView* __this, std::__u::string_view* v) {
+    struct TemplatedStringView* __this, ::std::__u::string_view* v) {
   crubit::construct_at(__this, std::move(*v));
 }
 

@@ -18,17 +18,17 @@
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nonmovable
+///CRUBIT_ANNOTATE: cpp_type=:: Nonmovable
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
 unsafe impl ::cxx::ExternType for Nonmovable {
-    type Id = ::cxx::type_id!("Nonmovable");
+    type Id = ::cxx::type_id!(":: Nonmovable");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
+forward_declare::unsafe_define!(forward_declare::symbol!(":: Nonmovable"), crate::Nonmovable);
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=11
 impl ::ctor::CtorNew<()> for Nonmovable {
@@ -48,17 +48,17 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=16
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Base
+///CRUBIT_ANNOTATE: cpp_type=:: Base
 pub struct Base {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Base {}
 impl !Sync for Base {}
 unsafe impl ::cxx::ExternType for Base {
-    type Id = ::cxx::type_id!("Base");
+    type Id = ::cxx::type_id!(":: Base");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Base"), crate::Base);
+forward_declare::unsafe_define!(forward_declare::symbol!(":: Base"), crate::Base);
 impl Base {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
@@ -115,17 +115,17 @@ pub mod base {
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=22
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Derived
+///CRUBIT_ANNOTATE: cpp_type=:: Derived
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
 unsafe impl ::cxx::ExternType for Derived {
-    type Id = ::cxx::type_id!("Derived");
+    type Id = ::cxx::type_id!(":: Derived");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
+forward_declare::unsafe_define!(forward_declare::symbol!(":: Derived"), crate::Derived);
 impl Derived {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]

@@ -256,7 +256,7 @@ extern "C" int __rust_thunk___ZNK16LayoutCompatible3getEv(
   return __this->get();
 }
 
-static_assert((int (LayoutCompatible::*)() const) & ::LayoutCompatible::get);
+static_assert((int (::LayoutCompatible::*)() const) & ::LayoutCompatible::get);
 
 extern "C" void
 __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(

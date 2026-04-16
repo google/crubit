@@ -27,9 +27,9 @@ extern "C" void __rust_thunk___ZN1SC1Ev(struct S* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((int& (S::*)(int&, int&) const) & ::S::const_method);
+static_assert((int& (::S::*)(int&, int&) const) & ::S::const_method);
 
-static_assert((int& (S::*)(int&, int&)) & ::S::method);
+static_assert((int& (::S::*)(int&, int&)) & ::S::method);
 
 static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
 static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==

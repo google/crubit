@@ -28,13 +28,13 @@ extern "C" void __rust_thunk___ZN10NontrivialaSEf(struct Nontrivial* __return,
   new (__return) auto(__this->operator=(__param_0));
 }
 
-static_assert((void (Nontrivial::*)()) & ::Nontrivial::Unqualified);
+static_assert((void (::Nontrivial::*)()) & ::Nontrivial::Unqualified);
 
-static_assert((void (Nontrivial::*)() const) & ::Nontrivial::ConstQualified);
+static_assert((void (::Nontrivial::*)() const) & ::Nontrivial::ConstQualified);
 
-static_assert((void (Nontrivial::*)() &)&::Nontrivial::LvalueRefQualified);
+static_assert((void (::Nontrivial::*)() &)&::Nontrivial::LvalueRefQualified);
 
-static_assert((void (Nontrivial::*)()
+static_assert((void (::Nontrivial::*)()
                    const&)&::Nontrivial::ConstLvalueRefQualified);
 
 static_assert(CRUBIT_SIZEOF(struct NontrivialInline) == 4);
@@ -66,7 +66,7 @@ extern "C" void __rust_thunk___ZN16NontrivialInline14MemberFunctionEv(
   __this->MemberFunction();
 }
 
-static_assert((void (NontrivialInline::*)()) &
+static_assert((void (::NontrivialInline::*)()) &
               ::NontrivialInline::MemberFunction);
 
 static_assert(CRUBIT_SIZEOF(struct NontrivialMembers) == 4);
@@ -88,7 +88,7 @@ static_assert(CRUBIT_SIZEOF(struct NontrivialUnpin) == 4);
 static_assert(alignof(struct NontrivialUnpin) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialUnpin) == 0);
 
-static_assert((void (NontrivialUnpin::*)()) &
+static_assert((void (::NontrivialUnpin::*)()) &
               ::NontrivialUnpin::MemberFunction);
 
 extern "C" void __rust_thunk___Z12TakesByValue10Nontrivial(
@@ -126,7 +126,7 @@ extern "C" void __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial(
 static_assert(sizeof(struct Nonmovable) == 1);
 static_assert(alignof(struct Nonmovable) == 1);
 
-static_assert((void (Nonmovable::*)()) & ::Nonmovable::MemberFunction);
+static_assert((void (::Nonmovable::*)()) & ::Nonmovable::MemberFunction);
 
 extern "C" void __rust_thunk___Z24ReturnsNonmovableByValuev(
     struct Nonmovable* __return) {

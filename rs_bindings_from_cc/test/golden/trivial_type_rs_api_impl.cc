@@ -26,13 +26,14 @@ extern "C" void __rust_thunk___ZN2ns7TrivialC1Ev(struct ns::Trivial* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (ns::Trivial::*)()) & ::ns::Trivial::Unqualified);
+static_assert((void (::ns::Trivial::*)()) & ::ns::Trivial::Unqualified);
 
-static_assert((void (ns::Trivial::*)() const) & ::ns::Trivial::ConstQualified);
+static_assert((void (::ns::Trivial::*)() const) &
+              ::ns::Trivial::ConstQualified);
 
-static_assert((void (ns::Trivial::*)() &)&::ns::Trivial::LvalueRefQualified);
+static_assert((void (::ns::Trivial::*)() &)&::ns::Trivial::LvalueRefQualified);
 
-static_assert((void (ns::Trivial::*)()
+static_assert((void (::ns::Trivial::*)()
                    const&)&::ns::Trivial::ConstLvalueRefQualified);
 
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(

@@ -28,7 +28,7 @@
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=B
+///CRUBIT_ANNOTATE: cpp_type=:: B
 pub struct B {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
@@ -37,10 +37,10 @@ pub struct B {
 impl !Send for B {}
 impl !Sync for B {}
 unsafe impl ::cxx::ExternType for B {
-    type Id = ::cxx::type_id!("B");
+    type Id = ::cxx::type_id!(":: B");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("B"), crate::B);
+forward_declare::unsafe_define!(forward_declare::symbol!(":: B"), crate::B);
 
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
 impl Default for B {

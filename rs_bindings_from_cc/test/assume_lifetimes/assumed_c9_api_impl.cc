@@ -31,9 +31,9 @@ extern "C" void __rust_thunk___Z17CoReturnReferencev(
       &::c9::internal::rust::StartCoroutineFromRust<[]() {
         return ::crubit::TransmuteAbi<int*>();
       }>)
-      .Encode(CoReturnReference(), __return_encoder);
+      .Encode(::CoReturnReference(), __return_encoder);
 }
 
-static_assert((struct c9::Co<int&> (*)()) & ::CoReturnReference);
+static_assert((struct ::c9::Co<int&> (*)()) & ::CoReturnReference);
 
 #pragma clang diagnostic pop

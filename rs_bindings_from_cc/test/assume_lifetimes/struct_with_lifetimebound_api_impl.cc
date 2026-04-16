@@ -41,7 +41,7 @@ extern "C" void __rust_thunk___ZNK37StructWithLifetimeboundMemberFunction1fEv(
 }
 
 static_assert((struct PlainStruct const (
-                  StructWithLifetimeboundMemberFunction::*)() const) &
+                  ::StructWithLifetimeboundMemberFunction::*)() const) &
               ::StructWithLifetimeboundMemberFunction::f);
 
 static_assert(sizeof(struct StructWithLifetimeboundRefMemberFunction) == 1);
@@ -53,7 +53,7 @@ extern "C" void __rust_thunk___ZN40StructWithLifetimeboundRefMemberFunctionC1Ev(
 }
 
 static_assert((struct PlainStruct const& (
-                  StructWithLifetimeboundRefMemberFunction::*)() const) &
+                  ::StructWithLifetimeboundRefMemberFunction::*)() const) &
               ::StructWithLifetimeboundRefMemberFunction::f);
 
 static_assert(sizeof(class DropClassWithLifetimeboundMemberFunction) == 1);
@@ -86,7 +86,7 @@ __rust_thunk___ZNK40DropClassWithLifetimeboundMemberFunction1fEv(
 }
 
 static_assert((struct PlainStruct const (
-                  DropClassWithLifetimeboundMemberFunction::*)() const) &
+                  ::DropClassWithLifetimeboundMemberFunction::*)() const) &
               ::DropClassWithLifetimeboundMemberFunction::f);
 
 static_assert(sizeof(class DropClassWithLifetimeboundRefMemberFunction) == 1);
@@ -113,7 +113,7 @@ __rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionaSERKS_(
 }
 
 static_assert((struct PlainStruct const& (
-                  DropClassWithLifetimeboundRefMemberFunction::*)() const) &
+                  ::DropClassWithLifetimeboundRefMemberFunction::*)() const) &
               ::DropClassWithLifetimeboundRefMemberFunction::f);
 
 static_assert(sizeof(struct StructWithLifetimeboundCtor) == 1);
@@ -204,7 +204,7 @@ __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERK11PlainStruct(
 }
 
 static_assert((struct PlainStruct const& (
-                  DropStructWithRefCtorAndRefMemberFunction::*)() const) &
+                  ::DropStructWithRefCtorAndRefMemberFunction::*)() const) &
               ::DropStructWithRefCtorAndRefMemberFunction::f);
 
 static_assert(sizeof(struct DropStructWithCtorAndMemberFunction) == 1);
@@ -236,7 +236,7 @@ extern "C" void __rust_thunk___ZNK35DropStructWithCtorAndMemberFunction1fEv(
 }
 
 static_assert((struct PlainStruct const (
-                  DropStructWithCtorAndMemberFunction::*)() const) &
+                  ::DropStructWithCtorAndMemberFunction::*)() const) &
               ::DropStructWithCtorAndMemberFunction::f);
 
 static_assert(sizeof(struct DropStructWithCtorAndRefMemberFunction) == 1);
@@ -264,7 +264,7 @@ __rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(
 }
 
 static_assert((struct PlainStruct const& (
-                  DropStructWithCtorAndRefMemberFunction::*)() const) &
+                  ::DropStructWithCtorAndRefMemberFunction::*)() const) &
               ::DropStructWithCtorAndRefMemberFunction::f);
 
 static_assert(sizeof(struct DropStructWithRefCtorAndMemberFunction) == 1);
@@ -298,7 +298,7 @@ extern "C" void __rust_thunk___ZNK38DropStructWithRefCtorAndMemberFunction1fEv(
 }
 
 static_assert((struct PlainStruct const (
-                  DropStructWithRefCtorAndMemberFunction::*)() const) &
+                  ::DropStructWithRefCtorAndMemberFunction::*)() const) &
               ::DropStructWithRefCtorAndMemberFunction::f);
 
 #pragma clang diagnostic pop

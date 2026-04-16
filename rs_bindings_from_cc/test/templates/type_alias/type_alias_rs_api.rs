@@ -28,7 +28,7 @@ pub type OtherTypeAliasInSameTarget = crate::__CcTemplateInst10MyTemplateIiE;
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=11
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
+///CRUBIT_ANNOTATE: cpp_type=:: MyTemplate < int >
 pub struct __CcTemplateInst10MyTemplateIiE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -38,7 +38,7 @@ pub struct __CcTemplateInst10MyTemplateIiE {
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate < int >"),
+    forward_declare::symbol!(":: MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE
 );
 impl __CcTemplateInst10MyTemplateIiE {

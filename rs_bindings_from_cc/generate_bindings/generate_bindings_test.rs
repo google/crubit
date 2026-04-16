@@ -725,6 +725,24 @@ fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
 }
 
 #[gtest]
+fn test_leading_colons_for_cpp_type() -> Result<()> {
+    let mut ir = ir_from_cc("struct S {};")?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LeadingColonsForCppType;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc = "CRUBIT_ANNOTATE: cpp_type=:: S"]
+            pub struct S
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
     let ir = ir_from_cc("struct type { int dyn; };")?;
     let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;

@@ -2204,9 +2204,9 @@ fn test_format_item_generate_bindings_for_top_level_type_alias() {
 fn test_format_namespace_bound_cc_tokens() {
     run_compiler_for_testing("", |tcx| {
         let db = bindings_db_for_tests(tcx);
-        let top_level = NamespaceQualifier::new::<&str>([]);
-        let m1 = NamespaceQualifier::new(["m1"]);
-        let m2 = NamespaceQualifier::new(["m2"]);
+        let top_level = NamespaceQualifier::new::<&str>([], true);
+        let m1 = NamespaceQualifier::new(["m1"], true);
+        let m2 = NamespaceQualifier::new(["m2"], true);
         let input = [
             (None, top_level.clone(), quote! { void f0a(); }),
             (None, m1.clone(), quote! { void f1a(); }),

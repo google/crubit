@@ -348,17 +348,27 @@ pub struct NamespaceQualifier {
     pub namespaces: Vec<Rc<str>>,
     // Outer to innermost. Paired as (rs_name, cc_name)
     pub nested_records: Vec<(Rc<str>, Rc<str>)>,
+    /// Whether to prepend `::` when formatting for C++.
+    // TODO(b/502939407): Remove this field (it will always be true).
+    pub use_leading_colons: bool,
 }
 
 impl NamespaceQualifier {
     /// Constructs a new `NamespaceQualifier` from a sequence of names.
-    pub fn new<T: Into<Rc<str>>>(iter: impl IntoIterator<Item = T>) -> Self {
+    pub fn new<T: Into<Rc<str>>>(
+        iter: impl IntoIterator<Item = T>,
+        use_leading_colons: bool,
+    ) -> Self {
         // TODO(b/258265044): Catch most (all if possible) error conditions early.  For
         // example:
         // - Panic early if any strings are empty, or are not Rust identifiers
         // - Report an error early if any strings are C++ reserved keywords
         // This may make `format_for_cc` and `format_namespace_bound_cc_tokens` infallible.
-        Self { namespaces: iter.into_iter().map(Into::into).collect(), nested_records: vec![] }
+        Self {
+            namespaces: iter.into_iter().map(Into::into).collect(),
+            nested_records: vec![],
+            use_leading_colons,
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -387,7 +397,11 @@ impl NamespaceQualifier {
 
     /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
     pub fn format_for_cc(&self) -> Result<TokenStream> {
-        let mut path = quote! {};
+        let mut path = if self.use_leading_colons {
+            quote! { :: }
+        } else {
+            quote! {}
+        };
         for namespace in &self.namespaces {
             let namespace = format_cc_ident(namespace)?;
             path.extend(quote! { #namespace :: });
@@ -745,34 +759,34 @@ pub mod tests {
 
     #[gtest]
     fn test_namespace_qualifier_empty() {
-        let ns = NamespaceQualifier::new::<&str>([]);
+        let ns = NamespaceQualifier::new::<&str>([], true);
         let actual_rs = ns.format_for_rs();
         assert!(actual_rs.is_empty());
         let actual_cc = ns.format_for_cc().unwrap();
-        assert!(actual_cc.is_empty());
+        assert_cc_matches!(actual_cc, quote! { :: });
     }
 
     #[gtest]
     fn test_namespace_qualifier_basic() {
-        let ns = NamespaceQualifier::new(["foo", "bar"]);
+        let ns = NamespaceQualifier::new(["foo", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo::bar:: });
         let actual_cc = ns.format_for_cc().unwrap();
-        assert_cc_matches!(actual_cc, quote! { foo::bar:: });
+        assert_cc_matches!(actual_cc, quote! { :: foo::bar:: });
     }
 
     #[gtest]
     fn test_namespace_qualifier_reserved_cc_keyword() {
-        let ns = NamespaceQualifier::new(["foo", "impl", "bar"]);
+        let ns = NamespaceQualifier::new(["foo", "impl", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: r#impl :: bar :: });
         let actual_cc = ns.format_for_cc().unwrap();
-        assert_cc_matches!(actual_cc, quote! { foo::impl::bar:: });
+        assert_cc_matches!(actual_cc, quote! { :: foo::impl::bar:: });
     }
 
     #[gtest]
     fn test_namespace_qualifier_reserved_rust_keyword() {
-        let ns = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"]);
+        let ns = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: reinterpret_cast :: bar :: });
         let cc_error = ns.format_for_cc().unwrap_err();

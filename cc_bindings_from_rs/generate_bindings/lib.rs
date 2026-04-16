@@ -244,7 +244,8 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
         let source_crate_num = db.source_crate_num();
         let crate_name = tcx.crate_name(source_crate_num);
         let crubit_features = {
-            let mut crubit_features: Vec<&str> = crate_features(db, source_crate_num)
+            let mut crubit_features: Vec<&str> = db
+                .crate_features(source_crate_num)
                 .into_iter()
                 .map(|feature| feature.short_name())
                 .collect();
@@ -334,19 +335,6 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
     };
 
     Ok(BindingsTokens { cc_api, cc_api_impl })
-}
-
-pub(crate) fn crate_features(
-    db: &BindingsGenerator,
-    krate: CrateNum,
-) -> flagset::FlagSet<crubit_feature::CrubitFeature> {
-    let crate_features = db.crate_name_to_features();
-    let features = if krate == db.source_crate_num() {
-        crate_features.get("self")
-    } else {
-        crate_features.get(db.tcx().crate_name(krate).as_str())
-    };
-    features.copied().unwrap_or_else(|| db.default_features())
 }
 
 fn check_feature_enabled_on_self_and_all_deps(
@@ -705,9 +693,15 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         }
     }
 
-    let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
-    let cpp_ns_path =
-        NamespaceQualifier::new(full_path_strs.into_iter().map(rename_clang_builtin_macros));
+    let features = db.crate_features(krate_num);
+    let use_leading_colons =
+        features.contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
+
+    let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone(), use_leading_colons);
+    let cpp_ns_path = NamespaceQualifier::new(
+        full_path_strs.into_iter().map(rename_clang_builtin_macros),
+        use_leading_colons,
+    );
     let cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_num);
     Some(FullyQualifiedName {
         krate,
@@ -1661,7 +1655,7 @@ fn generate_item_impl<'tcx>(
     };
 
     if let Ok(Some(item)) = item {
-        Ok(Some(item.resolve_feature_requirements(crate_features(db, db.source_crate_num()))?))
+        Ok(Some(item.resolve_feature_requirements(db.crate_features(db.source_crate_num()))?))
     } else {
         item
     }
@@ -1937,7 +1931,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                 // `format_namespace_bound_cc_tokens`, so we want to carry it alongside our alias
                 // even though we technically no longer need it.
                 def_id,
-                NamespaceQualifier::from(alias),
+                alias.to_namespace_qualifier(db),
                 using_snippets.into_tokens(&mut cc_details_prereqs),
             ));
         }
@@ -2096,26 +2090,45 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             .into_iter()
             .chain(ordered_main_apis)
             .map(|(node, tokens)| match node {
-                Node::Def(def_id) => (
-                    tcx.opt_parent(def_id),
-                    NamespaceQualifier::new(cpp_top_level_ns.iter().cloned().chain({
-                        db.symbol_canonical_name(def_id)
-                            .unwrap_or_else(|| {
-                                panic!("Exported item {def_id:?} should have a canonical name")
-                            })
-                            .cpp_ns_path
-                            .namespaces
-                    })),
-                    tokens,
-                ),
+                Node::Def(def_id) => {
+                    let features = db.crate_features(def_id.krate);
+                    let use_leading_colons =
+                        features.contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
+                    (
+                        tcx.opt_parent(def_id),
+                        NamespaceQualifier::new(
+                            cpp_top_level_ns.iter().cloned().chain({
+                                db.symbol_canonical_name(def_id)
+                                    .unwrap_or_else(|| {
+                                        panic!(
+                                            "Exported item {def_id:?} should have a canonical name"
+                                        )
+                                    })
+                                    .cpp_ns_path
+                                    .namespaces
+                            }),
+                            use_leading_colons,
+                        ),
+                        tokens,
+                    )
+                }
                 // Specializations always live in the top-level namespace.
-                Node::Specialization(_) => (None, NamespaceQualifier::new::<Rc<str>>([]), tokens),
+                Node::Specialization(_) => {
+                    let use_leading_colons = db
+                        .crate_features(db.source_crate_num())
+                        .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
+                    (None, NamespaceQualifier::new::<Rc<str>>([], use_leading_colons), tokens)
+                }
             })
             .chain(cc_details.into_iter().map(|details| {
+                let use_leading_colons = db
+                    .crate_features(details.def_id.krate)
+                    .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
                 (
                     tcx.opt_parent(details.def_id),
                     NamespaceQualifier::new(
                         cpp_top_level_ns.iter().cloned().chain(details.namespace.namespaces),
+                        use_leading_colons,
                     ),
                     details.tokens,
                 )

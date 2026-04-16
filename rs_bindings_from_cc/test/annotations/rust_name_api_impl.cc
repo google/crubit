@@ -53,7 +53,7 @@ extern "C" void __rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(
   __this->MethodOldName();
 }
 
-static_assert((void (crubit::test::SomeStruct::*)() const) &
+static_assert((void (::crubit::test::SomeStruct::*)() const) &
               ::crubit::test::SomeStruct::MethodOldName);
 
 #pragma clang diagnostic pop

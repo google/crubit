@@ -22,10 +22,10 @@ static_assert(CRUBIT_SIZEOF(struct DocCommentSlashes) == 4);
 static_assert(alignof(struct DocCommentSlashes) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct DocCommentSlashes) == 0);
 
-static_assert((int (DocCommentSlashes::*)() const) &
+static_assert((int (::DocCommentSlashes::*)() const) &
               ::DocCommentSlashes::get_field_value);
 
-static_assert((void (DocCommentSlashes::*)(int)) &
+static_assert((void (::DocCommentSlashes::*)(int)) &
               ::DocCommentSlashes::set_field_value);
 
 static_assert((int (*)()) & ::DocCommentSlashes::static_method);

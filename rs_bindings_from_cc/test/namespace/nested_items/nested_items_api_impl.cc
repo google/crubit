@@ -45,14 +45,14 @@ extern "C" int __rust_thunk___ZN4Same10NestedItem18NestedItemFunctionEv(
   return __this->NestedItemFunction();
 }
 
-static_assert((int (Same::NestedItem::*)()) &
+static_assert((int (::Same::NestedItem::*)()) &
               ::Same::NestedItem::NestedItemFunction);
 
 extern "C" int __rust_thunk___ZN4Same6MethodEv(class Same* __this) {
   return __this->Method();
 }
 
-static_assert((int (Same::*)()) & ::Same::Method);
+static_assert((int (::Same::*)()) & ::Same::Method);
 
 static_assert(sizeof(struct foo::Foo) == 1);
 static_assert(alignof(struct foo::Foo) == 1);

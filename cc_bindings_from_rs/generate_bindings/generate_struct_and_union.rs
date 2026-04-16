@@ -14,10 +14,9 @@ use crate::generate_function::{
     format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
 };
 use crate::{
-    crate_features, generate_const, generate_deprecated_tag, generate_must_use_tag,
-    generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef,
-    TraitThunks,
+    generate_const, generate_deprecated_tag, generate_must_use_tag, generate_trait_thunks,
+    generate_unsupported_def, get_layout, get_scalar_int_type, get_tag_size_with_padding,
+    is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
@@ -339,7 +338,7 @@ pub(crate) fn generate_associated_item<'tcx>(
         }
     };
     let result = result.and_then(|snippet| {
-        snippet.resolve_feature_requirements(crate_features(db, db.source_crate_num()))
+        snippet.resolve_feature_requirements(db.crate_features(db.source_crate_num()))
     });
     match result {
         Err(err) => {
@@ -1461,10 +1460,9 @@ pub(crate) fn generate_fields<'tcx>(
                                     size,
                                     cpp_type: db
                                         .format_ty_for_cc(ty, TypeLocation::Other)?
-                                        .resolve_feature_requirements(crate_features(
-                                            db,
-                                            db.source_crate_num(),
-                                        ))?,
+                                        .resolve_feature_requirements(
+                                            db.crate_features(db.source_crate_num()),
+                                        )?,
                                 })
                             });
                             let name = field_def.ident(tcx).to_string();

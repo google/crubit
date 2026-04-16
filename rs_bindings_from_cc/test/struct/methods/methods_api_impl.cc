@@ -52,10 +52,10 @@ extern "C" void __rust_thunk___ZN15InstanceMethodsC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert((int (InstanceMethods::*)() const) &
+static_assert((int (::InstanceMethods::*)() const) &
               ::InstanceMethods::get_int_field);
 
-static_assert((void (InstanceMethods::*)(int)) &
+static_assert((void (::InstanceMethods::*)(int)) &
               ::InstanceMethods::set_int_field);
 
 extern "C" int __rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(
@@ -63,7 +63,7 @@ extern "C" int __rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(
   return __this->inline_get_int_field();
 }
 
-static_assert((int (InstanceMethods::*)() const) &
+static_assert((int (::InstanceMethods::*)() const) &
               ::InstanceMethods::inline_get_int_field);
 
 extern "C" void __rust_thunk___ZN15InstanceMethods20inline_set_int_fieldEi(
@@ -71,7 +71,7 @@ extern "C" void __rust_thunk___ZN15InstanceMethods20inline_set_int_fieldEi(
   __this->inline_set_int_field(new_value);
 }
 
-static_assert((void (InstanceMethods::*)(int)) &
+static_assert((void (::InstanceMethods::*)(int)) &
               ::InstanceMethods::inline_set_int_field);
 
 extern "C" int* __rust_thunk___ZN15InstanceMethods21takes_and_returns_refERi(
@@ -79,7 +79,7 @@ extern "C" int* __rust_thunk___ZN15InstanceMethods21takes_and_returns_refERi(
   return std::addressof(__this->takes_and_returns_ref(*input_ref));
 }
 
-static_assert((int& (InstanceMethods::*)(int&)) &
+static_assert((int& (::InstanceMethods::*)(int&)) &
               ::InstanceMethods::takes_and_returns_ref);
 
 extern "C" void __rust_thunk___ZNR15InstanceMethods13ref_qualifiedEv(
@@ -87,14 +87,15 @@ extern "C" void __rust_thunk___ZNR15InstanceMethods13ref_qualifiedEv(
   __this->ref_qualified();
 }
 
-static_assert((void (InstanceMethods::*)() &)&::InstanceMethods::ref_qualified);
+static_assert(
+    (void (::InstanceMethods::*)() &)&::InstanceMethods::ref_qualified);
 
 extern "C" void __rust_thunk___ZNKR15InstanceMethods19const_ref_qualifiedEv(
     struct InstanceMethods const* __this) {
   __this->const_ref_qualified();
 }
 
-static_assert((void (InstanceMethods::*)()
+static_assert((void (::InstanceMethods::*)()
                    const&)&::InstanceMethods::const_ref_qualified);
 
 extern "C" void __rust_thunk___ZNO15InstanceMethods16rvalue_qualifiedEv(
@@ -103,6 +104,6 @@ extern "C" void __rust_thunk___ZNO15InstanceMethods16rvalue_qualifiedEv(
 }
 
 static_assert(
-    (void (InstanceMethods::*)() &&)&::InstanceMethods::rvalue_qualified);
+    (void (::InstanceMethods::*)() &&)&::InstanceMethods::rvalue_qualified);
 
 #pragma clang diagnostic pop

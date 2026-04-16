@@ -18,7 +18,7 @@
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SV
+///CRUBIT_ANNOTATE: cpp_type=:: SV
 pub struct SV<'a> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     __marker_a: ::core::marker::PhantomData<&'a ()>,
@@ -26,10 +26,10 @@ pub struct SV<'a> {
 impl<'a> !Send for SV<'a> {}
 impl<'a> !Sync for SV<'a> {}
 unsafe impl<'a> ::cxx::ExternType for SV<'a> {
-    type Id = ::cxx::type_id!("SV");
+    type Id = ::cxx::type_id!(":: SV");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SV"), crate::SV<'_>);
+forward_declare::unsafe_define!(forward_declare::symbol!(":: SV"), crate::SV<'_>);
 
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=10
 impl<'a> Default for SV<'a> {

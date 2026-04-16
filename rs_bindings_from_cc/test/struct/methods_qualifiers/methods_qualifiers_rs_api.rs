@@ -18,18 +18,18 @@
 /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=10
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnpinStructWithRefQualifiedMethods
+///CRUBIT_ANNOTATE: cpp_type=:: UnpinStructWithRefQualifiedMethods
 pub struct UnpinStructWithRefQualifiedMethods {
     pub i: ::ffi_11::c_int,
 }
 impl !Send for UnpinStructWithRefQualifiedMethods {}
 impl !Sync for UnpinStructWithRefQualifiedMethods {}
 unsafe impl ::cxx::ExternType for UnpinStructWithRefQualifiedMethods {
-    type Id = ::cxx::type_id!("UnpinStructWithRefQualifiedMethods");
+    type Id = ::cxx::type_id!(":: UnpinStructWithRefQualifiedMethods");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("UnpinStructWithRefQualifiedMethods"),
+    forward_declare::symbol!(":: UnpinStructWithRefQualifiedMethods"),
     crate::UnpinStructWithRefQualifiedMethods
 );
 impl UnpinStructWithRefQualifiedMethods {

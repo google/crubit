@@ -169,7 +169,10 @@ impl CratePath {
         namespace_qualifier: NamespaceQualifier,
         crate_ident: Option<Ident>,
     ) -> CratePath {
-        let crate_root_path = NamespaceQualifier::new(ir.crate_root_path());
+        let use_leading_colons = ir
+            .target_crubit_features(ir.current_target())
+            .contains(CrubitFeature::LeadingColonsForCppType);
+        let crate_root_path = NamespaceQualifier::new(ir.crate_root_path(), use_leading_colons);
         CratePath { crate_ident, crate_root_path, namespace_qualifier }
     }
 }
@@ -2173,7 +2176,11 @@ mod tests {
     }
 
     fn make_crate_path() -> Rc<CratePath> {
-        let ns = NamespaceQualifier { namespaces: vec![], nested_records: vec![] };
+        let ns = NamespaceQualifier {
+            namespaces: vec![],
+            nested_records: vec![],
+            use_leading_colons: true,
+        };
         Rc::new(CratePath {
             crate_ident: None,
             crate_root_path: ns.clone(),

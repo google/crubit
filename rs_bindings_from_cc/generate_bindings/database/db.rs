@@ -480,7 +480,17 @@ impl<'db> BindingsGenerator<'db> {
         }
         namespaces.reverse();
         nested_records.reverse();
-        code_gen_utils::NamespaceQualifier { namespaces, nested_records }
+        let use_leading_colons =
+            if let Some(target) = self.find_untyped_decl(item_id).owning_target() {
+                self.ir()
+                    .target_crubit_features(&target)
+                    .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType)
+            } else {
+                // We default to true here because the final change will always be to add `::` to
+                // the beginning of the type.
+                true
+            };
+        code_gen_utils::NamespaceQualifier { namespaces, nested_records, use_leading_colons }
     }
 
     /// Returns the name of the snake-cased module that exposes the given record's nested items.

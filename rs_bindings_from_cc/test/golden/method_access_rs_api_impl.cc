@@ -25,9 +25,9 @@ extern "C" void __rust_thunk___ZN6StructC1Ev(struct Struct* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (Struct::*)()) & ::Struct::AccessNone);
+static_assert((void (::Struct::*)()) & ::Struct::AccessNone);
 
-static_assert((void (Struct::*)()) & ::Struct::AccessPublic);
+static_assert((void (::Struct::*)()) & ::Struct::AccessPublic);
 
 static_assert(sizeof(class Class) == 1);
 static_assert(alignof(class Class) == 1);
@@ -36,6 +36,6 @@ extern "C" void __rust_thunk___ZN5ClassC1Ev(class Class* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (Class::*)()) & ::Class::AccessPublic);
+static_assert((void (::Class::*)()) & ::Class::AccessPublic);
 
 #pragma clang diagnostic pop

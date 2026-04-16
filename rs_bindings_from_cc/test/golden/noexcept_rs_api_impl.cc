@@ -27,11 +27,11 @@ extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
 
 static_assert((void (*)(int, char)) & ::SomeClass::create);
 
-static_assert((void (SomeClass::*)()) & ::SomeClass::no_except_member);
+static_assert((void (::SomeClass::*)()) & ::SomeClass::no_except_member);
 
-static_assert((void (SomeClass::*)()) & ::SomeClass::no_except_true_member);
+static_assert((void (::SomeClass::*)()) & ::SomeClass::no_except_true_member);
 
-static_assert((void (SomeClass::*)()) & ::SomeClass::no_except_false_member);
+static_assert((void (::SomeClass::*)()) & ::SomeClass::no_except_false_member);
 
 static_assert((void (*)()) & ::no_except);
 

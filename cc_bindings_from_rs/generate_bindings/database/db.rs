@@ -337,3 +337,18 @@ memoized::query_group! {
       ) -> Option<Result<RsStdEnumTemplateSpecialization<'tcx>>>;
   }
 }
+
+impl<'tcx> BindingsGenerator<'tcx> {
+    pub fn crate_features(
+        &self,
+        krate: CrateNum,
+    ) -> flagset::FlagSet<crubit_feature::CrubitFeature> {
+        let crate_features = self.crate_name_to_features();
+        let features = if krate == self.source_crate_num() {
+            crate_features.get("self")
+        } else {
+            crate_features.get(self.tcx().crate_name(krate).as_str())
+        };
+        features.copied().unwrap_or_else(|| self.default_features())
+    }
+}

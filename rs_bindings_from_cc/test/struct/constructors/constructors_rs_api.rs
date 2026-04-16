@@ -22,7 +22,7 @@
 ///
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=12
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithUserProvidedConstructors
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithUserProvidedConstructors
 pub struct StructWithUserProvidedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -30,11 +30,11 @@ pub struct StructWithUserProvidedConstructors {
 impl !Send for StructWithUserProvidedConstructors {}
 impl !Sync for StructWithUserProvidedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithUserProvidedConstructors {
-    type Id = ::cxx::type_id!("StructWithUserProvidedConstructors");
+    type Id = ::cxx::type_id!(":: StructWithUserProvidedConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithUserProvidedConstructors"),
+    forward_declare::symbol!(":: StructWithUserProvidedConstructors"),
     crate::StructWithUserProvidedConstructors
 );
 
@@ -90,7 +90,7 @@ impl Clone for StructWithUserProvidedConstructors {
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=22
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitConversionConstructor
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitConversionConstructor
 pub struct StructWithExplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -98,11 +98,11 @@ pub struct StructWithExplicitConversionConstructor {
 impl !Send for StructWithExplicitConversionConstructor {}
 impl !Sync for StructWithExplicitConversionConstructor {}
 unsafe impl ::cxx::ExternType for StructWithExplicitConversionConstructor {
-    type Id = ::cxx::type_id!("StructWithExplicitConversionConstructor");
+    type Id = ::cxx::type_id!(":: StructWithExplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithExplicitConversionConstructor"),
+    forward_declare::symbol!(":: StructWithExplicitConversionConstructor"),
     crate::StructWithExplicitConversionConstructor
 );
 
@@ -135,7 +135,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=29
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithMultipleConstructors
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithMultipleConstructors
 pub struct StructWithMultipleConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -143,11 +143,11 @@ pub struct StructWithMultipleConstructors {
 impl !Send for StructWithMultipleConstructors {}
 impl !Sync for StructWithMultipleConstructors {}
 unsafe impl ::cxx::ExternType for StructWithMultipleConstructors {
-    type Id = ::cxx::type_id!("StructWithMultipleConstructors");
+    type Id = ::cxx::type_id!(":: StructWithMultipleConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithMultipleConstructors"),
+    forward_declare::symbol!(":: StructWithMultipleConstructors"),
     crate::StructWithMultipleConstructors
 );
 
@@ -231,7 +231,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=38
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionConstructor
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionConstructor
 pub struct StructWithImplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -239,11 +239,11 @@ pub struct StructWithImplicitConversionConstructor {
 impl !Send for StructWithImplicitConversionConstructor {}
 impl !Sync for StructWithImplicitConversionConstructor {}
 unsafe impl ::cxx::ExternType for StructWithImplicitConversionConstructor {
-    type Id = ::cxx::type_id!("StructWithImplicitConversionConstructor");
+    type Id = ::cxx::type_id!(":: StructWithImplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithImplicitConversionConstructor"),
+    forward_declare::symbol!(":: StructWithImplicitConversionConstructor"),
     crate::StructWithImplicitConversionConstructor
 );
 
@@ -276,18 +276,18 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=46
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OtherSimpleStruct
+///CRUBIT_ANNOTATE: cpp_type=:: OtherSimpleStruct
 pub struct OtherSimpleStruct {
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for OtherSimpleStruct {}
 impl !Sync for OtherSimpleStruct {}
 unsafe impl ::cxx::ExternType for OtherSimpleStruct {
-    type Id = ::cxx::type_id!("OtherSimpleStruct");
+    type Id = ::cxx::type_id!(":: OtherSimpleStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("OtherSimpleStruct"),
+    forward_declare::symbol!(":: OtherSimpleStruct"),
     crate::OtherSimpleStruct
 );
 
@@ -306,7 +306,7 @@ impl Default for OtherSimpleStruct {
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=50
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionFromReference
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionFromReference
 pub struct StructWithImplicitConversionFromReference {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -314,11 +314,11 @@ pub struct StructWithImplicitConversionFromReference {
 impl !Send for StructWithImplicitConversionFromReference {}
 impl !Sync for StructWithImplicitConversionFromReference {}
 unsafe impl ::cxx::ExternType for StructWithImplicitConversionFromReference {
-    type Id = ::cxx::type_id!("StructWithImplicitConversionFromReference");
+    type Id = ::cxx::type_id!(":: StructWithImplicitConversionFromReference");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithImplicitConversionFromReference"),
+    forward_declare::symbol!(":: StructWithImplicitConversionFromReference"),
     crate::StructWithImplicitConversionFromReference
 );
 
@@ -352,7 +352,7 @@ impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
 ///
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=61
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithInlineConstructors
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithInlineConstructors
 pub struct StructWithInlineConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -360,11 +360,11 @@ pub struct StructWithInlineConstructors {
 impl !Send for StructWithInlineConstructors {}
 impl !Sync for StructWithInlineConstructors {}
 unsafe impl ::cxx::ExternType for StructWithInlineConstructors {
-    type Id = ::cxx::type_id!("StructWithInlineConstructors");
+    type Id = ::cxx::type_id!(":: StructWithInlineConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithInlineConstructors"),
+    forward_declare::symbol!(":: StructWithInlineConstructors"),
     crate::StructWithInlineConstructors
 );
 
@@ -438,7 +438,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=70
 #[::ctor::recursively_pinned]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithDeletedConstructors
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithDeletedConstructors
 pub struct StructWithDeletedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -446,11 +446,11 @@ pub struct StructWithDeletedConstructors {
 impl !Send for StructWithDeletedConstructors {}
 impl !Sync for StructWithDeletedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithDeletedConstructors {
-    type Id = ::cxx::type_id!("StructWithDeletedConstructors");
+    type Id = ::cxx::type_id!(":: StructWithDeletedConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithDeletedConstructors"),
+    forward_declare::symbol!(":: StructWithDeletedConstructors"),
     crate::StructWithDeletedConstructors
 );
 
@@ -467,7 +467,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstruct
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=78
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=StructWithPrivateConstructors
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithPrivateConstructors
 pub struct StructWithPrivateConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -477,11 +477,11 @@ pub struct StructWithPrivateConstructors {
 impl !Send for StructWithPrivateConstructors {}
 impl !Sync for StructWithPrivateConstructors {}
 unsafe impl ::cxx::ExternType for StructWithPrivateConstructors {
-    type Id = ::cxx::type_id!("StructWithPrivateConstructors");
+    type Id = ::cxx::type_id!(":: StructWithPrivateConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithPrivateConstructors"),
+    forward_declare::symbol!(":: StructWithPrivateConstructors"),
     crate::StructWithPrivateConstructors
 );
 
@@ -498,7 +498,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstruct
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=87
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitlyDefaultedConstructors
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitlyDefaultedConstructors
 pub struct StructWithExplicitlyDefaultedConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field_with_explicit_initializer: ::ffi_11::c_int,
@@ -507,11 +507,11 @@ pub struct StructWithExplicitlyDefaultedConstructors {
 impl !Send for StructWithExplicitlyDefaultedConstructors {}
 impl !Sync for StructWithExplicitlyDefaultedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithExplicitlyDefaultedConstructors {
-    type Id = ::cxx::type_id!("StructWithExplicitlyDefaultedConstructors");
+    type Id = ::cxx::type_id!(":: StructWithExplicitlyDefaultedConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("StructWithExplicitlyDefaultedConstructors"),
+    forward_declare::symbol!(":: StructWithExplicitlyDefaultedConstructors"),
     crate::StructWithExplicitlyDefaultedConstructors
 );
 
@@ -535,7 +535,7 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 /// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=99
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonTrivialStructWithConstructors
+///CRUBIT_ANNOTATE: cpp_type=:: NonTrivialStructWithConstructors
 pub struct NonTrivialStructWithConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -543,11 +543,11 @@ pub struct NonTrivialStructWithConstructors {
 impl !Send for NonTrivialStructWithConstructors {}
 impl !Sync for NonTrivialStructWithConstructors {}
 unsafe impl ::cxx::ExternType for NonTrivialStructWithConstructors {
-    type Id = ::cxx::type_id!("NonTrivialStructWithConstructors");
+    type Id = ::cxx::type_id!(":: NonTrivialStructWithConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("NonTrivialStructWithConstructors"),
+    forward_declare::symbol!(":: NonTrivialStructWithConstructors"),
     crate::NonTrivialStructWithConstructors
 );
 

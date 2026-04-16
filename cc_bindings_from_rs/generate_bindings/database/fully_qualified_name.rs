@@ -175,14 +175,18 @@ pub fn rename_clang_builtin_macros(ns: Rc<str>) -> Rc<str> {
     ns
 }
 
-impl From<&ExportedPath> for NamespaceQualifier {
-    fn from(this: &ExportedPath) -> Self {
+impl ExportedPath {
+    pub fn to_namespace_qualifier(&self, db: &BindingsGenerator) -> NamespaceQualifier {
+        let features = db.crate_features(self.krate);
+        let use_leading_colons =
+            features.contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
         NamespaceQualifier::new(
-            this.path
+            self.path
                 .iter()
                 .map(|s| Rc::<str>::from(s.as_str()))
                 .map(rename_clang_builtin_macros)
                 .collect::<Vec<_>>(),
+            use_leading_colons,
         )
     }
 }

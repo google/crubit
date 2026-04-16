@@ -44,6 +44,6 @@ extern "C" int __rust_thunk___ZNK16LayoutCompatible3getEv(
   return __this->get();
 }
 
-static_assert((int (LayoutCompatible::*)() const) & ::LayoutCompatible::get);
+static_assert((int (::LayoutCompatible::*)() const) & ::LayoutCompatible::get);
 
 #pragma clang diagnostic pop
