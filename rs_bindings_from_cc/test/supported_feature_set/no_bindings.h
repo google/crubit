@@ -10,11 +10,11 @@
 #include <set>
 namespace crubit::no_bindings {
 
-using DeprecatedAlias [[deprecated]] = int;
+using UnknownAttrAlias [[gnu::unused]] = int;
 
 // This struct would receive bindings, if it weren't for the unrecognized
 // attribute on the struct.
-struct [[deprecated]] UnknownAttrStruct final {
+struct [[gnu::visibility("default")]] UnknownAttrStruct final {
   int* x;
   float y;
   UnknownAttrStruct* z;
@@ -22,7 +22,7 @@ struct [[deprecated]] UnknownAttrStruct final {
 
 // This enum would receive bindings, if it weren't for the unrecognized
 // attribute on the enum.
-enum [[deprecated]] UnknownAttrEnum {
+enum [[gnu::visibility("default")]] UnknownAttrEnum {
   kConstant = 0,
 };
 
@@ -40,12 +40,8 @@ using InstantiatedTemplatedStruct = TemplatedStruct<int>;
   }
 }
 
-[[nodiscard]] inline void* crubit_nodiscard() { return nullptr; }
-
-// Note to robots: please do not automatically delete the following
-// function. We need to actually test deprecated functions!
-// Note to humans: please figure out a good way to control the robots.
-[[deprecated]] inline void crubit_deprecated() {}
+[[gnu::visibility("default")]] inline void crubit_unknown_function_attribute() {
+}
 
 [[deprecated]] inline void crubit_enable_if()
     __attribute__((enable_if(2 + 2 == 4, ""))) {}

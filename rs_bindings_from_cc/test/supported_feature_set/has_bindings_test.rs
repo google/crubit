@@ -185,3 +185,18 @@ fn test_accepts_nontrivial_ptr() {
 fn test_consteval() {
     assert!(value_exists!(has_bindings::consteval_add));
 }
+
+#[gtest]
+fn test_nodiscard() {
+    assert!(value_exists!(has_bindings::crubit_nodiscard));
+}
+
+#[gtest]
+fn test_deprecated_alias() {
+    assert!(type_exists!(has_bindings::DeprecatedAlias));
+}
+
+#[gtest]
+fn test_deprecated() {
+    assert!(value_exists!(has_bindings::crubit_deprecated));
+}

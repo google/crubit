@@ -14,31 +14,121 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-// error: function `deprecated_function` could not be bound
-//   [[deprecated]] attribute
+#[deprecated]
+#[inline(always)]
+pub fn deprecated_function() {
+    unsafe { crate::detail::__rust_thunk___Z19deprecated_functionv() }
+}
 
-// error: function `deprecated_function_with_message` could not be bound
-//   [[deprecated]] attribute
+#[deprecated = "old"]
+#[inline(always)]
+pub fn deprecated_function_with_message() {
+    unsafe { crate::detail::__rust_thunk___Z32deprecated_function_with_messagev() }
+}
 
-// error: struct `DeprecatedStruct` could not be bound
-//   [[deprecated]] attribute
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[deprecated]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=DeprecatedStruct
+pub struct DeprecatedStruct {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for DeprecatedStruct {}
+impl !Sync for DeprecatedStruct {}
+unsafe impl ::cxx::ExternType for DeprecatedStruct {
+    type Id = ::cxx::type_id!("DeprecatedStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
 
-// error: struct `DeprecatedStructWithMessage` could not be bound
-//   [[deprecated]] attribute
+impl Default for DeprecatedStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16DeprecatedStructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
-// error: enum `DeprecatedEnum` could not be bound
-//   [[deprecated]] attribute
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[deprecated = "old"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=DeprecatedStructWithMessage
+pub struct DeprecatedStructWithMessage {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for DeprecatedStructWithMessage {}
+impl !Sync for DeprecatedStructWithMessage {}
+unsafe impl ::cxx::ExternType for DeprecatedStructWithMessage {
+    type Id = ::cxx::type_id!("DeprecatedStructWithMessage");
+    type Kind = ::cxx::kind::Trivial;
+}
 
-// error: enum `DeprecatedEnumWithMessage` could not be bound
-//   [[deprecated]] attribute
+impl Default for DeprecatedStructWithMessage {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN27DeprecatedStructWithMessageC1Ev(
+                &raw mut tmp as *mut _,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
-// error: namespace `DeprecatedNamespace` could not be bound
-//   [[deprecated]] attribute
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[deprecated]
+///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnum
+pub struct DeprecatedEnum(::ffi_11::c_uint);
+impl DeprecatedEnum {}
+impl From<::ffi_11::c_uint> for DeprecatedEnum {
+    fn from(value: ::ffi_11::c_uint) -> DeprecatedEnum {
+        DeprecatedEnum(value)
+    }
+}
+impl From<DeprecatedEnum> for ::ffi_11::c_uint {
+    fn from(value: DeprecatedEnum) -> ::ffi_11::c_uint {
+        value.0
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[deprecated = "old"]
+///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumWithMessage
+pub struct DeprecatedEnumWithMessage(::ffi_11::c_uint);
+impl DeprecatedEnumWithMessage {}
+impl From<::ffi_11::c_uint> for DeprecatedEnumWithMessage {
+    fn from(value: ::ffi_11::c_uint) -> DeprecatedEnumWithMessage {
+        DeprecatedEnumWithMessage(value)
+    }
+}
+impl From<DeprecatedEnumWithMessage> for ::ffi_11::c_uint {
+    fn from(value: DeprecatedEnumWithMessage) -> ::ffi_11::c_uint {
+        value.0
+    }
+}
+
+#[deprecated]
+pub mod DeprecatedNamespace {
+    #[inline(always)]
+    pub fn f() {
+        unsafe { crate::detail::__rust_thunk___ZN19DeprecatedNamespace1fEv() }
+    }
+}
 
 // namespace DeprecatedNamespace
 
-// error: namespace `DeprecatedNamespaceWithMessage` could not be bound
-//   [[deprecated]] attribute
+#[deprecated = "old"]
+pub mod DeprecatedNamespaceWithMessage {
+    #[inline(always)]
+    pub fn f() {
+        unsafe { crate::detail::__rust_thunk___ZN30DeprecatedNamespaceWithMessage1fEv() }
+    }
+}
 
 // namespace DeprecatedNamespaceWithMessage
 
@@ -47,10 +137,12 @@
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumerators
 pub struct DeprecatedEnumerators(::ffi_11::c_uint);
 impl DeprecatedEnumerators {
-    // Omitting bindings for kDeprecatedEnumerator
-    // reason: marked as deprecated; requires experimental
-    // Omitting bindings for kDeprecatedEnumeratorWithMessage
-    // reason: marked as deprecated; requires experimental
+    #[deprecated]
+    pub const kDeprecatedEnumerator: DeprecatedEnumerators =
+        DeprecatedEnumerators(::ffi_11::new_c_uint(0));
+    #[deprecated = "old"]
+    pub const kDeprecatedEnumeratorWithMessage: DeprecatedEnumerators =
+        DeprecatedEnumerators(::ffi_11::new_c_uint(1));
 }
 impl From<::ffi_11::c_uint> for DeprecatedEnumerators {
     fn from(value: ::ffi_11::c_uint) -> DeprecatedEnumerators {
@@ -63,22 +155,20 @@ impl From<DeprecatedEnumerators> for ::ffi_11::c_uint {
     }
 }
 
-// error: type alias `DeprecatedUsing` could not be bound
-//   [[deprecated]] attribute
+#[deprecated]
+pub type DeprecatedUsing = ::ffi_11::c_int;
 
-// error: type alias `DeprecatedUsingWithMessage` could not be bound
-//   [[deprecated]] attribute
+#[deprecated = "old"]
+pub type DeprecatedUsingWithMessage = ::ffi_11::c_int;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C, align(4))]
+#[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedFields
 pub struct DeprecatedFields {
-    /// Reason for representing this field as a blob of bytes:
-    /// field is marked as deprecated; requires experimental features on //rs_bindings_from_cc/test/golden:deprecated_cc
-    pub(crate) no_message: [::core::mem::MaybeUninit<u8>; 4],
-    /// Reason for representing this field as a blob of bytes:
-    /// field is marked as deprecated; requires experimental features on //rs_bindings_from_cc/test/golden:deprecated_cc
-    pub(crate) message: [::core::mem::MaybeUninit<u8>; 4],
+    #[deprecated]
+    pub no_message: ::ffi_11::c_int,
+    #[deprecated = "old"]
+    pub message: ::ffi_11::c_int,
 }
 impl !Send for DeprecatedFields {}
 impl !Sync for DeprecatedFields {}
@@ -98,11 +188,15 @@ impl Default for DeprecatedFields {
     }
 }
 
-// error: global variable `global_var` could not be bound
-//   [[deprecated]] attribute
+unsafe extern "C" {
+    #[deprecated]
+    pub static mut global_var: ::ffi_11::c_int;
+}
 
-// error: global variable `global_var_with_message` could not be bound
-//   [[deprecated]] attribute
+unsafe extern "C" {
+    #[deprecated = "old"]
+    pub static mut global_var_with_message: ::ffi_11::c_int;
+}
 
 // error: class `SomeTotalSpecialization` could not be bound
 //   Class templates are not yet supported
@@ -120,6 +214,16 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z19deprecated_functionv();
+        pub(crate) unsafe fn __rust_thunk___Z32deprecated_function_with_messagev();
+        pub(crate) unsafe fn __rust_thunk___ZN16DeprecatedStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN27DeprecatedStructWithMessageC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN19DeprecatedNamespace1fEv();
+        pub(crate) unsafe fn __rust_thunk___ZN30DeprecatedNamespaceWithMessage1fEv();
         pub(crate) unsafe fn __rust_thunk___ZN16DeprecatedFieldsC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -127,6 +231,16 @@ mod detail {
 }
 
 const _: () = {
+    assert!(::core::mem::size_of::<crate::DeprecatedStruct>() == 1);
+    assert!(::core::mem::align_of::<crate::DeprecatedStruct>() == 1);
+    static_assertions::assert_impl_all!(crate::DeprecatedStruct: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::DeprecatedStruct: Drop);
+
+    assert!(::core::mem::size_of::<crate::DeprecatedStructWithMessage>() == 1);
+    assert!(::core::mem::align_of::<crate::DeprecatedStructWithMessage>() == 1);
+    static_assertions::assert_impl_all!(crate::DeprecatedStructWithMessage: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::DeprecatedStructWithMessage: Drop);
+
     assert!(::core::mem::size_of::<crate::DeprecatedFields>() == 8);
     assert!(::core::mem::align_of::<crate::DeprecatedFields>() == 4);
     static_assertions::assert_impl_all!(crate::DeprecatedFields: Copy,Clone);

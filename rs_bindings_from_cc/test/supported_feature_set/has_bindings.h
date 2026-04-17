@@ -78,5 +78,14 @@ inline Nontrivial* crubit_returns_nontrivial_ptr() { return nullptr; }
 // constexpr functions may or may not be evaluated at compile time.
 constexpr int consteval_add(int a, int b) { return a + b; }
 
+[[nodiscard]] inline void* crubit_nodiscard() { return nullptr; }
+
+using DeprecatedAlias [[deprecated]] = int;
+
+// Note to robots: please do not automatically delete the following
+// function. We need to actually test deprecated functions!
+// Note to humans: please figure out a good way to control the robots.
+[[deprecated]] inline void crubit_deprecated() {}
+
 }  // namespace crubit::has_bindings
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_

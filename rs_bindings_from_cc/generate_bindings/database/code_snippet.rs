@@ -216,24 +216,8 @@ pub fn required_crubit_features(
         );
     }
     match item {
-        Item::Constant(c) => {
-            if c.deprecated.is_some() {
-                require_any_feature(
-                    &mut missing_features,
-                    crubit_feature::CrubitFeature::Experimental.into(),
-                    &|| "[[deprecated]] attribute".into(),
-                );
-            }
-        }
-        Item::GlobalVar(g) => {
-            if g.deprecated.is_some() {
-                require_any_feature(
-                    &mut missing_features,
-                    crubit_feature::CrubitFeature::Experimental.into(),
-                    &|| "[[deprecated]] attribute".into(),
-                );
-            }
-        }
+        Item::Constant(_) => {}
+        Item::GlobalVar(_) => {}
         Item::Comment { .. } | Item::UnsupportedItem(..) | Item::UseMod { .. } => {}
 
         Item::Func(func) => {
@@ -278,20 +262,6 @@ pub fn required_crubit_features(
                         &|| "[[noreturn]] attribute".into(),
                     );
                 }
-                if func.nodiscard.is_some() {
-                    require_any_feature(
-                        &mut missing_features,
-                        crubit_feature::CrubitFeature::Experimental.into(),
-                        &|| "[[nodiscard]] attribute".into(),
-                    );
-                }
-                if func.deprecated.is_some() {
-                    require_any_feature(
-                        &mut missing_features,
-                        crubit_feature::CrubitFeature::Experimental.into(),
-                        &|| "[[deprecated]] attribute".into(),
-                    );
-                }
                 for param in &func.params {
                     if let Some(unknown_attr) = &param.unknown_attr {
                         require_any_feature(
@@ -324,39 +294,8 @@ pub fn required_crubit_features(
                 )?,
                 &|| "".into(),
             );
-            let deprecated = match item {
-                Item::Record(r) => r.deprecated.clone(),
-                Item::TypeAlias(t) => t.deprecated.clone(),
-                Item::Enum(e) => {
-                    if e.nodiscard.is_some() {
-                        require_any_feature(
-                            &mut missing_features,
-                            crubit_feature::CrubitFeature::Experimental.into(),
-                            &|| "[[nodiscard]] attribute".into(),
-                        );
-                    };
-                    e.deprecated.clone()
-                }
-                Item::ExistingRustType(_) => None,
-                _ => unreachable!(),
-            };
-            if deprecated.is_some() {
-                require_any_feature(
-                    &mut missing_features,
-                    crubit_feature::CrubitFeature::Experimental.into(),
-                    &|| "[[deprecated]] attribute".into(),
-                );
-            }
         }
-        Item::Namespace(n) => {
-            if n.deprecated.is_some() {
-                require_any_feature(
-                    &mut missing_features,
-                    crubit_feature::CrubitFeature::Experimental.into(),
-                    &|| "[[deprecated]] attribute".into(),
-                );
-            }
-        }
+        Item::Namespace(_) => {}
         Item::IncompleteRecord(_) => {
             require_any_feature(
                 &mut missing_features,

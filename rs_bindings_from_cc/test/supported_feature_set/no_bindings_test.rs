@@ -7,8 +7,8 @@ use item_exists::{type_exists, value_exists};
 use no_bindings::crubit::no_bindings;
 
 #[gtest]
-fn test_deprecated_alias() {
-    assert!(!type_exists!(no_bindings::DeprecatedAlias));
+fn test_unknown_attr_alias() {
+    assert!(!type_exists!(no_bindings::UnknownAttrAlias));
 }
 
 // vectorcall attribute is outright ignored on e.g. ARM -- so on that platform,
@@ -31,13 +31,8 @@ fn test_noreturn() {
 }
 
 #[gtest]
-fn test_nodiscard() {
-    assert!(!value_exists!(no_bindings::crubit_nodiscard));
-}
-
-#[gtest]
-fn test_deprecated() {
-    assert!(!value_exists!(no_bindings::crubit_deprecated));
+fn test_unknown_function_attribute() {
+    assert!(!value_exists!(no_bindings::crubit_unknown_function_attribute));
 }
 
 #[gtest]

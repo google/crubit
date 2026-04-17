@@ -64,17 +64,56 @@ impl Default for NoDiscardWithMessage {
     }
 }
 
-// error: enum `NoDiscardEnum` could not be bound
-//   [[nodiscard]] attribute
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[must_use]
+///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnum
+pub struct NoDiscardEnum(::ffi_11::c_uint);
+impl NoDiscardEnum {
+    pub const kConstant: NoDiscardEnum = NoDiscardEnum(::ffi_11::new_c_uint(0));
+}
+impl From<::ffi_11::c_uint> for NoDiscardEnum {
+    fn from(value: ::ffi_11::c_uint) -> NoDiscardEnum {
+        NoDiscardEnum(value)
+    }
+}
+impl From<NoDiscardEnum> for ::ffi_11::c_uint {
+    fn from(value: NoDiscardEnum) -> ::ffi_11::c_uint {
+        value.0
+    }
+}
 
-// error: enum `NoDiscardEnumWithMessage` could not be bound
-//   [[nodiscard]] attribute
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[must_use = "You really should use this"]
+///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnumWithMessage
+pub struct NoDiscardEnumWithMessage(::ffi_11::c_uint);
+impl NoDiscardEnumWithMessage {
+    pub const kConstantWithMessage: NoDiscardEnumWithMessage =
+        NoDiscardEnumWithMessage(::ffi_11::new_c_uint(0));
+}
+impl From<::ffi_11::c_uint> for NoDiscardEnumWithMessage {
+    fn from(value: ::ffi_11::c_uint) -> NoDiscardEnumWithMessage {
+        NoDiscardEnumWithMessage(value)
+    }
+}
+impl From<NoDiscardEnumWithMessage> for ::ffi_11::c_uint {
+    fn from(value: NoDiscardEnumWithMessage) -> ::ffi_11::c_uint {
+        value.0
+    }
+}
 
-// error: function `crubit_nodiscard` could not be bound
-//   [[nodiscard]] attribute
+#[must_use]
+#[inline(always)]
+pub fn crubit_nodiscard() -> *mut ::ffi_11::c_void {
+    unsafe { crate::detail::__rust_thunk___Z16crubit_nodiscardv() }
+}
 
-// error: function `crubit_nodiscard_message` could not be bound
-//   [[nodiscard]] attribute
+#[must_use = "You really should use this"]
+#[inline(always)]
+pub fn crubit_nodiscard_message() -> *mut ::ffi_11::c_void {
+    unsafe { crate::detail::__rust_thunk___Z24crubit_nodiscard_messagev() }
+}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -89,8 +128,25 @@ unsafe impl ::cxx::ExternType for NodiscardCtor {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// error: constructor `NodiscardCtor::NodiscardCtor` could not be bound
-//   [[nodiscard]] attribute
+impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
+    #[inline(always)]
+    fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
+        let (mut x, mut y) = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13NodiscardCtorC1Eii(&raw mut tmp as *mut _, x, y);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
+        <Self as From<(::ffi_11::c_int, ::ffi_11::c_int)>>::from(args)
+    }
+}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -105,8 +161,29 @@ unsafe impl ::cxx::ExternType for NodiscardCtorWithMessage {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// error: constructor `NodiscardCtorWithMessage::NodiscardCtorWithMessage` could not be bound
-//   [[nodiscard]] attribute
+impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtorWithMessage {
+    #[inline(always)]
+    fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
+        let (mut x, mut y) = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN24NodiscardCtorWithMessageC1Eii(
+                &raw mut tmp as *mut _,
+                x,
+                y,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtorWithMessage {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
+        <Self as From<(::ffi_11::c_int, ::ffi_11::c_int)>>::from(args)
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -115,6 +192,18 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN9NoDiscardC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN20NoDiscardWithMessageC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z16crubit_nodiscardv() -> *mut ::ffi_11::c_void;
+        pub(crate) unsafe fn __rust_thunk___Z24crubit_nodiscard_messagev() -> *mut ::ffi_11::c_void;
+        pub(crate) unsafe fn __rust_thunk___ZN13NodiscardCtorC1Eii(
+            __this: *mut ::core::ffi::c_void,
+            x: ::ffi_11::c_int,
+            y: ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN24NodiscardCtorWithMessageC1Eii(
+            __this: *mut ::core::ffi::c_void,
+            x: ::ffi_11::c_int,
+            y: ::ffi_11::c_int,
         );
     }
 }

@@ -128,17 +128,6 @@ fn get_field_rs_type_kind_for_layout(
             }
         }
     }
-    if field.deprecated.is_some() {
-        for target in
-            db.defining_target(record.id()).as_ref().into_iter().chain([&record.owning_target])
-        {
-            let enabled_features = ir.target_crubit_features(target);
-            ensure!(
-                enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
-                "field is marked as deprecated; requires experimental features on {target}"
-            );
-        }
-    }
     let type_kind = db.rs_type_kind(field.type_.clone())?;
 
     if let RsTypeKind::Error { error, .. } = type_kind {
@@ -311,18 +300,7 @@ fn field_definition(
         });
     };
 
-    let mut deprecated_attr: Option<DeprecatedAttr> = None;
-    if let Some(deprecated) = &field.deprecated {
-        for target in
-            db.defining_target(record.id()).as_ref().into_iter().chain([&record.owning_target])
-        {
-            let enabled_features = db.ir().target_crubit_features(target);
-            if enabled_features.contains(crubit_feature::CrubitFeature::Experimental) {
-                deprecated_attr = Some(DeprecatedAttr(deprecated.clone()));
-                break;
-            }
-        }
-    };
+    let deprecated_attr = field.deprecated.clone().map(DeprecatedAttr);
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
     let doc_comment = match &field_rs_type_kind {

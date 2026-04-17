@@ -33,10 +33,32 @@ extern "C" void __rust_thunk___ZN20NoDiscardWithMessageC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void* __rust_thunk___Z16crubit_nodiscardv() {
+  return crubit_nodiscard();
+}
+
+static_assert((void* (*)()) & ::crubit_nodiscard);
+
+extern "C" void* __rust_thunk___Z24crubit_nodiscard_messagev() {
+  return crubit_nodiscard_message();
+}
+
+static_assert((void* (*)()) & ::crubit_nodiscard_message);
+
 static_assert(sizeof(struct NodiscardCtor) == 1);
 static_assert(alignof(struct NodiscardCtor) == 1);
 
+extern "C" void __rust_thunk___ZN13NodiscardCtorC1Eii(
+    struct NodiscardCtor* __this, int x, int y) {
+  crubit::construct_at(__this, x, y);
+}
+
 static_assert(sizeof(struct NodiscardCtorWithMessage) == 1);
 static_assert(alignof(struct NodiscardCtorWithMessage) == 1);
+
+extern "C" void __rust_thunk___ZN24NodiscardCtorWithMessageC1Eii(
+    struct NodiscardCtorWithMessage* __this, int x, int y) {
+  crubit::construct_at(__this, x, y);
+}
 
 #pragma clang diagnostic pop
