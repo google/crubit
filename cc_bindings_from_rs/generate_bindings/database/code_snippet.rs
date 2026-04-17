@@ -14,7 +14,7 @@ use error_report::bail;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use rustc_middle::ty::Ty;
-use rustc_span::def_id::{DefId, LOCAL_CRATE};
+use rustc_span::def_id::DefId;
 use rustc_span::Symbol;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;

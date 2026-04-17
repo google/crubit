@@ -194,7 +194,7 @@ pub fn has_non_lifetime_generics<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool
 }
 
 pub fn post_analysis_typing_env(tcx: TyCtxt, def_id: DefId) -> ty::TypingEnv {
-    ty::TypingEnv { typing_mode: ty::TypingMode::PostAnalysis, param_env: tcx.param_env(def_id) }
+    ty::TypingEnv::post_analysis(tcx, def_id)
 }
 
 /// Returns whether `ty` is copyable inside the given environment (e.g. fn or type def).

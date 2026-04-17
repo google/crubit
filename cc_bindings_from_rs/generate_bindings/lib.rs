@@ -2,7 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(rustc_private)]
-#![feature(cfg_accessible)]
 #![feature(stmt_expr_attributes)]
 #![feature(proc_macro_hygiene)]
 
@@ -1551,12 +1550,6 @@ fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
     } else {
         quote! { __COMMENT__ #doc_comment}
     }
-}
-
-/// Returns the name of the item identified by `def_id`, or "<unknown>" if
-/// the item can't be identified.
-fn item_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Symbol {
-    db.tcx().opt_item_name(def_id).unwrap_or_else(|| Symbol::intern("<unknown>"))
 }
 
 fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> error_report::ItemName {
