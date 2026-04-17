@@ -20,6 +20,16 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+static_assert(sizeof(struct StructWithBridgeField) == 1);
+static_assert(alignof(struct StructWithBridgeField) == 1);
+static_assert(CRUBIT_OFFSET_OF(bridge_field, struct StructWithBridgeField) ==
+              0);
+
+extern "C" void __rust_thunk___ZN21StructWithBridgeFieldC1Ev(
+    struct StructWithBridgeField* __this) {
+  crubit::construct_at(__this);
+}
+
 extern "C" void __rust_thunk___Z15ReturnCppStructv(
     unsigned char* __return_abi_buffer) {
   ::crubit::Encoder __return_encoder(::crubit::CppStructAbi::kSize,

@@ -19,6 +19,10 @@ struct
     // clang-format on
     CppStruct {};
 
+struct StructWithBridgeField {
+  CppStruct bridge_field;
+};
+
 CppStruct ReturnCppStruct();
 
 void TakeCppStruct(CppStruct);

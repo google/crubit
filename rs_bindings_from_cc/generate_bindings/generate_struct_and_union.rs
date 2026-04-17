@@ -135,7 +135,8 @@ fn get_field_rs_type_kind_for_layout(
     }
 
     if type_kind.is_bridge_type() {
-        bail!("Bridge-by-value types are not supported in struct fields.")
+        bail!("crubit.rs/errors/bridge_field: '{}' is a bridge type, but fields must be layout compatible between Rust and C++.",
+            type_kind.display(db))
     }
 
     for target in

@@ -18,6 +18,32 @@
 // order for the generated code to properly compile. This example just serves to
 // illustrate what the generated code will look like.
 
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=StructWithBridgeField
+pub struct StructWithBridgeField {
+    /// Reason for representing this field as a blob of bytes:
+    /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is a bridge type, but fields must be layout compatible between Rust and C++.
+    pub(crate) bridge_field: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for StructWithBridgeField {}
+impl !Sync for StructWithBridgeField {}
+unsafe impl ::cxx::ExternType for StructWithBridgeField {
+    type Id = ::cxx::type_id!("StructWithBridgeField");
+    type Kind = ::cxx::kind::Trivial;
+}
+
+impl Default for StructWithBridgeField {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN21StructWithBridgeFieldC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
 #[inline(always)]
 pub fn ReturnCppStruct() -> crate::RustStruct {
     unsafe {
@@ -568,6 +594,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN21StructWithBridgeFieldC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z15ReturnCppStructv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
@@ -617,6 +646,11 @@ mod detail {
 }
 
 const _: () = {
+    assert!(::core::mem::size_of::<crate::StructWithBridgeField>() == 1);
+    assert!(::core::mem::align_of::<crate::StructWithBridgeField>() == 1);
+    static_assertions::assert_impl_all!(crate::StructWithBridgeField: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithBridgeField: Drop);
+    assert!(::core::mem::offset_of!(crate::StructWithBridgeField, bridge_field) == 0);
     assert!(::core::mem::size_of::<crate::Vec3>() == 12);
     assert!(::core::mem::align_of::<crate::Vec3>() == 4);
     static_assertions::assert_impl_all!(crate::Vec3: Copy,Clone);
