@@ -8,6 +8,7 @@ use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{format_generic_params, Lifetime};
 use generate_function_thunk::thunk_ident;
 use googletest::prelude::{assert_that, contains_substring, expect_that, gtest, not, OrFail as _};
+
 use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::{
@@ -486,6 +487,59 @@ fn test_impl_default_non_trivial_struct() -> Result<()> {
     )?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {impl Default});
+    Ok(())
+}
+#[gtest]
+fn test_impl_cc_index_for_member_function() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            inline const int& operator[](unsigned int index) const {
+                return items[index];
+            }
+            int items[10];
+        };"#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::operator::CcIndex<::ffi_11::c_uint> for SomeStruct {
+                type Output<'ctnr> = &'ctnr ::ffi_11::c_int;
+                #[inline(always)]
+                fn cc_index<'ctnr>(&'ctnr self, index: ::ffi_11::c_uint) -> Self::Output<'ctnr> {
+                    unsafe { crate::detail::__rust_thunk___ZNK10SomeStructixEj(self, index) }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            inline int& operator[](unsigned int index) {
+                return items[index];
+            }
+            int items[10];
+        };"#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::operator::CcIndexMut<::ffi_11::c_uint> for SomeStruct {
+                type Output<'ctnr> = &'ctnr mut ::ffi_11::c_int;
+                #[inline(always)]
+                fn cc_index_mut<'ctnr>(self: ::core::pin::Pin<&'ctnr mut Self>, index: ::ffi_11::c_uint) -> Self::Output<'ctnr> {
+                    unsafe { crate::detail::__rust_thunk___ZN10SomeStructixEj(self.get_unchecked_mut(), index) }
+                }
+            }
+        }
+    );
     Ok(())
 }
 

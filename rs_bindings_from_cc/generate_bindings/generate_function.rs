@@ -86,6 +86,23 @@ fn trait_name_to_token_stream_removing_trait_record(
                 quote! {PartialOrd #formatted_params}
             }
         }
+        CcIndex { index_type, .. } | CcIndexMut { index_type, .. } => {
+            let trait_path = match trait_name {
+                CcIndex { .. } => quote! { ::operator::CcIndex },
+                CcIndexMut { .. } => quote! { ::operator::CcIndexMut },
+                _ => unreachable!(),
+            };
+            if self_type.is_some_and(|self_type| index_type.as_ref() == self_type) {
+                quote! {#trait_path}
+            } else {
+                let formatted_params = format_generic_params_replacing_by_self(
+                    db,
+                    core::slice::from_ref(&**index_type),
+                    self_type,
+                );
+                quote! {#trait_path #formatted_params}
+            }
+        }
         Other { name, params, .. } => {
             let name_as_token_stream = name.parse::<TokenStream>().unwrap();
             let formatted_params =
@@ -313,6 +330,193 @@ fn api_func_shape_for_operator_eq(
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
     );
+    Ok((func_name, impl_kind))
+}
+
+/// TODO: b/242938276 - For now, just emit one impl per overload, either CcIndex or CcIndexMut.
+/// Do not generate native core::ops::Index or core::ops::IndexMut impls yet. This means that Rust
+/// callers must call .cc_index and .cc_index_mut rather than use bracket syntax.
+///
+/// Other current limitations.
+/// - Does not support C++ overloads that return items by value.
+/// - Does not support C++ overloads that use multiple indices.
+/// - Does not support C++ explicit object parameters, i.e. decltype(auto).
+fn api_func_shape_for_operator_index(
+    db: &BindingsGenerator,
+    func: &Func,
+    param_types: &mut [RsTypeKind],
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
+    let CcTypeVariant::Pointer(pointee) = &func.return_type.variant else {
+        bail_to_errors!(
+            errors,
+            "operator[] should return a reference, found {:?}",
+            &func.return_type.variant
+        )
+    };
+    let return_val_is_const = pointee.pointee_type.is_const;
+
+    let Some(instance_method_metadata) = &func.instance_method_metadata else {
+        panic!("cannot tell whether operator[] is const or not, shouldn't happen")
+    };
+    let method_is_const = instance_method_metadata.is_const;
+
+    let [container_type, index_type] = param_types else {
+        bail_to_errors!(
+            errors,
+            "Expected operator[] to have exactly two parameters. Found: {}.",
+            param_types.len(),
+        );
+    };
+
+    let (container_record, _is_ref) = match container_type {
+        RsTypeKind::Reference { referent, .. } => {
+            let RsTypeKind::Record { record, .. } = &**referent else {
+                bail_to_errors!(
+                    errors,
+                    "Expected the 'this' parameter to refer to a record type, but found {}.",
+                    referent.display(db)
+                );
+            };
+            (record.clone(), true)
+        }
+        _ => {
+            bail_to_errors!(
+                errors,
+                "Unexpected type for 'this' parameter of operator[]: {:?}.",
+                container_type
+            );
+        }
+    };
+
+    let index_type_rc = Rc::new(index_type.clone());
+    if return_val_is_const && method_is_const {
+        generate_cc_operator_index_nonmut_impls(db, func, container_record, index_type_rc, errors)
+    } else if !return_val_is_const && !method_is_const {
+        generate_cc_operator_index_mut_impls(db, func, container_record, index_type_rc, errors)
+    } else {
+        bail_to_errors!(
+            errors,
+            "operator[] must either:\n\
+            (a) be a const method that returns a const reference, or,\n\
+            (b) be a non-const method that returns a non-const reference.\n\
+            Instead found a method: (which is const?)={}, and (whose return value is const?)={}",
+            method_is_const,
+            return_val_is_const
+        )
+    }
+}
+
+fn generate_cc_operator_index_nonmut_impls(
+    db: &BindingsGenerator,
+    func: &Func,
+    container_record: Rc<Record>,
+    index_type: Rc<RsTypeKind>,
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
+    let func_name = make_rs_ident("cc_index");
+    let output_pointee_cc_type = match &func.return_type.variant {
+        CcTypeVariant::Pointer(pointer_data) => {
+            if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
+                errors.add(anyhow!(
+                    "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
+                    pointer_data.kind
+                ));
+            }
+            if !pointer_data.pointee_type.is_const {
+                errors.add(anyhow!("operator[] must return a const value"));
+            }
+
+            (*pointer_data.pointee_type).clone()
+        }
+
+        other_variant => {
+            bail_to_errors!(
+                errors,
+                "operator[] should return a reference (values are not yet supported), found {:?}",
+                other_variant
+            )
+        }
+    };
+
+    let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
+        Ok(rs_kind) => Rc::new(rs_kind),
+        Err(err) => {
+            bail_to_errors!(
+                errors,
+                "In the return value of operator[], could not convert C++ pointee to a Rust equivalent: {}",
+                err
+            )
+        }
+    };
+
+    let impl_kind = ImplKind::Trait {
+        record: container_record,
+        trait_name: TraitName::CcIndex { index_type, output_type },
+        impl_for: ImplFor::T,
+        format_first_param_as_self: true,
+        drop_return: false,
+        associated_return_type: Some(make_rs_ident("Output")),
+        force_const_reference_params: false,
+        always_public: false,
+    };
+    Ok((func_name, impl_kind))
+}
+
+fn generate_cc_operator_index_mut_impls(
+    db: &BindingsGenerator,
+    func: &Func,
+    container_record: Rc<Record>,
+    index_type: Rc<RsTypeKind>,
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
+    let func_name = make_rs_ident("cc_index_mut");
+
+    let output_pointee_cc_type = match &func.return_type.variant {
+        CcTypeVariant::Pointer(pointer_data) => {
+            if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
+                errors.add(anyhow!(
+                    "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
+                    pointer_data.kind
+                ));
+            }
+            if pointer_data.pointee_type.is_const {
+                errors.add(anyhow!("(mutable) operator[] must return a non-const value"));
+            }
+
+            (*pointer_data.pointee_type).clone()
+        }
+
+        other_variant => {
+            bail_to_errors!(
+                errors,
+                "(mutable) operator[] should return a reference (values are not yet supported), found {:?}",
+                other_variant
+            )
+        }
+    };
+
+    let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
+        Ok(rs_kind) => Rc::new(rs_kind),
+        Err(err) => {
+            bail_to_errors!(
+                errors,
+                "In the return value of operator[], could not convert C++ pointee to a Rust equivalent: {}",
+                err
+            )
+        }
+    };
+
+    let impl_kind = ImplKind::Trait {
+        record: container_record,
+        trait_name: TraitName::CcIndexMut { index_type, output_type },
+        impl_for: ImplFor::T,
+        format_first_param_as_self: true,
+        drop_return: false,
+        associated_return_type: Some(make_rs_ident("Output")),
+        force_const_reference_params: false,
+        always_public: false,
+    };
     Ok((func_name, impl_kind))
 }
 
@@ -566,6 +770,7 @@ fn api_func_shape_for_operator(
         "+" if param_types.len() == 1 => {
             api_func_shape_for_operator_unary_plus(db, &param_types[0], errors).ok()
         }
+        "[]" => api_func_shape_for_operator_index(db, func, param_types, errors).ok(),
         _ => {
             let Some(op_metadata) =
                 OPERATOR_METADATA.by_cc_name_and_params.get(&(&op.name, param_types.len()))
@@ -1289,7 +1494,7 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
         Constructor => true,
         Operator(op_name) => {
             match &*op_name.name {
-                "==" | "!=" | "<=>" | "<" | "=" => true,
+                "==" | "!=" | "<=>" | "<" | "=" | "[]" => true,
                 // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
                 // creates conflicting libc++ impls for `long` and `long long`.
                 "<<" | ">>" => false,
@@ -1877,7 +2082,47 @@ pub fn generate_function(
 
             let mut extra_body = if let Some(name) = associated_return_type {
                 let associated_type;
-                if quoted_return_type.is_empty() {
+                if matches!(trait_name, TraitName::CcIndex { .. } | TraitName::CcIndexMut { .. }) {
+                    let is_rvalue = match &func.instance_method_metadata {
+                        Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+                        None => false,
+                    };
+                    if is_rvalue {
+                        bail!("Rvalue-qualified operator[] is not supported");
+                    }
+
+                    let container_lifetime = Lifetime::new(CONTAINER_LIFETIME_NAME);
+                    let referent = match &return_type {
+                        RsTypeKind::Reference { referent, .. } => referent,
+                        RsTypeKind::RvalueReference { referent, .. } => referent,
+                        _ => bail!("Expected reference return type for indexing trait"),
+                    };
+                    let referent_tokens = referent.to_token_stream(db);
+                    let mutability = match &return_type {
+                        RsTypeKind::Reference { mutability, .. } => mutability,
+                        RsTypeKind::RvalueReference { mutability, .. } => mutability,
+                        _ => unreachable!(),
+                    };
+                    let mut_tokens = if *mutability == Mutability::Mut {
+                        quote! {mut}
+                    } else {
+                        quote! {}
+                    };
+
+                    let is_item_unpin = match referent.as_ref() {
+                        RsTypeKind::Record { record, .. } => record.is_unpin(),
+                        _ => true,
+                    };
+
+                    associated_type = if is_item_unpin
+                        || matches!(trait_name, TraitName::CcIndex { .. })
+                    {
+                        quote! { type #name<#container_lifetime> = &#container_lifetime #mut_tokens #referent_tokens; }
+                    } else {
+                        quote! { type #name<#container_lifetime> = ::core::pin::Pin<&#container_lifetime #mut_tokens #referent_tokens>; }
+                    };
+                    quoted_return_type = quote! { Self::#name<#container_lifetime> };
+                } else if quoted_return_type.is_empty() {
                     associated_type = quote! { type #name = (); };
                 } else {
                     associated_type = quote! { type #name = #quoted_return_type; };
@@ -1980,9 +2225,17 @@ pub fn generate_function(
                         }
                     }
                 }
-                _ => {
-                    quote! {}
+                TraitName::CcIndex { .. } | TraitName::CcIndexMut { .. } => {
+                    generate_standard_indexing_impl(
+                        db,
+                        &func,
+                        trait_record,
+                        &record_name,
+                        &unsatisfied_where_clause,
+                        trait_name,
+                    )?
                 }
+                _ => quote! {},
             };
 
             let extra_api_func_def = match &trait_name {
@@ -2196,6 +2449,19 @@ fn function_signature(
     // TODO(b/454627672): is it worth caching this?
     let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
 
+    let transformed_func = if matches!(
+        impl_kind,
+        ImplKind::Trait {
+            trait_name: TraitName::CcIndex { .. } | TraitName::CcIndexMut { .. },
+            ..
+        }
+    ) {
+        adjust_signature_for_indexing_traits(db, func, return_type, param_types)?
+    } else {
+        None
+    };
+    let func = transformed_func.as_ref().unwrap_or(func);
+
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
     let mut thunk_prepare = quote! {};
@@ -2302,6 +2568,18 @@ fn function_signature(
             .filter(|lifetime| !lifetime.is_elided())
             .collect();
 
+    if matches!(
+        impl_kind,
+        ImplKind::Trait {
+            trait_name: TraitName::CcIndex { .. } | TraitName::CcIndexMut { .. },
+            ..
+        }
+    ) {
+        // We manually set the container lifetime for indexing trait methods,
+        // so remove the `'__this` lifetime in this case.
+        lifetimes.retain(|l| &*l.0 != "__this");
+    }
+
     let mut quoted_return_type = None;
 
     if let ImplKind::Struct { is_renamed_unpin_constructor: true, .. } = impl_kind {
@@ -2370,7 +2648,13 @@ fn function_signature(
                 };
             }
         }
-        Some(TraitName::Other { .. } | TraitName::Delete) | None => {}
+        Some(
+            TraitName::CcIndex { .. }
+            | TraitName::CcIndexMut { .. }
+            | TraitName::Other { .. }
+            | TraitName::Delete,
+        )
+        | None => {}
     }
 
     let return_type_fragment = if matches!(
@@ -2425,25 +2709,45 @@ fn function_signature(
         match impl_kind {
             ImplKind::None { .. } => unreachable!(),
             ImplKind::Struct { .. } | ImplKind::Trait { impl_for: ImplFor::T, .. } => {
-                // In the ImplFor::T reference style (which is implied for ImplKind::Struct) the
-                // impl block is for `T`. The `self` parameter has a type determined by the
-                // first parameter (typically a reference of some kind) and can be passed to a
-                // thunk via the expression `self`.
-                if first_api_param.is_c_abi_compatible_by_value() {
-                    let rs_snippet = first_api_param.format_as_self_param()?;
-                    thunk_args[0] = if derived_record.is_some() {
-                        quote! { oops::Upcast::<_>::upcast(self) }
-                    } else {
-                        quote! { self }
+                if matches!(
+                    impl_kind,
+                    ImplKind::Trait { trait_name: TraitName::CcIndexMut { .. }, .. }
+                ) {
+                    // Always use Pin<&mut Self> for CcIndexMut::cc_index_mut's receiver.
+                    match first_api_param {
+                        RsTypeKind::Reference { lifetime, referent, .. } => {
+                            let lifetime_token = lifetime.format_for_reference();
+                            api_params[0] =
+                                quote! { self: ::core::pin::Pin< & #lifetime_token mut Self > };
+                            if referent.is_unpin() {
+                                thunk_args[0] = quote! { self.get_unchecked_mut() };
+                            } else {
+                                thunk_args[0] = quote! { self };
+                            }
+                        }
+                        _ => unreachable!(),
                     };
-                    api_params[0] = rs_snippet.tokens;
-                    features |= rs_snippet.features;
                 } else {
-                    api_params[0] = quote! { mut self };
-                    if derived_record.is_some() {
-                        thunk_args[0] = quote! { oops::Upcast::<_>::upcast(&mut self) };
+                    // In the ImplFor::T reference style (which is implied for ImplKind::Struct) the
+                    // impl block is for `T`. The `self` parameter has a type determined by the
+                    // first parameter (typically a reference of some kind) and can be passed to a
+                    // thunk via the expression `self`.
+                    if first_api_param.is_c_abi_compatible_by_value() {
+                        let rs_snippet = first_api_param.format_as_self_param()?;
+                        thunk_args[0] = if derived_record.is_some() {
+                            quote! { oops::Upcast::<_>::upcast(self) }
+                        } else {
+                            quote! { self }
+                        };
+                        api_params[0] = rs_snippet.tokens;
+                        features |= rs_snippet.features;
                     } else {
-                        thunk_args[0] = quote! { &mut self };
+                        api_params[0] = quote! { mut self };
+                        if derived_record.is_some() {
+                            thunk_args[0] = quote! { oops::Upcast::<_>::upcast(&mut self) };
+                        } else {
+                            thunk_args[0] = quote! { &mut self };
+                        }
                     }
                 }
             }
@@ -2699,4 +3003,133 @@ pub fn overload_sets(db: &BindingsGenerator) -> Rc<HashMap<Rc<FunctionId>, Optio
             )
             .collect(),
     )
+}
+
+pub const CONTAINER_LIFETIME_NAME: &str = "ctnr";
+
+/// Generates standard `std::ops::Index` and `std::ops::IndexMut`
+/// implementations that forward to the GAT-based `CcIndex` and `CcIndexMut`
+/// traits.
+pub fn generate_standard_indexing_impl(
+    db: &BindingsGenerator,
+    func: &Func,
+    trait_record: &Record,
+    record_name: &Ident,
+    unsatisfied_where_clause: &TokenStream,
+    trait_name: &TraitName,
+) -> Result<TokenStream> {
+    Ok(match trait_name {
+        TraitName::CcIndex { index_type, output_type } => {
+            let is_rvalue = match &func.instance_method_metadata {
+                Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+                None => false,
+            };
+            if is_rvalue {
+                quote! {}
+            } else {
+                let index_type_tokens = index_type.to_token_stream(db);
+                let output_type_tokens = output_type.to_token_stream(db);
+                if trait_record.is_unpin() {
+                    quote! {
+                        impl ::core::ops::Index<#index_type_tokens> for #record_name #unsatisfied_where_clause {
+                            type Output = #output_type_tokens;
+                            #[inline(always)]
+                            fn index(&self, index: #index_type_tokens) -> &Self::Output {
+                                ::operator::CcIndex::cc_index(self, index)
+                            }
+                        }
+                    }
+                } else {
+                    quote! {
+                        impl<'ctnr> ::core::ops::Index<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
+                            type Output = #output_type_tokens;
+                            #[inline(always)]
+                            fn index(&self, index: #index_type_tokens) -> &Self::Output {
+                                ::operator::CcIndex::cc_index(self.as_ref().get_ref(), index)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        TraitName::CcIndexMut { index_type, output_type } => {
+            let is_rvalue = match &func.instance_method_metadata {
+                Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+                None => false,
+            };
+            let is_item_unpin = match output_type.as_ref() {
+                RsTypeKind::Record { record, .. } => record.is_unpin(),
+                _ => true,
+            };
+            if is_rvalue || !is_item_unpin {
+                quote! {}
+            } else {
+                let index_type_tokens = index_type.to_token_stream(db);
+                if trait_record.is_unpin() {
+                    quote! {
+                        impl ::core::ops::IndexMut<#index_type_tokens> for #record_name #unsatisfied_where_clause {
+                            #[inline(always)]
+                            fn index_mut(&mut self, index: #index_type_tokens) -> &mut Self::Output {
+                                ::operator::CcIndexMut::cc_index_mut(::core::pin::Pin::new(self), index)
+                            }
+                        }
+                    }
+                } else {
+                    quote! {
+                        impl<'ctnr> ::core::ops::IndexMut<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
+                            #[inline(always)]
+                            fn index_mut(&mut self, index: #index_type_tokens) -> &mut Self::Output {
+                                ::operator::CcIndexMut::cc_index_mut(self.as_mut(), index)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        _ => quote! {},
+    })
+}
+
+/// Adjusts the function signature for indexing traits (CcIndex/CcIndexMut).
+/// In addition to transforming the signature based on lifetime defaults, we
+/// also adjust the lifetimes of self parameter and the return reference to
+/// use the unified container lifetime ('ctnr).
+///
+/// Returns the transformed `Func` if any transformations were applied.
+pub fn adjust_signature_for_indexing_traits(
+    db: &BindingsGenerator,
+    func: &Func,
+    return_type: &mut RsTypeKind,
+    param_types: &mut [RsTypeKind],
+) -> Result<Option<Func>> {
+    let is_rvalue = match &func.instance_method_metadata {
+        Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+        None => false,
+    };
+    if is_rvalue {
+        bail!("R-value qualified operator[] is not supported");
+    }
+
+    let transformed_func = lifetime_defaults_transform_func(db, func)?;
+
+    let rs_return_type = db.rs_type_kind(transformed_func.return_type.clone()).ok();
+
+    if let Some(rs_return_type) = rs_return_type {
+        let rs_return_type = match rs_return_type {
+            RsTypeKind::Pointer { pointee, mutability, .. } => RsTypeKind::Reference {
+                referent: pointee.clone(),
+                mutability,
+                lifetime: Lifetime::new(CONTAINER_LIFETIME_NAME),
+                is_cref: false,
+            },
+            _ => rs_return_type,
+        };
+        *return_type = rs_return_type;
+    }
+
+    if let Some(RsTypeKind::Reference { lifetime, .. }) = param_types.first_mut() {
+        *lifetime = Lifetime::new(CONTAINER_LIFETIME_NAME);
+    }
+
+    Ok(Some(transformed_func))
 }

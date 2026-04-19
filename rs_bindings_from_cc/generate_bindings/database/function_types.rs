@@ -55,6 +55,16 @@ pub enum TraitName {
     PartialOrd {
         param: Rc<RsTypeKind>,
     },
+    /// The trait for the const C++ operator[] overload.
+    CcIndex {
+        index_type: Rc<RsTypeKind>,
+        output_type: Rc<RsTypeKind>,
+    },
+    /// The trait for the mutable C++ operator[] overload.
+    CcIndexMut {
+        index_type: Rc<RsTypeKind>,
+        output_type: Rc<RsTypeKind>,
+    },
     /// The operator::Delete trait.
     Delete,
     /// Any other trait, e.g. Eq.
@@ -80,6 +90,8 @@ impl TraitName {
             TraitName::From { .. } => "From",
             TraitName::PartialEq { .. } => "PartialEq",
             TraitName::PartialOrd { .. } => "PartialOrd",
+            TraitName::CcIndex { .. } => "CcIndex",
+            TraitName::CcIndexMut { .. } => "CcIndexMut",
             TraitName::Delete => "::operator::Delete",
             TraitName::Other { name, .. } => name,
         }
@@ -92,6 +104,9 @@ impl TraitName {
             Self::CtorNew(params) | Self::From(params) | Self::Other { params, .. } => params,
             Self::PartialEq { param, .. } | Self::PartialOrd { param } => {
                 core::slice::from_ref(param)
+            }
+            Self::CcIndex { index_type, .. } | Self::CcIndexMut { index_type, .. } => {
+                core::slice::from_ref(index_type)
             }
         }
     }
