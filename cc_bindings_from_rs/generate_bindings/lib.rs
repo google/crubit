@@ -460,7 +460,7 @@ fn public_paths_by_def_id(
         // Map type aliases to their underlying type.
         let mut type_alias_def_id = None;
         if def_kind == DefKind::TyAlias {
-            let underlying_type = tcx.type_of(def_id).instantiate_identity();
+            let underlying_type = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
             if let crate::ty::TyKind::Adt(def, _) = underlying_type.kind() {
                 type_alias_def_id = Some(def_id);
                 def_id = def.did();
@@ -735,13 +735,7 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
     // slice has the same ABI as `rs_std::SliceRef`.
     let layout = tcx
-        .layout_of(
-            ty::TypingEnv {
-                typing_mode: ty::TypingMode::PostAnalysis,
-                param_env: ty::ParamEnv::empty(),
-            }
-            .as_query_input(ty),
-        )
+        .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
         .expect("`layout_of` is expected to succeed for `{ty}` type")
         .layout;
     assert_eq!(8, layout.align().abi.bytes());
@@ -864,7 +858,7 @@ fn generate_using<'tcx>(
         DefKind::Struct | DefKind::Enum => {
             // This points directly to a type definition, not an alias or compound data
             // type, so we can drop the hir type.
-            let use_type = tcx.type_of(def_id).instantiate_identity();
+            let use_type = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
             create_type_alias(db, def_id, using_name.as_str(), use_type)
         }
         DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str()),
@@ -933,7 +927,7 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
             tcx.item_name(def_id).as_str()
         )
     }
-    let ty = tcx.type_of(def_id).instantiate_identity();
+    let ty = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
     let rust_type = ty;
     let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
 
@@ -1071,7 +1065,7 @@ fn generate_type_alias<'tcx>(
     def_id: DefId,
     using_name: &str,
 ) -> Result<CcSnippet<'tcx>> {
-    let alias_type = db.tcx().type_of(def_id).instantiate_identity();
+    let alias_type = normalize_ty(db.tcx(), db.tcx().type_of(def_id).instantiate_identity());
     create_type_alias(db, def_id, using_name, alias_type)
 }
 
@@ -2161,4 +2155,29 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     }
 
     Ok(BindingsTokens { cc_api, cc_api_impl })
+}
+
+#[rustversion::before(2026-04-19)]
+pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, val: T) -> T {
+    val
+}
+
+#[rustversion::since(2026-04-19)]
+pub fn normalize_ty<'tcx, T>(tcx: TyCtxt<'tcx>, val: ty::Unnormalized<'tcx, T>) -> T
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+{
+    use rustc_infer::infer::TyCtxtInferExt;
+    use rustc_infer::traits::ObligationCause;
+    use rustc_trait_selection::infer::canonical::ir::TypingMode;
+    use rustc_trait_selection::traits::ObligationCtxt;
+
+    let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
+    let ocx = ObligationCtxt::new(&infcx);
+    let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
+    let param_env = ty::ParamEnv::empty();
+    let val = ocx.normalize(&cause, param_env, val);
+    let errors = ocx.evaluate_obligations_error_on_ambiguity();
+    assert!(errors.is_empty(), "Failed to normalize: {errors:?}");
+    val
 }

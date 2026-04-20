@@ -218,13 +218,7 @@ pub fn format_ty_for_cc<'tcx>(
             // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the
             // same ABI as `u32`.
             let layout = tcx
-                .layout_of(
-                    ty::TypingEnv {
-                        typing_mode: ty::TypingMode::PostAnalysis,
-                        param_env: ty::ParamEnv::empty(),
-                    }
-                    .as_query_input(ty),
-                )
+                .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
             assert_eq!(4, layout.align().abi.bytes());
@@ -451,12 +445,26 @@ pub fn format_ty_for_cc<'tcx>(
                     None => bail!("Generic function pointers are not supported yet (b/259749023)"),
                     Some(sig_tys) => sig_tys,
                 };
-                rustc_middle::ty::FnSig {
+                #[rustversion::before(2026-04-19)]
+                let sig = rustc_middle::ty::FnSig {
                     inputs_and_output: sig_tys.inputs_and_output,
                     c_variadic: fn_header.c_variadic,
                     safety: fn_header.safety,
                     abi: fn_header.abi,
-                }
+                };
+                #[rustversion::since(2026-04-19)]
+                let sig = {
+                    use rustc_type_ir::inherent::FSigKind;
+                    rustc_middle::ty::FnSig {
+                        inputs_and_output: sig_tys.inputs_and_output,
+                        fn_sig_kind: ty::FnSigKind::new(
+                            fn_header.abi(),
+                            fn_header.safety(),
+                            fn_header.c_variadic(),
+                        ),
+                    }
+                };
+                sig
             };
 
             check_fn_sig(&sig)?;
@@ -465,7 +473,11 @@ pub fn format_ty_for_cc<'tcx>(
             // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
             // This assertion reinforces that the generated C++ code doesn't need
             // to use calling convention attributes like `_stdcall`, etc.
-            assert!(matches!(sig.abi, rustc_abi::ExternAbi::C { .. }));
+            #[rustversion::before(2026-04-19)]
+            let abi = sig.abi;
+            #[rustversion::since(2026-04-19)]
+            let abi = sig.abi();
+            assert!(matches!(abi, rustc_abi::ExternAbi::C { .. }));
 
             // C++ references are not rebindable and therefore can't be used to replicate
             // semantics of Rust field types (or, say, element types of Rust
@@ -666,7 +678,10 @@ fn format_fn_ptr_for_rs<'tcx>(
     fn_header: ty::FnHeader<TyCtxt<'tcx>>,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
-    let ty::FnHeader { c_variadic, safety, abi } = fn_header;
+    #[rustversion::before(2026-04-19)]
+    let (c_variadic, safety, abi) = (fn_header.c_variadic, fn_header.safety, fn_header.abi);
+    #[rustversion::since(2026-04-19)]
+    let (c_variadic, safety, abi) = (fn_header.c_variadic(), fn_header.safety(), fn_header.abi());
     if c_variadic {
         bail!("Variadic functions are not yet supported.");
     }
@@ -1002,10 +1017,11 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 // It's just a regular old type.
                 // Question: do we need to check that it doesn't have any generics?
 
+                let tcx = db.tcx();
                 ensure!(
                     db.has_move_ctor_and_assignment_operator(
                         adt.did(),
-                        db.tcx().type_of(adt.did()).instantiate(db.tcx(), substs)
+                        crate::normalize_ty(tcx, tcx.type_of(adt.did()).instantiate(tcx, substs))
                     ).is_some(),
                     "Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator."
                 );
@@ -1311,14 +1327,12 @@ pub fn is_bridged_type<'tcx>(
 // Evaluates a constant (such as the length of an array type).
 pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) -> u64 {
     // It would be nice if we knew that these types were already fully normalized.
+    #[rustversion::before(2026-04-19)]
+    let unnorm_cst = cst;
+    #[rustversion::since(2026-04-19)]
+    let unnorm_cst = ty::Unnormalized::new_wip(cst);
     let normalized = tcx
-        .try_normalize_erasing_regions(
-            ty::TypingEnv {
-                typing_mode: ty::TypingMode::PostAnalysis,
-                param_env: ty::ParamEnv::empty(),
-            },
-            cst,
-        )
+        .try_normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_cst)
         .unwrap_or_else(|_| panic!("Unable to normalize type constant {{cst}}."));
     let Some(target_u64) = normalized.try_to_target_usize(tcx) else {
         panic!("Unable to get size from normalized type constant ({cst} => {normalized}).")

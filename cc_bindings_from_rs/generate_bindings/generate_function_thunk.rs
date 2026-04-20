@@ -52,13 +52,7 @@ fn tuple_c_abi_rs_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
 }
 
 fn is_drop_not_default<'tcx>(tcx: ty::TyCtxt<'tcx>, ty: ty::Ty<'tcx>) -> bool {
-    if !ty.needs_drop(
-        tcx,
-        ty::TypingEnv {
-            typing_mode: ty::TypingMode::PostAnalysis,
-            param_env: ty::ParamEnv::empty(),
-        },
-    ) {
+    if !ty.needs_drop(tcx, ty::TypingEnv::fully_monomorphized()) {
         return false;
     }
     let trait_id =
@@ -608,7 +602,11 @@ pub fn generate_thunk_impl<'tcx>(
 /// Returns `Ok(())` if no thunk is required.
 /// Otherwise returns an error the describes why the thunk is needed.
 pub fn is_thunk_required<'tcx>(tcx: TyCtxt<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
-    match sig.abi {
+    #[rustversion::before(2026-04-19)]
+    let abi = sig.abi;
+    #[rustversion::since(2026-04-19)]
+    let abi = sig.abi();
+    match abi {
         // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
         // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
         // https://doc.rust-lang.org/nomicon/ffi.html#ffi-and-unwinding.
@@ -729,19 +727,18 @@ pub fn generate_trait_thunks<'tcx>(
             }
         };
 
-        let sig_mid = liberate_and_deanonymize_late_bound_regions(
+        // We normalize here to expand associated types to their underlying type.
+        let sig_mid = try_normalize(
             tcx,
-            // We normalize here to expand associated types to their underlying type.
-            try_normalize(
-                tcx,
-                ty::PseudoCanonicalInput {
-                    typing_env: TypingEnv::fully_monomorphized(),
-                    value: tcx.fn_sig(method.def_id).instantiate(tcx, substs),
-                },
-            )
-            .expect("Normalization should succeed since this code typechecked"),
-            method.def_id,
-        );
+            ty::PseudoCanonicalInput {
+                typing_env: TypingEnv::fully_monomorphized(),
+                value: crate::normalize_ty(tcx, tcx.fn_sig(method.def_id).instantiate(tcx, substs)),
+            },
+        )
+        .expect("Normalization should succeed since this code typechecked");
+        #[rustversion::since(2026-04-19)]
+        let sig_mid = ty::Unnormalized::new(sig_mid);
+        let sig_mid = liberate_and_deanonymize_late_bound_regions(tcx, sig_mid, method.def_id);
 
         let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
         cc_thunk_decls.add_assign(generate_thunk_decl(

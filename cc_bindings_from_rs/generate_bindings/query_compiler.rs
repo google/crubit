@@ -76,7 +76,11 @@ pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bo
                 // TODO: b/258259459 - Support zero sized types.
                 return false;
             };
-            is_c_abi_compatible_by_value(tcx, tcx.type_of(field.did).instantiate(tcx, substs))
+            #[rustversion::before(2026-04-19)]
+            let ty = tcx.type_of(field.did).instantiate(tcx, substs);
+            #[rustversion::since(2026-04-19)]
+            let ty = tcx.type_of(field.did).instantiate(tcx, substs).skip_normalization();
+            is_c_abi_compatible_by_value(tcx, ty)
         }
 
         // Arrays are explicitly not ABI-compatible (though they are layout-compatible).
@@ -118,13 +122,21 @@ pub fn count_regions<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> HashMap<Region<'tcx>, u
 /// The prefix for deanonymized region names.
 pub const ANON_REGION_PREFIX: &str = "'__anon";
 
+#[rustversion::before(2026-04-19)]
+pub type PolyFnSig<'tcx> = ty::PolyFnSig<'tcx>;
+
+#[rustversion::since(2026-04-19)]
+pub type PolyFnSig<'tcx> = ty::Unnormalized<'tcx, ty::PolyFnSig<'tcx>>;
+
 /// Similar to `TyCtxt::liberate_and_name_late_bound_regions` but also replaces
 /// anonymous regions with new names.
 pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     tcx: TyCtxt<'tcx>,
-    sig: ty::PolyFnSig<'tcx>,
+    sig: PolyFnSig<'tcx>,
     fn_def_id: DefId,
 ) -> ty::FnSig<'tcx> {
+    #[rustversion::since(2026-04-19)]
+    let sig = sig.skip_normalization();
     let mut anon_count: u32 = 0;
     let mut translated_kinds: HashMap<ty::BoundVar, ty::BoundRegionKind> = HashMap::new();
     #[rustversion::before(2026-01-29)]
@@ -250,7 +262,10 @@ fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
 /// Implementation of `BindingsGenerator::repr_attrs`.
 pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]> {
     let mut result = Vec::new();
+    #[rustversion::before(2026-04-19)]
     let ty = tcx.type_of(def_id).instantiate_identity();
+    #[rustversion::since(2026-04-19)]
+    let ty = tcx.type_of(def_id).instantiate_identity().skip_normalization();
     match ty.kind() {
         ty::TyKind::Adt(adt_def, _) => {
             let repr = adt_def.repr();

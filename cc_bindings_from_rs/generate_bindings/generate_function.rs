@@ -90,7 +90,11 @@ fn thunk_name(
                 .to_string();
             tcx.trait_impl_of_assoc(def_id)
                 .map(|impl_id| {
-                    let trait_id = tcx.impl_trait_ref(impl_id).instantiate_identity().def_id;
+                    let trait_id = crate::normalize_ty(
+                        tcx,
+                        tcx.impl_trait_ref(impl_id).instantiate_identity(),
+                    )
+                    .def_id;
                     let trait_name = db
                         .symbol_unqualified_name(trait_id)
                         .map(|name| name.rs_name)
@@ -427,7 +431,7 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
-    tcx.type_of(impl_id).instantiate_identity()
+    return crate::normalize_ty(tcx, tcx.type_of(impl_id).instantiate_identity());
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
@@ -770,7 +774,7 @@ pub fn generate_function<'tcx>(
     let trait_ref = tcx
         .impl_of_assoc(def_id)
         .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
-        .map(|trait_ref| trait_ref.instantiate_identity());
+        .map(|trait_ref| crate::normalize_ty(tcx, trait_ref.instantiate_identity()));
     let function_kind = function_kind(tcx, def_id, &sig_mid)?;
     let self_ty = function_kind.self_ty();
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
@@ -1077,7 +1081,11 @@ pub fn generate_function<'tcx>(
 }
 
 pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
-    if sig.c_variadic {
+    #[rustversion::before(2026-04-19)]
+    let is_c_variadic = sig.c_variadic;
+    #[rustversion::since(2026-04-19)]
+    let is_c_variadic = sig.c_variadic();
+    if is_c_variadic {
         // TODO(b/254097223): Add support for variadic functions.
         bail!("C variadic functions are not supported (b/254097223)");
     }

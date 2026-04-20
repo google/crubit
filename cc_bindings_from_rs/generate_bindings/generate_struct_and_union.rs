@@ -71,7 +71,7 @@ pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
     }
 
     let field_def_id = fields[0].did;
-    let field_ty = tcx.type_of(field_def_id).instantiate_identity();
+    let field_ty = crate::normalize_ty(tcx, tcx.type_of(field_def_id).instantiate_identity());
 
     Ok(field_ty)
 }
@@ -317,14 +317,21 @@ pub(crate) fn generate_associated_item<'tcx>(
                 .zip(tcx.trait_impl_of_assoc(def_id))
                 .ok_or(anyhow!("Associated types with no name are not supported."))
                 .and_then(|(name, impl_id)| {
+                    #[rustversion::before(2026-04-19)]
                     let trait_ref = tcx.impl_trait_header(impl_id).trait_ref.instantiate_identity();
+                    #[rustversion::since(2026-04-19)]
+                    let trait_ref = crate::normalize_ty(
+                        tcx,
+                        tcx.impl_trait_header(impl_id).trait_ref.instantiate_identity(),
+                    );
                     let trait_rs_name = db
                         .symbol_canonical_name(trait_ref.def_id)
                         .expect("Trait impl should have a canonical name.")
                         .format_for_rs();
                     // The first argument of a trait ref is the self type.
                     let self_ty = trait_ref.args.type_at(0);
-                    let alias_type = tcx.type_of(def_id).instantiate_identity();
+                    let alias_type =
+                        crate::normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
                     let rs_type_spelling = format!("<{} as {}>::{}", self_ty, trait_rs_name, name);
                     crate::create_type_alias_with_rs_type(
                         db,
@@ -358,6 +365,15 @@ fn erase_regions<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
     return tcx.erase_regions(ty);
 }
 
+fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::TraitRef<'tcx> {
+    #[rustversion::since(2025-10-17)]
+    let middle_trait_header = tcx.impl_trait_header(impl_id);
+    #[rustversion::before(2025-10-17)]
+    let middle_trait_header =
+        tcx.impl_trait_header(impl_id).expect("DefId for a trait impl lacked a trait header");
+    crate::normalize_ty(tcx, middle_trait_header.trait_ref.instantiate_identity())
+}
+
 pub fn from_trait_impls_by_argument<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
@@ -375,13 +391,7 @@ pub fn from_trait_impls_by_argument<'tcx>(
     };
     let mut map: HashMap<Ty<'tcx>, Vec<DefId>> = HashMap::new();
     for from_impl_id in impls_iter {
-        #[rustversion::since(2025-10-17)]
-        let middle_trait_header = tcx.impl_trait_header(from_impl_id);
-        #[rustversion::before(2025-10-17)]
-        let middle_trait_header = tcx
-            .impl_trait_header(from_impl_id)
-            .expect("DefId for an `From` trait impl lacked a trait header");
-        let trait_ref = middle_trait_header.trait_ref.instantiate_identity();
+        let trait_ref = get_trait_ref_from_impl_id(tcx, from_impl_id);
         let ty = trait_ref.args.type_at(1);
         // We want to check if our type has type variables and constant variables, but not
         // region variables. Region variables are fine and we'll replace them with 'static.
@@ -409,14 +419,7 @@ fn generate_into_impls<'tcx>(
     let from_map = db.from_trait_impls_by_argument(core.def_id.krate);
     let from_impls = from_map.get(&core.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(
         |from_impl_id| {
-            #[rustversion::since(2025-10-17)]
-            let middle_trait_header = tcx.impl_trait_header(*from_impl_id);
-            #[rustversion::before(2025-10-17)]
-            let middle_trait_header = tcx
-                .impl_trait_header(*from_impl_id)
-                .expect("DefId for a `From` trait impl lacked a trait header");
-            let trait_ref = middle_trait_header.trait_ref.instantiate_identity();
-
+            let trait_ref = get_trait_ref_from_impl_id(tcx, *from_impl_id);
             let from_middle_ty = trait_ref.args.type_at(0);
 
             // If our type contains type variables or constant variables (but not region variables),
@@ -434,16 +437,10 @@ fn generate_into_impls<'tcx>(
     );
     let into_impls =
         tcx.non_blanket_impls_for_ty(into_trait, core.self_ty).filter_map(|into_impl_id| {
-            #[rustversion::since(2025-10-17)]
-            let middle_trait_header = tcx.impl_trait_header(into_impl_id);
-            #[rustversion::before(2025-10-17)]
-            let middle_trait_header = tcx
-                .impl_trait_header(into_impl_id)
-                .expect("DefId for an `Into` trait impl lacked a trait header");
+            let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
-            let into_middle_ty =
-                middle_trait_header.trait_ref.instantiate_identity().args.type_at(1);
+            let into_middle_ty = trait_ref.args.type_at(1);
 
             // If our type isn't Cxx compatible, we can't generate an `into` impl.
             let cc_ty = db
@@ -584,15 +581,10 @@ fn generate_index_impls<'tcx>(
         let mut has_isize_impl = false;
 
         let impls = tcx.non_blanket_impls_for_ty(index_trait, core.self_ty).map(|index_impl_id| {
-            #[rustversion::since(2025-10-17)]
-            let middle_trait_header = tcx.impl_trait_header(index_impl_id);
-            #[rustversion::before(2025-10-17)]
-            let middle_trait_header = tcx
-                .impl_trait_header(index_impl_id)
-                .expect("DefId for an `Index` trait impl lacked a trait header");
+            let trait_ref = get_trait_ref_from_impl_id(tcx, index_impl_id);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
-            let trait_args = middle_trait_header.trait_ref.instantiate_identity().args;
+            let trait_args = trait_ref.args;
             let index_element_ty = trait_args.type_at(1);
             if index_element_ty.flags().intersects(has_type_or_const_vars()) {
                 return Err((anyhow!("Index trait impl has uninstantiated generic parameters, which is not yet supported {index_element_ty}"), index_impl_id));
@@ -986,7 +978,11 @@ pub fn generate_adt_core<'tcx>(
     // Note: we erase regions in order to get bindings regardless of what lifetime parameters are
     // present. We want to generate bindings for functions regardless of their lifetime bounds, as
     // C++ cannot special-case the availability of a function based on lifetimes.
+    #[rustversion::before(2026-04-19)]
     let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
+    #[rustversion::since(2026-04-19)]
+    let self_ty =
+        erase_regions(tcx, crate::normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity()));
     assert!(self_ty.is_adt());
     assert!(db.symbol_canonical_name(def_id).is_some(), "Caller should verify");
 
