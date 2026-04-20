@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "nullability/type_and_maybe_loc_visitor.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTFwd.h"
@@ -20,7 +19,6 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
-#include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
@@ -36,6 +34,7 @@
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/ScopedPrinter.h"
 
@@ -759,18 +758,25 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     visit(FPT->getReturnType(),
           L ? std::optional<TypeLoc>(L->getReturnLoc()) : std::nullopt);
     if (L) {
-      CHECK(FPT->getParamTypes().size() == L->getNumParams());
+      if (FPT->getParamTypes().size() != L->getNumParams()) {
+        llvm::reportFatalInternalError(
+            "FunctionProtoType vs FunctionProtoTypeLoc has different number of "
+            "types and params");
+      }
     }
     for (unsigned I = 0, N = FPT->getParamTypes().size(); I < N; ++I) {
       std::optional<TypeLoc> ParamLoc;
       if (L) {
-        const auto *ParamDecl = L->getParam(I);
+        const auto* ParamDecl = L->getParam(I);
         // The only known case of null ParamDecls is when a function type is
         // seen as a template argument in a type of a lambda capture's implicit
         // FieldDecl. We avoid using NullabilityWalker to walk the TypeLocs of
-        // such Decls. If other cases arise, this CHECK serves to make sure we
-        // find out about them and handle them appropriately.
-        CHECK(ParamDecl);
+        // such Decls. Check here to make sure we find out about any other cases
+        // and handle them appropriately.
+        if (ParamDecl == nullptr) {
+          llvm::reportFatalInternalError(
+              "FunctionProtoTypeLoc has null ParamDecl");
+        }
         if (auto *TSI = ParamDecl->getTypeSourceInfo()) {
           ParamLoc = TSI->getTypeLoc();
         }
@@ -828,8 +834,10 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       return;
     }
 
-    auto *CRD = TST->getAsCXXRecordDecl();
-    CHECK(CRD) << "Expected an alias or class specialization in concrete code";
+    auto* CRD = TST->getAsCXXRecordDecl();
+    if (CRD == nullptr)
+      llvm::reportFatalInternalError(
+          "Expected an alias or class specialization in concrete code");
     if (isSupportedSmartPointerType(QualType(TST, 0))) {
       report(TST);
     } else {
@@ -838,7 +846,12 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     visit(CRD->getDeclContext());
 
     ArrayRef<TemplateArgument> TSTArgs = TST->template_arguments();
-    CHECK(!L || TSTArgs.size() == L->getNumArgs());
+    if (L && TSTArgs.size() != L->getNumArgs()) {
+      llvm::reportFatalInternalError(
+          "TemplateSpecializationType vs TemplateSpecializationTypeLoc has "
+          "different number of arguments " +
+          Twine(TSTArgs.size()) + " vs " + Twine(L->getNumArgs()));
+    }
 
     for (unsigned I = 0; I < TSTArgs.size(); ++I) {
       visit(TSTArgs[I], L ? std::optional<TemplateArgumentLoc>(L->getArgLoc(I))
@@ -975,9 +988,11 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     if (NK) sawNullability(*NK);
     visit(AT->getModifiedType(),
           L ? std::optional<TypeLoc>(L->getModifiedLoc()) : std::nullopt);
-    CHECK(!PendingNullability.has_value())
-        << "Should have been consumed by modified type! "
-        << AT->getModifiedType().getAsString();
+    if (PendingNullability.has_value()) {
+      llvm::reportFatalInternalError(
+          Twine("Should have been consumed by modified type! ") +
+          AT->getModifiedType().getAsString());
+    }
   }
 
   void visitPointerType(const PointerType *absl_nonnull PT,
@@ -1098,11 +1113,13 @@ TypeNullability getTypeNullability(
     // Pack indexing expressions can contain dependent types even in an
     // instantiation, so we detect and skip attempting to walk these types as
     // specifically as we can.
-    CHECK((PET && !PET->getPattern().isNull() &&
-           PET->getPattern()->containsUnexpandedParameterPack()))
-        << "Most dependent types should never reach this point of analysis. "
-           "Unexpected dependent type: "
-        << T.getAsString();
+    if (!PET || PET->getPattern().isNull() ||
+        !PET->getPattern()->containsUnexpandedParameterPack()) {
+      llvm::reportFatalInternalError(
+          Twine("Most dependent types should never reach this point of "
+                "analysis. Unexpected dependent type: ") +
+          T.getAsString());
+    }
     return {};
   }
 
@@ -1125,10 +1142,8 @@ TypeNullability getTypeNullability(
         std::optional<SubstTemplateTypeParmTypeLoc> L) {
       if (SubstituteTypeParam) {
         if (auto Subst = SubstituteTypeParam(ST)) {
-          DCHECK_EQ(Subst->size(),
-                    countPointersInType(ST->getCanonicalTypeInternal()))
-              << "Substituted nullability has the wrong structure: "
-              << QualType(ST, 0).getAsString();
+          assert(Subst->size() ==
+                 countPointersInType(ST->getCanonicalTypeInternal()));
           // Check if the PendingNullability is more precise than the
           // substituted nullability.
           if (!Subst->empty() && PendingNullability.has_value()) {
@@ -1220,9 +1235,11 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
   // Default behavior for unhandled types: do not transform.
   QualType VisitType(const Type *absl_nonnull T) { return QualType(T, 0); }
 
-  QualType VisitPointerType(const PointerType *absl_nonnull PT) {
-    CHECK(!Nullability.empty())
-        << "Nullability vector too short at " << QualType(PT, 0).getAsString();
+  QualType VisitPointerType(const PointerType* absl_nonnull PT) {
+    if (Nullability.empty()) {
+      llvm::reportFatalInternalError(Twine("Nullability vector too short at ") +
+                                     QualType(PT, 0).getAsString());
+    }
     NullabilityKind NK = Nullability.front().concrete();
     Nullability = Nullability.drop_front();
 
@@ -1283,12 +1300,15 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
 
 }  // namespace
 
-QualType rebuildWithNullability(QualType T, const TypeNullability &Nullability,
-                                ASTContext &Ctx) {
+QualType rebuildWithNullability(QualType T, const TypeNullability& Nullability,
+                                ASTContext& Ctx) {
   Rebuilder V(Nullability, Ctx);
   QualType Result = V.Visit(T.getCanonicalType());
-  CHECK(V.done()) << "Nullability vector[" << Nullability.size()
-                  << "] too long for " << T.getAsString();
+  if (!V.done()) {
+    llvm::reportFatalInternalError("Nullability vector[" +
+                                   Twine(Nullability.size()) +
+                                   "] too long for " + T.getAsString());
+  }
   return Result;
 }
 
@@ -1299,9 +1319,11 @@ std::string printWithNullability(QualType T, const TypeNullability &Nullability,
 }
 
 std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(
-    TypeLoc Loc, const TypeNullabilityDefaults &Defaults) {
-  CHECK(!Loc.getType()->isDependentType()) << Loc.getType().getAsString();
-
+    TypeLoc Loc, const TypeNullabilityDefaults& Defaults) {
+  if (Loc.getType()->isDependentType()) {
+    llvm::reportFatalInternalError(Twine("Unexpected dependent type: ") +
+                                   Loc.getType().getAsString());
+  }
   struct Walker : NullabilityWalker<Walker> {
     std::vector<TypeNullabilityLoc> TypeNullabilityLocs;
     unsigned Slot = 0;

@@ -7,7 +7,6 @@
 #include <memory>
 #include <string>
 
-#include "absl/log/check.h"
 #include "clang/Basic/FileEntry.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
@@ -39,9 +38,14 @@ class InMainFileOrHeader : public LocFilter {
       : SM(SM), AllowMainFile(AllowMainFile) {
     FileID MainFileID = SM.getMainFileID();
     MainFile = SM.getFileEntryRefForID(MainFileID);
-    CHECK(MainFile) << "Unable to compute main file for filtering.";
+    if (!MainFile.has_value()) {
+      llvm::reportFatalInternalError(
+          "Unable to compute main file for filtering");
+    }
     llvm::StringRef MainFileName = MainFile->getName();
-    CHECK(!MainFileName.empty());
+    if (MainFileName.empty()) {
+      llvm::reportFatalInternalError("Main file name is empty");
+    }
     MainFileStem = llvm::sys::path::stem(MainFileName);
     IsMainFileOrHeaderCache.insert({MainFileID, true});
     llvm::SmallVector<llvm::StringRef, 2> TestFileSuffixMatches;

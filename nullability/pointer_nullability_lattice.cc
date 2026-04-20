@@ -6,10 +6,8 @@
 
 #include <cassert>
 #include <functional>
-#include <optional>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -17,6 +15,7 @@
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/Support/ErrorHandling.h"
 
 namespace clang::tidy::nullability {
 namespace {
@@ -50,7 +49,9 @@ PointerNullabilityLatticeBase::insertExprNullabilityIfAbsent(
   // It may invalidate iterators, e.g. inserting missing vectors for children.
   auto [Iterator, Inserted] =
       NFS.ExprToNullability.insert({E, GetNullability()});
-  CHECK(Inserted) << "GetNullability inserted same " << E->getStmtClassName();
+  if (!Inserted)
+    reportFatalInternalError("GetNullability inserted same " +
+                             Twine(E->getStmtClassName()));
   return Iterator->second;
 }
 

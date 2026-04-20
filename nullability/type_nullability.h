@@ -25,18 +25,17 @@
 #ifndef CRUBIT_NULLABILITY_TYPE_NULLABILITY_H_
 #define CRUBIT_NULLABILITY_TYPE_NULLABILITY_H_
 
+#include <cassert>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
-#include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
@@ -116,12 +115,12 @@ class PointerTypeNullability {
   // Returns symbolic nullability atoms.
   // Requires: isSymbolic().
   dataflow::Atom nonnullAtom() const {
-    CHECK(isSymbolic());
+    assert(isSymbolic());
     return Nonnull;
   }
 
   dataflow::Atom nullableAtom() const {
-    CHECK(isSymbolic());
+    assert(isSymbolic());
     return Nullable;
   }
 
