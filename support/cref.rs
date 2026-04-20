@@ -226,6 +226,13 @@ impl<'a, T: ?Sized> Clone for CMut<'a, T> {
     }
 }
 
+// `CRef` and `CMut` are unconditionally `Unpin`, as they are just pointers.
+//
+// They do imply, however, that the pointed-to object is pinned, and `&mut T` may only be acquired
+// from them if `T: Unpin`.
+impl<'a, T: ?Sized> Unpin for CRef<'a, T> {}
+impl<'a, T: ?Sized> Unpin for CMut<'a, T> {}
+
 /// A trait corresponding to the common C++ notion of "thread-safe" types.
 ///
 /// A type is `ThreadSafe` if its `const` and non-`const` methods and APIS are safe to access
