@@ -13,7 +13,6 @@ cc_library(
     hdrs = ["methods_qualifiers.h"],
     aspect_hints = [
         "//features:experimental",
-        "//features:no_assume_lifetimes",
     ],
 )
 
