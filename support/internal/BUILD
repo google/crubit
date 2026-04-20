@@ -14,6 +14,7 @@ cc_library(
         "fmt.h",
         "lazy_init.h",
         "memswap.h",
+        "move_assign.h",
         "offsetof.h",
         "sizeof.h",
         "slot.h",

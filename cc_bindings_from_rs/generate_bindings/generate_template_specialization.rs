@@ -318,7 +318,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                     } __NEWLINE__
                     inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(#arg_ty&& value) noexcept {
                         if (tag() != #none_val) {
-                          *#some_ptr_val = ::std::move(value);
+                            ::crubit::MoveAssignOrDestroyAndConstruct(#some_ptr_val, ::std::move(value));
                         } else {
                           #write_some_to_tag
                           ::std::construct_at(#some_ptr_val, ::std::move(value));
@@ -358,6 +358,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
         let mut prereqs = CcPrerequisites::default();
         // For std::move.
         prereqs.includes.insert(CcInclude::utility());
+        prereqs.includes.insert(self.db.support_header("internal/move_assign.h"));
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
         let cc_details = CcSnippet {
             tokens: quote! {
@@ -555,7 +556,7 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                         ::std::construct_at(#ok_ptr, ::std::move(ok));
                     } else {
                         #write_ok_to_tag
-                        *#ok_ptr = ::std::move(ok);
+                        ::crubit::MoveAssignOrDestroyAndConstruct(#ok_ptr, ::std::move(ok));
                     }
                     return *this;
                 } __NEWLINE__
@@ -595,7 +596,7 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                             ::std::construct_at(#err_ptr, ::std::move(err.error()));
                         } else {
                             #write_err_to_tag
-                            *#err_ptr = ::std::move(err.error());
+                            ::crubit::MoveAssignOrDestroyAndConstruct(#err_ptr, ::std::move(err.error()));
                         }
                         return *this;
                     } __NEWLINE__
@@ -662,6 +663,7 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(CcInclude::utility());
         prereqs.includes.insert(db.support_header("internal/check.h"));
+        prereqs.includes.insert(db.support_header("internal/move_assign.h"));
         prereqs.includes.insert(CcInclude::cstring());
         let move_construct_ok_details = move_constructor_ok.cc_details.into_tokens(&mut prereqs);
         let move_construct_err_details = move_constructor_err.cc_details.into_tokens(&mut prereqs);

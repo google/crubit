@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/bridge.h"
 #include "support/internal/memswap.h"
+#include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/option.h"
@@ -1396,8 +1397,9 @@ inline rs_std::Option<::option::CloneNoDefault>&
 rs_std::Option<::option::CloneNoDefault>::operator=(
     ::option::CloneNoDefault&& value) noexcept {
   if (tag() != 0) {
-    *reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1) =
-        ::std::move(value);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::option::CloneNoDefault*>(storage_ + 1),
+        ::std::move(value));
   } else {
     set_tag(1);
     ::std::construct_at(
@@ -1521,8 +1523,9 @@ inline rs_std::Option<::option::CopyNoDefault>&
 rs_std::Option<::option::CopyNoDefault>::operator=(
     ::option::CopyNoDefault&& value) noexcept {
   if (tag() != 0) {
-    *reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1) =
-        ::std::move(value);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::option::CopyNoDefault*>(storage_ + 1),
+        ::std::move(value));
   } else {
     set_tag(1);
     ::std::construct_at(
@@ -1642,7 +1645,8 @@ inline rs_std::Option<::option::HasDefault>::Option(
 inline rs_std::Option<::option::HasDefault>& rs_std::Option<
     ::option::HasDefault>::operator=(::option::HasDefault&& value) noexcept {
   if (tag() != UINT64_C(9223372036854775808)) {
-    *reinterpret_cast<::option::HasDefault*>(storage_) = ::std::move(value);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::option::HasDefault*>(storage_), ::std::move(value));
   } else {
     ::std::construct_at(reinterpret_cast<::option::HasDefault*>(storage_),
                         ::std::move(value));
@@ -1860,7 +1864,8 @@ inline rs_std::Option<::option::HasOptions>::Option(
 inline rs_std::Option<::option::HasOptions>& rs_std::Option<
     ::option::HasOptions>::operator=(::option::HasOptions&& value) noexcept {
   if (tag() != 2) {
-    *reinterpret_cast<::option::HasOptions*>(storage_) = ::std::move(value);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::option::HasOptions*>(storage_), ::std::move(value));
   } else {
     ::std::construct_at(reinterpret_cast<::option::HasOptions*>(storage_),
                         ::std::move(value));
@@ -1969,7 +1974,8 @@ inline rs_std::Option<::option::NonMaxU8>::Option(
 inline rs_std::Option<::option::NonMaxU8>& rs_std::Option<
     ::option::NonMaxU8>::operator=(::option::NonMaxU8&& value) noexcept {
   if (tag() != 251) {
-    *reinterpret_cast<::option::NonMaxU8*>(storage_) = ::std::move(value);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::option::NonMaxU8*>(storage_), ::std::move(value));
   } else {
     ::std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
                         ::std::move(value));
@@ -2082,8 +2088,9 @@ inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>&
 rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
     rs_std::Option<::option::NonMaxU8>&& value) noexcept {
   if (tag() != 252) {
-    *reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_) =
-        ::std::move(value);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
+        ::std::move(value));
   } else {
     ::std::construct_at(
         reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
@@ -2201,7 +2208,8 @@ inline rs_std::Option<::std::uint8_t>::Option(::std::uint8_t&& value) noexcept {
 inline rs_std::Option<::std::uint8_t>&
 rs_std::Option<::std::uint8_t>::operator=(::std::uint8_t&& value) noexcept {
   if (tag() != 0) {
-    *reinterpret_cast<::std::uint8_t*>(storage_ + 1) = ::std::move(value);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(storage_ + 1), ::std::move(value));
   } else {
     set_tag(1);
     ::std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1),

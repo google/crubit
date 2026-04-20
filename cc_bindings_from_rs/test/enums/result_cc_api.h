@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/check.h"
 #include "support/internal/memswap.h"
+#include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/result.h"
@@ -1450,8 +1451,9 @@ rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator=(
         ::std::move(ok));
   } else {
     set_tag(0);
-    *reinterpret_cast<::result::CloneNoDefault*>(__storage + 1) =
-        ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::result::CloneNoDefault*>(__storage + 1),
+        ::std::move(ok));
   }
   return *this;
 }
@@ -1472,8 +1474,9 @@ rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator=(
                         ::std::move(err.error()));
   } else {
     set_tag(1);
-    *reinterpret_cast<::std::uint8_t*>(__storage + 1) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 1),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -1575,8 +1578,9 @@ rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator=(
         ::std::move(ok));
   } else {
     set_tag(0);
-    *reinterpret_cast<::result::CopyNoDefault*>(__storage + 1) =
-        ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::result::CopyNoDefault*>(__storage + 1),
+        ::std::move(ok));
   }
   return *this;
 }
@@ -1597,8 +1601,9 @@ rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator=(
                         ::std::move(err.error()));
   } else {
     set_tag(1);
-    *reinterpret_cast<::std::uint8_t*>(__storage + 1) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 1),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -1688,7 +1693,8 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator=(
     ::std::construct_at(reinterpret_cast<::result::HasDefault*>(__storage),
                         ::std::move(ok));
   } else {
-    *reinterpret_cast<::result::HasDefault*>(__storage) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::result::HasDefault*>(__storage), ::std::move(ok));
   }
   return *this;
 }
@@ -1709,8 +1715,9 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator=(
                         ::std::move(err.error()));
   } else {
     set_tag(UINT64_C(9223372036854775808));
-    *reinterpret_cast<::std::uint8_t*>(__storage + 8) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 8),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -1808,8 +1815,9 @@ rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator=(
                         ::std::move(err.error()));
   } else {
     set_tag(UINT64_C(9223372036854775808));
-    *reinterpret_cast<::std::uint8_t*>(__storage + 8) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 8),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -1922,8 +1930,10 @@ operator=(rs_std::Result<::std::uint32_t, ::std::uint32_t>&& ok) noexcept {
             __storage),
         ::std::move(ok));
   } else {
-    *reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
-        __storage) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
+            __storage),
+        ::std::move(ok));
   }
   return *this;
 }
@@ -1947,8 +1957,9 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                         ::std::move(err.error()));
   } else {
     set_tag(2);
-    *reinterpret_cast<::std::uint32_t*>(__storage + 4) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint32_t*>(__storage + 4),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -2070,7 +2081,8 @@ operator=(::std::uint32_t&& ok) noexcept {
                         ::std::move(ok));
   } else {
     set_tag(2);
-    *reinterpret_cast<::std::uint32_t*>(__storage + 4) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint32_t*>(__storage + 4), ::std::move(ok));
   }
   return *this;
 }
@@ -2098,8 +2110,10 @@ operator=(rs_std::unexpected<rs_std::Result<::std::uint32_t, ::std::uint32_t>>&&
             __storage),
         ::std::move(err.error()));
   } else {
-    *reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
-        __storage) = ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
+            __storage),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -2234,7 +2248,8 @@ rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator=(
                         ::std::move(ok));
   } else {
     set_tag(0);
-    *reinterpret_cast<::std::uint8_t*>(__storage + 1) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 1), ::std::move(ok));
   }
   return *this;
 }
@@ -2257,8 +2272,9 @@ rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator=(
         ::std::move(err.error()));
   } else {
     set_tag(1);
-    *reinterpret_cast<::result::CloneNoDefault*>(__storage + 1) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::result::CloneNoDefault*>(__storage + 1),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -2360,7 +2376,8 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator=(
                         ::std::move(ok));
   } else {
     set_tag(0);
-    *reinterpret_cast<::std::uint8_t*>(__storage + 1) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 1), ::std::move(ok));
   }
   return *this;
 }
@@ -2382,8 +2399,9 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator=(
         ::std::move(err.error()));
   } else {
     set_tag(1);
-    *reinterpret_cast<::result::CopyNoDefault*>(__storage + 1) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::result::CopyNoDefault*>(__storage + 1),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -2476,7 +2494,8 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator=(
                         ::std::move(ok));
   } else {
     set_tag(UINT64_C(9223372036854775808));
-    *reinterpret_cast<::std::uint8_t*>(__storage + 8) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 8), ::std::move(ok));
   }
   return *this;
 }
@@ -2494,8 +2513,9 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator=(
     ::std::construct_at(reinterpret_cast<::result::HasDefault*>(__storage),
                         ::std::move(err.error()));
   } else {
-    *reinterpret_cast<::result::HasDefault*>(__storage) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::result::HasDefault*>(__storage),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -2592,7 +2612,8 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator=(
                         ::std::move(ok));
   } else {
     set_tag(UINT64_C(9223372036854775808));
-    *reinterpret_cast<::std::uint8_t*>(__storage + 8) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 8), ::std::move(ok));
   }
   return *this;
 }
@@ -2697,7 +2718,8 @@ rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator=(
                         ::std::move(ok));
   } else {
     set_tag(0);
-    *reinterpret_cast<::std::uint32_t*>(__storage + 4) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint32_t*>(__storage + 4), ::std::move(ok));
   }
   return *this;
 }
@@ -2718,8 +2740,9 @@ rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator=(
                         ::std::move(err.error()));
   } else {
     set_tag(1);
-    *reinterpret_cast<::std::uint32_t*>(__storage + 4) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint32_t*>(__storage + 4),
+        ::std::move(err.error()));
   }
   return *this;
 }
@@ -2816,7 +2839,8 @@ inline rs_std::Result<::std::uint8_t, ::std::uint8_t>& rs_std::Result<
                         ::std::move(ok));
   } else {
     set_tag(0);
-    *reinterpret_cast<::std::uint8_t*>(__storage + 1) = ::std::move(ok);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 1), ::std::move(ok));
   }
   return *this;
 }
@@ -2837,8 +2861,9 @@ rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator=(
                         ::std::move(err.error()));
   } else {
     set_tag(1);
-    *reinterpret_cast<::std::uint8_t*>(__storage + 1) =
-        ::std::move(err.error());
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint8_t*>(__storage + 1),
+        ::std::move(err.error()));
   }
   return *this;
 }

@@ -12,6 +12,7 @@ add_library(crubit_support_internal_bindings_support STATIC
 "fmt.h"
 "lazy_init.h"
 "memswap.h"
+"move_assign.h"
 "offsetof.h"
 "sizeof.h"
 "slot.h"
