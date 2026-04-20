@@ -180,7 +180,8 @@ using GetTypeParamNullability =
 struct TypeNullabilityDefaults {
   // TODO(sammccall): remove this legacy constructor that ignores pragmas
   TypeNullabilityDefaults() : Ctx(nullptr), FileNullability(nullptr) {}
-  TypeNullabilityDefaults(ASTContext &Ctx, const NullabilityPragmas &Pragmas)
+  TypeNullabilityDefaults(const ASTContext& Ctx,
+                          const NullabilityPragmas& Pragmas)
       : Ctx(&Ctx), FileNullability(&Pragmas) {}
 
   // Get the effective default nullability for a particular file.
@@ -188,7 +189,7 @@ struct TypeNullabilityDefaults {
 
   // The AST context is needed to resolve the associated file in some cases.
   // TODO(sammccall): this should always be provided, clean up callers.
-  ASTContext *absl_nullable Ctx;
+  const ASTContext* absl_nullable Ctx;
   // The nullability of pointer types in this translation unit, where no
   // nullability annotations or pragmas apply.
   NullabilityKind DefaultNullability = NullabilityKind::Unspecified;
