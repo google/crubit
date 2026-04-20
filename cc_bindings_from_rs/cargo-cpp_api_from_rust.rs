@@ -176,12 +176,10 @@ fn main() -> Result<()> {
     fs::create_dir_all(&headers_dir)?;
 
     let mut lib_rs_content = String::new();
-    for pkg_id in ordered {
-        let artifact_info = match pkg_to_artifact.get(&pkg_id.repr) {
-            Some(info) => info,
-            None => continue,
+    for pkg_id in ordered.iter() {
+        let Some(artifact_info) = pkg_to_artifact.get(&pkg_id.repr) else {
+            continue;
         };
-
         let crate_name = &artifact_info.name;
         let rs_crate_name = crate_name.replace('-', "_");
         let hash = &artifact_info.hash;
@@ -190,10 +188,9 @@ fn main() -> Result<()> {
         let intermediate_rs = deps_dir.join(format!("lib{}-{}.rs", crate_name, hash));
 
         if artifact_info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
-            pkg_to_header.insert(pkg_id.repr, intermediate_h.to_string());
+            pkg_to_header.insert(pkg_id.repr.clone(), intermediate_h.to_string());
             lib_rs_content
                 .push_str(&format!("#[path = {:?}]\nmod r#{};\n", intermediate_rs, rs_crate_name));
-            // Final outputs: copy/rename from deps/ to their final locations.
             if !final_h.exists() {
                 fs::copy(&intermediate_h, &final_h)?;
             }
@@ -213,7 +210,7 @@ fn main() -> Result<()> {
         let resolve_node = resolve
             .nodes
             .iter()
-            .find(|n| n.id == pkg_id)
+            .find(|n| &n.id == pkg_id)
             .expect("Package must be in resolve graph");
         for dep_pkg_id in &resolve_node.dependencies {
             if let Some(dep_artifact) = pkg_to_artifact.get(&dep_pkg_id.repr) {
@@ -241,7 +238,7 @@ fn main() -> Result<()> {
                 None => err,
             })?;
         cpp_api_from_rust_lib::run_with_cmdline_args(&cmdline)?;
-        pkg_to_header.insert(pkg_id.repr, format!("{}.h", crate_name));
+        pkg_to_header.insert(pkg_id.repr.clone(), format!("{}.h", crate_name));
 
         // Final outputs: copy/rename from deps/ to their final locations.
         fs::copy(&intermediate_h, &final_h)?;
@@ -254,21 +251,73 @@ fn main() -> Result<()> {
     fs::write(&lib_rs_path, lib_rs_content)?;
 
     let static_lib_path = target_dir.join(&profile_dir).join(format!("lib{}.a", root_name));
-    let mut final_rustc_args = vec![
-        "rustc".to_string(),
-        lib_rs_path.to_string(),
-        format!("--edition={}", edition),
-        format!("--crate-name={}_cc_api", root_name),
-        "--crate-type=staticlib".to_string(),
-        format!("-Ldependency={}", deps_dir.as_str()),
-        "-o".to_string(),
-        static_lib_path.to_string(),
-    ];
-    for (_, artifact_info) in pkg_to_artifact.iter() {
-        final_rustc_args.push(format!("--extern={}={}", artifact_info.name, artifact_info.path));
+    let mut cargo_toml_content = format!(
+        r#"[package]
+name = "{root_name}-cc-api"
+version = "0.1.0"
+edition = "{edition}"
+
+[lib]
+path = "{lib_rs_filename}"
+crate-type = ["staticlib"]
+
+[dependencies]
+crubit_bridge_rust = "0.0.1"
+"#,
+        root_name = root_name,
+        edition = edition,
+        lib_rs_filename = lib_rs_path.file_name().unwrap(),
+    );
+
+    let pkg_id_to_package: HashMap<_, _> =
+        metadata.packages.iter().map(|p| (p.id.clone(), p)).collect();
+    for pkg in ordered
+        .iter()
+        .filter(|pkg_id| pkg_to_artifact.contains_key(&pkg_id.repr))
+        .filter_map(|pkg_id| pkg_id_to_package.get(pkg_id))
+    {
+        if pkg.source.as_ref().is_some_and(|source| source.is_crates_io()) {
+            cargo_toml_content.push_str(&format!("{} = \"{}\"\n", pkg.name, pkg.version));
+        } else {
+            // If it's not crates.io, we may need a more complex way to resolve it.
+            // For now, we'll try to use the path if it's available.
+            cargo_toml_content.push_str(&format!(
+                "{} = {{ path = {:?} }}\n",
+                pkg.name,
+                pkg.manifest_path
+                    .parent()
+                    .expect("Manifest path expected to have at least a Cargo.toml segment")
+            ));
+        }
     }
 
-    cpp_api_from_rust_lib::run_rustc(&final_rustc_args);
+    let cargo_toml_path = deps_dir.join("Cargo.toml");
+    fs::write(&cargo_toml_path, cargo_toml_content)?;
+
+    let mut cargo_build = Command::new(cargo_bin());
+    cargo_build.args([
+        "build",
+        "--manifest-path",
+        cargo_toml_path.as_str(),
+        format!("--target-dir={}", target_dir).as_str(),
+    ]);
+
+    if profile_dir.as_str() == "release" {
+        cargo_build.arg("--release");
+    }
+
+    let status =
+        cargo_build.status().map_err(|err| anyhow!("Failed to run cargo build: {}", err))?;
+    if !status.success() {
+        bail!("Cargo build of bindings failed");
+    }
+
+    // Cargo will output to target_dir/profile/staticlibname.a
+    // The previous implementation expected it at lib{root_name}.a directly under the profile dir.
+    let cargo_static_lib_path =
+        target_dir.join(&profile_dir).join(format!("lib{}_cc_api.a", root_name.replace('-', "_")));
+
+    fs::copy(&cargo_static_lib_path, &static_lib_path)?;
 
     Ok(())
 }
