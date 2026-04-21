@@ -1,0 +1,36 @@
+/* Part of the Crubit project, under the Apache License v2.0 with LLVM
+ * Exceptions. See /LICENSE for license information.
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ */
+
+td:has(> .ga) {
+  background-color: #e0f2f1;
+}
+
+.ga {
+  color: #267769;
+}
+
+td:has(> .😊) {
+  background-color: #e1f5fe;
+}
+
+.😊 {
+  color: #1a6ebb;
+}
+
+td:has(> .😑) {
+  background-color: #fefee1ff;
+}
+
+.😑 {
+  color: #53370b;
+}
+
+td:has(> .🙁) {
+  background-color: #ffefe1;
+}
+
+.🙁 {
+  color: #ad0303;
+}
