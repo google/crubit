@@ -350,8 +350,8 @@ fn api_func_shape_for_operator_index(
     let CcTypeVariant::Pointer(pointee) = &func.return_type.variant else {
         bail_to_errors!(
             errors,
-            "operator[] should return a reference, found {:?}",
-            &func.return_type.variant
+            "operator[] should return a reference, found {}",
+            db.cc_type_debug_name(&func.return_type)
         )
     };
     let return_val_is_const = pointee.pointee_type.is_const;
@@ -433,8 +433,8 @@ fn generate_cc_operator_index_nonmut_impls(
         other_variant => {
             bail_to_errors!(
                 errors,
-                "operator[] should return a reference (values are not yet supported), found {:?}",
-                other_variant
+                "operator[] should return a reference (values are not yet supported), found {}",
+                db.cc_type_debug_name(&func.return_type)
             )
         }
     };
@@ -490,8 +490,8 @@ fn generate_cc_operator_index_mut_impls(
         other_variant => {
             bail_to_errors!(
                 errors,
-                "(mutable) operator[] should return a reference (values are not yet supported), found {:?}",
-                other_variant
+                "(mutable) operator[] should return a reference (values are not yet supported), found {}",
+                db.cc_type_debug_name(&func.return_type)
             )
         }
     };
