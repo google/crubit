@@ -118,7 +118,7 @@ fn thunk_name(
     let target_path_mangled_hash = if db.no_thunk_name_mangling() {
         "".to_string()
     } else {
-        format!("{}_", tcx.crate_hash(db.source_crate_num()).to_hex())
+        format!("{:x}_", tcx.stable_crate_id(db.source_crate_num()))
     };
     if needs_thunk {
         format!(

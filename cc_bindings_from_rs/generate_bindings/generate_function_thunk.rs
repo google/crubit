@@ -720,8 +720,8 @@ pub fn generate_trait_thunks<'tcx>(
 
                 let symbol = tcx.symbol_name(instance);
                 format!(
-                    "__crubit_thunk_{}_{}",
-                    tcx.crate_hash(db.source_crate_num()).to_hex(),
+                    "__crubit_thunk_{:x}_{}",
+                    tcx.stable_crate_id(db.source_crate_num()),
                     &escape_non_identifier_chars(symbol.name)
                 )
             }
