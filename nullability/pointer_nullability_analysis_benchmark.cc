@@ -2,29 +2,26 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <cstdint>
-
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "benchmark/benchmark.h"
-#include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_diagnosis.h"
 #include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
+#include "llvm/Support/ErrorHandling.h"
 
 namespace clang::tidy::nullability {
 namespace {
 
 NamedDecl *absl_nonnull lookup(absl::string_view Name, const DeclContext &DC) {
   auto Result = DC.lookup(&DC.getParentASTContext().Idents.get(Name));
-  CHECK(Result.isSingleResult()) << Name;
+  if (!Result.isSingleResult())
+    llvm::reportFatalInternalError(Twine("lookup failed for ") + Name);
   return Result.front();
 }
 

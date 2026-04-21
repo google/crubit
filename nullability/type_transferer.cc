@@ -10,7 +10,6 @@
 #include <optional>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/type_nullability.h"
@@ -34,6 +33,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
@@ -73,7 +73,7 @@ static void computeNullability(const Expr* absl_nonnull E,
       });
 
       // We can't meaningfully interpret the vector, so discard it.
-      // TODO: fix all broken cases and upgrade to CHECK or DCHECK or so.
+      // TODO: fix all broken cases and upgrade to an assert or fatal error.
       Nullability.assign(ExpectedSize, NullabilityKind::Unspecified);
     }
     return Nullability;
@@ -89,7 +89,7 @@ static const TypeNullability& getNullabilityForChild(
     // Since we process child nodes before parents, we should already have
     // computed the child nullability. However, this is not true in all test
     // cases. So, we return unspecified nullability annotations.
-    // TODO: fix this issue, and CHECK() instead.
+    // TODO: fix this issue, and upgrade to a fatal error.
     LLVM_DEBUG({
       llvm::dbgs() << "=== Missing child nullability: ===\n";
       dump(E, llvm::dbgs());
@@ -527,7 +527,7 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
         return unspecifiedNullability(CE);
 
       case CK_Dependent:
-        CHECK(false) << "Shouldn't see dependent casts here?";
+        llvm::reportFatalInternalError("Shouldn't see dependent casts here?");
     }
   });
 }
@@ -727,7 +727,9 @@ static void transferArraySubscriptExpr(
   computeNullability(ASE, State, [&]() {
     auto& BaseNullability = getNullabilityForChild(ASE->getBase(), State);
     QualType BaseType = ASE->getBase()->getType();
-    CHECK(isSupportedRawPointerType(BaseType) || BaseType->isVectorType());
+    if (!isSupportedRawPointerType(BaseType) && !BaseType->isVectorType())
+      llvm::reportFatalInternalError(
+          "unexpected subscript base type (not pointer / not vector)");
     return isSupportedRawPointerType(BaseType)
                ? ArrayRef(BaseNullability).slice(1).vec()
                : BaseNullability;

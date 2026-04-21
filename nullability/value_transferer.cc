@@ -9,7 +9,6 @@
 #include <optional>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "nullability/ast_helpers.h"
 #include "nullability/macro_arg_capture.h"
 #include "nullability/pointer_nullability.h"
@@ -41,6 +40,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
@@ -756,6 +756,8 @@ static BoolValue* absl_nullable processPointerComparison(
     return &A.makeTopValue();
   }
 
+  assert(Opcode == BO_EQ || Opcode == BO_NE);
+
   // Special case: Are we comparing against `nullptr`?
   // We can avoid modifying the flow condition in this case and simply propagate
   // the nullability of the other operand (potentially with a negation).
@@ -765,7 +767,6 @@ static BoolValue* absl_nullable processPointerComparison(
   if (RHSNull->isLiteral(true))
     return &A.makeBoolValue(Opcode == BO_EQ ? *LHSNull : A.makeNot(*LHSNull));
 
-  CHECK(Opcode == BO_EQ || Opcode == BO_NE);
   auto& PointerEQ =
       Opcode == BO_EQ ? ComparisonFormula : A.makeNot(ComparisonFormula);
   auto& PointerNE =

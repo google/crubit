@@ -22,11 +22,9 @@ clang-tidy once mature.
 
 Specifically:
 
-- We follow the LLVM coding standards, with the exceptions listed here.
-- We use absl `CHECK()` rather than `assert()`.
-  (This finds bugs more reliably, and is trivial to migrate later.)
-- We otherwise avoid relying on absl, using llvm's Support libraries instead.
-- We write `// TODO` instead of `// FIXME`.
+-   We follow the LLVM coding standards, with the exceptions listed here:
+    -   We write `// TODO` instead of `// FIXME`.
+-   We otherwise avoid relying on absl, using llvm's Support libraries instead.
 
 This list isn't set in stone: we can choose to diverge further from LLVM style,
 if it's worth more cost of upstreaming later.
