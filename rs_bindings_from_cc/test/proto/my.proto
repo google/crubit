@@ -7,5 +7,8 @@ edition = "2023";
 package my_package;
 
 message MyMessage {
+  message Request {
+    int64 my_num = 1;
+  }
   int64 my_num = 1;
 }

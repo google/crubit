@@ -6,6 +6,12 @@ use forward_declare::{CppCast, UnsafeCppCast};
 use googletest::prelude::*;
 
 #[gtest]
+fn test_make_request() {
+    let msg = my_proto_api::test::MakeRequest(123);
+    expect_that!(msg.my_num(), eq(123));
+}
+
+#[gtest]
 fn test_return_value() {
     let msg = my_proto_api::test::ReturnValue();
 

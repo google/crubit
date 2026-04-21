@@ -112,6 +112,25 @@ MATCHER(HasDetectedFormatter, "") {
   return arg.detected_formatter;
 }
 
+MATCHER_P(HasProtoMessageBridgeType, expected_rust_name, "") {
+  if (!arg.bridge_type.has_value()) {
+    *result_listener << "no bridge_type";
+    return false;
+  }
+  const auto* pb =
+      std::get_if<BridgeType::ProtoMessageBridge>(&arg.bridge_type->variant);
+  if (!pb) {
+    *result_listener << "not ProtoMessageBridge";
+    return false;
+  }
+  if (pb->rust_name != expected_rust_name) {
+    *result_listener << "expected rust_name '" << expected_rust_name
+                     << "', got '" << pb->rust_name << "'";
+    return false;
+  }
+  return true;
+}
+
 // Matches a Func that has the given mangled name.
 MATCHER_P(MangledNameIs, mangled_name, "") {
   if (arg.mangled_name == mangled_name) return true;
@@ -347,6 +366,36 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
   }
 
   return items;
+}
+
+TEST(ImporterTest, ProtoMessageBridgeType) {
+  absl::string_view file = R"cc(
+    namespace proto2 {
+    struct Message {};
+    }  // namespace proto2
+    class MyMessage : public google::protobuf::Message {};
+    class MyMessage_Request : public google::protobuf::Message {};
+    class MyMessage_Request_Inner : public google::protobuf::Message {};
+    class Outer : public google::protobuf::Message {};
+    class Outer_Inner_Level2 : public google::protobuf::Message {};
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      AllOf(Contains(Pointee(AllOf(RsNameIs("MyMessage"),
+                                   HasProtoMessageBridgeType("MyMessage")))),
+            Contains(Pointee(
+                AllOf(RsNameIs("MyMessage_Request"),
+                      HasProtoMessageBridgeType("my_message::Request")))),
+            Contains(Pointee(AllOf(
+                RsNameIs("MyMessage_Request_Inner"),
+                HasProtoMessageBridgeType("my_message::request::Inner")))),
+            Contains(Pointee(
+                AllOf(RsNameIs("Outer"), HasProtoMessageBridgeType("Outer")))),
+            Contains(Pointee(
+                AllOf(RsNameIs("Outer_Inner_Level2"),
+                      HasProtoMessageBridgeType("outer::Inner_Level2"))))));
 }
 
 TEST(ImporterTest, Noop) {

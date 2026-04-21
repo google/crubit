@@ -11,6 +11,12 @@
 
 namespace test {
 
+inline my_package::MyMessage_Request MakeRequest(int64_t num) {
+  my_package::MyMessage_Request req;
+  req.set_my_num(num);
+  return req;
+}
+
 inline my_package::MyMessage ReturnValue() {
   my_package::MyMessage msg;
   msg.set_my_num(123);

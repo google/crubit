@@ -1067,7 +1067,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             Primitive::StdUint64T => CrubitAbiType::transmute("u64", "std::uint64_t"),
         }),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
-            BridgeRsTypeKind::ProtoMessageBridge { .. } => {
+            BridgeRsTypeKind::ProtoMessageBridge { rust_name } => {
                 let ir = db.ir();
                 let target = db
                     .defining_target(original_type.id())
@@ -1084,11 +1084,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
 
                 Ok(CrubitAbiType::ProtoMessage {
                     proto_message_rust_bridge: rust_abi_path,
-                    rust_proto_path: make_rust_abi_path_from_str(
-                        original_type.rs_name.identifier.as_ref(),
-                        ir,
-                        &target,
-                    ),
+                    rust_proto_path: make_rust_abi_path_from_str(rust_name.as_ref(), ir, &target),
                     cpp_proto_path: make_cpp_abi_path_from_str(&merged_cpp_abi_path)?,
                 })
             }

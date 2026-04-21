@@ -1,6 +1,7 @@
 """Importers for various types of `Decl`s"""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -34,6 +35,7 @@ cc_library(
         "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_set",
+        "@abseil-cpp//absl/functional:any_invocable",
         "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/log:die_if_null",
@@ -195,5 +197,15 @@ cc_library(
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "cxx_record_test",
+    srcs = ["cxx_record_test.cc"],
+    deps = [
+        ":cxx_record",
+        "//testing/base/public:gunit_main",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -20,6 +21,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
@@ -271,6 +273,39 @@ std::optional<std::array<std::string, N>> GetKeyValues(
   return values;
 }
 
+std::string ToSnakeCase(absl::string_view input) {
+  std::string result;
+  for (size_t i = 0; i < input.size(); ++i) {
+    if (std::isupper(input[i])) {
+      if (i > 0 && input[i - 1] != '_') {
+        result += '_';
+      }
+      result += std::tolower(input[i]);
+    } else {
+      result += std::tolower(input[i]);
+    }
+  }
+  return result;
+}
+
+std::string GetProto2MessageRustName(ImportContext& ictx,
+                                     const clang::RecordDecl& record_decl) {
+  const clang::DeclContext* dc = record_decl.getDeclContext();
+  return internal::GetProto2MessageRustNameImpl(
+      record_decl.getNameAsString(), [&ictx, dc](absl::string_view prefix) {
+        clang::IdentifierInfo& ii = ictx.ctx_.Idents.get(prefix);
+        for (clang::NamedDecl* decl : dc->lookup(&ii)) {
+          if (auto* outer_record =
+                  clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
+            if (crubit::IsProto2Message(*outer_record)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      });
+}
+
 // Returns the bridge type annotation for the given `record_decl` if it exists.
 std::optional<BridgeType> GetBridgeTypeAnnotation(
     ImportContext& ictx, const clang::RecordDecl& record_decl) {
@@ -280,7 +315,7 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
 
   if (crubit::IsProto2Message(record_decl)) {
     return BridgeType{BridgeType::ProtoMessageBridge{
-        .rust_name = record_decl.getNameAsString()}};
+        .rust_name = GetProto2MessageRustName(ictx, record_decl)}};
   }
 
   if (crubit_abi_values.has_value()) {
@@ -1460,5 +1495,56 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
 
   return std::nullopt;
 }
+
+namespace internal {
+
+// Determines the Rust bridge path for a given Proto2 message declaration.
+// Protobuf messages can be nested, resulting in C++ names like `Outer_Inner`.
+// This function resolves the nesting by looking up the parent messages in the
+// C++ AST, and formats the resulting path as `outer::Inner` in Rust.
+std::string GetProto2MessageRustNameImpl(
+    absl::string_view message_name,
+    absl::AnyInvocable<bool(absl::string_view)> is_parent_proto) {
+  absl::string_view current = message_name;
+  std::vector<absl::string_view> path;
+
+  // Traverse nested protobuf messages by searching for '_' in the name and
+  // checking if the prefix corresponds to an enclosing protobuf message.
+  while (true) {
+    bool found = false;
+    // Search for '_' from right to left to handle multiple levels of nesting.
+    for (size_t last_underscore = current.rfind('_');
+         !found && last_underscore != absl::string_view::npos &&
+         last_underscore > 0;
+         last_underscore = current.rfind('_', last_underscore - 1)) {
+      absl::string_view prefix = current.substr(0, last_underscore);
+      if (is_parent_proto(prefix)) {
+        // Found the parent proto message. The suffix is the inner message
+        // name. Add it to our path and continue with the parent.
+        path.push_back(current.substr(last_underscore + 1));
+        current = prefix;
+        found = true;
+      }
+    }
+    // If no valid parent proto message was found by splitting at '_',
+    // the current string is the outermost message name. Add it and stop.
+    if (!found) {
+      path.push_back(current);
+      break;
+    }
+  }
+
+  std::string rust_name = std::string(path.back());
+  if (path.size() > 1) {
+    rust_name = ToSnakeCase(rust_name);
+    for (int i = path.size() - 2; i > 0; --i) {
+      absl::StrAppend(&rust_name, "::", ToSnakeCase(path[i]));
+    }
+    absl::StrAppend(&rust_name, "::", path.front());
+  }
+  return rust_name;
+}
+
+}  // namespace internal
 
 }  // namespace crubit
