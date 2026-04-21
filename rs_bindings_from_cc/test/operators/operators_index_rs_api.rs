@@ -649,7 +649,7 @@ pub mod crubit {
 
         // Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=80
         // error: function `crubit::test::ContainerValue::operator[]` could not be bound
-        //   operator[] should return a reference, found Primitive(Int)
+        //   operator[] should return a reference, found int
 
         /// R-value qualified overloads are not supported.
         ///

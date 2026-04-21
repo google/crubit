@@ -614,7 +614,7 @@ Importer::GetTopLevelItemIdsInSourceOrder(
 
   absl::flat_hash_map<BazelLabel, std::vector<ItemId>> ordered_items;
   for (auto& [target, item_ids_in_target] : items) {
-    llvm::sort(item_ids_in_target, compare_locations);
+    llvm::stable_sort(item_ids_in_target, compare_locations);
 
     std::vector<ItemId>& ordered_item_ids = ordered_items[target];
     ordered_item_ids.reserve(item_ids_in_target.size());
@@ -653,7 +653,7 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   clang::SourceManager& sm = ctx_.getSourceManager();
   auto compare_locations = SourceLocationComparator(sm);
 
-  llvm::sort(items, compare_locations);
+  llvm::stable_sort(items, compare_locations);
   std::vector<ItemId> ordered_item_ids;
 
   ordered_item_ids.reserve(items.size());
@@ -673,7 +673,7 @@ std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
 
   clang::SourceManager& sm = ctx_.getSourceManager();
   auto compare_locations = SourceLocationComparator(sm);
-  llvm::sort(items, compare_locations);
+  llvm::stable_sort(items, compare_locations);
 
   std::vector<ItemId> ordered_item_ids;
   ordered_item_ids.reserve(items.size());
@@ -717,22 +717,36 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   // Augment child_item_ids for records with out-of-line defined children, e.g.
   // class A { class B; };   // declares A::B
   // class A::B { ... };  // defines A::B
+  std::vector<std::pair<SourceOrderKey, const clang::Decl*>> ordered_children;
   for (const auto& [decl, item] : import_cache_) {
     if (!item.has_value()) continue;
     if (auto* parent_record_decl =
             llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext())) {
-      auto it = import_cache_.find(parent_record_decl);
-      if (it != import_cache_.end() && it->second.has_value()) {
-        if (auto* parent_item = std::get_if<Record>(&(it->second.value()))) {
-          auto child_id = GenerateItemId(decl);
-          if (!IsUnsupportedAndAlien(child_id) &&
-              std::find(parent_item->child_item_ids.begin(),
-                        parent_item->child_item_ids.end(),
-                        child_id) == parent_item->child_item_ids.end()) {
-            parent_item->child_item_ids.push_back(child_id);
-          }
+      auto parent_it = import_cache_.find(parent_record_decl);
+      if (parent_it != import_cache_.end() && parent_it->second.has_value()) {
+        if (auto* parent_item =
+                std::get_if<Record>(&(parent_it->second.value()))) {
+          ordered_children.push_back({GetSourceOrderKey(decl), decl});
         }
       }
+    }
+  }
+
+  SourceLocationComparator compare_locations(sm);
+  llvm::stable_sort(ordered_children, compare_locations);
+
+  for (const auto& [key, decl] : ordered_children) {
+    auto* parent_record_decl =
+        llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext());
+    auto parent_it = import_cache_.find(parent_record_decl);
+    auto* parent_item = std::get_if<Record>(&(parent_it->second.value()));
+
+    auto child_id = GenerateItemId(decl);
+    if (!IsUnsupportedAndAlien(child_id) &&
+        std::find(parent_item->child_item_ids.begin(),
+                  parent_item->child_item_ids.end(),
+                  child_id) == parent_item->child_item_ids.end()) {
+      parent_item->child_item_ids.push_back(child_id);
     }
   }
 
@@ -743,7 +757,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     ordered_items.push_back({GetSourceOrderKey(decl), *item});
   }
 
-  llvm::sort(ordered_items, SourceLocationComparator(sm));
+  llvm::stable_sort(ordered_items, SourceLocationComparator(sm));
 
   invocation_.ir_.items.reserve(ordered_items.size());
   for (auto& ordered_item : ordered_items) {
