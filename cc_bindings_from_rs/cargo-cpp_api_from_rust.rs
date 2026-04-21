@@ -319,7 +319,7 @@ path = "{lib_rs_filename}"
 crate-type = ["staticlib"]
 
 [dependencies]
-crubit_bridge_rust = "0.0.1"
+bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
     "#,
             root_name = root_name,
             edition = self.root.edition,
