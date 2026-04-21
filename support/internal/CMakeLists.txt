@@ -10,7 +10,6 @@ add_library(crubit_support_internal_bindings_support STATIC
 "check_no_mutable_aliasing.h"
 "cxx20_backports.h"
 "fmt.h"
-"lazy_init.h"
 "memswap.h"
 "move_assign.h"
 "offsetof.h"
