@@ -113,7 +113,6 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:generate_function
         fn generate_function(&self, func: Rc<Func>, derived_record: Option<Rc<Record>>) -> Result<Option<GeneratedFunction>>;
 
-
         /// You should call is_function_ambiguous() instead.
         ///
         /// Identifies all functions having overloads that we can't import (yet).
@@ -217,7 +216,11 @@ impl<'db> BindingsGenerator<'db> {
         match self.type_target_restriction(rs_type_kind.clone())? {
             Some(label) if &label != library => {
                 let rs_type_kind = rs_type_kind.display(self);
-                Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
+                Err(anyhow!(
+                    "crubit.rs/errors/visibility: Support for `{rs_type_kind}` is experimental.\n\
+                      Its use is restricted to `pub(crate)` in defining target:\n\
+                      `{label}`"
+                ))
             }
             Some(_) => Ok(Visibility::PubCrate),
             None => {
@@ -320,6 +323,79 @@ impl<'db> BindingsGenerator<'db> {
         };
         let qualifier = self.namespace_qualifier_from_id(id).format_for_cc_debug();
         return format! {"{qualifier}{name}"}.into();
+    }
+
+    pub fn cc_type_debug_name(&self, cc_type: &CcType) -> String {
+        let base_name = match &cc_type.variant {
+            ir::CcTypeVariant::Primitive(p) => match p {
+                ir::Primitive::Bool => "bool",
+                ir::Primitive::Void => "void",
+                ir::Primitive::Float => "float",
+                ir::Primitive::Double => "double",
+                ir::Primitive::Char => "char",
+                ir::Primitive::SignedChar => "signed char",
+                ir::Primitive::UnsignedChar => "unsigned char",
+                ir::Primitive::Short => "short",
+                ir::Primitive::Int => "int",
+                ir::Primitive::Long => "long",
+                ir::Primitive::LongLong => "long long",
+                ir::Primitive::UnsignedShort => "unsigned short",
+                ir::Primitive::UnsignedInt => "unsigned int",
+                ir::Primitive::UnsignedLong => "unsigned long",
+                ir::Primitive::UnsignedLongLong => "unsigned long long",
+                ir::Primitive::Char16T => "char16_t",
+                ir::Primitive::Char32T => "char32_t",
+                ir::Primitive::PtrdiffT => "ptrdiff_t",
+                ir::Primitive::IntptrT => "intptr_t",
+                ir::Primitive::SizeT => "size_t",
+                ir::Primitive::UintptrT => "uintptr_t",
+                ir::Primitive::StdPtrdiffT => "std::ptrdiff_t",
+                ir::Primitive::StdIntptrT => "std::intptr_t",
+                ir::Primitive::StdSizeT => "std::size_t",
+                ir::Primitive::StdUintptrT => "std::uintptr_t",
+                ir::Primitive::Int8T => "int8_t",
+                ir::Primitive::Int16T => "int16_t",
+                ir::Primitive::Int32T => "int32_t",
+                ir::Primitive::Int64T => "int64_t",
+                ir::Primitive::StdInt8T => "std::int8_t",
+                ir::Primitive::StdInt16T => "std::int16_t",
+                ir::Primitive::StdInt32T => "std::int32_t",
+                ir::Primitive::StdInt64T => "std::int64_t",
+                ir::Primitive::Uint8T => "uint8_t",
+                ir::Primitive::Uint16T => "uint16_t",
+                ir::Primitive::Uint32T => "uint32_t",
+                ir::Primitive::Uint64T => "uint64_t",
+                ir::Primitive::StdUint8T => "std::uint8_t",
+                ir::Primitive::StdUint16T => "std::uint16_t",
+                ir::Primitive::StdUint32T => "std::uint32_t",
+                ir::Primitive::StdUint64T => "std::uint64_t",
+            }
+            .to_string(),
+            ir::CcTypeVariant::Pointer(ptr) => {
+                let ptr_str = match ptr.kind {
+                    ir::PointerTypeKind::LValueRef => "&",
+                    ir::PointerTypeKind::RValueRef => "&&",
+                    ir::PointerTypeKind::Nullable
+                    | ir::PointerTypeKind::NonNull
+                    | ir::PointerTypeKind::Owned => "*",
+                };
+                let pointee_name = self.cc_type_debug_name(&ptr.pointee_type);
+                format!("{pointee_name}{ptr_str}")
+            }
+            ir::CcTypeVariant::FuncPointer { .. } => "function pointer".to_string(),
+            ir::CcTypeVariant::Decl(id) => self.debug_name(*id).to_string(),
+            ir::CcTypeVariant::Error(err) => format!("<error: {}>", err.message),
+        };
+
+        if cc_type.is_const {
+            if matches!(cc_type.variant, ir::CcTypeVariant::Pointer(_)) {
+                format!("{} const", base_name)
+            } else {
+                format!("const {}", base_name)
+            }
+        } else {
+            base_name
+        }
     }
 
     pub fn new_unsupported_item(

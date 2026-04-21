@@ -24,20 +24,18 @@
 // is incomplete, which is false.
 
 // error: function `ImportedFirst` could not be bound
-//   Unsupported parameter #0 (__param_0): template instantiation is not yet supported
-//   template instantiation is not yet supported
+//   Unsupported parameter type `DoesNotUse<DoesNotUse<int>> __param_0`:
+//     template instantiation is not yet supported
 
 // We expect ImportedSecond to fail because we need wrapper mode, _not_ because
 // `DoesNotUse<int>` is incomplete.
 
 // error: function `ImportedSecond` could not be bound
-//   Unsupported parameter #0 (__param_0): template instantiation is not yet supported
-//   template instantiation is not yet supported
+//   Unsupported parameter type `DoesNotUse<int> __param_0`:
+//     template instantiation is not yet supported
 
 // error: struct `DoesNotUse<DoesNotUse<int>>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: struct `DoesNotUse<int>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported

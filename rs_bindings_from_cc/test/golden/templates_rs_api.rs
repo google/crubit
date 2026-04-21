@@ -44,10 +44,8 @@ pub mod test_namespace_bindings {
 
     // error: type alias `test_namespace_bindings::MyTypeAlias` could not be bound
     //   template instantiation is not yet supported
-    //   template instantiation is not yet supported
 
     // error: type alias `test_namespace_bindings::OtherTypeAliasInSameTarget` could not be bound
-    //   template instantiation is not yet supported
     //   template instantiation is not yet supported
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -78,10 +76,8 @@ pub mod test_namespace_bindings {
 
     // error: type alias `test_namespace_bindings::TemplateWithStructTemplateParam` could not be bound
     //   template instantiation is not yet supported
-    //   template instantiation is not yet supported
 
     // error: type alias `test_namespace_bindings::ParamFromDifferentScope` could not be bound
-    //   template instantiation is not yet supported
     //   template instantiation is not yet supported
 
     // error: class `test_namespace_bindings::TemplateWithTwoParams` could not be bound
@@ -89,10 +85,8 @@ pub mod test_namespace_bindings {
 
     // error: type alias `test_namespace_bindings::AliasToTemplateWithTwoParams` could not be bound
     //   template instantiation is not yet supported
-    //   template instantiation is not yet supported
 
     // error: type alias `test_namespace_bindings::AliasToTemplateOfATemplate` could not be bound
-    //   template instantiation is not yet supported
     //   template instantiation is not yet supported
 
     // error: class `test_namespace_bindings::MyStruct` could not be bound
@@ -105,7 +99,6 @@ pub mod test_namespace_bindings {
     // even when not instantiated if there is a type alias for it.
 
     // error: type alias `test_namespace_bindings::MyCharStruct` could not be bound
-    //   template instantiation is not yet supported
     //   template instantiation is not yet supported
 
     // Forward declared explicit class template specialization should be imported
@@ -126,10 +119,10 @@ pub mod test_namespace_bindings {
 
 // error: type alias `TopLevelTemplateWithNonTopLevelParam` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: function `processForwardDeclaredSpecialization` could not be bound
-//   Unsupported parameter #0 (i): incomplete type
+//   Unsupported parameter type `MyTopLevelTemplate<int>* i`:
+//     incomplete type
 
 pub mod template_template_params { // error: class `template_template_params::Policy` could not be bound
                                    //   Class templates are not yet supported
@@ -138,7 +131,6 @@ pub mod template_template_params { // error: class `template_template_params::Po
     //   Class templates are not yet supported
 
     // error: type alias `template_template_params::MyTypeAlias` could not be bound
-    //   template instantiation is not yet supported
     //   template instantiation is not yet supported
 }
 
@@ -172,41 +164,32 @@ pub mod private_classes {
 
 // error: class `test_namespace_bindings::MyTemplate<DifferentScope>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: class `test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: class `test_namespace_bindings::MyTemplate<int>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: struct `test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: struct `test_namespace_bindings::TemplateWithTwoParams<int, float>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: struct `test_namespace_bindings::TemplateWithTwoParams<int, int>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: struct `test_namespace_bindings::MyStruct<char>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: struct `MyTopLevelTemplate<test_namespace_bindings::TemplateParam>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: struct `MyTopLevelTemplate<int>` could not be bound
 //   incomplete type
 
 // error: class `template_template_params::MyTemplate<template_template_params::Policy>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: class `forward_declared_template::ForwardDeclaredTemplate<int>` could not be bound

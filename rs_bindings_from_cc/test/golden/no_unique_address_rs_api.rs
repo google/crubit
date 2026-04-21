@@ -58,18 +58,24 @@ impl Default for Struct {
 }
 
 // error: constructor `Struct::Struct` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Struct& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Struct::Struct` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Struct&& __param_0`:
+//     references are not yet supported
 
 // error: function `Struct::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Struct& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Struct&`:
+//     references are not yet supported
 
 // error: function `Struct::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Struct&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Struct&`:
+//     references are not yet supported
 
 pub mod r#struct {
     #[inline(always)]
@@ -129,18 +135,24 @@ impl Default for PaddingBetweenFields {
 }
 
 // error: constructor `PaddingBetweenFields::PaddingBetweenFields` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PaddingBetweenFields& __param_0`:
+//     references are not yet supported
 
 // error: constructor `PaddingBetweenFields::PaddingBetweenFields` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `PaddingBetweenFields&& __param_0`:
+//     references are not yet supported
 
 // error: function `PaddingBetweenFields::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PaddingBetweenFields& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `PaddingBetweenFields&`:
+//     references are not yet supported
 
 // error: function `PaddingBetweenFields::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `PaddingBetweenFields&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `PaddingBetweenFields&`:
+//     references are not yet supported
 
 pub mod padding_between_fields {
     #[inline(always)]
@@ -195,11 +207,14 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
 }
 
 // error: constructor `FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const FieldInTailPadding_InnerStruct& __param_0`:
+//     references are not yet supported
 
 // error: function `FieldInTailPadding_InnerStruct::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const FieldInTailPadding_InnerStruct& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `FieldInTailPadding_InnerStruct&`:
+//     references are not yet supported
 
 /// User-defined destructor to make this struct non-POD for the purposes of
 /// layout.
@@ -237,10 +252,12 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding {
 }
 
 // error: constructor `FieldInTailPadding::FieldInTailPadding` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const FieldInTailPadding& __param_0`:
+//     references are not yet supported
 
 // error: constructor `FieldInTailPadding::FieldInTailPadding` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `FieldInTailPadding&& __param_0`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for FieldInTailPadding {
     #[inline(always)]
@@ -250,12 +267,16 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
 }
 
 // error: function `FieldInTailPadding::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const FieldInTailPadding& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `FieldInTailPadding&`:
+//     references are not yet supported
 
 // error: function `FieldInTailPadding::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `FieldInTailPadding&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `FieldInTailPadding&`:
+//     references are not yet supported
 
 impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_char, ::ffi_11::c_char)> for FieldInTailPadding {
     type CtorType = ::ctor::Ctor![Self];

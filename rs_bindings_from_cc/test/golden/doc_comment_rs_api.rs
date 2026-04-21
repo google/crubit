@@ -50,18 +50,24 @@ impl DocCommentSlashes {
 }
 
 // error: constructor `DocCommentSlashes::DocCommentSlashes` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const DocCommentSlashes& __param_0`:
+//     references are not yet supported
 
 // error: constructor `DocCommentSlashes::DocCommentSlashes` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `DocCommentSlashes&& __param_0`:
+//     references are not yet supported
 
 // error: function `DocCommentSlashes::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const DocCommentSlashes& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `DocCommentSlashes&`:
+//     references are not yet supported
 
 // error: function `DocCommentSlashes::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `DocCommentSlashes&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `DocCommentSlashes&`:
+//     references are not yet supported
 
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
@@ -155,18 +161,24 @@ impl Default for DocCommentBang {
 }
 
 // error: constructor `DocCommentBang::DocCommentBang` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const DocCommentBang& __param_0`:
+//     references are not yet supported
 
 // error: constructor `DocCommentBang::DocCommentBang` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `DocCommentBang&& __param_0`:
+//     references are not yet supported
 
 // error: function `DocCommentBang::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const DocCommentBang& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `DocCommentBang&`:
+//     references are not yet supported
 
 // error: function `DocCommentBang::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `DocCommentBang&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `DocCommentBang&`:
+//     references are not yet supported
 
 /// Multiline comment
 ///
@@ -197,18 +209,24 @@ impl Default for MultilineCommentTwoStars {
 }
 
 // error: constructor `MultilineCommentTwoStars::MultilineCommentTwoStars` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MultilineCommentTwoStars& __param_0`:
+//     references are not yet supported
 
 // error: constructor `MultilineCommentTwoStars::MultilineCommentTwoStars` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MultilineCommentTwoStars&& __param_0`:
+//     references are not yet supported
 
 // error: function `MultilineCommentTwoStars::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MultilineCommentTwoStars& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MultilineCommentTwoStars&`:
+//     references are not yet supported
 
 // error: function `MultilineCommentTwoStars::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MultilineCommentTwoStars&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MultilineCommentTwoStars&`:
+//     references are not yet supported
 
 /// Line comment
 ///
@@ -239,18 +257,24 @@ impl Default for LineComment {
 }
 
 // error: constructor `LineComment::LineComment` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const LineComment& __param_0`:
+//     references are not yet supported
 
 // error: constructor `LineComment::LineComment` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `LineComment&& __param_0`:
+//     references are not yet supported
 
 // error: function `LineComment::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const LineComment& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `LineComment&`:
+//     references are not yet supported
 
 // error: function `LineComment::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `LineComment&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `LineComment&`:
+//     references are not yet supported
 
 /// Multiline comment
 ///
@@ -281,18 +305,24 @@ impl Default for MultilineOneStar {
 }
 
 // error: constructor `MultilineOneStar::MultilineOneStar` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MultilineOneStar& __param_0`:
+//     references are not yet supported
 
 // error: constructor `MultilineOneStar::MultilineOneStar` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MultilineOneStar&& __param_0`:
+//     references are not yet supported
 
 // error: function `MultilineOneStar::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MultilineOneStar& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MultilineOneStar&`:
+//     references are not yet supported
 
 // error: function `MultilineOneStar::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MultilineOneStar&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MultilineOneStar&`:
+//     references are not yet supported
 
 /// A function
 #[inline(always)]
@@ -314,10 +344,8 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 
 // error: type alias `MyInstantiation` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: type alias `MySpecializedInstantiation` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: class `OuterTemplate` could not be bound
@@ -328,14 +356,11 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 
 // error: struct `MyTemplate<int>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: struct `MyTemplate<float>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: struct `OuterTemplate<int>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 mod detail {

@@ -315,7 +315,7 @@ impl From<NonEmptyCharClass> for ::ffi_11::c_char {
 //   b/322391132: Forward-declared (opaque) enums are not implemented yet
 
 // error: function `do_not_generate_bindings_for_me` could not be bound
-//   Cannot use an error type by value: b/322391132: Forward-declared (opaque) enums are not implemented yet
+//   b/322391132: Forward-declared (opaque) enums are not implemented yet
 
 pub const kAnonRed: ::ffi_11::c_uint = ::ffi_11::new_c_uint(0);
 

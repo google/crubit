@@ -170,8 +170,10 @@ impl Default for CanOstream {
 
 // Generated from: rs_bindings_from_cc/test/display/displayables.h;l=46
 // error: function `operator<<` could not be bound
-//   Unsupported return type: template instantiation is not yet supported
-//   Unsupported parameter #0 (out): template instantiation is not yet supported
+//   Unsupported parameter type `std::__u::ostream& out`:
+//     template instantiation is not yet supported
+//   Unsupported return type `std::__u::ostream&`:
+//     template instantiation is not yet supported
 
 /// Generated from: rs_bindings_from_cc/test/display/displayables.h;l=51
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -216,8 +218,10 @@ impl Default for CanAbslStringifyAndOstream {
 
 // Generated from: rs_bindings_from_cc/test/display/displayables.h;l=61
 // error: function `operator<<` could not be bound
-//   Unsupported return type: template instantiation is not yet supported
-//   Unsupported parameter #0 (out): template instantiation is not yet supported
+//   Unsupported parameter type `std::__u::ostream& out`:
+//     template instantiation is not yet supported
+//   Unsupported return type `std::__u::ostream&`:
+//     template instantiation is not yet supported
 
 /// Generated from: rs_bindings_from_cc/test/display/displayables.h;l=67
 #[repr(transparent)]

@@ -121,7 +121,6 @@ pub mod template_with_preferred_name { // error: class `template_with_preferred_
 
     // error: type alias `template_with_preferred_name::SpecializedTypeAlias` could not be bound
     //   template instantiation is not yet supported
-    //   template instantiation is not yet supported
 
     // Based on `llvm/include/c++/v1/string_view` - mimics definition of
     // `basic_string_view` class template (focusing on the attributes related to the
@@ -131,7 +130,6 @@ pub mod template_with_preferred_name { // error: class `template_with_preferred_
 // namespace template_with_preferred_name
 
 // error: struct `template_with_preferred_name::SomeTemplate<int>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 mod detail {

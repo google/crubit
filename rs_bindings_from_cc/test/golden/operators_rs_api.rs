@@ -42,21 +42,28 @@ impl Default for AddableConstMember {
 }
 
 // error: constructor `AddableConstMember::AddableConstMember` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableConstMember& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableConstMember::AddableConstMember` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableConstMember&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableConstMember::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableConstMember& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableConstMember&`:
+//     references are not yet supported
 
 // error: function `AddableConstMember::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableConstMember&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableConstMember&`:
+//     references are not yet supported
 
 // error: function `AddableConstMember::operator+` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const AddableConstMember& rhs`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
@@ -86,21 +93,28 @@ impl Default for AddableNonConstMember {
 }
 
 // error: constructor `AddableNonConstMember::AddableNonConstMember` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableNonConstMember& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableNonConstMember::AddableNonConstMember` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableNonConstMember&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableNonConstMember::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableNonConstMember& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableNonConstMember&`:
+//     references are not yet supported
 
 // error: function `AddableNonConstMember::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableNonConstMember&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableNonConstMember&`:
+//     references are not yet supported
 
 // error: function `AddableNonConstMember::operator+` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const AddableNonConstMember& rhs`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
@@ -130,22 +144,30 @@ impl Default for AddableFriend {
 }
 
 // error: constructor `AddableFriend::AddableFriend` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFriend& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableFriend::AddableFriend` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFriend&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableFriend::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFriend& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFriend&`:
+//     references are not yet supported
 
 // error: function `AddableFriend::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFriend&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFriend&`:
+//     references are not yet supported
 
 // error: function `operator+` could not be bound
-//   Unsupported parameter #0 (lhs): references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const AddableFriend& lhs`:
+//     references are not yet supported
+//   Unsupported parameter type `const AddableFriend& rhs`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -172,18 +194,24 @@ impl Default for AddableFreeByConstRef {
 }
 
 // error: constructor `AddableFreeByConstRef::AddableFreeByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByConstRef& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableFreeByConstRef::AddableFreeByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByConstRef&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableFreeByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByConstRef& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByConstRef&`:
+//     references are not yet supported
 
 // error: function `AddableFreeByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByConstRef&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByConstRef&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -210,18 +238,24 @@ impl Default for AddableFreeByMutRef {
 }
 
 // error: constructor `AddableFreeByMutRef::AddableFreeByMutRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByMutRef& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableFreeByMutRef::AddableFreeByMutRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByMutRef&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableFreeByMutRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByMutRef& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByMutRef&`:
+//     references are not yet supported
 
 // error: function `AddableFreeByMutRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByMutRef&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByMutRef&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -248,18 +282,24 @@ impl Default for AddableFreeByValue {
 }
 
 // error: constructor `AddableFreeByValue::AddableFreeByValue` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByValue& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableFreeByValue::AddableFreeByValue` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByValue&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableFreeByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByValue& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByValue&`:
+//     references are not yet supported
 
 // error: function `AddableFreeByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByValue&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByValue&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -286,26 +326,36 @@ impl Default for AddableFreeByRValueRef {
 }
 
 // error: constructor `AddableFreeByRValueRef::AddableFreeByRValueRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByRValueRef& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableFreeByRValueRef::AddableFreeByRValueRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByRValueRef&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableFreeByRValueRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByRValueRef& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByRValueRef&`:
+//     references are not yet supported
 
 // error: function `AddableFreeByRValueRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableFreeByRValueRef&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableFreeByRValueRef&`:
+//     references are not yet supported
 
 // error: function `operator+` could not be bound
-//   Unsupported parameter #0 (lhs): references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const AddableFreeByConstRef& lhs`:
+//     references are not yet supported
+//   Unsupported parameter type `const AddableFreeByConstRef& rhs`:
+//     references are not yet supported
 
 // error: function `operator+` could not be bound
-//   Unsupported parameter #0 (lhs): references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `AddableFreeByMutRef& lhs`:
+//     references are not yet supported
+//   Unsupported parameter type `AddableFreeByMutRef& rhs`:
+//     references are not yet supported
 
 impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
     type Output = crate::AddableFreeByValue;
@@ -351,24 +401,32 @@ impl Default for Overloaded {
 }
 
 // error: constructor `Overloaded::Overloaded` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Overloaded& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Overloaded::Overloaded` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Overloaded&& __param_0`:
+//     references are not yet supported
 
 // error: function `Overloaded::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Overloaded& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Overloaded&`:
+//     references are not yet supported
 
 // error: function `Overloaded::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Overloaded&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Overloaded&`:
+//     references are not yet supported
 
 // error: function `operator+` could not be bound
-//   Unsupported parameter #0 (lhs): references are not yet supported
+//   Unsupported parameter type `const Overloaded& lhs`:
+//     references are not yet supported
 
 // error: function `operator+` could not be bound
-//   Unsupported parameter #0 (lhs): references are not yet supported
+//   Unsupported parameter type `const Overloaded& lhs`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -395,18 +453,24 @@ impl Default for IncompatibleLHS {
 }
 
 // error: constructor `IncompatibleLHS::IncompatibleLHS` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const IncompatibleLHS& __param_0`:
+//     references are not yet supported
 
 // error: constructor `IncompatibleLHS::IncompatibleLHS` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `IncompatibleLHS&& __param_0`:
+//     references are not yet supported
 
 // error: function `IncompatibleLHS::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const IncompatibleLHS& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `IncompatibleLHS&`:
+//     references are not yet supported
 
 // error: function `IncompatibleLHS::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `IncompatibleLHS&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `IncompatibleLHS&`:
+//     references are not yet supported
 
 // error: function `operator+` could not be bound
 //   Non-record-nor-reference operator parameters are not yet supported, found ::ffi_11::c_int
@@ -442,21 +506,28 @@ impl Default for AddableReturnsVoid {
 }
 
 // error: constructor `AddableReturnsVoid::AddableReturnsVoid` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableReturnsVoid& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddableReturnsVoid::AddableReturnsVoid` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableReturnsVoid&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableReturnsVoid::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableReturnsVoid& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableReturnsVoid&`:
+//     references are not yet supported
 
 // error: function `AddableReturnsVoid::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddableReturnsVoid&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableReturnsVoid&`:
+//     references are not yet supported
 
 // error: function `AddableReturnsVoid::operator+` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const AddableReturnsVoid& rhs`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
@@ -491,14 +562,18 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
 }
 
 // error: constructor `AddableConstMemberNonunpin::AddableConstMemberNonunpin` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableConstMemberNonunpin& __param_0`:
+//     references are not yet supported
 
 // error: function `AddableConstMemberNonunpin::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddableConstMemberNonunpin& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddableConstMemberNonunpin&`:
+//     references are not yet supported
 
 // error: function `AddableConstMemberNonunpin::operator+` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const AddableConstMemberNonunpin& rhs`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     #[inline(always)]
@@ -532,18 +607,24 @@ impl Default for AddAssignMemberInt {
 }
 
 // error: constructor `AddAssignMemberInt::AddAssignMemberInt` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignMemberInt& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignMemberInt::AddAssignMemberInt` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignMemberInt&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignMemberInt::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignMemberInt& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignMemberInt&`:
+//     references are not yet supported
 
 // error: function `AddAssignMemberInt::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignMemberInt&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignMemberInt&`:
+//     references are not yet supported
 
 impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
     #[inline(always)]
@@ -579,22 +660,30 @@ impl Default for AddAssignMemberByConstRef {
 }
 
 // error: constructor `AddAssignMemberByConstRef::AddAssignMemberByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignMemberByConstRef& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignMemberByConstRef::AddAssignMemberByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignMemberByConstRef&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignMemberByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignMemberByConstRef& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignMemberByConstRef&`:
+//     references are not yet supported
 
 // error: function `AddAssignMemberByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignMemberByConstRef&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignMemberByConstRef&`:
+//     references are not yet supported
 
 // error: function `AddAssignMemberByConstRef::operator+=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const AddAssignMemberByConstRef& rhs`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignMemberByConstRef&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -621,18 +710,24 @@ impl Default for AddAssignFreeByConstRef {
 }
 
 // error: constructor `AddAssignFreeByConstRef::AddAssignFreeByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFreeByConstRef& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignFreeByConstRef::AddAssignFreeByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFreeByConstRef&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignFreeByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFreeByConstRef& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFreeByConstRef&`:
+//     references are not yet supported
 
 // error: function `AddAssignFreeByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFreeByConstRef&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFreeByConstRef&`:
+//     references are not yet supported
 
 impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
     #[inline(always)]
@@ -668,22 +763,30 @@ impl Default for AddAssignFreeByValue {
 }
 
 // error: constructor `AddAssignFreeByValue::AddAssignFreeByValue` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFreeByValue& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignFreeByValue::AddAssignFreeByValue` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFreeByValue&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignFreeByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFreeByValue& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFreeByValue&`:
+//     references are not yet supported
 
 // error: function `AddAssignFreeByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFreeByValue&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFreeByValue&`:
+//     references are not yet supported
 
 // error: function `operator+=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (lhs): references are not yet supported
+//   Unsupported parameter type `AddAssignFreeByValue& lhs`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFreeByValue&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -710,18 +813,24 @@ impl Default for AddAssignFriendByConstRef {
 }
 
 // error: constructor `AddAssignFriendByConstRef::AddAssignFriendByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFriendByConstRef& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignFriendByConstRef::AddAssignFriendByConstRef` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFriendByConstRef&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignFriendByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFriendByConstRef& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFriendByConstRef&`:
+//     references are not yet supported
 
 // error: function `AddAssignFriendByConstRef::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFriendByConstRef&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFriendByConstRef&`:
+//     references are not yet supported
 
 impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
     #[inline(always)]
@@ -757,22 +866,30 @@ impl Default for AddAssignFriendByValue {
 }
 
 // error: constructor `AddAssignFriendByValue::AddAssignFriendByValue` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFriendByValue& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignFriendByValue::AddAssignFriendByValue` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFriendByValue&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignFriendByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignFriendByValue& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFriendByValue&`:
+//     references are not yet supported
 
 // error: function `AddAssignFriendByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignFriendByValue&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFriendByValue&`:
+//     references are not yet supported
 
 // error: function `operator+=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (lhs): references are not yet supported
+//   Unsupported parameter type `AddAssignFriendByValue& lhs`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignFriendByValue&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -801,18 +918,24 @@ impl Default for AddAssignProhibitedConstMember {
 }
 
 // error: constructor `AddAssignProhibitedConstMember::AddAssignProhibitedConstMember` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignProhibitedConstMember& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignProhibitedConstMember::AddAssignProhibitedConstMember` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignProhibitedConstMember&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignProhibitedConstMember::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignProhibitedConstMember& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignProhibitedConstMember&`:
+//     references are not yet supported
 
 // error: function `AddAssignProhibitedConstMember::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignProhibitedConstMember&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignProhibitedConstMember&`:
+//     references are not yet supported
 
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
@@ -859,21 +982,28 @@ impl Default for AddAssignProhibitedFriendConstLhs {
 }
 
 // error: constructor `AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignProhibitedFriendConstLhs& __param_0`:
+//     references are not yet supported
 
 // error: constructor `AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignProhibitedFriendConstLhs&& __param_0`:
+//     references are not yet supported
 
 // error: function `AddAssignProhibitedFriendConstLhs::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const AddAssignProhibitedFriendConstLhs& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignProhibitedFriendConstLhs&`:
+//     references are not yet supported
 
 // error: function `AddAssignProhibitedFriendConstLhs::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `AddAssignProhibitedFriendConstLhs&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `AddAssignProhibitedFriendConstLhs&`:
+//     references are not yet supported
 
 // error: function `operator+=` could not be bound
-//   Unsupported parameter #0 (lhs): references are not yet supported
+//   Unsupported parameter type `const AddAssignProhibitedFriendConstLhs& lhs`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -906,18 +1036,24 @@ impl Default for ManyOperators {
 }
 
 // error: constructor `ManyOperators::ManyOperators` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& __param_0`:
+//     references are not yet supported
 
 // error: constructor `ManyOperators::ManyOperators` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `ManyOperators&& __param_0`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `ManyOperators&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
@@ -953,74 +1089,104 @@ impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
 //   Bindings for this kind of operator (operator ~ with 1 parameter(s)) are not supported
 
 // error: function `ManyOperators::operator+` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator-` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator*` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator/` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator%` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator&` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator|` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator^` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator<<` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator>>` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator+=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator-=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator*=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator/=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator%=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator&=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator|=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator^=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator<<=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 // error: function `ManyOperators::operator>>=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const ManyOperators& rhs`:
+//     references are not yet supported
+//   Unsupported return type `ManyOperators&`:
+//     references are not yet supported
 
 pub mod many_operators {
     #[inline(always)]

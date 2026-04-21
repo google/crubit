@@ -143,8 +143,8 @@ fn get_field_rs_type_kind_for_layout(
         db.defining_target(record.id()).as_ref().into_iter().chain([&record.owning_target])
     {
         let enabled_features = ir.target_crubit_features(target);
-        let (missing_features, reason) = type_kind.required_crubit_features(enabled_features);
-        ensure!(missing_features.is_empty(), reason);
+        let reasons = type_kind.missing_feature_descriptions_of_type(target, enabled_features);
+        ensure!(reasons.is_empty(), reasons.join(", "));
     }
 
     // In supported, we replace nontrivial fields with opaque blobs.

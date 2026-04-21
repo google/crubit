@@ -1357,12 +1357,12 @@ impl Record {
     pub fn check_by_value(&self) -> Result<()> {
         ensure!(
             self.destructor != SpecialMemberFunc::Unavailable,
-            "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
+            "`{}` can't be used by-value because it has a non-public or deleted destructor",
             self.cc_name
         );
         ensure!(
             !self.is_abstract,
-            "Can't directly construct values of type `{}`: it is abstract",
+            "`{}` can be used by-value because it has pure virtual functions that are not overridden",
             self.cc_name
         );
         Ok(())

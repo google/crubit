@@ -87,12 +87,12 @@ impl Default for Foo {
 }
 
 // error: function `Foo::Bar` could not be bound
-//   Unsupported parameter #1 (__param_0): template instantiation is not yet supported
-//   template instantiation is not yet supported
+//   Unsupported parameter type `Sizeof<int> __param_0`:
+//     template instantiation is not yet supported
 
 // error: function `Foo::Bar` could not be bound
-//   Unsupported parameter #1 (__param_0): template instantiation is not yet supported
-//   template instantiation is not yet supported
+//   Unsupported parameter type `Sizeof<float> __param_0`:
+//     template instantiation is not yet supported
 
 pub mod foo {
     /// # Safety
@@ -107,10 +107,8 @@ pub mod foo {
 
 // error: struct `Sizeof<float>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: struct `Sizeof<int>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 mod detail {

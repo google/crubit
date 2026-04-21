@@ -60,24 +60,32 @@ pub mod ns {
     }
 
     // error: constructor `ns::Trivial::Trivial` could not be bound
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `const ns::Trivial& __param_0`:
+    //     references are not yet supported
 
     // error: constructor `ns::Trivial::Trivial` could not be bound
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `ns::Trivial&& __param_0`:
+    //     references are not yet supported
 
     // error: function `ns::Trivial::operator=` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `const ns::Trivial& __param_0`:
+    //     references are not yet supported
+    //   Unsupported return type `ns::Trivial&`:
+    //     references are not yet supported
 
     // error: function `ns::Trivial::operator=` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `ns::Trivial&& __param_0`:
+    //     references are not yet supported
+    //   Unsupported return type `ns::Trivial&`:
+    //     references are not yet supported
 
     // error: function `ns::Trivial::RvalueRefQualified` could not be bound
-    //   Unsupported parameter #0 (__this): references are not yet supported
+    //   Unsupported parameter type `ns::Trivial&& __this`:
+    //     references are not yet supported
 
     // error: function `ns::Trivial::ConstRvalueRefQualified` could not be bound
-    //   Unsupported parameter #0 (__this): references are not yet supported
+    //   Unsupported parameter type `const ns::Trivial&& __this`:
+    //     references are not yet supported
 
     pub mod trivial {
         #[inline(always)]
@@ -113,20 +121,28 @@ pub mod ns {
     }
 
     // error: function `ns::TakesByReference` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #0 (trivial): references are not yet supported
+    //   Unsupported parameter type `ns::Trivial& trivial`:
+    //     references are not yet supported
+    //   Unsupported return type `ns::Trivial&`:
+    //     references are not yet supported
 
     // error: function `ns::TakesByConstReference` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #0 (trivial): references are not yet supported
+    //   Unsupported parameter type `const ns::Trivial& trivial`:
+    //     references are not yet supported
+    //   Unsupported return type `const ns::Trivial&`:
+    //     references are not yet supported
 
     // error: function `ns::TakesByRvalueReference` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #0 (trivial): references are not yet supported
+    //   Unsupported parameter type `ns::Trivial&& trivial`:
+    //     references are not yet supported
+    //   Unsupported return type `ns::Trivial&&`:
+    //     references are not yet supported
 
     // error: function `ns::TakesByConstRvalueReference` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #0 (trivial): references are not yet supported
+    //   Unsupported parameter type `const ns::Trivial&& trivial`:
+    //     references are not yet supported
+    //   Unsupported return type `const ns::Trivial&&`:
+    //     references are not yet supported
 }
 
 // namespace ns

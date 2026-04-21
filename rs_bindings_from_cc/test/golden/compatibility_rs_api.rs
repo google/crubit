@@ -45,11 +45,14 @@ impl CompatibleType {
 }
 
 // error: constructor `CompatibleType::CompatibleType` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const CompatibleType& __param_0`:
+//     references are not yet supported
 
 // error: function `CompatibleType::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const CompatibleType& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `CompatibleType&`:
+//     references are not yet supported
 
 pub mod compatible_type {
     #[inline(always)]

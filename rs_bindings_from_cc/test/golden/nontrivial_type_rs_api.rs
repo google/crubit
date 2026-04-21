@@ -110,21 +110,28 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
 }
 
 // error: constructor `Nontrivial::Nontrivial` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Nontrivial& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Nontrivial::Nontrivial` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Nontrivial&& __param_0`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Nontrivial& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Nontrivial&`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Nontrivial&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Nontrivial&`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
+//   Unsupported return type `Nontrivial&`:
+//     references are not yet supported
 
 impl ::ctor::Assign<f32> for Nontrivial {
     #[inline(always)]
@@ -149,22 +156,28 @@ impl ::ctor::PinnedDrop for Nontrivial {
 }
 
 // error: function `Nontrivial::RvalueRefQualified` could not be bound
-//   Unsupported parameter #0 (__this): references are not yet supported
+//   Unsupported parameter type `Nontrivial&& __this`:
+//     references are not yet supported
 
 // error: function `Nontrivial::ConstRvalueRefQualified` could not be bound
-//   Unsupported parameter #0 (__this): references are not yet supported
+//   Unsupported parameter type `const Nontrivial&& __this`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator==` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const Nontrivial& rhs`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator!=` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const Nontrivial& rhs`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator<` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const Nontrivial& rhs`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator+` could not be bound
-//   Unsupported parameter #1 (rhs): references are not yet supported
+//   Unsupported parameter type `const Nontrivial& rhs`:
+//     references are not yet supported
 
 // error: function `Nontrivial::operator+=` could not be bound
 //   Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'a mut crate::Nontrivial>
@@ -273,21 +286,28 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
 }
 
 // error: constructor `NontrivialInline::NontrivialInline` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NontrivialInline& __param_0`:
+//     references are not yet supported
 
 // error: constructor `NontrivialInline::NontrivialInline` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NontrivialInline&& __param_0`:
+//     references are not yet supported
 
 // error: function `NontrivialInline::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NontrivialInline& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialInline&`:
+//     references are not yet supported
 
 // error: function `NontrivialInline::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NontrivialInline&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialInline&`:
+//     references are not yet supported
 
 // error: function `NontrivialInline::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
+//   Unsupported return type `NontrivialInline&`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for NontrivialInline {
     #[inline(always)]
@@ -340,10 +360,12 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 }
 
 // error: constructor `NontrivialMembers::NontrivialMembers` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NontrivialMembers& __param_0`:
+//     references are not yet supported
 
 // error: constructor `NontrivialMembers::NontrivialMembers` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NontrivialMembers&& __param_0`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for NontrivialMembers {
     #[inline(always)]
@@ -353,12 +375,16 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 }
 
 // error: function `NontrivialMembers::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NontrivialMembers& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialMembers&`:
+//     references are not yet supported
 
 // error: function `NontrivialMembers::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NontrivialMembers&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialMembers&`:
+//     references are not yet supported
 
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
 #[repr(C)]
@@ -436,24 +462,32 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialUnpin {
 }
 
 // error: constructor `NontrivialUnpin::NontrivialUnpin` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NontrivialUnpin& __param_0`:
+//     references are not yet supported
 
 // error: constructor `NontrivialUnpin::NontrivialUnpin` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NontrivialUnpin&& __param_0`:
+//     references are not yet supported
 
 // error: constructor `NontrivialUnpin::NontrivialUnpin` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Nontrivial&& __param_0`:
+//     references are not yet supported
 
 // error: function `NontrivialUnpin::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NontrivialUnpin& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialUnpin&`:
+//     references are not yet supported
 
 // error: function `NontrivialUnpin::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NontrivialUnpin&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialUnpin&`:
+//     references are not yet supported
 
 // error: function `NontrivialUnpin::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
+//   Unsupported return type `NontrivialUnpin&`:
+//     references are not yet supported
 
 impl Drop for NontrivialUnpin {
     #[inline(always)]
@@ -510,36 +544,52 @@ pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::Nontr
 }
 
 // error: function `TakesByReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `Nontrivial& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `Nontrivial&`:
+//     references are not yet supported
 
 // error: function `TakesUnpinByReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `NontrivialUnpin& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialUnpin&`:
+//     references are not yet supported
 
 // error: function `TakesByConstReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `const Nontrivial& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `const Nontrivial&`:
+//     references are not yet supported
 
 // error: function `TakesUnpinByConstReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `const NontrivialUnpin& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `const NontrivialUnpin&`:
+//     references are not yet supported
 
 // error: function `TakesByRvalueReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `Nontrivial&& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `Nontrivial&&`:
+//     references are not yet supported
 
 // error: function `TakesUnpinByRvalueReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `NontrivialUnpin&& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialUnpin&&`:
+//     references are not yet supported
 
 // error: function `TakesByConstRvalueReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `const Nontrivial&& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `const Nontrivial&&`:
+//     references are not yet supported
 
 // error: function `TakesUnpinByConstRvalueReference` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #0 (nontrivial): references are not yet supported
+//   Unsupported parameter type `const NontrivialUnpin&& nontrivial`:
+//     references are not yet supported
+//   Unsupported return type `const NontrivialUnpin&&`:
+//     references are not yet supported
 
 /// Finally, testing for strange by-value APIs.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -556,18 +606,24 @@ unsafe impl ::cxx::ExternType for NontrivialByValue {
 }
 
 // error: constructor `NontrivialByValue::NontrivialByValue` could not be bound
-//   Unsupported parameter #1 (other): references are not yet supported
+//   Unsupported parameter type `const NontrivialByValue& other`:
+//     references are not yet supported
 
 // error: constructor `NontrivialByValue::NontrivialByValue` could not be bound
-//   Unsupported parameter #1 (other): references are not yet supported
+//   Unsupported parameter type `NontrivialByValue&& other`:
+//     references are not yet supported
 
 // error: function `NontrivialByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (other): references are not yet supported
+//   Unsupported parameter type `const NontrivialByValue& other`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialByValue&`:
+//     references are not yet supported
 
 // error: function `NontrivialByValue::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (other): references are not yet supported
+//   Unsupported parameter type `NontrivialByValue&& other`:
+//     references are not yet supported
+//   Unsupported return type `NontrivialByValue&`:
+//     references are not yet supported
 
 impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivial>>
     for NontrivialByValue

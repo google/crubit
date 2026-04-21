@@ -43,26 +43,20 @@ impl Default for TopLevel {
 
 // error: type alias `Alias1` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: type alias `Alias2` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: type alias `Alias3` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: type alias `Alias4` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: type alias `Alias5` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: type alias `Alias6` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 pub mod test_namespace_bindings {
@@ -94,14 +88,11 @@ pub mod test_namespace_bindings {
 
     // error: type alias `test_namespace_bindings::Alias7` could not be bound
     //   template instantiation is not yet supported
-    //   template instantiation is not yet supported
 
     // error: type alias `test_namespace_bindings::Alias8` could not be bound
     //   template instantiation is not yet supported
-    //   template instantiation is not yet supported
 
     // error: type alias `test_namespace_bindings::Alias9` could not be bound
-    //   template instantiation is not yet supported
     //   template instantiation is not yet supported
 }
 
@@ -109,38 +100,29 @@ pub mod test_namespace_bindings {
 
 // error: class `MyTemplate<TopLevel>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: class `MyTemplate<test_namespace_bindings::Inner>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: class `MyTemplate<MyTemplate<TopLevel>>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: class `MyTemplate<MyTemplate<test_namespace_bindings::Inner>>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: class `MyTemplate<bool>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: class `MyTemplate<char>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 // error: class `MyTemplate<double>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: class `MyTemplate<float>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // error: class `MyTemplate<int>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 mod detail {

@@ -48,18 +48,24 @@ impl ::ctor::CtorNew<()> for Derived2 {
 }
 
 // error: constructor `Derived2::Derived2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Derived2& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Derived2::Derived2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Derived2&& __param_0`:
+//     references are not yet supported
 
 // error: function `Derived2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Derived2& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Derived2&`:
+//     references are not yet supported
 
 // error: function `Derived2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Derived2&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Derived2&`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -91,18 +97,24 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
 }
 
 // error: constructor `VirtualDerived2::VirtualDerived2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualDerived2& __param_0`:
+//     references are not yet supported
 
 // error: constructor `VirtualDerived2::VirtualDerived2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualDerived2&& __param_0`:
+//     references are not yet supported
 
 // error: function `VirtualDerived2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualDerived2& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualDerived2&`:
+//     references are not yet supported
 
 // error: function `VirtualDerived2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualDerived2&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualDerived2&`:
+//     references are not yet supported
 
 mod detail {
     #[allow(unused_imports)]

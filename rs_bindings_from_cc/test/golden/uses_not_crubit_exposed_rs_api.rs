@@ -15,7 +15,9 @@
 #![deny(warnings)]
 
 // error: function `UseNotCrubitExposed` could not be bound
-//   Unsupported parameter #0 (not_crubit_exposed)
+//   Unsupported parameter type `NotCrubitExposed not_crubit_exposed`:
+//     Crubit is not enabled on defining target:
+//       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
@@ -48,10 +50,14 @@ pub mod c9 { // error: class `c9::Co` could not be bound
 // namespace c9
 
 // error: function `ReturnsCo` could not be bound
-//   Cannot use an error type by value: depends on type with missing bindings:
+//   `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
+//   Crubit is not enabled on defining target:
+//       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
 
 // error: class `c9::Co<NotCrubitExposed>` could not be bound
-//   depends on type with missing bindings:
+//   `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
+//   Crubit is not enabled on defining target:
+//       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
 
 mod detail {
     #[allow(unused_imports)]

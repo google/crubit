@@ -43,18 +43,24 @@ impl Default for EmptyUnion {
 }
 
 // error: constructor `EmptyUnion::EmptyUnion` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const EmptyUnion& __param_0`:
+//     references are not yet supported
 
 // error: constructor `EmptyUnion::EmptyUnion` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `EmptyUnion&& __param_0`:
+//     references are not yet supported
 
 // error: function `EmptyUnion::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const EmptyUnion& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `EmptyUnion&`:
+//     references are not yet supported
 
 // error: function `EmptyUnion::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `EmptyUnion&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `EmptyUnion&`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
@@ -85,7 +91,8 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 }
 
 // error: constructor `Nontrivial::Nontrivial` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Nontrivial&& __param_0`:
+//     references are not yet supported
 
 /// # Safety
 ///
@@ -116,18 +123,24 @@ impl Default for RenamedUnion {
 }
 
 // error: constructor `UnionToRename::UnionToRename` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const UnionToRename& __param_0`:
+//     references are not yet supported
 
 // error: constructor `UnionToRename::UnionToRename` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `UnionToRename&& __param_0`:
+//     references are not yet supported
 
 // error: function `UnionToRename::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const UnionToRename& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `UnionToRename&`:
+//     references are not yet supported
 
 // error: function `UnionToRename::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `UnionToRename&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `UnionToRename&`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
@@ -143,11 +156,14 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
 }
 
 // error: function `TriviallyCopyableButNontriviallyDestructible::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TriviallyCopyableButNontriviallyDestructible& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TriviallyCopyableButNontriviallyDestructible&`:
+//     references are not yet supported
 
 // error: constructor `TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TriviallyCopyableButNontriviallyDestructible& __param_0`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -190,18 +206,24 @@ impl Default for NonEmptyUnion {
 }
 
 // error: constructor `NonEmptyUnion::NonEmptyUnion` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NonEmptyUnion& __param_0`:
+//     references are not yet supported
 
 // error: constructor `NonEmptyUnion::NonEmptyUnion` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NonEmptyUnion&& __param_0`:
+//     references are not yet supported
 
 // error: function `NonEmptyUnion::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NonEmptyUnion& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NonEmptyUnion&`:
+//     references are not yet supported
 
 // error: function `NonEmptyUnion::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NonEmptyUnion&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NonEmptyUnion&`:
+//     references are not yet supported
 
 /// # Safety
 ///
@@ -240,18 +262,24 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
 }
 
 // error: constructor `NonCopyUnion2::NonCopyUnion2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NonCopyUnion2& __param_0`:
+//     references are not yet supported
 
 // error: constructor `NonCopyUnion2::NonCopyUnion2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NonCopyUnion2&& __param_0`:
+//     references are not yet supported
 
 // error: function `NonCopyUnion2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const NonCopyUnion2& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NonCopyUnion2&`:
+//     references are not yet supported
 
 // error: function `NonCopyUnion2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NonCopyUnion2&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `NonCopyUnion2&`:
+//     references are not yet supported
 
 /// # Safety
 ///
@@ -286,18 +314,24 @@ impl Default for UnionWithOpaqueField {
 }
 
 // error: constructor `UnionWithOpaqueField::UnionWithOpaqueField` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const UnionWithOpaqueField& __param_0`:
+//     references are not yet supported
 
 // error: constructor `UnionWithOpaqueField::UnionWithOpaqueField` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `UnionWithOpaqueField&& __param_0`:
+//     references are not yet supported
 
 // error: function `UnionWithOpaqueField::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const UnionWithOpaqueField& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `UnionWithOpaqueField&`:
+//     references are not yet supported
 
 // error: function `UnionWithOpaqueField::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `UnionWithOpaqueField&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `UnionWithOpaqueField&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -324,18 +358,24 @@ impl Default for TrivialButInheritable {
 }
 
 // error: constructor `TrivialButInheritable::TrivialButInheritable` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TrivialButInheritable& __param_0`:
+//     references are not yet supported
 
 // error: constructor `TrivialButInheritable::TrivialButInheritable` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TrivialButInheritable&& __param_0`:
+//     references are not yet supported
 
 // error: function `TrivialButInheritable::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TrivialButInheritable& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TrivialButInheritable&`:
+//     references are not yet supported
 
 // error: function `TrivialButInheritable::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TrivialButInheritable&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TrivialButInheritable&`:
+//     references are not yet supported
 
 /// # Safety
 ///
@@ -366,18 +406,24 @@ impl Default for UnionWithInheritable {
 }
 
 // error: constructor `UnionWithInheritable::UnionWithInheritable` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const UnionWithInheritable& __param_0`:
+//     references are not yet supported
 
 // error: constructor `UnionWithInheritable::UnionWithInheritable` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `UnionWithInheritable&& __param_0`:
+//     references are not yet supported
 
 // error: function `UnionWithInheritable::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const UnionWithInheritable& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `UnionWithInheritable&`:
+//     references are not yet supported
 
 // error: function `UnionWithInheritable::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `UnionWithInheritable&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `UnionWithInheritable&`:
+//     references are not yet supported
 
 /// # Safety
 ///
@@ -408,18 +454,24 @@ impl Default for TypedefUnion {
 }
 
 // error: constructor `TypedefUnion::TypedefUnion` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TypedefUnion& __param_0`:
+//     references are not yet supported
 
 // error: constructor `TypedefUnion::TypedefUnion` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TypedefUnion&& __param_0`:
+//     references are not yet supported
 
 // error: function `TypedefUnion::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TypedefUnion& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TypedefUnion&`:
+//     references are not yet supported
 
 // error: function `TypedefUnion::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TypedefUnion&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TypedefUnion&`:
+//     references are not yet supported
 
 /// # Safety
 ///
@@ -452,18 +504,24 @@ impl Default for TypedefUnionWithInheritable {
 }
 
 // error: constructor `TypedefUnionWithInheritable::TypedefUnionWithInheritable` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TypedefUnionWithInheritable& __param_0`:
+//     references are not yet supported
 
 // error: constructor `TypedefUnionWithInheritable::TypedefUnionWithInheritable` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TypedefUnionWithInheritable&& __param_0`:
+//     references are not yet supported
 
 // error: function `TypedefUnionWithInheritable::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TypedefUnionWithInheritable& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TypedefUnionWithInheritable&`:
+//     references are not yet supported
 
 // error: function `TypedefUnionWithInheritable::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TypedefUnionWithInheritable&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TypedefUnionWithInheritable&`:
+//     references are not yet supported
 
 mod detail {
     #[allow(unused_imports)]

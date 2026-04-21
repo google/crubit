@@ -42,18 +42,24 @@ impl Default for Base0 {
 }
 
 // error: constructor `Base0::Base0` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Base0& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Base0::Base0` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Base0&& __param_0`:
+//     references are not yet supported
 
 // error: function `Base0::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Base0& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Base0&`:
+//     references are not yet supported
 
 // error: function `Base0::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Base0&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Base0&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
@@ -86,18 +92,24 @@ impl Default for Base1 {
 }
 
 // error: constructor `Base1::Base1` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Base1& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Base1::Base1` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Base1&& __param_0`:
+//     references are not yet supported
 
 // error: function `Base1::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Base1& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Base1&`:
+//     references are not yet supported
 
 // error: function `Base1::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Base1&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Base1&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(2))]
@@ -127,18 +139,24 @@ impl Default for Base2 {
 }
 
 // error: constructor `Base2::Base2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Base2& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Base2::Base2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Base2&& __param_0`:
+//     references are not yet supported
 
 // error: function `Base2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Base2& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Base2&`:
+//     references are not yet supported
 
 // error: function `Base2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Base2&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Base2&`:
+//     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
@@ -166,18 +184,24 @@ impl Default for Derived {
 }
 
 // error: constructor `Derived::Derived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Derived& __param_0`:
+//     references are not yet supported
 
 // error: constructor `Derived::Derived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Derived&& __param_0`:
+//     references are not yet supported
 
 // error: function `Derived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const Derived& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Derived&`:
+//     references are not yet supported
 
 // error: function `Derived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `Derived&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `Derived&`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -209,18 +233,24 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 }
 
 // error: constructor `VirtualBase1::VirtualBase1` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualBase1& __param_0`:
+//     references are not yet supported
 
 // error: constructor `VirtualBase1::VirtualBase1` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualBase1&& __param_0`:
+//     references are not yet supported
 
 // error: function `VirtualBase1::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualBase1& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualBase1&`:
+//     references are not yet supported
 
 // error: function `VirtualBase1::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualBase1&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualBase1&`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -252,18 +282,24 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 }
 
 // error: constructor `VirtualBase2::VirtualBase2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualBase2& __param_0`:
+//     references are not yet supported
 
 // error: constructor `VirtualBase2::VirtualBase2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualBase2&& __param_0`:
+//     references are not yet supported
 
 // error: function `VirtualBase2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualBase2& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualBase2&`:
+//     references are not yet supported
 
 // error: function `VirtualBase2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualBase2&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualBase2&`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -295,18 +331,24 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 }
 
 // error: constructor `VirtualDerived::VirtualDerived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualDerived& __param_0`:
+//     references are not yet supported
 
 // error: constructor `VirtualDerived::VirtualDerived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualDerived&& __param_0`:
+//     references are not yet supported
 
 // error: function `VirtualDerived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const VirtualDerived& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualDerived&`:
+//     references are not yet supported
 
 // error: function `VirtualDerived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `VirtualDerived&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `VirtualDerived&`:
+//     references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -322,14 +364,16 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 }
 
 // error: constructor `MyAbstractClass::MyAbstractClass` could not be bound
-//   Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
+//   `MyAbstractClass` can't be used by-value because it has a non-public or deleted destructor
 
 // error: constructor `MyAbstractClass::MyAbstractClass` could not be bound
-//   Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
+//   `MyAbstractClass` can't be used by-value because it has a non-public or deleted destructor
 
 // error: function `MyAbstractClass::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MyAbstractClass& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MyAbstractClass&`:
+//     references are not yet supported
 
 /// Method inheritance
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -379,18 +423,24 @@ impl Default for MethodBase1 {
 }
 
 // error: constructor `MethodBase1::MethodBase1` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MethodBase1& __param_0`:
+//     references are not yet supported
 
 // error: constructor `MethodBase1::MethodBase1` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MethodBase1&& __param_0`:
+//     references are not yet supported
 
 // error: function `MethodBase1::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MethodBase1& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MethodBase1&`:
+//     references are not yet supported
 
 // error: function `MethodBase1::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MethodBase1&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MethodBase1&`:
+//     references are not yet supported
 
 pub mod method_base1 {
     #[inline(always)]
@@ -453,18 +503,24 @@ impl Default for MethodBase2 {
 }
 
 // error: constructor `MethodBase2::MethodBase2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MethodBase2& __param_0`:
+//     references are not yet supported
 
 // error: constructor `MethodBase2::MethodBase2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MethodBase2&& __param_0`:
+//     references are not yet supported
 
 // error: function `MethodBase2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MethodBase2& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MethodBase2&`:
+//     references are not yet supported
 
 // error: function `MethodBase2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MethodBase2&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MethodBase2&`:
+//     references are not yet supported
 
 pub mod method_base2 {
     #[inline(always)]
@@ -502,18 +558,24 @@ impl Default for MethodDerived {
 }
 
 // error: constructor `MethodDerived::MethodDerived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MethodDerived& __param_0`:
+//     references are not yet supported
 
 // error: constructor `MethodDerived::MethodDerived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MethodDerived&& __param_0`:
+//     references are not yet supported
 
 // error: function `MethodDerived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const MethodDerived& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MethodDerived&`:
+//     references are not yet supported
 
 // error: function `MethodDerived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `MethodDerived&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `MethodDerived&`:
+//     references are not yet supported
 
 // error: function `MethodDerived::Colliding1` could not be bound
 //   Function aliases are not yet supported.

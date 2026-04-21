@@ -44,11 +44,14 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
 }
 
 // error: constructor `PolymorphicBase::PolymorphicBase` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PolymorphicBase& __param_0`:
+//     references are not yet supported
 
 // error: function `PolymorphicBase::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PolymorphicBase& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `PolymorphicBase&`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
@@ -102,11 +105,14 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
 }
 
 // error: constructor `PolymorphicBase2::PolymorphicBase2` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PolymorphicBase2& __param_0`:
+//     references are not yet supported
 
 // error: function `PolymorphicBase2::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PolymorphicBase2& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `PolymorphicBase2&`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
@@ -161,10 +167,12 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
 }
 
 // error: constructor `PolymorphicDerived::PolymorphicDerived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PolymorphicDerived& __param_0`:
+//     references are not yet supported
 
 // error: constructor `PolymorphicDerived::PolymorphicDerived` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `PolymorphicDerived&& __param_0`:
+//     references are not yet supported
 
 impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
@@ -174,12 +182,16 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
 }
 
 // error: function `PolymorphicDerived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const PolymorphicDerived& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `PolymorphicDerived&`:
+//     references are not yet supported
 
 // error: function `PolymorphicDerived::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `PolymorphicDerived&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `PolymorphicDerived&`:
+//     references are not yet supported
 
 unsafe impl ::operator::Delete for crate::PolymorphicDerived {
     #[inline(always)]

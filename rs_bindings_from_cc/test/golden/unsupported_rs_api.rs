@@ -39,18 +39,24 @@ impl Default for TrivialCustomType {
 }
 
 // error: constructor `TrivialCustomType::TrivialCustomType` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TrivialCustomType& __param_0`:
+//     references are not yet supported
 
 // error: constructor `TrivialCustomType::TrivialCustomType` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TrivialCustomType&& __param_0`:
+//     references are not yet supported
 
 // error: function `TrivialCustomType::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const TrivialCustomType& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TrivialCustomType&`:
+//     references are not yet supported
 
 // error: function `TrivialCustomType::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `TrivialCustomType&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `TrivialCustomType&`:
+//     references are not yet supported
 
 // error: function `TrivialCustomType::operator||` could not be bound
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
@@ -73,7 +79,8 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 }
 
 // error: constructor `NontrivialCustomType::NontrivialCustomType` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `NontrivialCustomType&& __param_0`:
+//     references are not yet supported
 
 // error: function `NontrivialCustomType::operator||` could not be bound
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported

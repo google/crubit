@@ -60,8 +60,8 @@ pub mod repro {
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=24
     // error: function `repro::crash` could not be bound
-    //   Unsupported parameter #0 (__param_0): template instantiation is not yet supported
-    //   template instantiation is not yet supported
+    //   Unsupported parameter type `repro::Nullable<repro::Interval> __param_0`:
+    //     template instantiation is not yet supported
 }
 
 // namespace repro
@@ -71,11 +71,9 @@ pub mod repro {
 // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=11
 // error: struct `repro::optional<repro::Interval>` could not be bound
 //   template instantiation is not yet supported
-//   template instantiation is not yet supported
 
 // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=20
 // error: struct `repro::Nullable<repro::Interval>` could not be bound
-//   template instantiation is not yet supported
 //   template instantiation is not yet supported
 
 mod detail {

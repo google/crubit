@@ -13,7 +13,6 @@ use crubit_feature::CrubitFeature;
 use error_report::{bail, ensure};
 use flagset::FlagSet;
 use ir::*;
-use itertools::Itertools;
 use proc_macro2::{Delimiter, Group, Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::HashSet;
@@ -328,7 +327,8 @@ impl UniformReprTemplateType {
             let arg_type_kind = db.rs_type_kind(template_arg.clone())?;
             ensure!(
                 !arg_type_kind.is_bridge_type(),
-                "Bridge types cannot be used as template arguments"
+                "`{}` cannot be used as a template argument because it is a bridged type\nSee crubit.rs/types.",
+                arg_type_kind.display(db),
             );
             // We don't do this in required_crubit_features() because it doesn't know which
             // template arguments actually need to be free of errors. (For example,
@@ -341,13 +341,19 @@ impl UniformReprTemplateType {
         match template_specialization_kind {
             Some(TemplateSpecializationKind::StdUniquePtr { element_type }) => {
                 let element_type = type_arg(element_type)?;
-                ensure!(element_type.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", element_type.display(db));
-                ensure!(element_type.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", element_type.display(db));
+                ensure!(element_type.is_complete(),
+                    "`{}` can't be used in a Rust std::unique_ptr<T> because it is an incomplete type",
+                    element_type.display(db));
+                ensure!(element_type.is_destructible(),
+                    "`{}` can't be used in a Rust std::unique_ptr<T> because it has a deleted or non-public destructor",
+                    element_type.display(db));
                 Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtr { element_type })))
             }
             Some(TemplateSpecializationKind::StdVector { element_type }) => {
                 let element_type = type_arg(element_type)?;
-                ensure!(element_type.is_destructible(), "Rust std::vector<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", element_type.display(db));
+                ensure!(element_type.is_destructible(),
+                    "`{}` can't be used in a Rust std::vector<T> becuase it has a deleted or non-public destructor",
+                    element_type.display(db));
                 if element_type.overloads_operator_delete() {
                     return Ok(None);
                 }
@@ -723,7 +729,12 @@ fn new_c9_co_record(
     };
     let arg_type_kind = db.rs_type_kind(element_type.clone())?;
     if let RsTypeKind::Error { error, .. } = arg_type_kind {
-        return Err(error);
+        let element_name = db.cc_type_debug_name(element_type);
+        let desc = error.to_string().replace("\n", "\n  ");
+        return Err(anyhow!(
+            "`c9::Co<{element_name}>` is unsupported because `{element_name}` is unavailable:\n\
+              {desc}"
+        ));
     };
     Ok(Some(BridgeRsTypeKind::C9Co { has_reference_param, result_type: Rc::new(arg_type_kind) }))
 }
@@ -980,59 +991,53 @@ impl RsTypeKind {
     /// for both the template definition and its instantiation, and so both
     /// would need to be passed in to rs_type_kind() in order to be able to
     /// merge these two functions.
-    pub fn required_crubit_features<'a>(
+    pub fn missing_feature_descriptions_of_type(
         &self,
+        target: &BazelLabel,
         enabled_features: flagset::FlagSet<CrubitFeature>,
-    ) -> (flagset::FlagSet<CrubitFeature>, String) {
+    ) -> Vec<String> {
         let mut missing_features = <flagset::FlagSet<CrubitFeature>>::default();
-        let mut reasons = <std::collections::BTreeSet<std::borrow::Cow<'static, str>>>::new();
-        let mut require_feature =
-            |required_feature: CrubitFeature,
-             reason: Option<&dyn Fn() -> std::borrow::Cow<'static, str>>| {
-                let required_features = <flagset::FlagSet<CrubitFeature>>::from(required_feature);
-                let missing = required_features - enabled_features;
-                if !missing.is_empty() {
-                    missing_features |= missing;
-                    if let Some(reason) = reason {
-                        reasons.insert(reason());
-                    }
-                }
-            };
+        let mut reasons = std::collections::BTreeSet::<String>::new();
+        let mut require_feature = |required_feature: CrubitFeature, reason: std::fmt::Arguments| {
+            let required_features = <flagset::FlagSet<CrubitFeature>>::from(required_feature);
+            let missing = required_features - enabled_features;
+            if !missing.is_empty() {
+                missing_features |= missing;
+                reasons.insert(reason.to_string());
+            }
+        };
+
+        if !enabled_features.contains(CrubitFeature::Types) {
+            require_feature(
+                CrubitFeature::Types,
+                format_args!("Crubit is not enabled on defining target:\n  {target}"),
+            );
+        }
 
         for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
                 RsTypeKind::Error { error, visibility_override, .. } => {
-                    if visibility_override.is_some() {
-                        require_feature(CrubitFeature::Types, None)
-                    } else {
-                        require_feature(
-                            CrubitFeature::Wrapper,
-                            Some(&|| std::borrow::Cow::from(error.to_string())),
-                        )
+                    if visibility_override.is_none() {
+                        require_feature(CrubitFeature::Wrapper, format_args!("{error}"))
                     }
                 }
-                RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::Types, None),
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     require_feature(
                         CrubitFeature::Experimental,
-                        Some(&|| "references are not yet supported".into()),
+                        format_args!("references are not yet supported"),
                     );
                 }
                 RsTypeKind::FuncPtr { cc_calling_conv, .. } => {
-                    if *cc_calling_conv == CcCallingConv::C {
-                        require_feature(CrubitFeature::Types, None);
-                    } else {
+                    if *cc_calling_conv != CcCallingConv::C {
                         require_feature(
                             CrubitFeature::Experimental,
-                            Some(&|| {
-                                "function pointers using a non-`C` calling convention are not yet supported".into()
-                            }),
+                            format_args!("function pointers using a non-`C` calling convention are not yet supported"),
                         );
                     }
                 }
                 RsTypeKind::IncompleteRecord { .. } => require_feature(
                     CrubitFeature::Wrapper,
-                    Some(&|| "forward declared types are not yet supported".into()),
+                    format_args!("forward declared types are not yet supported"),
                 ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //
@@ -1049,23 +1054,23 @@ impl RsTypeKind {
                     // temporary solution until we have a better way to handle template
                     // instantiations.
 
-                    if uniform_repr_template_type.is_some() || record.has_unique_owning_target() {
-                        require_feature(CrubitFeature::Types, None);
-                    } else {
+                    if uniform_repr_template_type.is_none() && !record.has_unique_owning_target() {
                         require_feature(
                             CrubitFeature::Wrapper,
-                            Some(&|| "template instantiation is not yet supported".into()),
+                            format_args!("template instantiation is not yet supported"),
                         )
                     }
                 }
-                RsTypeKind::BridgeType { .. } => require_feature(CrubitFeature::Types, None),
-                RsTypeKind::ExistingRustType { .. }
+
+                RsTypeKind::Pointer { .. }
+                | RsTypeKind::BridgeType { .. }
+                | RsTypeKind::ExistingRustType { .. }
                 | RsTypeKind::Enum { .. }
                 | RsTypeKind::TypeAlias { .. }
-                | RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Types, None),
+                | RsTypeKind::Primitive { .. } => {}
             }
         }
-        (missing_features, reasons.into_iter().join(", "))
+        reasons.into_iter().collect()
     }
 
     // If the type is pointer annotated with CRUBIT_OWNED_POINTER, returns the pointee type.
@@ -1141,11 +1146,11 @@ impl RsTypeKind {
     /// it can't.
     pub fn check_by_value(&self) -> Result<()> {
         match self.unalias() {
-            RsTypeKind::Error { error, .. } => bail!("Cannot use an error type by value: {error}"),
+            RsTypeKind::Error { error, .. } => Err(error.clone()),
             RsTypeKind::Record { record, .. } => record.check_by_value(),
             RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
                 bail!(
-                    "Attempted to pass incomplete record type `{}` by-value",
+                    "`{}` cannot be passed by-value because it is an incomplete type",
                     incomplete_record.cc_name
                 )
             }
@@ -2064,7 +2069,7 @@ mod tests {
                 return_type: Rc::new(c),
             }
         };
-        let dfs_names = f
+        let dfs_names: Vec<String> = f
             .dfs_iter()
             .map(|t| match t {
                 RsTypeKind::FuncPtr { .. } => "fn".to_string(),
@@ -2073,7 +2078,7 @@ mod tests {
                 }
                 _ => unreachable!("Only FuncPtr and ExistingRustType kinds are used in this test"),
             })
-            .collect_vec();
+            .collect();
         assert_eq!(vec!["fn", "::A", "::B", "::C"], dfs_names);
     }
 
@@ -2168,10 +2173,11 @@ mod tests {
                 param_types: Rc::from([reference]),
             },
         ] {
-            let (all_required_features, reason) =
-                func_ptr.required_crubit_features(<flagset::FlagSet<CrubitFeature>>::default());
-            assert_eq!(all_required_features, CrubitFeature::Experimental | CrubitFeature::Types);
-            assert_eq!(reason, "references are not yet supported");
+            let reasons = func_ptr.missing_feature_descriptions_of_type(
+                &BazelLabel("//fake".into()),
+                CrubitFeature::Types.into(),
+            );
+            assert_eq!(reasons, vec!["references are not yet supported"]);
         }
     }
 

@@ -8,6 +8,7 @@ use crate::db::BindingsGenerator;
 use crate::rs_snippet::{PrimitiveName, RsTypeKind};
 use arc_anyhow::{Error, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
+use crubit_feature::CrubitFeature;
 use error_report::{anyhow, bail, ensure};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
@@ -20,7 +21,7 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::{quote, ToTokens};
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
+use std::fmt::Display;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
 
@@ -105,38 +106,6 @@ pub struct BindingsTokens {
     pub rs_api_impl: TokenStream,
 }
 
-/// A missing set of crubit features caused by a capability that requires that
-/// feature.
-///
-/// For example, if addition is not implemented due to missing the Experimental
-/// feature on //foo, then we might have something like:
-///
-/// ```
-/// RequiredCrubitFeature {
-///   target: "//foo".into(),
-///   item: "kFoo".into(),
-///   missing_features: CrubitFeature::Experimental.into(),
-///   capability_description: "int addition".into(),
-/// }
-/// ```
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct RequiredCrubitFeature {
-    pub target: BazelLabel,
-    pub item: Rc<str>,
-    pub missing_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-    pub capability_description: Rc<str>,
-}
-
-impl Display for RequiredCrubitFeature {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        let Self { capability_description, .. } = self;
-        if !capability_description.is_empty() {
-            write!(f, "{capability_description}")?;
-        }
-        Ok(())
-    }
-}
-
 /// Returns the list of features required to use the item which are not yet
 /// enabled.
 ///
@@ -145,163 +114,142 @@ impl Display for RequiredCrubitFeature {
 ///
 /// If the item does have a defining target, and it doesn't enable the specified
 /// features, then bindings are suppressed for this item.
-pub fn required_crubit_features(
-    db: &BindingsGenerator,
-    item: &Item,
-) -> Result<Vec<RequiredCrubitFeature>> {
+pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Result<Vec<String>> {
     let mut missing_features = vec![];
 
     let ir = &db.ir();
 
-    let require_any_feature =
-        |missing_features: &mut Vec<RequiredCrubitFeature>,
-         alternative_required_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-         capability_description: &dyn Fn() -> Rc<str>| {
-            // We refuse to generate bindings if either the definition of an item, or
-            // instantiation (if it is a template) of an item are in a translation unit
-            // which doesn't have the required Crubit features.
-            for target in db
-                .defining_target(item.id())
-                .as_ref()
-                .into_iter()
-                .chain(item.owning_target().as_ref())
-            {
-                let enabled_features = ir.target_crubit_features(target);
-                if (alternative_required_features & enabled_features).is_empty() {
-                    missing_features.push(RequiredCrubitFeature {
-                        target: target.clone(),
-                        item: db.debug_name(item.id()),
-                        missing_features: alternative_required_features,
-                        capability_description: capability_description(),
-                    });
-                }
-            }
-        };
+    struct TargetAndFeatures {
+        target: BazelLabel,
+        features: flagset::FlagSet<CrubitFeature>,
+    }
+    let defining_and_owning_target: Vec<TargetAndFeatures> = db
+        .defining_target(item.id())
+        .into_iter()
+        .chain(item.owning_target())
+        .map(|target| TargetAndFeatures { features: ir.target_crubit_features(&target), target })
+        .collect();
 
-    let require_rs_type_kind = |missing_features: &mut Vec<RequiredCrubitFeature>,
-                                rs_type_kind: &RsTypeKind,
-                                context: &dyn Fn() -> Rc<str>| {
-        for target in
-            db.defining_target(item.id()).as_ref().into_iter().chain(item.owning_target().as_ref())
-        {
-            let (missing, desc) =
-                rs_type_kind.required_crubit_features(ir.target_crubit_features(target));
-            if !missing.is_empty() {
-                let context = context();
-                let capability_description = if desc.is_empty() {
-                    context
-                } else if context.is_empty() {
-                    desc.into()
-                } else {
-                    format!("{context}: {desc}").into()
-                };
-                missing_features.push(RequiredCrubitFeature {
-                    target: target.clone(),
-                    item: db.debug_name(item.id()),
-                    missing_features: missing,
-                    capability_description,
-                });
+    let have_feature = |feature: CrubitFeature| -> bool {
+        // We refuse to generate bindings if either the definition of an item, or
+        // instantiation (if it is a template) of an item are in a translation unit
+        // which doesn't have the required Crubit features.
+        for TargetAndFeatures { target, .. } in &defining_and_owning_target {
+            let enabled_features = ir.target_crubit_features(target);
+            if !enabled_features.contains(feature) {
+                return false;
             }
+        }
+        true
+    };
+
+    let missing_features_of_type = |rs_type_kind: &RsTypeKind| -> Option<Vec<String>> {
+        for TargetAndFeatures { target, features } in &defining_and_owning_target {
+            let descriptions = rs_type_kind.missing_feature_descriptions_of_type(target, *features);
+            if !descriptions.is_empty() {
+                return Some(descriptions);
+            }
+        }
+        None
+    };
+
+    let missing_features_of_cc_type = |cc_type: ir::CcType| -> Option<Vec<String>> {
+        match db.rs_type_kind(cc_type) {
+            Ok(rs_type_kind) => missing_features_of_type(&rs_type_kind),
+            Err(e) => Some(vec![e.to_string()]),
         }
     };
 
-    if let Some(unknown_attr) = item.unknown_attr() {
-        require_any_feature(
-            &mut missing_features,
-            crubit_feature::CrubitFeature::Experimental.into(),
-            &|| {
-                format!("crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}")
-                    .into()
-            },
-        );
+    let join_missing_with_context = |context: &str, missing: &[String]| -> String {
+        let desc = missing.join("\n").replace('\n', "\n  ");
+        format!("{context}:\n  {desc}")
+    };
+
+    if !have_feature(CrubitFeature::Experimental) {
+        if let Some(unknown_attr) = item.unknown_attr() {
+            missing_features.push(format!(
+                "crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}"
+            ));
+        }
     }
+
     match item {
-        Item::Constant(_) => {}
-        Item::GlobalVar(_) => {}
-        Item::Comment { .. } | Item::UnsupportedItem(..) | Item::UseMod { .. } => {}
+        Item::Constant(_)
+        | Item::Comment { .. }
+        | Item::GlobalVar(_)
+        | Item::Namespace(_)
+        | Item::UnsupportedItem(..)
+        | Item::UseMod { .. } => {}
 
         Item::Func(func) => {
             if func.rs_name == UnqualifiedIdentifier::Destructor {
                 // We support destructors in supported even though they use some features we
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.
-                require_any_feature(
-                    &mut missing_features,
-                    crubit_feature::CrubitFeature::Types.into(),
-                    &|| "destructors".into(),
-                );
+                if !have_feature(CrubitFeature::Types) {
+                    missing_features.push("destructors".to_string());
+                }
             } else {
-                let return_type = db.rs_type_kind(func.return_type.clone())?;
-                require_rs_type_kind(&mut missing_features, &return_type, &|| {
-                    "Unsupported return type".into()
-                });
-                for (i, param) in func.params.iter().enumerate() {
-                    let param_type = db.rs_type_kind(param.type_.clone())?;
-                    require_rs_type_kind(&mut missing_features, &param_type, &|| {
-                        format!("Unsupported parameter #{i} ({})", &param.identifier).into()
-                    });
-                }
-                if !func.has_c_calling_convention {
-                    require_any_feature(
-                        &mut missing_features,
-                        crubit_feature::CrubitFeature::Experimental.into(),
-                        &|| "non-C calling convention".into(),
-                    );
-                }
-                if func.is_variadic {
-                    require_any_feature(
-                        &mut missing_features,
-                        crubit_feature::CrubitFeature::Experimental.into(),
-                        &|| "variadic function".into(),
-                    );
-                }
-                if func.is_noreturn {
-                    require_any_feature(
-                        &mut missing_features,
-                        crubit_feature::CrubitFeature::Experimental.into(),
-                        &|| "[[noreturn]] attribute".into(),
-                    );
-                }
                 for param in &func.params {
-                    if let Some(unknown_attr) = &param.unknown_attr {
-                        require_any_feature(
-                            &mut missing_features,
-                            crubit_feature::CrubitFeature::Experimental.into(),
-                            &|| {
-                                format!(
-                                    "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
-                                    param = &param.identifier.identifier
-                                )
-                                .into()
-                            },
-                        );
+                    if let Some(missing) = missing_features_of_cc_type(param.type_.clone()) {
+                        missing_features.push(join_missing_with_context(
+                            &format!(
+                                "Unsupported parameter type `{} {}`",
+                                db.cc_type_debug_name(&param.type_),
+                                param.identifier
+                            ),
+                            &missing,
+                        ));
+                    }
+                }
+                if let Some(missing) = missing_features_of_cc_type(func.return_type.clone()) {
+                    missing_features.push(join_missing_with_context(
+                        &format!(
+                            "Unsupported return type `{}`",
+                            db.cc_type_debug_name(&func.return_type)
+                        ),
+                        &missing,
+                    ));
+                }
+                if !have_feature(CrubitFeature::Experimental) {
+                    if !func.has_c_calling_convention {
+                        missing_features.push("non-C calling convention".to_string());
+                    }
+                    if func.is_variadic {
+                        missing_features.push("variadic function".to_string());
+                    }
+                    if func.is_noreturn {
+                        missing_features.push("[[noreturn]] attribute".to_string());
+                    }
+                    for param in &func.params {
+                        if let Some(unknown_attr) = &param.unknown_attr {
+                            missing_features.push(format!(
+                                "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
+                                param = &param.identifier.identifier
+                            ));
+                        }
                     }
                 }
             }
         }
         Item::Record(_) | Item::TypeAlias(_) | Item::Enum(_) | Item::ExistingRustType(_) => {
-            require_rs_type_kind(
-                &mut missing_features,
-                // We use from_item_raw here because required_crubit_features is itself called
-                // by `BindingsGenerator::rs_type_kind()` in order to decide if it should return
-                // an error.
-                &RsTypeKind::from_item_raw(
-                    db,
-                    item.clone(),
-                    /*have_reference_param=*/ false,
-                    /*is_return_type=*/ true,
-                    /*lifetimes=*/ &[],
-                )?,
-                &|| "".into(),
-            );
+            // We use from_item_raw here because missing_feature_descriptions is itself called
+            // by `BindingsGenerator::rs_type_kind()` in order to decide if it should return
+            // an error.
+            if let Some(missing) = missing_features_of_type(&RsTypeKind::from_item_raw(
+                db,
+                item.clone(),
+                /*have_reference_param=*/ false,
+                /*is_return_type=*/ true,
+                /*lifetimes=*/ &[],
+            )?) {
+                missing_features.extend(missing);
+            }
         }
-        Item::Namespace(_) => {}
         Item::IncompleteRecord(_) => {
-            require_any_feature(
-                &mut missing_features,
-                crubit_feature::CrubitFeature::Wrapper.into(),
-                &|| "incomplete type".into(),
-            );
+            if !have_feature(CrubitFeature::Wrapper) {
+                missing_features.push("incomplete type".to_string());
+            }
         }
     }
     Ok(missing_features)
@@ -356,26 +304,24 @@ pub struct BindingsInfo {
 #[derive(Clone, PartialEq, Eq)]
 pub enum NoBindingsReason {
     MissingRequiredFeatures {
-        missing_features: Vec<RequiredCrubitFeature>,
+        missing_features: Vec<String>,
     },
     DependencyFailed {
-        context: Rc<str>,
-        error: Error,
+        type_name: String,
+        reason: String,
     },
     LeadingDunder {
-        name: Rc<str>,
+        name: String,
     },
+    Visibility(Error),
     /// This is directly unsupported.
-    Unsupported {
-        context: Rc<str>,
-        error: Error,
-    },
+    Unsupported(Error),
     /// This item's parent was a record, but no nested items module could be generated because there
     /// were other records with nested items whose nested items module mapped to the same name.
     ParentModuleNameNotUnique {
-        conflicting_name: Rc<str>,
+        conflicting_name: String,
         /// Invariant: more than 1 element.
-        parent_names_that_map_to_same_name: Vec<Rc<str>>,
+        parent_names_that_map_to_same_name: Vec<String>,
     },
     /// This item's parent was a record, but no nested items module could be generated because there
     /// were other items that occupied the name in that parent's namespace. For example, a struct
@@ -402,19 +348,15 @@ impl From<NoBindingsReason> for Error {
     fn from(reason: NoBindingsReason) -> Error {
         match reason {
             NoBindingsReason::MissingRequiredFeatures { missing_features } => {
-                let mut all_missing = vec![];
-                for missing in missing_features {
-                    all_missing.push(missing.to_string());
-                }
-                anyhow!(all_missing.join("\n"))
+                anyhow!(missing_features.join("\n"))
             }
-            NoBindingsReason::DependencyFailed { error, .. } => {
-                anyhow!("depends on type with missing bindings: {error:#}")
+            NoBindingsReason::DependencyFailed { type_name, reason } => {
+                anyhow!("depends on `{type_name}` which cannot be bound because {reason}")
             }
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")
             }
-            NoBindingsReason::Unsupported { error, .. } => error,
+            NoBindingsReason::Visibility(error) | NoBindingsReason::Unsupported(error) => error,
             NoBindingsReason::ParentModuleNameNotUnique {
                 conflicting_name,
                 parent_names_that_map_to_same_name,

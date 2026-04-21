@@ -15,10 +15,10 @@
 #![deny(warnings)]
 
 // error: type alias `PtrDiff` could not be bound
-//   depends on type with missing bindings: Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported type '__ptrdiff_t': Unsupported clang::Type class 'PredefinedSugar'
+//   Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported type '__ptrdiff_t': Unsupported clang::Type class 'PredefinedSugar'
 
 // error: type alias `Size` could not be bound
-//   depends on type with missing bindings: Unsupported type 'decltype(sizeof (0))': Unsupported type '__size_t': Unsupported clang::Type class 'PredefinedSugar'
+//   Unsupported type 'decltype(sizeof (0))': Unsupported type '__size_t': Unsupported clang::Type class 'PredefinedSugar'
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -45,18 +45,24 @@ impl Default for SomeStruct {
 }
 
 // error: constructor `SomeStruct::SomeStruct` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const SomeStruct& __param_0`:
+//     references are not yet supported
 
 // error: constructor `SomeStruct::SomeStruct` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `SomeStruct&& __param_0`:
+//     references are not yet supported
 
 // error: function `SomeStruct::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const SomeStruct& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `SomeStruct&`:
+//     references are not yet supported
 
 // error: function `SomeStruct::operator=` could not be bound
-//   Unsupported return type: references are not yet supported
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `SomeStruct&& __param_0`:
+//     references are not yet supported
+//   Unsupported return type `SomeStruct&`:
+//     references are not yet supported
 
 // error: struct `ForwardDeclaredStruct` could not be bound
 //   incomplete type
@@ -137,14 +143,18 @@ unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
 }
 
 // error: constructor `FieldTypeTestStruct::FieldTypeTestStruct` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `const FieldTypeTestStruct& __param_0`:
+//     references are not yet supported
 
 // error: constructor `FieldTypeTestStruct::FieldTypeTestStruct` could not be bound
-//   Unsupported parameter #1 (__param_0): references are not yet supported
+//   Unsupported parameter type `FieldTypeTestStruct&& __param_0`:
+//     references are not yet supported
 
 // error: function `FunctionTakingPointersAndReferences` could not be bound
-//   Unsupported parameter #0 (const_ref_param): references are not yet supported
-//   Unsupported parameter #1 (mut_ref_param): references are not yet supported
+//   Unsupported parameter type `const int& const_ref_param`:
+//     references are not yet supported
+//   Unsupported parameter type `int& mut_ref_param`:
+//     references are not yet supported
 
 #[inline(always)]
 pub fn VoidReturningFunction() {

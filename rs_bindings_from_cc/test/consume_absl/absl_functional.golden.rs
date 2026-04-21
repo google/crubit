@@ -489,17 +489,20 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
 
 // Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
 // error: class `absl::internal_any_invocable::CoreImpl<false, MyOption<int>, MyOption<int>>` could not be bound
-//   template instantiation is not yet supported
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
 //   template instantiation is not yet supported
 
 // Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
 // error: class `absl::internal_any_invocable::CoreImpl<false, int, int>` could not be bound
-//   template instantiation is not yet supported
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
 //   template instantiation is not yet supported
 
 // Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
 // error: class `absl::internal_any_invocable::CoreImpl<false, void>` could not be bound
-//   template instantiation is not yet supported
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
 //   template instantiation is not yet supported
 
 mod detail {

@@ -56,18 +56,24 @@ pub mod test_namespace_bindings {
     }
 
     // error: constructor `test_namespace_bindings::SomeClass::SomeClass` could not be bound
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `const test_namespace_bindings::SomeClass& __param_0`:
+    //     references are not yet supported
 
     // error: constructor `test_namespace_bindings::SomeClass::SomeClass` could not be bound
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `test_namespace_bindings::SomeClass&& __param_0`:
+    //     references are not yet supported
 
     // error: function `test_namespace_bindings::SomeClass::operator=` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `const test_namespace_bindings::SomeClass& __param_0`:
+    //     references are not yet supported
+    //   Unsupported return type `test_namespace_bindings::SomeClass&`:
+    //     references are not yet supported
 
     // error: function `test_namespace_bindings::SomeClass::operator=` could not be bound
-    //   Unsupported return type: references are not yet supported
-    //   Unsupported parameter #1 (__param_0): references are not yet supported
+    //   Unsupported parameter type `test_namespace_bindings::SomeClass&& __param_0`:
+    //     references are not yet supported
+    //   Unsupported return type `test_namespace_bindings::SomeClass&`:
+    //     references are not yet supported
 
     pub mod some_class {
         #[inline(always)]

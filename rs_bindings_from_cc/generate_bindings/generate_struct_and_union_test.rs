@@ -430,7 +430,7 @@ fn test_trivial_nonpublic_destructor() -> Result<()> {
     // It isn't available by value:
     expect_that!(
         rs_api.to_string(),
-        contains_substring("Can't directly construct values of type `Indestructible`"),
+        contains_substring("`Indestructible` can't be used by-value because it has a non-public or deleted destructor"),
     );
     assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
     // ... but it is otherwise available:
@@ -464,7 +464,7 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
     expect_that!(
         rs_api.to_string(),
-        contains_substring("Can't directly construct values of type `Indestructible`"),
+        contains_substring("`Indestructible` can't be used by-value because it has a non-public or deleted destructor"),
     );
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Indestructible});
