@@ -2148,7 +2148,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         cc_api_impl = quote! {
             #cc_api_impl
 
-           extern "C" {
+           unsafe extern "C" {
                #decls
            }
         };
