@@ -272,11 +272,6 @@ pub struct PointerType {
     pub kind: PointerTypeKind,
     pub lifetime: Option<LifetimeId>,
     pub pointee_type: Rc<CcType>,
-    /// Lower as CRef or CMut depending on constness. Depending on the strategy we use, various
-    /// PointerTypeKinds may be `is_cref`. Note that we don't expect this to be produced from
-    /// the Clang side.
-    #[serde(default)]
-    pub is_cref: bool,
 }
 
 /// Generates an enum type that implements `Deserialize`, which parses the stringified contents of

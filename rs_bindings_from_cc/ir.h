@@ -223,8 +223,6 @@ struct CcType {
     std::optional<LifetimeId> lifetime;
 
     std::shared_ptr<CcType> pointee_type;
-
-    bool is_cref = false;
   };
 
   struct Primitive {

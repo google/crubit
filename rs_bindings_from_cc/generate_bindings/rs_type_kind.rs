@@ -53,6 +53,11 @@ pub fn rs_type_kind_with_lifetime_elision(
                 LifetimeOptions {
                     assume_lifetimes: lifetime_options.assume_lifetimes
                         && !pointee_is_string_view(db, &pointer.pointee_type),
+                    // is_return_type is used in !assume_lifetimes contexts for absl::span
+                    // to determine whether lifetimes should be provided.
+                    is_return_type: lifetime_options.is_return_type
+                        && lifetime_options.assume_lifetimes,
+                    is_operator: lifetime_options.is_operator,
                     ..LifetimeOptions::default()
                 },
             )?;
@@ -102,7 +107,11 @@ pub fn rs_type_kind_with_lifetime_elision(
                     referent: pointee,
                     mutability,
                     lifetime,
-                    is_cref: pointer.is_cref,
+                    // lifetime_defaults_transform should never give us an LValueRef without
+                    // a lifetime assignment.
+                    is_cref: lifetime_options.assume_lifetimes
+                        && lifetime_options.is_return_type
+                        && !lifetime_options.is_operator,
                 },
                 PointerTypeKind::RValueRef => {
                     RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime }

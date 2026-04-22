@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(negative_impls)]
 
+use cref::{CMut, CRef};
 use ctor::{
     ctor, emplace, mov, Assign, ConstRvalueReference, Ctor, CtorNew, Emplace, Infallible,
     RvalueReference,
@@ -68,13 +69,18 @@ fn test_copy_assign() {
 fn test_ref() {
     let mut x = emplace!(Nonunpin::ctor_new(42));
     {
-        let x_ref: Pin<&mut Nonunpin> = x.as_mut().AsMutRef();
-        assert_eq!(nonunpin_experimental::GetValueFromMutRef(x_ref), 42);
+        let x_ref: CMut<'_, Nonunpin> = x.as_mut().AsMutRef();
+        // SAFETY: `x_ref` is the only live reference to `x`.
+        assert_eq!(nonunpin_experimental::GetValueFromMutRef(unsafe { CMut::unique(x_ref) }), 42);
         assert_eq!(nonunpin_experimental::GetValueFromMutRef(x.as_mut()), 42);
     }
     {
-        let x_ref: &Nonunpin = x.AsConstRef();
-        assert_eq!(nonunpin_experimental::GetValueFromConstRef(x_ref), 42);
+        let x_ref: CRef<'_, Nonunpin> = x.AsConstRef();
+        // SAFETY: `x_ref` is the only live reference to `x`.
+        assert_eq!(
+            nonunpin_experimental::GetValueFromConstRef(&*unsafe { CRef::unchanging(x_ref) }),
+            42
+        );
         assert_eq!(nonunpin_experimental::GetValueFromConstRef(&x), 42);
     }
     {

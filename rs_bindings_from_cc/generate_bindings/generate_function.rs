@@ -1525,6 +1525,7 @@ fn rs_type_kinds_for_func(
         .ir()
         .target_crubit_features(&func.owning_target)
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    let is_operator = matches!(func.cc_name, ir::UnqualifiedIdentifier::Operator(_));
 
     // TODO(b/454627672): is it worth caching this?
     let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
@@ -1538,7 +1539,7 @@ fn rs_type_kinds_for_func(
             if i == 0 && func.is_instance_method() {
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.
-                let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _, is_cref: _}) =
+                let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _ }) =
                     &mut param_type.variant
                 else {
                     panic!(
@@ -1572,6 +1573,7 @@ fn rs_type_kinds_for_func(
                         // Only interesting for the return type.
                         have_reference_param: false,
                         assume_lifetimes,
+                        is_operator,
                     },
                 )
                 .map_err(|err| {
@@ -1598,6 +1600,7 @@ fn rs_type_kinds_for_func(
                     matches!(pt, RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. })
                 }),
                 assume_lifetimes,
+                is_operator,
             },
         )
         .map_err(|err| anyhow!("Return type is not supported: {err}")),

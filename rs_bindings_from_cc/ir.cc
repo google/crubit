@@ -96,9 +96,6 @@ llvm::json::Value CcType::ToJson() const {
                 {"lifetime", pointer.lifetime},
                 {"pointee_type", *pointer.pointee_type},
             };
-            if (pointer.is_cref) {
-              pointer_json.insert({"is_cref", pointer.is_cref});
-            }
             return llvm::json::Object{
                 {"Pointer", std::move(pointer_json)},
             };

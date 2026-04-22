@@ -279,11 +279,15 @@ pub struct LifetimeOptions {
     /// Are there any reference parameters to the function whose return type we are interested in?
     pub have_reference_param: bool,
 
+    /// Is the type we're lowering part of a type in return position?
     pub is_return_type: bool,
 
     /// If true, assumed lifetimes are used. The item in question is expected to have undergone
     /// lifetime_defaults_transform.
     pub assume_lifetimes: bool,
+
+    /// Is the type we're lowering part of the type of an operator function?
+    pub is_operator: bool,
 }
 
 /// A type with template type arguments that has a uniform representation regardless of `T` and
@@ -1457,8 +1461,8 @@ impl RsTypeKind {
                 } else {
                     quote! {& #lifetime #mut_ #referent_ }
                 };
-                if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(zarko): Is Pin right for cref here?
+                if mutability == &Mutability::Mut && !referent.is_unpin() && !is_cref {
+                    // CRef/CMut imply Pin; Pin<CRef<...>>/Pin<CMut<...>> are meaningless.
                     tokens = quote! {::core::pin::Pin< #tokens >};
                 }
                 tokens
@@ -1734,8 +1738,8 @@ impl RsTypeKind {
                     let mut_ = mutability.format_for_reference();
                     quote! {& #lifetime #mut_ #referent_tokens}
                 };
-                if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(zarko): Is this the right thing for CRef?
+                if mutability == &Mutability::Mut && !referent.is_unpin() && !is_cref {
+                    // CRef/CMut imply Pin; Pin<CRef<...>>/Pin<CMut<...>> are meaningless.
                     tokens = quote! { ::core::pin::Pin< #tokens > };
                 }
                 tokens
