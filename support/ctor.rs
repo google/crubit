@@ -236,19 +236,19 @@ pub unsafe trait Ctor: Sized {
     ///
     /// This is useful for chaining possibly-fallible operations (such as `ctor_then`) on top of
     /// an existing infallible `Ctor`.
-    fn ctor_make_fallible<E>(self) -> Ctor![Self::Output, Error = E]
+    fn ctor_make_fallible<E>(self) -> CtorMakeFallible<Self, E>
     where
         Self: Ctor<Error = Infallible>,
     {
-        self.ctor_map_err(|e: Infallible| match e {})
+        CtorMakeFallible { ctor: self, marker: PhantomData }
     }
 
     /// Maps this `Ctor`'s error type into a new error type using the `Into` trait.
-    fn ctor_err_into<E>(self) -> Ctor![Self::Output, Error = E]
+    fn ctor_err_into<E>(self) -> CtorErrInto<Self, E>
     where
         Self::Error: Into<E>,
     {
-        self.ctor_map_err(|e| e.into())
+        CtorErrInto { ctor: self, marker: PhantomData }
     }
 
     /// Returns a `Ctor`, which will invoke `f` after construction, if successful.
@@ -269,35 +269,10 @@ pub unsafe trait Ctor: Sized {
     /// });
     /// let x = emplace!(new_ctor);
     /// ```
-    fn ctor_then<F>(self, f: F) -> Ctor![Self::Output, Error = Self::Error]
+    fn ctor_then<F>(self, f: F) -> CtorThen<Self, F>
     where
         F: FnOnce(Pin<&mut Self::Output>) -> Result<(), Self::Error>,
     {
-        struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> {
-            ctor: C,
-            f: F,
-        }
-
-        // SAFETY: unconditionally initializes dest.
-        unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Ctor
-            for CtorThen<C, F>
-        {
-            type Output = C::Output;
-            type Error = C::Error;
-            unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
-                self.ctor.ctor(dest)?;
-                let dest = Pin::new_unchecked(&mut *dest);
-                (self.f)(dest)
-            }
-        }
-
-        impl<C, F> !SelfCtor for CtorThen<C, F>
-        where
-            C: Ctor,
-            F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>,
-        {
-        }
-
         CtorThen { ctor: self, f }
     }
 
@@ -317,11 +292,11 @@ pub unsafe trait Ctor: Sized {
     /// let new_ctor = y.ctor_map_err(|e| e.into_new_error());
     /// let x = try_emplace!(new_ctor);
     /// ```
-    fn ctor_map_err<F, E>(self, f: F) -> Ctor![Self::Output, Error = E]
+    fn ctor_map_err<F, E>(self, f: F) -> CtorMapErr<Self, F, E>
     where
         F: FnOnce(Self::Error) -> E,
     {
-        self.ctor_or_else(|e| ctor_error(f(e)))
+        CtorMapErr { ctor: self, f }
     }
 
     /// Returns a `Ctor` which, if the original construction fails,
@@ -335,44 +310,11 @@ pub unsafe trait Ctor: Sized {
     /// let new_ctor = Y::first_attempt().ctor_or_else(|_| Y::fallback_attempt());
     /// let x = try_emplace!(new_ctor);
     /// ```
-    fn ctor_or_else<F, O>(self, f: F) -> Ctor![Self::Output, Error = O::Error]
+    fn ctor_or_else<F, O>(self, f: F) -> CtorOrElse<Self, F, O>
     where
         F: FnOnce(Self::Error) -> O,
         O: Ctor<Output = Self::Output>,
     {
-        struct CtorOrElse<C, F, O>
-        where
-            C: Ctor,
-            F: FnOnce(C::Error) -> O,
-            O: Ctor<Output = C::Output>,
-        {
-            ctor: C,
-            f: F,
-        }
-
-        // SAFETY: initializes dest or returns an error.
-        unsafe impl<C, F, O> Ctor for CtorOrElse<C, F, O>
-        where
-            C: Ctor,
-            F: FnOnce(C::Error) -> O,
-            O: Ctor<Output = C::Output>,
-        {
-            type Output = C::Output;
-            type Error = O::Error;
-            unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
-                let Err(e) = self.ctor.ctor(dest) else { return Ok(()) };
-                (self.f)(e).ctor(dest)
-            }
-        }
-
-        impl<C, F, O> !SelfCtor for CtorOrElse<C, F, O>
-        where
-            C: Ctor,
-            F: FnOnce(C::Error) -> O,
-            O: Ctor<Output = C::Output>,
-        {
-        }
-
         CtorOrElse { ctor: self, f }
     }
 
@@ -380,45 +322,268 @@ pub unsafe trait Ctor: Sized {
     /// fails.
     ///
     /// This functions similarly to `Result::expect`.
-    fn ctor_expect<'a>(
-        self,
-        msg: &'a str,
-    ) -> impl Ctor<Output = Self::Output, Error = Infallible> + use<'a, Self>
+    fn ctor_expect<'a>(self, msg: &'a str) -> CtorExpect<'a, Self>
     where
         Self::Error: Debug,
     {
-        // Unused: convert `!` into a proper `Ctor`-implementing type.
-        #[allow(unused)]
-        self.ctor_or_else(move |e| ctor_error(panic!("{msg}: {e:?}")))
+        CtorExpect { ctor: self, msg }
     }
 
     /// Returns a `Ctor` which will panic if the original construction fails.
     ///
     /// This functions similarly to `Result::unwrap`.
-    fn ctor_unwrap(self) -> Ctor![Self::Output, Error = Infallible]
+    fn ctor_unwrap(self) -> CtorUnwrap<Self>
     where
         Self::Error: Debug,
     {
-        self.ctor_or_else(|e| {
-            // Unused: convert `!` into a proper `Ctor`-implementing type.
-            #[allow(unused)]
-            ctor_error(panic!(
-                "Construction of {type_name} failed: {e:?}",
-                type_name = core::any::type_name::<Self::Output>(),
-            ))
-        })
+        CtorUnwrap { ctor: self }
     }
 
     /// Returns a `Ctor` which will return a default value if the original construction fails.
     ///
     /// This functions similarly to `Result::unwrap_or_default`.
-    fn ctor_unwrap_or_default(
-        self,
-    ) -> Ctor![Self::Output, Error = <Self::Output as CtorNew<()>>::Error]
+    fn ctor_unwrap_or_default(self) -> CtorUnwrapOrDefault<Self>
     where
         Self::Output: CtorNew<()>,
     {
-        self.ctor_or_else(|_| Self::Output::ctor_new(()))
+        CtorUnwrapOrDefault { ctor: self }
+    }
+}
+
+// =======================
+// Ctor trait return types
+// =======================
+
+/// Return type of [`Ctor::ctor_make_fallible`].
+pub struct CtorMakeFallible<C, E>
+where
+    C: Ctor<Error = Infallible>,
+{
+    ctor: C,
+    marker: PhantomData<fn() -> E>,
+}
+
+impl<C, E> !SelfCtor for CtorMakeFallible<C, E> where C: Ctor<Error = Infallible> {}
+
+unsafe impl<C, E> Ctor for CtorMakeFallible<C, E>
+where
+    C: Ctor<Error = Infallible>,
+{
+    type Output = C::Output;
+    type Error = E;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe { self.ctor.ctor(dest).map_err(|e| match e {}) }
+    }
+}
+
+/// Return type of [`Ctor::ctor_err_into`].
+pub struct CtorErrInto<C, E>
+where
+    C: Ctor,
+    C::Error: Into<E>,
+{
+    ctor: C,
+    marker: PhantomData<fn() -> E>,
+}
+
+impl<C, E> !SelfCtor for CtorErrInto<C, E>
+where
+    C: Ctor,
+    C::Error: Into<E>,
+{
+}
+
+unsafe impl<C, E> Ctor for CtorErrInto<C, E>
+where
+    C: Ctor,
+    C::Error: Into<E>,
+{
+    type Output = C::Output;
+    type Error = E;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe { self.ctor.ctor(dest).map_err(Into::into) }
+    }
+}
+
+/// Return type of [`Ctor::ctor_then`].
+pub struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> {
+    ctor: C,
+    f: F,
+}
+
+impl<C, F> !SelfCtor for CtorThen<C, F>
+where
+    C: Ctor,
+    F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>,
+{
+}
+
+// SAFETY: unconditionally initializes dest.
+unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Ctor
+    for CtorThen<C, F>
+{
+    type Output = C::Output;
+    type Error = C::Error;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe {
+            self.ctor.ctor(dest)?;
+        }
+        let dest = unsafe { Pin::new_unchecked(&mut *dest) };
+        (self.f)(dest)
+    }
+}
+
+/// Return type of [`Ctor::ctor_map_err`].
+pub struct CtorMapErr<C, F, E>
+where
+    C: Ctor,
+    F: FnOnce(C::Error) -> E,
+{
+    ctor: C,
+    f: F,
+}
+
+impl<C, F, E> !SelfCtor for CtorMapErr<C, F, E>
+where
+    C: Ctor,
+    F: FnOnce(C::Error) -> E,
+{
+}
+
+unsafe impl<C, F, E> Ctor for CtorMapErr<C, F, E>
+where
+    C: Ctor,
+    F: FnOnce(C::Error) -> E,
+{
+    type Output = C::Output;
+    type Error = E;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe { self.ctor.ctor(dest).map_err(|e| (self.f)(e)) }
+    }
+}
+
+/// Return type of [`Ctor::ctor_or_else`].
+pub struct CtorOrElse<C, F, O>
+where
+    C: Ctor,
+    F: FnOnce(C::Error) -> O,
+    O: Ctor<Output = C::Output>,
+{
+    ctor: C,
+    f: F,
+}
+
+impl<C, F, O> !SelfCtor for CtorOrElse<C, F, O>
+where
+    C: Ctor,
+    F: FnOnce(C::Error) -> O,
+    O: Ctor<Output = C::Output>,
+{
+}
+
+// SAFETY: initializes dest or returns an error.
+unsafe impl<C, F, O> Ctor for CtorOrElse<C, F, O>
+where
+    C: Ctor,
+    F: FnOnce(C::Error) -> O,
+    O: Ctor<Output = C::Output>,
+{
+    type Output = C::Output;
+    type Error = O::Error;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe {
+            let Err(e) = self.ctor.ctor(dest) else { return Ok(()) };
+            (self.f)(e).ctor(dest)
+        }
+    }
+}
+
+/// Return type of [`Ctor::ctor_expect`].
+pub struct CtorExpect<'a, C>
+where
+    C: Ctor,
+{
+    ctor: C,
+    msg: &'a str,
+}
+
+impl<'a, C> !SelfCtor for CtorExpect<'a, C> where C: Ctor {}
+
+unsafe impl<'a, C> Ctor for CtorExpect<'a, C>
+where
+    C: Ctor,
+    C::Error: Debug,
+{
+    type Output = C::Output;
+    type Error = Infallible;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe {
+            self.ctor.ctor(dest).unwrap_or_else(|e| panic!("{}: {:?}", self.msg, e));
+            Ok(())
+        }
+    }
+}
+
+/// Return type of [`Ctor::ctor_unwrap`].
+pub struct CtorUnwrap<C>
+where
+    C: Ctor,
+{
+    ctor: C,
+}
+
+impl<C> !SelfCtor for CtorUnwrap<C> where C: Ctor {}
+
+unsafe impl<C> Ctor for CtorUnwrap<C>
+where
+    C: Ctor,
+    C::Error: Debug,
+{
+    type Output = C::Output;
+    type Error = Infallible;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe {
+            self.ctor.ctor(dest).unwrap_or_else(|e| {
+                panic!(
+                    "Construction of {type_name} failed: {e:?}",
+                    type_name = core::any::type_name::<C::Output>(),
+                )
+            });
+            Ok(())
+        }
+    }
+}
+
+/// Return type of [`Ctor::ctor_unwrap_or_default`].
+pub struct CtorUnwrapOrDefault<C>
+where
+    C: Ctor,
+    C::Output: CtorNew<()>,
+{
+    ctor: C,
+}
+
+impl<C> !SelfCtor for CtorUnwrapOrDefault<C>
+where
+    C: Ctor,
+    C::Output: CtorNew<()>,
+{
+}
+
+unsafe impl<C> Ctor for CtorUnwrapOrDefault<C>
+where
+    C: Ctor,
+    C::Output: CtorNew<()>,
+{
+    type Output = C::Output;
+    type Error = <C::Output as CtorNew<()>>::Error;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        unsafe {
+            if self.ctor.ctor(dest).is_err() {
+                <C::Output as CtorNew<()>>::ctor_new(()).ctor(dest)?;
+            }
+            Ok(())
+        }
     }
 }
 
@@ -444,24 +609,24 @@ macro_rules! Ctor {
     };
 }
 
+pub struct CtorError<T: ?Sized, E> {
+    e: E,
+    marker: PhantomData<fn() -> T>,
+}
+
+// SAFETY: unconditionally returns an error.
+unsafe impl<T: ?Sized, E> Ctor for CtorError<T, E> {
+    type Output = T;
+    type Error = E;
+    unsafe fn ctor(self, _: *mut Self::Output) -> Result<(), Self::Error> {
+        Err(self.e)
+    }
+}
+
+impl<T: ?Sized, E> !SelfCtor for CtorError<T, E> {}
+
 /// Returns a `Ctor` with error type `E` which always fails with the given error.
-pub fn ctor_error<T: ?Sized, E>(e: E) -> impl Ctor<Output = T, Error = E> {
-    struct CtorError<T: ?Sized, E> {
-        e: E,
-        marker: PhantomData<fn() -> T>,
-    }
-
-    // SAFETY: unconditionally returns an error.
-    unsafe impl<T: ?Sized, E> Ctor for CtorError<T, E> {
-        type Output = T;
-        type Error = E;
-        unsafe fn ctor(self, _: *mut Self::Output) -> Result<(), Self::Error> {
-            Err(self.e)
-        }
-    }
-
-    impl<T: ?Sized, E> !SelfCtor for CtorError<T, E> {}
-
+pub fn ctor_error<T: ?Sized, E>(e: E) -> CtorError<T, E> {
     CtorError { e, marker: PhantomData }
 }
 
