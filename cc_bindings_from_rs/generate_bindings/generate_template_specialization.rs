@@ -777,23 +777,26 @@ fn specialize_result<'tcx>(
             constexpr #tag_type_cc tag() const& noexcept; __NEWLINE__
             void set_tag(#tag_type_cc tag) noexcept; __NEWLINE__
         }),
-        cc_details: CcSnippet::new(quote! {
-            inline constexpr #tag_type_cc rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::tag() const& noexcept {
-                std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
-                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    __bytes[#byte_index_read] = __storage[#tag_offset + i];
+        cc_details: CcSnippet::with_include(
+            quote! {
+                inline constexpr #tag_type_cc rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::tag() const& noexcept {
+                    std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
+                    for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                        __bytes[#byte_index_read] = __storage[#tag_offset + i];
+                    }
+                    return std::bit_cast<#tag_type_cc>(__bytes);
                 }
-                return std::bit_cast<#tag_type_cc>(__bytes);
-            }
-            __NEWLINE__
-            inline void rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
-                auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
-                for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    __storage[#tag_offset + i] = __bytes[#byte_index_write];
+                __NEWLINE__
+                inline void rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
+                    auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
+                    for (std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                        __storage[#tag_offset + i] = __bytes[#byte_index_write];
+                    }
                 }
-            }
-            __NEWLINE__
-        }),
+                __NEWLINE__
+            },
+            CcInclude::bit(),
+        ),
         ..Default::default()
     };
 
@@ -1007,23 +1010,26 @@ fn specialize_option<'tcx>(
             constexpr #tag_type_cc tag() const& noexcept; __NEWLINE__
             constexpr void set_tag(#tag_type_cc tag) noexcept; __NEWLINE__
         }),
-        cc_details: CcSnippet::new(quote! {
-            inline constexpr #tag_type_cc rs_std::Option<#ty_tokens>::tag() const& noexcept {
-                ::std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
-                for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    __bytes[#endian_index] = storage_[#tag_offset + i];
+        cc_details: CcSnippet::with_include(
+            quote! {
+                inline constexpr #tag_type_cc rs_std::Option<#ty_tokens>::tag() const& noexcept {
+                    ::std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
+                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                        __bytes[#endian_index] = storage_[#tag_offset + i];
+                    }
+                    return ::std::bit_cast<#tag_type_cc>(__bytes);
                 }
-                return ::std::bit_cast<#tag_type_cc>(__bytes);
-            }
-            __NEWLINE__
-            inline constexpr void rs_std::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
-                auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
-                for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                    storage_[#tag_offset + i] = __bytes[#endian_index];
+                __NEWLINE__
+                inline constexpr void rs_std::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
+                    auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
+                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                        storage_[#tag_offset + i] = __bytes[#endian_index];
+                    }
                 }
-            }
-            __NEWLINE__
-        }),
+                __NEWLINE__
+            },
+            CcInclude::bit(),
+        ),
         ..Default::default()
     };
 

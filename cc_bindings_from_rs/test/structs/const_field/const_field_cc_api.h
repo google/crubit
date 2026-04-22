@@ -20,6 +20,7 @@
 #include "support/internal/slot.h"
 #include "support/rs_std/result.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <optional>

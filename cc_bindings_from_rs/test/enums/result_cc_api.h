@@ -24,6 +24,7 @@
 #include "support/rs_std/str_ref.h"
 
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
