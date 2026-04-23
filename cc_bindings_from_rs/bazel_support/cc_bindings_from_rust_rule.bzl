@@ -466,10 +466,13 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     features = find_crubit_features(target, ctx)
     cli_flags = collect_cc_bindings_from_rust_cli_flags(target, ctx)
-    dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr)
+    dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + [
+        target[CcBindingsFromRustInfo]
+        for target in ctx.attr._stdlib_bindings
+    ]
     config = crate_name_to_library_config(
         aspect_hints = ctx.rule.attr.aspect_hints,
-        deps = getattr(ctx.rule.attr, "deps", []),
+        rust_infos = dep_bindings_infos,
     )
     bindings_info, features, config, output_depset = _generate_bindings(
         ctx,
@@ -585,7 +588,16 @@ cc_bindings_from_rust_aspect = aspect(
     implementation = _cc_bindings_from_rust_aspect_impl,
     doc = "Aspect for generating C++ bindings for a Rust library.",
     attr_aspects = ["deps"],
-    attrs = private_common_attrs,
+    attrs = private_common_attrs | {
+        "_stdlib_bindings": attr.label_list(
+            doc = "Bindings for the standard library. These are implicitly imported by all bindings.",
+            default = [
+                "//support/rs_std:rs_std",
+                "//support/rs_std:rs_alloc",
+                "//support/rs_std:rs_core",
+            ],
+        ),
+    },
     toolchains = [
         "@rules_rust//rust:toolchain_type",
         config_common.toolchain_type("//cc_bindings_from_rs/bazel_support:toolchain_type", mandatory = False),
@@ -716,9 +728,10 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
 
     dep_bindings_infos = _get_dep_bindings_infos(ctx.attr)
 
-    config = crate_name_to_library_config(aspect_hints = [], deps = deps)
+    config = crate_name_to_library_config(aspect_hints = [], rust_infos = dep_bindings_infos)
     if ctx.attr.cpp_namespace:
         config["self"] = struct(namespace = ctx.attr.cpp_namespace)
+        config[crate_name] = struct(namespace = ctx.attr.cpp_namespace)
     bindings_info, features, config, output_depset = _generate_bindings(
         ctx,
         dep_bindings_infos = dep_bindings_infos,

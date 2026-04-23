@@ -31,6 +31,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/rs_std/rs_alloc.h"
+
 namespace traits {
 
 // Generated from:
@@ -60,10 +62,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
  private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> a;
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/traits/traits.rs;l=150
+    ::rs::alloc::string::String a;
+  };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/traits.rs;l=149
@@ -300,18 +303,17 @@ struct rs_std::impl<::traits::AssociatedTypeStruct,
   static ::std::int32_t get_my_assoc_type(
       ::traits::AssociatedTypeStruct const& self);
 
-  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
-  // traits_golden::AssociatedTypeTrait>::UnsupportedAssocType` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=160:
-  // Definition `std::string::String` comes from the `alloc` crate, but no
-  // `--crate-header` was specified for this crate
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=160
+  using UnsupportedAssocType CRUBIT_INTERNAL_RUST_TYPE(
+      "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
+      "AssociatedTypeTrait>::UnsupportedAssocType") =
+      ::rs::alloc::string::String;
 
-  // Error generating bindings for `<traits_golden::AssociatedTypeStruct as
-  // traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type` defined at
-  // cc_bindings_from_rs/test/traits/traits.rs;l=161:
-  // Error formatting function return type `std::string::String`: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=161
+  static ::rs::alloc::string::String get_unsupported_assoc_type(
+      ::traits::AssociatedTypeStruct const& self);
 };
 
 template <>
@@ -597,6 +599,25 @@ rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
     get_my_assoc_type(::traits::AssociatedTypeStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(self);
+}
+
+namespace traits {
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc_utype(
+    ::traits::AssociatedTypeStruct const&,
+    ::rs::alloc::string::String* __ret_ptr);
+}
+}  // namespace traits
+inline ::rs::alloc::string::String
+rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
+    get_unsupported_assoc_type(::traits::AssociatedTypeStruct const& self) {
+  crubit::Slot<::rs::alloc::string::String> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  traits::__crubit_internal::
+      __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc_utype(
+          self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace traits {

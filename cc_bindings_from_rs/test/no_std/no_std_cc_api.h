@@ -20,11 +20,12 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/str_ref.h"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <utility>
+
+#include "support/rs_std/rs_alloc.h"
 
 namespace no_std {
 
@@ -59,11 +60,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
   // cc_bindings_from_rs/test/no_std/no_std.rs;l=18
   rs_std::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
- private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> test;
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/no_std/no_std.rs;l=8
+    ::rs::alloc::string::String test;
+  };
 
  private:
   static void __crubit_field_offset_assertions();

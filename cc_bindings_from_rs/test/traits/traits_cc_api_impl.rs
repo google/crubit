@@ -111,6 +111,16 @@ unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc_utype(
+    __self: &'static ::traits_golden::AssociatedTypeStruct,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value=<::traits_golden::AssociatedTypeStruct as::traits_golden::AssociatedTypeTrait>::get_unsupported_assoc_type(__self);
+        (__ret_ptr as *mut ::alloc::string::String).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething(
     __self: &'static ::traits_golden::LifetimeStruct<'static>,
 ) -> &'static i32 {

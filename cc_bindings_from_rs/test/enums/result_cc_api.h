@@ -32,6 +32,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/rs_std/rs_alloc.h"
+
 namespace result {
 
 // Generated from:
@@ -125,11 +127,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
   // cc_bindings_from_rs/test/enums/result.rs;l=66
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
- private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> val_;
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/enums/result.rs;l=59
+    ::rs::alloc::string::String val_;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -162,11 +164,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
   // cc_bindings_from_rs/test/enums/result.rs;l=87
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
- private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> val_;
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/enums/result.rs;l=84
+    ::rs::alloc::string::String val_;
+  };
 
  private:
   static void __crubit_field_offset_assertions();

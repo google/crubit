@@ -23,6 +23,18 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_E(
+    __param_0: &'static mut ::core::mem::MaybeUninit<::alloc::string::String>,
+    __param_1: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __param_0 = __param_0.assume_init_read();
+        let __rs_return_value = ::enums_golden::repr_c::MyEnum::E(__param_0, __param_1);
+        (__ret_ptr as *mut ::enums_golden::repr_c::MyEnum).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_A(
     __param_0: i32,
     __param_1: i64,

@@ -33,6 +33,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/rs_std/rs_alloc.h"
+
 namespace option {
 struct HasOptions;
 
@@ -133,11 +135,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
- private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> foo;
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/enums/option.rs;l=70
+    ::rs::alloc::string::String foo;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -175,13 +177,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
- private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> foo;
-
- public:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/enums/option.rs;l=93
+    ::rs::alloc::string::String foo;
+  };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=94

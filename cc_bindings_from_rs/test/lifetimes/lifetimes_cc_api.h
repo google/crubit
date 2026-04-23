@@ -19,12 +19,13 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_alloc.h"
 
 namespace lifetimes {
 
@@ -138,13 +139,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=78
   static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
 
- private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> field_with_drop_glue;
-
- public:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=74
+    ::rs::alloc::string::String field_with_drop_glue;
+  };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=73

@@ -28,6 +28,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/rs_std/rs_alloc.h"
+
 namespace enums::repr_c {
 
 // Generated from:
@@ -38,10 +40,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Default::default
   MyEnum();
 
-  // Error generating bindings for `enums_golden::repr_c::MyEnum::E` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=12:
-  // Definition `std::string::String` comes from the `alloc` crate, but no
-  // `--crate-header` was specified for this crate
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=12
+  static ::enums::repr_c::MyEnum MakeE(::rs::alloc::string::String __param_0,
+                                       ::std::int32_t __param_1);
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=13
@@ -88,13 +90,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     ::std::memcpy(this, &value, sizeof(value));
   }
   struct alignas(0) __crubit_E_struct {
-   private:
-    // Field type has been replaced with a blob of bytes: Definition
-    // `std::string::String` comes from the `alloc` crate, but no
-    // `--crate-header` was specified for this crate
-    ::std::array<unsigned char, 24> __field0;
-
    public:
+    ::rs::alloc::string::String __field0;
     ::std::int32_t __field1;
   };
   struct alignas(0) __crubit_A_struct {
@@ -685,6 +682,20 @@ inline ::enums::repr_c::MyEnum::MyEnum() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+extern "C" void __crubit_thunk_E(::rs::alloc::string::String*, ::std::int32_t,
+                                 ::enums::repr_c::MyEnum* __ret_ptr);
+}
+inline ::enums::repr_c::MyEnum MyEnum::MakeE(
+    ::rs::alloc::string::String __param_0, ::std::int32_t __param_1) {
+  crubit::Slot __param_0_slot((::std::move(__param_0)));
+  crubit::Slot<::enums::repr_c::MyEnum> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_E(__param_0_slot.Get(), __param_1,
+                                      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_A(::std::int32_t, ::std::int64_t,
                                  ::enums::repr_c::MyEnum* __ret_ptr);
 }
@@ -728,6 +739,7 @@ inline void MyEnum::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(MyEnum, A));
   static_assert(8 == offsetof(MyEnum, B));
   static_assert(8 == offsetof(MyEnum, C));
+  static_assert(0 == offsetof(MyEnum::__crubit_E_struct, __field0));
   static_assert(24 == offsetof(MyEnum::__crubit_E_struct, __field1));
   static_assert(0 == offsetof(MyEnum::__crubit_A_struct, __field0));
   static_assert(8 == offsetof(MyEnum::__crubit_A_struct, __field1));

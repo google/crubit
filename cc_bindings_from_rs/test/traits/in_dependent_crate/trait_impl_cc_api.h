@@ -19,7 +19,6 @@
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -27,6 +26,7 @@
 #include <utility>
 
 #include "cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.h"
+#include "support/rs_std/rs_alloc.h"
 
 namespace trait_impl {
 
@@ -87,12 +87,11 @@ NotImplemented final {
   NotImplemented(::crubit::UnsafeRelocateTag, NotImplemented&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-
- private:
-  // Field type has been replaced with a blob of bytes: Definition
-  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
-  // was specified for this crate
-  ::std::array<unsigned char, 24> foo;
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=24
+    ::rs::alloc::string::String foo;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
