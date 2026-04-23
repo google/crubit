@@ -22,6 +22,8 @@ use query_compiler::{get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
 use rustc_abi::VariantIdx;
 use rustc_middle::ty::layout::PrimitiveExt;
+#[rustversion::since(2026-04-22)]
+use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use std::collections::HashSet;

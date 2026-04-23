@@ -33,6 +33,8 @@ use rustc_abi::{Endian, FieldsShape, VariantIdx, Variants};
 use rustc_infer::infer::{RegionVariableOrigin, TyCtxtInferExt};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
+#[rustversion::since(2026-04-22)]
+use rustc_middle::ty::Flags;
 use rustc_middle::ty::{
     self, AssocKind, IntTy, Region, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv, TypingMode, UintTy,
 };

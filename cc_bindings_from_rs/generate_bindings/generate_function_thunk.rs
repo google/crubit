@@ -22,6 +22,8 @@ use proc_macro2::{Ident, TokenStream};
 use query_compiler::{post_analysis_typing_env, try_normalize};
 use quote::format_ident;
 use quote::quote;
+#[rustversion::since(2026-04-22)]
+use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
