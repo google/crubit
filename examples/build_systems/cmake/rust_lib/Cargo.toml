@@ -1,0 +1,13 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "rust_lib"
+version = "0.1.0"
+edition = "2024"
+license-file = "../../../LICENSE"
+repository = "https://github.com/google/crubit"
+
+[dependencies]
+base64 = "0.22"

@@ -89,35 +89,46 @@ fn main() -> Result<()> {
     if !cli.features.features.is_empty() {
         build_args.push(format!("--features={}", cli.features.features.join(",")));
     }
-    build_args.extend(cli.build_args);
+    build_args.extend(cli.build_args.clone());
 
     let pkg_to_artifact = build_crate_and_stream_artifacts(&build_args)?;
 
     let ctx = BindingGenerationContext::new(pkg_to_artifact, root.clone(), &metadata, target_dir)?;
-    let lib_rs_content = ctx.generate_bindings()?;
+    ctx.generate_bindings()?;
 
-    ctx.compile_staticlib(lib_rs_content, &metadata)?;
+    ctx.compile_staticlib(&metadata)?;
 
     Ok(())
 }
 
-fn build_crate_and_stream_artifacts(
-    build_args: &[String],
-) -> Result<HashMap<String, ArtifactInfo>> {
+use std::process::Child;
+
+fn stream_cargo_build(
+    args: &[String],
+) -> Result<(Child, impl Iterator<Item = Result<Message, std::io::Error>>)> {
     let mut build_command = Command::new(cargo_bin());
-    build_command.args(["build", "--message-format=json"]);
-    build_command.args(build_args);
+    build_command.args(args);
 
     let mut command = build_command
         .stdout(Stdio::piped())
         .spawn()
         .map_err(|err| anyhow!("Failed to spawn cargo: {}", err))?;
 
-    let mut pkg_to_artifact = HashMap::new();
     let reader = std::io::BufReader::new(
         command.stdout.take().ok_or_else(|| anyhow!("Failed to open cargo stdout"))?,
     );
-    for message in cargo_metadata::Message::parse_stream(reader) {
+    Ok((command, cargo_metadata::Message::parse_stream(reader)))
+}
+
+fn build_crate_and_stream_artifacts(
+    build_args: &[String],
+) -> Result<HashMap<String, ArtifactInfo>> {
+    let mut args = vec!["build".to_string(), "--message-format=json".to_string()];
+    args.extend(build_args.iter().cloned());
+
+    let mut pkg_to_artifact = HashMap::new();
+    let (command, stream) = stream_cargo_build(&args)?;
+    for message in stream {
         let message = message.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
         if let Message::CompilerArtifact(artifact) = message {
             let find_metadata_file = artifact.filenames.iter().find(|filename| {
@@ -214,9 +225,8 @@ impl BindingGenerationContext {
         Ok(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone() })
     }
 
-    fn generate_bindings(&self) -> Result<String> {
+    fn generate_bindings(&self) -> Result<()> {
         let mut pkg_to_header = HashMap::new();
-        let mut lib_rs_content = String::new();
         let deps_dir = &self.dirs.deps_dir;
         let headers_dir = &self.dirs.headers_dir;
 
@@ -226,7 +236,6 @@ impl BindingGenerationContext {
                 continue;
             };
             let crate_name = &artifact_info.name;
-            let rs_crate_name = crate_name.replace('-', "_");
             let hash = &artifact_info.hash;
             let intermediate_h = deps_dir.join(format!("{}-{}.h", crate_name, hash));
             let final_h = headers_dir.join(format!("{}.h", crate_name));
@@ -234,10 +243,6 @@ impl BindingGenerationContext {
 
             if artifact_info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
                 pkg_to_header.insert(pkg_id.repr.clone(), intermediate_h.to_string());
-                lib_rs_content.push_str(&format!(
-                    "#[path = {:?}]\nmod r#{};\n",
-                    intermediate_rs, rs_crate_name
-                ));
                 if !final_h.exists() {
                     fs::copy(&intermediate_h, &final_h)?;
                 }
@@ -271,8 +276,6 @@ impl BindingGenerationContext {
                     }
                 }
             }
-            lib_rs_content
-                .push_str(&format!("#[path = {:?}]\nmod r#{};\n", intermediate_rs, rs_crate_name));
 
             let cmdline = Cmdline::new(&current_args).map_err(|err| {
                 match err.downcast_ref::<clap::Error>() {
@@ -294,17 +297,17 @@ impl BindingGenerationContext {
             fs::copy(&intermediate_h, &final_h)?;
         }
 
-        Ok(lib_rs_content)
+        Ok(())
     }
 
-    fn compile_staticlib(&self, mut lib_rs_content: String, metadata: &Metadata) -> Result<()> {
+    fn compile_staticlib(&self, metadata: &Metadata) -> Result<()> {
         let root_name = &self.root.name;
         let deps_dir = &self.dirs.deps_dir;
         let target_dir = &self.dirs.target_dir;
         let profile_dir = &self.dirs.profile_dir;
         let lib_rs_path = deps_dir.join(format!("{}_cc_api.rs", root_name));
         let root_crate_name = root_name.replace('-', "_");
-        lib_rs_content.push_str(&format!("pub use r#{}::*;\n", root_crate_name));
+        let lib_rs_content = format!("pub use r#{}::*;\n", root_crate_name);
         fs::write(&lib_rs_path, lib_rs_content)?;
 
         let static_lib_path = target_dir.join(&profile_dir).join(format!("lib{}.a", root_name));
@@ -352,31 +355,46 @@ bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
         let cargo_toml_path = deps_dir.join("Cargo.toml");
         fs::write(&cargo_toml_path, cargo_toml_content)?;
 
-        let mut cargo_build = Command::new(cargo_bin());
-        cargo_build.args([
-            "build",
-            "--manifest-path",
-            cargo_toml_path.as_str(),
-            format!("--target-dir={}", target_dir).as_str(),
-        ]);
+        let mut cargo_build = vec![
+            "build".to_string(),
+            "--manifest-path".to_string(),
+            cargo_toml_path.to_string(),
+            "--message-format=json".to_string(),
+        ];
 
         if profile_dir.as_str() == "release" {
-            cargo_build.arg("--release");
+            cargo_build.push("--release".to_string());
+        }
+        let (child, stream) = stream_cargo_build(&cargo_build)?;
+        let mut cargo_static_lib_path = None;
+        for message in stream {
+            let message =
+                message.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
+            // TODO: Extract an iterator wrapper that prints out lines out output and returns artifacts.
+            let Message::CompilerArtifact(artifact) = message else {
+                continue;
+            };
+            if artifact.target.kind.contains(&cargo_metadata::TargetKind::StaticLib) {
+                cargo_static_lib_path = artifact.filenames.first().cloned();
+            }
         }
 
-        let status =
-            cargo_build.status().map_err(|err| anyhow!("Failed to run cargo build: {}", err))?;
-        if !status.success() {
+        let output = child
+            .wait_with_output()
+            .map_err(|err| anyhow!("Failed to build staticlib: {}", err))?;
+        if !output.status.success() {
             bail!("Cargo build of bindings failed");
         }
+        let cargo_static_lib_path =
+            cargo_static_lib_path.ok_or_else(|| anyhow!("Failed to find staticlib output"))?;
 
-        // Cargo will output to target_dir/profile/staticlibname.a
-        // The previous implementation expected it at lib{root_name}.a directly under the profile dir.
-        let cargo_static_lib_path = target_dir
-            .join(&profile_dir)
-            .join(format!("lib{}_cc_api.a", root_name.replace('-', "_")));
-
-        fs::copy(&cargo_static_lib_path, &static_lib_path)?;
+        fs::copy(&cargo_static_lib_path, &static_lib_path).map_err(|err| {
+            anyhow!(
+                "Failed to copy cargo output to final staticlib path: {}\n{}",
+                cargo_static_lib_path,
+                err
+            )
+        })?;
 
         Ok(())
     }
