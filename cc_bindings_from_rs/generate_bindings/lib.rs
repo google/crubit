@@ -273,6 +273,7 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
         __HASH_TOKEN__ pragma clang diagnostic ignored "-Wreturn-type-c-linkage" __NEWLINE__
         __HASH_TOKEN__ pragma clang diagnostic ignored "-Wunused-private-field" __NEWLINE__
         __HASH_TOKEN__ pragma clang diagnostic ignored "-Wdeprecated-declarations" __NEWLINE__
+        __HASH_TOKEN__ pragma clang diagnostic ignored "-Wignored-attributes" __NEWLINE__
 
         #cc_api
 
