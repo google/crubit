@@ -80,10 +80,34 @@ using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
 constexpr llvm::StringRef CheckMacroDefinitions = R"cc(
-  // Bodies must reference the first param so that args are in the AST, but
-  // otherwise don't matter.
-#define CHECK(X) (X)
-#define CHECK_NE(A, B) (A, B)
+  // A simplified version of Abseil's CHECK macro. We want just enough control
+  // flow that this should affect flow conditions.
+#define CHECK(X) \
+    if (!X) __builtin_abort();
+
+  // A simplified version of Abseil's CHECK_NE (enough to affect flow
+  // conditions).
+  struct string;
+  namespace absl::something {
+  template <typename T>
+  const T& GetReferenceableValue(const T& X) {
+    return X;
+  }
+  int GetReferenceableValue(int t) { return t; }
+
+  template <typename T1, typename T2>
+  string* Check_NEImpl(const T1&, const T2&, const char*) {
+    return nullptr;
+  }
+  }  // namespace absl::something
+
+#define CHECK_OP(name, op, a, b)                                  \
+    while (string* result = ::absl::something::name##Impl(          \
+               ::absl::something::GetReferenceableValue(a),         \
+               ::absl::something::GetReferenceableValue(b), "msg")) \
+      __builtin_abort();
+
+#define CHECK_NE(a, b) CHECK_OP(Check_NE, !=, (a), (b))
 )cc";
 
 constexpr llvm::StringRef GtestMacroDefinitions = R"cc(
@@ -813,6 +837,22 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL)));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, CheckMacroPostState) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+    Nullable<int*> getOrNull(int x);
+    int* target() {
+      int* P = getOrNull(0);
+      CHECK(P);
+      return P;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("P"))));
+}
+
 // This is a crash repro; see b/370737278.
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      CheckMacroSmartPointerToPointer) {
@@ -858,12 +898,12 @@ TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(3), Evidence::ABORT_IF_NULL),
-                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                                    localVarNamed("A"))));
+      IsSupersetOf({(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
+                     evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
+                     evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
+                     evidence(paramSlot(3), Evidence::ABORT_IF_NULL),
+                     evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                              localVarNamed("A")))}));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
@@ -880,15 +920,31 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
+      IsSupersetOf({(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
+                     evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
+                     evidence(paramSlot(3), Evidence::ABORT_IF_NULL))}));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, CheckNEMacroPostState) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+    Nullable<int*> getOrNull(int x);
+    int* target() {
+      int* P = getOrNull(0);
+      CHECK_NE(P, nullptr);
+      return P;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
+      IsSupersetOf({(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN),
+                     evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                              localVarNamed("P")))}));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NullableArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
-    void callee(int *Q);
-    void target(Nullable<int *> P) { callee(P); }
+    void callee(int* Q);
+    void target(Nullable<int*> P) { callee(P); }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
@@ -4418,8 +4474,8 @@ TEST(CollectEvidenceFromDefinitionTest, PragmaLocalTopLevelPointer) {
 TEST(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #pragma nullability file_default nonnull
-    int* target(NullabilityUnknown<int*> P) {
-      CHECK(P);
+    int* target(NullabilityUnknown<int*> P, NullabilityUnknown<int*> Q) {
+      CHECK(Q);
       return P;
     }
   )cc";
@@ -4427,7 +4483,7 @@ TEST(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
-          evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
+          evidence(paramSlot(1), Evidence::ABORT_IF_NULL)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,

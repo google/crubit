@@ -910,6 +910,18 @@ static bool isDeclaredInAbseilOrUtil(const Decl& D) {
          (NS->getName() == "absl" || NS->getName() == "util");
 }
 
+// Models our macro replacement argument-capture functions (supporting
+// inference).
+static void modelArgCaptureAbortIfPassThrough(const CallExpr& CE,
+                                              Environment& Env) {
+  assert(CE.isGLValue());
+  assert(CE.getNumArgs() >= 1);
+  assert(CE.getArg(0) != nullptr);
+  // Pass through the storage location of the first argument to the result.
+  if (StorageLocation* Loc = Env.getStorageLocation(*CE.getArg(0)))
+    Env.setStorageLocation(CE, *Loc);
+}
+
 // Models the `GetReferenceableValue` functions used in Abseil logging and
 // elsewhere.
 static void modelGetReferenceableValue(const CallExpr& CE, Environment& Env) {
@@ -1019,6 +1031,11 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
         modelCheckNE(*CE, State.Env);
         return;
       }
+      if (FunII->isStr(ArgCaptureAbortIfFalse) ||
+          FunII->isStr(ArgCaptureAbortIfEqual)) {
+        modelArgCaptureAbortIfPassThrough(*CE, State.Env);
+        return;
+      }
     }
   }
 
@@ -1071,11 +1088,8 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
 
   if (CE->isCallToStdMove() || FuncDecl == nullptr) return;
 
-  // Don't treat parameters of our macro replacement argument-capture functions
-  // or of absl::StatusOr::value_or as output parameters.
-  if (FunII && (FunII->isStr(ArgCaptureAbortIfFalse) ||
-                FunII->isStr(ArgCaptureAbortIfEqual) ||
-                (FunII->isStr("value_or") && isMethodOfAbslStatusOr(FuncDecl))))
+  // Don't treat parameters of absl::StatusOr::value_or as output parameters.
+  if (FunII && ((FunII->isStr("value_or") && isMethodOfAbslStatusOr(FuncDecl))))
     return;
   // Make output parameters (with unknown nullability) initialized to unknown.
   for (ParamAndArgIterator<CallExpr> Iter(*FuncDecl, *CE); Iter; ++Iter)
