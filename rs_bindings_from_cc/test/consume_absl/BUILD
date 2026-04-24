@@ -37,6 +37,8 @@ crubit_test_cc_library(
     hdrs = ["uses_anyinvocable.h"],
     aspect_hints = [
         "//features:supported",
+        # Required to support incomplete types.
+        "//features:wrapper",
         "//features:callables",
     ],
     deps = [

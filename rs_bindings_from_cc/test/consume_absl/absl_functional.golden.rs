@@ -39,14 +39,14 @@ pub fn CallVoidVoid(
 ///
 /// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=24
 #[inline(always)]
-pub fn ReturnIntVoid() -> ::alloc::boxed::Box<
+pub fn ReturnIntMapper() -> ::alloc::boxed::Box<
     dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
         + ::core::marker::Send
         + ::core::marker::Sync
         + 'static,
 > {
     unsafe {
-        ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(raw_any_invocable.get(),param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z13ReturnIntVoidv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(raw_any_invocable.get(),param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z15ReturnIntMapperv(__return_abi_buffer,); })
     }
 }
 
@@ -65,6 +65,17 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
         ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(crate::MyOption<::ffi_11::c_int>)->crate::MyOption<::ffi_11::c_int>+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: crate::MyOption<::ffi_11::c_int>|->crate::MyOption<::ffi_11::c_int>{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::Fn(crate::MyOption<::ffi_11::c_int>)->crate::MyOption<::ffi_11::c_int>+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move|param_0: crate::MyOption<::ffi_11::c_int>|->crate::MyOption<::ffi_11::c_int>{ ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<::core::ffi::c_int>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<::core::ffi::c_int>>,|out|{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(raw_any_invocable.get(),::bridge_rust::unstable_encode!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<::core::ffi::c_int>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<::core::ffi::c_int>>,param_0).as_ptr()as*const u8,out) } }) }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(crate::MyOption<::ffi_11::c_int>)->crate::MyOption<::ffi_11::c_int>+::core::marker::Send+::core::marker::Sync+'static>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z17MyOptionIntMapperv(__return_abi_buffer,); })
     }
 }
+
+// error: struct `Incomplete` could not be bound
+//   incomplete type
+
+// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=34
+// error: function `ReturnIncompleteMapper` could not be bound
+//   Return type is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
+
+// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=36
+// error: function `CallIncompleteMapper` could not be bound
+//   Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
 // error: struct `std::integral_constant<bool, false>` could not be bound
@@ -505,6 +516,10 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
 //     third_party/absl/functional/internal/any_invocable.h
 //   template instantiation is not yet supported
 
+// Generated from: third_party/absl/functional/any_invocable.h;l=173
+// error: class `absl::AnyInvocable` could not be bound
+//   Return type of callable is incomplete: struct Incomplete
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -512,7 +527,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z12CallVoidVoidN4absl12AnyInvocableIFvvOEEE(
             f: *const ::core::ffi::c_uchar,
         );
-        pub(crate) unsafe fn __rust_thunk___Z13ReturnIntVoidv(
+        pub(crate) unsafe fn __rust_thunk___Z15ReturnIntMapperv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___Z17MyOptionIntMapperv(

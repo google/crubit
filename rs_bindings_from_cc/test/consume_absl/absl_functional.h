@@ -21,10 +21,19 @@ struct                                                                     //
 void CallVoidVoid(absl::AnyInvocable<void() &&> f);
 
 // Returns an invocable that returns 42.
-absl::AnyInvocable<int(int) const> ReturnIntVoid();
+absl::AnyInvocable<int(int) const> ReturnIntMapper();
 
 // Returns an AnyInvocable that takes a MyOption<int> and returns a
 // MyOption<int>.
 absl::AnyInvocable<MyOption<int>(MyOption<int>) const> MyOptionIntMapper();
+
+// IncompleteRecord
+struct Incomplete;
+
+// Should not receive bindings because the type is incomplete.
+absl::AnyInvocable<Incomplete(Incomplete) const> ReturnIncompleteMapper();
+// Should not receive bindings because the type is incomplete.
+Incomplete CallIncompleteMapper(
+    absl::AnyInvocable<Incomplete(Incomplete) const> f, Incomplete i);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CONSUME_ABSL_ABSL_FUNCTIONAL_H_

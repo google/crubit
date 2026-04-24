@@ -189,6 +189,25 @@ pub fn map_layout_compatible(
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `f`: Callable takes unsafe parameters: param 1 is of unsafe type raw pointer
+#[inline(always)]
+pub unsafe fn callable_taking_reference(
+    f: ::alloc::boxed::Box<
+        dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+            + ::core::marker::Send
+            + ::core::marker::Sync
+            + 'static,
+    >,
+    arg: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::FnMut(*mut::ffi_11::c_int)+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: *mut::ffi_11::c_int|{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::FnMut(*mut::ffi_11::c_int)+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,arg)
+    }
+}
+
 // error: struct `std::integral_constant<bool, false>` could not be bound
 //   template instantiation is not yet supported
 
@@ -565,6 +584,40 @@ mod detail {
             f: *const ::core::ffi::c_uchar,
             arg: &mut crate::LayoutCompatible,
         );
+        pub(crate) unsafe fn __rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(
+            f: *const ::core::ffi::c_uchar,
+            arg: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: *mut ::ffi_11::c_int,
+    ) {
+        (unsafe { &mut *f })(param_0);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(

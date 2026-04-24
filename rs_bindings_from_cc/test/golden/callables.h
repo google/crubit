@@ -46,4 +46,6 @@ LayoutCompatible map_layout_compatible(
     rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const> f,
     LayoutCompatible arg);
 
+int callable_taking_reference(rs_std::DynCallable<void(int&)> f, int arg);
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CALLABLES_H_

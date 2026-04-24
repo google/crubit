@@ -72,11 +72,12 @@ pub fn callable_crubit_abi_type(
         FnTrait::FnOnce => quote! { && },
     };
 
-    let cpp_return_type = cpp_type_name::format_cpp_type(&callable.return_type, db)?;
+    let cpp_return_type =
+        cpp_type_name::format_cpp_type_with_references(&callable.return_type, db)?;
     let cpp_param_types = callable
         .param_types
         .iter()
-        .map(|param_ty| cpp_type_name::format_cpp_type(param_ty, db))
+        .map(|param_ty| cpp_type_name::format_cpp_type_with_references(param_ty, db))
         .collect::<Result<Vec<_>>>()?;
     let cpp_fn_sig = quote! {
         #cpp_return_type(#(#cpp_param_types),*) #qualifier
@@ -147,7 +148,11 @@ fn generate_invoker_function_pointer(
 
         match param_ty.passing_convention() {
             PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
-                arg_exprs.push(quote! { #param_ident });
+                if param_ty.as_rvalue_referee().is_some() {
+                    arg_exprs.push(quote! { std::move(#param_ident) });
+                } else {
+                    arg_exprs.push(quote! { #param_ident });
+                }
             }
             PassingConvention::LayoutCompatible => {
                 let arg_ident = format_ident!("stack_param_{i}");
@@ -308,7 +313,7 @@ fn generate_make_cpp_invoker_tokens(
         PassingConvention::AbiCompatible => {}
         PassingConvention::Void => {}
         PassingConvention::LayoutCompatible => {
-            arg_exprs.push(quote! { out });
+            arg_exprs.push(quote! { out.as_mut_ptr() });
         }
         PassingConvention::ComposablyBridged => {
             arg_exprs.push(quote! { out });
@@ -331,7 +336,7 @@ fn generate_make_cpp_invoker_tokens(
         }
         PassingConvention::LayoutCompatible => {
             invoke_ffi_and_transform_to_rust = quote! {
-                let out = ::core::mem::MaybeUninit::uninit();
+                let mut out = ::core::mem::MaybeUninit::uninit();
                 #invoke_ffi_and_transform_to_rust;
                 unsafe { out.assume_init() }
             }

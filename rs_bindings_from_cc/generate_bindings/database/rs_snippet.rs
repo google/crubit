@@ -1315,6 +1315,30 @@ impl RsTypeKind {
         }
     }
 
+    pub fn as_rvalue_referee(&self) -> Option<&Rc<RsTypeKind>> {
+        // TODO(b/505098853): I have no idea why there are two rvalue ref types.
+        // We need to unify them.
+        match self.unalias() {
+            RsTypeKind::RvalueReference { referent: p, .. }
+            | RsTypeKind::Pointer {
+                kind: RustPtrKind::CcPtr(PointerTypeKind::RValueRef),
+                pointee: p,
+                ..
+            } => Some(p),
+            _ => None,
+        }
+    }
+
+    pub fn is_rvalue_ref(&self) -> bool {
+        // TODO(b/505098853): I have no idea why there are two rvalue ref types.
+        // We need to unify them.
+        matches!(
+            self.unalias(),
+            RsTypeKind::RvalueReference { .. }
+                | RsTypeKind::Pointer { kind: RustPtrKind::CcPtr(PointerTypeKind::RValueRef), .. }
+        )
+    }
+
     pub fn is_rvalue_ref_to(&self, expected_record: &Record) -> bool {
         match self.unalias() {
             RsTypeKind::RvalueReference { referent, .. } => referent.is_record(expected_record),

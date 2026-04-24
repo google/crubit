@@ -1268,11 +1268,13 @@ fn generate_dyn_callable_invoker_and_manager_decls(
         .map(|(param_ident, param_type)| -> Option<TokenStream> {
             match param_type.passing_convention() {
                 PassingConvention::AbiCompatible => {
-                    let param_type_tokens = cpp_type_name::format_cpp_type(param_type, db).ok()?;
+                    let param_type_tokens =
+                        cpp_type_name::format_cpp_type_with_references(param_type, db).ok()?;
                     Some(quote! { , #param_type_tokens #param_ident })
                 }
                 PassingConvention::LayoutCompatible => {
-                    let param_type_tokens = cpp_type_name::format_cpp_type(param_type, db).ok()?;
+                    let param_type_tokens =
+                        cpp_type_name::format_cpp_type_with_references(param_type, db).ok()?;
                     Some(quote! { , #param_type_tokens* #param_ident })
                 }
                 PassingConvention::ComposablyBridged => {
@@ -1291,14 +1293,14 @@ fn generate_dyn_callable_invoker_and_manager_decls(
         PassingConvention::AbiCompatible => {
             out_param = None;
             decl_return_type_tokens =
-                cpp_type_name::format_cpp_type(&callable.return_type, db).ok()?;
+                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
         }
         PassingConvention::LayoutCompatible => {
             // For std::move in the invoker impl.
             internal_includes.insert(CcInclude::utility());
 
             let return_type_tokens =
-                cpp_type_name::format_cpp_type(&callable.return_type, db).ok()?;
+                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
             out_param = Some(quote! { , #return_type_tokens* out });
             decl_return_type_tokens = quote! { void };
         }
@@ -1628,9 +1630,14 @@ fn generate_any_invocable_invoker_def(
         .map(|(param_ident, param_type)| -> Option<TokenStream> {
             match param_type.passing_convention() {
                 PassingConvention::AbiCompatible => {
-                    arg_exprs.push(quote! { #param_ident });
+                    if param_type.as_rvalue_referee().is_some() {
+                        internal_includes.insert(CcInclude::utility());
+                        arg_exprs.push(quote! { std::move(#param_ident) });
+                    } else {
+                        arg_exprs.push(quote! { #param_ident });
+                    };
                     let param_type_tokens =
-                        cpp_type_name::format_cpp_type(param_type, db).ok()?;
+                        cpp_type_name::format_cpp_type_with_references(param_type, db).ok()?;
                     Some(quote! { , #param_type_tokens #param_ident })
                 }
                 PassingConvention::LayoutCompatible => {
@@ -1638,7 +1645,7 @@ fn generate_any_invocable_invoker_def(
                     internal_includes.insert(CcInclude::utility());
                     arg_exprs.push(quote! { std::move(*#param_ident) });
                     let param_type_tokens =
-                        cpp_type_name::format_cpp_type(param_type, db).ok()?;
+                        cpp_type_name::format_cpp_type_with_references(param_type, db).ok()?;
                     Some(quote! { , #param_type_tokens* #param_ident })
                 }
                 PassingConvention::ComposablyBridged => {
@@ -1678,12 +1685,12 @@ fn generate_any_invocable_invoker_def(
             };
 
             decl_return_type_tokens =
-                cpp_type_name::format_cpp_type(&callable.return_type, db).ok()?;
+                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
             out_param = None;
         }
         PassingConvention::LayoutCompatible => {
             let return_type_tokens =
-                cpp_type_name::format_cpp_type(&callable.return_type, db).ok()?;
+                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
 
             invoke_rust_and_return_to_ffi = quote! {
                 new (out) #return_type_tokens(#invoke_rust_and_return_to_ffi);
@@ -1742,11 +1749,12 @@ fn generate_any_invocable_invoker_def(
 /// An error is returned if there is issue generating the declaration. The specific error is not
 /// reported because it will be reported elsewhere.
 fn any_invocable_sig_spelling(callable: &Callable, db: &BindingsGenerator) -> Result<TokenStream> {
-    let return_type_tokens = cpp_type_name::format_cpp_type(&callable.return_type, db)?;
+    let return_type_tokens =
+        cpp_type_name::format_cpp_type_with_references(&callable.return_type, db)?;
     let param_type_tokens = callable
         .param_types
         .iter()
-        .map(|param_ty| cpp_type_name::format_cpp_type(param_ty, db))
+        .map(|param_ty| cpp_type_name::format_cpp_type_with_references(param_ty, db))
         .collect::<Result<Vec<TokenStream>>>()?;
     let qual = match callable.fn_trait {
         FnTrait::Fn => quote! { const },

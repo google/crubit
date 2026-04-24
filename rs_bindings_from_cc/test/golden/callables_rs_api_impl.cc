@@ -23,6 +23,15 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 extern "C" void
+__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state, int& param_0);
+extern "C" void
+__crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" void
 __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state);
 extern "C" void
@@ -290,5 +299,26 @@ static_assert(
         class rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const>,
         class LayoutCompatible)) &
     ::map_layout_compatible);
+
+extern "C" int
+__rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(
+    const unsigned char* f, int arg) {
+  ::crubit::Decoder __f_decoder(
+      ::rs_std::internal_dyn_callable::DynCallableAbi<void(int&)>::kSize, f);
+  return callable_taking_reference(
+      ::rs_std::internal_dyn_callable::DynCallableAbi<void(int&)>(
+          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+          [](::absl::internal_any_invocable::TypeErasedState* state,
+             ::absl::internal_any_invocable::ForwardedParameterType<int&>
+                 param_0) noexcept -> void {
+            __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+                state, param_0);
+          })
+          .Decode(__f_decoder),
+      arg);
+}
+
+static_assert((int (*)(class rs_std::DynCallable<void(int&)>, int)) &
+              ::callable_taking_reference);
 
 #pragma clang diagnostic pop

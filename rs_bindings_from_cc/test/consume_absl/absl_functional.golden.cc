@@ -93,7 +93,7 @@ extern "C" void __rust_thunk___Z12CallVoidVoidN4absl12AnyInvocableIFvvOEEE(
 
 static_assert((void (*)(class absl::AnyInvocable<void() &&>)) & ::CallVoidVoid);
 
-extern "C" void __rust_thunk___Z13ReturnIntVoidv(
+extern "C" void __rust_thunk___Z15ReturnIntMapperv(
     unsigned char* __return_abi_buffer) {
   ::crubit::Encoder __return_encoder(
       ::crubit::AnyInvocableAbi<int(int) const>::kSize, __return_abi_buffer);
@@ -105,11 +105,11 @@ extern "C" void __rust_thunk___Z13ReturnIntVoidv(
         return __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
             state, param_0);
       })
-      .Encode(ReturnIntVoid(), __return_encoder);
+      .Encode(ReturnIntMapper(), __return_encoder);
 }
 
 static_assert((class absl::AnyInvocable<int(int) const> (*)()) &
-              ::ReturnIntVoid);
+              ::ReturnIntMapper);
 
 extern "C" void __rust_thunk___Z17MyOptionIntMapperv(
     unsigned char* __return_abi_buffer) {
