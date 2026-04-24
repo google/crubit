@@ -93,5 +93,21 @@ TEST(PointerNullabilityTest, NullableCallbackWithoutCalleeDecl) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, NullableCallbackWithNullCheck) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    using NullableCallbackType = void (*_Nullable)();
+    void foo();
+    void target(NullableCallbackType callback) {
+      (*callback)();  // [[unsafe]]
+      callback();     // [[unsafe]]
+      if (!callback) {
+        callback = foo;
+      }
+      (*callback)();
+      callback();
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

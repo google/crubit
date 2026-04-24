@@ -176,10 +176,11 @@ bool isNullable(PointerNullState PointerNullState, const Environment &Env,
   //   (if a value from a nullable source was checked, it's not nullable)
   //
   // Notably, a value from an unknown source that may be null, but is not
-  // provably null, is not considered nullable. Values from non-null sources are
-  // never considered nullable because being able to prove them null can only
-  // occur under unsatisfiable flow conditions.
+  // provably null, is not considered nullable.
+  // Values from non-null sources are never considered nullable because being
+  // able to prove them null can only occur under unsatisfiable flow conditions.
   if (Null) {
+    if (!AdditionalConstraints && Null->isLiteral(false)) return false;
     const Formula *ProvablyNull = Null;
     if (AdditionalConstraints)
       ProvablyNull = &A.makeImplies(*AdditionalConstraints, *ProvablyNull);
