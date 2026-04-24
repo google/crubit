@@ -20,6 +20,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
-    - name: Test
+    - name: Test Cargo project
       run: cargo test --verbose --workspace --exclude 'rs_bindings_from_cc*' --exclude '*_sys' --no-fail-fast
+    - name: Test CMake project
+      run: |
+        cd examples/build_systems/cmake
+        cmake -B build -S .
+        cmake --build build --parallel
+        cd build
+        ctest --output-on-failure --parallel 2
 # LINT.ThenChange(//depot/copy.bara.sky)

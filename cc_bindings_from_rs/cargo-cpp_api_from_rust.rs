@@ -94,9 +94,9 @@ fn main() -> Result<()> {
     let pkg_to_artifact = build_crate_and_stream_artifacts(&build_args)?;
 
     let ctx = BindingGenerationContext::new(pkg_to_artifact, root.clone(), &metadata, target_dir)?;
-    ctx.generate_bindings()?;
+    let lib_rs_content = ctx.generate_bindings()?;
 
-    ctx.compile_staticlib(&metadata)?;
+    ctx.compile_staticlib(lib_rs_content, &metadata)?;
 
     Ok(())
 }
@@ -225,8 +225,9 @@ impl BindingGenerationContext {
         Ok(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone() })
     }
 
-    fn generate_bindings(&self) -> Result<()> {
+    fn generate_bindings(&self) -> Result<String> {
         let mut pkg_to_header = HashMap::new();
+        let mut lib_rs_content = String::new();
         let deps_dir = &self.dirs.deps_dir;
         let headers_dir = &self.dirs.headers_dir;
 
@@ -236,6 +237,7 @@ impl BindingGenerationContext {
                 continue;
             };
             let crate_name = &artifact_info.name;
+            let rs_crate_name = crate_name.replace('-', "_");
             let hash = &artifact_info.hash;
             let intermediate_h = deps_dir.join(format!("{}-{}.h", crate_name, hash));
             let final_h = headers_dir.join(format!("{}.h", crate_name));
@@ -243,6 +245,10 @@ impl BindingGenerationContext {
 
             if artifact_info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
                 pkg_to_header.insert(pkg_id.repr.clone(), intermediate_h.to_string());
+                lib_rs_content.push_str(&format!(
+                    "#[path = {:?}]\nmod r#{};\n",
+                    intermediate_rs, rs_crate_name
+                ));
                 if !final_h.exists() {
                     fs::copy(&intermediate_h, &final_h)?;
                 }
@@ -276,6 +282,8 @@ impl BindingGenerationContext {
                     }
                 }
             }
+            lib_rs_content
+                .push_str(&format!("#[path = {:?}]\nmod r#{};\n", intermediate_rs, rs_crate_name));
 
             let cmdline = Cmdline::new(&current_args).map_err(|err| {
                 match err.downcast_ref::<clap::Error>() {
@@ -297,17 +305,17 @@ impl BindingGenerationContext {
             fs::copy(&intermediate_h, &final_h)?;
         }
 
-        Ok(())
+        Ok(lib_rs_content)
     }
 
-    fn compile_staticlib(&self, metadata: &Metadata) -> Result<()> {
+    fn compile_staticlib(&self, mut lib_rs_content: String, metadata: &Metadata) -> Result<()> {
         let root_name = &self.root.name;
         let deps_dir = &self.dirs.deps_dir;
         let target_dir = &self.dirs.target_dir;
         let profile_dir = &self.dirs.profile_dir;
         let lib_rs_path = deps_dir.join(format!("{}_cc_api.rs", root_name));
         let root_crate_name = root_name.replace('-', "_");
-        let lib_rs_content = format!("pub use r#{}::*;\n", root_crate_name);
+        lib_rs_content.push_str(&format!("pub use r#{}::*;\n", root_crate_name));
         fs::write(&lib_rs_path, lib_rs_content)?;
 
         let static_lib_path = target_dir.join(&profile_dir).join(format!("lib{}.a", root_name));
@@ -316,6 +324,8 @@ impl BindingGenerationContext {
 name = "{root_name}-cc-api"
 version = "0.1.0"
 edition = "{edition}"
+
+[workspace]
 
 [lib]
 path = "{lib_rs_filename}"

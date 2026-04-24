@@ -4,9 +4,10 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-project(crubit LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(crubit LANGUAGES CXX)
 
 include(FetchContent)
 
@@ -24,6 +25,8 @@ set(CRUBIT_SUBDIRS
   support/rs_std
   support/rs_std/internal
 )
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ALL_TARGETS "")
 foreach(subdir IN LISTS CRUBIT_SUBDIRS)
