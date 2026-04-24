@@ -663,10 +663,10 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
         };
 
         let mut prereqs = CcPrerequisites::default();
+        prereqs.includes.insert(CcInclude::cstring());
         prereqs.includes.insert(CcInclude::utility());
         prereqs.includes.insert(db.support_header("internal/check.h"));
         prereqs.includes.insert(db.support_header("internal/move_assign.h"));
-        prereqs.includes.insert(CcInclude::cstring());
         let move_construct_ok_details = move_constructor_ok.cc_details.into_tokens(&mut prereqs);
         let move_construct_err_details = move_constructor_err.cc_details.into_tokens(&mut prereqs);
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
@@ -720,13 +720,12 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                 #tag_method_cc_details __NEWLINE__
 
                 inline void #full_self_ty::check_has_ok() {
-                    CHECK(has_value()) << "Bad value access on rs_std::Result";
+                    CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
                 } __NEWLINE__
 
                 inline void #full_self_ty::check_has_err() {
-                    CHECK(!has_value()) << "Bad error access on rs_std::Result";
+                    CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
                 } __NEWLINE__
-
             },
             prereqs,
         };

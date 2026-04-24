@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/types/span.h"
 
 namespace crubit::internal {
@@ -23,7 +23,7 @@ void SortPtrDatas(absl::Span<PtrData> unsorted) {
 
 void CheckNoMutableAliasingSpans(absl::Span<PtrData> mut_ptrs,
                                  absl::Span<PtrData> const_ptrs) {
-  CHECK(!HasMutableAliasingSpans(mut_ptrs, const_ptrs));
+  ABSL_CHECK(!HasMutableAliasingSpans(mut_ptrs, const_ptrs));
 }
 
 bool HasMutableAliasingSpans(absl::Span<PtrData> mut_ptrs,

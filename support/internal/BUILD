@@ -31,7 +31,7 @@ cc_library(
     deps = [
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:has_ostream_operator",
         "@abseil-cpp//absl/types:span",

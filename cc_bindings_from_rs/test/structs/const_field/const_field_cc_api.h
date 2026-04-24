@@ -251,11 +251,11 @@ inline void rs_std::Result<::struct_with_const_field, ::std::uint8_t>::set_tag(
 
 inline void
 rs_std::Result<::struct_with_const_field, ::std::uint8_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::struct_with_const_field, ::std::uint8_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 

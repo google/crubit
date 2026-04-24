@@ -21,7 +21,7 @@ set_target_properties(crubit_support_internal_bindings_support PROPERTIES LINKER
 target_link_libraries(crubit_support_internal_bindings_support PUBLIC
 absl::core_headers
 absl::nullability
-absl::check
+absl::absl_check
 absl::strings
 absl::has_ostream_operator
 absl::span

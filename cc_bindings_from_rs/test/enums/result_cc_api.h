@@ -1547,11 +1547,11 @@ inline void rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::set_tag(
 
 inline void
 rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -1674,11 +1674,11 @@ inline void rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::set_tag(
 
 inline void
 rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -1792,11 +1792,11 @@ inline void rs_std::Result<::result::HasDefault, ::std::uint8_t>::set_tag(
 
 inline void
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -1892,11 +1892,11 @@ inline void rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::set_tag(
 
 inline void
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2042,11 +2042,11 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
 
 inline void rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                            ::std::uint32_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                            ::std::uint32_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2199,12 +2199,12 @@ inline void rs_std::Result<::std::uint32_t,
 inline void rs_std::Result<
     ::std::uint32_t,
     rs_std::Result<::std::uint32_t, ::std::uint32_t>>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void rs_std::Result<
     ::std::uint32_t,
     rs_std::Result<::std::uint32_t, ::std::uint32_t>>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2345,11 +2345,11 @@ inline void rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::set_tag(
 
 inline void
 rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2472,11 +2472,11 @@ inline void rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::set_tag(
 
 inline void
 rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2590,11 +2590,11 @@ inline void rs_std::Result<::std::uint8_t, ::result::HasDefault>::set_tag(
 
 inline void
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2688,11 +2688,11 @@ inline void rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::set_tag(
 
 inline void
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2811,10 +2811,10 @@ inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::set_tag(
 }
 
 inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
@@ -2931,10 +2931,10 @@ inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::set_tag(
 }
 
 inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_ok() {
-  CHECK(has_value()) << "Bad value access on rs_std::Result";
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_err() {
-  CHECK(!has_value()) << "Bad error access on rs_std::Result";
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 
