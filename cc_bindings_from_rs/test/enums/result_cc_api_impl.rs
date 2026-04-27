@@ -215,26 +215,6 @@ unsafe extern "C" fn __crubit_thunk_take_uresult_uhas_udefault(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_clone(
-    __self: &'static ::core::result::Result<::result_golden::CloneNoDefault, u8>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value=<std::result::Result<::result_golden::CloneNoDefault,u8>as::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::core::result::Result<::result_golden::CloneNoDefault, u8>)
-            .write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
-    __self: &'static mut ::core::result::Result<::result_golden::CloneNoDefault, u8>,
-    source: &'static ::core::result::Result<::result_golden::CloneNoDefault, u8>,
-) -> () {
-    unsafe {
-        <std::result::Result<::result_golden::CloneNoDefault,u8>as::core::clone::Clone>::clone_from(__self,source)
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
     __self: &'static ::core::result::Result<u8, ::result_golden::CloneNoDefault>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -251,5 +231,25 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
 ) -> () {
     unsafe {
         <std::result::Result<u8,::result_golden::CloneNoDefault>as::core::clone::Clone>::clone_from(__self,source)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_clone(
+    __self: &'static ::core::result::Result<::result_golden::CloneNoDefault, u8>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value=<std::result::Result<::result_golden::CloneNoDefault,u8>as::core::clone::Clone>::clone(__self);
+        (__ret_ptr as *mut ::core::result::Result<::result_golden::CloneNoDefault, u8>)
+            .write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+    __self: &'static mut ::core::result::Result<::result_golden::CloneNoDefault, u8>,
+    source: &'static ::core::result::Result<::result_golden::CloneNoDefault, u8>,
+) -> () {
+    unsafe {
+        <std::result::Result<::result_golden::CloneNoDefault,u8>as::core::clone::Clone>::clone_from(__self,source)
     }
 }

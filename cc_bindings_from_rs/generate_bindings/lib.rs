@@ -8,6 +8,7 @@
 extern crate rustc_abi;
 extern crate rustc_ast;
 extern crate rustc_attr_parsing;
+extern crate rustc_data_structures;
 extern crate rustc_hir;
 extern crate rustc_infer;
 extern crate rustc_middle;
@@ -1799,7 +1800,7 @@ fn generate_specializations_fixpoint<'tcx>(
 
     while !worklist.is_empty() {
         // Sort to ensure deterministic processing.
-        worklist.sort_unstable_by(|a, b| template_specialization_cmp(db.tcx(), a, b));
+        worklist.sort_by_cached_key(|spec| make_sort_key(db.tcx(), spec));
 
         let mut next_worklist = Vec::new();
         for spec in worklist {
@@ -1871,20 +1872,44 @@ fn formatted_items_in_crate<'tcx>(
         .sorted_by_def_with(tcx, |item| item.def_id)
 }
 
-fn template_specialization_cmp<'tcx>(
+#[derive(PartialOrd, Ord, PartialEq, Eq)]
+enum SpecializationSortKey {
+    TypeHash(u64),
+    TraitImpl(String, u64),
+}
+
+fn make_sort_key<'tcx>(
     tcx: TyCtxt<'tcx>,
-    left: &TemplateSpecialization<'tcx>,
-    right: &TemplateSpecialization<'tcx>,
-) -> std::cmp::Ordering {
-    match (left, right) {
-        (TemplateSpecialization::RsStdEnum(left), TemplateSpecialization::RsStdEnum(right)) => {
-            left.core.self_ty_rs.sort_string(tcx).cmp(&right.core.self_ty_rs.sort_string(tcx))
+    spec: &TemplateSpecialization<'tcx>,
+) -> SpecializationSortKey {
+    match spec {
+        TemplateSpecialization::RsStdEnum(e) => {
+            #[rustversion::before(2026-04-22)]
+            let unnorm_ty = e.core.self_ty_rs;
+            #[rustversion::since(2026-04-22)]
+            let unnorm_ty = ty::Unnormalized::new(e.core.self_ty_rs);
+
+            let ty = tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_ty);
+
+            use rustc_data_structures::stable_hasher::{HashStable, StableHasher};
+
+            let hash = tcx.with_stable_hashing_context(|mut hcx| {
+                let mut hasher = StableHasher::new();
+                ty.hash_stable(&mut hcx, &mut hasher);
+
+                hasher
+                    .finish::<rustc_data_structures::fingerprint::Fingerprint>()
+                    .to_smaller_hash()
+                    .as_u64()
+            });
+
+            SpecializationSortKey::TypeHash(hash)
         }
-        (TemplateSpecialization::TraitImpl(left), TemplateSpecialization::TraitImpl(right)) => {
-            stable_def_id_cmp(tcx, left.trait_impl, right.trait_impl)
+        TemplateSpecialization::TraitImpl(t) => {
+            let path_str = tcx.def_path_str(t.trait_impl);
+            let path_hash = tcx.def_path_hash(t.trait_impl);
+            SpecializationSortKey::TraitImpl(path_str, path_hash.local_hash().as_u64())
         }
-        (TemplateSpecialization::RsStdEnum(_), _) => Ordering::Less,
-        (_, TemplateSpecialization::RsStdEnum(_)) => Ordering::Greater,
     }
 }
 
@@ -2008,6 +2033,9 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                     })
                 })
                 .collect::<Vec<_>>();
+            let spec_keys: HashMap<&TemplateSpecialization<'_>, SpecializationSortKey> =
+                specializations.keys().map(|spec| (spec, make_sort_key(tcx, spec))).collect();
+
             toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
                 match (lhs_id, rhs_id) {
                     (Node::Def(lhs_id), Node::Def(rhs_id)) => {
@@ -2015,7 +2043,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                     }
                     // Prefer to emit specializations after defs.
                     (Node::Specialization(left), Node::Specialization(right)) => {
-                        template_specialization_cmp(tcx, left, right)
+                        spec_keys[left].cmp(&spec_keys[right])
                     }
                     (Node::Def(_), Node::Specialization(_)) => Ordering::Less,
                     (Node::Specialization(_), Node::Def(_)) => Ordering::Greater,
