@@ -130,6 +130,20 @@ source_set("result") {
   ]
 }
 
+source_set("tuple") {
+  public_configs = [ "$crubit_src_dir/support:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "tuple.h",
+  ]
+}
+
 group("rs_std") {
   public_deps = [
     ":char",
@@ -139,5 +153,6 @@ group("rs_std") {
     ":traits",
     ":option",
     ":result",
+    ":tuple",
   ]
 }

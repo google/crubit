@@ -74,3 +74,8 @@ add_library(crubit_support_rs_std_result STATIC
 )
 set_target_properties(crubit_support_rs_std_result PROPERTIES LINKER_LANGUAGE CXX)
 
+add_library(crubit_support_rs_std_tuple STATIC
+"tuple.h"
+)
+set_target_properties(crubit_support_rs_std_tuple PROPERTIES LINKER_LANGUAGE CXX)
+

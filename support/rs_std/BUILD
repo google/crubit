@@ -213,6 +213,17 @@ cc_library(
     deps = [],
 )
 
+cc_library(
+    name = "tuple",
+    hdrs = ["tuple.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [],
+)
+
 rust_library(
     name = "lossy_formatter",
     srcs = ["lossy_formatter.rs"],
@@ -288,6 +299,7 @@ bazel_to_builds(
         ":traits",
         ":option",
         ":result",
+        ":tuple",
         ":lossy_formatter_for_bindings",
     ],
 )
