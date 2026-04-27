@@ -449,67 +449,72 @@ impl Parse for RecursivelyPinnedArgs {
 /// Prevents this type from being directly created outside of this crate in safe
 /// code.
 ///
-/// For enums and unit structs, this uses the `#[non_exhaustive]` attribute.
-/// This leads to unfortunate error messages, but there is no other way to
-/// prevent creation of an enum or a unit struct at this time.
+/// We use a private field with a name and type that indicates the error:
 ///
-/// For tuple structs, we also use `#[non_exhaustive]`, as it's no worse than
-/// the alternative. Both adding a private field and adding `#[non_exhaustive]`
-/// lead to indirect error messages, but `#[non_exhaustive]` is the more likely
-/// of the two to ever get custom error message support.
+/// ```
+/// __must_use_ctor_to_initialize: ::ctor::macro_internal::MustUseCtorToInitialize,
+/// ```
 ///
-/// Finally, for structs with named fields, we actually *cannot* use
-/// `#[non_exhaustive]`, because it would make the struct not FFI-safe, and
-/// structs with named fields are specifically supported for C++ interop.
-/// Instead, we use a private field with a name that indicates the error.
-/// (`__must_use_ctor_to_initialize`).
+/// This zero-sized type cannot be constructed in safe code, and so the compiler will prevent
+/// direct initialization.
 ///
 /// Unions are not yet implemented properly.
-///
-/// ---
-///
-/// Note that the use of `#[non_exhaustive]` also has other effects. At the
-/// least: tuple variants and tuple structs marked with `#[non_exhaustive]`
-/// cannot be pattern matched using the "normal" syntax. Instead, one must use
-/// curly braces. (Broken: `T(x, ..)`; woken: `T{0: x, ..}`).
-///
-/// (This does not seem very intentional, and with all luck will be fixed before
-/// too long.)
-fn forbid_initialization(s: &mut syn::DeriveInput) {
-    let non_exhaustive_attr = syn::parse_quote!(#[non_exhaustive]);
+fn forbid_initialization(s: &mut syn::DeriveInput, ctor: &Ident) {
     match &mut s.data {
         // TODO(b/232969667): prevent creation of unions from safe code.
         // (E.g. hide inside a struct.)
         syn::Data::Union(_) => return,
         syn::Data::Struct(data) => {
-            match &mut data.fields {
-                syn::Fields::Unit | syn::Fields::Unnamed(_) => {
-                    s.attrs.insert(0, non_exhaustive_attr);
-                }
-                syn::Fields::Named(fields) => {
-                    // insert at the front in case the last field is !Sized.
-                    fields.named.insert(
-                        0,
-                        syn::Field {
-                            attrs: vec![],
-                            vis: syn::Visibility::Inherited,
-                            mutability: syn::FieldMutability::None,
-                            // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
-                            ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
-                            colon_token: Some(<syn::Token![:]>::default()),
-                            ty: syn::parse_quote!([u8; 0]),
-                        },
-                    );
-                }
-            }
+            forbid_initialization_fields(&mut data.fields, ctor);
         }
         syn::Data::Enum(e) => {
-            // Enums can't have private fields. Instead, we need to add #[non_exhaustive] to
-            // every variant -- this makes it impossible to construct the
-            // variants.
             for variant in &mut e.variants {
-                variant.attrs.insert(0, non_exhaustive_attr.clone());
+                forbid_initialization_fields(&mut variant.fields, ctor);
             }
+        }
+    }
+}
+
+fn forbid_initialization_fields(fields: &mut syn::Fields, ctor: &Ident) {
+    match fields {
+        syn::Fields::Unit => {
+            // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
+            let ident = Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site());
+            *fields = syn::Fields::Named(syn::parse_quote!({
+                #ident: ::#ctor::macro_internal::MustUseCtorToInitialize,
+            }));
+        }
+        syn::Fields::Unnamed(fields) => {
+            // Push to the back to keep the indices lining up with the types. If we inserted to the
+            // front, the indices would shift which might cause extremely subtle bugs if someone
+            // tried to use FnCtor and used `std::mem::offset_of!(TupleStruct, N)`. For example,
+            // if N = 1, they might think they're getting the offset of the second field, but they'd
+            // actually get the offset of the first field (because N = 0 is the hidden field).
+            // The only downside to this is that users will get a horribly confusing error if they
+            // try to have their type coerce to a DST.
+            fields.unnamed.push(syn::Field {
+                attrs: vec![],
+                vis: syn::Visibility::Inherited,
+                mutability: syn::FieldMutability::None,
+                ident: None,
+                colon_token: None,
+                ty: syn::parse_quote!(::#ctor::macro_internal::MustUseCtorToInitialize),
+            });
+        }
+        syn::Fields::Named(fields) => {
+            // insert at the front in case the last field is !Sized.
+            fields.named.insert(
+                0,
+                syn::Field {
+                    attrs: vec![],
+                    vis: syn::Visibility::Inherited,
+                    mutability: syn::FieldMutability::None,
+                    // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
+                    ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
+                    colon_token: Some(<syn::Token![:]>::default()),
+                    ty: syn::parse_quote!(::#ctor::macro_internal::MustUseCtorToInitialize),
+                },
+            );
         }
     }
 }
@@ -631,11 +636,9 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 /// Recursively pinned types cannot be created directly in safe code, as they
 /// are pinned from the very moment of their creation.
 ///
-/// This is prevented either using `#[non_exhaustive]` or using a private field,
-/// depending on the type in question. For example, enums use
-/// `#[non_exhaustive]`, and structs with named fields use a private field named
-/// `__must_use_ctor_to_initialize`. This can lead to confusing error messages,
-/// so watch out!
+/// This is prevented using a private field of type
+/// `ctor::macro_internal::MustUseCtorToInitialize`. This can lead to confusing
+/// error messages, so watch out!
 ///
 /// ## Pin-projection
 ///
@@ -671,7 +674,11 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 ///
 /// Structs, enums, and unions are all supported. However, unions do not receive
 /// a `project_{pin,ref}` methods, as there is no way to implement pin projection for
-/// unions. (One cannot know which field is active.)
+/// unions (one cannot know which field is active). Lastly, although DST structs are
+/// supported, DST tuple structs are not supported. This is because the unsized field must be
+/// the last field in the struct, but the insertion of a hidden `MustUseCtorToInitialize` field
+/// would break this requirement, and inserting it at the front would cause surprising behavior
+/// with respect to offset calculations.
 #[proc_macro_attribute]
 pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
     match recursively_pinned_impl(args.into(), item.into()) {
@@ -710,7 +717,7 @@ fn recursively_pinned_impl(
     // type is locally defined within a narrow scope.
     ctor_initialized_input.ident = syn::Ident::new(&format!("__CrubitCtor{name}"), name.span());
     let ctor_initialized_name = &ctor_initialized_input.ident;
-    forbid_initialization(&mut input);
+    forbid_initialization(&mut input, &ctor);
 
     let (input_impl_generics, input_type_generics, input_where_clause) =
         input.generics.split_for_impl();
@@ -789,7 +796,7 @@ mod test {
             quote! {
                 #[repr(C)]
                 struct S {
-                    __must_use_ctor_to_initialize: [u8; 0],
+                    __must_use_ctor_to_initialize: ::ctor::macro_internal::MustUseCtorToInitialize,
                     x: i32
                 }
             }
@@ -841,10 +848,10 @@ mod test {
             quote! {
                 #[repr(C)]
                 enum E {
-                    #[non_exhaustive]
-                    A,
-                    #[non_exhaustive]
-                    B(i32),
+                    A {
+                        __must_use_ctor_to_initialize: ::ctor::macro_internal::MustUseCtorToInitialize,
+                    },
+                    B(i32, ::ctor::macro_internal::MustUseCtorToInitialize),
                 }
             }
         );

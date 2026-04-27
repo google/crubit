@@ -49,6 +49,6 @@ fn test_derive_move_and_assign_via_copy() {
 fn test_recursively_pinned_unit_struct() {
     #[renamed_ctor::recursively_pinned(crate = renamed_ctor)]
     struct S;
-    let _ = Box::pin(S).as_mut().project_pin();
+    let _ = ::renamed_ctor::emplace!(::renamed_ctor::ctor!(S)).as_mut().project_pin();
     assert_eq!(std::mem::size_of::<renamed_ctor::project_pin_type!(S)>(), 0);
 }

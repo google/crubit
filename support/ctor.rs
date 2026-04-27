@@ -1251,6 +1251,9 @@ pub mod macro_internal {
     pub use core::mem::MaybeUninit;
     pub use core::pin::Pin;
 
+    /// A helpfully named type alias that tells users to not directly initialize fields of this type
+    pub type MustUseCtorToInitialize = [u8; 0];
+
     /// Workaround for more_qualified_paths.
     /// Instead of `<Foo as Bar>::Assoc { ... }`, which requires that feature,
     /// we can use `Identity<<Foo as Bar>::Assoc> { ... }`.
