@@ -88,7 +88,9 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
         match bridged_builtin {
             BridgedBuiltin::Option => {
                 let arg_ty = FormattedTy::try_from_ty(
-                    replace_all_regions_with_static(tcx, substs.type_at(0)),
+                    replace_all_regions_with_static(tcx, tcx.normalize_erasing_regions(
+                        ty::TypingEnv::fully_monomorphized(),
+                        substs.type_at(0))),
                     TypeLocation::Other,
                     db
                 )?;
@@ -135,12 +137,16 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
             }
             BridgedBuiltin::Result => {
                 let ok_ty = FormattedTy::try_from_ty(
-                    replace_all_regions_with_static(tcx, substs.type_at(0)),
+                    replace_all_regions_with_static(tcx, tcx.normalize_erasing_regions(
+                        ty::TypingEnv::fully_monomorphized(),
+                        substs.type_at(0))),
                     TypeLocation::Other,
                     db
                 )?;
                 let err_ty = FormattedTy::try_from_ty(
-                    replace_all_regions_with_static(tcx, substs.type_at(1)),
+                    replace_all_regions_with_static(tcx, tcx.normalize_erasing_regions(
+                        ty::TypingEnv::fully_monomorphized(),
+                        substs.type_at(1))),
                     TypeLocation::Other,
                     db
                 )?;
