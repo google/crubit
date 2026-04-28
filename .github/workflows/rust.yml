@@ -22,10 +22,26 @@ jobs:
     - uses: actions/checkout@v6
     - name: Test Cargo project
       run: cargo test --verbose --workspace --exclude 'rs_bindings_from_cc*' --exclude '*_sys' --no-fail-fast
+
+  test_cmake:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install ccache
+      run: sudo apt-get update && sudo apt-get install -y ccache
+    - name: Cache CMake with ccache
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/ccache
+        key: ${{ runner.os }}-ccache-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-ccache-
     - name: Test CMake project
       run: |
         cd examples/build_systems/cmake
-        cmake -B build -S .
+        cmake -B build -S . -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build build --parallel
         cd build
         ctest --output-on-failure --parallel 2
