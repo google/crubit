@@ -371,7 +371,8 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
 TEST(ImporterTest, ProtoMessageBridgeType) {
   absl::string_view file = R"cc(
     namespace proto2 {
-    struct Message {};
+    struct MessageLite {};
+    struct Message : public MessageLite {};
     }  // namespace proto2
     class MyMessage : public google::protobuf::Message {};
     class MyMessage_Request : public google::protobuf::Message {};

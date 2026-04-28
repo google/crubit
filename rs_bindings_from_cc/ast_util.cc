@@ -252,28 +252,29 @@ absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
 }
 
 bool IsProto2Message(const clang::Decl& decl) {
-  if (!clang::isa<clang::CXXRecordDecl>(decl)) {
+  const auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&decl);
+  if (cxx_record_decl == nullptr || !cxx_record_decl->isCompleteDefinition()) {
     return false;
   }
-
-  const auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&decl);
-  constexpr auto kProtoClasses = std::to_array<absl::string_view>({
-      "google::protobuf::Message",
-      "proto2::internal::ZeroFieldsBase",
-      "google::protobuf::MessageLite",
+  // A forward-compatible way to check this is to see whether the record derives
+  // from google::protobuf::MessageLite. (Note that because the record is a complete
+  // definition, we have the full inheritance hierarchy available.)
+  bool found = false;
+  cxx_record_decl->forallBases([&found](const clang::CXXRecordDecl* base) {
+    std::string base_name_owned = base->getQualifiedNameAsString();
+    absl::string_view base_name = base_name_owned;
+    // It's not clear that the default formatting rules will give us an absolute
+    // qualified name, but popping off the first :: is benign.
+    if (base_name.starts_with("::")) {
+      base_name.remove_prefix(2);
+    }
+    if (base_name == "google::protobuf::MessageLite") {
+      found = true;
+      return false;
+    }
+    return true;
   });
-
-  return cxx_record_decl->isCompleteDefinition() &&
-         absl::c_any_of(
-             cxx_record_decl->bases(),
-             [&](const clang::CXXBaseSpecifier& base) {
-               std::string base_name_owned = base.getType().getAsString();
-               absl::string_view base_name = base_name_owned;
-               if (base_name.starts_with("::")) {
-                 base_name.remove_prefix(2);
-               }
-               return absl::c_linear_search(kProtoClasses, base_name);
-             });
+  return found;
 }
 
 }  // namespace crubit
