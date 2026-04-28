@@ -35,6 +35,7 @@
 - [Structs](./rust/structs.md)
 - [Enums](./rust/enums.md)
 - [Cpp Enums](./rust/cpp_enums.md)
+- [Traits](./rust/traits.md)
 - [Type Aliases](./rust/type_aliases.md)
 - [`use` Declarations](./rust/use_declarations.md)
 
