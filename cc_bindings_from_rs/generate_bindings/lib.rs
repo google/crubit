@@ -1223,7 +1223,8 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
         let cc_struct_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
 
-        match db.has_copy_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+        match core.def_id.and_then(|id| db.has_copy_ctor_and_assignment_operator(id, core.self_ty))
+        {
             Some(CopyCtorStyle::Copy) => {
                 let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                         and assignment operator.";
@@ -1284,8 +1285,9 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                 Ok(ApiSnippets { main_api, cc_details, rs_details })
             }
             None => {
-                let display_name = db
-                    .symbol_canonical_name(core.def_id)
+                let display_name = core
+                    .def_id
+                    .and_then(|id| db.symbol_canonical_name(id))
                     .map(|canon| {
                         let parts =
                             canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
@@ -1344,7 +1346,8 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     ) -> Result<ApiSnippets<'tcx>> {
         let adt_cc_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
-        match db.has_move_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+        match core.def_id.and_then(|id| db.has_move_ctor_and_assignment_operator(id, core.self_ty))
+        {
             // We rely on the copy constructor and assignment operator to handle the move
             // operations.
             Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),
@@ -1457,7 +1460,7 @@ fn generate_fwd_decl(db: &BindingsGenerator<'_>, def_id: DefId) -> TokenStream {
     // If we're forward declaring a C++ enum, we need to include the underlying type in the forward
     // declaration. Otherwise, it will default to `int` and cause a compilation error.
     let tcx = db.tcx();
-    let crubit_attrs = crubit_attr::get_attrs(tcx, core_bindings.def_id).unwrap_or_default();
+    let crubit_attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
     if crubit_attrs.cpp_enum.is_some() {
         let cpp_enum_cpp_underlying_type_snippet = cpp_enum_cpp_underlying_type(db, def_id)
             .expect("`generate_fwd_decl` should only be called if we successfully generated an enum for this type");

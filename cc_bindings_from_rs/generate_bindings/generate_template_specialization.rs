@@ -900,7 +900,7 @@ fn specialize_result<'tcx>(
     let rs_fully_qualified_name = quote! { std::result::Result<#ok_ty_for_rs, #err_ty_for_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Result<#ok_ty_tokens, #err_ty_tokens> };
     let core = Rc::new(database::AdtCoreBindings {
-        def_id: adt.did(),
+        def_id: Some(adt.did()),
         keyword: quote! { struct },
         cc_short_name: format_ident!("Result"),
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
@@ -1088,7 +1088,7 @@ fn specialize_option<'tcx>(
     let rs_fully_qualified_name = quote! { std::option::Option<#arg_ty_for_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Option<#ty_tokens> };
     let core = Rc::new(database::AdtCoreBindings {
-        def_id: adt.did(),
+        def_id: Some(adt.did()),
         keyword: quote! { struct },
         cc_short_name: format_ident!("Option"),
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),

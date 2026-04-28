@@ -59,7 +59,11 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
     bindings: &AdtCoreBindings<'tcx>,
     tcx: TyCtxt<'tcx>,
 ) -> bool {
-    bindings.self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, bindings.def_id))
+    let typing_env = bindings
+        .def_id
+        .map(|id| post_analysis_typing_env(tcx, id))
+        .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
+    bindings.self_ty.needs_drop(tcx, typing_env)
 }
 
 /// Returns the Rust underlying type of the `cpp_enum` struct specified by the given def id.
@@ -196,16 +200,17 @@ fn generate_cpp_enum<'tcx>(
     // Generate relevant attributes.
     let rs_type = core.rs_fully_qualified_name.to_string();
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
-    if let Some(tag) = generate_must_use_tag(tcx, core.def_id) {
+    let def_id = core.def_id.expect("cpp_enum requires a valid DefId");
+    if let Some(tag) = generate_must_use_tag(tcx, def_id) {
         attributes.push(tag);
     }
-    if let Some(tag) = generate_deprecated_tag(tcx, core.def_id) {
+    if let Some(tag) = generate_deprecated_tag(tcx, def_id) {
         attributes.push(tag);
     }
 
     // Generate the enumerator list.
     let enumerator_lines: Vec<TokenStream> = tcx
-        .inherent_impls(core.def_id)
+        .inherent_impls(def_id)
         .iter()
         .copied()
         .sorted_by_def(tcx)
@@ -230,7 +235,7 @@ fn generate_cpp_enum<'tcx>(
             } else {
                 (TokenStream::new(), quote! { #enumerator_name })
             };
-            let value_kind = *cpp_enum_rust_underlying_type(tcx, core.def_id).unwrap().kind();
+            let value_kind = *cpp_enum_rust_underlying_type(tcx, def_id).unwrap().kind();
             let scalar = match tcx.const_eval_poly(assoc_item.def_id).unwrap() {
                 ConstValue::Scalar(scalar) => scalar,
                 other => {
@@ -246,9 +251,9 @@ fn generate_cpp_enum<'tcx>(
         })
         .collect();
 
-    let doc_comment = generate_doc_comment(db, core.def_id);
+    let doc_comment = generate_doc_comment(db, def_id);
     let keyword = &core.keyword;
-    let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, core.def_id).unwrap();
+    let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, def_id).unwrap();
     let underlying_cc_type = underlying_cc_type_snippet.tokens;
     let bracketed_enumeration_cc_name = if db.kythe_annotations() {
         quote! { __CAPTURE_BEGIN__ #enumeration_cc_name __CAPTURE_END__ }
@@ -417,8 +422,12 @@ fn generate_into_impls<'tcx>(
     let cc_struct_name = &core.cc_short_name;
 
     let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
+    let Some(def_id) = core.def_id else {
+        // If we don't have a def_id, we can't generate Into impls.
+        return ApiSnippets::default();
+    };
 
-    let from_map = db.from_trait_impls_by_argument(core.def_id.krate);
+    let from_map = db.from_trait_impls_by_argument(def_id.krate);
     let from_impls = from_map.get(&core.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(
         |from_impl_id| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, *from_impl_id);
@@ -732,7 +741,8 @@ pub fn generate_adt<'tcx>(
     let adt_cc_name = &core.cc_short_name;
 
     // Handle `cpp_enum` structs.
-    let crubit_attrs = crubit_attr::get_attrs(tcx, core.def_id).unwrap_or_default();
+    let crubit_attrs =
+        core.def_id.and_then(|id| crubit_attr::get_attrs(tcx, id).ok()).unwrap_or_default();
     if crubit_attrs.cpp_enum.is_some() {
         return generate_cpp_enum(db, core);
     }
@@ -794,8 +804,10 @@ pub fn generate_adt<'tcx>(
     let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
 
     let mut member_function_names = HashSet::<String>::new();
-    let impl_items_snippets = tcx
-        .inherent_impls(core.def_id)
+    let impl_items_snippets = core
+        .def_id
+        .map(|id| tcx.inherent_impls(id))
+        .unwrap_or_default()
         .iter()
         .copied()
         .sorted_by_def(tcx)
@@ -825,7 +837,7 @@ pub fn generate_adt<'tcx>(
     .into_iter()
     .collect();
 
-    let repr_attrs = db.repr_attrs(core.def_id);
+    let repr_attrs = core.def_id.map(|id| db.repr_attrs(id)).unwrap_or_default();
 
     let ApiSnippets {
         main_api: mut fields_main_api,
@@ -853,8 +865,10 @@ pub fn generate_adt<'tcx>(
             quote! {alignas(#alignment)},
             quote! {[[clang::trivial_abi]]},
         ];
-        if db
-            .repr_attrs(core.def_id)
+        if core
+            .def_id
+            .map(|id| db.repr_attrs(id).to_vec())
+            .unwrap_or_default()
             .iter()
             .any(|repr| matches!(repr, rustc_hir::attrs::ReprPacked { .. }))
         {
@@ -862,21 +876,25 @@ pub fn generate_adt<'tcx>(
         }
 
         // Additional attributes
-        if let Some(tag) = generate_must_use_tag(tcx, core.def_id) {
-            attributes.push(tag);
-        }
-        if let Some(tag) = generate_deprecated_tag(tcx, core.def_id) {
-            attributes.push(tag);
+        if let Some(def_id) = core.def_id {
+            if let Some(tag) = generate_must_use_tag(tcx, def_id) {
+                attributes.push(tag);
+            }
+            if let Some(tag) = generate_deprecated_tag(tcx, def_id) {
+                attributes.push(tag);
+            }
         }
 
-        let doc_comment = generate_doc_comment(db, core.def_id);
+        let doc_comment = core.def_id.map(|id| generate_doc_comment(db, id)).unwrap_or_default();
         let keyword = &core.keyword;
 
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(db.support_header("annotations_internal.h"));
         let public_functions_main_api = public_functions_main_api.into_tokens(&mut prereqs);
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
-        prereqs.fwd_decls.remove(&core.def_id);
+        if let Some(def_id) = core.def_id {
+            prereqs.fwd_decls.remove(&def_id);
+        }
 
         let bracketed_adt_cc_name = if db.kythe_annotations() {
             quote! { __CAPTURE_BEGIN__ #adt_cc_name __CAPTURE_END__ }
@@ -901,7 +919,9 @@ pub fn generate_adt<'tcx>(
         let mut prereqs = CcPrerequisites::default();
         let public_functions_cc_details = public_functions_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
-        prereqs.defs.insert(core.def_id);
+        if let Some(def_id) = core.def_id {
+            prereqs.defs.insert(def_id);
+        }
         CcSnippet {
             prereqs,
             tokens: quote! {
@@ -1049,7 +1069,7 @@ pub fn generate_adt_core<'tcx>(
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
     Ok(Rc::new(AdtCoreBindings {
-        def_id,
+        def_id: Some(def_id),
         keyword,
         cc_short_name: cpp_name,
         rs_fully_qualified_name,

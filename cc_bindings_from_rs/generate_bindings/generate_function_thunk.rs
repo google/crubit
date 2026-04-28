@@ -659,15 +659,20 @@ pub fn generate_trait_thunks<'tcx>(
         // To support "drop glue" we don't require that `self_ty` directly implements
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
-        assert!(self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, adt.def_id)));
+        let typing_env = adt
+            .def_id
+            .map(|id| post_analysis_typing_env(tcx, id))
+            .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
+        assert!(self_ty.needs_drop(tcx, typing_env));
     } else if !does_type_implement_trait(
         tcx,
         self_ty,
         trait_id,
         type_args.iter().copied().map(ty::GenericArg::from),
     ) {
-        let display_name = db
-            .symbol_canonical_name(adt.def_id)
+        let display_name = adt
+            .def_id
+            .and_then(|id| db.symbol_canonical_name(id))
             .map(|canon| {
                 let parts = canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
                 parts.join("::")

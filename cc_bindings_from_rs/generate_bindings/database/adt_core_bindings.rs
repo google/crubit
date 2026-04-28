@@ -29,7 +29,7 @@ use std::hash::{Hash, Hasher};
 #[derive(Clone)]
 pub struct AdtCoreBindings<'tcx> {
     /// DefId of the ADT.
-    pub def_id: DefId,
+    pub def_id: Option<DefId>,
 
     /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
     /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
