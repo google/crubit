@@ -889,6 +889,49 @@ fn test_conflicting_unsafe_annotation() {
 }
 
 #[gtest]
+fn test_struct_with_thread_safe_annotation() {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_thread_safe")]]
+                ThreadSafeType {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "ThreadSafeType", ...
+                is_thread_safe: true, ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_struct_without_thread_safe_annotation() {
+    let ir = ir_from_cc(
+        r#"
+        struct NotThreadSafe {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "NotThreadSafe", ...
+                is_thread_safe: false, ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_struct_with_unnamed_struct_and_union_members() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // See also:

@@ -26,3 +26,5 @@
 %enddef
 %define CRUBIT_OVERRIDE_DISPLAY(should_bind)
 %enddef
+%define CRUBIT_THREAD_SAFE
+%enddef

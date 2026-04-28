@@ -1143,6 +1143,13 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
 
+  absl::StatusOr<bool> is_thread_safe =
+      HasAnnotationWithoutArgs(*record_decl, "crubit_thread_safe");
+  if (!is_thread_safe.ok()) {
+    return unsupported(
+        FormattedError::FromStatus(std::move(is_thread_safe).status()));
+  }
+
   absl::StatusOr<TraitDerives> trait_derives = GetTraitDerives(*record_decl);
   if (!trait_derives.ok()) {
     return unsupported(
@@ -1221,6 +1228,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .enclosing_item_id = std::move(enclosing_item_id),
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
       .detected_formatter = *detected_formatter,
+      .is_thread_safe = *is_thread_safe,
       .lifetime_inputs = std::move(lifetime_inputs),
       .deprecated = std::move(deprecated),
   };

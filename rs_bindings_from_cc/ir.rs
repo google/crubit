@@ -1209,6 +1209,9 @@ pub struct Record {
     /// string is used.
     #[serde(default)]
     pub deprecated: Option<Rc<str>>,
+    /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
+    #[serde(default)]
+    pub is_thread_safe: bool,
 }
 
 impl GenericItem for Record {

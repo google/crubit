@@ -711,6 +711,7 @@ llvm::json::Value Record::ToJson() const {
       {"must_bind", must_bind},
       {"overloads_operator_delete", overloads_operator_delete},
       {"detected_formatter", detected_formatter},
+      {"is_thread_safe", is_thread_safe},
   };
 
   if (!lifetime_inputs.empty()) {

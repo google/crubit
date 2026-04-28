@@ -812,6 +812,11 @@ struct Record {
   bool overloads_operator_delete = false;
   bool detected_formatter = false;
 
+  // Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
+  // Thread-safe types implement Send+Sync and wrap their internals in
+  // UnsafeCell, allowing non-const C++ methods to be called via &self.
+  bool is_thread_safe = false;
+
   // Lifetime variable names bound by this record.
   std::vector<std::string> lifetime_inputs;
 

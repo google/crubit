@@ -323,4 +323,28 @@
 #define CRUBIT_OVERRIDE_DISPLAY(should_bind) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_override_display", should_bind)
 
+// Marks a type as thread-safe for Rust interop.
+//
+// Types annotated with `CRUBIT_THREAD_SAFE` will:
+// (TODO: b/475929893) * Implement `Send + Sync` in Rust
+// (TODO: b/475929893) * Have their internal representation wrapped in
+// `UnsafeCell`, allowing non-const C++ methods to be called via shared
+// references (`&self`)
+//
+// This annotation is appropriate for types that internally synchronize
+// access (e.g., types with mutexes, atomics, or other synchronization
+// primitives).
+//
+// Example:
+// ```c++
+// class CRUBIT_THREAD_SAFE ThreadSafeCounter {
+//   public:
+//     void Increment();      // Can be called via mut T*.
+//     int Get() const;       // Can also be called via &self
+//   private:
+//     std::atomic<int> count_;
+// };
+// ```
+#define CRUBIT_THREAD_SAFE CRUBIT_INTERNAL_ANNOTATE("crubit_thread_safe")
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_
