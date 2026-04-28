@@ -5,12 +5,7 @@
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_RESULT_H_
 
 #include <initializer_list>
-#include <memory>
 #include <utility>
-#if __cplusplus >= 202302L
-#include <expected>
-#endif
-
 namespace rs_std {
 
 template <typename T, typename E>
@@ -19,14 +14,6 @@ struct Result final {
                 "This type should only be used via a generated specialization");
 };
 
-#if __cplusplus >= 202302L
-using std::unexpect;
-using std::unexpect_t;
-// Not using a more straightforward `using std::unexpected` to avoid ambiguity
-// from https://crbug.com/501547639
-template <typename E>
-using unexpected = std::expected<int, E>::unexpected_type;
-#else
 struct unexpect_t {
   explicit unexpect_t() = default;
 };
@@ -43,20 +30,20 @@ class unexpected final {
 
   constexpr ~unexpected() = default;
 
-  constexpr explicit unexpected(E&& err) : err_(std::move(err)) {};
+  template <typename G = E>
+    requires(std::is_constructible_v<E, G>)
+  constexpr explicit unexpected(G&& err) : err_(std::forward<G>(err)) {}
 
   template <typename... Args>
     requires(std::is_constructible_v<E, Args...>)
-  constexpr explicit unexpected(std::in_place_t, Args&&... args) {
-    std::construct_at(&err_, std::forward<Args>(args)...);
-  };
+  constexpr explicit unexpected(std::in_place_t, Args&&... args)
+      : err_(std::forward<Args>(args)...) {}
 
   template <class U, class... Args>
     requires(std::is_constructible_v<E, std::initializer_list<U>&, Args...>)
   constexpr explicit unexpected(std::in_place_t, std::initializer_list<U> il,
-                                Args&&... args) {
-    std::construct_at(&err_, il, std::forward<Args>(args)...);
-  };
+                                Args&&... args)
+      : err_(il, std::forward<Args>(args)...) {}
 
   constexpr const E& error() const& noexcept { return err_; }
   constexpr E& error() & noexcept { return err_; }
@@ -66,7 +53,6 @@ class unexpected final {
  private:
   E err_;
 };
-#endif
 
 }  // namespace rs_std
 
