@@ -7,6 +7,8 @@
 
 #include "support/annotations_internal.h"
 
+// LINT.IfChange
+
 // Marks a function or type as requiring Rust binding.
 //
 // If Crubit fails to generate bindings for a function or type annotated with
@@ -322,5 +324,7 @@
 // * Deleted functions
 #define CRUBIT_OVERRIDE_DISPLAY(should_bind) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_override_display", should_bind)
+
+// LINT.ThenChange(//depot/support/annotations.swig)
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_
