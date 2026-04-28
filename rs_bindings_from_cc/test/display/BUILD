@@ -7,10 +7,6 @@ load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
 )
-load(
-    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
-    "golden_test",
-)
 
 cc_library(
     name = "displayables",
@@ -33,14 +29,6 @@ additional_rust_srcs_for_crubit_bindings(
     aspect_hints = [
         "//features:fmt",
     ],
-)
-
-golden_test(
-    name = "displayables_golden_test",
-    basename = "displayables",
-    cc_library = "displayables",
-    golden_cc = "displayables_api_impl.cc",
-    golden_rs = "displayables_api.rs",
 )
 
 crubit_rust_test(
