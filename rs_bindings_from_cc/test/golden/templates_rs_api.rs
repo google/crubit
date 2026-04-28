@@ -103,13 +103,6 @@ pub mod test_namespace_bindings {
 
     // Forward declared explicit class template specialization should be imported
     // so the forward declaration code is generated (`forward_declare!`).
-
-    // Explicit class template instantiation definition is imported similarly to
-    // how implicit typedeffed instantiations are.
-
-    // Explicit class template instantiation declaration is not handled (yet?)
-    // TODO(b/245467707): Consider handling these as a build speed/ergonomic
-    // optimization.
 }
 
 // namespace test_namespace_bindings
