@@ -37,6 +37,8 @@ RustBindingsFromCcInfo = provider(
                         "{'t': <target>, 'h': [<header>], 'f': [<feature>]}"),
         "namespaces": ("A json file containing the namespace hierarchy for the target we " +
                        "are generating bindings for, or None."),
+        "additional_rust_srcs": ("A depset of files containing all files that appear in an " +
+                                 "additional_rust_srcs aspect hint."),
     },
 )
 

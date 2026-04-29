@@ -47,7 +47,8 @@ def generate_and_compile_bindings(
         extra_cc_compilation_action_inputs = [],
         extra_rs_bindings_from_cc_cli_flags = [],
         should_generate_bindings = True,
-        aliases = {}):
+        aliases = {},
+        additional_rust_srcs = depset()):
     """Runs the bindings generator.
 
     Args:
@@ -81,6 +82,7 @@ def generate_and_compile_bindings(
                 pass_through_dep_variant_infos = deps_for_rs_file,
                 target_args = target_args,
                 namespaces = None,
+                additional_rust_srcs = additional_rust_srcs,
             ),
         ]
 
@@ -178,6 +180,7 @@ def generate_and_compile_bindings(
             target_args = target_args,
             namespaces = namespaces_output,
             pass_through_dep_variant_infos = depset(),
+            additional_rust_srcs = additional_rust_srcs,
         ),
         GeneratedBindingsInfo(
             cc_file = cc_output,

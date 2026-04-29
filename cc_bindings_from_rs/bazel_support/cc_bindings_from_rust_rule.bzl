@@ -639,6 +639,7 @@ def _cc_bindings_from_rust_rule_impl(ctx):
                 ),
             ]),
             namespaces = None,
+            additional_rust_srcs = depset(),
         ),
     ]
     if OutputGroupInfo in crate:

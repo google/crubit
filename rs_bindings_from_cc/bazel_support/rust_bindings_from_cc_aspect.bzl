@@ -393,6 +393,14 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             has_public_headers or extra_rs_srcs
         ) and not _is_cc_proto_library(target),
         aliases = aliases,
+        additional_rust_srcs = depset(
+            direct = [f for f, _ in extra_rs_srcs],
+            transitive = [
+                d.additional_rust_srcs
+                for d in binding_infos
+                if hasattr(d, "additional_rust_srcs")
+            ],
+        ),
     )
 
 rust_bindings_from_cc_aspect = aspect(
