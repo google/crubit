@@ -1464,8 +1464,8 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
                 fn ctor_new(args: ()) -> Self::CtorType {
                     let () = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(dest as *mut ::core::ffi::c_void);
+                        ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(__crubit_dest as *mut ::core::ffi::c_void);
                         })
                     }
                 }
@@ -1498,8 +1498,8 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
                 fn ctor_new(args: ::ffi_11::c_uchar) -> Self::CtorType {
                     let mut input = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(dest as *mut ::core::ffi::c_void, input);
+                        ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(__crubit_dest as *mut ::core::ffi::c_void, input);
                         })
                     }
                 }
@@ -1532,8 +1532,8 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
                 fn ctor_new(args: (::ffi_11::c_uchar, ::ffi_11::c_schar)) -> Self::CtorType {
                     let (mut input1, mut input2) = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(dest as *mut ::core::ffi::c_void, input1, input2);
+                        ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(__crubit_dest as *mut ::core::ffi::c_void, input1, input2);
                         })
                     }
                 }
@@ -1584,8 +1584,8 @@ fn test_nonunpin_by_value_params() -> Result<()> {
                 ) -> Self::CtorType {
                     let (mut x, mut y, mut b) = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(dest as *mut ::core::ffi::c_void, x, y, b);
+                        ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(__crubit_dest as *mut ::core::ffi::c_void, x, y, b);
                         })
                     }
                 }
@@ -1612,8 +1612,8 @@ fn test_nonunpin_return() -> Result<()> {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::ffi_11::c_int, y: &'b ::ffi_11::c_int)
             -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(dest as *mut ::core::ffi::c_void, x, y);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(__crubit_dest as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -1650,8 +1650,8 @@ fn test_nonunpin_const_return() -> Result<()> {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::ffi_11::c_int, y: &'b ::ffi_11::c_int)
             -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(dest as *mut ::core::ffi::c_void, x, y);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(__crubit_dest as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -1835,9 +1835,9 @@ fn test_nonunpin_return_assign() -> Result<()> {
                 fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, other: &'b Self) {
                     unsafe {
                         let _ = ::ctor::emplace!(::ctor::FnCtor::new(
-                            move |dest: *mut Self| {
+                            move |__crubit_dest: *mut Self| {
                                 crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(
-                                    dest as *mut ::core::ffi::c_void,
+                                    __crubit_dest as *mut ::core::ffi::c_void,
                                     self,
                                     other
                                 );
@@ -2048,5 +2048,72 @@ fn test_simple_explicit_lifetime() -> Result<()> {
     );
 
     assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3AddRi});
+    Ok(())
+}
+
+#[gtest]
+fn test_unsafe_constructor_unpin() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct StructWithUnsafeConstructor final {
+            explicit StructWithUnsafeConstructor(int* p) : ptr_field(p) {}
+            int* ptr_field;
+        };"#,
+    )?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
+                #[inline(always)]
+                unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
+                    let mut p = args;
+                    unsafe {
+                        let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+                        crate::detail::__rust_thunk___ZN27StructWithUnsafeConstructorC1EPi(
+                            &raw mut __return as *mut ::core::ffi::c_void,
+                            p
+                        );
+                        __return.assume_init()
+                    }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unsafe_constructor_nonunpin() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct NonUnpinStructWithUnsafeConstructor final {
+            explicit NonUnpinStructWithUnsafeConstructor(int* p) : ptr_field(p) {}
+            ~NonUnpinStructWithUnsafeConstructor(); // makes it non-Unpin
+            int* ptr_field;
+        };"#,
+    )?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for NonUnpinStructWithUnsafeConstructor {
+                type CtorType = ::ctor::Ctor![Self];
+                type Error = ::ctor::Infallible;
+                #[inline(always)]
+                unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
+                    let mut p = args;
+                    unsafe {
+                        ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN35NonUnpinStructWithUnsafeConstructorC1EPi(
+                                __crubit_dest as *mut ::core::ffi::c_void,
+                                p
+                            );
+                        })
+                    }
+                }
+            }
+        }
+    );
     Ok(())
 }

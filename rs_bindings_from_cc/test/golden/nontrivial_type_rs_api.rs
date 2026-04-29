@@ -58,8 +58,10 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(dest as *mut ::core::ffi::c_void);
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                );
             })
         }
     }
@@ -72,9 +74,9 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     field,
                 );
             })
@@ -98,9 +100,9 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     field,
                     unused,
                 );
@@ -137,9 +139,9 @@ impl ::ctor::Assign<f32> for Nontrivial {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: f32) {
         unsafe {
-            let _ = ::ctor::emplace!(::ctor::FnCtor::new(move |dest: *mut Self| {
+            let _ = ::ctor::emplace!(::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialaSEf(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     self,
                     __param_0,
                 );
@@ -232,9 +234,9 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }
@@ -248,9 +250,9 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialInline {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     field,
                 );
             })
@@ -274,9 +276,9 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     field,
                     unused,
                 );
@@ -350,9 +352,9 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }
@@ -508,9 +510,9 @@ pub fn TakesByValue(
     nontrivial: ::ctor::Ctor![crate::Nontrivial],
 ) -> ::ctor::Ctor![crate::Nontrivial] {
     unsafe {
-        ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
+        ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
             crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
-                dest as *mut ::core::ffi::c_void,
+                __crubit_dest as *mut ::core::ffi::c_void,
                 ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
             );
         })
@@ -522,9 +524,9 @@ pub fn TakesByValueInline(
     nontrivial: ::ctor::Ctor![crate::NontrivialInline],
 ) -> ::ctor::Ctor![crate::NontrivialInline] {
     unsafe {
-        ::ctor::FnCtor::new(move |dest: *mut crate::NontrivialInline| {
+        ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::NontrivialInline| {
             crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
-                dest as *mut ::core::ffi::c_void,
+                __crubit_dest as *mut ::core::ffi::c_void,
                 ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
             );
         })
@@ -686,8 +688,10 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(dest as *mut ::core::ffi::c_void);
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                );
             })
         }
     }
@@ -726,9 +730,9 @@ where
 #[inline(always)]
 pub fn ReturnsNonmovableByValue() -> ::ctor::Ctor![crate::Nonmovable] {
     unsafe {
-        ::ctor::FnCtor::new(move |dest: *mut crate::Nonmovable| {
+        ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nonmovable| {
             crate::detail::__rust_thunk___Z24ReturnsNonmovableByValuev(
-                dest as *mut ::core::ffi::c_void,
+                __crubit_dest as *mut ::core::ffi::c_void,
             );
         })
     }

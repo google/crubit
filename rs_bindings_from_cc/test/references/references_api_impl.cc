@@ -22,8 +22,18 @@
 static_assert(sizeof(class TypeWithPtrConstructor) == 1);
 static_assert(alignof(class TypeWithPtrConstructor) == 1);
 
+extern "C" void __rust_thunk___ZN22TypeWithPtrConstructorC1EPi(
+    class TypeWithPtrConstructor* __this, int* ptr) {
+  crubit::construct_at(__this, ptr);
+}
+
 static_assert(sizeof(class TypeWithNonNullPtrConstructor) == 1);
 static_assert(alignof(class TypeWithNonNullPtrConstructor) == 1);
+
+extern "C" void __rust_thunk___ZN29TypeWithNonNullPtrConstructorC1EPi(
+    class TypeWithNonNullPtrConstructor* __this, int* ptr) {
+  crubit::construct_at(__this, ptr);
+}
 
 static_assert(sizeof(class TypeWithReferenceConstructor) == 1);
 static_assert(alignof(class TypeWithReferenceConstructor) == 1);

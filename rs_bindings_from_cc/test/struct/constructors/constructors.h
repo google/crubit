@@ -106,4 +106,9 @@ struct NonTrivialStructWithConstructors final {
   int int_field;
 };
 
+struct StructWithUnsafeConstructor final {
+  explicit StructWithUnsafeConstructor(int* p) : ptr_field(p) {}
+  int* ptr_field;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_

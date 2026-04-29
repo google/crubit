@@ -183,4 +183,14 @@ __rust_thunk___ZN32NonTrivialStructWithConstructorsaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert(CRUBIT_SIZEOF(struct ::StructWithUnsafeConstructor) == 8);
+static_assert(alignof(struct ::StructWithUnsafeConstructor) == 8);
+static_assert(CRUBIT_OFFSET_OF(ptr_field,
+                               struct ::StructWithUnsafeConstructor) == 0);
+
+extern "C" void __rust_thunk___ZN27StructWithUnsafeConstructorC1EPi(
+    struct ::StructWithUnsafeConstructor* __this, int* p) {
+  crubit::construct_at(__this, p);
+}
+
 #pragma clang diagnostic pop
