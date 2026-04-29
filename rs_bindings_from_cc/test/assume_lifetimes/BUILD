@@ -158,6 +158,33 @@ golden_test(
 )
 
 crubit_test_cc_library(
+    name = "assumed_span",
+    srcs = ["assumed_span.cc"],
+    hdrs = ["assumed_span.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":test_annotations",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
+crubit_rust_test(
+    name = "assumed_span_test",
+    srcs = ["assumed_span_test.rs"],
+    cc_deps = [
+        ":assumed_span",
+        "//support/cc_std",
+        "@abseil-cpp//absl/types:span",
+    ],
+    deps = [
+        "//support:cref",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
     name = "string_view",
     srcs = ["string_view.cc"],
     hdrs = ["string_view.h"],

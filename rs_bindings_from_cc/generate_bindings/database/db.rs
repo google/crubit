@@ -383,7 +383,7 @@ impl<'db> BindingsGenerator<'db> {
                 format!("{pointee_name}{ptr_str}")
             }
             ir::CcTypeVariant::FuncPointer { .. } => "function pointer".to_string(),
-            ir::CcTypeVariant::Decl(id) => self.debug_name(*id).to_string(),
+            ir::CcTypeVariant::Decl { id, .. } => self.debug_name(*id).to_string(),
             ir::CcTypeVariant::Error(err) => format!("<error: {}>", err.message),
         };
 

@@ -5,7 +5,7 @@
 /// Generate the final bindings, including structures for code snippet, feature
 /// gating, etc.
 use crate::db::BindingsGenerator;
-use crate::rs_snippet::{PrimitiveName, RsTypeKind};
+use crate::rs_snippet::{LifetimeOptions, PrimitiveName, RsTypeKind};
 use arc_anyhow::{Error, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use crubit_feature::CrubitFeature;
@@ -239,8 +239,8 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
             if let Some(missing) = missing_features_of_type(&RsTypeKind::from_item_raw(
                 db,
                 item.clone(),
-                /*have_reference_param=*/ false,
-                /*is_return_type=*/ true,
+                &LifetimeOptions { is_return_type: true, ..LifetimeOptions::default() },
+                /*template_args=*/ &None,
                 /*lifetimes=*/ &[],
             )?) {
                 missing_features.extend(missing);

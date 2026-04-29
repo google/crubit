@@ -134,7 +134,9 @@ llvm::json::Value CcType::ToJson() const {
                  }},
             };
           },
-          [&](ItemId id) { return llvm::json::Object{{"Decl", id}}; },
+          [&](ItemId id) {
+            return llvm::json::Object{{"Decl", llvm::json::Object{{"id", id}}}};
+          },
           [&](FormattedError error) {
             return llvm::json::Object{
                 {"Error", llvm::json::Object{

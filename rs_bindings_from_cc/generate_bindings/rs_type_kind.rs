@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
     match ty.variant {
-        CcTypeVariant::Decl(id) => {
+        CcTypeVariant::Decl { id, .. } => {
             let item = db.find_untyped_decl(id);
             if let ir::Item::Record(record) = item {
                 record.is_string_view()
@@ -171,7 +171,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 param_types,
             })
         }
-        CcTypeVariant::Decl(id) => {
+        CcTypeVariant::Decl { id, template_args } => {
             let item = db.find_untyped_decl(*id);
 
             if let Err(no_bindings_reason) = db.has_bindings(item.clone()) {
@@ -230,8 +230,8 @@ pub fn rs_type_kind_with_lifetime_elision(
             RsTypeKind::from_item_raw(
                 db,
                 item.clone(),
-                lifetime_options.have_reference_param,
-                lifetime_options.is_return_type,
+                &lifetime_options,
+                template_args,
                 &lifetimes,
             )
         }

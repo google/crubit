@@ -296,22 +296,36 @@ pub struct LifetimeOptions {
 pub enum UniformReprTemplateType {
     /// std::vector<T, std::allocator<T>>
     StdVector {
+        // No lifetime: owned by the vector
         element_type: RsTypeKind,
     },
     /// std::unique_ptr<T, std::default_delete<T>>
     StdUniquePtr {
+        // No lifetime here: owned by the unique_ptr
         element_type: RsTypeKind,
     },
     AbslSpan {
         is_const: bool,
         include_lifetime: bool,
         element_type: RsTypeKind,
+        // The lifetime for the span, if assumed lifetimes are turned on.
+        lifetime: Option<Lifetime>,
     },
     /// cc_std::string_view<'a>
-    StdStringView {
-        in_cc_std: bool,
-        lifetime: Lifetime,
-    },
+    StdStringView { in_cc_std: bool, lifetime: Lifetime },
+}
+
+fn choose_one_type(t: &CcType, ts: &Option<Rc<[CcType]>>) -> Result<CcType> {
+    match ts {
+        Some(ts) => {
+            if ts.len() == 1 {
+                Ok(ts[0].clone())
+            } else {
+                Err(anyhow!("Internal error: overriding template arguments with wrong arity"))
+            }
+        }
+        None => Ok(t.clone()),
+    }
 }
 
 impl UniformReprTemplateType {
@@ -322,13 +336,17 @@ impl UniformReprTemplateType {
     fn new(
         db: &BindingsGenerator,
         template_specialization_kind: Option<&TemplateSpecializationKind>,
-        is_return_type: bool,
+        options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
         lifetimes: &[Lifetime],
         in_cc_std: bool,
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
             // Importantly, `is_return_type` is not propagated through inner types.
-            let arg_type_kind = db.rs_type_kind(template_arg.clone())?;
+            let arg_type_kind = db.rs_type_kind_with_lifetime_elision(
+                template_arg.clone(),
+                LifetimeOptions { is_return_type: false, ..*options },
+            )?;
             ensure!(
                 !arg_type_kind.is_bridge_type(),
                 "`{}` cannot be used as a template argument because it is a bridged type\nSee crubit.rs/types.",
@@ -343,8 +361,9 @@ impl UniformReprTemplateType {
             Ok(arg_type_kind)
         };
         match template_specialization_kind {
-            Some(TemplateSpecializationKind::StdUniquePtr { element_type }) => {
-                let element_type = type_arg(element_type)?;
+            Some(TemplateSpecializationKind::StdUniquePtr { raw_element_type }) => {
+                let element_type = choose_one_type(raw_element_type, template_args)?;
+                let element_type = type_arg(&element_type)?;
                 ensure!(element_type.is_complete(),
                     "`{}` can't be used in a Rust std::unique_ptr<T> because it is an incomplete type",
                     element_type.display(db));
@@ -353,8 +372,9 @@ impl UniformReprTemplateType {
                     element_type.display(db));
                 Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtr { element_type })))
             }
-            Some(TemplateSpecializationKind::StdVector { element_type }) => {
-                let element_type = type_arg(element_type)?;
+            Some(TemplateSpecializationKind::StdVector { raw_element_type }) => {
+                let element_type = choose_one_type(raw_element_type, template_args)?;
+                let element_type = type_arg(&element_type)?;
                 ensure!(element_type.is_destructible(),
                     "`{}` can't be used in a Rust std::vector<T> becuase it has a deleted or non-public destructor",
                     element_type.display(db));
@@ -367,9 +387,13 @@ impl UniformReprTemplateType {
                 }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdVector { element_type })))
             }
-            Some(TemplateSpecializationKind::AbslSpan { element_type }) => {
-                let element_type_kind = type_arg(element_type)?;
+            Some(TemplateSpecializationKind::AbslSpan { raw_element_type }) => {
+                let element_type = choose_one_type(raw_element_type, template_args)?;
+                let element_type_kind = type_arg(&element_type)?;
                 let is_const = element_type.is_const;
+                if lifetimes.len() > 1 {
+                    bail!("Internal error: span was given too many lifetimes.")
+                }
                 Ok(Some(Rc::new(UniformReprTemplateType::AbslSpan {
                     is_const,
 
@@ -378,8 +402,9 @@ impl UniformReprTemplateType {
                     //
                     // Spans returned by a C++ function have an unclear lifetime, and so must be
                     // returned as a raw span.
-                    include_lifetime: !is_return_type,
+                    include_lifetime: !options.is_return_type,
                     element_type: element_type_kind,
+                    lifetime: if lifetimes.is_empty() { None } else { Some(lifetimes[0].clone()) },
                 })))
             }
             Some(TemplateSpecializationKind::StdStringView) if lifetimes.len() == 1 => {
@@ -412,17 +437,23 @@ impl UniformReprTemplateType {
                     quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
                 }
             }
-            Self::AbslSpan { is_const, include_lifetime, element_type } => {
+            Self::AbslSpan { is_const, include_lifetime, element_type, lifetime } => {
                 let element_type_tokens = element_type.to_token_stream(db);
 
                 // Use Span when we have a lifetime parameter, and RawSpan otherwise.
                 //
                 // See http://<internal link>.
-                match (*is_const, *include_lifetime) {
-                    (true, true) => quote! { ::span::absl::Span<'_, #element_type_tokens> },
-                    (false, true) => quote! { ::span::absl::SpanMut<'_, #element_type_tokens> },
-                    (true, false) => quote! { ::span::absl::RawSpan<#element_type_tokens> },
-                    (false, false) => quote! { ::span::absl::RawSpanMut<#element_type_tokens> },
+                match (*is_const, *include_lifetime, lifetime) {
+                    (true, _, Some(lifetime)) => {
+                        quote! { ::span::absl::Span<#lifetime, #element_type_tokens> }
+                    }
+                    (false, _, Some(lifetime)) => {
+                        quote! { ::span::absl::SpanMut<#lifetime, #element_type_tokens> }
+                    }
+                    (true, true, _) => quote! { ::span::absl::Span<'_, #element_type_tokens> },
+                    (false, true, _) => quote! { ::span::absl::SpanMut<'_, #element_type_tokens> },
+                    (true, false, _) => quote! { ::span::absl::RawSpan<#element_type_tokens> },
+                    (false, false, _) => quote! { ::span::absl::RawSpanMut<#element_type_tokens> },
                 }
             }
             Self::StdStringView { in_cc_std, lifetime } => {
@@ -640,10 +671,12 @@ impl BridgeRsTypeKind {
     /// record has template parameters that cannot be translated.
     pub fn new(
         record: &Record,
-        has_reference_param: bool,
+        options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
         db: &BindingsGenerator,
+        lifetimes: &[Lifetime],
     ) -> Result<Option<BridgeRsTypeKind>> {
-        if let Some(c9_co) = new_c9_co_record(has_reference_param, record, db)? {
+        if let Some(c9_co) = new_c9_co_record(options, record, template_args, lifetimes, db)? {
             return Ok(Some(c9_co));
         }
 
@@ -655,7 +688,25 @@ impl BridgeRsTypeKind {
             BridgeType::ProtoMessageBridge { rust_name } => {
                 BridgeRsTypeKind::ProtoMessageBridge { rust_name }
             }
-            BridgeType::Bridge { rust_name, abi_rust, abi_cpp, template_args } => {
+            BridgeType::Bridge {
+                rust_name,
+                abi_rust,
+                abi_cpp,
+                template_args: bridge_template_args,
+            } => {
+                let template_args = match template_args {
+                    Some(a) => {
+                        if a.len() == bridge_template_args.len() {
+                            a.clone()
+                        } else {
+                            return Err(anyhow!(
+                            "Internal error: template argument arity mismatch for bridge type `{}`",
+                            record.rs_name.identifier.as_ref(),
+                        ));
+                        }
+                    }
+                    None => bridge_template_args.clone(),
+                };
                 BridgeRsTypeKind::Bridge {
                     rust_name,
                     abi_rust,
@@ -720,27 +771,36 @@ impl BridgeRsTypeKind {
 }
 
 fn new_c9_co_record(
-    has_reference_param: bool,
+    options: &LifetimeOptions,
     record: &Record,
+    template_args: &Option<Rc<[CcType]>>,
+    _lifetimes: &[Lifetime],
     db: &BindingsGenerator,
 ) -> Result<Option<BridgeRsTypeKind>> {
     let Some(TemplateSpecialization {
-        kind: TemplateSpecializationKind::C9Co { element_type },
+        kind: TemplateSpecializationKind::C9Co { raw_element_type },
         ..
     }) = record.template_specialization.as_ref()
     else {
         return Ok(None);
     };
-    let arg_type_kind = db.rs_type_kind(element_type.clone())?;
+    let element_type = choose_one_type(raw_element_type, template_args)?;
+    let arg_type_kind = db.rs_type_kind_with_lifetime_elision(
+        element_type.clone(),
+        LifetimeOptions { have_reference_param: false, ..*options },
+    )?;
     if let RsTypeKind::Error { error, .. } = arg_type_kind {
-        let element_name = db.cc_type_debug_name(element_type);
+        let element_name = db.cc_type_debug_name(&element_type);
         let desc = error.to_string().replace("\n", "\n  ");
         return Err(anyhow!(
             "`c9::Co<{element_name}>` is unsupported because `{element_name}` is unavailable:\n\
               {desc}"
         ));
     };
-    Ok(Some(BridgeRsTypeKind::C9Co { has_reference_param, result_type: Rc::new(arg_type_kind) }))
+    Ok(Some(BridgeRsTypeKind::C9Co {
+        has_reference_param: options.have_reference_param,
+        result_type: Rc::new(arg_type_kind),
+    }))
 }
 
 impl RsTypeKind {
@@ -757,8 +817,8 @@ impl RsTypeKind {
     pub fn from_item_raw(
         db: &BindingsGenerator,
         item: Item,
-        has_reference_param: bool,
-        is_return_type: bool,
+        options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
         lifetimes: &[Lifetime],
     ) -> Result<Self> {
         match item {
@@ -766,7 +826,7 @@ impl RsTypeKind {
                 RsTypeKind::new_incomplete_record(db, incomplete_record)
             }
             Item::Record(record) => {
-                RsTypeKind::new_record(db, record, has_reference_param, is_return_type, lifetimes)
+                RsTypeKind::new_record(db, record, options, template_args, lifetimes)
             }
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
             Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias, lifetimes),
@@ -818,12 +878,14 @@ impl RsTypeKind {
     fn new_record(
         db: &BindingsGenerator,
         record: Rc<Record>,
-        has_reference_param: bool,
-        is_return_type: bool,
+        options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
         lifetimes: &[Lifetime],
     ) -> Result<Self> {
         let ir = db.ir();
-        if let Some(bridge_type) = BridgeRsTypeKind::new(&record, has_reference_param, db)? {
+        if let Some(bridge_type) =
+            BridgeRsTypeKind::new(&record, options, template_args, db, lifetimes)?
+        {
             return Ok(RsTypeKind::BridgeType { bridge_type, original_type: record });
         }
 
@@ -840,7 +902,8 @@ impl RsTypeKind {
             uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
                 record.template_specialization.as_ref().map(|ts| &ts.kind),
-                is_return_type,
+                options,
+                template_args,
                 lifetimes,
                 in_cc_std,
             )?,
@@ -2302,7 +2365,10 @@ mod tests {
                 doc_comment: None,
                 unknown_attr: None,
                 underlying_type: CcType {
-                    variant: CcTypeVariant::Decl(ItemId::new_for_testing(0)),
+                    variant: CcTypeVariant::Decl {
+                        id: ItemId::new_for_testing(0),
+                        template_args: None,
+                    },
                     is_const: false,
                     unknown_attr: "".into(),
                     explicit_lifetimes: vec![],

@@ -226,7 +226,7 @@ impl CcType {
 impl From<&Record> for CcType {
     fn from(record: &Record) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl(record.id),
+            variant: CcTypeVariant::Decl { id: record.id, template_args: None },
             is_const: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
@@ -237,7 +237,7 @@ impl From<&Record> for CcType {
 impl From<&TypeAlias> for CcType {
     fn from(alias: &TypeAlias) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl(alias.id),
+            variant: CcTypeVariant::Decl { id: alias.id, template_args: None },
             is_const: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
@@ -248,7 +248,7 @@ impl From<&TypeAlias> for CcType {
 impl From<&ExistingRustType> for CcType {
     fn from(existing_rust_type: &ExistingRustType) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl(existing_rust_type.id),
+            variant: CcTypeVariant::Decl { id: existing_rust_type.id, template_args: None },
             is_const: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
@@ -464,7 +464,12 @@ pub enum CcTypeVariant {
         #[serde(default)]
         lifetime_inputs: Vec<Rc<str>>,
     },
-    Decl(ItemId),
+    Decl {
+        id: ItemId,
+        /// The type arguments to the type. These override any type arguments attached to the item.
+        #[serde(default)]
+        template_args: Option<Rc<[CcType]>>,
+    },
     /// This type could not be translated to Rust.
     ///
     /// It's preferable to forward on a failed type conversion,
@@ -499,7 +504,7 @@ pub trait TypeWithDeclId {
 impl TypeWithDeclId for CcType {
     fn decl_id(&self) -> Option<ItemId> {
         match &self.variant {
-            CcTypeVariant::Decl(id) => Some(*id),
+            CcTypeVariant::Decl { id, .. } => Some(*id),
             _ => None,
         }
     }
@@ -1117,13 +1122,25 @@ pub enum TemplateSpecializationKind {
     /// std::basic_string_view<wchar_t, std::char_traits<wchar_t>>
     StdWStringView,
     /// std::vector<T, std::allocator<T>>
-    StdVector { element_type: CcType },
+    StdVector {
+        #[serde(rename(deserialize = "element_type"))]
+        raw_element_type: CcType,
+    },
     /// std::unique_ptr<T, std::default_delete<T>>
-    StdUniquePtr { element_type: CcType },
+    StdUniquePtr {
+        #[serde(rename(deserialize = "element_type"))]
+        raw_element_type: CcType,
+    },
     /// c9::Co<T>
-    C9Co { element_type: CcType },
+    C9Co {
+        #[serde(rename(deserialize = "element_type"))]
+        raw_element_type: CcType,
+    },
     /// absl::Span<T>
-    AbslSpan { element_type: CcType },
+    AbslSpan {
+        #[serde(rename(deserialize = "element_type"))]
+        raw_element_type: CcType,
+    },
     /// Some other template specialization.
     NonSpecial,
 }

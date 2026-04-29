@@ -430,7 +430,7 @@ fn generate_cc_operator_index_nonmut_impls(
             (*pointer_data.pointee_type).clone()
         }
 
-        other_variant => {
+        _other_variant => {
             bail_to_errors!(
                 errors,
                 "operator[] should return a reference (values are not yet supported), found {}",
@@ -487,7 +487,7 @@ fn generate_cc_operator_index_mut_impls(
             (*pointer_data.pointee_type).clone()
         }
 
-        other_variant => {
+        _other_variant => {
             bail_to_errors!(
                 errors,
                 "(mutable) operator[] should return a reference (values are not yet supported), found {}",

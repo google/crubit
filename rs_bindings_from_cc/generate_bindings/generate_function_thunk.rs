@@ -374,7 +374,7 @@ fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
     // Match on any C([const] C&).
      FuncParam { type_: CcType { variant: CcTypeVariant::Pointer(
         PointerType {kind: PointerTypeKind::LValueRef, pointee_type: inner_type, ..}), ..}, .. }] =>
-        matches!(&**inner_type, CcType { variant: CcTypeVariant::Decl(rid), ..} if *rid == record_id),
+        matches!(&**inner_type, CcType { variant: CcTypeVariant::Decl{ id, ..}, ..} if *id == record_id),
     _ => false
   }
 }

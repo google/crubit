@@ -7,7 +7,7 @@ use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     missing_feature_descriptions, BindingsInfo, NoBindingsReason, ResolvedName, Visibility,
 };
-use database::rs_snippet::RsTypeKind;
+use database::rs_snippet::{LifetimeOptions, RsTypeKind};
 use database::BindingsGenerator;
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
@@ -167,8 +167,8 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             match RsTypeKind::from_item_raw(
                 db,
                 item.clone(),
-                /*have_reference_param=*/ false,
-                /*is_return_type=*/ true,
+                &LifetimeOptions { is_return_type: true, ..Default::default() },
+                /*template_args=*/ &None,
                 /*lifetimes=*/ &[],
             ) {
                 Ok(rs_type_kind) => {

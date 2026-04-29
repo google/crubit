@@ -36,7 +36,7 @@ fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
         CcTypeVariant::FuncPointer { .. } => {
             bail!("TODO(b/454627672): function pointer returns are unsupported")
         }
-        CcTypeVariant::Decl(id) => decl_lifetime_arity(db, *id),
+        CcTypeVariant::Decl { id, .. } => decl_lifetime_arity(db, *id),
         CcTypeVariant::Error(msg) => bail!("encountered error type: {:?}", msg),
     }
 }
@@ -112,23 +112,24 @@ fn decl_lifetime_arity_impl(
         // TODO(b/498977848): We seem to lose the typedef sugar if it's annotated. Note that we
         // explicitly only need to check for StdStringView here (and not the more general
         // rc.is_string_view()).
-        Item::Record(rc)
-            if matches!(
-                rc.template_specialization,
-                Some(ir::TemplateSpecialization {
+        Item::Record(rc) => match rc.template_specialization {
+            Some(
+                ir::TemplateSpecialization {
                     kind: ir::TemplateSpecializationKind::StdStringView,
                     ..
-                })
-            ) =>
-        {
-            Ok(1)
-        }
+                }
+                | ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::AbslSpan { .. },
+                    ..
+                },
+            ) => Ok(1),
+            _ => record_lifetime_arity(db, rc),
+        },
         Item::TypeAlias(_ta) => {
             // Here and elsewhere in this function: change has_bindings.rs to check for additional
             // Item kinds when they are supported.
             bail!("Type aliases unhandled for lifetimes: {:?}", item.cc_name_as_str())
         }
-        Item::Record(rc) => record_lifetime_arity(db, rc),
         Item::IncompleteRecord(_) => {
             bail!("Incomplete records unhandled for lifetimes: {:?}", item.cc_name_as_str())
         }
@@ -338,7 +339,14 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         ty: &CcType,
     ) -> Result<LifetimeResult> {
         match &ty.variant {
-            CcTypeVariant::Decl(d) if self.decl_binds_lifetimes(d)? => {
+            CcTypeVariant::Decl { id, .. } if self.decl_binds_lifetimes(id)? => {
+                let mut new_ty = ty.clone();
+                if let Some(type_arg) = self.type_arg_from_decl_id(*id) {
+                    let LifetimeResult { ty: type_arg, .. } =
+                        self.add_lifetime_to_input_type(false, name_hint, new_bindings, &type_arg)?;
+                    new_ty.variant =
+                        CcTypeVariant::Decl { id: *id, template_args: Some(Rc::new([type_arg])) };
+                };
                 let mut state =
                     self.get_state_for_annotated_lifetime(&ty.explicit_lifetimes, new_bindings);
                 if state == LifetimeState::Unseen {
@@ -346,7 +354,6 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     new_bindings.push(lifetime.clone());
                     state = LifetimeState::Single(lifetime);
                 }
-                let mut new_ty = ty.clone();
                 new_ty.explicit_lifetimes = self.get_lifetime_for_state(&state);
                 Ok(LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen })
             }
@@ -388,6 +395,32 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         }
     }
 
+    /// Returns the (raw) type argument applied to the decl `id`.
+    fn type_arg_from_decl_id(&mut self, id: ItemId) -> Option<CcType> {
+        match self.db.find_untyped_decl(id) {
+            Item::Record(record) => match &record.template_specialization {
+                Some(ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::StdVector { raw_element_type, .. },
+                    ..
+                }) => Some(raw_element_type.clone()),
+                Some(ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::StdUniquePtr { raw_element_type, .. },
+                    ..
+                }) => Some(raw_element_type.clone()),
+                Some(ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::C9Co { raw_element_type, .. },
+                    ..
+                }) => Some(raw_element_type.clone()),
+                Some(ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::AbslSpan { raw_element_type, .. },
+                    ..
+                }) => Some(raw_element_type.clone()),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
     /// Adds lifetimes to a type in output position. `lifetime_hint` is used to assign a lifetime
     /// when one is not otherwise available. If `lifetime_hint` is empty, no new lifetimes will be
     /// assigned.
@@ -398,28 +431,34 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         ty: &CcType,
     ) -> Result<CcType> {
         match &ty.variant {
-            CcTypeVariant::Decl(d) if self.decl_binds_lifetimes(d)? => {
+            CcTypeVariant::Decl { id, .. } => {
                 let mut new_ty = ty.clone();
-                // If there's a previously-annotated lifetime, use that.
-                if !ty.explicit_lifetimes.is_empty() {
-                    new_ty.explicit_lifetimes = ty
-                        .explicit_lifetimes
-                        .iter()
-                        .map(|l| {
-                            self.bindings
-                                .get_or_push_new_binding(l, |name| new_bindings.push(name.clone()))
-                        })
-                        .collect();
-                    if new_ty.explicit_lifetimes.iter().any(|l| l.as_ref() == "unknown") {
-                        new_ty.explicit_lifetimes.clear();
+                if self.decl_binds_lifetimes(id)? {
+                    // If there's a previously-annotated lifetime, use that.
+                    if !ty.explicit_lifetimes.is_empty() {
+                        new_ty.explicit_lifetimes = ty
+                            .explicit_lifetimes
+                            .iter()
+                            .map(|l| {
+                                self.bindings.get_or_push_new_binding(l, |name| {
+                                    new_bindings.push(name.clone())
+                                })
+                            })
+                            .collect();
+                        if new_ty.explicit_lifetimes.iter().any(|l| l.as_ref() == "unknown") {
+                            new_ty.explicit_lifetimes.clear();
+                        }
+                    } else if !lifetime_hint.is_empty() {
+                        // If there is no viable inferred lifetime, there is nothing to do.
+                        new_ty.explicit_lifetimes = lifetime_hint.clone();
                     }
-                    return Ok(new_ty);
                 }
-                // If there is no viable inferred lifetime, there is nothing to do.
-                if lifetime_hint.is_empty() {
-                    return Ok(new_ty);
-                }
-                new_ty.explicit_lifetimes = lifetime_hint.clone();
+                if let Some(elt) = self.type_arg_from_decl_id(*id) {
+                    let elt_lowered =
+                        self.add_lifetime_to_output_type(lifetime_hint, new_bindings, &elt)?;
+                    new_ty.variant =
+                        CcTypeVariant::Decl { id: *id, template_args: Some(Rc::new([elt_lowered])) }
+                };
                 Ok(new_ty)
             }
             CcTypeVariant::Pointer(pty) if pty.kind == PointerTypeKind::LValueRef => {

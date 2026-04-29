@@ -17,8 +17,8 @@ use database::code_snippet::{
 };
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
-    BackingType, BridgeRsTypeKind, Callable, FnTrait, Mutability, PassingConvention, RsTypeKind,
-    RustPtrKind, Safety,
+    BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions, Mutability,
+    PassingConvention, RsTypeKind, RustPtrKind, Safety,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -459,13 +459,13 @@ pub fn generate_bindings_tokens(
                     return None;
                 }
 
-                // It doesn't matter since we're just checking for presence of DynCallable.
-                let has_reference_param = false;
+                // We assume !has_reference_param: it doesn't matter since we're just checking for
+                // presence of DynCallable.
 
                 // Find records that are template instantiations of `rs_std::DynCallable` or
                 // `absl::AnyInvocable`.
                 let Ok(Some(BridgeRsTypeKind::Callable(callable))) =
-                    BridgeRsTypeKind::new(record, has_reference_param, &db)
+                    BridgeRsTypeKind::new(record, &LifetimeOptions::default(), &None, &db, &[])
                 else {
                     return None;
                 };
@@ -875,11 +875,13 @@ fn generate_rs_api_impl_includes(
 
     for record in ir.records() {
         // We don't actually use the possible c9::Co, but need to pass in something to `new`.
-        let has_reference_param = false;
+        // We assume has_reference_param = false.
 
         // Err means that this bridge type has some issues. For the purpose of generating includes,
         // we can ignore it.
-        if let Ok(Some(bridge_type)) = BridgeRsTypeKind::new(record, has_reference_param, db) {
+        if let Ok(Some(bridge_type)) =
+            BridgeRsTypeKind::new(record, &LifetimeOptions::default(), &None, db, &[])
+        {
             match bridge_type {
                 BridgeRsTypeKind::C9Co { .. } => {
                     internal_includes.insert(CcInclude::SupportLibHeader(
@@ -998,6 +1000,17 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             Ok(CrubitAbiType::Ptr {
                 is_const: mutability == Mutability::Const,
                 is_rust_slice: kind == RustPtrKind::Slice,
+                rust_type: rust_tokens,
+                cpp_type: cpp_tokens,
+            })
+        }
+        RsTypeKind::Reference { referent, mutability, lifetime: _, is_cref: true } => {
+            let rust_tokens = referent.to_token_stream(db);
+            let cpp_tokens = format_cpp_type_with_references(&referent, db)?;
+
+            Ok(CrubitAbiType::Ptr {
+                is_const: mutability == Mutability::Const,
+                is_rust_slice: false,
                 rust_type: rust_tokens,
                 cpp_type: cpp_tokens,
             })
