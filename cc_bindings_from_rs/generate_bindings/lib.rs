@@ -66,11 +66,23 @@ use rustc_span::symbol::{sym, Symbol};
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::support_header`.
 fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
+}
+
+pub(crate) fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> bool {
+    let def_span = db.tcx().def_span(def_id);
+    let filepath = db.tcx().sess.source_map().span_to_filename(def_span);
+    #[rustversion::before(2025-12-14)]
+    let file_name = filepath.prefer_local().to_string();
+    #[rustversion::since(2025-12-14)]
+    let file_name = filepath.prefer_local_unconditionally().to_string();
+    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
+    !db.ignore_symbols_from_files().contains(&PathBuf::from(file_name))
 }
 
 pub struct BindingsTokens {
@@ -190,6 +202,7 @@ pub fn new_database<'db>(
     fatal_errors: Rc<dyn ReportFatalError>,
     no_thunk_name_mangling: bool,
     h_out_include_guard: IncludeGuard,
+    ignore_symbols_from_files: Rc<HashSet<PathBuf>>,
 ) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         tcx,
@@ -207,6 +220,7 @@ pub fn new_database<'db>(
         fatal_errors,
         no_thunk_name_mangling,
         h_out_include_guard,
+        ignore_symbols_from_files,
         source_crate_num,
         support_header,
         repr_attrs_from_db,
@@ -1849,6 +1863,9 @@ fn formatted_items_in_crate<'tcx>(
     defs_in_crate
         .into_iter()
         .filter_map(|(def_id, paths)| {
+            if !crate::should_receive_bindings(db, def_id) {
+                return None;
+            }
             let mut snippets = None;
             let canonical_name = db.symbol_canonical_name(def_id)?;
             let aliases = if canonical_name.krate_num == db.source_crate_num() {

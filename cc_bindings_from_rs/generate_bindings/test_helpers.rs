@@ -14,7 +14,7 @@ use error_report::{FatalErrors, IgnoreErrors};
 use generate_bindings::{generate_bindings, new_database, BindingsTokens};
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 use rustc_middle::ty::TyCtxt;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use dyn_format::Format;
@@ -92,6 +92,7 @@ fn bindings_db_for_tests_with_features(
         /* fatal_errors= */ Rc::new(FatalErrors::new()),
         /* no_thunk_name_mangling= */ true,
         /* include_guard */ IncludeGuard::PragmaOnce,
+        /* ignore_symbols_from_files */ HashSet::default().into(),
     )
 }
 

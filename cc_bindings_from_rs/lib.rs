@@ -18,8 +18,8 @@ use rustc_middle::ty::TyCtxt;
 use rustc_session::config::OptionsTargetModifiers;
 
 use arc_anyhow::{bail, Context, Result};
-use std::collections::HashMap;
-use std::path::Path;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use cmdline::Cmdline;
@@ -86,6 +86,10 @@ fn new_db<'tcx>(
     for (name, renamed) in &cmdline.crate_rename {
         crate_renames.insert(name.as_str().into(), renamed.as_str().into());
     }
+    let mut ignore_symbols_from_files: HashSet<PathBuf> = HashSet::new();
+    for file in &cmdline.ignore_symbols_from_files {
+        ignore_symbols_from_files.insert(file.to_path_buf());
+    }
     generate_bindings::new_database(
         tcx,
         cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
@@ -102,6 +106,7 @@ fn new_db<'tcx>(
         fatal_errors,
         cmdline.no_thunk_name_mangling,
         include_guard,
+        ignore_symbols_from_files.into(),
     )
 }
 

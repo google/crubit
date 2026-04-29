@@ -178,6 +178,10 @@ pub struct Cmdline {
     /// Enables new command line interface that uses .rmeta files to generate bindings.
     #[clap(long = "enable-rmeta-interface", value_parser, value_name = "BOOL")]
     pub enable_rmeta_interface: bool,
+
+    /// List of source files whose symbols should be excluded from the generated bindings.
+    #[clap(long = "ignore-symbols-from-files", value_parser, value_name = "FILE")]
+    pub ignore_symbols_from_files: Vec<PathBuf>,
 }
 
 impl Cmdline {
@@ -555,5 +559,21 @@ mod tests {
         assert_eq!(None, cmdline.clang_format_exe_path);
         assert_eq!(Some(PathBuf::from("rustfmt.exe")), cmdline.rustfmt_exe_path);
         assert_eq!(true, cmdline.kythe_annotations);
+    }
+
+    #[test]
+    fn test_ignore_symbols_from_files() {
+        let cmdline = new_cmdline([
+            "--h-out=foo.h",
+            "--rs-out=foo_impl.rs",
+            "--crubit-support-path-format=<crubit/support/{header}>",
+            "--ignore-symbols-from-files=foo.rs",
+            "--ignore-symbols-from-files=bar.rs",
+        ])
+        .unwrap();
+        assert_eq!(
+            vec![PathBuf::from("foo.rs"), PathBuf::from("bar.rs")],
+            cmdline.ignore_symbols_from_files
+        );
     }
 }

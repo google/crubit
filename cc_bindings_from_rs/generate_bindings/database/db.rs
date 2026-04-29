@@ -21,7 +21,8 @@ use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::Symbol;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 use std::rc::Rc;
 
 memoized::query_group! {
@@ -100,6 +101,9 @@ memoized::query_group! {
 
       #[input]
       fn h_out_include_guard(&self) -> IncludeGuard;
+
+      #[input]
+      fn ignore_symbols_from_files(&self) -> Rc<HashSet<PathBuf>>;
 
       /// The `CrateNum` of the crate that the bindings should be generated for.
       /// This will be `LOCAL_CRATE` if no `source_crate_name` was provided.
