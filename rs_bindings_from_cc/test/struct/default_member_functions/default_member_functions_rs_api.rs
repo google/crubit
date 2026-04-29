@@ -37,8 +37,10 @@ impl ::ctor::CtorNew<()> for Uncopyable {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN10UncopyableC1Ev(dest as *mut ::core::ffi::c_void);
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10UncopyableC1Ev(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                );
             })
         }
     }
@@ -81,9 +83,9 @@ impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }

@@ -552,9 +552,9 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }

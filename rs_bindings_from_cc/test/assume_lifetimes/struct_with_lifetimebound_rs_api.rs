@@ -172,9 +172,9 @@ impl ::ctor::CtorNew<()> for DropClassWithLifetimeboundMemberFunction {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN40DropClassWithLifetimeboundMemberFunctionC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }
@@ -189,9 +189,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropClassWithLifetimeboun
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN40DropClassWithLifetimeboundMemberFunctionC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -279,9 +279,9 @@ impl<'__implicit> ::ctor::CtorNew<()> for DropClassWithLifetimeboundRefMemberFun
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }
@@ -302,8 +302,8 @@ impl<'__implicit, '__param_0, '__param_0_0>
     ) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionC1ERKS_(dest as*mut::core::ffi::c_void,__param_0);
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionC1ERKS_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
             })
         }
     }
@@ -473,9 +473,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimebou
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN31DropStructWithLifetimeboundCtorC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -512,9 +512,9 @@ impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithLifetimeboundCtor {
     fn ctor_new(args: crate::PlainStruct) -> Self::CtorType {
         let mut s = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN31DropStructWithLifetimeboundCtorC1E11PlainStruct(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     &mut s,
                 );
             })
@@ -568,9 +568,9 @@ impl<'__implicit, '__param_0, '__param_0_0>
     ) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -624,8 +624,10 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
         let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(
-                move |dest: *mut crate::DropStructWithLifetimeboundRefCtor<'__implicit>| {
-                    crate::detail::__rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERK11PlainStruct(dest as*mut::core::ffi::c_void,s);
+                move |__crubit_dest: *mut crate::DropStructWithLifetimeboundRefCtor<
+                    '__implicit,
+                >| {
+                    crate::detail::__rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERK11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s);
                 },
             )
         }
@@ -689,9 +691,9 @@ impl<'__implicit, '__param_0, '__param_0_0>
     ) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -745,8 +747,10 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
         let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(
-                move |dest: *mut crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>| {
-                    crate::detail::__rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERK11PlainStruct(dest as*mut::core::ffi::c_void,s);
+                move |__crubit_dest: *mut crate::DropStructWithRefCtorAndRefMemberFunction<
+                    '__implicit,
+                >| {
+                    crate::detail::__rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERK11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s);
                 },
             )
         }
@@ -815,9 +819,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndMemb
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -854,8 +858,8 @@ impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithCtorAndMemberFunction
     fn ctor_new(args: crate::PlainStruct) -> Self::CtorType {
         let mut s = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1E11PlainStruct(dest as*mut::core::ffi::c_void,&mut s);
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1E11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,&mut s);
             })
         }
     }
@@ -924,9 +928,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndRefM
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -963,8 +967,8 @@ impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithCtorAndRefMemberFunct
     fn ctor_new(args: crate::PlainStruct) -> Self::CtorType {
         let mut s = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(dest as*mut::core::ffi::c_void,&mut s);
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,&mut s);
             })
         }
     }
@@ -1039,9 +1043,9 @@ impl<'__implicit, '__param_0, '__param_0_0>
     ) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -1095,8 +1099,10 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
         let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(
-                move |dest: *mut crate::DropStructWithRefCtorAndMemberFunction<'__implicit>| {
-                    crate::detail::__rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERK11PlainStruct(dest as*mut::core::ffi::c_void,s);
+                move |__crubit_dest: *mut crate::DropStructWithRefCtorAndMemberFunction<
+                    '__implicit,
+                >| {
+                    crate::detail::__rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERK11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s);
                 },
             )
         }

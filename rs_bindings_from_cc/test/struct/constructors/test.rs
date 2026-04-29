@@ -7,10 +7,11 @@ use constructors::{
     StructWithExplicitConversionConstructor, StructWithExplicitlyDefaultedConstructors,
     StructWithImplicitConversionConstructor, StructWithImplicitConversionFromReference,
     StructWithInlineConstructors, StructWithMultipleConstructors, StructWithPrivateConstructors,
-    StructWithUserProvidedConstructors,
+    StructWithUnsafeConstructor, StructWithUserProvidedConstructors,
 };
 use ctor::emplace;
 use ctor::CtorNew as _;
+use ctor::UnsafeFrom as _;
 use googletest::gtest;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
 
@@ -130,6 +131,17 @@ fn test_nontrivial_struct() {
 
     let s_clone = emplace!(ctor::copy(&*s));
     assert_eq!(s_clone.int_field, 123);
+}
+
+#[gtest]
+fn test_unsafe_constructor() {
+    let mut x = 42;
+    let p: *mut i32 = &mut x;
+    // SAFETY: We are passing a valid pointer.
+    let s = unsafe { StructWithUnsafeConstructor::unsafe_from(p) };
+    unsafe {
+        assert_eq!(*s.ptr_field, 42);
+    }
 }
 
 // Ideally, this test would work.

@@ -124,6 +124,13 @@ extern "C" void __rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void
+__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1EPNS0_12ItemNonUnpinE(
+    class crubit::test::ContainerUnpinItemNonUnpin* __this,
+    struct crubit::test::ItemNonUnpin* items) {
+  crubit::construct_at(__this, items);
+}
+
 extern "C" struct crubit::test::ItemNonUnpin const*
 __rust_thunk___ZNK6crubit4test26ContainerUnpinItemNonUnpinixEj(
     class crubit::test::ContainerUnpinItemNonUnpin const* __this,
