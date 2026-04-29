@@ -24,6 +24,8 @@ use rustc_abi::VariantIdx;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
+#[rustversion::since(2026-04-22)]
+use rustc_middle::ty::Unnormalized;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use std::collections::HashSet;
@@ -68,6 +70,19 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
 ) -> Option<Result<RsStdEnumTemplateSpecialization<'tcx>>> {
     use crate::BridgedBuiltin;
     use database::code_snippet::TemplateSpecializationKind;
+    let tcx = db.tcx();
+    // Check we're looking at an ADT before doing any work on self_ty.
+    // This avoids what would be wasted work normalizing a type we're immediately going to
+    // return None for.
+    self_ty.ty_adt_def()?;
+    #[rustversion::before(2026-04-22)]
+    let unnorm_ty = self_ty;
+    #[rustversion::since(2026-04-22)]
+    let unnorm_ty = Unnormalized::new(self_ty);
+    let self_ty = replace_all_regions_with_static(
+        tcx,
+        tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_ty),
+    );
     let ty::TyKind::Adt(adt, substs) = self_ty.kind() else {
         return None;
     };
@@ -81,14 +96,13 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
         return None;
     }
     BridgedBuiltin::new(db, *adt).map(|bridged_builtin| {
-        let tcx = db.tcx();
         if self_ty.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
             bail!("b/491106325 - isize and usize types are not yet supported as generic type arguments.")
         }
         match bridged_builtin {
             BridgedBuiltin::Option => {
                 let arg_ty = FormattedTy::try_from_ty(
-                    replace_all_regions_with_static(tcx, substs.type_at(0)),
+                    substs.type_at(0),
                     TypeLocation::Other,
                     db
                 )?;
@@ -135,12 +149,12 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
             }
             BridgedBuiltin::Result => {
                 let ok_ty = FormattedTy::try_from_ty(
-                    replace_all_regions_with_static(tcx, substs.type_at(0)),
+                    substs.type_at(0),
                     TypeLocation::Other,
                     db
                 )?;
                 let err_ty = FormattedTy::try_from_ty(
-                    replace_all_regions_with_static(tcx, substs.type_at(1)),
+                    substs.type_at(1),
                     TypeLocation::Other,
                     db
                 )?;

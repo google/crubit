@@ -15,16 +15,11 @@ extern crate rustc_target;
 
 use rustc_hir::attrs::AttributeKind;
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{
-    self as config, CodegenOptions, ErrorOutputType, OptionsTargetModifiers, Sysroot,
-    UnstableOptions,
-};
-use rustc_session::search_paths::SearchPath;
-use rustc_session::EarlyDiagCtxt;
+use rustc_session::config::OptionsTargetModifiers;
 
 use arc_anyhow::{bail, Context, Result};
-use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::collections::HashMap;
+use std::path::Path;
 use std::rc::Rc;
 
 use cmdline::Cmdline;
@@ -32,7 +27,7 @@ use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError, SourceLanguage};
 use generate_bindings::{BindingsGenerator, IncludeGuard};
 use kythe_metadata::cc_embed_provenance_map;
-use run_compiler::run_compiler;
+use run_compiler::{run_compiler, run_compiler_with_input};
 use token_stream_printer::{
     cc_tokens_to_formatted_string, cc_tokens_to_formatted_string_with_provenance,
     rs_tokens_to_formatted_string, RustfmtConfig,
@@ -170,177 +165,12 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     Ok(())
 }
 
-#[rustversion::before(2026-01-19)]
-fn handle_options(
-    early_dcx: &EarlyDiagCtxt,
-    at_args: &[String],
-) -> Option<rustc_session::getopts::Matches> {
-    rustc_driver::handle_options(early_dcx, at_args)
-}
-
-#[rustversion::since(2026-01-19)]
-fn handle_options(
-    early_dcx: &EarlyDiagCtxt,
-    at_args: &[String],
-) -> Option<rustc_session::getopts::Matches> {
-    match rustc_driver::handle_options(early_dcx, at_args) {
-        rustc_driver::HandledOptions::None => None,
-        rustc_driver::HandledOptions::Normal(matches) => Some(matches),
-        rustc_driver::HandledOptions::HelpOnly(matches) => Some(matches),
-    }
-}
-
-#[rustversion::before(2026-02-06)]
-pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
-    rustc_interface::Config {
-        // Command line options
-        opts,
-        // cfg! configuration in addition to the default ones
-        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
-        crate_check_cfg: Vec::new(), // CheckCfg
-        input,
-        output_dir: None,  // Option<PathBuf>
-        output_file: None, // Option<PathBuf>
-        file_loader: None, // Option<Box<dyn FileLoader + Send + Sync>>
-        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_owned(),
-        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
-        // This is a callback from the driver that is called when [`ParseSess`] is created.
-        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
-        // This is a callback from the driver that is called when we're registering lints;
-        // it is called during plugin registration when we have the LintStore in a non-shared state.
-        //
-        // Note that if you find a Some here you probably want to call that function in the new
-        // function being registered.
-        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
-        // This is a callback from the driver that is called just after we have populated
-        // the list of queries.
-        //
-        // The second parameter is local providers and the third parameter is external providers.
-        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
-        // Registry of diagnostics codes.
-        registry: rustc_errors::registry::Registry::new(rustc_errors::codes::DIAGNOSTICS),
-        make_codegen_backend: None,
-        ice_file: None,
-        hash_untracked_state: None,
-        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
-        extra_symbols: vec![],
-    }
-}
-
-#[rustversion::since(2026-02-06)]
-#[rustversion::before(2026-02-08)]
-pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
-    rustc_interface::Config {
-        // Command line options
-        opts,
-        // cfg! configuration in addition to the default ones
-        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
-        crate_check_cfg: Vec::new(), // CheckCfg
-        input,
-        output_dir: None,  // Option<PathBuf>
-        output_file: None, // Option<PathBuf>
-        file_loader: None, // Option<Box<dyn FileLoader + Send + Sync>>
-        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_owned(),
-        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
-        // This is a callback from the driver that is called when [`ParseSess`] is created.
-        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
-        // This is a callback from the driver that is called when we're registering lints;
-        // it is called during plugin registration when we have the LintStore in a non-shared state.
-        //
-        // Note that if you find a Some here you probably want to call that function in the new
-        // function being registered.
-        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
-        // This is a callback from the driver that is called just after we have populated
-        // the list of queries.
-        //
-        // The second parameter is local providers and the third parameter is external providers.
-        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
-        make_codegen_backend: None,
-        ice_file: None,
-        hash_untracked_state: None,
-        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
-        extra_symbols: vec![],
-    }
-}
-
-#[rustversion::since(2026-02-08)]
-#[rustversion::before(2026-03-18)]
-pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
-    rustc_interface::Config {
-        // Command line options
-        opts,
-        // cfg! configuration in addition to the default ones
-        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
-        crate_check_cfg: Vec::new(), // CheckCfg
-        input,
-        output_dir: None,              // Option<PathBuf>
-        output_file: None,             // Option<PathBuf>
-        file_loader: None,             // Option<Box<dyn FileLoader + Send + Sync>>
-        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
-        // This is a callback from the driver that is called when [`ParseSess`] is created.
-        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
-        // This is a callback from the driver that is called when we're registering lints;
-        // it is called during plugin registration when we have the LintStore in a non-shared state.
-        //
-        // Note that if you find a Some here you probably want to call that function in the new
-        // function being registered.
-        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
-        // This is a callback from the driver that is called just after we have populated
-        // the list of queries.
-        //
-        // The second parameter is local providers and the third parameter is external providers.
-        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
-        make_codegen_backend: None,
-        ice_file: None,
-        hash_untracked_state: None,
-        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
-        extra_symbols: vec![],
-    }
-}
-
-#[rustversion::since(2026-03-18)]
-pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
-    rustc_interface::Config {
-        // Command line options
-        opts,
-        // cfg! configuration in addition to the default ones
-        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
-        crate_check_cfg: Vec::new(), // CheckCfg
-        input,
-        output_dir: None,              // Option<PathBuf>
-        output_file: None,             // Option<PathBuf>
-        file_loader: None,             // Option<Box<dyn FileLoader + Send + Sync>>
-        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
-        // This is a callback from the driver that is called when [`ParseSess`] is created.
-        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
-        // This is a callback from the driver that is called when we're registering lints;
-        // it is called during plugin registration when we have the LintStore in a non-shared state.
-        //
-        // Note that if you find a Some here you probably want to call that function in the new
-        // function being registered.
-        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
-        // This is a callback from the driver that is called just after we have populated
-        // the list of queries.
-        //
-        // The second parameter is local providers and the third parameter is external providers.
-        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
-        make_codegen_backend: None,
-        ice_file: None,
-        track_state: None,
-        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
-        extra_symbols: vec![],
-    }
-}
-
 /// Generates bindings using rmeta input files rather than source files and rustc args.
 /// This function exists so we can guard it behind a feature flag and should be cleaned up once
 /// we've migrated to rmetas entirely.
 fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
-    let early_dcx = EarlyDiagCtxt::new(ErrorOutputType::default());
-    let at_args = &cmdline.rustc_args;
-    let at_args = at_args.get(1..).unwrap_or_default();
+    let mut at_args = vec!["rustc".to_string()];
 
-    let mut at_args = at_args.to_owned();
     for (crate_name, metadata) in &cmdline.r#extern {
         at_args.push(format!("--extern={crate_name}={metadata}"));
     }
@@ -357,108 +187,56 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         at_args.push(format!("-L{}", library_path));
     }
 
-    let Some(matches) = handle_options(&early_dcx, &at_args) else {
-        bail!("rustc failed to parse provided arguments")
-    };
-
-    // We do not support unstable options at the moment.
-    // We just need an instance of this struct so we can reuse the logic in rustc rather than
-    // duplicate it.
-    let unstable_opts = UnstableOptions {
-        // Needed for when using a target.json; avoids:
-        // error loading target specification: custom targets are unstable and require `-Zunstable-options`
-        unstable_options: true,
-        ..UnstableOptions::default()
-    };
     // Ignore target modifiers.
     // These will cause a compilation error when we load our metadata if the crate under compilation
     // set them and we did not. But we don't care about setting them because we aren't actually
     // going to do codegen, so we mark them all as ignored via `unsafe_allow_abi_mismatch`.
-    let mut cg = CodegenOptions::default();
     rustc_session::config::CG_OPTIONS
         .iter()
         .map(|opt| opt.name())
         .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
         .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
-        .for_each(|name| cg.unsafe_allow_abi_mismatch.push(name.to_string()));
-
-    let externs = config::parse_externs(&early_dcx, &matches, &unstable_opts);
-
-    let sysroot = Sysroot::new(matches.opt_str("sysroot").map(PathBuf::from));
-    let target_triple = config::parse_target_triple(&early_dcx, &matches);
-
-    // We eagerly scan all files in each passed -L path. If the same directory is passed multiple
-    // times, and the directory contains a lot of files, this can take a lot of time.
-    // So we remove -L paths that were passed multiple times, and keep only the first occurrence.
-    // We still have to keep the original order of the -L arguments.
-    let search_paths: Vec<SearchPath> = {
-        let mut seen_search_paths: HashSet<&String> = HashSet::default();
-        let search_path_matches: Vec<String> = matches.opt_strs("L");
-        search_path_matches
-            .iter()
-            .filter(|p| seen_search_paths.insert(*p))
-            .map(|path| {
-                // TODO: use `Session::unstable_options` instead of
-                // `unstable_opts.unstable_options`.
-                #[allow(rustc::internal)]
-                SearchPath::from_cli_opt(
-                    sysroot.path(),
-                    &target_triple,
-                    &early_dcx,
-                    path,
-                    unstable_opts.unstable_options,
-                )
-            })
-            .collect()
-    };
+        .for_each(|name| {
+            at_args.push(format!("-Cunsafe_allow_abi_mismatch={name}"));
+        });
 
     let Some(crate_name) = cmdline.source_crate_name.as_ref() else {
         bail!("--source-crate-name must be provided when using rmetas")
     };
+    at_args.push("--crate-type=lib".to_string());
+
+    // Tell rustc to expect a file on stdin.
+    // We won't pass a file on stdin, we just need to pass CLI validation, so we can override the
+    // input in our callback in run_compiler.
+    at_args.push("-".to_string());
+
+    let compiler_args = at_args;
 
     let mut crate_attrs = Vec::new();
 
-    let probe_input = config::Input::Str {
-        name: rustc_span::FileName::Custom("probe.rs".into()),
-        input: format!("#![no_std]\n#![no_core]\nextern crate r#{};", crate_name),
-    };
-    let probe_config = construct_config(
-        probe_input,
-        config::Options {
-            crate_types: vec![config::CrateType::Rlib],
-            externs: externs.clone(),
-            sysroot: sysroot.clone(),
-            target_triple: target_triple.clone(),
-            search_paths: search_paths.clone(),
-            cg: cg.clone(),
-            unstable_opts: unstable_opts.clone(),
-            ..Default::default()
-        },
-    );
-    rustc_interface::run_compiler(probe_config, |compiler| {
-        let krate = rustc_interface::passes::parse(&compiler.sess);
-        rustc_interface::create_and_enter_global_ctxt(compiler, krate, |tcx| {
-            let _ = tcx.resolver_for_lowering();
-            let Some(cnum) = tcx
-                .used_crates(())
-                .iter()
-                .find(|&&cnum| tcx.crate_name(cnum).as_str() == crate_name)
-            else {
-                // If we can't load the metadata for the crate, we won't be able to generate
-                // bindings for it and we'll generate the relevant error below.
-                return;
-            };
-            if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd(_)) {
-                crate_attrs.push("#![no_std]");
-            }
-            if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore(_)) {
-                crate_attrs.extend([
-                    "#![allow(internal_features)]",
-                    "#![feature(no_core)]",
-                    "#![no_core]",
-                ]);
-            }
-        });
+    let probe_input =
+        format!("#![feature(no_core)]\n#![no_std]\n#![no_core]\nextern crate r#{};", crate_name);
+    // Because this is just to probe for attributes on our underlying crate, we are okay to ignore
+    // the result of the compilation. Any errors will be reported below.
+    let _ = run_compiler_with_input(&compiler_args, probe_input, |tcx| {
+        let Some(cnum) =
+            tcx.used_crates(()).iter().find(|&&cnum| tcx.crate_name(cnum).as_str() == crate_name)
+        else {
+            // If we can't load the metadata for the crate, we won't be able to generate
+            // bindings for it and we'll generate the relevant error below.
+            return Ok(());
+        };
+        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd(_)) {
+            crate_attrs.push("#![no_std]");
+        }
+        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore(_)) {
+            crate_attrs.extend([
+                "#![allow(internal_features)]",
+                "#![feature(no_core)]",
+                "#![no_core]",
+            ]);
+        }
+        Ok(())
     });
 
     let mut input_str = crate_attrs.join("\n");
@@ -466,49 +244,19 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         input_str.push_str(&format!("\n\nextern crate r#{};\n", crate_name));
     }
 
-    let input = config::Input::Str {
-        name: rustc_span::FileName::Custom("lib.rs".into()),
-        input: input_str,
-    };
-    let config = construct_config(
-        input,
-        config::Options {
-            // Specifying we only want `.rlib` removes some compatibility checks for metadata
-            // related to codegen that we don't want to invoke during binding generation
-            // (i.e. panicking etc)
-            crate_types: vec![config::CrateType::Rlib],
-            externs,
-            sysroot,
-            target_triple,
-            search_paths,
-            cg,
-            unstable_opts,
-            ..Default::default()
-        },
-    );
-    rustc_interface::run_compiler(config, |compiler| {
-        // Parse the program and print the syntax tree.
-        let krate = rustc_interface::passes::parse(&compiler.sess);
-        // Analyze the program and inspect the types of definitions.
-        rustc_interface::create_and_enter_global_ctxt(compiler, krate, |tcx| {
-            // Make sure name resolution and macro expansion is run.
-            let _ = tcx.resolver_for_lowering();
-
-            tcx.ensure_ok().analysis(());
-            // Now that we've run analysis to prime the compiler, run our callback.
-            if let Err(e) = run_with_tcx(cmdline, tcx) {
-                let bold = "\x1B[1m";
-                let italic = "\x1B[3m";
-                let reset = "\x1B[0m";
-                let red = "\x1B[31m";
-                eprintln!(
-                    "{bold}Crubit {italic}{red}failed{reset} to generate C++ bindings for Rust crate \
-                    {bold}`{crate_name}`{reset} due to the following errors:\n{e}"
-                );
-                std::process::exit(1);
-            }
-        });
-    });
+    if let Err(e) =
+        run_compiler_with_input(&compiler_args, input_str, |tcx| run_with_tcx(cmdline, tcx))
+    {
+        let bold = "\x1B[1m";
+        let italic = "\x1B[3m";
+        let reset = "\x1B[0m";
+        let red = "\x1B[31m";
+        eprintln!(
+            "{bold}Crubit {italic}{red}failed{reset} to generate C++ bindings for Rust crate \
+            {bold}`{crate_name}`{reset} due to the following errors:\n{e}"
+        );
+        std::process::exit(1);
+    }
     Ok(())
 }
 
