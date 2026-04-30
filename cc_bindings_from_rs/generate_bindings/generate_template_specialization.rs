@@ -1319,6 +1319,9 @@ fn generate_trait_impl_specialization<'tcx>(
     let trait_name_with_args = quote! { #trait_name #type_args };
 
     prereqs.depend_on_def(db, trait_def_id).map_err(|err| (impl_def_id, err))?;
+    if let Some(adt) = trait_ref.self_ty().ty_adt_def() {
+        prereqs.depend_on_def(db, adt.did()).map_err(|err| (impl_def_id, err))?;
+    }
 
     let mut member_function_names = HashSet::new();
     let assoc_items: ApiSnippets = tcx
