@@ -559,9 +559,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivialStructWithConst
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -598,9 +598,9 @@ impl ::ctor::CtorNew<()> for NonTrivialStructWithConstructors {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }
@@ -615,9 +615,9 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for NonTrivialStructWithConstructors {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN32NonTrivialStructWithConstructorsC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })

@@ -56,12 +56,12 @@ impl Default for CompoundDataType {
 #[inline(always)]
 pub(crate) fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
     unsafe {
-        let mut __return =
+        let mut __crubit_return =
             ::core::mem::MaybeUninit::<crate::__CcTemplateInst8TemplateIiE>::uninit();
         crate::detail::__rust_thunk___Z14GetTemplateIntv(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 
@@ -100,12 +100,12 @@ pub unsafe fn OtherPubCrateTypes(__param_0: *mut ::other_pub_crate_types::Forwar
 #[inline(always)]
 pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template2IiE {
     unsafe {
-        let mut __return =
+        let mut __crubit_return =
             ::core::mem::MaybeUninit::<crate::__CcTemplateInst9Template2IiE>::uninit();
         crate::detail::__rust_thunk___Z28GetOtherPubCrateTemplate2Intv(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 

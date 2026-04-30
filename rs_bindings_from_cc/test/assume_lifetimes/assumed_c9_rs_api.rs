@@ -19,7 +19,7 @@
 #[inline(always)]
 pub fn CoReturnReference() -> ::co::Co<'static, *mut ::ffi_11::c_int> {
     unsafe {
-        ::bridge_rust::unstable_return!(@::co::internal_crubit::CoCrubitAbi::new(|consume_result_into_buffer: ::co::internal_crubit::ConsumeResultIntoBufferFn,context: *mut::core::ffi::c_void|->*mut::ffi_11::c_int{ ::bridge_rust::unstable_return!(@::bridge_rust::transmute_abi::<*mut::ffi_11::c_int>(),::bridge_rust::TransmuteAbi<*mut::ffi_11::c_int>,|buffer: *mut u8|{ (consume_result_into_buffer.unwrap())(context,buffer,<::bridge_rust::TransmuteAbi<*mut::ffi_11::c_int>as::bridge_rust::CrubitAbi>::SIZE,); }) }),::co::internal_crubit::CoCrubitAbi<*mut::ffi_11::c_int>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z17CoReturnReferencev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@::co::internal_crubit::CoCrubitAbi::new(|consume_result_into_buffer: ::co::internal_crubit::ConsumeResultIntoBufferFn,context: *mut::core::ffi::c_void|->*mut::ffi_11::c_int{ ::bridge_rust::unstable_return!(@::bridge_rust::transmute_abi::<*mut::ffi_11::c_int>(),::bridge_rust::TransmuteAbi<*mut::ffi_11::c_int>,|buffer: *mut u8|{ (consume_result_into_buffer.unwrap())(context,buffer,<::bridge_rust::TransmuteAbi<*mut::ffi_11::c_int>as::bridge_rust::CrubitAbi>::SIZE,); }) }),::co::internal_crubit::CoCrubitAbi<*mut::ffi_11::c_int>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z17CoReturnReferencev(__crubit_return_abi_buffer,); })
     }
 }
 

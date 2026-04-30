@@ -362,13 +362,13 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
     #[inline(always)]
     fn add(mut self, mut rhs: Self) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___Zpl18AddableFreeByValueS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 &mut self,
                 &mut rhs,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
 }
@@ -552,9 +552,9 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                 );
             })
         }
@@ -1060,12 +1060,12 @@ impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
     #[inline(always)]
     fn neg(self) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorsngEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
 }
@@ -1075,12 +1075,12 @@ impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
     #[inline(always)]
     fn not(self) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorsntEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
 }
@@ -1192,12 +1192,12 @@ pub mod many_operators {
     #[inline(always)]
     pub(crate) fn unary_plus<'a>(__this: &'a crate::ManyOperators) -> crate::ManyOperators {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 __this,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
 }

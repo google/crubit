@@ -90,12 +90,12 @@ pub mod layout_compatible {
     #[inline(always)]
     pub(crate) fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::LayoutCompatible>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::LayoutCompatible>::uninit();
             crate::detail::__rust_thunk___ZN16LayoutCompatible6CreateEi(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 x,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
     /// # Safety

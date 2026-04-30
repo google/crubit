@@ -63,12 +63,12 @@ pub mod some_class {
         initial_value_of_field: ::ffi_11::c_int,
     ) -> crate::SomeClass {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 initial_value_of_field,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
     /// Static method working on primitive types (and unrelated to the struct).

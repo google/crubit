@@ -39,9 +39,9 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut x = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     x,
                 );
             })
@@ -66,9 +66,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
-                    dest as *mut ::core::ffi::c_void,
+                    __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
                 );
             })
@@ -107,8 +107,8 @@ impl ::ctor::PinnedDrop for Nontrivial {
 #[inline(always)]
 pub fn Create() -> ::ctor::Ctor![crate::Nontrivial] {
     unsafe {
-        ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
-            crate::detail::__rust_thunk___Z6Createv(dest as *mut ::core::ffi::c_void);
+        ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+            crate::detail::__rust_thunk___Z6Createv(__crubit_dest as *mut ::core::ffi::c_void);
         })
     }
 }

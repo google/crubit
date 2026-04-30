@@ -29,9 +29,10 @@ pub fn string_view_return<'s>(
     mut s: ::cc_std::std::string_view<'s>,
 ) -> ::cc_std::std::string_view<'s> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<::cc_std::std::string_view<'s>>::uninit();
-        crate::detail::__rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(&raw mut __return as*mut::core::ffi::c_void,&mut s);
-        __return.assume_init()
+        let mut __crubit_return =
+            ::core::mem::MaybeUninit::<::cc_std::std::string_view<'s>>::uninit();
+        crate::detail::__rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(&raw mut __crubit_return as*mut::core::ffi::c_void,&mut s);
+        __crubit_return.assume_init()
     }
 }
 
@@ -42,10 +43,10 @@ pub fn ambiguous_string_view_return<'a, 'b>(
     mut b: ::cc_std::std::string_view<'b>,
 ) -> ::cc_std::std::__u::raw_string_view {
     unsafe {
-        let mut __return =
+        let mut __crubit_return =
             ::core::mem::MaybeUninit::<::cc_std::std::__u::raw_string_view>::uninit();
-        crate::detail::__rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __return as*mut::core::ffi::c_void,&mut a,&mut b);
-        __return.assume_init()
+        crate::detail::__rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __crubit_return as*mut::core::ffi::c_void,&mut a,&mut b);
+        __crubit_return.assume_init()
     }
 }
 
@@ -64,9 +65,10 @@ pub fn unambiguous_string_view_return_annotated<'a>(
     mut y: ::cc_std::std::string_view<'a>,
 ) -> ::cc_std::std::string_view<'a> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<::cc_std::std::string_view<'a>>::uninit();
-        crate::detail::__rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __return as*mut::core::ffi::c_void,&mut x,&mut y);
-        __return.assume_init()
+        let mut __crubit_return =
+            ::core::mem::MaybeUninit::<::cc_std::std::string_view<'a>>::uninit();
+        crate::detail::__rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(&raw mut __crubit_return as*mut::core::ffi::c_void,&mut x,&mut y);
+        __crubit_return.assume_init()
     }
 }
 

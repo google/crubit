@@ -47,7 +47,7 @@ impl Default for StructWithBridgeField {
 #[inline(always)]
 pub fn ReturnCppStruct() -> crate::RustStruct {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::RustStructAbi,crate::RustStructAbi,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z15ReturnCppStructv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::RustStructAbi,crate::RustStructAbi,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z15ReturnCppStructv(__crubit_return_abi_buffer,); })
     }
 }
 
@@ -93,14 +93,14 @@ impl Default for Vec3 {
 #[inline(always)]
 pub fn MakeOptionalVec3(x: f32, y: f32, z: f32, is_present: bool) -> crate::MyOption<crate::Vec3> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::Vec3>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z16MakeOptionalVec3fffb(__return_abi_buffer,x,y,z,is_present); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::Vec3>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z16MakeOptionalVec3fffb(__crubit_return_abi_buffer,x,y,z,is_present); })
     }
 }
 
 #[inline(always)]
 pub fn MapMultiply(v: crate::MyOption<crate::Vec3>, factor: f32) -> crate::MyOption<crate::Vec3> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::Vec3>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(__return_abi_buffer,::bridge_rust::unstable_encode!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::Vec3>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,v).as_ptr()as*const u8,factor); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::Vec3>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(__crubit_return_abi_buffer,::bridge_rust::unstable_encode!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::Vec3>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,v).as_ptr()as*const u8,factor); })
     }
 }
 
@@ -109,7 +109,7 @@ pub fn MapMultiply(v: crate::MyOption<crate::Vec3>, factor: f32) -> crate::MyOpt
 #[inline(always)]
 pub fn MakeMyI8Struct() -> crate::MyOption<i8> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<i8>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<i8>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z14MakeMyI8Structv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<i8>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<i8>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z14MakeMyI8Structv(__crubit_return_abi_buffer,); })
     }
 }
 
@@ -127,7 +127,7 @@ pub unsafe fn InspectStringViews(slice: *mut [::cc_std::std::__u::raw_string_vie
 #[inline(always)]
 pub fn MaybeVoidPtr() -> crate::MyOption<*mut ::ffi_11::c_void> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut::ffi_11::c_void>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut::ffi_11::c_void>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z12MaybeVoidPtrv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut::ffi_11::c_void>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut::ffi_11::c_void>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z12MaybeVoidPtrv(__crubit_return_abi_buffer,); })
     }
 }
 
@@ -140,14 +140,14 @@ pub unsafe fn AcceptsSliceAndReturnsStatusErrorIfEmpty(
     slice: *const [::ffi_11::c_int],
 ) -> crate::MyOption<*const [::ffi_11::c_int]> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::ffi_11::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__return_abi_buffer,slice); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::ffi_11::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__crubit_return_abi_buffer,slice); })
     }
 }
 
 #[inline(always)]
 pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut*const::ffi_11::c_char>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut*const::ffi_11::c_char>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z16ReturnsCStrArrayv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut*const::ffi_11::c_char>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut*const::ffi_11::c_char>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z16ReturnsCStrArrayv(__crubit_return_abi_buffer,); })
     }
 }
 
@@ -174,7 +174,7 @@ impl From<DefaultEnum> for ::ffi_11::c_int {
 #[inline(always)]
 pub fn ReturnsDefaultEnumInComposableBridgeType() -> crate::MyOption<crate::DefaultEnum> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::DefaultEnum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::DefaultEnum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::DefaultEnum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::DefaultEnum>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(__crubit_return_abi_buffer,); })
     }
 }
 
@@ -201,7 +201,7 @@ impl From<I64Enum> for ::ffi_11::c_long {
 #[inline(always)]
 pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::I64Enum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::I64Enum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::I64Enum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::I64Enum>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(__crubit_return_abi_buffer,); })
     }
 }
 
@@ -231,7 +231,7 @@ pub mod some_namespace {
 pub fn ReturnsEnumInNamespaceInComposableBridgeType(
 ) -> crate::MyOption<crate::some_namespace::EnumInNamespace> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::some_namespace::EnumInNamespace>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::some_namespace::EnumInNamespace>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::some_namespace::EnumInNamespace>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::some_namespace::EnumInNamespace>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(__crubit_return_abi_buffer,); })
     }
 }
 

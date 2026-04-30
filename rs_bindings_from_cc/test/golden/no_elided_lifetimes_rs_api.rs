@@ -141,8 +141,8 @@ impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
     fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(dest as*mut::core::ffi::c_void,__param_0);
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
             })
         }
     }
@@ -218,13 +218,13 @@ impl ::core::ops::Add<&crate::WrappedValue> for &crate::WrappedValue {
     #[inline(always)]
     fn add(self, rhs: &crate::WrappedValue) -> Self::Output {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::WrappedValue>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::WrappedValue>::uninit();
             crate::detail::__rust_thunk___ZNK12WrappedValueplERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 rhs,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
 }

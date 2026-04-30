@@ -67,9 +67,9 @@ pub mod crubit {
             fn ctor_new(args: ()) -> Self::CtorType {
                 let () = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                         crate::detail::__rust_thunk___ZN6crubit4test12ItemNonUnpinC1Ev(
-                            dest as *mut ::core::ffi::c_void,
+                            __crubit_dest as *mut ::core::ffi::c_void,
                         );
                     })
                 }
@@ -85,9 +85,9 @@ pub mod crubit {
             fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
                 let mut __param_0 = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                         crate::detail::__rust_thunk___ZN6crubit4test12ItemNonUnpinC1ERKS1_(
-                            dest as *mut ::core::ffi::c_void,
+                            __crubit_dest as *mut ::core::ffi::c_void,
                             __param_0,
                         );
                     })
@@ -233,8 +233,8 @@ pub mod crubit {
             fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
                 let mut __param_0 = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
-                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1ERKS1_(dest as*mut::core::ffi::c_void,__param_0);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1ERKS1_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
                     })
                 }
             }
@@ -261,8 +261,8 @@ pub mod crubit {
             fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
                 let mut __param_0 = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
-                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1EOS1_(dest as*mut::core::ffi::c_void,__param_0);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1EOS1_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
                     })
                 }
             }
@@ -325,8 +325,8 @@ pub mod crubit {
             fn ctor_new(args: ()) -> Self::CtorType {
                 let () = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
-                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1Ev(dest as*mut::core::ffi::c_void);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1Ev(__crubit_dest as*mut::core::ffi::c_void);
                     })
                 }
             }
@@ -401,8 +401,8 @@ pub mod crubit {
             fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
                 let mut __param_0 = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
-                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerNonUnpinItemUnpinC1ERKS1_(dest as*mut::core::ffi::c_void,__param_0);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerNonUnpinItemUnpinC1ERKS1_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
                     })
                 }
             }
@@ -436,8 +436,8 @@ pub mod crubit {
             fn ctor_new(args: ()) -> Self::CtorType {
                 let () = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
-                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerNonUnpinItemUnpinC1Ev(dest as*mut::core::ffi::c_void);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerNonUnpinItemUnpinC1Ev(__crubit_dest as*mut::core::ffi::c_void);
                     })
                 }
             }
@@ -527,8 +527,8 @@ pub mod crubit {
             fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
                 let mut __param_0 = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
-                        crate::detail::__rust_thunk___ZN6crubit4test29ContainerNonUnpinItemNonUnpinC1ERKS1_(dest as*mut::core::ffi::c_void,__param_0);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test29ContainerNonUnpinItemNonUnpinC1ERKS1_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
                     })
                 }
             }
@@ -562,8 +562,8 @@ pub mod crubit {
             fn ctor_new(args: ()) -> Self::CtorType {
                 let () = args;
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: *mut Self| {
-                        crate::detail::__rust_thunk___ZN6crubit4test29ContainerNonUnpinItemNonUnpinC1Ev(dest as*mut::core::ffi::c_void);
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test29ContainerNonUnpinItemNonUnpinC1Ev(__crubit_dest as*mut::core::ffi::c_void);
                     })
                 }
             }

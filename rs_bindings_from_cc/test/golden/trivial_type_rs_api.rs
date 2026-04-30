@@ -111,12 +111,12 @@ pub mod ns {
     #[inline(always)]
     pub fn TakesByValue(mut trivial: crate::ns::Trivial) -> crate::ns::Trivial {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ns::Trivial>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::ns::Trivial>::uninit();
             crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 &mut trivial,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
 

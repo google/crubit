@@ -18,12 +18,12 @@
 #[inline(always)]
 pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
     unsafe {
-        let mut __return =
+        let mut __crubit_return =
             ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
         crate::detail::__rust_thunk___Z13GetMyTemplatev(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 

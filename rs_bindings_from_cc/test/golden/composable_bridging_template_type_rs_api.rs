@@ -23,7 +23,7 @@
 #[inline(always)]
 pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::__CcTemplateInst5ValueIiE>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::__CcTemplateInst5ValueIiE>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z12ReturnsValuev(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::__CcTemplateInst5ValueIiE>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::__CcTemplateInst5ValueIiE>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z12ReturnsValuev(__crubit_return_abi_buffer,); })
     }
 }
 

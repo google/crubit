@@ -67,12 +67,13 @@ pub mod test_namespace_bindings {
 #[inline(always)]
 pub fn identity(mut s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<crate::test_namespace_bindings::S>::uninit();
+        let mut __crubit_return =
+            ::core::mem::MaybeUninit::<crate::test_namespace_bindings::S>::uninit();
         crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
             &mut s,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 

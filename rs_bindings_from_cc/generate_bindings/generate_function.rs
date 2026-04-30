@@ -1361,12 +1361,12 @@ fn generate_func_body(
                 }
                 PassingConvention::LayoutCompatible => {
                     quote! {
-                        let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
+                        let mut __crubit_return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
                         #crate_root_path::detail::#thunk_ident(
-                            &raw mut __return as *mut ::core::ffi::c_void
+                            &raw mut __crubit_return as *mut ::core::ffi::c_void
                             #( , #clone_prefixes #thunk_args #clone_suffixes )*
                         );
-                        __return.assume_init()
+                        __crubit_return.assume_init()
                     }
                 }
                 PassingConvention::ComposablyBridged => {
@@ -1375,9 +1375,9 @@ fn generate_func_body(
                     let crubit_abi_type_expr_tokens =
                         CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                     quote! {
-                        ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |__return_abi_buffer| {
+                        ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |__crubit_return_abi_buffer| {
                             #crate_root_path::detail::#thunk_ident(
-                                __return_abi_buffer,
+                                __crubit_return_abi_buffer,
                                 #(#clone_prefixes #thunk_args #clone_suffixes ),*
                             );
                         })
@@ -1386,9 +1386,9 @@ fn generate_func_body(
                 PassingConvention::Ctor => {
                     quote! {
                         ::ctor::FnCtor::new(
-                            move |dest: *mut #return_type_or_self| {
+                            move |__crubit_dest: *mut #return_type_or_self| {
                                 #crate_root_path::detail::#thunk_ident(
-                                    dest as *mut ::core::ffi::c_void
+                                    __crubit_dest as *mut ::core::ffi::c_void
                                     #( , #thunk_args )*
                                 );
                             }

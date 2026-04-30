@@ -49,12 +49,12 @@ impl<'a> Default for SV<'a> {
 #[inline(always)]
 pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'s>>::uninit();
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'s>>::uninit();
         crate::detail::__rust_thunk___Z8sv_ident2SV(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
             &mut s,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 
@@ -67,12 +67,12 @@ pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
 #[inline(always)]
 pub unsafe fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
         crate::detail::__rust_thunk___Z16sv_ident_unknown2SV(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
             &mut s,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 
@@ -85,12 +85,12 @@ pub unsafe fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> 
 #[inline(always)]
 pub unsafe fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'static> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
         crate::detail::__rust_thunk___Z23sv_ident_unknown_elided2SV(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
             &mut s,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 
@@ -98,11 +98,11 @@ pub unsafe fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'s
 #[inline(always)]
 pub fn sv_make_raw() -> crate::SV<'static> {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
         crate::detail::__rust_thunk___Z11sv_make_rawv(
-            &raw mut __return as *mut ::core::ffi::c_void,
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
         );
-        __return.assume_init()
+        __crubit_return.assume_init()
     }
 }
 

@@ -71,12 +71,12 @@ pub mod some_class {
         int_var_initial_value: ::ffi_11::c_int,
     ) -> crate::SomeClass {
         unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
-                &raw mut __return as *mut ::core::ffi::c_void,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 int_var_initial_value,
             );
-            __return.assume_init()
+            __crubit_return.assume_init()
         }
     }
     /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=11
