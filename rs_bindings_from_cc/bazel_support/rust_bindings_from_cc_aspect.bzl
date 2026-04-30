@@ -394,7 +394,6 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ) and not _is_cc_proto_library(target),
         aliases = aliases,
         additional_rust_srcs = depset(
-            direct = [f for f, _ in extra_rs_srcs],
             transitive = [
                 d.additional_rust_srcs
                 for d in binding_infos
