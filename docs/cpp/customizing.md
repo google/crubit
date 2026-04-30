@@ -20,8 +20,7 @@ More information:
 
   * **Dependency**: `//support:annotations`
   * **Include**: `#include <crubit/support/annotations.h>`
-  * Full API documentation:
-    support/annotations.h
+  * Full API documentation: support/annotations.h
 
 ## Example
 
