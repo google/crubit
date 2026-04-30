@@ -703,9 +703,17 @@ impl<T> Emplace<T> for Arc<T> {
 pub auto trait SelfCtor {}
 
 #[must_use = must_use_ctor!()]
-pub struct FnCtor<Output, F: FnOnce(*mut Output)>(pub F, PhantomData<fn(Output)>);
+pub struct FnCtor<Output, F: FnOnce(*mut Output)>(F, PhantomData<fn(Output)>);
 impl<Output, F: FnOnce(*mut Output)> FnCtor<Output, F> {
-    pub fn new(f: F) -> Self {
+    /// Create a new `Ctor` whose `ctor()` method invokes `f`.
+    ///
+    /// # Safety
+    ///
+    /// If `f` does not panic, then it must initialize its argument to a valid value.
+    ///
+    /// `f` may rely on the same safety preconditions described by `Ctor::ctor`. In particular,
+    /// the pointer argument is guaranteed to be valid for writes.
+    pub unsafe fn new(f: F) -> Self {
         Self(f, PhantomData)
     }
 }
@@ -1308,6 +1316,12 @@ pub mod macro_internal {
     ///
     /// This gives a pleasing error message, as they have the same name.
     pub unsafe fn raw_ctor() {}
+
+    /// Create an `FnOnce`. This works around Rust trying to infer that a closure is
+    /// `Fn`.
+    pub fn make_fn_once<Output, F: FnOnce(*mut Output)>(f: F) -> impl FnOnce(*mut Output) {
+        f
+    }
 }
 
 // =====================
@@ -1498,6 +1512,11 @@ macro_rules! raw_ctor {
     };
 }
 
+/// Implementation of the ctor! macro.
+///
+/// # Safety
+///
+/// * fields_ty must have every field that `$Type` does.
 // Note: we're using `ident (::ident)*` for the type names because neither `ident` nor `path`
 // really work perfectly -- `ident` is great, except that `foo::bar` isn't an ident. `path` is
 // great, except that e.g. parentheses can't follow a path. (This is not fixable: FnOnce(T) is
@@ -1527,7 +1546,7 @@ macro_rules! unsafe_ctor_impl {
         // that we can progressively unpack.
         let capture = $crate::internal_hlist!($($sub_ctor,)*);
         let _ = &capture;  // silence unused_variables warning if Type is fieldless.
-        $crate::FnCtor::new(move |x: *mut $Type $(< $( $gp ),+ >)?| {
+        let init = $crate::macro_internal::make_fn_once(move |x: *mut $Type $(< $( $gp ),+ >)?| {
             struct DropGuard;
             let drop_guard = DropGuard;
             let _ = &x; // silence unused_variables warning if Type is fieldless.
@@ -1567,7 +1586,17 @@ macro_rules! unsafe_ctor_impl {
             )*
             #[allow(clippy::forget_non_drop)] // if fieldless
             ::core::mem::forget(drop_guard);
-        })
+        });
+        // SAFETY: In the non-panicking case, we initialize each field using `Ctor::ctor`, which
+        // guarantees initialization.
+        //
+        // We guarantee that no fields are missed by pretending to construct using ordinary Rust
+        // struct syntax in a never-executed code path. If the user failed to
+        // mention initialization of a field, then this will fail with a compilation error.
+        // The type used is specified by $fields_ty, which must be correct for this to be
+        // safe to call. (In practice, it's either unsafely passed by the user, or
+        // automatically generated to match by `#[recursively_pinned]`).
+        unsafe {$crate::FnCtor::new(init)}
     }};
 }
 

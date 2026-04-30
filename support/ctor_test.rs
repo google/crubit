@@ -615,12 +615,14 @@ fn test_ctor_trait_captures() {
         x: &'a i32,
         y: &'b i32,
     ) -> impl Ctor<Output = i32, Error = Infallible> + use<'a, 'b> {
-        FnCtor::new(|dest: *mut i32| {
+        let init = |dest: *mut i32| {
             // SAFETY: dest is valid and uninitialized.
             unsafe {
                 dest.write(*x + *y);
             }
-        })
+        };
+        // SAFETY: unconditionally initializes dest.
+        unsafe { FnCtor::new(init) }
     }
 
     let sum = emplace!(adder(&40, &2));
