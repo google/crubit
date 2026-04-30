@@ -780,6 +780,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
             configuration = config,
         ),
         bindings_info,
+        cc_info,
         OutputGroupInfo(out = output_depset, out_compiled = out_compiled),
     ]
 
