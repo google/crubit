@@ -21,7 +21,20 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Test Cargo project
-      run: cargo test --verbose --workspace --exclude 'rs_bindings_from_cc*' --exclude '*_sys' --no-fail-fast
+      run: >
+        cargo test --verbose --workspace --no-fail-fast
+        --exclude '*_sys'
+        --exclude 'rs_bindings_from_cc*'
+    - name: Build not-yet-testable Cargo crates
+      run: >
+        cargo build --verbose --workspace
+        --exclude '*_sys'
+        --exclude=rs_bindings_from_cc
+        --exclude=rs_bindings_from_cc_cc_api
+        --exclude=rs_bindings_from_cc_ir_matchers
+        --exclude=rs_bindings_from_cc_ir_testing
+        --exclude=rs_bindings_from_cc_multiplatform_ir_testing
+        --exclude=rs_bindings_from_cc_test_generators
 
   test_cmake:
 

@@ -47,7 +47,7 @@ unicode-ident = "1"
 
 [workspace.package]
 
-edition = "2021"
+edition = "2024"
 license-file = "LICENSE"
 repository = "https://github.com/google/crubit"
 categories = ["development-tools::ffi"]

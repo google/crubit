@@ -6,7 +6,7 @@
 
 [package]
 name = "cc_bindings_from_rs_generate_bindings"
-edition.workspace = true
+edition = "2021"
 
 license-file.workspace = true
 repository.workspace = true

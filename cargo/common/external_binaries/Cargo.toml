@@ -6,7 +6,7 @@
 
 [package]
 name = "external_binaries"
-edition.workspace = true
+edition = "2021"
 
 license-file.workspace = true
 repository.workspace = true
