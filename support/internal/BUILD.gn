@@ -36,8 +36,9 @@ source_set("bindings_support") {
   ]
 }
 
-group("internal") {
+group("internal_cpp") {
   public_deps = [
     ":bindings_support",
   ]
 }
+

@@ -70,11 +70,28 @@ source_set("lifetime_annotations") {
   ]
 }
 
-group("support") {
+rust_static_library("bridge_rust") {
+  crate_name = "bridge_rust"
+  crate_root = "bridge.rs"
+  edition = "2024"
+  sources = [
+    "bridge.rs",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+group("support_cpp") {
   public_deps = [
     ":annotations",
     ":annotations_internal",
     ":bridge_cpp",
     ":lifetime_annotations",
+  ]
+}
+
+group("support_rust") {
+  public_deps = [
+    ":bridge_rust",
   ]
 }

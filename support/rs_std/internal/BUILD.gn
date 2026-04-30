@@ -25,8 +25,9 @@ source_set("is_utf8") {
   ]
 }
 
-group("internal") {
+group("internal_cpp") {
   public_deps = [
     ":is_utf8",
   ]
 }
+

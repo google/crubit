@@ -302,6 +302,7 @@ bazel_to_builds(
         ":annotations",
         ":annotations_internal",
         ":bridge_cpp",
+        ":bridge_rust",
         ":lifetime_annotations",
     ],
 )
