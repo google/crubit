@@ -176,7 +176,16 @@ pub struct Cmdline {
     pub library_dirs: Vec<String>,
 
     /// Enables new command line interface that uses .rmeta files to generate bindings.
-    #[clap(long = "enable-rmeta-interface", value_parser, value_name = "BOOL")]
+    #[clap(
+        long = "enable-rmeta-interface", 
+        action = clap::ArgAction::Set,
+        value_parser,
+        value_name = "BOOL",
+        default_value_t = false,
+        default_missing_value = "true",
+        num_args = 0..=1,
+        require_equals = false,
+    )]
     pub enable_rmeta_interface: bool,
 
     /// List of source files whose symbols should be excluded from the generated bindings.
@@ -575,5 +584,52 @@ mod tests {
             vec![PathBuf::from("foo.rs"), PathBuf::from("bar.rs")],
             cmdline.ignore_symbols_from_files
         );
+    }
+
+    #[test]
+    fn test_enable_rmeta_interface() {
+        let cmdline = new_cmdline([
+            "--h-out=foo.h",
+            "--rs-out=foo_impl.rs",
+            "--crubit-support-path-format=<crubit/support/{header}>",
+            "--enable-rmeta-interface",
+        ])
+        .unwrap();
+        assert_eq!(true, cmdline.enable_rmeta_interface);
+    }
+
+    #[test]
+    fn test_enable_rmeta_interface_default() {
+        let cmdline = new_cmdline([
+            "--h-out=foo.h",
+            "--rs-out=foo_impl.rs",
+            "--crubit-support-path-format=<crubit/support/{header}>",
+        ])
+        .unwrap();
+        assert_eq!(false, cmdline.enable_rmeta_interface);
+    }
+
+    #[test]
+    fn test_enable_rmeta_interface_explicit() {
+        let cmdline = new_cmdline([
+            "--h-out=foo.h",
+            "--rs-out=foo_impl.rs",
+            "--crubit-support-path-format=<crubit/support/{header}>",
+            "--enable-rmeta-interface=true",
+        ])
+        .unwrap();
+        assert_eq!(true, cmdline.enable_rmeta_interface);
+    }
+
+    #[test]
+    fn test_enable_rmeta_interface_disabled() {
+        let cmdline = new_cmdline([
+            "--h-out=foo.h",
+            "--rs-out=foo_impl.rs",
+            "--crubit-support-path-format=<crubit/support/{header}>",
+            "--enable-rmeta-interface=false",
+        ])
+        .unwrap();
+        assert_eq!(false, cmdline.enable_rmeta_interface);
     }
 }
