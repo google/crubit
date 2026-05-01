@@ -100,14 +100,6 @@ pub mod raw_thing {
     }
 }
 
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, false>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, true>` could not be bound
-//   template instantiation is not yet supported
-
 #[path = "rs_bindings_from_cc/test/annotations/owned_ptr_rust_thing.rs"]
 mod __crubit_mod_0;
 #[allow(unused_imports)]

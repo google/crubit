@@ -54,14 +54,6 @@ pub unsafe fn GetThingValue(thingptr: *mut ::owned_ptr::RawThing) -> ::ffi_11::c
     unsafe { crate::detail::__rust_thunk___Z13GetThingValueP5Thing(thingptr) }
 }
 
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, false>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, true>` could not be bound
-//   template instantiation is not yet supported
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
