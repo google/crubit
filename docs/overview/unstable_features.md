@@ -130,6 +130,13 @@ For each feature we use, we document the following:
     successfully, so we can delete the usage (keeping the `cfg_accessible` usage
     that is currently used, and deleting the other one). Same for the rest.
 
+    For versions we must continue to support, we can use the `rustversion`
+    crate.
+
+    Finally, in some cases there may be workarounds we can deploy that are only
+    "worse", not infeasible. For example, to import a trait if it exists, we can
+    `use path::to::*` instead of `use path::to::Trait`.
+
 ### `unsized_const_params`, `adt_const_params`
 
 *   **Crubit feature:** `supported`

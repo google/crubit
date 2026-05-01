@@ -31,7 +31,7 @@ rust_library(
         "@crate_index//:rustversion",  # v1
     ],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":query_compiler",

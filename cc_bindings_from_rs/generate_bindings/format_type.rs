@@ -454,6 +454,8 @@ pub fn format_ty_for_cc<'tcx>(
                 };
                 #[rustversion::since(2026-04-19)]
                 let sig = {
+                    // Trait was replaced with inherent methods in nightly-2026-05-01.
+                    #[cfg_accessible(rustc_type_ir::inherent::FSigKind)]
                     use rustc_type_ir::inherent::FSigKind;
                     rustc_middle::ty::FnSig {
                         inputs_and_output: sig_tys.inputs_and_output,
