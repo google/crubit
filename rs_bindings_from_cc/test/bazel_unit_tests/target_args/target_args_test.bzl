@@ -210,6 +210,7 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
         env,
         any([path in [
             "nowhere/llvm/src/libcxx/include/inttypes.h",
+            "third_party/llvm/llvm-project/clang/lib/Headers/llvm_libc_wrappers/inttypes.h",
         ] for path in inttypes]),
         "inttypes: %s" % inttypes,
     )
