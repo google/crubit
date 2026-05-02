@@ -907,7 +907,7 @@ impl RsTypeKind {
                 lifetimes,
                 in_cc_std,
             )?,
-            owned_ptr_type: record.owned_ptr_type.clone(),
+            owned_ptr_type: record.owned_ptr_config.as_ref().map(|cfg| cfg.owned_ptr_type.clone()),
             record,
             crate_path,
             lifetimes: lifetimes.to_vec(),
@@ -1511,7 +1511,7 @@ impl RsTypeKind {
             )
         };
 
-        let owned_ptr_type = record.owned_ptr_type.as_ref().expect(
+        let owned_ptr_type = record.owned_ptr_config.as_ref().map(|cfg| cfg.owned_ptr_type.as_ref()).expect(
             "CRUBIT_OWNED_POINTER annotated pointers should point to a struct with an associated CRUBIT_OWNED_POINTEE",
         );
 

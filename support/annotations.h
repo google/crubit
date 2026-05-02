@@ -265,11 +265,16 @@
 // This will generate a Rust struct called `WrapperTypeName` that simply
 // contains a pointer to the underlying object. This type will be used in
 // positions that are annotated with `CRUBIT_OWNED_POINTER`.
+//
+// You can optionally specify a custom drop method name as a second argument:
+// `CRUBIT_OWNED_POINTEE("WrapperTypeName", "DropMethodName")`. If omitted, it
+// defaults to `DropImpl`.
 
 #define CRUBIT_OWNED_POINTER \
   CRUBIT_INTERNAL_ANNOTATE_TYPE("crubit_owned_pointer")
-#define CRUBIT_OWNED_POINTEE(name) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_owned_pointee", name)
+#define CRUBIT_OWNED_POINTEE(name, ...)            \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_owned_pointee", \
+                           name __VA_OPT__(, ) __VA_ARGS__)
 
 // Overrides the `Display` binding detection for a type to true or false.
 //

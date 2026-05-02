@@ -658,8 +658,8 @@ fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
 
     let record =
         ir.records().find(|record| record.rs_name == "RecordWithOwnedPtrType").or_fail()?;
-    let owned_ptr_type = &record.owned_ptr_type.clone().or_fail()?;
-    expect_that!(&**owned_ptr_type, eq("SomeOwnedPtrType"));
+    let owned_ptr_config = record.owned_ptr_config.as_ref().or_fail()?;
+    expect_that!(&*owned_ptr_config.owned_ptr_type, eq("SomeOwnedPtrType"));
     Ok(())
 }
 

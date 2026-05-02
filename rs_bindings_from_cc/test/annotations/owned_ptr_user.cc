@@ -12,6 +12,10 @@ Thing* CRUBIT_OWNED_POINTER MakeOwnedThing(int value) {
   return MakeThing(value);
 }
 
+CustomThing* CRUBIT_OWNED_POINTER MakeCustomOwnedThing(int value) {
+  return new CustomThing(value);
+}
+
 int GetThingValue(Thing* thing) { return thing->value; }
 int ThingToValue(Thing* CRUBIT_OWNED_POINTER thing) {
   auto result = thing->value;

@@ -15,6 +15,7 @@
 namespace crubit {
 namespace {
 
+using testing::ElementsAre;
 using testing::Eq;
 using testing::HasSubstr;
 using testing::Ne;
@@ -149,6 +150,42 @@ TEST(AnnotationReaderTest,
   auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
 
   ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"), IsOkAndHolds(Ne(std::nullopt)));
+}
+
+TEST(AnnotationReaderTest, GetAnnotationWithStringArgsSuccess) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", "arg1", "arg2")]] int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  auto result = GetAnnotationWithStringArgs(var, "foo");
+  ASSERT_THAT(result, IsOkAndHolds(Ne(std::nullopt)));
+  EXPECT_THAT(**result, ElementsAre("arg1", "arg2"));
+}
+
+TEST(AnnotationReaderTest, GetAnnotationWithStringArgsNone) {
+  clang::TestAST ast(R"cc(
+    int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  EXPECT_THAT(GetAnnotationWithStringArgs(var, "foo"),
+              IsOkAndHolds(Eq(std::nullopt)));
+}
+
+TEST(AnnotationReaderTest, GetAnnotationWithStringArgsFailureNonString) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", "arg1", 42)]] int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  EXPECT_THAT(
+      GetAnnotationWithStringArgs(var, "foo"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Annotation foo arguments must be string literals.")));
 }
 
 }  // namespace

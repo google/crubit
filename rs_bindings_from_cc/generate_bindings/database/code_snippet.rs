@@ -540,7 +540,7 @@ pub fn generated_items_to_tokens<'db>(
                     nested_items,
                     indirect_functions,
                     delete,
-                    owned_type_name,
+                    owned_ptr_config,
                     member_methods,
                     free_functions,
                     lifetime_params,
@@ -604,10 +604,12 @@ pub fn generated_items_to_tokens<'db>(
                     None
                 };
 
-                let owned_type_def = owned_type_name.as_ref().map(|owned_type_name| {
+                let owned_type_def = owned_ptr_config.as_ref().map(|cfg| {
+                    let owned_type_name = &cfg.owned_type_name;
+                    let drop_meth = &cfg.drop_impl;
                     let doc_comment = format!(
-                        "Wrapper for a C++ {} owned by Rust. \n\n Style guide: The C++ type to which this refers should be wrapped in an `Arc` or `Mutex` if it is not already thread-safe. \n\n THIS TYPE REQUIRES A MANUAL DROP IMPLEMENTATION. \n You MUST provide an `impl {} {{ pub fn DropImpl(&mut self) {{ ... }} }}` block in a separate Rust file (e.g., via `additional_rust_srcs`). Failure to do so will result in a compile-time error: `method not found in `{}``.",
-                        ident, owned_type_name, owned_type_name
+                        "Wrapper for a C++ {} owned by Rust. \n\n Style guide: The C++ type to which this refers should be wrapped in an `Arc` or `Mutex` if it is not already thread-safe. \n\n THIS TYPE REQUIRES A MANUAL DROP IMPLEMENTATION. \n You MUST provide an `impl {} {{ pub fn {}(&mut self) {{ ... }} }}` block in a separate Rust file (e.g., via `additional_rust_srcs`). Failure to do so will result in a compile-time error: `method not found in `{}``.",
+                        ident, owned_type_name, drop_meth, owned_type_name
                     );
                     quote! {
                         __NEWLINE__ __NEWLINE__
@@ -618,10 +620,10 @@ pub fn generated_items_to_tokens<'db>(
 
                         impl Drop for #owned_type_name {
                             fn drop(&mut self) {
-                                __COMMENT__ "IMPORTANT: The DropImpl method for `{}` MUST be implemented in a user-written .rs file (e.g., using `additional_rust_srcs`)."
+                                __COMMENT__ "IMPORTANT: The drop method MUST be implemented in a user-written .rs file (e.g., using `additional_rust_srcs`)."
                                 __COMMENT__ "Crubit cannot automatically generate the destruction logic for this type."
                                 __COMMENT__ "See the struct documentation for more details."
-                                self.DropImpl();
+                                self.#drop_meth();
                             }
                         }
                     }
@@ -978,6 +980,12 @@ impl GeneratedItem {
 }
 
 #[derive(Clone, Debug)]
+pub struct OwnedPtrConfig {
+    pub owned_type_name: Ident,
+    pub drop_impl: Ident,
+}
+
+#[derive(Clone, Debug)]
 pub struct Record {
     pub doc_comment_attr: Option<DocCommentAttr>,
     pub derive_attr: DeriveAttr,
@@ -1005,8 +1013,8 @@ pub struct Record {
     /// Functions that get attached either by a trait or from a base class.
     pub indirect_functions: Vec<TokenStream>,
     pub delete: Option<DeleteImpl>,
-    /// The name of the owning wrapper type when the type was annotated with CRUBIT_OWNED_POINTEE.
-    pub owned_type_name: Option<Ident>,
+    /// The owning wrapper type configuration when the type was annotated with CRUBIT_OWNED_POINTEE.
+    pub owned_ptr_config: Option<OwnedPtrConfig>,
     pub member_methods: Vec<TokenStream>,
     pub free_functions: Vec<TokenStream>,
     pub lifetime_params: Vec<syn::Lifetime>,

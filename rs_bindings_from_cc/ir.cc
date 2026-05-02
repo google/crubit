@@ -670,6 +670,13 @@ llvm::json::Value TraitDerives::ToJson() const {
   };
 }
 
+llvm::json::Value OwnedPtrConfig::ToJson() const {
+  return llvm::json::Object{
+      {"owned_ptr_type", owned_ptr_type},
+      {"drop_impl", drop_impl},
+  };
+}
+
 llvm::json::Value Record::ToJson() const {
   std::vector<llvm::json::Value> json_item_ids;
   json_item_ids.reserve(child_item_ids.size());
@@ -688,7 +695,6 @@ llvm::json::Value Record::ToJson() const {
       {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},
       {"bridge_type", bridge_type},
-      {"owned_ptr_type", owned_ptr_type},
       {"source_loc", source_loc},
       {"unambiguous_public_bases", unambiguous_public_bases},
       {"fields", fields},
@@ -715,6 +721,10 @@ llvm::json::Value Record::ToJson() const {
       {"detected_formatter", detected_formatter},
       {"is_thread_safe", is_thread_safe},
   };
+
+  if (owned_ptr_config.has_value()) {
+    record.insert({"owned_ptr_config", owned_ptr_config->ToJson()});
+  }
 
   if (!lifetime_inputs.empty()) {
     record.insert({"lifetime_inputs", lifetime_inputs});

@@ -922,12 +922,36 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::optional<BridgeType> bridge_type =
       GetBridgeTypeAnnotation(ictx_, *record_decl);
 
-  absl::StatusOr<std::optional<std::string>> owned_ptr_type =
-      GetAnnotationWithStringArg(*record_decl, "crubit_owned_pointee");
-  if (!owned_ptr_type.ok()) {
+  absl::StatusOr<std::optional<std::vector<std::string>>> args =
+      GetAnnotationWithStringArgs(*record_decl, "crubit_owned_pointee");
+  if (!args.ok()) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(owned_ptr_type).status()));
+        FormattedError::FromStatus(std::move(args).status()));
+  }
+
+  std::optional<OwnedPtrConfig> owned_ptr_config;
+
+  if (args->has_value()) {
+    const auto& args_vec = **args;
+    if (args_vec.empty() || args_vec.size() > 2) {
+      return ictx_.ImportUnsupportedItem(
+          *record_decl, std::nullopt,
+          FormattedError::Static(
+              "crubit_owned_pointee takes 1 or 2 arguments"));
+    }
+
+    std::string owned_ptr_type = args_vec[0];
+    std::string drop_impl = "DropImpl";
+
+    if (args_vec.size() == 2) {
+      drop_impl = args_vec[1];
+    }
+
+    owned_ptr_config = OwnedPtrConfig{
+        .owned_ptr_type = std::move(owned_ptr_type),
+        .drop_impl = std::move(drop_impl),
+    };
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
@@ -1198,7 +1222,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .unknown_attr = std::move(*unknown_attr),
       .doc_comment = std::move(doc_comment),
       .bridge_type = std::move(bridge_type),
-      .owned_ptr_type = *std::move(owned_ptr_type),
+      .owned_ptr_config = std::move(owned_ptr_config),
       .source_loc = ictx_.ConvertSourceLocation(source_loc, nullptr),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),

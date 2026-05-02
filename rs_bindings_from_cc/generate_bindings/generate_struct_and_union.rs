@@ -702,7 +702,11 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         })
     };
 
-    let owned_type_name = record.owned_ptr_type.as_ref().map(|opt| make_rs_ident(opt.as_ref()));
+    let owned_ptr_config =
+        record.owned_ptr_config.as_ref().map(|cfg| database::code_snippet::OwnedPtrConfig {
+            owned_type_name: make_rs_ident(cfg.owned_ptr_type.as_ref()),
+            drop_impl: make_rs_ident(cfg.drop_impl.as_ref()),
+        });
     let member_methods = api_snippets.member_functions.remove(&record.id).unwrap_or_default();
     let free_functions = api_snippets.free_functions.remove(&record.id).unwrap_or_default();
 
@@ -751,7 +755,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         items,
         nested_items,
         indirect_functions,
-        owned_type_name,
+        owned_ptr_config,
         member_methods,
         free_functions,
         delete: operator_delete_impl,
