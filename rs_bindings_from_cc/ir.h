@@ -892,6 +892,7 @@ struct GlobalVar {
   std::optional<std::string> unknown_attr;
   std::optional<ItemId> enclosing_item_id;
   bool must_bind = false;
+  bool is_thread_local = false;
   // Set if this is [[deprecated]]. If no message was given, will be "".
   std::optional<std::string> deprecated;
   std::optional<std::string> doc_comment;

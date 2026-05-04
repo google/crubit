@@ -42,12 +42,6 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
         {FormattedError::Static("static data members are not supported")});
   }
 
-  if (var_decl->getTLSKind() != clang::VarDecl::TLS_None) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        {FormattedError::Static("thread_local variables are not supported")});
-  }
-
   // Note that `[const|inline] T x = /* constant initializer */;` acts like
   // constexpr and does not create an external symbol in Clang. This was
   // apparently done to support constexpr-like patterns before it existed in the
@@ -170,6 +164,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
       .type = std::move(type),
       .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),
+      .is_thread_local = var_decl->getTLSKind() != clang::VarDecl::TLS_None,
       .deprecated = std::move(deprecated),
       .doc_comment = ictx_.GetComment(var_decl),
   };
