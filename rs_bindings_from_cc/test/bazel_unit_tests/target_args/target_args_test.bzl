@@ -209,7 +209,7 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
     asserts.true(
         env,
         any([path in [
-            "nowhere/llvm/src/libcxx/include/inttypes.h",
+            "//nowhere/libc_x86include/inttypes.h",
         ] for path in inttypes]),
         "inttypes: %s" % inttypes,
     )
