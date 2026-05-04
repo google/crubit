@@ -26,6 +26,7 @@ use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError, SourceLanguage};
 use generate_bindings::{BindingsGenerator, IncludeGuard};
+use itertools::Itertools;
 use kythe_metadata::cc_embed_provenance_map;
 use run_compiler::{run_compiler, run_compiler_with_input};
 use token_stream_printer::{
@@ -196,14 +197,15 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     // These will cause a compilation error when we load our metadata if the crate under compilation
     // set them and we did not. But we don't care about setting them because we aren't actually
     // going to do codegen, so we mark them all as ignored via `unsafe_allow_abi_mismatch`.
-    rustc_session::config::CG_OPTIONS
-        .iter()
-        .map(|opt| opt.name())
-        .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
-        .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
-        .for_each(|name| {
-            at_args.push(format!("-Cunsafe_allow_abi_mismatch={name}"));
-        });
+    at_args.push(format!(
+        "-Cunsafe-allow-abi-mismatch={}",
+        rustc_session::config::CG_OPTIONS
+            .iter()
+            .map(|opt| opt.name())
+            .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
+            .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
+            .join(",")
+    ));
 
     let Some(crate_name) = cmdline.source_crate_name.as_ref() else {
         bail!("--source-crate-name must be provided when using rmetas")
