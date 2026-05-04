@@ -19,3 +19,8 @@ message FooResponse {
 message FooRequestStats {
   int32 num_requests = 1;
 }
+
+enum FooEnum {
+  UNKNOWN = 0;
+  KNOWN = 1;
+}

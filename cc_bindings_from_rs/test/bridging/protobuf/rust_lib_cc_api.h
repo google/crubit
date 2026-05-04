@@ -26,6 +26,7 @@
 #include <utility>
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
+#include "cc_bindings_from_rs/test/bridging/protobuf/foo_cpp_rust_proto.h"
 
 namespace rust_lib {
 
@@ -67,6 +68,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=32
   void update_request_stats(::foo_service::FooRequestStats updated_stats);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=36
+  static void enum_in_signature(::foo_proto::FooEnum _e);
 
  private:
   // Field type has been replaced with a blob of bytes: Field is a bridged type
@@ -160,6 +165,13 @@ inline void FooService::update_request_stats(
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_update_urequest_ustats(
       self, &updated_stats);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_enum_uin_usignature(::foo_proto::FooEnum);
+}
+inline void FooService::enum_in_signature(::foo_proto::FooEnum _e) {
+  return __crubit_internal::__crubit_thunk_enum_uin_usignature(_e);
 }
 inline void FooService::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(FooService, stats));

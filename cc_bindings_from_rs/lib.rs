@@ -53,12 +53,6 @@ fn new_db<'tcx>(
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
 ) -> BindingsGenerator<'tcx> {
-    let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
-    for (crate_name, include_path) in &cmdline.crate_headers {
-        let paths = crate_name_to_include_paths.entry(crate_name.as_str().into()).or_default();
-        paths.push(CcInclude::user_header(include_path.as_str().into()));
-    }
-
     let mut crate_name_to_features =
         <HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new();
     for (crate_name, features) in &cmdline.crate_features {
@@ -86,6 +80,13 @@ fn new_db<'tcx>(
     let mut crate_renames = <HashMap<Rc<str>, Rc<str>>>::new();
     for (name, renamed) in &cmdline.crate_rename {
         crate_renames.insert(name.as_str().into(), renamed.as_str().into());
+    }
+    let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
+    for (crate_name, include_path) in &cmdline.crate_headers {
+        let name =
+            crate_renames.get(crate_name.as_str()).cloned().unwrap_or(crate_name.as_str().into());
+        let paths = crate_name_to_include_paths.entry(name).or_default();
+        paths.push(CcInclude::user_header(include_path.as_str().into()));
     }
     let mut ignore_symbols_from_files: HashSet<PathBuf> = HashSet::new();
     for file in &cmdline.ignore_symbols_from_files {

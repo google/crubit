@@ -552,8 +552,7 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
         std::iter::once(LOCAL_CRATE).chain(tcx.used_crates(()).iter().cloned()).filter(|&krate|
         // Check if our krate can be imported (and so should provide public paths for DefIds).
         krate == db.source_crate_num()
-            || db.crate_name_to_include_paths().contains_key(db.renamed_crate_original_name(krate)
-                .unwrap_or_else(|| Rc::from(tcx.crate_name(krate).as_str())).as_ref())
+            || db.crate_name_to_include_paths().contains_key(&Rc::from(tcx.crate_name(krate).as_str()))
             // TODO - b/391443811: We don't need this workaround once we depend on `std`, `core`,
             // and `alloc` implicitly.
             || {
