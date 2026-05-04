@@ -234,10 +234,10 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
         };
-        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd(_)) {
+        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. }) {
             crate_attrs.push("#![no_std]");
         }
-        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore(_)) {
+        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. }) {
             crate_attrs.extend([
                 "#![allow(internal_features)]",
                 "#![feature(no_core)]",
