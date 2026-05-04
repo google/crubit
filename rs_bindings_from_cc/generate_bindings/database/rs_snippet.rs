@@ -660,8 +660,10 @@ pub enum BridgeRsTypeKind {
     Callable(Rc<Callable>),
     /// c9::Co<T>
     C9Co {
+        // TODO(b/489098131): Remove has_reference_param after assume_lifetimes is supported.
         has_reference_param: bool,
         result_type: Rc<RsTypeKind>,
+        lifetime: Option<Lifetime>,
     },
 }
 
@@ -774,7 +776,7 @@ fn new_c9_co_record(
     options: &LifetimeOptions,
     record: &Record,
     template_args: &Option<Rc<[CcType]>>,
-    _lifetimes: &[Lifetime],
+    lifetimes: &[Lifetime],
     db: &BindingsGenerator,
 ) -> Result<Option<BridgeRsTypeKind>> {
     let Some(TemplateSpecialization {
@@ -797,9 +799,19 @@ fn new_c9_co_record(
               {desc}"
         ));
     };
+    let lifetime = if options.assume_lifetimes {
+        if lifetimes.is_empty() {
+            Some(Lifetime::new("static"))
+        } else {
+            Some(lifetimes[0].clone())
+        }
+    } else {
+        None
+    };
     Ok(Some(BridgeRsTypeKind::C9Co {
         has_reference_param: options.have_reference_param,
         result_type: Rc::new(arg_type_kind),
+        lifetime,
     }))
 }
 
@@ -1963,7 +1975,7 @@ impl RsTypeKind {
                         let callable_spelling = callable.dyn_fn_spelling(&db);
                         quote! { ::alloc::boxed::Box<#callable_spelling> }
                     }
-                    BridgeRsTypeKind::C9Co { has_reference_param, result_type, .. } => {
+                    BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime, .. } => {
                         let result_type_tokens = if result_type.is_void() {
                             quote! { () }
                         } else {
@@ -1971,9 +1983,10 @@ impl RsTypeKind {
                         };
                         // When there are reference parameters, the coroutine must finish before they are
                         // invalidated (http://shortn/_XPma06AwZh).
-                        match has_reference_param {
-                            false => quote! { ::co::Co<'static, #result_type_tokens> },
-                            true => quote! { ::co::Co<'_, #result_type_tokens> },
+                        match (lifetime, has_reference_param) {
+                            (Some(lt), _) => quote! { ::co::Co<#lt, #result_type_tokens> },
+                            (_, false) => quote! { ::co::Co<'static, #result_type_tokens> },
+                            (_, true) => quote! { ::co::Co<'_, #result_type_tokens> },
                         }
                     }
                 }

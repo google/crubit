@@ -18,7 +18,7 @@ use database::code_snippet::{
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
     BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions, Mutability,
-    PassingConvention, RsTypeKind, RustPtrKind, Safety,
+    PassingConvention, RsTypeKind, RustPtrKind, Safety, UniformReprTemplateType,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -983,6 +983,178 @@ fn generate_rs_api_impl_includes(
     CppIncludes { internal_includes, ir_includes }
 }
 
+/// Returns `t` with all lifetimes replaced with `'static`.
+fn all_static_lifetimes(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
+    if t.lifetimes().all(|l| l.0.as_ref() == "static") {
+        // nb: .all() returns true if the iterator is empty.
+        return t;
+    }
+    all_static_lifetimes_internal(t)
+}
+
+fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
+    match t.as_ref() {
+        RsTypeKind::Error { .. } => t,
+        RsTypeKind::Pointer { pointee, kind, mutability } => Rc::new(RsTypeKind::Pointer {
+            pointee: all_static_lifetimes_internal(pointee.clone()),
+            kind: *kind,
+            mutability: *mutability,
+        }),
+        RsTypeKind::Reference { referent, mutability, lifetime: _, is_cref } => {
+            Rc::new(RsTypeKind::Reference {
+                referent: all_static_lifetimes_internal(referent.clone()),
+                mutability: *mutability,
+                lifetime: database::rs_snippet::Lifetime::new("static"),
+                is_cref: *is_cref,
+            })
+        }
+        RsTypeKind::RvalueReference { referent, mutability, lifetime: _ } => {
+            Rc::new(RsTypeKind::RvalueReference {
+                referent: all_static_lifetimes_internal(referent.clone()),
+                mutability: *mutability,
+                lifetime: database::rs_snippet::Lifetime::new("static"),
+            })
+        }
+        RsTypeKind::FuncPtr { option, cc_calling_conv, return_type, param_types } => {
+            Rc::new(RsTypeKind::FuncPtr {
+                option: *option,
+                cc_calling_conv: *cc_calling_conv,
+                return_type: all_static_lifetimes_internal(return_type.clone()),
+                param_types: param_types
+                    .iter()
+                    .map(|param_type| {
+                        all_static_lifetimes_internal(Rc::new(param_type.clone())).as_ref().clone()
+                    })
+                    .collect(),
+            })
+        }
+        RsTypeKind::IncompleteRecord { .. } => t,
+        RsTypeKind::Record {
+            record,
+            crate_path,
+            uniform_repr_template_type,
+            owned_ptr_type,
+            lifetimes,
+        } => Rc::new(RsTypeKind::Record {
+            record: record.clone(),
+            crate_path: crate_path.clone(),
+            uniform_repr_template_type: uniform_repr_template_type.as_ref().map(|r| {
+                Rc::new(match r.as_ref() {
+                    UniformReprTemplateType::StdVector { element_type } => {
+                        UniformReprTemplateType::StdVector {
+                            element_type: all_static_lifetimes_internal(Rc::new(
+                                element_type.clone(),
+                            ))
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::StdUniquePtr { element_type } => {
+                        UniformReprTemplateType::StdUniquePtr {
+                            element_type: all_static_lifetimes_internal(Rc::new(
+                                element_type.clone(),
+                            ))
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::AbslSpan {
+                        is_const,
+                        include_lifetime,
+                        element_type,
+                        lifetime,
+                    } => UniformReprTemplateType::AbslSpan {
+                        is_const: *is_const,
+                        include_lifetime: *include_lifetime,
+                        element_type: all_static_lifetimes_internal(Rc::new(element_type.clone()))
+                            .as_ref()
+                            .clone(),
+                        lifetime: lifetime
+                            .as_ref()
+                            .map(|_| database::rs_snippet::Lifetime::new("static")),
+                    },
+                    UniformReprTemplateType::StdStringView { in_cc_std, lifetime: _ } => {
+                        UniformReprTemplateType::StdStringView {
+                            in_cc_std: *in_cc_std,
+                            lifetime: database::rs_snippet::Lifetime::new("static"),
+                        }
+                    }
+                })
+            }),
+            owned_ptr_type: owned_ptr_type.clone(),
+            lifetimes: lifetimes
+                .iter()
+                .map(|_| database::rs_snippet::Lifetime::new("static"))
+                .collect(),
+        }),
+        RsTypeKind::Enum { .. } => t,
+        RsTypeKind::TypeAlias { type_alias, underlying_type, crate_path, lifetimes } => {
+            Rc::new(RsTypeKind::TypeAlias {
+                type_alias: type_alias.clone(),
+                underlying_type: all_static_lifetimes_internal(underlying_type.clone()),
+                crate_path: crate_path.clone(),
+                lifetimes: lifetimes
+                    .iter()
+                    .map(|_| database::rs_snippet::Lifetime::new("static"))
+                    .collect(),
+            })
+        }
+        RsTypeKind::Primitive(_) => t,
+        RsTypeKind::BridgeType { bridge_type, original_type } => Rc::new(RsTypeKind::BridgeType {
+            bridge_type: match bridge_type {
+                BridgeRsTypeKind::Bridge { rust_name, abi_rust, abi_cpp, generic_types } => {
+                    BridgeRsTypeKind::Bridge {
+                        rust_name: rust_name.clone(),
+                        abi_rust: abi_rust.clone(),
+                        abi_cpp: abi_cpp.clone(),
+                        generic_types: generic_types
+                            .iter()
+                            .map(|generic_type| {
+                                all_static_lifetimes_internal(Rc::new(generic_type.clone()))
+                                    .as_ref()
+                                    .clone()
+                            })
+                            .collect(),
+                    }
+                }
+                BridgeRsTypeKind::ProtoMessageBridge { .. } => bridge_type.clone(),
+                BridgeRsTypeKind::StdOptional(element_type) => BridgeRsTypeKind::StdOptional(
+                    all_static_lifetimes_internal(element_type.clone()),
+                ),
+                BridgeRsTypeKind::StdPair(first, second) => BridgeRsTypeKind::StdPair(
+                    all_static_lifetimes_internal(first.clone()),
+                    all_static_lifetimes_internal(second.clone()),
+                ),
+                BridgeRsTypeKind::StdString { .. } => bridge_type.clone(),
+                BridgeRsTypeKind::Callable(k) => BridgeRsTypeKind::Callable(Rc::new(Callable {
+                    return_type: all_static_lifetimes_internal(k.return_type.clone()),
+                    param_types: k
+                        .param_types
+                        .iter()
+                        .map(|param_type| {
+                            all_static_lifetimes_internal(Rc::new(param_type.clone()))
+                                .as_ref()
+                                .clone()
+                        })
+                        .collect(),
+                    ..k.as_ref().clone()
+                })),
+                BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime } => {
+                    BridgeRsTypeKind::C9Co {
+                        has_reference_param: *has_reference_param,
+                        result_type: all_static_lifetimes_internal(result_type.clone()),
+                        lifetime: lifetime
+                            .as_ref()
+                            .map(|_| database::rs_snippet::Lifetime::new("static")),
+                    }
+                }
+            },
+            original_type: original_type.clone(),
+        }),
+        RsTypeKind::ExistingRustType { .. } => t,
+    }
+}
+
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
@@ -1002,6 +1174,8 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 is_rust_slice: kind == RustPtrKind::Slice,
                 rust_type: rust_tokens,
                 cpp_type: cpp_tokens,
+                is_cref: false,
+                is_cpp_ref: kind == RustPtrKind::CcPtr(PointerTypeKind::LValueRef),
             })
         }
         RsTypeKind::Reference { referent, mutability, lifetime: _, is_cref: true } => {
@@ -1013,6 +1187,8 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 is_rust_slice: false,
                 rust_type: rust_tokens,
                 cpp_type: cpp_tokens,
+                is_cref: true,
+                is_cpp_ref: false,
             })
         }
         RsTypeKind::Enum { ref enum_, .. } => {
@@ -1134,7 +1310,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 let result_type_tokens = if result_type.is_void() {
                     quote! { () }
                 } else {
-                    result_type.to_token_stream(db)
+                    all_static_lifetimes(result_type.clone()).to_token_stream(db)
                 };
                 let rust_type_tokens = quote! {
                     ::co::internal_crubit::CoCrubitAbi<#result_type_tokens>

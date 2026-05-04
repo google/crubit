@@ -1056,6 +1056,8 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     is_rust_slice,
                     rust_type,
                     cpp_type,
+                    is_cref: false,
+                    is_cpp_ref: false,
                 },
                 prereqs,
             });

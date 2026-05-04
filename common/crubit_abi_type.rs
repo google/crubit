@@ -56,6 +56,10 @@ pub enum CrubitAbiType {
         /// Is this a Rust slice (*mut [T] / rs_std::SliceRef<T>),
         /// or just a pointer (*mut T / T*).
         is_rust_slice: bool,
+        /// Is this a CRef/CMut?
+        is_cref: bool,
+        /// Was this originally a C++ reference?
+        is_cpp_ref: bool,
         rust_type: TokenStream,
         cpp_type: TokenStream,
     },
@@ -173,16 +177,18 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
             CrubitAbiType::UnsignedLongLong => {
                 quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_ulonglong> }.to_tokens(tokens)
             }
-            CrubitAbiType::Ptr { is_const, is_rust_slice, rust_type, .. } => {
+            CrubitAbiType::Ptr { is_const, is_rust_slice, rust_type, is_cref, .. } => {
                 let mut ty = rust_type.clone();
                 if *is_rust_slice {
                     ty = quote! { [#ty] };
                 }
-                if *is_const {
-                    ty = quote! { *const #ty };
-                } else {
-                    ty = quote! { *mut #ty };
-                }
+                ty = match (is_const, is_cref) {
+                    // This is intentionally 'static everywhere.
+                    (true, true) => quote! { ::cref::CRef<'static, #ty> },
+                    (false, true) => quote! { ::cref::CMut<'static, #ty> },
+                    (true, false) => quote! { *const #ty },
+                    (false, false) => quote! { *mut #ty },
+                };
                 quote! { ::bridge_rust::TransmuteAbi<#ty> }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
@@ -247,16 +253,18 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                 quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_ulonglong>() }
                     .to_tokens(tokens)
             }
-            CrubitAbiType::Ptr { is_const, is_rust_slice, rust_type, .. } => {
+            CrubitAbiType::Ptr { is_const, is_rust_slice, rust_type, is_cref, .. } => {
                 let mut ty = rust_type.clone();
                 if *is_rust_slice {
                     ty = quote! { [#ty] };
                 }
-                if *is_const {
-                    ty = quote! { *const #ty };
-                } else {
-                    ty = quote! { *mut #ty };
-                }
+                ty = match (is_const, is_cref) {
+                    // This is intentionally 'static everywhere.
+                    (true, true) => quote! { ::cref::CRef<'static, #ty> },
+                    (false, true) => quote! { ::cref::CMut<'static, #ty> },
+                    (true, false) => quote! { *const #ty },
+                    (false, false) => quote! { *mut #ty },
+                };
                 quote! { ::bridge_rust::transmute_abi::<#ty>() }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
@@ -321,13 +329,15 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
             CrubitAbiType::UnsignedLongLong => {
                 quote! { ::crubit::TransmuteAbi<unsigned long long> }.to_tokens(tokens)
             }
-            CrubitAbiType::Ptr { is_const, is_rust_slice, cpp_type, .. } => {
+            CrubitAbiType::Ptr { is_const, is_rust_slice, cpp_type, is_cpp_ref, .. } => {
                 let mut ty = cpp_type.clone();
                 if *is_const {
                     ty = quote! { const #ty };
                 }
                 if *is_rust_slice {
                     ty = quote! { ::rs_std::SliceRef<#ty> };
+                } else if *is_cpp_ref {
+                    ty = quote! { #ty & };
                 } else {
                     ty = quote! { #ty * };
                 }
