@@ -10,6 +10,7 @@ load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
 )
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -31,4 +32,14 @@ golden_test(
     golden_h = "stdlib_cc_api.h",
     golden_rs = "stdlib_cc_api_impl.rs",
     rust_library = "stdlib",
+)
+
+crubit_cc_test(
+    name = "stdlib_test",
+    srcs = ["stdlib_test.cc"],
+    deps = [
+        ":stdlib_cc_api",
+        "//support/rs_std:rs_core",
+        "//testing/base/public:gunit_main",
+    ],
 )

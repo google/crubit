@@ -1071,7 +1071,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 prereqs,
             });
         }
-        _ => bail!("Unsupported bridge type: {ty:?}"),
+        _ => bail!("Unsupported bridge type: {ty}"),
     }))
 }
 

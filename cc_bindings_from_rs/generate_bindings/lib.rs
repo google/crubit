@@ -994,29 +994,32 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
 // Implementation of `BindingsGenerator::supported_traits`.
 fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
     let tcx = db.tcx();
+
     let traits = tcx
         .visible_traits()
         .filter(|trait_id| {
+            // Does the trait get bindings?
+            db.symbol_canonical_name(*trait_id).is_some()
+        })
+        .filter(|trait_id| {
+            // Traits do not support const generics.
+            let has_const_generics = tcx
+                .generics_of(*trait_id)
+                .own_params
+                .iter()
+                .any(|param| matches!(param.kind, GenericParamDefKind::Const { .. }));
+            !has_const_generics
+        })
+        .filter(|trait_id| {
+            // TODO(b/483382648): Generate bindings for other `std`, `core`, and `alloc` traits.
+            // At least for _most_ other traits - we probably still want to exclude traits that
+            // get idiomatic C++ bindings elsewhere, such as `Clone`, `Default`, `Drop`, `From`,
+            // `Index`, and `Into`.
             let crate_name = tcx.crate_name(trait_id.krate);
-            // TODO: b/269294366 - Support traits in stdlib once we can generate bindings for the
-            // stdlib that can be depended on.
             let not_in_stdlib = crate_name.as_str() != "std"
                 && crate_name.as_str() != "core"
                 && crate_name.as_str() != "alloc";
-
-            let generics = tcx.generics_of(*trait_id);
-            // Traits do not support const generics.
-            let no_generic_args = generics
-                .own_params
-                .iter()
-                .filter(|param| matches!(param.kind, GenericParamDefKind::Const { .. }))
-                .count()
-                == 0;
-
-            let is_exposed_trait = db.symbol_canonical_name(*trait_id).is_some();
-            // We might want to explicitly omit certain marker traits here that are already handled by the bindings for structs/enums (Copy, Clone, Default, etc.).
-            // Unless, we think there's value in exposing them explicitly as traits.
-            not_in_stdlib && no_generic_args && is_exposed_trait
+            not_in_stdlib || tcx.def_path_str(*trait_id) == "std::iter::Iterator"
         })
         .collect::<Vec<DefId>>()
         .into_boxed_slice();

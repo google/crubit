@@ -21,4 +21,27 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
         (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
     }
 }
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_drop(
+    __self: &'static mut ::core::mem::MaybeUninit<::stdlib_golden::MyStruct>,
+) {
+    unsafe { __self.assume_init_drop() };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_clone(
+    __self: &'static ::stdlib_golden::MyStruct,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <::stdlib_golden::MyStruct as ::core::clone::Clone>::clone(__self);
+        (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+    __self: &'static mut ::stdlib_golden::MyStruct,
+    source: &'static ::stdlib_golden::MyStruct,
+) -> () {
+    unsafe { <::stdlib_golden::MyStruct as ::core::clone::Clone>::clone_from(__self, source) }
+}
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::MyStruct, x) == 0);
