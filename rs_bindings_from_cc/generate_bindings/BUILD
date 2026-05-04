@@ -76,10 +76,13 @@ multiplatform_rust_test(
     ],
     visibility = ["//cargo:__subpackages__"],
     deps = [
+        ":generate_bindings",
         ":multiplatform_ir_testing",
         ":test_generators",
         "//common:arc_anyhow",
         "//common:crubit_feature",
+        "//common:error_report",
+        "//common:ffi_types",
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
         "//common:token_stream_printer",

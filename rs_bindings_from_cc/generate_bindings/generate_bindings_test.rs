@@ -5,6 +5,9 @@
 use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind};
+use error_report::{ErrorReport, FatalErrors, SourceLanguage};
+use ffi_types::Environment;
+use generate_bindings::new_database;
 use googletest::{expect_eq, gtest};
 use ir::IR;
 use ir_matchers::assert_ir_matches;
@@ -1121,6 +1124,38 @@ fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {NotPresent});
     assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
+    Ok(())
+}
+
+#[gtest]
+fn test_missing_dependency_error_message() -> Result<()> {
+    let mut ir = ir_from_cc_dependency("void Func(NotPresent);", "struct NotPresent {};")?;
+
+    // Find the record 'NotPresent' and change its owning target to simulate an unknown target.
+    for item in ir.items_mut() {
+        if let ir::Item::Record(record) = item {
+            if record.cc_name.identifier.as_ref() == "NotPresent" {
+                let mut record_mut = (**record).clone();
+                record_mut.owning_target = ir::BazelLabel("//_unknown_target:my_header.h".into());
+                *record = std::rc::Rc::new(record_mut);
+                break;
+            }
+        }
+    }
+
+    enable_supported(&mut ir);
+
+    let errors = ErrorReport::new(SourceLanguage::Cpp);
+    let fatal_errors = FatalErrors::new();
+    let db = new_database(&ir, &errors, &fatal_errors, Environment::Production, false);
+
+    let func = ir.functions().next().unwrap();
+    let missing_features =
+        database::code_snippet::missing_feature_descriptions(&db, &ir::Item::Func(func.clone()))?;
+
+    let expected_error = "Header 'my_header.h' is not associated with any Crubit-enabled target. Please add the missing dependency to your BUILD file.";
+
+    assert!(missing_features.iter().any(|s| s.contains(expected_error)));
     Ok(())
 }
 

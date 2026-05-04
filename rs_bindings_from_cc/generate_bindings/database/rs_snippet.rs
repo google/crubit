@@ -1063,6 +1063,12 @@ impl RsTypeKind {
         target: &BazelLabel,
         enabled_features: flagset::FlagSet<CrubitFeature>,
     ) -> Vec<String> {
+        if let Some(header) = target.0.strip_prefix("//_unknown_target:") {
+            return vec![format!(
+                "Header '{}' is not associated with any Crubit-enabled target. Please add the missing dependency to your BUILD file.",
+                header
+            )];
+        }
         let mut missing_features = <flagset::FlagSet<CrubitFeature>>::default();
         let mut reasons = std::collections::BTreeSet::<String>::new();
         let mut require_feature = |required_feature: CrubitFeature, reason: std::fmt::Arguments| {
