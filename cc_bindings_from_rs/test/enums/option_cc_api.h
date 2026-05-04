@@ -38,7 +38,7 @@
 namespace option {
 struct HasOptions;
 
-// Error generating bindings for `option_golden::BridgedType` defined at
+// Error generating bindings for struct `option_golden::BridgedType` defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=178:
 // Type bindings for option_golden::BridgedType suppressed due to being mapped
 // to an existing C++ type (int)
@@ -230,8 +230,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: NonMaxU8") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `option_golden::OptUninhabited` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=153:
+// Error generating bindings for struct `option_golden::OptUninhabited` defined
+// at cc_bindings_from_rs/test/enums/option.rs;l=153:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // Generated from:
@@ -298,15 +298,16 @@ OptionWithSizeTypes final {
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `option_golden::UninhabitedEnum` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=151:
+// Error generating bindings for enum `option_golden::UninhabitedEnum` defined
+// at cc_bindings_from_rs/test/enums/option.rs;l=151:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for `option_golden::Unit` defined at
+// Error generating bindings for struct `option_golden::Unit` defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=158:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for `option_golden::take_option_bridged` defined at
+// Error generating bindings for function `option_golden::take_option_bridged`
+// defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=180:
 // Error handling parameter #0 of type
 // `std::option::Option<option_golden::BridgedType>`: Failed to format type for

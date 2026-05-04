@@ -1587,28 +1587,14 @@ pub(crate) fn report_must_bind_error<'tcx>(
 ) {
     let tcx = db.tcx();
     let item_path = tcx.def_path_str(def_id);
-    let def_kind = tcx.def_kind(def_id);
-    let kind_str = match def_kind {
-        rustc_hir::def::DefKind::Struct => "struct",
-        rustc_hir::def::DefKind::Enum => "enum",
-        rustc_hir::def::DefKind::Union => "union",
-        rustc_hir::def::DefKind::Fn => "function",
-        rustc_hir::def::DefKind::TyAlias => "type alias",
-        rustc_hir::def::DefKind::Const { .. } => "constant",
-        rustc_hir::def::DefKind::Trait => "trait",
-        rustc_hir::def::DefKind::AssocFn => "function",
-        rustc_hir::def::DefKind::AssocConst { .. } => "constant",
-        rustc_hir::def::DefKind::AssocTy => "associated type",
-        _ => "item",
-    };
     let error_details = format!("  {err:#}").replace('\n', "\n  ");
     let bold = "\x1B[1m";
     let reset = "\x1B[0m";
     let red = "\x1B[31m";
     let must_bind_message = format!(
-        "{bold}{red}error:{reset}{bold} {kind_str} `{item_path}` could not be bound{reset}\n\
-        {error_details}\n\
-        {bold}note:{reset} hard error because `#[crubit_annotate::must_bind]` was applied to `{item_path}`"
+        "{bold}{red}error:{reset}{bold}{}\n\
+        {bold}note:{reset} hard error because `#[crubit_annotate::must_bind]` was applied to `{item_path}`",
+        unsupported_def_error_message(db, def_id, err, ErrorStyle::Terminal),
     );
     db.fatal_errors().report(&must_bind_message);
 }
@@ -1670,6 +1656,37 @@ fn generate_item_impl<'tcx>(
     }
 }
 
+enum ErrorStyle {
+    // This message will be formatted as a comment.
+    Comment,
+    // This message will be printed to a terminal.
+    Terminal,
+}
+
+pub(crate) fn unsupported_def_error_message(
+    db: &BindingsGenerator,
+    def_id: DefId,
+    err: &Error,
+    style: ErrorStyle,
+) -> String {
+    let tcx = db.tcx();
+    let source_loc = generate_source_location(db, def_id);
+    let name = tcx.def_path_str(def_id);
+    let def_kind = tcx.def_kind(def_id);
+    let kind_str = def_kind.descr(def_id);
+    let err_msg = if let ErrorStyle::Terminal = style {
+        format!("\n  {err:#}").replace('\n', "\n  ")
+    } else {
+        format!(" {err:#}")
+    };
+    let bold = if let ErrorStyle::Terminal = style { "\x1B[1m" } else { "" };
+    let reset = if let ErrorStyle::Terminal = style { "\x1B[0m" } else { "" };
+
+    // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
+    // says: To print causes as well [...], use the alternate selector “{:#}”.
+    format!("{bold}{kind_str} `{name}` defined at {source_loc}:{reset}{err_msg}")
+}
+
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
 pub(crate) fn generate_unsupported_def<'tcx>(
@@ -1680,12 +1697,10 @@ pub(crate) fn generate_unsupported_def<'tcx>(
     let tcx = db.tcx();
     db.errors().assert_in_item(item_name_for_error_report(db, def_id));
     db.errors().report(&err);
-    let source_loc = generate_source_location(db, def_id);
-    let name = tcx.def_path_str(def_id);
-
-    // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
-    // says: To print causes as well [...], use the alternate selector “{:#}”.
-    let msg = format!("Error generating bindings for `{name}` defined at {source_loc}: {err:#}");
+    let msg = format!(
+        "Error generating bindings for {}",
+        unsupported_def_error_message(db, def_id, &err, ErrorStyle::Comment)
+    );
     CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ })
 }
 

@@ -1328,7 +1328,8 @@ fn test_format_item_static_method_with_generic_type_parameters() {
     test_format_item(test_src, "SomeStruct", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let unsupported_msg = "Error generating bindings for `SomeStruct::generic_method` \
+        let unsupported_msg =
+            "Error generating bindings for associated function `SomeStruct::generic_method` \
                                defined at <crubit_unittests.rs>;l=12: \
                                No valid non-generic replacement for generic type param `T`";
         assert_cc_matches!(
@@ -1670,7 +1671,8 @@ fn test_format_item_method_taking_self_by_arc() {
     test_format_item(test_src, "SomeStruct", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
+        let unsupported_msg =
+            "Error generating bindings for associated function `SomeStruct::get_f32` \
                                defined at <crubit_unittests.rs>;l=7: \
                                Unsupported `self` type `std::sync::Arc<SomeStruct>`";
         assert_cc_matches!(
@@ -1706,7 +1708,8 @@ fn test_format_item_method_taking_self_by_pinned_mut_ref() {
     test_format_item(test_src, "SomeStruct", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
+        let unsupported_msg =
+            "Error generating bindings for associated function `SomeStruct::set_f32` \
                                defined at <crubit_unittests.rs>;l=7: \
                                Unsupported `self` type `std::pin::Pin<&'__anon1 mut SomeStruct>`";
         assert_cc_matches!(

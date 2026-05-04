@@ -29,12 +29,12 @@
 
 namespace function_pointers {
 
-// Error generating bindings for
+// Error generating bindings for constant
 // `function_pointers_golden::CONST_C_FN_PTR_ADD_TEN` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=27:
 // Pointer values cannot be used as scalar constants.
 
-// Error generating bindings for
+// Error generating bindings for constant
 // `function_pointers_golden::CONST_RUST_FN_PTR_ADD_TEN` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=26:
 // Function pointers can't have a thunk: Any calling convention other than
@@ -125,19 +125,19 @@ void call_fn_ptr_no_args_or_return(crubit::type_identity_t<void()>& fn_ptr);
 ::std::int32_t call_fn_ptr_with_five(
     crubit::type_identity_t<::std::int32_t(::std::int32_t)>& fn_ptr);
 
-// Error generating bindings for
+// Error generating bindings for function
 // `function_pointers_golden::call_fn_ptr_with_five_reference` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=45:
 // Error handling parameter #0 of type `for<'a> extern "C" fn(&'a i32) -> i32`:
 // Generic function pointers are not supported yet (b/259749023)
 
-// Error generating bindings for
+// Error generating bindings for function
 // `function_pointers_golden::call_fn_ptr_with_five_reference_hrtb` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=50:
 // Error handling parameter #0 of type `for<'a> extern "C" fn(&'a i32) -> i32`:
 // Generic function pointers are not supported yet (b/259749023)
 
-// Error generating bindings for
+// Error generating bindings for function
 // `function_pointers_golden::call_fn_ptr_with_repr_c_struct` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=69:
 // Error handling parameter #0 of type `extern "C"
@@ -152,15 +152,15 @@ void call_fn_ptr_no_args_or_return(crubit::type_identity_t<void()>& fn_ptr);
     crubit::type_identity_t<
         ::std::int32_t(::function_pointers::CStruct const*)>& fn_ptr);
 
-// Error generating bindings for
+// Error generating bindings for function
 // `function_pointers_golden::call_fn_ptr_with_repr_c_struct_ref` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=74:
 // Error handling parameter #0 of type `for<'a> extern "C" fn(&'a
 // function_pointers_golden::CStruct) -> i32`: Generic function pointers are not
 // supported yet (b/259749023)
 
-// Error generating bindings for `function_pointers_golden::call_rust_fn_ptr`
-// defined at
+// Error generating bindings for function
+// `function_pointers_golden::call_rust_fn_ptr` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=35:
 // Error handling parameter #0 of type `fn()`: Function pointers can't have a
 // thunk: Any calling convention other than `extern "C"` requires a thunk

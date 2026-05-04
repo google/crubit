@@ -134,7 +134,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=22
   ::std::int32_t const& $(__anon1) operator[](::std::uintptr_t index) const&;
 
-  // Error generating bindings for `<rs_index_golden::IntPair as
+  // Error generating bindings for implementation `<rs_index_golden::IntPair as
   // std::ops::Index<u64>>` defined at
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=44:
   // Index implementation for `u64` is not supported when `Index<usize>` is
@@ -149,7 +149,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=34
   ::std::int32_t& $(__anon1) operator[](::std::uintptr_t index) &;
 
-  // Error generating bindings for `<rs_index_golden::IntPair as
+  // Error generating bindings for implementation `<rs_index_golden::IntPair as
   // std::ops::IndexMut<u64>>` defined at
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=56:
   // Index implementation for `u64` is not supported when `Index<usize>` is
@@ -211,7 +211,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=134
   rs_std::StrRef operator[](::rs_index::Id const* crubit_nonnull index) const&;
 
-  // Error generating bindings for `<rs_index_golden::Map as
+  // Error generating bindings for implementation `<rs_index_golden::Map as
   // std::ops::IndexMut<(usize, usize)>>` defined at
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=121:
   // Mutable references to `str` are not yet supported.

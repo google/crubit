@@ -105,7 +105,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=14
 void takes_val_movable(::pass_by_value_unmovable::CppMovable _val);
 
-// Error generating bindings for
+// Error generating bindings for function
 // `pass_by_value_unmovable_golden::takes_val_unmovable` defined at
 // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=23:
 // Error handling parameter #0 of type

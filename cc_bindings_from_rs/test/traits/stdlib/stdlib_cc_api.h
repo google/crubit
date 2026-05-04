@@ -80,8 +80,8 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
       "<stdlib_golden::MyStruct as :: core :: iter :: Iterator>::Item") =
       ::std::int32_t;
 
-  // Error generating bindings for `<stdlib_golden::MyStruct as
-  // std::iter::Iterator>::next` defined at
+  // Error generating bindings for associated function `<stdlib_golden::MyStruct
+  // as std::iter::Iterator>::next` defined at
   // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=43:
   // Error formatting function return type
   // `std::option::Option<<stdlib_golden::MyStruct as
