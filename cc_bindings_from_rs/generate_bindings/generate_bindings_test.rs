@@ -2265,3 +2265,41 @@ fn test_multiple_attributes() {
         )
     })
 }
+
+#[test]
+fn test_trait_impl_for_std_iter_iterator_trait() {
+    let test_src = r#"
+            #![allow(unused)]
+
+            pub struct MyStruct(i32);
+
+            impl std::iter::Iterator for MyStruct {
+                type Item = i32;
+                fn next(&mut self) -> Option<Self::Item> {
+                    todo!()
+                }
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                template <>
+                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::iter::Iterator> {
+                    static constexpr bool kIsImplemented = true;
+                    ...
+                    using Item CRUBIT_INTERNAL_RUST_TYPE(
+                        "<MyStruct as :: core :: iter :: Iterator>::Item") = ::std::int32_t;
+                    ...
+                    // TODO(b/483382648): Cover `next` once its bindings work.
+                };
+            }
+        );
+
+        // TODO(b/483382648): Remove this `assert_cc_not_matches` and expect
+        // `next` in `assert_cc_matches` above once its bindings work.
+        assert_cc_not_matches!(bindings.cc_api, quote! { next ( ... ) },);
+    });
+}
