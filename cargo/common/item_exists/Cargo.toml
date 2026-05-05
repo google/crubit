@@ -4,7 +4,7 @@
 
 [package]
 name = "item_exists"
-edition = "2021"
+edition = "2024"
 
 [lib]
 path = "../../item_exists.rs"

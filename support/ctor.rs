@@ -751,7 +751,7 @@ where
     type Error = Error;
 
     unsafe fn ctor(self, dest: *mut Output) -> Result<(), Self::Error> {
-        Output::ctor_new(&*self.0).ctor(dest)
+        unsafe { Output::ctor_new(&*self.0).ctor(dest) }
     }
 }
 
@@ -822,7 +822,7 @@ where
     type Error = <T as CtorNew<Self>>::Error;
 
     unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
-        T::ctor_new(self).ctor(dest)
+        unsafe { T::ctor_new(self).ctor(dest) }
     }
 }
 
@@ -890,7 +890,7 @@ where
     type Error = <T as CtorNew<Self>>::Error;
 
     unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
-        T::ctor_new(self).ctor(dest)
+        unsafe { T::ctor_new(self).ctor(dest) }
     }
 }
 
@@ -943,7 +943,9 @@ unsafe impl<T: SelfCtor> Ctor for T {
     type Output = T;
     type Error = Infallible;
     unsafe fn ctor(self, dest: *mut Self) -> Result<(), Infallible> {
-        dest.write(self);
+        unsafe {
+            dest.write(self);
+        }
         Ok(())
     }
 }
@@ -1306,7 +1308,9 @@ pub mod macro_internal {
     ) -> impl Drop {
         // safety: the field is not yet initialized, the caller guarantees it's
         // pinned.
-        Ctor::ctor(ctor, field).unwrap();
+        unsafe {
+            Ctor::ctor(ctor, field).unwrap();
+        }
         UnsafeDropGuard(field)
     }
 
@@ -1651,10 +1655,12 @@ macro_rules! internal_hlist {
 /// guarantee, and is allowed to then re-init it with something else. In effect, this
 /// is just the in-place Ctor version of the existing method `Pin<T>::set(T)`.)
 pub unsafe fn reconstruct<T>(p: Pin<&mut T>, ctor: impl Ctor<Output = T, Error = Infallible>) {
-    let raw_ptr = Pin::into_inner_unchecked(p) as *mut _;
-    core::ptr::drop_in_place(raw_ptr);
+    let raw_ptr = unsafe { Pin::into_inner_unchecked(p) } as *mut _;
+    unsafe {
+        core::ptr::drop_in_place(raw_ptr);
+    }
     abort_on_unwind(move || {
-        ctor.ctor(raw_ptr).unwrap();
+        unsafe { ctor.ctor(raw_ptr) }.unwrap();
     });
 }
 
@@ -1838,7 +1844,7 @@ unsafe impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
         // Safety: ManuallyDrop<T> and T have the same layout.
         // All other preconditions are satisfied by the caller.
-        self.0.ctor(dest as *mut _)
+        unsafe { self.0.ctor(dest as *mut _) }
     }
 }
 

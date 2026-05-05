@@ -1039,7 +1039,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
         }
         ty::TyKind::Never => bail!("Never type is unsupported in bridging"),
         ty::TyKind::Tuple(_tys) => bail!("composably bridging tuples is not yet supported."),
-        ty::TyKind::RawPtr(mut pointee, mutability) => {
+        &ty::TyKind::RawPtr(mut pointee, mutability) => {
             let mut is_rust_slice = false;
             if let ty::TyKind::Slice(slice_ty) = pointee.kind() {
                 pointee = *slice_ty;

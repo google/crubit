@@ -26,7 +26,6 @@ rust_library(
         "get_generic_args.rs",
         "lib.rs",
     ],
-    edition = "2021",
     proc_macro_deps = [
         "@crate_index//:rustversion",  # v1
     ],

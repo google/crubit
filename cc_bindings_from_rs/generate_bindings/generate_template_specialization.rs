@@ -857,7 +857,7 @@ fn specialize_result<'tcx>(
                 },
             }
         }
-        rustc_abi::TagEncoding::Niche { niche_start, ref niche_variants, untagged_variant } => {
+        rustc_abi::TagEncoding::Niche { niche_start, niche_variants, untagged_variant } => {
             let mut has_value_impl = quote! {};
             let (write_ok_to_tag, ok_ptr_val) = if *untagged_variant == ok_idx {
                 // Untagged variant is Ok, we don't need to set the tag when we write Ok.
@@ -1078,7 +1078,7 @@ fn specialize_option<'tcx>(
                 tag_type_cc: tag_type_cc.clone(),
             }
         }
-        rustc_abi::TagEncoding::Niche { niche_start, ref niche_variants, .. } => {
+        rustc_abi::TagEncoding::Niche { niche_start, niche_variants, .. } => {
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
             let none_relative_val =

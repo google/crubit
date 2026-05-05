@@ -4,7 +4,7 @@
 
 [package]
 name = "lifetime_annotations_sys"
-edition = "2021"
+edition = "2024"
 
 build = "build.rs"
 

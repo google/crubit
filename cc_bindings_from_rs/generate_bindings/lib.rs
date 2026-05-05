@@ -1587,7 +1587,6 @@ pub(crate) fn report_must_bind_error<'tcx>(
 ) {
     let tcx = db.tcx();
     let item_path = tcx.def_path_str(def_id);
-    let error_details = format!("  {err:#}").replace('\n', "\n  ");
     let bold = "\x1B[1m";
     let reset = "\x1B[0m";
     let red = "\x1B[31m";
@@ -1694,7 +1693,6 @@ pub(crate) fn generate_unsupported_def<'tcx>(
     def_id: DefId,
     err: Error,
 ) -> CcSnippet<'tcx> {
-    let tcx = db.tcx();
     db.errors().assert_in_item(item_name_for_error_report(db, def_id));
     db.errors().report(&err);
     let msg = format!(

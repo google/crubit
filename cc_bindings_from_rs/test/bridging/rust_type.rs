@@ -52,7 +52,7 @@ mod type_converters {
     ///  - rs_in is a valid pointer to an initialized TheRustType.
     ///  - cpp_out is a valid pointer to an uninitialized
     ///    crubit::test::TheCppType.
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub unsafe extern "C" fn convert_rust_to_cpp_type(rs_in: *const c_void, cpp_out: *mut c_void) {
         unsafe {
             let rust_type = &*(rs_in as *const TheRustType);
@@ -64,7 +64,7 @@ mod type_converters {
     ///  - cpp_in is a valid pointer to an uninitialized
     ///    crubit::test::TheCppType.
     ///  - rs_out is a valid pointer to an uninitialized TheRustType.
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub unsafe extern "C" fn convert_cpp_to_rust_type(cpp_in: *const c_void, rs_out: *mut c_void) {
         unsafe {
             let output = &mut *(rs_out as *mut ::core::mem::MaybeUninit<TheRustType>);
@@ -73,7 +73,7 @@ mod type_converters {
         }
     }
 
-    extern "C" {
+    unsafe extern "C" {
         fn crubit_test_new_cpp_type(x: c_int, cc_type_out: *mut c_void);
         fn crubit_test_cpp_type_get_x(cpp_type: *const c_void) -> c_int;
     }
