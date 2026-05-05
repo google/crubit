@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// IWYU pragma: private, include "support/annotations.h"
+
 #ifndef CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
 #define CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
 

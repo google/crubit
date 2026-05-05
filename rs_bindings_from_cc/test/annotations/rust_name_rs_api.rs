@@ -66,7 +66,7 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
         impl SomeStruct {
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub fn ConstructorNewName(
@@ -81,7 +81,7 @@ pub mod crubit {
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
             ///
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const Self) {
@@ -104,7 +104,7 @@ pub mod crubit {
         }
 
         pub mod some_struct {
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub(crate) fn ConstructorNewName(
@@ -128,7 +128,7 @@ pub mod crubit {
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
             ///
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub(crate) unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
