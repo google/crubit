@@ -4,7 +4,7 @@
 
 //! A Rust wrapper around a type-erased `Future` designed for use from C++.
 
-#![deny(missing_docs)]
+#![deny(missing_docs, unsafe_op_in_unsafe_fn)]
 
 use cpp_waker::rs_std::CppWaker;
 use std::future::Future;
@@ -79,19 +79,19 @@ unsafe extern "C" {
 }
 
 unsafe fn rs_std_cpp_waker_clone_wrapper(obj: UnitPtr) -> RawWaker {
-    RawWaker::new(rs_std_cpp_waker_clone(obj), RS_STD_CPP_WAKER_VTABLE)
+    unsafe { RawWaker::new(rs_std_cpp_waker_clone(obj), RS_STD_CPP_WAKER_VTABLE) }
 }
 
 unsafe fn rs_std_cpp_waker_wake_and_destroy_wrapper(obj: UnitPtr) {
-    rs_std_cpp_waker_wake_and_destroy(obj)
+    unsafe { rs_std_cpp_waker_wake_and_destroy(obj) }
 }
 
 unsafe fn rs_std_cpp_waker_wake_by_ref_wrapper(obj: UnitPtr) {
-    rs_std_cpp_waker_wake_by_ref(obj)
+    unsafe { rs_std_cpp_waker_wake_by_ref(obj) }
 }
 
 unsafe fn rs_std_cpp_waker_drop_wrapper(obj: UnitPtr) {
-    rs_std_cpp_waker_drop(obj)
+    unsafe { rs_std_cpp_waker_drop(obj) }
 }
 
 static RS_STD_CPP_WAKER_VTABLE: &RawWakerVTable = &RawWakerVTable::new(
