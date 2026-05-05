@@ -53,6 +53,16 @@ bool IsClangLifetimeAnnotation(const clang::Attr& attr) {
          clang::isa<clang::LifetimeCaptureByAttr>(attr);
 }
 
+bool IsClangCoroAnnotation(const clang::Attr& attr) {
+  return clang::isa<clang::CoroReturnTypeAttr>(attr) ||
+         clang::isa<clang::CoroWrapperAttr>(attr) ||
+         clang::isa<clang::CoroLifetimeBoundAttr>(attr) ||
+         clang::isa<clang::CoroDisableLifetimeBoundAttr>(attr) ||
+         clang::isa<clang::CoroAwaitElidableAttr>(attr) ||
+         clang::isa<clang::CoroAwaitElidableArgumentAttr>(attr) ||
+         clang::isa<clang::CoroOnlyDestroyWhenCompleteAttr>(attr);
+}
+
 absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
     absl::FunctionRef<bool(const clang::Attr&)> is_known) {
@@ -80,6 +90,9 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
 
   for (clang::Attr* attr : decl.getAttrs()) {
     if (is_known(*attr)) {
+      continue;
+    }
+    if (IsClangCoroAnnotation(*attr)) {
       continue;
     }
     // Regardless of the callback, always ignore annotate attributes.

@@ -26,6 +26,9 @@ bool IsFullClassTemplateSpecializationOrChild(const clang::Decl* decl);
 // Returns true if `attr` is clang::lifetimebound or clang::lifetime_capture_by.
 bool IsClangLifetimeAnnotation(const clang::Attr& attr);
 
+// Returns true if `attr` is a Clang coroutine attribute.
+bool IsClangCoroAnnotation(const clang::Attr& attr);
+
 // Returns a human-readable string containing the list of unknown attrs.
 //
 // is_known is called exactly once on every attribute, and returns true if the
