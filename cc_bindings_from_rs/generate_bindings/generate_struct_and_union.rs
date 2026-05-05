@@ -1001,10 +1001,19 @@ pub fn generate_adt_core<'tcx>(
     // present. We want to generate bindings for functions regardless of their lifetime bounds, as
     // C++ cannot special-case the availability of a function based on lifetimes.
     #[rustversion::before(2026-04-19)]
-    let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
+    let original_self_ty = tcx.type_of(def_id).instantiate_identity();
     #[rustversion::since(2026-04-19)]
-    let self_ty =
-        erase_regions(tcx, crate::normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity()));
+    let original_self_ty = crate::normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
+
+    let self_ty = erase_regions(tcx, original_self_ty);
+    let typing_env = post_analysis_typing_env(tcx, def_id);
+    if self_ty.needs_drop(tcx, typing_env)
+        && crate::format_type::has_non_static_lifetime_in_adt(db, original_self_ty)
+    {
+        bail!(
+            "Types with non-'static lifetimes that need drop are not supported yet (b/500486197)"
+        );
+    }
     assert!(self_ty.is_adt());
     assert!(db.symbol_canonical_name(def_id).is_some(), "Caller should verify");
 

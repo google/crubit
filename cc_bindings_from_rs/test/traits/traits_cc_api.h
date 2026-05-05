@@ -320,15 +320,23 @@ template <>
 struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
   static constexpr bool kIsImplemented = true;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=95
-  static ::std::int32_t const& $a
-  trait_do_something(::traits::LifetimeStruct const& self);
+  // Error generating bindings for associated function
+  // `<traits_golden::LifetimeStruct<'a> as
+  // traits_golden::LifetimeTrait<'a>>::trait_do_something` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=95:
+  // Error handling parameter #0 of type `&'a
+  // traits_golden::LifetimeStruct<'a>`: Failed to format the referent of the
+  // reference type `&'a traits_golden::LifetimeStruct<'a>`: Types with
+  // non-'static lifetimes are not supported yet (b/500486197)
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=99
-  static ::std::int32_t const& $(__anon1)
-      function_do_something(::traits::LifetimeStruct const& self);
+  // Error generating bindings for associated function
+  // `<traits_golden::LifetimeStruct<'a> as
+  // traits_golden::LifetimeTrait<'a>>::function_do_something` defined at
+  // cc_bindings_from_rs/test/traits/traits.rs;l=99:
+  // Error handling parameter #0 of type `&'__anon1
+  // traits_golden::LifetimeStruct<'a>`: Failed to format the referent of the
+  // reference type `&'__anon1 traits_golden::LifetimeStruct<'a>`: Types with
+  // non-'static lifetimes are not supported yet (b/500486197)
 };
 
 template <>
@@ -619,34 +627,6 @@ rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
       __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc_utype(
           self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace traits {
-namespace __crubit_internal {
-extern "C" ::std::int32_t const& $a
-__crubit_thunk_LifetimeTrait_utrait_udo_usomething(
-    ::traits::LifetimeStruct const&);
-}
-}  // namespace traits
-inline ::std::int32_t const& $a
-rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
-    trait_do_something(::traits::LifetimeStruct const& self) {
-  return traits::__crubit_internal::
-      __crubit_thunk_LifetimeTrait_utrait_udo_usomething(self);
-}
-
-namespace traits {
-namespace __crubit_internal {
-extern "C" ::std::int32_t const& $(__anon1)
-    __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
-        ::traits::LifetimeStruct const&);
-}
-}  // namespace traits
-inline ::std::int32_t const& $(
-    __anon1) rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
-    function_do_something(::traits::LifetimeStruct const& self) {
-  return traits::__crubit_internal::
-      __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(self);
 }
 
 namespace traits {

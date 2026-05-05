@@ -25,8 +25,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "support/rs_std/rs_alloc.h"
-
 namespace lifetimes {
 
 // Generated from:
@@ -52,23 +50,34 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=32
-  static ::lifetimes::StructWithLifetime from_ref(
-      ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
+  // Error generating bindings for associated function
+  // `lifetimes_golden::StructWithLifetime::<'a>::from_ref` defined at
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=32:
+  // Error formatting function return type
+  // `lifetimes_golden::StructWithLifetime<'a>`: Types with non-'static
+  // lifetimes are not supported yet (b/500486197)
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=36
-  ::std::int32_t const& $a into_ref() const;
+  // Error generating bindings for associated function
+  // `lifetimes_golden::StructWithLifetime::<'a>::into_ref` defined at
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=36:
+  // Error handling parameter #0 of type
+  // `lifetimes_golden::StructWithLifetime<'a>`: Types with non-'static
+  // lifetimes are not supported yet (b/500486197)
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=40
-  ::std::int32_t value() const;
+  // Error generating bindings for associated function
+  // `lifetimes_golden::StructWithLifetime::<'a>::value` defined at
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=40:
+  // Error handling parameter #0 of type
+  // `lifetimes_golden::StructWithLifetime<'a>`: Types with non-'static
+  // lifetimes are not supported yet (b/500486197)
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=44
-  ::std::int32_t const& $(__anon1)
-      borrow_from_self() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  // Error generating bindings for associated function
+  // `lifetimes_golden::StructWithLifetime::<'a>::borrow_from_self` defined at
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=44:
+  // Error handling parameter #0 of type `&'__anon1
+  // lifetimes_golden::StructWithLifetime<'a>`: Failed to format the referent of
+  // the reference type `&'__anon1 lifetimes_golden::StructWithLifetime<'a>`:
+  // Types with non-'static lifetimes are not supported yet (b/500486197)
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=50
@@ -88,14 +97,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=65
   ::std::int32_t const& $static borrow_from_static_self() const& $static;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=19
-  explicit operator ::std::int32_t const& $a();
-
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=25
-  explicit operator ::std::int32_t();
-
   union {
     // Generated from:
     // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=10
@@ -106,53 +107,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=72
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
-    [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
- public:
-  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
-  // `Default` trait
-  StructWithLifetimeAndDropGlue() = delete;
-
-  // Drop::drop
-  ~StructWithLifetimeAndDropGlue();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  StructWithLifetimeAndDropGlue(StructWithLifetimeAndDropGlue&&) = delete;
-  ::lifetimes::StructWithLifetimeAndDropGlue& operator=(
-      StructWithLifetimeAndDropGlue&&) = delete;
-  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
-  // `Clone` trait
-  StructWithLifetimeAndDropGlue(const StructWithLifetimeAndDropGlue&) = delete;
-  StructWithLifetimeAndDropGlue& operator=(
-      const StructWithLifetimeAndDropGlue&) = delete;
-  StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
-                                StructWithLifetimeAndDropGlue&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=78
-  static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
-
-  union {
-    // Generated from:
-    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=74
-    ::rs::alloc::string::String field_with_drop_glue;
-  };
-  union {
-    // Generated from:
-    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=73
-    ::std::int32_t const* crubit_nonnull field_with_lifetime;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
+// Error generating bindings for struct
+// `lifetimes_golden::StructWithLifetimeAndDropGlue` defined at
+// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=72:
+// Types with non-'static lifetimes that need drop are not supported yet
+// (b/500486197)
 
 // Generated from:
 // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=70
@@ -174,48 +133,6 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::lifetimes::StructWithLifetime>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::lifetimes::StructWithLifetime>);
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_uref(
-    ::std::int32_t const* $a crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
-}
-inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
-    ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
-  crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_from_uref(field_with_lifetime,
-                                              __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace __crubit_internal {
-extern "C" ::std::int32_t const& $a
-__crubit_thunk_into_uref(::lifetimes::StructWithLifetime*);
-}
-inline ::std::int32_t const& $a StructWithLifetime::into_ref() const {
-  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
-  return __crubit_internal::__crubit_thunk_into_uref(&self);
-}
-
-namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_value(
-    ::lifetimes::StructWithLifetime*);
-}
-inline ::std::int32_t StructWithLifetime::value() const {
-  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
-  return __crubit_internal::__crubit_thunk_value(&self);
-}
-
-namespace __crubit_internal {
-extern "C" ::std::int32_t const& $(__anon1)
-    __crubit_thunk_borrow_ufrom_uself(::lifetimes::StructWithLifetime const&);
-}
-inline ::std::int32_t const& $(__anon1) StructWithLifetime::borrow_from_self()
-    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_borrow_ufrom_uself(self);
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
     ::lifetimes::StructWithLifetime* __ret_ptr);
@@ -266,57 +183,8 @@ StructWithLifetime::borrow_from_static_self() const& $static {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_borrow_ufrom_ustatic_uself(self);
 }
-namespace __crubit_internal {
-extern "C" ::std::int32_t const& $a
-__crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(
-    ::lifetimes::StructWithLifetime*);
-}
-inline StructWithLifetime::operator ::std::int32_t const& $a() {
-  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
-  return __crubit_internal::
-      __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(&self);
-}
-namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_into_ui32(
-    ::lifetimes::StructWithLifetime*);
-}
-inline StructWithLifetime::operator ::std::int32_t() {
-  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
-  return __crubit_internal::__crubit_thunk_into_ui32(&self);
-}
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithLifetime, field_with_lifetime));
-}
-static_assert(
-    sizeof(StructWithLifetimeAndDropGlue) == 32,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(StructWithLifetimeAndDropGlue) == 8,
-    "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
-    ::lifetimes::StructWithLifetimeAndDropGlue&);
-}
-inline StructWithLifetimeAndDropGlue::~StructWithLifetimeAndDropGlue() {
-  __crubit_internal::__crubit_thunk_drop(*this);
-}
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_make_ustatic_u42(
-    ::lifetimes::StructWithLifetimeAndDropGlue* __ret_ptr);
-}
-inline ::lifetimes::StructWithLifetimeAndDropGlue
-StructWithLifetimeAndDropGlue::make_static_42() {
-  crubit::Slot<::lifetimes::StructWithLifetimeAndDropGlue>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-inline void StructWithLifetimeAndDropGlue::__crubit_field_offset_assertions() {
-  static_assert(0 ==
-                offsetof(StructWithLifetimeAndDropGlue, field_with_drop_glue));
-  static_assert(24 ==
-                offsetof(StructWithLifetimeAndDropGlue, field_with_lifetime));
 }
 namespace __crubit_internal {
 extern "C" void

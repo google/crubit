@@ -121,26 +121,6 @@ unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething(
-    __self: &'static ::traits_golden::LifetimeStruct<'static>,
-) -> &'static i32 {
-    unsafe {
-        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::trait_do_something(
-            __self,
-        )
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
-    __self: &'static ::traits_golden::LifetimeStruct<'static>,
-) -> &'static i32 {
-    unsafe {
-        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::function_do_something(
-            __self,
-        )
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_DifferentTraitSameName_udo_usomething(
     __self: &'static ::traits_golden::MyStruct,
 ) -> i32 {

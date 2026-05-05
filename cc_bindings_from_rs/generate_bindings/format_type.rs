@@ -273,6 +273,10 @@ pub fn format_ty_for_cc<'tcx>(
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
+            if has_non_static_lifetime_in_adt(db, ty) {
+                bail!("Types with non-'static lifetimes are not supported yet (b/500486197)");
+            }
+
             if location.is_bridgeable() && is_c_abi_compatible_by_value(tcx, ty) {
                 ensure!(
                     db.has_move_ctor_and_assignment_operator(
@@ -605,6 +609,46 @@ pub fn region_is_elided<'tcx>(tcx: TyCtxt<'tcx>, region: ty::Region<'tcx>) -> bo
     match region.get_name(tcx) {
         Some(name) => name.as_str().starts_with(query_compiler::ANON_REGION_PREFIX),
         None => true,
+    }
+}
+
+pub(crate) fn has_non_static_lifetime_in_adt<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> bool {
+    use core::ops::ControlFlow;
+    use rustc_middle::ty::{Ty, TyCtxt, TypeVisitor};
+    use ty::TypeSuperVisitable;
+
+    struct HasNonStaticLifetimeInAdt;
+    struct Searcher<'a, 'tcx> {
+        db: &'a BindingsGenerator<'tcx>,
+    }
+    impl<'a, 'tcx> TypeVisitor<TyCtxt<'tcx>> for Searcher<'a, 'tcx> {
+        type Result = ControlFlow<HasNonStaticLifetimeInAdt>;
+        fn visit_ty(&mut self, ty: Ty<'tcx>) -> ControlFlow<HasNonStaticLifetimeInAdt> {
+            if let ty::TyKind::Adt(adt, substs) = ty.kind() {
+                let item_name = self.db.tcx().item_name(adt.did()).to_string();
+                let attrs = crubit_attr::get_attrs(self.db.tcx(), adt.did()).unwrap_or_default();
+                let has_cpp_type = attrs.cpp_type.is_some();
+
+                if has_cpp_type
+                    || item_name == "string_view"
+                    || item_name == "ConvertRef"
+                    || item_name == "OpaqueRef"
+                {
+                    return ControlFlow::Continue(());
+                }
+                if substs.iter().any(|subst| subst.as_region().is_some_and(|r| !r.is_static())) {
+                    return ControlFlow::Break(HasNonStaticLifetimeInAdt);
+                }
+            }
+            ty.super_visit_with(self)
+        }
+    }
+    match (Searcher { db }).visit_ty(ty) {
+        ControlFlow::Break(HasNonStaticLifetimeInAdt) => true,
+        ControlFlow::Continue(()) => false,
     }
 }
 
@@ -1039,7 +1083,8 @@ pub fn crubit_abi_type_from_ty<'tcx>(
         }
         ty::TyKind::Never => bail!("Never type is unsupported in bridging"),
         ty::TyKind::Tuple(_tys) => bail!("composably bridging tuples is not yet supported."),
-        &ty::TyKind::RawPtr(mut pointee, mutability) => {
+        &ty::TyKind::RawPtr(pointee, mutability) => {
+            let mut pointee = pointee;
             let mut is_rust_slice = false;
             if let ty::TyKind::Slice(slice_ty) = pointee.kind() {
                 pointee = *slice_ty;
