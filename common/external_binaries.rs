@@ -21,14 +21,14 @@ pub const RUSTFMT_EXE_PATH: &str = env_or_default!("CRUBIT_RUSTFMT_EXE_PATH", "r
 pub const CLANG_FORMAT_EXE_PATH: &str =
     env_or_default!("CRUBIT_CLANG_FORMAT_EXE_PATH", "clang-format");
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn crubit_rustfmt_exe_path() -> *const c_char {
     static C_RUSTFMT_EXE_PATH: LazyLock<CString> =
         LazyLock::new(|| CString::new(RUSTFMT_EXE_PATH).unwrap());
     C_RUSTFMT_EXE_PATH.as_ref().as_ptr()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn crubit_clang_format_exe_path() -> *const c_char {
     static C_PATH: LazyLock<CString> =
         LazyLock::new(|| CString::new(CLANG_FORMAT_EXE_PATH).unwrap());
