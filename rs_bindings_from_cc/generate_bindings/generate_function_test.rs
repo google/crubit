@@ -2085,3 +2085,25 @@ fn test_constructor_with_dest_parameter() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_function_using_error_type_by_value() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct __DunderName {};
+        void foo(__DunderName x);
+        "#,
+    )?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[diagnostic::on_unimplemented(
+                message = "binding generation for function failed\nCannot use an error type `__DunderName` by value:\n  Skipping generating bindings for '__DunderName' because it has a leading `__`"
+            )]
+            pub trait BindingFailedFor_Z3foo12__DunderName {}
+        }
+    );
+    Ok(())
+}

@@ -50,9 +50,10 @@ pub mod c9 { // error: class `c9::Co` could not be bound
 // namespace c9
 
 // error: function `ReturnsCo` could not be bound
-//   `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
-//   Crubit is not enabled on defining target:
-//       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
+//   Cannot use an error type `c9 :: Co < NotCrubitExposed >` by value:
+//     `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
+//     Crubit is not enabled on defining target:
+//         rs_bindings_from_cc/test/golden/not_crubit_exposed.h
 
 // error: class `c9::Co<NotCrubitExposed>` could not be bound
 //   `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:

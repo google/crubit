@@ -1225,7 +1225,10 @@ impl RsTypeKind {
     /// it can't.
     pub fn check_by_value(&self) -> Result<()> {
         match self.unalias() {
-            RsTypeKind::Error { error, .. } => Err(error.clone()),
+            RsTypeKind::Error { error, symbol, .. } => {
+                let desc = error.to_string().replace("\n", "\n  ");
+                bail!("Cannot use an error type `{symbol}` by value:\n  {desc}")
+            }
             RsTypeKind::Record { record, .. } => record.check_by_value(),
             RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
                 bail!(
