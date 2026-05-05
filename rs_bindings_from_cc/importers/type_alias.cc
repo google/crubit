@@ -108,15 +108,15 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         tag_decl->getName() == decl->getName()) {
       return ictx_.ImportUnsupportedItem(
           *decl, std::nullopt,
-          FormattedError::Static(
-              "Typedef only used to introduce a name in C. Not importing."));
+          {FormattedError::Static(
+              "Typedef only used to introduce a name in C. Not importing.")});
     }
   } else if (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
     clang::NamedDecl* target = using_decl->getTargetDecl();
     if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(target)) {
       return ictx_.ImportUnsupportedItem(
           *decl, std::nullopt,
-          FormattedError::Static("Function aliases are not yet supported."));
+          {FormattedError::Static("Function aliases are not yet supported.")});
     }
     auto* target_type = clang::dyn_cast<clang::TypeDecl>(target);
     if (target_type == nullptr) {
@@ -136,15 +136,15 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
         *decl, std::nullopt,
-        FormattedError::PrefixedStrCat("Type alias name is not supported",
-                                       identifier.status().message()));
+        {FormattedError::PrefixedStrCat("Type alias name is not supported",
+                                        identifier.status().message())});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
   }
 
   clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
@@ -159,7 +159,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         *decl,
         UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        FormattedError::FromStatus(std::move(underlying_type.status())));
+        {FormattedError::FromStatus(std::move(underlying_type.status()))});
   }
   ictx_.MarkAsSuccessfullyImported(decl);
 
@@ -178,7 +178,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         *decl,
         UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
+        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
   return TypeAlias{

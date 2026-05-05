@@ -251,7 +251,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         *function_decl,
         UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        std::vector<FormattedError>({std::move(error)}), must_bind_);
+        {std::move(error)}, must_bind_);
   };
 
   // We should only import methods of class template specializations

@@ -22,7 +22,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        FormattedError::Static("Anonymous namespaces are not yet supported"));
+        {FormattedError::Static("Anonymous namespaces are not yet supported")});
   }
 
   absl::StatusOr<TranslatedIdentifier> identifier =
@@ -30,8 +30,8 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        FormattedError::PrefixedStrCat("Namespace name is not supported",
-                                       identifier.status().message()));
+        {FormattedError::PrefixedStrCat("Namespace name is not supported",
+                                        identifier.status().message())});
   }
 
   ictx_.ImportDeclsFromDeclContext(namespace_decl);
@@ -40,14 +40,14 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
   }
   // Renames are not currently supported for namespaces.
   // TODO - b/399487279: Support namespace renames using CRUBIT_RUST_NAME.
   // if (identifier->crubit_rust_name.has_value()) {
   //   return ictx_.ImportUnsupportedItem(
-  //       namespace_decl, std::nullopt,
-  //       FormattedError::Static("Namespace renames are not yet supported"));
+  //       *namespace_decl, std::nullopt,
+  //       {FormattedError::Static("Namespace renames are not yet supported")});
   // }
 
   std::optional<std::string> deprecated;
@@ -63,7 +63,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
+        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
   return Namespace{.cc_name = identifier->cc_identifier,
