@@ -644,6 +644,55 @@ impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
     }
 }
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `ptr_field`: raw pointer
+///
+/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=109
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithUnsafeConstructor
+pub struct StructWithUnsafeConstructor {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    pub ptr_field: *mut ::ffi_11::c_int,
+}
+impl !Send for StructWithUnsafeConstructor {}
+impl !Sync for StructWithUnsafeConstructor {}
+unsafe impl ::cxx::ExternType for StructWithUnsafeConstructor {
+    type Id = ::cxx::type_id!(":: StructWithUnsafeConstructor");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!(":: StructWithUnsafeConstructor"),
+    crate::StructWithUnsafeConstructor
+);
+
+/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=110
+impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
+    #[inline(always)]
+    unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
+        let mut p = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN27StructWithUnsafeConstructorC1EPi(
+                &raw mut tmp as *mut _,
+                p,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
+        <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args)
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -759,6 +808,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsD1Ev<'__this>(
             __this: ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN27StructWithUnsafeConstructorC1EPi(
+            __this: *mut ::core::ffi::c_void,
+            p: *mut ::ffi_11::c_int,
+        );
     }
 }
 
@@ -832,4 +885,9 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::NonTrivialStructWithConstructors: Copy);
     assert!(::core::mem::offset_of!(crate::NonTrivialStructWithConstructors, int_field) == 0);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
+    assert!(::core::mem::size_of::<crate::StructWithUnsafeConstructor>() == 8);
+    assert!(::core::mem::align_of::<crate::StructWithUnsafeConstructor>() == 8);
+    static_assertions::assert_impl_all!(crate::StructWithUnsafeConstructor: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithUnsafeConstructor: Drop);
+    assert!(::core::mem::offset_of!(crate::StructWithUnsafeConstructor, ptr_field) == 0);
 };

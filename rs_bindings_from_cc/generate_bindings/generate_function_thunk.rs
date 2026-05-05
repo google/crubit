@@ -489,7 +489,11 @@ pub fn generate_function_thunk_impl(
                             })
                         }
                         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
-                            Ok(quote! { std::move(* #ident) })
+                            if rs_type_kind.is_c_abi_compatible_by_value() {
+                                Ok(quote! { std::move( #ident) })
+                            } else {
+                                Ok(quote! { std::move(* #ident) })
+                            }
                         }
                         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
                             if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {

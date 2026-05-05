@@ -1754,6 +1754,19 @@ pub trait UnpinAssign<From> {
     fn unpin_assign(&mut self, src: From);
 }
 
+/// A conversion trait that is considered unsafe.
+///
+/// This is used for `Unpin` types when the conversion involves unsafe operations
+/// or types.
+pub trait UnsafeFrom<From> {
+    /// Performs the conversion.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the conversion is safe.
+    unsafe fn unsafe_from(src: From) -> Self;
+}
+
 // =======================
 // Constructor overloading
 // =======================
@@ -1776,6 +1789,25 @@ pub trait CtorNew<ConstructorArgs> {
     type Error;
 
     fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
+}
+
+/// Overloaded constructor trait for constructors that are considered unsafe.
+///
+/// This is used when the constructor accepts arguments that are unsafe to use,
+/// or when the constructor itself is marked unsafe in C++.
+///
+/// `T : UnsafeCtorNew<(A, B, C)>` is roughly equivalent to the C++ "T has an
+/// unsafe constructor taking arguments of type A, B, and C".
+pub trait UnsafeCtorNew<ConstructorArgs> {
+    type CtorType: Ctor<Output = Self, Error = Self::Error>;
+    type Error;
+
+    /// Creates a new constructor.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the arguments are safe to use for construction.
+    unsafe fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
 }
 
 // ====

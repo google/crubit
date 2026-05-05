@@ -46,6 +46,10 @@ pub enum TraitName {
     CtorNew(Rc<[RsTypeKind]>),
     Default,
     From(Rc<[RsTypeKind]>),
+    /// The constructor trait for !Unpin types that are considered unsafe.
+    UnsafeCtorNew(Rc<[RsTypeKind]>),
+    /// The conversion trait for Unpin types that are considered unsafe.
+    UnsafeFrom(Rc<[RsTypeKind]>),
     /// The PartialEq trait.
     PartialEq {
         param: Rc<RsTypeKind>,
@@ -88,6 +92,8 @@ impl TraitName {
             TraitName::CtorNew { .. } => "CtorNew",
             TraitName::Default => "Default",
             TraitName::From { .. } => "From",
+            TraitName::UnsafeCtorNew { .. } => "UnsafeCtorNew",
+            TraitName::UnsafeFrom { .. } => "UnsafeFrom",
             TraitName::PartialEq { .. } => "PartialEq",
             TraitName::PartialOrd { .. } => "PartialOrd",
             TraitName::CcIndex { .. } => "CcIndex",
@@ -101,7 +107,11 @@ impl TraitName {
     fn params(&self) -> &[RsTypeKind] {
         match self {
             Self::Clone | Self::Default | Self::Delete => &[],
-            Self::CtorNew(params) | Self::From(params) | Self::Other { params, .. } => params,
+            Self::CtorNew(params)
+            | Self::From(params)
+            | Self::UnsafeCtorNew(params)
+            | Self::UnsafeFrom(params)
+            | Self::Other { params, .. } => params,
             Self::PartialEq { param, .. } | Self::PartialOrd { param } => {
                 core::slice::from_ref(param)
             }
@@ -212,6 +222,8 @@ impl ImplKind {
             Self::None { is_unsafe: true, .. }
                 | Self::Struct { is_unsafe: true, .. }
                 | Self::Trait { trait_name: TraitName::Other { is_unsafe_fn: true, .. }, .. }
+                | Self::Trait { trait_name: TraitName::UnsafeCtorNew(_), .. }
+                | Self::Trait { trait_name: TraitName::UnsafeFrom(_), .. }
         )
     }
 }

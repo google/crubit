@@ -2052,30 +2052,62 @@ fn test_simple_explicit_lifetime() -> Result<()> {
 }
 
 #[gtest]
-fn test_constructor_with_dest_parameter() -> Result<()> {
+fn test_unsafe_constructor_unpin() -> Result<()> {
     let ir = ir_from_cc(
         r#"
-        struct S final {
-            explicit S(int dest) : value(dest) {}
-            ~S(); // makes it non-Unpin
-            int value;
+        struct StructWithUnsafeConstructor final {
+            explicit StructWithUnsafeConstructor(int* p) : ptr_field(p) {}
+            int* ptr_field;
         };"#,
     )?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl ::ctor::CtorNew<::ffi_11::c_int> for S {
+            impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
+                #[inline(always)]
+                unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
+                    let mut p = args;
+                    let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                    unsafe {
+                        crate::detail::__rust_thunk___ZN27StructWithUnsafeConstructorC1EPi(
+                            &raw mut tmp as *mut _,
+                            p
+                        );
+                        tmp.assume_init()
+                    }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unsafe_constructor_nonunpin() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct NonUnpinStructWithUnsafeConstructor final {
+            explicit NonUnpinStructWithUnsafeConstructor(int* p) : ptr_field(p) {}
+            ~NonUnpinStructWithUnsafeConstructor(); // makes it non-Unpin
+            int* ptr_field;
+        };"#,
+    )?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for NonUnpinStructWithUnsafeConstructor {
                 type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;
                 #[inline(always)]
-                fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-                    let mut dest = args;
+                unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
+                    let mut p = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN1SC1Ei(
+                            crate::detail::__rust_thunk___ZN35NonUnpinStructWithUnsafeConstructorC1EPi(
                                 __crubit_dest as *mut ::core::ffi::c_void,
-                                dest
+                                p
                             );
                         })
                     }
