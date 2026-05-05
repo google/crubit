@@ -7,6 +7,7 @@
 
 extern int extern_int;
 extern const int kExternConstInt;
+extern thread_local int thread_local_int;
 
 // Check that duplicate extern declarations are handled correctly.
 extern int extern_int;
