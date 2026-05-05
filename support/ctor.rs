@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![cfg_attr(not(test), no_std)]
-#![feature(auto_traits, negative_impls, allow_internal_unstable, super_let)]
+#![feature(auto_traits, negative_impls, allow_internal_unstable)]
 #![allow(internal_features)] // allow_internal_unstable 🤔
 //! Traits for memory management operations on wrapped C++ objects, inspired by
 //! moveit, pin-init, and the current in-place initialization proposal at
@@ -911,7 +911,7 @@ impl<'a, T: ?Sized> !SelfCtor for ConstRvalueReference<'a, T> {}
 #[macro_export]
 macro_rules! mov {
     ($p:expr) => {
-        $crate::DerefRvalueReference::deref_rvalue_reference(&mut { $p })
+        $crate::DerefRvalueReference::deref_rvalue_reference(&mut ($p))
     };
 }
 
