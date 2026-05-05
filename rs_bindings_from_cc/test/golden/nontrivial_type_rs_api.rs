@@ -431,11 +431,11 @@ impl From<::ffi_11::c_int> for NontrivialUnpin {
     }
 }
 impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialUnpin {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
     }
 }
 
@@ -455,11 +455,11 @@ impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialUnpin {
     }
 }
 impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialUnpin {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
-        <Self as From<(::ffi_11::c_int, ::ffi_11::c_int)>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<(::ffi_11::c_int, ::ffi_11::c_int)>>::from(args))
     }
 }
 

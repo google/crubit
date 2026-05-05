@@ -114,11 +114,13 @@ pub mod crubit {
         impl ::ctor::CtorNew<crate::crubit::test::ArgumentToBoundOverload>
             for StructWithDoNotBindConstructor
         {
-            type CtorType = Self;
+            type CtorType = ::ctor::RustMoveCtor<Self>;
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: crate::crubit::test::ArgumentToBoundOverload) -> Self::CtorType {
-                <Self as From<crate::crubit::test::ArgumentToBoundOverload>>::from(args)
+                ::ctor::RustMoveCtor::new(<Self as From<
+                    crate::crubit::test::ArgumentToBoundOverload,
+                >>::from(args))
             }
         }
 

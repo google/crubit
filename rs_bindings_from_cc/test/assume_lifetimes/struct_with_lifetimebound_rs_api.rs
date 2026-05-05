@@ -398,11 +398,11 @@ impl From<crate::PlainStruct> for StructWithLifetimeboundCtor {
     }
 }
 impl ::ctor::CtorNew<crate::PlainStruct> for StructWithLifetimeboundCtor {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: crate::PlainStruct) -> Self::CtorType {
-        <Self as From<crate::PlainStruct>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<crate::PlainStruct>>::from(args))
     }
 }
 
@@ -443,11 +443,11 @@ impl<'__implicit> From<&'__implicit crate::PlainStruct>
 impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     for StructWithLifetimeboundRefCtor<'__implicit>
 {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__implicit crate::PlainStruct) -> Self::CtorType {
-        <Self as From<&'__implicit crate::PlainStruct>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<&'__implicit crate::PlainStruct>>::from(args))
     }
 }
 

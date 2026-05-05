@@ -99,11 +99,11 @@ impl From<::ffi_11::c_int> for DocCommentSlashes {
     }
 }
 impl ::ctor::CtorNew<::ffi_11::c_int> for DocCommentSlashes {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
     }
 }
 

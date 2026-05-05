@@ -45,11 +45,13 @@ impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
     }
 }
 impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
-        <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args)
+        ::ctor::RustMoveCtor::new(<Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(
+            args,
+        ))
     }
 }
 
@@ -83,11 +85,13 @@ impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor 
     }
 }
 impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
-        <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args)
+        ::ctor::RustMoveCtor::new(<Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(
+            args,
+        ))
     }
 }
 
@@ -121,11 +125,11 @@ impl From<&mut ::ffi_11::c_int> for TypeWithReferenceConstructor {
     }
 }
 impl ::ctor::CtorNew<&mut ::ffi_11::c_int> for TypeWithReferenceConstructor {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &mut ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<&mut ::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<&mut ::ffi_11::c_int>>::from(args))
     }
 }
 

@@ -2268,12 +2268,12 @@ pub fn generate_function(
                     );
                     quote! {
                         impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
-                            type CtorType = Self;
+                            type CtorType = ::ctor::RustMoveCtor<Self>;
                             type Error = ::ctor::Infallible;
 
                             #[inline (always)]
                             fn ctor_new(args: #single_param_) -> Self::CtorType {
-                                <Self as From<#single_param_>>::from(args)
+                                ::ctor::RustMoveCtor::new(<Self as From<#single_param_>>::from(args))
                             }
                         }
                     }
@@ -2286,12 +2286,12 @@ pub fn generate_function(
                     );
                     quote! {
                         impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<#single_param_> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
-                            type CtorType = Self;
+                            type CtorType = ::ctor::RustMoveCtor<Self>;
                             type Error = ::ctor::Infallible;
 
                             #[inline (always)]
                             unsafe fn ctor_new(args: #single_param_) -> Self::CtorType {
-                                <Self as ::ctor::UnsafeFrom<#single_param_>>::unsafe_from(args)
+                                ::ctor::RustMoveCtor::new(<Self as ::ctor::UnsafeFrom<#single_param_>>::unsafe_from(args))
                             }
                         }
                     }

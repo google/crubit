@@ -64,11 +64,11 @@ impl From<::ffi_11::c_int> for DestructionOrderRecorder {
     }
 }
 impl ::ctor::CtorNew<::ffi_11::c_int> for DestructionOrderRecorder {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
     }
 }
 
@@ -88,11 +88,11 @@ impl From<::ctor::RvalueReference<'_, Self>> for DestructionOrderRecorder {
     }
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for DestructionOrderRecorder {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ctor::RvalueReference<'_, Self>>>::from(args))
     }
 }
 
@@ -189,11 +189,11 @@ impl From<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrderTester {
     }
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrderTester {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ctor::RvalueReference<'_, Self>>>::from(args))
     }
 }
 
@@ -246,7 +246,7 @@ impl
         crate::DestructionOrderRecorder,
     )> for FieldDestructionOrderTester
 {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -256,11 +256,11 @@ impl
             crate::DestructionOrderRecorder,
         ),
     ) -> Self::CtorType {
-        <Self as From<(
+        ::ctor::RustMoveCtor::new(<Self as From<(
             crate::DestructionOrderRecorder,
             crate::DestructionOrderRecorder,
             crate::DestructionOrderRecorder,
-        )>>::from(args)
+        )>>::from(args))
     }
 }
 

@@ -79,11 +79,11 @@ impl From<i32> for RawThing {
     }
 }
 impl ::ctor::CtorNew<i32> for RawThing {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: i32) -> Self::CtorType {
-        <Self as From<i32>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<i32>>::from(args))
     }
 }
 
@@ -160,11 +160,11 @@ impl From<i32> for CustomRawThing {
     }
 }
 impl ::ctor::CtorNew<i32> for CustomRawThing {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: i32) -> Self::CtorType {
-        <Self as From<i32>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<i32>>::from(args))
     }
 }
 

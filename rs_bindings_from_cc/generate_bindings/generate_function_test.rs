@@ -1333,6 +1333,21 @@ fn test_overloaded_functions() -> Result<()> {
     assert_rs_matches!(rs_api, quote! {impl From<::ffi_11::c_int> for S3});
     assert_rs_matches!(rs_api, quote! {impl From<f64> for S3});
 
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::CtorNew<::ffi_11::c_int> for S3 {
+                type CtorType = ::ctor::RustMoveCtor<Self>;
+                type Error = ::ctor::Infallible;
+
+                #[inline(always)]
+                fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+                    ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
+                }
+            }
+        }
+    );
+
     // And we can import functions that have the same name + signature, but that are
     // in 2 different namespaces.
     assert_rs_matches!(rs_api, quote! { pub fn not_overloaded() });
@@ -2076,6 +2091,20 @@ fn test_unsafe_constructor_unpin() -> Result<()> {
                         );
                         tmp.assume_init()
                     }
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
+                type CtorType = ::ctor::RustMoveCtor<Self>;
+                type Error = ::ctor::Infallible;
+
+                #[inline(always)]
+                unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
+                    ::ctor::RustMoveCtor::new(<Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args))
                 }
             }
         }

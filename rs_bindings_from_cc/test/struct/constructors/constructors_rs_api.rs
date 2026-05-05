@@ -124,11 +124,11 @@ impl From<::ffi_11::c_int> for StructWithExplicitConversionConstructor {
     }
 }
 impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructor {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
     }
 }
 
@@ -167,11 +167,11 @@ impl From<::ffi_11::c_int> for StructWithMultipleConstructors {
     }
 }
 impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithMultipleConstructors {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
     }
 }
 
@@ -192,11 +192,11 @@ impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMultipleConstructors
     }
 }
 impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMultipleConstructors {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
-        <Self as From<(::ffi_11::c_int, ::ffi_11::c_int)>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<(::ffi_11::c_int, ::ffi_11::c_int)>>::from(args))
     }
 }
 
@@ -220,11 +220,15 @@ impl From<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMul
 impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
     for StructWithMultipleConstructors
 {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
-        <Self as From<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<(
+            ::ffi_11::c_int,
+            ::ffi_11::c_int,
+            ::ffi_11::c_int,
+        )>>::from(args))
     }
 }
 
@@ -265,11 +269,11 @@ impl From<::ffi_11::c_int> for StructWithImplicitConversionConstructor {
     }
 }
 impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructor {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
     }
 }
 
@@ -339,11 +343,11 @@ impl<'other> From<&'other crate::OtherSimpleStruct> for StructWithImplicitConver
 impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
     for StructWithImplicitConversionFromReference
 {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'other crate::OtherSimpleStruct) -> Self::CtorType {
-        <Self as From<&'other crate::OtherSimpleStruct>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<&'other crate::OtherSimpleStruct>>::from(args))
     }
 }
 
@@ -427,11 +431,11 @@ impl From<::ffi_11::c_int> for StructWithInlineConstructors {
     }
 }
 impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        <Self as From<::ffi_11::c_int>>::from(args)
+        ::ctor::RustMoveCtor::new(<Self as From<::ffi_11::c_int>>::from(args))
     }
 }
 
@@ -685,11 +689,13 @@ impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
     }
 }
 impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
-    type CtorType = Self;
+    type CtorType = ::ctor::RustMoveCtor<Self>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
-        <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args)
+        ::ctor::RustMoveCtor::new(<Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(
+            args,
+        ))
     }
 }
 
