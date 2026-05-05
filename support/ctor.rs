@@ -167,9 +167,7 @@ use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 
-pub use ctor_proc_macros::{
-    project_pin_type, project_ref_type, recursively_pinned, CtorFrom_Default, MoveAndAssignViaCopy,
-};
+pub use ctor_proc_macros::{recursively_pinned, CtorFrom_Default, MoveAndAssignViaCopy};
 
 /// The error type for an infallible `Ctor`.
 ///
@@ -1396,6 +1394,18 @@ pub unsafe trait RecursivelyPinned {
     /// will not be initialized, so they must permit uninitialized memory.
     /// (For example, ZST or MaybeUninit.)
     type CtorInitializedFields: ?Sized;
+
+    /// The type returned by `project_pin` containing pinned references to the
+    /// fields of `Self`.
+    type ProjectedPin<'a>
+    where
+        Self: 'a;
+
+    /// The type returned by `project_ref` containing pinned references to the
+    /// fields of `Self`.
+    type ProjectedRef<'a>
+    where
+        Self: 'a;
 }
 
 /// The drop trait for `#[recursively_pinned(PinnedDrop)]` types.

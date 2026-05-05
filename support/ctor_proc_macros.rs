@@ -8,7 +8,9 @@ extern crate alloc;
 use alloc::borrow::Cow;
 use alloc::collections::BTreeSet;
 use alloc::format;
+use alloc::string::ToString;
 use alloc::vec;
+use alloc::vec::Vec;
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, quote_spanned, ToTokens as _};
@@ -192,55 +194,54 @@ fn derive_move_and_assign_via_copy_impl(
     })
 }
 
-/// `project_pin_type!(foo::T)` is the name of the type returned by
-/// `foo::T::project_pin()`.
-///
-/// If `foo::T` is not `#[recursively_pinned]`, then this returns the name it
-/// would have used, but is essentially useless.
-#[proc_macro]
-pub fn project_pin_type(name: TokenStream) -> TokenStream {
-    project_type_impl(name, project_pin_ident)
-}
-
 fn project_pin_ident(ident: &Ident) -> Ident {
     Ident::new(&format!("__CrubitProjectPin{}", ident), Span::call_site())
-}
-
-/// `project_ref_type!(foo::T)` is the name of the type returned by
-/// `foo::T::project_ref()`.
-///
-/// If `foo::T` is not `#[recursively_pinned]`, then this returns the name it
-/// would have used, but is essentially useless.
-#[proc_macro]
-pub fn project_ref_type(name: TokenStream) -> TokenStream {
-    project_type_impl(name, project_ref_ident)
 }
 
 fn project_ref_ident(ident: &Ident) -> Ident {
     Ident::new(&format!("__CrubitProjectRef{}", ident), Span::call_site())
 }
 
-fn project_type_impl(name: TokenStream, project_ident: fn(&Ident) -> Ident) -> TokenStream {
-    let mut name = syn::parse_macro_input!(name as syn::Path);
-    match name.segments.last_mut() {
-        None => {
-            return syn::Error::new(name.span(), "Path must have at least one element")
-                .into_compile_error()
-                .into();
-        }
-        Some(last) => {
-            if let syn::PathArguments::Parenthesized(p) = &last.arguments {
-                return syn::Error::new(
-                    p.span(),
-                    "Parenthesized paths (e.g. fn, Fn) do not have projected equivalents.",
-                )
-                .into_compile_error()
-                .into();
+fn most_public_vis(a: &syn::Visibility, b: &syn::Visibility) -> syn::Visibility {
+    use syn::Visibility::{Inherited, Public, Restricted};
+    match (a, b) {
+        (Public(_), _) | (_, Public(_)) => Public(<syn::Token![pub]>::default()),
+        (Restricted(r), _) | (_, Restricted(r)) => Restricted(r.clone()),
+        (Inherited, Inherited) => Inherited,
+    }
+}
+
+fn most_private_vis(a: &syn::Visibility, b: &syn::Visibility) -> syn::Visibility {
+    use syn::Visibility::{Inherited, Public, Restricted};
+    match (a, b) {
+        (Inherited, _) | (_, Inherited) => Inherited,
+        (Restricted(r), _) | (_, Restricted(r)) => Restricted(r.clone()),
+        (Public(_), Public(_)) => Public(<syn::Token![pub]>::default()),
+    }
+}
+
+fn get_max_visibility(input: &syn::DeriveInput) -> syn::Visibility {
+    let mut max_vis = syn::Visibility::Inherited;
+    match &input.data {
+        syn::Data::Struct(data) => {
+            for field in &data.fields {
+                max_vis = most_public_vis(&max_vis, &field.vis);
             }
-            last.ident = project_ident(&last.ident);
+        }
+        syn::Data::Enum(e) => {
+            for variant in &e.variants {
+                for field in &variant.fields {
+                    max_vis = most_public_vis(&max_vis, &field.vis);
+                }
+            }
+        }
+        syn::Data::Union(u) => {
+            for field in &u.fields.named {
+                max_vis = most_public_vis(&max_vis, &field.vis);
+            }
         }
     }
-    TokenStream::from(quote! { #name })
+    max_vis
 }
 
 /// Defines the `project_pin`/`project_ref` function, and its return type.
@@ -261,6 +262,8 @@ fn project_method_impl(
     mut_: proc_macro2::TokenStream,
     project_ident: fn(&Ident) -> Ident,
 ) -> syn::Result<proc_macro2::TokenStream> {
+    let max_field_vis = get_max_visibility(input);
+
     let is_fieldless = match &input.data {
         syn::Data::Struct(data) => data.fields.is_empty(),
         syn::Data::Enum(e) => e.variants.iter().all(|variant| variant.fields.is_empty()),
@@ -269,19 +272,38 @@ fn project_method_impl(
         }
     };
 
+    // The projection type should be at most as public as the most public field
+    // and at most as public as the input type.
+    let vis = most_private_vis(&input.vis, &max_field_vis);
+
     let mut projected = input.clone();
     // TODO(jeanpierreda): check attributes for repr(packed)
     projected.attrs.clear();
     projected.ident = project_ident(&projected.ident);
 
-    let lifetime = if is_fieldless {
-        quote! {}
-    } else {
-        add_lifetime(&mut projected.generics, "'proj")
-    };
+    // Projection types must be public to be used in the public RecursivelyPinned trait.
+    // This is okay because the fields are still private, as is the projection method.
+    // We also hide these unusable projection types from the docs.
+    projected.vis = syn::Visibility::Public(<syn::Token![pub]>::default());
+    if matches!(vis, syn::Visibility::Inherited) {
+        projected.attrs.push(syn::parse_quote!(#[doc(hidden)]));
+    }
+
+    let doc_msg = format!("Pinned references to the fields of [`{}`].", input.ident);
+    projected.attrs.push(syn::parse_quote!(#[doc = #doc_msg]));
+
+    let lifetime = add_lifetime(&mut projected.generics, "'crubit_proj");
 
     let project_field = |field: &mut syn::Field| {
         field.attrs.clear();
+        let field_name = field
+            .ident
+            .as_ref()
+            .map(|id| id.to_string())
+            .unwrap_or_else(|| "tuple field".to_string());
+        let doc_msg =
+            format!("Pinned reference to the `{}` field of [`{}`].", field_name, input.ident);
+        field.attrs.push(syn::parse_quote!(#[doc = #doc_msg]));
         let field_ty = &field.ty;
         let pin_ty = syn::parse_quote!(::core::pin::Pin<& #lifetime #mut_ #field_ty>);
         field.ty = syn::Type::Path(pin_ty);
@@ -317,26 +339,47 @@ fn project_method_impl(
     let projected_ident = &projected.ident;
     match &mut projected.data {
         syn::Data::Struct(data) => {
-            for field in &mut data.fields {
-                project_field(field);
+            if is_fieldless {
+                data.fields = syn::Fields::Named(syn::parse_quote!({
+                    #[doc(hidden)]
+                    pub _phantom: ::core::marker::PhantomData<& #lifetime ()>,
+                }));
+                project_body = quote! {
+                    let _ = from;
+                    #projected_ident { _phantom: ::core::marker::PhantomData }
+                };
+            } else {
+                for field in &mut data.fields {
+                    project_field(field);
+                }
+                let (pat, project) = pat_project(&mut data.fields);
+                project_body = quote! {
+                    let #input_ident #pat = from;
+                    #projected_ident #project
+                };
             }
-            let (pat, project) = pat_project(&mut data.fields);
-            project_body = quote! {
-                let #input_ident #pat = from;
-                #projected_ident #project
-            };
         }
         syn::Data::Enum(e) => {
             let mut match_body = quote! {};
             for variant in &mut e.variants {
-                for field in &mut variant.fields {
-                    project_field(field);
-                }
-                let (pat, project) = pat_project(&mut variant.fields);
                 let variant_ident = &variant.ident;
-                match_body.extend(quote! {
-                    #input_ident::#variant_ident #pat => #projected_ident::#variant_ident #project,
-                });
+                if is_fieldless {
+                    variant.fields = syn::Fields::Named(syn::parse_quote!({
+                        #[doc(hidden)]
+                        pub _phantom: ::core::marker::PhantomData<& #lifetime ()>,
+                    }));
+                    match_body.extend(quote! {
+                        #input_ident::#variant_ident { .. } => #projected_ident::#variant_ident { _phantom: ::core::marker::PhantomData },
+                    });
+                } else {
+                    for field in &mut variant.fields {
+                        project_field(field);
+                    }
+                    let (pat, project) = pat_project(&mut variant.fields);
+                    match_body.extend(quote! {
+                        #input_ident::#variant_ident #pat => #projected_ident::#variant_ident #project,
+                    });
+                }
             }
             project_body = quote! {
                 match from  {
@@ -353,12 +396,18 @@ fn project_method_impl(
         input.generics.split_for_impl();
     let (_, projected_generics, _) = projected.generics.split_for_impl();
 
+    let method_doc = format!(
+        "Projects a pinned reference to [`{}`] into a struct of pinned references to its fields.",
+        input.ident
+    );
+
     Ok(quote! {
         #projected
 
         impl #input_impl_generics #input_ident #input_type_generics #input_where_clause {
+            #[doc = #method_doc]
             #[must_use]
-            pub fn #method_name<#lifetime>(self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
+            #vis fn #method_name <#lifetime> (self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
                 unsafe {
                     let from = ::core::pin::Pin::into_inner_unchecked(self);
                     #project_body
@@ -384,7 +433,12 @@ fn add_lifetime(generics: &mut syn::Generics, prefix: &str) -> proc_macro2::Toke
         name = Cow::Owned(format!("{prefix}_{i}"));
     };
     let quoted_lifetime = quote! {#lifetime};
-    generics.params.push(syn::GenericParam::Lifetime(syn::LifetimeParam::new(lifetime)));
+    let pos = generics
+        .params
+        .iter()
+        .position(|p| !matches!(p, syn::GenericParam::Lifetime(_)))
+        .unwrap_or(generics.params.len());
+    generics.params.insert(pos, syn::GenericParam::Lifetime(syn::LifetimeParam::new(lifetime)));
     quoted_lifetime
 }
 
@@ -749,6 +803,41 @@ fn recursively_pinned_impl(
         }
     };
 
+    let mut input_lifetimes = Vec::new();
+    let mut input_types_and_consts = Vec::new();
+
+    for param in input.generics.params.iter() {
+        match param {
+            syn::GenericParam::Lifetime(lt) => {
+                let lt = &lt.lifetime;
+                input_lifetimes.push(quote! { #lt });
+            }
+            syn::GenericParam::Type(t) => {
+                let id = &t.ident;
+                input_types_and_consts.push(quote! { #id });
+            }
+            syn::GenericParam::Const(c) => {
+                let id = &c.ident;
+                input_types_and_consts.push(quote! { #id });
+            }
+        }
+    }
+
+    let (projected_pin_type, projected_ref_type) = if matches!(input.data, syn::Data::Union(_)) {
+        (quote! { () }, quote! { () })
+    } else {
+        let projected_pin_ident = project_pin_ident(&name);
+        let projected_ref_ident = project_ref_ident(&name);
+
+        let mut args = input_lifetimes.clone();
+        args.push(quote! { 'crubit_proj });
+        args.extend(input_types_and_consts.clone());
+
+        let type_args = quote! { < #(#args),* > };
+
+        (quote! { #projected_pin_ident #type_args }, quote! { #projected_ref_ident #type_args })
+    };
+
     Ok(quote! {
         #input
         #project_pin_impl
@@ -757,9 +846,6 @@ fn recursively_pinned_impl(
         #drop_impl
         #unpin_impl
 
-        // Introduce a new scope to limit the blast radius of the CtorInitializedFields type.
-        // This lets us use relatively readable names: while the impl is visible outside the scope,
-        // type is otherwise not visible.
         const _ : () = {
             #ctor_initialized_input
 
@@ -767,6 +853,8 @@ fn recursively_pinned_impl(
                 #name #input_type_generics #input_where_clause
             {
                 type CtorInitializedFields = #ctor_initialized_name #input_type_generics;
+                type ProjectedPin<'crubit_proj> = #projected_pin_type where Self: 'crubit_proj;
+                type ProjectedRef<'crubit_proj> = #projected_ref_type where Self: 'crubit_proj;
             }
         };
     })
@@ -809,6 +897,7 @@ mod test {
                    struct __CrubitCtorS {x: i32}
                    unsafe impl ::ctor::RecursivelyPinned for S {
                        type CtorInitializedFields = __CrubitCtorS;
+                       ...
                    }
                 };
             }
@@ -866,6 +955,7 @@ mod test {
                     }
                     unsafe impl ::ctor::RecursivelyPinned for E {
                         type CtorInitializedFields = __CrubitCtorE;
+                        ...
                     }
                 };
             }

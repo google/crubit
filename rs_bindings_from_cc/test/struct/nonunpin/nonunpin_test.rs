@@ -82,6 +82,14 @@ fn test_union_field() {
     }
     unsafe impl ctor::RecursivelyPinned for MyUnion {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = ()
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = ()
+        where
+            Self: 'a;
     }
 
     // No safe helpers here. :)
