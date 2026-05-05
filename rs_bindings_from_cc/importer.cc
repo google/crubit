@@ -1217,6 +1217,14 @@ IR::Item Importer::ImportUnsupportedItem(
 }
 
 IR::Item Importer::ImportUnsupportedItem(
+    const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+    FormattedError error, bool is_hard_error) {
+  return ImportUnsupportedItem(decl, std::move(path),
+                               std::vector<FormattedError>({std::move(error)}),
+                               is_hard_error);
+}
+
+IR::Item Importer::ImportUnsupportedItem(
     const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,
     std::vector<FormattedError> errors, bool is_hard_error) {
   auto kind = UnsupportedItem::Kind::kOther;

@@ -86,7 +86,11 @@ class Importer final : public ImportContext {
   IR::Item ImportUnsupportedItem(const clang::Decl& decl,
                                  std::optional<UnsupportedItem::Path> path,
                                  std::vector<FormattedError> error,
-                                 bool is_hard_error);
+                                 bool is_hard_error) override;
+  IR::Item ImportUnsupportedItem(const clang::Decl& decl,
+                                 std::optional<UnsupportedItem::Path> path,
+                                 FormattedError error,
+                                 bool is_hard_error) override;
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
   std::optional<IR::Item> GetImportedItem(
       const clang::Decl* decl) const override;

@@ -1238,6 +1238,15 @@ fn test_must_bind_annotation_on_unbindable_type_produces_must_bind_error() -> go
 }
 
 #[gtest]
+fn test_must_bind_annotation_on_unbindable_function_produces_must_bind_error(
+) -> googletest::Result<()> {
+    let ir = ir_from_cc(r#"[[clang::annotate("crubit_must_bind")]] inline void f();"#).or_fail()?;
+    let func = ir.unsupported_items().find(|item| &*item.name == "f").or_fail()?;
+    expect_that!(&**func, field!(&UnsupportedItem.must_bind, eq(true)));
+    Ok(())
+}
+
+#[gtest]
 fn test_typedef() -> Result<()> {
     let ir = ir_from_cc(
         r#"

@@ -118,6 +118,18 @@ class ImportContext {
       const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
       FormattedError error) = 0;
 
+  // Imports an unsupported item with a vector of formatted error messages and a
+  // hard error flag.
+  virtual IR::Item ImportUnsupportedItem(
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      std::vector<FormattedError> error, bool is_hard_error) = 0;
+
+  // Imports an unsupported item with a single formatted error message and a
+  // hard error flag.
+  virtual IR::Item ImportUnsupportedItem(
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      FormattedError error, bool is_hard_error) = 0;
+
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.
   // Does not use or update the cache.

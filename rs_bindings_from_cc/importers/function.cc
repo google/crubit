@@ -202,8 +202,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
       return ictx_.ImportUnsupportedItem(
           *function_decl, std::nullopt,
-          FormattedError::Static("Internal functions from the standard "
-                                 "library are not supported"));
+          {FormattedError::Static("Internal functions from the standard "
+                                  "library are not supported")},
+          must_bind_);
     }
   }
   // Method is private, we don't need to import it.
@@ -226,15 +227,17 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!translated_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        FormattedError::PrefixedStrCat("Function name is not supported",
-                                       translated_name.status().message()));
+        {FormattedError::PrefixedStrCat("Function name is not supported",
+                                        translated_name.status().message())},
+        must_bind_);
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id).status()));
+        {FormattedError::FromStatus(std::move(enclosing_item_id).status())},
+        must_bind_);
   }
 
   // Reports an unsupported function with the given error.
@@ -248,7 +251,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         *function_decl,
         UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        error);
+        std::vector<FormattedError>({std::move(error)}), must_bind_);
   };
 
   // We should only import methods of class template specializations
@@ -656,7 +659,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         *function_decl,
         UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        std::vector(errors.error_set.begin(), errors.error_set.end()));
+        std::vector(errors.error_set.begin(), errors.error_set.end()),
+        must_bind_);
   }
 
   bool has_c_calling_convention =
@@ -725,7 +729,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         *function_decl,
         UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        FormattedError::FromStatus(std::move(unknown_attr).status()));
+        {FormattedError::FromStatus(std::move(unknown_attr).status())},
+        must_bind_);
   }
 
   // Silence ClangTidy, checked above: calling `errors.Add` if
