@@ -77,11 +77,20 @@ pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bo
                 return false;
             };
             #[rustversion::before(2026-04-19)]
-            let ty = tcx.type_of(field.did).instantiate(tcx, substs);
+            let mut ty = tcx.type_of(field.did).instantiate(tcx, substs);
             #[rustversion::since(2026-04-19)]
-            let ty = tcx.type_of(field.did).instantiate(tcx, substs).skip_normalization();
+            let mut ty = tcx.type_of(field.did).instantiate(tcx, substs).skip_normalization();
+
+            // Pattern types can be considered by value when they're embedded within an ADT.
+            // We dont' want to do that for pattern types at large because they might mean they're
+            // in a function signature, and we cannot uphold a pattern types invariants across the
+            // FFI boundary leading to UB.
+            if let ty::TyKind::Pat(pat_ty, _) = ty.kind() {
+                ty = *pat_ty;
+            }
             is_c_abi_compatible_by_value(tcx, ty)
         }
+        ty::TyKind::Pat(_, _) => false,
 
         // Arrays are explicitly not ABI-compatible (though they are layout-compatible).
         ty::TyKind::Array { .. } => false,
