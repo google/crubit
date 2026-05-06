@@ -23,12 +23,8 @@ fn test_thread_safe_is_sync() {
 #[gtest]
 fn test_thread_safe_struct_methods_via_shared_self_ref() {
     let s = emplace!(ThreadSafeStruct::ctor_new(()));
-    // TODO(b/475929893) Update to use &self method calls once implemented.
-    let ptr: *mut ThreadSafeStruct = s.as_ref().get_ref() as *const _ as *mut _;
-    unsafe {
-        assert_eq!(ThreadSafeStruct::ConstGet(ptr as *const _), 0);
-        assert_eq!(ThreadSafeStruct::NonConstGet(ptr), 0);
-    }
+    assert_eq!(s.NonConstGet(), 0);
+    assert_eq!(s.ConstGet(), 0);
 }
 
 #[gtest]

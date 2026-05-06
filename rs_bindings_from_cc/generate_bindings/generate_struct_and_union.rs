@@ -722,7 +722,9 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         recursively_pinned_attr,
         must_use_attr: record.nodiscard.clone().map(MustUseAttr),
         deprecated_attr: record.deprecated.clone().map(DeprecatedAttr),
-        align: if override_alignment && record.size_align.alignment > 1 {
+        // Thread-safe types always need explicit alignment because the opaque
+        // UnsafeCell<[MaybeUninit<u8>; N]> body has alignment 1.
+        align: if (override_alignment || record.is_thread_safe) && record.size_align.alignment > 1 {
             Some(record.size_align.alignment)
         } else {
             None
@@ -760,6 +762,8 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         free_functions,
         delete: operator_delete_impl,
         lifetime_params,
+        is_thread_safe: record.is_thread_safe,
+        size: record.size_align.size,
     };
 
     api_snippets.features |= Feature::negative_impls;
@@ -791,14 +795,18 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
 
     api_snippets.assertions.push(rs_size_align_assertions(qualified_ident, &record.size_align));
     api_snippets.assertions.push(record_trait_assertions);
-    api_snippets.assertions.push(field_offset_assertions);
-    api_snippets.assertions.extend(fields_that_must_be_copy.into_iter().map(
-        |formatted_field_type| Assertion::Impls {
-            type_name: formatted_field_type,
-            all_of: AssertableTrait::Copy.into(),
-            none_of: FlagSet::empty(),
-        },
-    ));
+    // For thread-safe types, the struct body is opaque (UnsafeCell), so the original
+    // field names don't exist. Skip field offset assertions and field copy assertions.
+    if !record.is_thread_safe {
+        api_snippets.assertions.push(field_offset_assertions);
+        api_snippets.assertions.extend(fields_that_must_be_copy.into_iter().map(
+            |formatted_field_type| Assertion::Impls {
+                type_name: formatted_field_type,
+                all_of: AssertableTrait::Copy.into(),
+                none_of: FlagSet::empty(),
+            },
+        ));
+    }
 
     api_snippets.generated_items.insert(record.id, GeneratedItem::Record(Box::new(record_tokens)));
     Ok(api_snippets)
@@ -831,6 +839,12 @@ pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAli
 }
 
 pub fn generate_derives(record: &Record) -> DeriveAttr {
+    // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>.
+    // This opaque byte array doesn't support useful standard derives, and Clone/Copy
+    // are explicitly prevented to support interior mutability anyway.
+    if record.is_thread_safe {
+        return DeriveAttr(vec![]);
+    }
     let mut derives = vec![];
     if should_derive_clone(record) {
         derives.push(quote! { Clone });

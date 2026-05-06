@@ -334,9 +334,8 @@
 //
 // Types annotated with `CRUBIT_THREAD_SAFE` will:
 // * Implement `Send + Sync` in Rust
-// (TODO: b/475929893) * Have their internal representation wrapped in
-// `UnsafeCell`, allowing non-const C++ methods to be called via shared
-// references (`&self`)
+// * Have their internal representation wrapped in `UnsafeCell`, allowing
+//   non-const C++ methods to be called via shared references (`&self`)
 //
 // This annotation is appropriate for types that internally synchronize
 // access (e.g., types with mutexes, atomics, or other synchronization

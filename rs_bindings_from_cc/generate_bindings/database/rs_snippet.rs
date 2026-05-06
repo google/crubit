@@ -244,6 +244,11 @@ pub fn format_generic_params_replacing_by_self<'db, 'a>(
 // Otherwise, these functions should be moved into a separate module.
 
 pub fn should_derive_clone(record: &Record) -> bool {
+    // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>,
+    // which prevents them from deriving Clone.
+    if record.is_thread_safe {
+        return false;
+    }
     match record.trait_derives.clone {
         TraitImplPolarity::Positive => true,
         TraitImplPolarity::Negative => false,

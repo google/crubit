@@ -12,6 +12,10 @@ namespace crubit::test {
 // A simple thread-safe struct.
 class CRUBIT_THREAD_SAFE ThreadSafeStruct final {
  public:
+  ThreadSafeStruct() = default;
+  ThreadSafeStruct(const ThreadSafeStruct&) = delete;
+  ThreadSafeStruct& operator=(const ThreadSafeStruct&) = delete;
+
   int ConstGet() const { return x_; }
   // A non-const method for testing the generation behavior.
   // The implementation doesn't actually do anything non-const, but it doesn't

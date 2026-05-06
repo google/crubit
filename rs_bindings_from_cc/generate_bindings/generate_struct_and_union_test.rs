@@ -1923,3 +1923,77 @@ fn test_display() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_thread_safe_annotation_generates_send_sync() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_thread_safe")]] ThreadSafeStruct final {
+            int field;
+        };
+    "#,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Thread-safe types should get `unsafe impl Send` and `unsafe impl Sync`.
+    assert_rs_matches!(rs_api, quote! { unsafe impl Send for ThreadSafeStruct {} });
+    assert_rs_matches!(rs_api, quote! { unsafe impl Sync for ThreadSafeStruct {} });
+
+    Ok(())
+}
+
+#[gtest]
+fn test_thread_safe_annotation_generates_unsafe_cell_body() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_thread_safe")]] ThreadSafeStruct final {
+            int field;
+        };
+    "#,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Thread-safe types should have an opaque UnsafeCell body instead of individual fields.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct ThreadSafeStruct {
+                __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 4]>,
+            }
+        }
+    );
+
+    // Individual fields should NOT appear.
+    assert_rs_not_matches!(rs_api, quote! { pub field });
+
+    Ok(())
+}
+
+#[gtest]
+fn test_non_thread_safe_struct_has_negative_send_sync() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct RegularStruct final {
+            int field;
+        };
+    "#,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Non-thread-safe types should NOT have `unsafe impl Send/Sync`.
+    assert_rs_not_matches!(rs_api, quote! { unsafe impl Send for RegularStruct {} });
+    assert_rs_not_matches!(rs_api, quote! { unsafe impl Sync for RegularStruct {} });
+
+    // They should have negative impls instead.
+    assert_rs_matches!(rs_api, quote! { impl !Send for RegularStruct {} });
+    assert_rs_matches!(rs_api, quote! { impl !Sync for RegularStruct {} });
+
+    // And should have normal fields, not UnsafeCell wrapping.
+    assert_rs_matches!(rs_api, quote! { pub field: ::ffi_11::c_int });
+    assert_rs_not_matches!(rs_api, quote! { __opaque });
+
+    Ok(())
+}

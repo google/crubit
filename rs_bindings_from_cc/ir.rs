@@ -1361,6 +1361,11 @@ impl Record {
     }
 
     pub fn should_derive_copy(&self) -> bool {
+        // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>,
+        // which prevents them from deriving Copy.
+        if self.is_thread_safe {
+            return false;
+        }
         match self.trait_derives.copy {
             TraitImplPolarity::Positive => true,
             TraitImplPolarity::Negative => false,
