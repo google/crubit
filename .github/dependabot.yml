@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # TODO(b/379928127): Also cover `MODULE.bazel.lock`
+
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
