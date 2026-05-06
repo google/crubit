@@ -165,12 +165,12 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
         format!("{context}:\n  {desc}")
     };
 
-    if !have_feature(CrubitFeature::Experimental) {
-        if let Some(unknown_attr) = item.unknown_attr() {
-            missing_features.push(format!(
-                "crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}"
-            ));
-        }
+    if !have_feature(CrubitFeature::Experimental)
+        && let Some(unknown_attr) = item.unknown_attr()
+    {
+        missing_features.push(format!(
+            "crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}"
+        ));
     }
 
     match item {

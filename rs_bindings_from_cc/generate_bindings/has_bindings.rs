@@ -70,13 +70,12 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                         if let ResolvedName::RecordNestedItems {
                             parent_records_that_map_to_this_name,
                         } = resolved_name
+                            && parent_records_that_map_to_this_name.contains(&parent_record.id)
                         {
-                            if parent_records_that_map_to_this_name.contains(&parent_record.id) {
-                                return Some((
-                                    name.clone(),
-                                    parent_records_that_map_to_this_name.clone(),
-                                ));
-                            }
+                            return Some((
+                                name.clone(),
+                                parent_records_that_map_to_this_name.clone(),
+                            ));
                         }
                         None
                     })

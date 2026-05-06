@@ -141,7 +141,7 @@ pub fn ir_from_cc_dependency(
         )
         .into_boxed_slice()
     };
-    let mut ir = ir::deserialize_ir(&*json_utf8)?;
+    let mut ir = ir::deserialize_ir(&json_utf8)?;
     update_test_ir(&mut ir, extra_feature);
     Ok(ir)
 }

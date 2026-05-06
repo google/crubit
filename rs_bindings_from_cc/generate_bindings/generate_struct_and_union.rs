@@ -201,10 +201,10 @@ pub fn collect_unqualified_member_functions(
                 return None;
             };
 
-            if let Item::Func(member_function) = child_item {
-                if let UnqualifiedIdentifier::Identifier(_) = &member_function.rs_name {
-                    return Some(member_function.clone());
-                }
+            if let Item::Func(member_function) = child_item
+                && let UnqualifiedIdentifier::Identifier(_) = &member_function.rs_name
+            {
+                return Some(member_function.clone());
             }
 
             None
@@ -278,7 +278,7 @@ fn field_definition(
     {
         0
     } else {
-        let padding_start = (prev_end + 7) / 8 * 8; // round up to byte boundary
+        let padding_start = prev_end.div_ceil(8) * 8; // round up to byte boundary
         offset - padding_start
     };
 
@@ -634,7 +634,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     let mut lifetime_params = vec![];
     if assume_lifetimes {
         lifetime_params =
-            record.lifetime_inputs.iter().map(|id| make_rs_lifetime_ident(&*id)).collect();
+            record.lifetime_inputs.iter().map(|id| make_rs_lifetime_ident(id)).collect();
     }
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
         let (new_upcast_impls, thunks, thunk_impls) = cc_struct_upcast_impl(db, &record, ir)?;

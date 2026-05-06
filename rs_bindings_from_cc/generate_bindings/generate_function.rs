@@ -1016,10 +1016,9 @@ fn api_func_shape_for_constructor(
         for param in &mut params[..] {
             if let RsTypeKind::Reference { lifetime, .. }
             | RsTypeKind::RvalueReference { lifetime, .. } = param
+                && lifetime.is_elided()
             {
-                if lifetime.is_elided() {
-                    *lifetime = Lifetime::new("__unelided");
-                }
+                *lifetime = Lifetime::new("__unelided");
             }
         }
         // Check if there's still any elided lifetimes after the minimal transform above:
@@ -2204,10 +2203,10 @@ pub fn generate_function(
                 assumed_lifetime_params = trait_record
                     .lifetime_inputs
                     .iter()
-                    .map(|id| make_rs_lifetime_ident(&*id))
+                    .map(|id| make_rs_lifetime_ident(id))
                     .collect();
                 trait_lifetime_params =
-                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(&*id)).collect();
+                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
             }
             let trait_record_param_tokens = if !assumed_lifetime_params.is_empty() {
                 quote! { < #( #assumed_lifetime_params ),* > }
@@ -2331,7 +2330,7 @@ pub fn generate_function(
                 // needed for better readability.
                 quote! { #record_name }
             } else {
-                let t = db.rs_type_kind((&*trait_record).into())?;
+                let t = db.rs_type_kind(trait_record.into())?;
                 t.to_token_stream(db)
             };
             let mut self_type = db.rs_type_kind(trait_record.into())?;
@@ -2343,15 +2342,14 @@ pub fn generate_function(
                 ImplFor::T => (
                     trait_name_to_token_stream_removing_trait_record(
                         db,
-                        &trait_name,
+                        trait_name,
                         Some(&self_type),
                     ),
                     qualified_record_name,
                 ),
-                ImplFor::RefT => (
-                    trait_name_to_token_stream(db, &trait_name),
-                    param_types[0].to_token_stream(db),
-                ),
+                ImplFor::RefT => {
+                    (trait_name_to_token_stream(db, trait_name), param_types[0].to_token_stream(db))
+                }
             };
             let func_body = create_func_body()?;
             api_func = quote! {
@@ -2374,7 +2372,7 @@ pub fn generate_function(
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: {
-                    let trait_name_tokens = trait_name_to_token_stream(db, &trait_name);
+                    let trait_name_tokens = trait_name_to_token_stream(db, trait_name);
                     syn::parse2(quote! { #trait_name_tokens :: #func_name }).unwrap()
                 },
             };

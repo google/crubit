@@ -3169,7 +3169,7 @@ fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
 
 fn assert_strings_contain(strings: &[&str], expected_string: &str) {
     assert!(
-        strings.iter().any(|s| *s == expected_string),
+        strings.contains(&expected_string),
         "Value '{}' was unexpectedly missing from {:?}",
         expected_string,
         strings

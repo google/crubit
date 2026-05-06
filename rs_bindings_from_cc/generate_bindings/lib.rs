@@ -247,10 +247,10 @@ fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Resul
 
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
-    if let Some(owning_target) = item.owning_target() {
-        if !db.ir().is_current_target(&owning_target) {
-            return Ok(ApiSnippets::default());
-        }
+    if let Some(owning_target) = item.owning_target()
+        && !db.ir().is_current_target(&owning_target)
+    {
+        return Ok(ApiSnippets::default());
     }
     let _scope = db.error_scope(item.id());
     let err = match generate_item_impl(db, &item) {

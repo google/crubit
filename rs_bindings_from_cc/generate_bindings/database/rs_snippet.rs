@@ -875,9 +875,9 @@ impl RsTypeKind {
             return Ok(underlying_type);
         }
         let crate_path = Rc::new(CratePath::new(
-            &ir,
+            ir,
             db.namespace_qualifier(&type_alias),
-            rs_imported_crate_name(&type_alias.owning_target, &ir),
+            rs_imported_crate_name(&type_alias.owning_target, ir),
         ));
         Ok(RsTypeKind::TypeAlias {
             type_alias,
@@ -1883,7 +1883,7 @@ impl RsTypeKind {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(&db);
                 }
-                let arity = (db.codegen_functions().decl_lifetime_arity)(&*db, record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
+                let arity = (db.codegen_functions().decl_lifetime_arity)(&db, record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
                 if arity == 0 || lifetimes.len() == arity || record.is_raw_string_view() {
                     // Use the safe projection.
                     let lts = if lifetimes.is_empty() {
