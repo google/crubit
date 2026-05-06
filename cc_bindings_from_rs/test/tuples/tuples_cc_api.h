@@ -232,8 +232,8 @@ return_nested_tuples();
 // Error generating bindings for function
 // `tuples_golden::return_new_non_cpp_movable_in_tuple` defined at
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=66:
-// Can't return a type by value inside a compound data type without a move
-// constructor
+// Can't return type `tuples_golden::NonCppMovable` by value inside a compound
+// data type without a move constructor
 
 // Generated from:
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=46

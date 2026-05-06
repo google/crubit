@@ -374,7 +374,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 let core = db.generate_adt_core(adt_def.did())?;
                 // Note: the error here is an ApiSnippets which is not propagated.
                 db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
-                    anyhow!("Can't return a type by value inside a compound data type without a move constructor")
+                    anyhow!("Can't return type `{ty}` by value inside a compound data type without a move constructor")
                 })?;
             }
         }

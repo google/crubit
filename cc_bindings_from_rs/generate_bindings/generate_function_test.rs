@@ -1565,3 +1565,48 @@ fn test_format_item_fn_repr_transparent_generic_struct_param() {
         );
     });
 }
+
+#[test]
+fn test_imported_cpp_type_pass_by_value() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]
+            pub struct ImportedCppType {
+                pub x: i32,
+            }
+
+            impl Drop for ImportedCppType {
+                fn drop(&mut self) {}
+            }
+
+            pub fn pass_by_value(_x: ImportedCppType) {}
+        "#;
+    test_format_item(test_src, "pass_by_value", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Can't pass type `ImportedCppType` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable."
+        );
+    });
+}
+
+#[test]
+fn test_unmovable_type_error_message() {
+    let test_src = r#"
+            pub struct Unmovable {
+                pub x: i32,
+            }
+
+            impl Drop for Unmovable {
+                fn drop(&mut self) {}
+            }
+
+            pub fn pass_unmovable(_x: Unmovable) {}
+        "#;
+    test_format_item(test_src, "pass_unmovable", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Can't pass type `Unmovable` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable."
+        );
+    });
+}
