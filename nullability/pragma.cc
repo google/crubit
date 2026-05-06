@@ -14,8 +14,7 @@
 #include "clang/Lex/Preprocessor.h"
 #include "llvm/ADT/StringSwitch.h"
 
-namespace clang {
-namespace tidy::nullability {
+namespace clang::tidy::nullability {
 namespace {
 
 class DefaultNullabilityPragmaHandler : public PragmaHandler {
@@ -72,5 +71,4 @@ void registerPragmaHandler(Preprocessor &PP, NullabilityPragmas &Out) {
                                          Out, PP.getDiagnostics()));
 }
 
-}  // namespace tidy::nullability
-}  // namespace clang
+}  // namespace clang::tidy::nullability

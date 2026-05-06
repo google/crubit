@@ -18,9 +18,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 namespace internal {
 
@@ -130,8 +128,6 @@ AST_MATCHER(Decl, isInAbslNamespace) {
   return II != nullptr && II->isStr("absl");
 }
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_POINTER_NULLABILITY_MATCHERS_H_

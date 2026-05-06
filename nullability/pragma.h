@@ -19,7 +19,9 @@
 
 namespace clang {
 class Preprocessor;
-namespace tidy::nullability {
+}
+
+namespace clang::tidy::nullability {
 
 using NullabilityPragmas = llvm::DenseMap<FileID, NullabilityKind>;
 
@@ -28,7 +30,6 @@ using NullabilityPragmas = llvm::DenseMap<FileID, NullabilityKind>;
 // `Out` must outlive the preprocessor (i.e. the compilation).
 void registerPragmaHandler(clang::Preprocessor &PP, NullabilityPragmas &Out);
 
-}  // namespace tidy::nullability
-}  // namespace clang
+}  // namespace clang::tidy::nullability
 
 #endif

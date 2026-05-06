@@ -18,9 +18,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Error.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 /// Diagnoses a nullability-related issue in the associated CFG element.
 struct PointerNullabilityDiagnostic {
@@ -96,8 +94,6 @@ diagnosePointerNullability(
     const ValueDecl *VD, const NullabilityPragmas &Pragmas,
     const SolverFactory &MakeSolver = makeDefaultSolverForDiagnosis);
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
