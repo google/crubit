@@ -6,13 +6,10 @@ module(
     version = "0.0.1",
 )
 
-# TODO: this needs to be paired with a refreshed patch
-# (see WORKSPACE.bzlmod)
 bazel_dep(name = "rules_rust", version = "0.71.3")
 bazel_dep(name = "rules_cc", version = "0.2.19")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "abseil-cpp", version = "20260526.0")
-
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "fuzztest", version = "20250214.0")
 bazel_dep(name = "google_benchmark", version = "1.9.1")
@@ -30,6 +27,17 @@ bazel_dep(name = "toolchains_llvm", version = "1.8.0")
 # it to be a newer version.
 bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
 
+########################################################################
+# Building of Clang/LLVM from sources
+llvm_ext = use_extension("//bazel:llvm_extension.bzl", "llvm_extension")
+llvm_ext.configure(commit = "a6b0af7536ef0ae8383ec729c5fbf23c73243776")
+use_repo(llvm_ext, "llvm-raw", "llvm_libxml2", "llvm_zlib", "llvm_zstd")
+
+llvm_configure = use_repo_rule("@llvm-raw//utils/bazel:configure.bzl", "llvm_configure")
+llvm_configure(name = "llvm-project")
+
+########################################################################
+# Rust Crate Dependencies
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
     name = "crate_index",
