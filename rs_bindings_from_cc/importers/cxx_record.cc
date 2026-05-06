@@ -1177,6 +1177,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(trait_derives).status()));
   }
 
+  if (*is_thread_safe) {
+    trait_derives->send = true;
+    trait_derives->sync = true;
+  }
+
   absl::StatusOr<SafetyAnnotation> safety_annotation =
       GetSafetyAnnotation(*record_decl);
   if (!safety_annotation.ok()) {

@@ -333,7 +333,7 @@
 // Marks a type as thread-safe for Rust interop.
 //
 // Types annotated with `CRUBIT_THREAD_SAFE` will:
-// (TODO: b/475929893) * Implement `Send + Sync` in Rust
+// * Implement `Send + Sync` in Rust
 // (TODO: b/475929893) * Have their internal representation wrapped in
 // `UnsafeCell`, allowing non-const C++ methods to be called via shared
 // references (`&self`)
