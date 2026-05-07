@@ -354,9 +354,9 @@ pub mod crubit {
             #[inline(always)]
             unsafe fn ctor_new(args: (*mut crate::crubit::test::ItemNonUnpin,)) -> Self::CtorType {
                 let (arg,) = args;
-                <Self as ::ctor::UnsafeCtorNew<*mut crate::crubit::test::ItemNonUnpin>>::ctor_new(
-                    arg,
-                )
+                unsafe {
+                    <Self as::ctor::UnsafeCtorNew<*mut crate::crubit::test::ItemNonUnpin>>::ctor_new(arg)
+                }
             }
         }
 

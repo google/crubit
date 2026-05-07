@@ -689,7 +689,7 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor
     type Error = ::ctor::Infallible;
     #[inline(always)]
     unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
-        <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args)
+        unsafe { <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args) }
     }
 }
 

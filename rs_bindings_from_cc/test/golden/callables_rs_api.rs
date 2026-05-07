@@ -362,7 +362,9 @@ mod detail {
                 + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -382,7 +384,9 @@ mod detail {
             dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -409,7 +413,9 @@ mod detail {
             dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -422,7 +428,7 @@ mod detail {
         param_0: *mut crate::ABICompatible,
         out: *mut crate::ABICompatible,
     ) {
-        let param_0 = ::core::ptr::read(param_0);
+        let param_0 = unsafe { ::core::ptr::read(param_0) };
         match (unsafe { &*f })(param_0) {
             result => unsafe {
                 ::core::ptr::write(out, result);
@@ -445,7 +451,9 @@ mod detail {
                 + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -458,7 +466,7 @@ mod detail {
         param_0: *mut crate::LayoutCompatible,
         out: *mut crate::LayoutCompatible,
     ) {
-        let param_0 = ::core::ptr::read(param_0);
+        let param_0 = unsafe { ::core::ptr::read(param_0) };
         match (unsafe { &*f })(param_0) {
             result => unsafe {
                 ::core::ptr::write(out, result);
@@ -481,7 +489,9 @@ mod detail {
                 + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -494,12 +504,14 @@ mod detail {
         param_0: *mut ::core::ffi::c_uchar,
         bridge_buffer: *mut ::core::ffi::c_uchar,
     ) {
-        let param_0 = ::bridge_rust::internal::decode(crate::RustBridgedAbi, param_0);
-        ::bridge_rust::internal::encode(
-            crate::RustBridgedAbi,
-            bridge_buffer,
-            (unsafe { &*f })(param_0),
-        );
+        let param_0 = unsafe { ::bridge_rust::internal::decode(crate::RustBridgedAbi, param_0) };
+        unsafe {
+            ::bridge_rust::internal::encode(
+                crate::RustBridgedAbi,
+                bridge_buffer,
+                (unsafe { &*f })(param_0),
+            )
+        };
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -517,7 +529,9 @@ mod detail {
                 + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -547,7 +561,9 @@ mod detail {
                 + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -567,7 +583,9 @@ mod detail {
             dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
 }
 

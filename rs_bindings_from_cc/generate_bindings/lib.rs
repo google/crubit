@@ -1560,7 +1560,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                 }
                 PassingConvention::LayoutCompatible => {
                     ffi_to_rust_transforms.extend(quote! {
-                        let #ident = ::core::ptr::read(#ident);
+                        let #ident = unsafe { ::core::ptr::read(#ident) };
                     });
                     let ty_tokens = ty.to_token_stream(db);
                     Some(quote! { , #ident: *mut #ty_tokens })
@@ -1569,7 +1569,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                     let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
                     let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                     ffi_to_rust_transforms.extend(quote! {
-                        let #ident = ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident);
+                        let #ident = unsafe { ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident) };
                     });
                     Some(quote! { , #ident: *mut ::core::ffi::c_uchar })
                 }
@@ -1630,11 +1630,13 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone()).ok()?;
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
             invoke_rust_and_return_to_ffi = quote! {
-                ::bridge_rust::internal::encode(
-                    #crubit_abi_type_expr_tokens,
-                    bridge_buffer,
-                    #invoke_rust_and_return_to_ffi
-                );
+                unsafe {
+                    ::bridge_rust::internal::encode(
+                        #crubit_abi_type_expr_tokens,
+                        bridge_buffer,
+                        #invoke_rust_and_return_to_ffi
+                    )
+                };
             };
 
             return_type_fragment = None;
@@ -1678,7 +1680,9 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             from: *mut ::alloc::boxed::Box<#dyn_fn_spelling>,
             to: *mut ::alloc::boxed::Box<#dyn_fn_spelling>
         ) {
-            ::dyn_callable_rs::manager(operation, from, to);
+            unsafe {
+                ::dyn_callable_rs::manager(operation, from, to);
+            }
         }
     })
 }
