@@ -29,7 +29,7 @@ either = "1"
 flagset = "0.4"
 googletest = "0.14"
 heck = "0.5"
-itertools = "0.13"
+itertools = "0.14"
 indenter = "0.3"
 once_cell = "1.21.3"
 phf = { version = "0.11", features = [ "macros" ] }
