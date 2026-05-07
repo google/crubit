@@ -47,10 +47,10 @@ cc_test(
         ":collect_evidence",
         ":collect_evidence_test_utilities",
         ":inference_cc_proto",
+        ":proto_matchers",
         ":slot_fingerprint",
         ":usr_cache",
         "//nullability:pragma",
-        "//nullability:proto_matchers",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
@@ -78,13 +78,28 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "proto_matchers",
+    testonly = 1,
+    srcs = ["proto_matchers.cc"],
+    hdrs = ["proto_matchers.h"],
+    visibility = [":__subpackages__"],
+    deps = [
+        "//third_party/protobuf",
+        "@abseil-cpp//absl/base:nullability",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+    ],
+)
+
 cc_test(
     name = "merge_test",
     srcs = ["merge_test.cc"],
     deps = [
         ":inference_cc_proto",
         ":merge",
-        "//nullability:proto_matchers",
+        ":proto_matchers",
         "//third_party/protobuf",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//llvm:Support",
@@ -179,8 +194,8 @@ cc_test(
         ":eligible_ranges",
         ":eligible_ranges_for_test",
         ":inference_cc_proto",
+        ":proto_matchers",
         "//nullability:pragma",
-        "//nullability:proto_matchers",
         "//nullability:type_nullability",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings",
@@ -213,8 +228,8 @@ cc_test(
         ":augmented_test_inputs",
         ":infer_tu",
         ":inference_cc_proto",
+        ":proto_matchers",
         "//nullability:pragma",
-        "//nullability:proto_matchers",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",

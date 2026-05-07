@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_NULLABILITY_PROTO_MATCHERS_H_
-#define CRUBIT_NULLABILITY_PROTO_MATCHERS_H_
+#ifndef CRUBIT_NULLABILITY_INFERENCE_PROTO_MATCHERS_H_
+#define CRUBIT_NULLABILITY_INFERENCE_PROTO_MATCHERS_H_
 
 #include "llvm/ADT/StringRef.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"

@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "nullability/proto_matchers.h"
+#include "nullability/inference/proto_matchers.h"
 
 #include <memory>
 #include <new>

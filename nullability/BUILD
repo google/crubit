@@ -259,21 +259,6 @@ cc_test(
 )
 
 cc_library(
-    name = "proto_matchers",
-    testonly = 1,
-    srcs = ["proto_matchers.cc"],
-    hdrs = ["proto_matchers.h"],
-    visibility = [":__subpackages__"],
-    deps = [
-        "//third_party/protobuf",
-        "@abseil-cpp//absl/base:nullability",
-        "@llvm-project//llvm:Support",
-        "@llvm-project//third-party/unittest:gmock",
-        "@llvm-project//third-party/unittest:gtest",
-    ],
-)
-
-cc_library(
     name = "type_and_maybe_loc_visitor",
     hdrs = ["type_and_maybe_loc_visitor.h"],
     deps = [
