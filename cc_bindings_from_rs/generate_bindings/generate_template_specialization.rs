@@ -24,7 +24,7 @@ use rustc_abi::VariantIdx;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-#[rustversion::since(2026-04-22)]
+#[rustversion::since(2026-04-20)]
 use rustc_middle::ty::Unnormalized;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
@@ -75,9 +75,9 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     // This avoids what would be wasted work normalizing a type we're immediately going to
     // return None for.
     self_ty.ty_adt_def()?;
-    #[rustversion::before(2026-04-22)]
+    #[rustversion::before(2026-04-20)]
     let unnorm_ty = self_ty;
-    #[rustversion::since(2026-04-22)]
+    #[rustversion::since(2026-04-20)]
     let unnorm_ty = Unnormalized::new(self_ty);
     let self_ty = replace_all_regions_with_static(
         tcx,
