@@ -211,7 +211,6 @@ cc_test(
     deps = [
         ":pragma",
         ":type_nullability",
-        "//nullability/test:test_headers",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",

@@ -3,8 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Tests for the treatment of the `this` pointer (which is always nonnull).
-#include <optional>
-#include <set>
 #include <string>
 
 #include "nullability/test/check_diagnostics.h"
