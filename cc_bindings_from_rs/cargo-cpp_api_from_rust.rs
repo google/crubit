@@ -123,7 +123,7 @@ fn stream_cargo_build(
 fn build_crate_and_stream_artifacts(
     build_args: &[String],
 ) -> Result<HashMap<String, ArtifactInfo>> {
-    let mut args = vec!["build".to_string(), "--message-format=json".to_string()];
+    let mut args = vec!["rustc".to_string(), "--message-format=json".to_string()];
     args.extend(build_args.iter().cloned());
 
     let mut pkg_to_artifact = HashMap::new();
