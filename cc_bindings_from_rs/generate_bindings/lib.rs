@@ -304,7 +304,7 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
 
     let mut extern_crate_decls: Vec<TokenStream> = vec![];
     let (mut core_renamed, mut alloc_renamed) = (false, false);
-    for (name, renamed) in db.crate_renames().iter() {
+    for (name, renamed) in db.crate_renames().iter().sorted() {
         if name.as_ref() == "core" {
             core_renamed = true;
         }
