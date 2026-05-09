@@ -127,6 +127,7 @@ cc_library(
         "//rs_bindings_from_cc:recording_diagnostic_consumer",
         "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/container:btree",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

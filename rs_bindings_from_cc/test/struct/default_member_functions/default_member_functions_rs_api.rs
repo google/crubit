@@ -73,7 +73,7 @@ impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
 
 // Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=17
 // error: function `UncopyableDespiteDecl::operator=` could not be bound
-//   Implicit copy assignment is considered invalid
+//   Defaulted function relies on an invalid decl: UncopyableDespiteDecl::operator=
 
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=19
 impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {

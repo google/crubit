@@ -186,13 +186,13 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=14
 // error: function `Template<int>::IndirectCannotBeInstantiated` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18
-// error: function `Template<int>::CannotBeInstantiated` could not be bound
 //   Failed to instantiate the function/method template: Diagnostics emitted:
 //   rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16:5: note: in instantiation of member function 'Template<int>::CannotBeInstantiated' requested here
 //   rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18:47: error: static assertion failed
+
+// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18
+// error: function `Template<int>::CannotBeInstantiated` could not be bound
+//   Instantiating this template relies on an invalid decl: Template<int>::CannotBeInstantiated
 
 #[path = "rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types_extra.rs"]
 mod __crubit_mod_0;
