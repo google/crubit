@@ -13,6 +13,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -970,22 +971,40 @@ llvm::json::Value IR::ToJson() const {
   CHECK_EQ(json_items.size(), items.size());
 
   llvm::json::Object top_level_item_ids_json;
-  for (const auto& [target, item_ids] : top_level_item_ids) {
-    std::vector<llvm::json::Value> item_ids_json;
-    item_ids_json.reserve(item_ids.size());
-    for (const auto& item_id : item_ids) {
-      item_ids_json.push_back(item_id.value());
+  {
+    std::vector<std::pair<BazelLabel, std::vector<ItemId>>>
+        sorted_top_level_item_ids(top_level_item_ids.begin(),
+                                  top_level_item_ids.end());
+    absl::c_sort(sorted_top_level_item_ids, [](const auto& a, const auto& b) {
+      return a.first.value() < b.first.value();
+    });
+    for (const auto& [target, item_ids] : sorted_top_level_item_ids) {
+      std::vector<llvm::json::Value> item_ids_json;
+      item_ids_json.reserve(item_ids.size());
+      for (const auto& item_id : item_ids) {
+        item_ids_json.push_back(item_id.value());
+      }
+      top_level_item_ids_json[target.value()] = std::move(item_ids_json);
     }
-    top_level_item_ids_json[target.value()] = std::move(item_ids_json);
   }
 
   llvm::json::Object features_json;
-  for (const auto& [target, features] : crubit_features) {
-    std::vector<llvm::json::Value> feature_array;
-    for (const std::string& feature : features) {
-      feature_array.push_back(feature);
+  {
+    std::vector<std::pair<BazelLabel, absl::flat_hash_set<std::string>>>
+        sorted_crubit_features(crubit_features.begin(), crubit_features.end());
+    absl::c_sort(sorted_crubit_features, [](const auto& a, const auto& b) {
+      return a.first.value() < b.first.value();
+    });
+    for (const auto& [target, features] : sorted_crubit_features) {
+      std::vector<llvm::json::Value> feature_array;
+      std::vector<std::string> sorted_features(features.begin(),
+                                               features.end());
+      absl::c_sort(sorted_features);
+      for (const std::string& feature : sorted_features) {
+        feature_array.push_back(feature);
+      }
+      features_json[target.value()] = std::move(feature_array);
     }
-    features_json[target.value()] = std::move(feature_array);
   }
 
   llvm::json::Object result{

@@ -945,6 +945,24 @@ TEST(ImporterTest, TopLevelItemIds) {
           VariantWith<Comment>(TextIs("namespace top_level_namespace"))));
 }
 
+TEST(ImporterTest, IRToJsonPreservesSortedOrder) {
+  IR ir;
+  ir.top_level_item_ids[BazelLabel("//target:a")] = {ItemId{1}};
+  ir.top_level_item_ids[BazelLabel("//target:b")] = {ItemId{2}};
+  ir.top_level_item_ids[BazelLabel("//target:c")] = {ItemId{3}};
+
+  llvm::json::Value json = ir.ToJson();
+  std::string json_str = llvm::formatv("{0}", json);
+
+  size_t pos_a = json_str.find("//target:a");
+  size_t pos_b = json_str.find("//target:b");
+  size_t pos_c = json_str.find("//target:c");
+
+  // Assert that keys are sorted deterministically in alphabetical order.
+  EXPECT_LT(pos_a, pos_b);
+  EXPECT_LT(pos_b, pos_c);
+}
+
 TEST(ImporterTest, ForwardDeclarationAndDefinition) {
   absl::string_view file = R"cc(
     struct ForwardDeclaredStruct;
