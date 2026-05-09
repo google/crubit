@@ -13,6 +13,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -981,8 +982,11 @@ llvm::json::Value IR::ToJson() const {
 
   llvm::json::Object features_json;
   for (const auto& [target, features] : crubit_features) {
+    std::vector<std::string> sorted_features(features.begin(), features.end());
+    absl::c_sort(sorted_features);
     std::vector<llvm::json::Value> feature_array;
-    for (const std::string& feature : features) {
+    feature_array.reserve(sorted_features.size());
+    for (const std::string& feature : sorted_features) {
       feature_array.push_back(feature);
     }
     features_json[target.value()] = std::move(feature_array);
