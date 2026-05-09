@@ -2633,11 +2633,12 @@ fn function_signature(
     let parent_lifetimes = collect_parent_lifetime_bindings(db, func)?;
 
     let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types, &func.lifetime_inputs)
+        .into_iter()
         .filter(|lifetime| !parent_lifetimes.contains(lifetime.0.as_ref()))
         .collect();
 
     let mut lifetimes_including_impl: Vec<Lifetime> =
-        unique_lifetimes(&*param_types, &func.lifetime_inputs).collect();
+        unique_lifetimes(&*param_types, &func.lifetime_inputs);
 
     let mut lifetime_inputs_and_parents = func.lifetime_inputs.clone();
     for lifetime in parent_lifetimes {
@@ -2645,6 +2646,7 @@ fn function_signature(
     }
     let all_lifetimes: Vec<Lifetime> =
         unique_lifetimes(&*param_types, &lifetime_inputs_and_parents)
+            .into_iter()
             .filter(|lifetime| !lifetime.is_elided())
             .collect();
 

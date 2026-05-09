@@ -189,6 +189,7 @@ pub fn generate_function_thunk(
 
     // Of the remaining lifetimes, put them in the generic parameters.
     let lifetimes: Vec<_> = unique_lifetimes(param_types.clone(), &func.lifetime_inputs)
+        .into_iter()
         .chain(extra_return_lifetime)
         .filter(|lifetime| !lifetime.is_elided())
         .collect();

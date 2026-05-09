@@ -1566,14 +1566,14 @@ fn test_nonunpin_by_value_params() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl <'b, 'y, 'b_2> ::ctor::CtorNew<(
+            impl <'b, 'b_2, 'y> ::ctor::CtorNew<(
                 &'b ::ffi_11::c_int,
                 ::ctor::RvalueReference<'y, Self>,
                 ::ctor::RvalueReference<'b_2, Self>)
             > for HasConstructor {
                 // The captures are why we need explicit lifetimes for the two rvalue reference
                 // parameters.
-                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b, 'y, 'b_2>;
+                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b, 'b_2, 'y>;
                 type Error = ::ctor::Infallible;
 
                 #[inline (always)]
@@ -2048,6 +2048,37 @@ fn test_simple_explicit_lifetime() -> Result<()> {
     );
 
     assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3AddRi});
+    Ok(())
+}
+
+#[gtest]
+fn test_deterministic_lifetime_order() -> Result<()> {
+    let cc_src = with_lifetime_macros(
+        r#"
+        struct LIFETIME_PARAMS("a", "b", "c", "d") S {
+            int& $a x;
+            int& $b y;
+            int& $c z;
+            int& $d w;
+            S();
+            ~S();
+        };
+    "#,
+    );
+
+    let ir = ir_from_assumed_lifetimes_cc(&cc_src)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+
+    // Verify that lifetimes are sorted alphabetically in the `use<...>` clause.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            ...
+            + use<'a, 'b, 'c, 'd>
+            ...
+        }
+    );
+
     Ok(())
 }
 

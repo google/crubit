@@ -191,7 +191,7 @@ impl ToTokens for CratePath {
 pub fn unique_lifetimes<'a>(
     types: impl IntoIterator<Item = &'a RsTypeKind> + 'a,
     assumed_inputs: &Vec<Rc<str>>,
-) -> impl Iterator<Item = Lifetime> + 'a {
+) -> Vec<Lifetime> {
     let mut unordered_lifetimes = HashSet::new();
     let mut saved_assumed_inputs: Vec<Lifetime> = Vec::new();
     for lt in assumed_inputs {
@@ -200,11 +200,14 @@ pub fn unique_lifetimes<'a>(
             saved_assumed_inputs.push(rs_lt);
         }
     }
-    types
+    let mut all_lifetimes: Vec<Lifetime> = types
         .into_iter()
         .flat_map(|ty| ty.lifetimes())
         .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
         .chain(saved_assumed_inputs)
+        .collect();
+    all_lifetimes.sort_by(|a, b| a.0.cmp(&b.0));
+    all_lifetimes
 }
 
 pub fn format_generic_params<'a, T: ToTokens>(

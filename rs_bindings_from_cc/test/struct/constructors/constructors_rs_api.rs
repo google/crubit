@@ -698,8 +698,8 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN34StructWithUserProvidedConstructorsaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: &'__this mut crate::StructWithUserProvidedConstructors,
             __param_0: &'__param_0 crate::StructWithUserProvidedConstructors,
@@ -748,8 +748,8 @@ mod detail {
             other: &'other crate::OtherSimpleStruct,
         );
         pub(crate) unsafe fn __rust_thunk___ZN28StructWithInlineConstructorsaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: &'__this mut crate::StructWithInlineConstructors,
             __param_0: &'__param_0 crate::StructWithInlineConstructors,
@@ -766,15 +766,15 @@ mod detail {
             i: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN29StructWithDeletedConstructorsaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>,
             __param_0: &'__param_0 crate::StructWithDeletedConstructors,
         ) -> ::core::pin::Pin<&'__this mut crate::StructWithDeletedConstructors>;
         pub(crate) unsafe fn __rust_thunk___ZN29StructWithPrivateConstructorsaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::StructWithPrivateConstructors>,
             __param_0: &'__param_0 crate::StructWithPrivateConstructors,
@@ -789,8 +789,8 @@ mod detail {
             __param_0: &'__param_0 crate::NonTrivialStructWithConstructors,
         );
         pub(crate) unsafe fn __rust_thunk___ZN32NonTrivialStructWithConstructorsaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::NonTrivialStructWithConstructors>,
             __param_0: &'__param_0 crate::NonTrivialStructWithConstructors,
