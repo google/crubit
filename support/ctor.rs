@@ -966,7 +966,9 @@ unsafe impl<T, E> Ctor for RustMoveCtor<T, E> {
     type Output = T;
     type Error = E;
     unsafe fn ctor(self, dest: *mut T) -> Result<(), E> {
-        dest.write(self.0);
+        unsafe {
+            dest.write(self.0);
+        }
         Ok(())
     }
 }
