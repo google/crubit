@@ -304,6 +304,12 @@ fn test_format_ty_for_cc_successes() {
             cc: "::rs::core::cmp::Ordering",
             includes: ["\"fake_bindings_for_unittests/core_cc_api.h\""]
         ),
+        case!(
+            rs: "LifetimeGenericStruct<'static>",
+            cc: "::rust_out::LifetimeGenericStruct",
+            includes: [],
+            prereq_def: "LifetimeGenericStruct"
+        ),
     ];
     let preamble = quote! {
         #![allow(unused_parens)]
@@ -321,6 +327,10 @@ fn test_format_ty_for_cc_successes() {
         pub union SomeUnion {
             pub x: i32,
             pub y: i32,
+        }
+
+        pub struct LifetimeGenericStruct<'a> {
+            pub reference: &'a u8,
         }
 
         #[allow(unused)]
@@ -466,6 +476,14 @@ fn test_format_ty_for_cc_failures() {
             "Failed to format type for the definition of `std::alloc::LayoutError`: \
              Zero-sized types (ZSTs) are not supported (b/258259459)",
         ),
+        (
+            "LifetimeGenericStruct<'_>",
+            "Types with non-'static lifetimes are not supported yet (b/500486197)",
+        ),
+        (
+            "Option<LifetimeGenericStruct<'_>>",
+            "Types with non-'static lifetimes are not supported yet (b/500486197)",
+        ),
     ];
     let preamble = quote! {
         #![feature(never_type)]
@@ -482,6 +500,10 @@ fn test_format_ty_for_cc_failures() {
 
         pub struct TypeGenericStruct<T = u8> {
             pub t: T,
+        }
+
+        pub struct LifetimeGenericStruct<'a> {
+            pub reference: &'a u8,
         }
     };
     test_ty(

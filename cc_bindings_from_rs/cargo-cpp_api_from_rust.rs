@@ -65,9 +65,20 @@ fn main() -> Result<()> {
     let mut env_args = std::env::args();
     env_args.next(); // Remove the binary name.
     let cli = Cli::try_parse_from(env_args)?;
-    let mut metadata = cli.manifest.metadata();
-    cli.features.forward_metadata(&mut metadata);
-    let metadata = metadata.exec()?;
+    let mut cmd = cargo_metadata::MetadataCommand::new();
+    if let Some(ref path) = cli.manifest.manifest_path {
+        cmd.manifest_path(path);
+    }
+    if cli.features.all_features {
+        cmd.features(cargo_metadata::CargoOpt::AllFeatures);
+    }
+    if cli.features.no_default_features {
+        cmd.features(cargo_metadata::CargoOpt::NoDefaultFeatures);
+    }
+    if !cli.features.features.is_empty() {
+        cmd.features(cargo_metadata::CargoOpt::SomeFeatures(cli.features.features.clone()));
+    }
+    let metadata = cmd.exec()?;
 
     let root = metadata.root_package().ok_or_else(|| anyhow!("Failed to find root package"))?;
 
