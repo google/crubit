@@ -1,0 +1,11 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "lib_using_proc_macro"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+my_proc_macro = { path = "../my_proc_macro" }
