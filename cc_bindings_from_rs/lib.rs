@@ -213,10 +213,11 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     };
     at_args.push("--crate-type=lib".to_string());
 
-    // Tell rustc to expect a file on stdin.
-    // We won't pass a file on stdin, we just need to pass CLI validation, so we can override the
-    // input in our callback in run_compiler.
-    at_args.push("-".to_string());
+    // Tell rustc to expect an input file.
+    // We won't pass a real file, we just need to pass CLI validation, so we can override the
+    // input in our callback in run_compiler. We cannot use `-` because then rustc sometimes hangs,
+    // waiting for stdin.
+    at_args.push("unused_this_does_not_exist.rs".to_string());
 
     let compiler_args = at_args;
 
