@@ -1,0 +1,9 @@
+--- a/rust/bazel/aspects.bzl
++++ b/rust/bazel/aspects.bzl
+@@ -26,5 +26,5 @@
+ )
+ 
+-visibility(["//rust/...", "//rs_bindings_from_cc/..."])
++visibility(["//..."])
+ 
+ CrateMappingInfo = provider(
