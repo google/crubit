@@ -1914,22 +1914,19 @@ impl NodeSortKey {
             TemplateSpecialization::RsStdEnum(e) => {
                 let ty = e.core.self_ty_rs;
 
-                use rustc_data_structures::stable_hasher::StableHasher;
-                // Old name up to nightly 2026-05-02.
-                #[cfg_accessible(rustc_data_structures::stable_hasher::HashStable)]
-                use rustc_data_structures::stable_hasher::HashStable;
-                // New name since nightly 2026-05-03.
-                #[cfg_accessible(rustc_data_structures::stable_hasher::StableHash)]
-                use rustc_data_structures::stable_hasher::StableHash;
+                #[rustversion::since(2026-05-08)]
+                use rustc_data_structures::stable_hash;
+                #[rustversion::before(2026-05-08)]
+                use rustc_data_structures::stable_hasher as stable_hash;
 
                 let hash = tcx.with_stable_hashing_context(|mut hcx| {
-                    let mut hasher = StableHasher::new();
-                    // Old name up to nightly 2026-05-02.
-                    #[cfg_accessible(rustc_data_structures::stable_hasher::HashStable)]
-                    ty.hash_stable(&mut hcx, &mut hasher);
-                    // New name since nightly 2026-05-03.
-                    #[cfg_accessible(rustc_data_structures::stable_hasher::StableHash)]
-                    ty.stable_hash(&mut hcx, &mut hasher);
+                    let mut hasher = stable_hash::StableHasher::new();
+
+                    #[rustversion::before(2026-05-03)]
+                    stable_hash::HashStable::hash_stable(&ty, &mut hcx, &mut hasher);
+                    #[rustversion::since(2026-05-03)]
+                    stable_hash::StableHash::stable_hash(&ty, &mut hcx, &mut hasher);
+
                     hasher
                         .finish::<rustc_data_structures::fingerprint::Fingerprint>()
                         .to_smaller_hash()
