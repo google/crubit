@@ -92,6 +92,7 @@ fn thunk_name(
                 .map(|impl_id| {
                     let trait_id = crate::normalize_ty(
                         tcx,
+                        tcx.param_env(impl_id),
                         tcx.impl_trait_ref(impl_id).instantiate_identity(),
                     )
                     .def_id;
@@ -431,7 +432,11 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
-    return crate::normalize_ty(tcx, tcx.type_of(impl_id).instantiate_identity());
+    return crate::normalize_ty(
+        tcx,
+        tcx.param_env(impl_id),
+        tcx.type_of(impl_id).instantiate_identity(),
+    );
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
@@ -774,7 +779,9 @@ pub fn generate_function<'tcx>(
     let trait_ref = tcx
         .impl_of_assoc(def_id)
         .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
-        .map(|trait_ref| crate::normalize_ty(tcx, trait_ref.instantiate_identity()));
+        .map(|trait_ref| {
+            crate::normalize_ty(tcx, tcx.param_env(def_id), trait_ref.instantiate_identity())
+        });
     let function_kind = function_kind(tcx, def_id, &sig_mid)?;
     let self_ty = function_kind.self_ty();
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.

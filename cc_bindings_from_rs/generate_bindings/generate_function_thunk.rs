@@ -739,7 +739,11 @@ pub fn generate_trait_thunks<'tcx>(
             tcx,
             ty::PseudoCanonicalInput {
                 typing_env: TypingEnv::fully_monomorphized(),
-                value: crate::normalize_ty(tcx, tcx.fn_sig(method.def_id).instantiate(tcx, substs)),
+                value: crate::normalize_ty(
+                    tcx,
+                    tcx.param_env(method.def_id),
+                    tcx.fn_sig(method.def_id).instantiate(tcx, substs),
+                ),
             },
         )
         .expect("Normalization should succeed since this code typechecked");

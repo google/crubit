@@ -1277,7 +1277,11 @@ fn generate_trait_impl_specialization<'tcx>(
     let trait_header = tcx.impl_trait_header(impl_def_id);
     #[rustversion::before(2025-10-17)]
     let trait_header = trait_header.expect("Trait impl should have a trait header");
-    let trait_ref = crate::normalize_ty(tcx, trait_header.trait_ref.instantiate_identity());
+    let trait_ref = crate::normalize_ty(
+        tcx,
+        tcx.param_env(impl_def_id),
+        trait_header.trait_ref.instantiate_identity(),
+    );
     let trait_def_id = trait_ref.def_id;
 
     let canonical_trait_name = db.symbol_canonical_name(trait_def_id).expect(

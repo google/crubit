@@ -477,7 +477,11 @@ fn public_paths_by_def_id(
         // Map type aliases to their underlying type.
         let mut type_alias_def_id = None;
         if def_kind == DefKind::TyAlias {
-            let underlying_type = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
+            let underlying_type = normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            );
             if let crate::ty::TyKind::Adt(def, _) = underlying_type.kind() {
                 type_alias_def_id = Some(def_id);
                 def_id = def.did();
@@ -867,7 +871,11 @@ fn generate_using<'tcx>(
         DefKind::Struct | DefKind::Enum => {
             // This points directly to a type definition, not an alias or compound data
             // type, so we can drop the hir type.
-            let use_type = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
+            let use_type = normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            );
             create_type_alias(db, def_id, using_name.as_str(), use_type)
         }
         DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str()),
@@ -936,7 +944,7 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
             tcx.item_name(def_id).as_str()
         )
     }
-    let ty = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
+    let ty = normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity());
     let rust_type = ty;
     let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
 
@@ -1077,7 +1085,11 @@ fn generate_type_alias<'tcx>(
     def_id: DefId,
     using_name: &str,
 ) -> Result<CcSnippet<'tcx>> {
-    let alias_type = normalize_ty(db.tcx(), db.tcx().type_of(def_id).instantiate_identity());
+    let alias_type = normalize_ty(
+        db.tcx(),
+        db.tcx().param_env(def_id),
+        db.tcx().type_of(def_id).instantiate_identity(),
+    );
     create_type_alias(db, def_id, using_name, alias_type)
 }
 
@@ -1914,9 +1926,9 @@ impl NodeSortKey {
             TemplateSpecialization::RsStdEnum(e) => {
                 let ty = e.core.self_ty_rs;
 
-                #[rustversion::since(2026-05-08)]
+                #[cfg_accessible(rustc_data_structures::stable_hash)]
                 use rustc_data_structures::stable_hash;
-                #[rustversion::before(2026-05-08)]
+                #[cfg_accessible(rustc_data_structures::stable_hasher)]
                 use rustc_data_structures::stable_hasher as stable_hash;
 
                 let hash = tcx.with_stable_hashing_context(|mut hcx| {
@@ -2235,14 +2247,18 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
 }
 
 #[rustversion::before(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, val: T) -> T {
+pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
     val
 }
 
 #[rustversion::since(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(tcx: TyCtxt<'tcx>, val: ty::Unnormalized<'tcx, T>) -> T
+pub fn normalize_ty<'tcx, T>(
+    tcx: TyCtxt<'tcx>,
+    param_env: ty::ParamEnv<'tcx>,
+    val: ty::Unnormalized<'tcx, T>,
+) -> T
 where
-    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+    T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Display + std::fmt::Debug,
 {
     use rustc_infer::infer::TyCtxtInferExt;
     use rustc_infer::traits::ObligationCause;
@@ -2250,11 +2266,7 @@ where
     use rustc_trait_selection::traits::ObligationCtxt;
 
     let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
-    let ocx = ObligationCtxt::new(&infcx);
+    let ocx = ObligationCtxt::new_with_diagnostics(&infcx);
     let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
-    let param_env = ty::ParamEnv::empty();
-    let val = ocx.normalize(&cause, param_env, val);
-    let errors = ocx.evaluate_obligations_error_on_ambiguity();
-    assert!(errors.is_empty(), "Failed to normalize: {errors:?}");
-    val
+    ocx.normalize(&cause, param_env, val)
 }
