@@ -1914,20 +1914,31 @@ impl NodeSortKey {
             TemplateSpecialization::RsStdEnum(e) => {
                 let ty = e.core.self_ty_rs;
 
-                use rustc_data_structures::stable_hasher::StableHasher;
+                #[cfg_accessible(rustc_data_structures::stable_hash)]
+                use rustc_data_structures::stable_hash as stable_hash_compat;
+
+                #[cfg_accessible(rustc_data_structures::stable_hasher)]
+                use rustc_data_structures::stable_hasher as stable_hash_compat;
+
+                use stable_hash_compat::StableHasher;
+
+                // New name since nightly 2026-05-03.
+                #[cfg_accessible(rustc_data_structures::stable_hash)]
+                use rustc_data_structures::stable_hash::StableHash;
+
                 // Old name up to nightly 2026-05-02.
                 #[cfg_accessible(rustc_data_structures::stable_hasher::HashStable)]
                 use rustc_data_structures::stable_hasher::HashStable;
-                // New name since nightly 2026-05-03.
-                #[cfg_accessible(rustc_data_structures::stable_hasher::StableHash)]
-                use rustc_data_structures::stable_hasher::StableHash;
 
                 let hash = tcx.with_stable_hashing_context(|mut hcx| {
                     let mut hasher = StableHasher::new();
-                    // Old name up to nightly 2026-05-02.
+
+                    #[cfg_accessible(rustc_data_structures::stable_hash)]
+                    ty.stable_hash(&mut hcx, &mut hasher);
+
                     #[cfg_accessible(rustc_data_structures::stable_hasher::HashStable)]
                     ty.hash_stable(&mut hcx, &mut hasher);
-                    // New name since nightly 2026-05-03.
+
                     #[cfg_accessible(rustc_data_structures::stable_hasher::StableHash)]
                     ty.stable_hash(&mut hcx, &mut hasher);
                     hasher
