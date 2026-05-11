@@ -13,11 +13,18 @@
 namespace crubit {
 namespace {
 
-TEST(StdlibTraitTest, Iterator) {
+TEST(StdlibTraitTest, IteratorItem) {
   using impl = rs::core::iter::Iterator::impl<stdlib::MyStruct>;
   static_assert(std::is_same_v<impl::Item, std::int32_t>);
+}
 
-  // TODO(b/483382648): Also test bindings of `next()` method once it works.
+TEST(StdlibTraitTest, IteratorNext) {
+  using impl = rs::core::iter::Iterator::impl<stdlib::MyStruct>;
+  auto s = stdlib::MyStruct::new_(3);
+  EXPECT_EQ(std::optional(impl::next(s)), std::make_optional(2));
+  EXPECT_EQ(std::optional(impl::next(s)), std::make_optional(1));
+  EXPECT_EQ(std::optional(impl::next(s)), std::make_optional(0));
+  EXPECT_EQ(std::optional(impl::next(s)), std::nullopt);
 }
 
 }  // namespace

@@ -20,6 +20,12 @@ pub struct MyStruct {
     pub x: i32,
 }
 
+impl MyStruct {
+    pub fn new(x: i32) -> Self {
+        MyStruct { x }
+    }
+}
+
 // Implement `From` (and implicitly `Into`) to verify via goldens that they
 // don't get trait-shaped bindings (since they already get other, idiomatic C++
 // bindings).

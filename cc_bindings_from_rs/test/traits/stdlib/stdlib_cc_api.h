@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/bridge.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
@@ -23,6 +24,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <utility>
 
 #include "support/rs_std/rs_core.h"
@@ -52,6 +54,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=24
+  static ::stdlib::MyStruct new_(::std::int32_t x);
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=20
@@ -75,18 +82,14 @@ template <>
 struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=41
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=47
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: iter :: Iterator>::Item") =
       ::std::int32_t;
 
-  // Error generating bindings for associated function `<stdlib_golden::MyStruct
-  // as std::iter::Iterator>::next` defined at
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=43:
-  // Error formatting function return type
-  // `std::option::Option<<stdlib_golden::MyStruct as
-  // std::iter::Iterator>::Item>`: Unsupported bridge type:
-  // <stdlib_golden::MyStruct as std::iter::Iterator>::Item
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=49
+  static ::std::optional<::std::int32_t> next(::stdlib::MyStruct& self);
 };
 
 namespace stdlib {
@@ -132,10 +135,40 @@ inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(
   }
   return *this;
 }
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::stdlib::MyStruct* __ret_ptr);
+}
+inline ::stdlib::MyStruct MyStruct::new_(::std::int32_t x) {
+  crubit::Slot<::stdlib::MyStruct> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
 }
 }  // namespace stdlib
+
+namespace stdlib {
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_Iterator_unext(::stdlib::MyStruct&,
+                                              unsigned char* __ret_ptr);
+}
+}  // namespace stdlib
+inline ::std::optional<::std::int32_t>
+rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
+    ::stdlib::MyStruct& self) {
+  unsigned char __return_value_storage
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
+  stdlib::__crubit_internal::__crubit_thunk_Iterator_unext(
+      self, __return_value_storage);
+  return ::crubit::internal::Decode<
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
+      __return_value_storage);
+}
 
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_STDLIB_STDLIB_GOLDEN

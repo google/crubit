@@ -44,4 +44,27 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
 ) -> () {
     unsafe { <::stdlib_golden::MyStruct as ::core::clone::Clone>::clone_from(__self, source) }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::stdlib_golden::MyStruct::new(x);
+        (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
+    }
+}
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::MyStruct, x) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Iterator_unext(
+    __self: &'static mut ::stdlib_golden::MyStruct,
+    __ret_ptr: *mut core::ffi::c_uchar,
+) -> () {
+    unsafe {
+        let __rs_return_value = <::stdlib_golden::MyStruct as ::core::iter::Iterator>::next(__self);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                __ret_ptr as *mut core::ffi::c_uchar,
+                __rs_return_value,
+            );
+        }
+    }
+}

@@ -772,6 +772,24 @@ pub fn generate_function<'tcx>(
     let sig_mid = {
         let generic_args = db.get_generic_args(def_id)?;
         let early_bound_fn_sig = tcx.fn_sig(def_id).instantiate(tcx, generic_args);
+        let is_trait_method = tcx.trait_impl_of_assoc(def_id).is_some();
+        let early_bound_fn_sig = if is_trait_method {
+            let fn_sig = query_compiler::try_normalize(
+                tcx,
+                ty::PseudoCanonicalInput {
+                    typing_env: ty::TypingEnv::fully_monomorphized(),
+                    value: crate::normalize_ty(tcx, tcx.param_env(def_id), early_bound_fn_sig),
+                },
+            )
+            .map_err(|_| anyhow!("Failed to normalize fn sig for {}", tcx.def_path_str(def_id)))?;
+            // We need this to line up the types going into `liberate_and_deanonymize_late_bound_regions`
+            // which expects a `ty::Unnormalized` input.
+            #[rustversion::since(2026-04-19)]
+            let fn_sig = ty::Unnormalized::new(fn_sig);
+            fn_sig
+        } else {
+            early_bound_fn_sig
+        };
         liberate_and_deanonymize_late_bound_regions(tcx, early_bound_fn_sig, def_id)
     };
     check_fn_sig(&sig_mid)?;

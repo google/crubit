@@ -2296,13 +2296,11 @@ fn test_trait_impl_for_std_iter_iterator_trait() {
                     using Item CRUBIT_INTERNAL_RUST_TYPE(
                         "<MyStruct as :: core :: iter :: Iterator>::Item") = ::std::int32_t;
                     ...
-                    // TODO(b/483382648): Cover `next` once its bindings work.
                 };
             }
         );
 
-        // TODO(b/483382648): Remove this `assert_cc_not_matches` and expect
-        // `next` in `assert_cc_matches` above once its bindings work.
-        assert_cc_not_matches!(bindings.cc_api, quote! { next ( ... ) },);
+        // `next` bindings work now!
+        assert_cc_matches!(bindings.cc_api, quote! { next ( ... ) },);
     });
 }
