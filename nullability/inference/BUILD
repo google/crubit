@@ -314,7 +314,7 @@ cc_library(
         ":clang_tidy_nullability_replacement_macros",
         ":replace_macros",
         "//nullability:pragma",
-        "//nullability/test:test_headers",
+        "//nullability/test:mock_headers",
         "@llvm-project//clang:frontend",
         "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",

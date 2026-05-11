@@ -36,7 +36,7 @@
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pragma.h"
-#include "nullability/test/test_headers.h"
+#include "nullability/test/mock_headers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTTypeTraits.h"
@@ -65,7 +65,6 @@
 #include "clang/Tooling/CompilationDatabase.h"
 #include "clang/Tooling/StandaloneExecution.h"
 #include "clang/Tooling/Tooling.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
@@ -645,9 +644,9 @@ int main(int argc, const char **argv) {
     exit(1);
   }
   clang::tooling::StandaloneToolExecutor Executor{*CDB, Sources};
-  for (const auto &Entry :
-       llvm::ArrayRef(test_headers_create(), test_headers_size()))
-    Executor.mapVirtualFile(Entry.name, Entry.data);
+  auto Headers = clang::tidy::nullability::test::getMockHeaders();
+  for (const auto& Entry : Headers)
+    Executor.mapVirtualFile(Entry.first, Entry.second);
   // Run in C++17 and C++20 mode to cover differences in the AST between modes
   // (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
   for (const char *CxxMode : {"-std=c++17", "-std=c++20"})
