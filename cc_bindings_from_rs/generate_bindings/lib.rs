@@ -482,7 +482,29 @@ fn public_paths_by_def_id(
                 tcx.param_env(def_id),
                 tcx.type_of(def_id).instantiate_identity(),
             );
-            if let crate::ty::TyKind::Adt(def, _) = underlying_type.kind() {
+            if let crate::ty::TyKind::Adt(def, args) = underlying_type.kind() {
+                let alias_generics = tcx.generics_of(def_id);
+                // Check if generics match.
+                let generics_do_not_match = args.len() != alias_generics.own_params.len()
+                    || args.iter().zip(alias_generics.own_params.iter()).any(|(arg, param)| {
+                        !matches!(
+                            (arg.kind(), &param.kind),
+                            (ty::GenericArgKind::Type(_), ty::GenericParamDefKind::Type { .. })
+                                | (
+                                    ty::GenericArgKind::Const(_),
+                                    ty::GenericParamDefKind::Const { .. }
+                                )
+                                | (
+                                    ty::GenericArgKind::Lifetime(_),
+                                    ty::GenericParamDefKind::Lifetime
+                                )
+                        )
+                    });
+                // If our generics do not match for our type alias, do not consider them a public
+                // path for their underlying type.
+                if generics_do_not_match {
+                    return;
+                }
                 type_alias_def_id = Some(def_id);
                 def_id = def.did();
             }
