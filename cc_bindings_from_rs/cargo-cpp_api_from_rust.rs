@@ -23,7 +23,7 @@
 
 use arc_anyhow::{anyhow, bail, Result};
 use cargo_metadata::camino::Utf8PathBuf;
-use cargo_metadata::{Message, Metadata, Package, PackageId, Resolve};
+use cargo_metadata::{Artifact, Message, Metadata, Package, PackageId, Resolve};
 use clap::Parser;
 use cmdline::Cmdline;
 
@@ -105,7 +105,7 @@ use std::process::Child;
 
 fn stream_cargo_build(
     args: &[String],
-) -> Result<(Child, impl Iterator<Item = Result<Message, std::io::Error>>)> {
+) -> Result<(Child, impl Iterator<Item = Result<Artifact, std::io::Error>>)> {
     let mut build_command = Command::new(cargo_bin());
     build_command.args(args);
 
@@ -117,7 +117,25 @@ fn stream_cargo_build(
     let reader = std::io::BufReader::new(
         command.stdout.take().ok_or_else(|| anyhow!("Failed to open cargo stdout"))?,
     );
-    Ok((command, cargo_metadata::Message::parse_stream(reader)))
+    // Print out any compiler diagnostics when we walk the iterator leaving only the complier artifacts.
+    Ok((
+        command,
+        cargo_metadata::Message::parse_stream(reader).filter_map(|message| match message {
+            Ok(message) => match message {
+                Message::CompilerMessage(msg) => {
+                    eprint!("{}", msg);
+                    None
+                }
+                Message::TextLine(msg) => {
+                    eprint!("{}", msg);
+                    None
+                }
+                Message::CompilerArtifact(artifact) => Some(Ok(artifact)),
+                _ => None,
+            },
+            Err(err) => Some(Err(err)),
+        }),
+    ))
 }
 
 fn build_crate_and_stream_artifacts(
@@ -128,29 +146,25 @@ fn build_crate_and_stream_artifacts(
 
     let mut pkg_to_artifact = HashMap::new();
     let (command, stream) = stream_cargo_build(&args)?;
-    for message in stream {
-        let message = message.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
-        if let Message::CompilerArtifact(artifact) = message {
-            let find_metadata_file = artifact.filenames.iter().find(|filename| {
-                filename.extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib")
-            });
-            if let Some(filename) = find_metadata_file {
-                let hash = filename
-                    .file_stem()
-                    .and_then(|s| s.rsplitn(2, '-').next())
-                    .unwrap_or("")
-                    .to_string();
-                pkg_to_artifact.insert(
-                    artifact.package_id.repr.clone(),
-                    ArtifactInfo {
-                        path: filename.clone(),
-                        name: artifact.target.name.clone(),
-                        hash,
-                        fresh: artifact.fresh,
-                    },
-                );
-            }
-        }
+    for artifact in stream {
+        let artifact = artifact.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
+        let find_metadata_file = artifact.filenames.iter().find(|filename| {
+            filename.extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib")
+        });
+        let Some(filename) = find_metadata_file else {
+            continue;
+        };
+        let hash =
+            filename.file_stem().and_then(|s| s.rsplitn(2, '-').next()).unwrap_or("").to_string();
+        pkg_to_artifact.insert(
+            artifact.package_id.repr.clone(),
+            ArtifactInfo {
+                path: filename.clone(),
+                name: artifact.target.name.clone(),
+                hash,
+                fresh: artifact.fresh,
+            },
+        );
     }
 
     let cargo_output =
@@ -406,15 +420,13 @@ bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
         }
         let (child, stream) = stream_cargo_build(&cargo_build)?;
         let mut cargo_static_lib_path = None;
-        for message in stream {
-            let message =
-                message.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
-            // TODO: Extract an iterator wrapper that prints out lines out output and returns artifacts.
-            let Message::CompilerArtifact(artifact) = message else {
-                continue;
-            };
+        for artifact in stream {
+            let artifact =
+                artifact.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
             if artifact.target.kind.contains(&cargo_metadata::TargetKind::StaticLib) {
                 cargo_static_lib_path = artifact.filenames.first().cloned();
+                // It's important to consume the entire iterator, even after we've found the
+                // artifact, so we don't miss any diagnostics emitted.
             }
         }
 
