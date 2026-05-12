@@ -111,12 +111,9 @@ team itself, as part of producing bindings for high-touch core libraries.
 
 ### `"//features:experimental"` {#experimental}
 
-WARNING: `experimental` has known compilation errors when used (e.g.
-b/439435837), and is by allowlist only. As a general rule, you should prefer to
-deploy a workaround rather than use `experimental`.
-
-<!-- TODO(b/439435837): update to different bug link once fixed, or else change
-to warn that it's easily broken / fragile and may have bugs. -->
+WARNING: `experimental` is easily broken, may have bugs at head, and is by
+allowlist only. As a general rule, you should prefer to deploy a workaround
+rather than use `experimental`.
 
 The `experimental` feature enables internal-only experimental capabilities. This
 is used for testing of upcoming features, and is also used by pilot partners who
