@@ -120,12 +120,24 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
-        # LINT.IfChange
-        rust_flags = ["-Zallow-features=custom_inner_attributes,impl_trait_in_assoc_type,register_tool,negative_impls,extern_types,arbitrary_self_types,allocator_api,cfg_sanitize"] + remapped_flags,
-        # LINT.ThenChange(//docs/overview/unstable_features.md)
+        rust_flags = remapped_flags,
         output_hash = output_hash,
         force_all_deps_direct = force_all_deps_direct,
         include_coverage = include_coverage,
+        # LINT.IfChange
+        allowed_unstable_rust_features = [
+            # <internal link> start
+            "allocator_api",
+            "arbitrary_self_types",
+            "cfg_sanitize",
+            "custom_inner_attributes",
+            "extern_types",
+            "impl_trait_in_assoc_type",
+            "negative_impls",
+            "register_tool",
+            # <internal link> end
+        ],
+        # LINT.ThenChange(//docs/overview/unstable_features.md)
     )
 
     return DepVariantInfo(
