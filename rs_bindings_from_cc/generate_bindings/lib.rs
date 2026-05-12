@@ -1158,8 +1158,8 @@ fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
-        RsTypeKind::Error { error, .. } => {
-            bail!("Type has an error and cannot be bridged: {error}")
+        RsTypeKind::Error { symbol, error, .. } => {
+            bail!("Type '{symbol}' has an error and cannot be bridged: {error}")
         }
         RsTypeKind::TypeAlias { underlying_type, .. } => {
             // We don't actually _have_ to expand the type alias here
