@@ -30,14 +30,14 @@ pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
 /// A basic templated type that does nothing fancy.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Value < int >
+///CRUBIT_ANNOTATE: cpp_type=:: Value < int >
 pub(crate) struct __CcTemplateInst5ValueIiE {
     pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst5ValueIiE {}
 impl !Sync for __CcTemplateInst5ValueIiE {}
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("Value < int >"),
+    forward_declare::symbol!(":: Value < int >"),
     crate::__CcTemplateInst5ValueIiE
 );
 

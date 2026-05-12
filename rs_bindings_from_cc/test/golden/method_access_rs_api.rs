@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Struct
+///CRUBIT_ANNOTATE: cpp_type=:: Struct
 pub struct Struct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Struct {}
 impl !Sync for Struct {}
 unsafe impl ::cxx::ExternType for Struct {
-    type Id = ::cxx::type_id!("Struct");
+    type Id = ::cxx::type_id!(":: Struct");
     type Kind = ::cxx::kind::Trivial;
 }
 impl Struct {
@@ -77,14 +77,14 @@ pub mod r#struct {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Class
+///CRUBIT_ANNOTATE: cpp_type=:: Class
 pub struct Class {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Class {}
 impl !Sync for Class {}
 unsafe impl ::cxx::ExternType for Class {
-    type Id = ::cxx::type_id!("Class");
+    type Id = ::cxx::type_id!(":: Class");
     type Kind = ::cxx::kind::Trivial;
 }
 impl Class {

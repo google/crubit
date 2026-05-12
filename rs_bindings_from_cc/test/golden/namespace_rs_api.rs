@@ -17,14 +17,14 @@
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: S
+    ///CRUBIT_ANNOTATE: cpp_type=:: test_namespace_bindings :: S
     pub struct S {
         pub i: ::ffi_11::c_int,
     }
     impl !Send for S {}
     impl !Sync for S {}
     unsafe impl ::cxx::ExternType for S {
-        type Id = ::cxx::type_id!("test_namespace_bindings :: S");
+        type Id = ::cxx::type_id!(":: test_namespace_bindings :: S");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -95,14 +95,14 @@ pub mod test_namespace_bindings_reopened {
     pub mod inner {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_reopened :: inner :: S
+        ///CRUBIT_ANNOTATE: cpp_type=:: test_namespace_bindings_reopened :: inner :: S
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for S {}
         impl !Sync for S {}
         unsafe impl ::cxx::ExternType for S {
-            type Id = ::cxx::type_id!("test_namespace_bindings_reopened :: inner :: S");
+            type Id = ::cxx::type_id!(":: test_namespace_bindings_reopened :: inner :: S");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -138,7 +138,7 @@ pub mod test_namespace_bindings_inline {
     pub mod inner {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: inner :: StructInInlineNamespace
+        ///CRUBIT_ANNOTATE: cpp_type=:: test_namespace_bindings_inline :: inner :: StructInInlineNamespace
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -146,7 +146,7 @@ pub mod test_namespace_bindings_inline {
         impl !Sync for StructInInlineNamespace {}
         unsafe impl ::cxx::ExternType for StructInInlineNamespace {
             type Id = ::cxx::type_id!(
-                "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
+                ":: test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
             );
             type Kind = ::cxx::kind::Trivial;
         }

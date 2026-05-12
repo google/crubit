@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/namespace/inline:inline
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -25,14 +25,14 @@ pub mod foo {
         /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=foo :: inline1 :: MyStruct
+        ///CRUBIT_ANNOTATE: cpp_type=:: foo :: inline1 :: MyStruct
         pub struct MyStruct {
             pub value: ::ffi_11::c_int,
         }
         impl !Send for MyStruct {}
         impl !Sync for MyStruct {}
         unsafe impl ::cxx::ExternType for MyStruct {
-            type Id = ::cxx::type_id!("foo :: inline1 :: MyStruct");
+            type Id = ::cxx::type_id!(":: foo :: inline1 :: MyStruct");
             type Kind = ::cxx::kind::Trivial;
         }
 

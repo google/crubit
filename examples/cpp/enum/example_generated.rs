@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/enum:example_lib
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -18,7 +18,7 @@
 /// Generated from: examples/cpp/enum/example.h;l=8
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=Color
+///CRUBIT_ANNOTATE: cpp_type=:: Color
 pub struct Color(::ffi_11::c_uint);
 impl Color {
     pub const kRed: Color = Color(::ffi_11::new_c_uint(0));

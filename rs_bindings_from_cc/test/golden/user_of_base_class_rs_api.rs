@@ -21,7 +21,7 @@
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Derived2
+///CRUBIT_ANNOTATE: cpp_type=:: Derived2
 pub struct Derived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 20],
     pub derived_1: ::ffi_11::c_char,
@@ -29,7 +29,7 @@ pub struct Derived2 {
 impl !Send for Derived2 {}
 impl !Sync for Derived2 {}
 unsafe impl ::cxx::ExternType for Derived2 {
-    type Id = ::cxx::type_id!("Derived2");
+    type Id = ::cxx::type_id!(":: Derived2");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -71,14 +71,14 @@ impl ::ctor::CtorNew<()> for Derived2 {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualDerived2
+///CRUBIT_ANNOTATE: cpp_type=:: VirtualDerived2
 pub struct VirtualDerived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }
 impl !Send for VirtualDerived2 {}
 impl !Sync for VirtualDerived2 {}
 unsafe impl ::cxx::ExternType for VirtualDerived2 {
-    type Id = ::cxx::type_id!("VirtualDerived2");
+    type Id = ::cxx::type_id!(":: VirtualDerived2");
     type Kind = ::cxx::kind::Opaque;
 }
 

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/trivial_abi_struct:example_lib
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -21,7 +21,7 @@
 /// Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 #[derive(Clone)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Position
+///CRUBIT_ANNOTATE: cpp_type=:: Position
 pub struct Position {
     pub x: ::ffi_11::c_int,
     pub y: ::ffi_11::c_int,
@@ -29,7 +29,7 @@ pub struct Position {
 impl !Send for Position {}
 impl !Sync for Position {}
 unsafe impl ::cxx::ExternType for Position {
-    type Id = ::cxx::type_id!("Position");
+    type Id = ::cxx::type_id!(":: Position");
     type Kind = ::cxx::kind::Trivial;
 }
 

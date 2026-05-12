@@ -51,7 +51,7 @@ pub type BadSameAbiAttr = ::ffi_11::c_uchar;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ExistingRustTypeFieldTypes
+///CRUBIT_ANNOTATE: cpp_type=:: ExistingRustTypeFieldTypes
 pub struct ExistingRustTypeFieldTypes {
     pub my_i8_struct: i8,
     pub my_i8_class: i8,
@@ -62,7 +62,7 @@ pub struct ExistingRustTypeFieldTypes {
 impl !Send for ExistingRustTypeFieldTypes {}
 impl !Sync for ExistingRustTypeFieldTypes {}
 unsafe impl ::cxx::ExternType for ExistingRustTypeFieldTypes {
-    type Id = ::cxx::type_id!("ExistingRustTypeFieldTypes");
+    type Id = ::cxx::type_id!(":: ExistingRustTypeFieldTypes");
     type Kind = ::cxx::kind::Trivial;
 }
 

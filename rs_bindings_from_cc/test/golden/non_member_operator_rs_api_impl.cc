@@ -18,15 +18,16 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct ns::X) == 4);
-static_assert(alignof(struct ns::X) == 4);
-static_assert(CRUBIT_OFFSET_OF(f, struct ns::X) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::ns::X) == 4);
+static_assert(alignof(struct ::ns::X) == 4);
+static_assert(CRUBIT_OFFSET_OF(f, struct ::ns::X) == 0);
 
-extern "C" void __rust_thunk___ZN2ns1XC1Ev(struct ns::X* __this) {
+extern "C" void __rust_thunk___ZN2ns1XC1Ev(struct ::ns::X* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" bool __rust_thunk___ZeqN2ns1XES0_(struct ns::X* a, struct ns::X* b) {
+extern "C" bool __rust_thunk___ZeqN2ns1XES0_(struct ::ns::X* a,
+                                             struct ::ns::X* b) {
   return operator==(std::move(*a), std::move(*b));
 }
 

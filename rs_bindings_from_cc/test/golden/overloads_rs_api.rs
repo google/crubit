@@ -54,14 +54,14 @@ pub fn AlsoTemplateOverload() {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Foo
+///CRUBIT_ANNOTATE: cpp_type=:: Foo
 pub struct Foo {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
 unsafe impl ::cxx::ExternType for Foo {
-    type Id = ::cxx::type_id!("Foo");
+    type Id = ::cxx::type_id!(":: Foo");
     type Kind = ::cxx::kind::Trivial;
 }
 impl Foo {

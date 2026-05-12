@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/consume_absl:absl_functional
-// Features: callables, fmt, supported, types
+// Features: callables, fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]

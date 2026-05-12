@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Noninline
+///CRUBIT_ANNOTATE: cpp_type=:: Noninline
 pub struct Noninline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Noninline {}
 impl !Sync for Noninline {}
 unsafe impl ::cxx::ExternType for Noninline {
-    type Id = ::cxx::type_id!("Noninline");
+    type Id = ::cxx::type_id!(":: Noninline");
     type Kind = ::cxx::kind::Trivial;
 }
 impl Noninline {
@@ -125,14 +125,14 @@ pub mod noninline {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Inline
+///CRUBIT_ANNOTATE: cpp_type=:: Inline
 pub struct Inline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Inline {}
 impl !Sync for Inline {}
 unsafe impl ::cxx::ExternType for Inline {
-    type Id = ::cxx::type_id!("Inline");
+    type Id = ::cxx::type_id!(":: Inline");
     type Kind = ::cxx::kind::Trivial;
 }
 impl Inline {

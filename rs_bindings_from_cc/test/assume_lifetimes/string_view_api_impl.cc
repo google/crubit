@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:string_view
-// Features: assume_lifetimes, fmt, supported, types
+// Features: assume_lifetimes, fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -22,7 +22,7 @@
 extern "C" void
 __rust_thunk___Z16string_view_sinkNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
     ::std::__u::string_view* s) {
-  string_view_sink(std::move(*s));
+  ::string_view_sink(std::move(*s));
 }
 
 static_assert((void (*)(::std::__u::string_view)) & ::string_view_sink);
@@ -30,7 +30,7 @@ static_assert((void (*)(::std::__u::string_view)) & ::string_view_sink);
 extern "C" void
 __rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
     ::std::__u::string_view* __return, ::std::__u::string_view* s) {
-  new (__return) auto(string_view_return(std::move(*s)));
+  new (__return) auto(::string_view_return(std::move(*s)));
 }
 
 static_assert((::std::__u::string_view (*)(::std::__u::string_view)) &
@@ -41,7 +41,7 @@ __rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11c
     ::std::__u::string_view* __return, ::std::__u::string_view* a,
     ::std::__u::string_view* b) {
   new (__return) auto(
-      ambiguous_string_view_return(std::move(*a), std::move(*b)));
+      ::ambiguous_string_view_return(std::move(*a), std::move(*b)));
 }
 
 static_assert((::std::__u::string_view (*)(::std::__u::string_view,
@@ -51,7 +51,7 @@ static_assert((::std::__u::string_view (*)(::std::__u::string_view,
 extern "C" void
 __rust_thunk___Z29explicit_lifetime_string_viewNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
     ::std::__u::string_view* x) {
-  explicit_lifetime_string_view(std::move(*x));
+  ::explicit_lifetime_string_view(std::move(*x));
 }
 
 static_assert((void (*)(::std::__u::string_view)) &
@@ -62,7 +62,7 @@ __rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_
     ::std::__u::string_view* __return, ::std::__u::string_view* x,
     ::std::__u::string_view* y) {
   new (__return) auto(
-      unambiguous_string_view_return_annotated(std::move(*x), std::move(*y)));
+      ::unambiguous_string_view_return_annotated(std::move(*x), std::move(*y)));
 }
 
 static_assert((::std::__u::string_view (*)(::std::__u::string_view,

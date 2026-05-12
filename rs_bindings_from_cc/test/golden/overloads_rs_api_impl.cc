@@ -23,15 +23,15 @@ static_assert((void (*)()) & ::Overload2);
 static_assert((void (*)(int)) & ::Overlaod2);
 
 extern "C" void __rust_thunk___Z20AlsoTemplateOverloadv() {
-  AlsoTemplateOverload();
+  ::AlsoTemplateOverload();
 }
 
 static_assert((void (*)()) & ::AlsoTemplateOverload);
 
-static_assert(sizeof(class Foo) == 1);
-static_assert(alignof(class Foo) == 1);
+static_assert(sizeof(class ::Foo) == 1);
+static_assert(alignof(class ::Foo) == 1);
 
-extern "C" void __rust_thunk___ZN3FooC1Ev(class Foo* __this) {
+extern "C" void __rust_thunk___ZN3FooC1Ev(class ::Foo* __this) {
   crubit::construct_at(__this);
 }
 

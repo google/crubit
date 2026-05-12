@@ -20,14 +20,14 @@
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
+///CRUBIT_ANNOTATE: cpp_type=:: EmptyUnion
 pub union EmptyUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for EmptyUnion {}
 impl !Sync for EmptyUnion {}
 unsafe impl ::cxx::ExternType for EmptyUnion {
-    type Id = ::cxx::type_id!("EmptyUnion");
+    type Id = ::cxx::type_id!(":: EmptyUnion");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -64,7 +64,7 @@ impl Default for EmptyUnion {
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nontrivial
+///CRUBIT_ANNOTATE: cpp_type=:: Nontrivial
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -72,7 +72,7 @@ pub struct Nontrivial {
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
 unsafe impl ::cxx::ExternType for Nontrivial {
-    type Id = ::cxx::type_id!("Nontrivial");
+    type Id = ::cxx::type_id!(":: Nontrivial");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -102,14 +102,14 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnionToRename
+///CRUBIT_ANNOTATE: cpp_type=:: UnionToRename
 pub union RenamedUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for RenamedUnion {}
 impl !Sync for RenamedUnion {}
 unsafe impl ::cxx::ExternType for RenamedUnion {
-    type Id = ::cxx::type_id!("UnionToRename");
+    type Id = ::cxx::type_id!(":: UnionToRename");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -146,14 +146,14 @@ impl Default for RenamedUnion {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
+///CRUBIT_ANNOTATE: cpp_type=:: TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
 unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
-    type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
+    type Id = ::cxx::type_id!(":: TriviallyCopyableButNontriviallyDestructible");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -182,7 +182,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion
+///CRUBIT_ANNOTATE: cpp_type=:: NonEmptyUnion
 pub union NonEmptyUnion {
     pub bool_field: bool,
     pub char_field: ::ffi_11::c_char,
@@ -192,7 +192,7 @@ pub union NonEmptyUnion {
 impl !Send for NonEmptyUnion {}
 impl !Sync for NonEmptyUnion {}
 unsafe impl ::cxx::ExternType for NonEmptyUnion {
-    type Id = ::cxx::type_id!("NonEmptyUnion");
+    type Id = ::cxx::type_id!(":: NonEmptyUnion");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -233,7 +233,7 @@ impl Default for NonEmptyUnion {
 /// * The callee does not read an incorrect field out of the union.
 #[::ctor::recursively_pinned]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion
+///CRUBIT_ANNOTATE: cpp_type=:: NonCopyUnion
 pub union NonCopyUnion {
     pub trivial_member: bool,
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
@@ -241,7 +241,7 @@ pub union NonCopyUnion {
 impl !Send for NonCopyUnion {}
 impl !Sync for NonCopyUnion {}
 unsafe impl ::cxx::ExternType for NonCopyUnion {
-    type Id = ::cxx::type_id!("NonCopyUnion");
+    type Id = ::cxx::type_id!(":: NonCopyUnion");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -250,7 +250,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion2
+///CRUBIT_ANNOTATE: cpp_type=:: NonCopyUnion2
 pub union NonCopyUnion2 {
     pub trivial_member: bool,
     pub nontrivial_member:
@@ -259,7 +259,7 @@ pub union NonCopyUnion2 {
 impl !Send for NonCopyUnion2 {}
 impl !Sync for NonCopyUnion2 {}
 unsafe impl ::cxx::ExternType for NonCopyUnion2 {
-    type Id = ::cxx::type_id!("NonCopyUnion2");
+    type Id = ::cxx::type_id!(":: NonCopyUnion2");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -291,7 +291,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
 ///   * `constant_array_field_not_yet_supported`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField
+///CRUBIT_ANNOTATE: cpp_type=:: UnionWithOpaqueField
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
@@ -300,7 +300,7 @@ pub union UnionWithOpaqueField {
 impl !Send for UnionWithOpaqueField {}
 impl !Sync for UnionWithOpaqueField {}
 unsafe impl ::cxx::ExternType for UnionWithOpaqueField {
-    type Id = ::cxx::type_id!("UnionWithOpaqueField");
+    type Id = ::cxx::type_id!(":: UnionWithOpaqueField");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -337,14 +337,14 @@ impl Default for UnionWithOpaqueField {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable
+///CRUBIT_ANNOTATE: cpp_type=:: TrivialButInheritable
 pub struct TrivialButInheritable {
     pub x: ::ffi_11::c_int,
 }
 impl !Send for TrivialButInheritable {}
 impl !Sync for TrivialButInheritable {}
 unsafe impl ::cxx::ExternType for TrivialButInheritable {
-    type Id = ::cxx::type_id!("TrivialButInheritable");
+    type Id = ::cxx::type_id!(":: TrivialButInheritable");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -385,14 +385,14 @@ impl Default for TrivialButInheritable {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable
+///CRUBIT_ANNOTATE: cpp_type=:: UnionWithInheritable
 pub union UnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }
 impl !Send for UnionWithInheritable {}
 impl !Sync for UnionWithInheritable {}
 unsafe impl ::cxx::ExternType for UnionWithInheritable {
-    type Id = ::cxx::type_id!("UnionWithInheritable");
+    type Id = ::cxx::type_id!(":: UnionWithInheritable");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -433,14 +433,14 @@ impl Default for UnionWithInheritable {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypedefUnion
+///CRUBIT_ANNOTATE: cpp_type=:: TypedefUnion
 pub union TypedefUnion {
     pub trivial_member: bool,
 }
 impl !Send for TypedefUnion {}
 impl !Sync for TypedefUnion {}
 unsafe impl ::cxx::ExternType for TypedefUnion {
-    type Id = ::cxx::type_id!("TypedefUnion");
+    type Id = ::cxx::type_id!(":: TypedefUnion");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -481,14 +481,14 @@ impl Default for TypedefUnion {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable
+///CRUBIT_ANNOTATE: cpp_type=:: TypedefUnionWithInheritable
 pub union TypedefUnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }
 impl !Send for TypedefUnionWithInheritable {}
 impl !Sync for TypedefUnionWithInheritable {}
 unsafe impl ::cxx::ExternType for TypedefUnionWithInheritable {
-    type Id = ::cxx::type_id!("TypedefUnionWithInheritable");
+    type Id = ::cxx::type_id!(":: TypedefUnionWithInheritable");
     type Kind = ::cxx::kind::Trivial;
 }
 

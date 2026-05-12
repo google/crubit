@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -29,7 +29,7 @@ pub mod repro {
     /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=repro :: Interval
+    ///CRUBIT_ANNOTATE: cpp_type=:: repro :: Interval
     pub struct Interval {
         /// Reason for representing this field as a blob of bytes:
         /// Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
@@ -38,7 +38,7 @@ pub mod repro {
     impl !Send for Interval {}
     impl !Sync for Interval {}
     unsafe impl ::cxx::ExternType for Interval {
-        type Id = ::cxx::type_id!("repro :: Interval");
+        type Id = ::cxx::type_id!(":: repro :: Interval");
         type Kind = ::cxx::kind::Trivial;
     }
 

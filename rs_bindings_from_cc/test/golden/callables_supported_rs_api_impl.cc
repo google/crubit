@@ -20,27 +20,27 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct ABICompatible) == 4);
-static_assert(alignof(struct ABICompatible) == 4);
-static_assert(CRUBIT_OFFSET_OF(x, struct ABICompatible) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::ABICompatible) == 4);
+static_assert(alignof(struct ::ABICompatible) == 4);
+static_assert(CRUBIT_OFFSET_OF(x, struct ::ABICompatible) == 0);
 
 extern "C" void __rust_thunk___ZN13ABICompatibleC1Ev(
-    struct ABICompatible* __this) {
+    struct ::ABICompatible* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(class LayoutCompatible) == 4);
-static_assert(alignof(class LayoutCompatible) == 4);
+static_assert(CRUBIT_SIZEOF(class ::LayoutCompatible) == 4);
+static_assert(alignof(class ::LayoutCompatible) == 4);
 
 extern "C" void __rust_thunk___ZN16LayoutCompatible6CreateEi(
-    class LayoutCompatible* __return, int x) {
-  new (__return) auto(LayoutCompatible::Create(x));
+    class ::LayoutCompatible* __return, int x) {
+  new (__return) auto(::LayoutCompatible::Create(x));
 }
 
-static_assert((class LayoutCompatible (*)(int)) & ::LayoutCompatible::Create);
+static_assert((class ::LayoutCompatible (*)(int)) & ::LayoutCompatible::Create);
 
 extern "C" int __rust_thunk___ZNK16LayoutCompatible3getEv(
-    class LayoutCompatible const* __this) {
+    class ::LayoutCompatible const* __this) {
   return __this->get();
 }
 

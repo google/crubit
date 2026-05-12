@@ -21,14 +21,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=CannotUpcastInCrubit
+///CRUBIT_ANNOTATE: cpp_type=:: CannotUpcastInCrubit
 pub struct CannotUpcastInCrubit {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for CannotUpcastInCrubit {}
 impl !Sync for CannotUpcastInCrubit {}
 unsafe impl ::cxx::ExternType for CannotUpcastInCrubit {
-    type Id = ::cxx::type_id!("CannotUpcastInCrubit");
+    type Id = ::cxx::type_id!(":: CannotUpcastInCrubit");
     type Kind = ::cxx::kind::Trivial;
 }
 

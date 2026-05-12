@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:member_function
-// Features: assume_lifetimes, fmt, supported, types
+// Features: assume_lifetimes, fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -18,14 +18,14 @@
 /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=S
+///CRUBIT_ANNOTATE: cpp_type=:: S
 pub struct S {
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for S {}
 impl !Sync for S {}
 unsafe impl ::cxx::ExternType for S {
-    type Id = ::cxx::type_id!("S");
+    type Id = ::cxx::type_id!(":: S");
     type Kind = ::cxx::kind::Trivial;
 }
 impl S {

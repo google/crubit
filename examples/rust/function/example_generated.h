@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_FUNCTION_EXAMPLE_CRATE_GOLDEN

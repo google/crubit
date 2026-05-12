@@ -16,7 +16,7 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=WithBitfields
+///CRUBIT_ANNOTATE: cpp_type=:: WithBitfields
 pub struct WithBitfields {
     // f1 : 2 bits
     __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
@@ -37,7 +37,7 @@ pub struct WithBitfields {
 impl !Send for WithBitfields {}
 impl !Sync for WithBitfields {}
 unsafe impl ::cxx::ExternType for WithBitfields {
-    type Id = ::cxx::type_id!("WithBitfields");
+    type Id = ::cxx::type_id!(":: WithBitfields");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -62,7 +62,7 @@ impl Default for WithBitfields {
 ///   * `status`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'enum AlignmentRegressionTest::(unnamed at ./rs_bindings_from_cc/test/golden/bitfields.h:25:3)': No generated bindings found for ''
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=AlignmentRegressionTest
+///CRUBIT_ANNOTATE: cpp_type=:: AlignmentRegressionTest
 pub struct AlignmentRegressionTest {
     // code_point : 31 bits
     // status : 1 bits
@@ -71,7 +71,7 @@ pub struct AlignmentRegressionTest {
 impl !Send for AlignmentRegressionTest {}
 impl !Sync for AlignmentRegressionTest {}
 unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
-    type Id = ::cxx::type_id!("AlignmentRegressionTest");
+    type Id = ::cxx::type_id!(":: AlignmentRegressionTest");
     type Kind = ::cxx::kind::Trivial;
 }
 

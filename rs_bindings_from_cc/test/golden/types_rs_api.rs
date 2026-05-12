@@ -22,14 +22,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeStruct
+///CRUBIT_ANNOTATE: cpp_type=:: SomeStruct
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
 unsafe impl ::cxx::ExternType for SomeStruct {
-    type Id = ::cxx::type_id!("SomeStruct");
+    type Id = ::cxx::type_id!(":: SomeStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -86,7 +86,7 @@ impl Default for SomeStruct {
 ///   * `cyclic_ptr_field`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct
+///CRUBIT_ANNOTATE: cpp_type=:: FieldTypeTestStruct
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: ::ffi_11::c_char,
@@ -138,7 +138,7 @@ pub struct FieldTypeTestStruct {
 impl !Send for FieldTypeTestStruct {}
 impl !Sync for FieldTypeTestStruct {}
 unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
-    type Id = ::cxx::type_id!("FieldTypeTestStruct");
+    type Id = ::cxx::type_id!(":: FieldTypeTestStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 

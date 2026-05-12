@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -18,14 +18,14 @@
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Uncopyable
+///CRUBIT_ANNOTATE: cpp_type=:: Uncopyable
 pub struct Uncopyable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Uncopyable {}
 impl !Sync for Uncopyable {}
 unsafe impl ::cxx::ExternType for Uncopyable {
-    type Id = ::cxx::type_id!("Uncopyable");
+    type Id = ::cxx::type_id!(":: Uncopyable");
     type Kind = ::cxx::kind::Opaque;
 }
 
@@ -49,7 +49,7 @@ impl ::ctor::CtorNew<()> for Uncopyable {
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=17
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl
+///CRUBIT_ANNOTATE: cpp_type=:: UncopyableDespiteDecl
 pub struct UncopyableDespiteDecl {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -59,7 +59,7 @@ pub struct UncopyableDespiteDecl {
 impl !Send for UncopyableDespiteDecl {}
 impl !Sync for UncopyableDespiteDecl {}
 unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
-    type Id = ::cxx::type_id!("UncopyableDespiteDecl");
+    type Id = ::cxx::type_id!(":: UncopyableDespiteDecl");
     type Kind = ::cxx::kind::Opaque;
 }
 

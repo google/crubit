@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TrivialCustomType
+///CRUBIT_ANNOTATE: cpp_type=:: TrivialCustomType
 pub struct TrivialCustomType {
     pub i: ::ffi_11::c_int,
 }
 impl !Send for TrivialCustomType {}
 impl !Sync for TrivialCustomType {}
 unsafe impl ::cxx::ExternType for TrivialCustomType {
-    type Id = ::cxx::type_id!("TrivialCustomType");
+    type Id = ::cxx::type_id!(":: TrivialCustomType");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -66,7 +66,7 @@ impl Default for TrivialCustomType {
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType
+///CRUBIT_ANNOTATE: cpp_type=:: NontrivialCustomType
 pub struct NontrivialCustomType {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub i: ::ffi_11::c_int,
@@ -74,7 +74,7 @@ pub struct NontrivialCustomType {
 impl !Send for NontrivialCustomType {}
 impl !Sync for NontrivialCustomType {}
 unsafe impl ::cxx::ExternType for NontrivialCustomType {
-    type Id = ::cxx::type_id!("NontrivialCustomType");
+    type Id = ::cxx::type_id!(":: NontrivialCustomType");
     type Kind = ::cxx::kind::Opaque;
 }
 

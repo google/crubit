@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:member_function
-// Features: assume_lifetimes, fmt, supported, types
+// Features: assume_lifetimes, fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -19,25 +19,25 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct S) == 4);
-static_assert(alignof(struct S) == 4);
-static_assert(CRUBIT_OFFSET_OF(int_field, struct S) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::S) == 4);
+static_assert(alignof(struct ::S) == 4);
+static_assert(CRUBIT_OFFSET_OF(int_field, struct ::S) == 0);
 
-extern "C" void __rust_thunk___ZN1SC1Ev(struct S* __this) {
+extern "C" void __rust_thunk___ZN1SC1Ev(struct ::S* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" int const* __rust_thunk___ZNK1S12int_accessorEv(
-    struct S const* __this) {
+    struct ::S const* __this) {
   return std::addressof(__this->int_accessor());
 }
 
 static_assert((int const& (::S::*)() const) & ::S::int_accessor);
 
-extern "C" struct S* __rust_thunk___ZN1S2meEv(struct S* __this) {
+extern "C" struct ::S* __rust_thunk___ZN1S2meEv(struct ::S* __this) {
   return std::addressof(__this->me());
 }
 
-static_assert((struct S & (::S::*)()) & ::S::me);
+static_assert((struct ::S & (::S::*)()) & ::S::me);
 
 #pragma clang diagnostic pop

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:rust_name
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -26,14 +26,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=15
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: StructOldName
         pub struct StructNewName {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for StructNewName {}
         impl !Sync for StructNewName {}
         unsafe impl ::cxx::ExternType for StructNewName {
-            type Id = ::cxx::type_id!("crubit :: test :: StructOldName");
+            type Id = ::cxx::type_id!(":: crubit :: test :: StructOldName");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -54,7 +54,7 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=17
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: SomeStruct
         pub struct SomeStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub field_new_name: ::ffi_11::c_int,
@@ -62,7 +62,7 @@ pub mod crubit {
         impl !Send for SomeStruct {}
         impl !Sync for SomeStruct {}
         unsafe impl ::cxx::ExternType for SomeStruct {
-            type Id = ::cxx::type_id!("crubit :: test :: SomeStruct");
+            type Id = ::cxx::type_id!(":: crubit :: test :: SomeStruct");
             type Kind = ::cxx::kind::Trivial;
         }
         impl SomeStruct {

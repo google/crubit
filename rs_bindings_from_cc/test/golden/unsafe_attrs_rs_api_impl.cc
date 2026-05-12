@@ -16,11 +16,11 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-extern "C" bool __rust_thunk___ZL11ReturnsTruev() { return ReturnsTrue(); }
+extern "C" bool __rust_thunk___ZL11ReturnsTruev() { return ::ReturnsTrue(); }
 
 static_assert((bool (*)()) & ::ReturnsTrue);
 
-extern "C" bool __rust_thunk___ZL12ReturnsFalsev() { return ReturnsFalse(); }
+extern "C" bool __rust_thunk___ZL12ReturnsFalsev() { return ::ReturnsFalse(); }
 
 static_assert((bool (*)()) & ::ReturnsFalse);
 

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/methods:methods
-// Features: assume_this_lifetimes, fmt, supported, types
+// Features: assume_this_lifetimes, fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -18,14 +18,14 @@
 /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeClass
+///CRUBIT_ANNOTATE: cpp_type=:: SomeClass
 pub struct SomeClass {
     pub int_var: ::ffi_11::c_int,
 }
 impl !Send for SomeClass {}
 impl !Sync for SomeClass {}
 unsafe impl ::cxx::ExternType for SomeClass {
-    type Id = ::cxx::type_id!("SomeClass");
+    type Id = ::cxx::type_id!(":: SomeClass");
     type Kind = ::cxx::kind::Trivial;
 }
 impl SomeClass {
@@ -104,14 +104,14 @@ pub mod some_class {
 /// Generated from: rs_bindings_from_cc/test/struct/methods/methods.h;l=25
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=InstanceMethods
+///CRUBIT_ANNOTATE: cpp_type=:: InstanceMethods
 pub struct InstanceMethods {
     pub int_field: ::ffi_11::c_int,
 }
 impl !Send for InstanceMethods {}
 impl !Sync for InstanceMethods {}
 unsafe impl ::cxx::ExternType for InstanceMethods {
-    type Id = ::cxx::type_id!("InstanceMethods");
+    type Id = ::cxx::type_id!(":: InstanceMethods");
     type Kind = ::cxx::kind::Trivial;
 }
 impl InstanceMethods {

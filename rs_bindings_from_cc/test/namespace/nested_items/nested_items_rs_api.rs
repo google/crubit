@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/namespace/nested_items:nested_items
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -28,14 +28,14 @@ pub mod same {
 /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=14
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Same
+///CRUBIT_ANNOTATE: cpp_type=:: Same
 pub struct Same {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Same {}
 impl !Sync for Same {}
 unsafe impl ::cxx::ExternType for Same {
-    type Id = ::cxx::type_id!("Same");
+    type Id = ::cxx::type_id!(":: Same");
     type Kind = ::cxx::kind::Trivial;
 }
 impl Same {
@@ -77,14 +77,14 @@ pub mod same_items {
     /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=16
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=Same :: NestedItem
+    ///CRUBIT_ANNOTATE: cpp_type=:: Same :: NestedItem
     pub struct NestedItem {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for NestedItem {}
     impl !Sync for NestedItem {}
     unsafe impl ::cxx::ExternType for NestedItem {
-        type Id = ::cxx::type_id!("Same :: NestedItem");
+        type Id = ::cxx::type_id!(":: Same :: NestedItem");
         type Kind = ::cxx::kind::Trivial;
     }
     impl NestedItem {
@@ -132,7 +132,7 @@ pub mod same_items {
     /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=20
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-    ///CRUBIT_ANNOTATE: cpp_type=Same :: NestedEnum
+    ///CRUBIT_ANNOTATE: cpp_type=:: Same :: NestedEnum
     pub struct NestedEnum(::ffi_11::c_int);
     impl NestedEnum {
         pub const kOne: NestedEnum = NestedEnum(::ffi_11::new_c_int(0));
@@ -154,14 +154,14 @@ pub mod foo {
     /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=29
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo
+    ///CRUBIT_ANNOTATE: cpp_type=:: foo :: Foo
     pub struct Foo {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
     unsafe impl ::cxx::ExternType for Foo {
-        type Id = ::cxx::type_id!("foo :: Foo");
+        type Id = ::cxx::type_id!(":: foo :: Foo");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -181,14 +181,14 @@ pub mod foo {
         /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=30
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo
+        ///CRUBIT_ANNOTATE: cpp_type=:: foo :: Foo :: foo
         pub struct foo {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for foo {}
         impl !Sync for foo {}
         unsafe impl ::cxx::ExternType for foo {
-            type Id = ::cxx::type_id!("foo :: Foo :: foo");
+            type Id = ::cxx::type_id!(":: foo :: Foo :: foo");
             type Kind = ::cxx::kind::Trivial;
         }
         impl foo {
@@ -220,14 +220,14 @@ pub mod foo {
             /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=31
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C)]
-            ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo :: Item
+            ///CRUBIT_ANNOTATE: cpp_type=:: foo :: Foo :: foo :: Item
             pub struct Item {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
             }
             impl !Send for Item {}
             impl !Sync for Item {}
             unsafe impl ::cxx::ExternType for Item {
-                type Id = ::cxx::type_id!("foo :: Foo :: foo :: Item");
+                type Id = ::cxx::type_id!(":: foo :: Foo :: foo :: Item");
                 type Kind = ::cxx::kind::Trivial;
             }
 
@@ -253,14 +253,14 @@ pub mod foo {
 /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=37
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OuterCpp
+///CRUBIT_ANNOTATE: cpp_type=:: OuterCpp
 pub struct OuterRustName {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for OuterRustName {}
 impl !Sync for OuterRustName {}
 unsafe impl ::cxx::ExternType for OuterRustName {
-    type Id = ::cxx::type_id!("OuterCpp");
+    type Id = ::cxx::type_id!(":: OuterCpp");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -280,14 +280,14 @@ pub mod outer_rust_name {
     /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=38
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=OuterCpp :: Inner
+    ///CRUBIT_ANNOTATE: cpp_type=:: OuterCpp :: Inner
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("OuterCpp :: Inner");
+        type Id = ::cxx::type_id!(":: OuterCpp :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
 

@@ -18,11 +18,11 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct ns::Trivial) == 4);
-static_assert(alignof(struct ns::Trivial) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::Trivial) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::ns::Trivial) == 4);
+static_assert(alignof(struct ::ns::Trivial) == 4);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ::ns::Trivial) == 0);
 
-extern "C" void __rust_thunk___ZN2ns7TrivialC1Ev(struct ns::Trivial* __this) {
+extern "C" void __rust_thunk___ZN2ns7TrivialC1Ev(struct ::ns::Trivial* __this) {
   crubit::construct_at(__this);
 }
 
@@ -37,11 +37,11 @@ static_assert((void (::ns::Trivial::*)()
                    const&)&::ns::Trivial::ConstLvalueRefQualified);
 
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
-    struct ns::Trivial* __return, struct ns::Trivial* trivial) {
-  new (__return) auto(ns::TakesByValue(std::move(*trivial)));
+    struct ::ns::Trivial* __return, struct ::ns::Trivial* trivial) {
+  new (__return) auto(::ns::TakesByValue(std::move(*trivial)));
 }
 
-static_assert((struct ns::Trivial (*)(struct ns::Trivial)) &
+static_assert((struct ::ns::Trivial (*)(struct ::ns::Trivial)) &
               ::ns::TakesByValue);
 
 #pragma clang diagnostic pop

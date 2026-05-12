@@ -52,7 +52,7 @@ __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvOEEE__2f_2fthird_5fpar
 extern "C" void
 __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state,
-    struct ABICompatible* param_0, struct ABICompatible* out);
+    struct ::ABICompatible* param_0, struct ::ABICompatible* out);
 extern "C" void
 __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
@@ -62,7 +62,7 @@ __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__
 extern "C" void
 __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state,
-    class LayoutCompatible* param_0, class LayoutCompatible* out);
+    class ::LayoutCompatible* param_0, class ::LayoutCompatible* out);
 extern "C" void
 __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
@@ -101,7 +101,7 @@ extern "C" void __rust_thunk___Z11invoke_onceN6rs_std11DynCallableIFvvOEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void() &&>::kSize, f);
-  invoke_once(
+  ::invoke_once(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void() &&>(
           __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
@@ -112,13 +112,14 @@ extern "C" void __rust_thunk___Z11invoke_onceN6rs_std11DynCallableIFvvOEEE(
           .Decode(__f_decoder));
 }
 
-static_assert((void (*)(class rs_std::DynCallable<void() &&>)) & ::invoke_once);
+static_assert((void (*)(class ::rs_std::DynCallable<void() &&>)) &
+              ::invoke_once);
 
 extern "C" void __rust_thunk___Z6invokeN6rs_std11DynCallableIFvvEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void()>::kSize, f);
-  invoke(
+  ::invoke(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void()>(
           __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
@@ -129,13 +130,13 @@ extern "C" void __rust_thunk___Z6invokeN6rs_std11DynCallableIFvvEEE(
           .Decode(__f_decoder));
 }
 
-static_assert((void (*)(class rs_std::DynCallable<void()>)) & ::invoke);
+static_assert((void (*)(class ::rs_std::DynCallable<void()>)) & ::invoke);
 
 extern "C" void __rust_thunk___Z12invoke_constN6rs_std11DynCallableIKFvvEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void() const>::kSize, f);
-  invoke_const(
+  ::invoke_const(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void() const>(
           __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
@@ -146,7 +147,7 @@ extern "C" void __rust_thunk___Z12invoke_constN6rs_std11DynCallableIKFvvEEE(
           .Decode(__f_decoder));
 }
 
-static_assert((void (*)(class rs_std::DynCallable<void() const>)) &
+static_assert((void (*)(class ::rs_std::DynCallable<void() const>)) &
               ::invoke_const);
 
 extern "C" int __rust_thunk___Z7map_intN6rs_std11DynCallableIKFiiEEEi(
@@ -154,7 +155,7 @@ extern "C" int __rust_thunk___Z7map_intN6rs_std11DynCallableIKFiiEEEi(
   ::crubit::Decoder __f_decoder(
       ::rs_std::internal_dyn_callable::DynCallableAbi<int(int) const>::kSize,
       f);
-  return map_int(
+  return ::map_int(
       ::rs_std::internal_dyn_callable::DynCallableAbi<int(int) const>(
           __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state,
@@ -167,7 +168,7 @@ extern "C" int __rust_thunk___Z7map_intN6rs_std11DynCallableIKFiiEEEi(
       arg);
 }
 
-static_assert((int (*)(class rs_std::DynCallable<int(int) const>, int)) &
+static_assert((int (*)(class ::rs_std::DynCallable<int(int) const>, int)) &
               ::map_int);
 
 extern "C" void
@@ -175,21 +176,21 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
     unsigned char* __return_abi_buffer, const unsigned char* f,
     const unsigned char* arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<struct Bridged(
-          struct Bridged) const>::kSize,
+      ::rs_std::internal_dyn_callable::DynCallableAbi<struct ::Bridged(
+          struct ::Bridged) const>::kSize,
       f);
   ::crubit::Decoder __arg_decoder(::crubit::BridgedAbi::kSize, arg);
   ::crubit::Encoder __return_encoder(::crubit::BridgedAbi::kSize,
                                      __return_abi_buffer);
   ::crubit::BridgedAbi().Encode(
-      map_bridged(
-          ::rs_std::internal_dyn_callable::DynCallableAbi<struct Bridged(
-              struct Bridged) const>(
+      ::map_bridged(
+          ::rs_std::internal_dyn_callable::DynCallableAbi<struct ::Bridged(
+              struct ::Bridged) const>(
               __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
               [](::absl::internal_any_invocable::TypeErasedState* state,
                  ::absl::internal_any_invocable::ForwardedParameterType<
-                     struct Bridged>
-                     param_0) noexcept -> struct Bridged {
+                     struct ::Bridged>
+                     param_0) noexcept -> struct ::Bridged {
                 unsigned char bridge_param_0[::crubit::BridgedAbi::kSize];
                 ::crubit::internal::Encode(::crubit::BridgedAbi(),
                                            bridge_param_0, param_0);
@@ -205,38 +206,38 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
 }
 
 static_assert(
-    (struct Bridged (*)(class rs_std::DynCallable<Bridged(Bridged) const>,
-                        struct Bridged)) &
+    (struct ::Bridged (*)(class ::rs_std::DynCallable<Bridged(Bridged) const>,
+                          struct ::Bridged)) &
     ::map_bridged);
 
-static_assert(CRUBIT_SIZEOF(struct ABICompatible) == 4);
-static_assert(alignof(struct ABICompatible) == 4);
-static_assert(CRUBIT_OFFSET_OF(x, struct ABICompatible) == 0);
+static_assert(CRUBIT_SIZEOF(struct ::ABICompatible) == 4);
+static_assert(alignof(struct ::ABICompatible) == 4);
+static_assert(CRUBIT_OFFSET_OF(x, struct ::ABICompatible) == 0);
 
 extern "C" void __rust_thunk___ZN13ABICompatibleC1Ev(
-    struct ABICompatible* __this) {
+    struct ::ABICompatible* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
 __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EEES1_(
-    struct ABICompatible* __return, const unsigned char* f,
-    struct ABICompatible* arg) {
+    struct ::ABICompatible* __return, const unsigned char* f,
+    struct ::ABICompatible* arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
-          struct ABICompatible) const>::kSize,
+      ::rs_std::internal_dyn_callable::DynCallableAbi<struct ::ABICompatible(
+          struct ::ABICompatible) const>::kSize,
       f);
-  new (__return) auto(map_abi_compatible(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
-          struct ABICompatible) const>(
+  new (__return) auto(::map_abi_compatible(
+      ::rs_std::internal_dyn_callable::DynCallableAbi<struct ::ABICompatible(
+          struct ::ABICompatible) const>(
           __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state,
              ::absl::internal_any_invocable::ForwardedParameterType<
-                 struct ABICompatible>
-                 param_0) noexcept -> struct ABICompatible {
-            ::crubit::Slot<struct ABICompatible> stack_param_0(
+                 struct ::ABICompatible>
+                 param_0) noexcept -> struct ::ABICompatible {
+            ::crubit::Slot<struct ::ABICompatible> stack_param_0(
                 std::move(param_0));
-            ::crubit::Slot<struct ABICompatible> out;
+            ::crubit::Slot<struct ::ABICompatible> out;
             __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state, stack_param_0.Get(), out.Get());
             return std::move(out).AssumeInitAndTakeValue();
@@ -245,23 +246,24 @@ __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EE
       std::move(*arg)));
 }
 
-static_assert((struct ABICompatible (*)(
-                  class rs_std::DynCallable<ABICompatible(ABICompatible) const>,
-                  struct ABICompatible)) &
-              ::map_abi_compatible);
+static_assert(
+    (struct ::ABICompatible (*)(
+        class ::rs_std::DynCallable<ABICompatible(ABICompatible) const>,
+        struct ::ABICompatible)) &
+    ::map_abi_compatible);
 
-static_assert(CRUBIT_SIZEOF(class LayoutCompatible) == 4);
-static_assert(alignof(class LayoutCompatible) == 4);
+static_assert(CRUBIT_SIZEOF(class ::LayoutCompatible) == 4);
+static_assert(alignof(class ::LayoutCompatible) == 4);
 
 extern "C" void __rust_thunk___ZN16LayoutCompatible6CreateEi(
-    class LayoutCompatible* __return, int x) {
-  new (__return) auto(LayoutCompatible::Create(x));
+    class ::LayoutCompatible* __return, int x) {
+  new (__return) auto(::LayoutCompatible::Create(x));
 }
 
-static_assert((class LayoutCompatible (*)(int)) & ::LayoutCompatible::Create);
+static_assert((class ::LayoutCompatible (*)(int)) & ::LayoutCompatible::Create);
 
 extern "C" int __rust_thunk___ZNK16LayoutCompatible3getEv(
-    class LayoutCompatible const* __this) {
+    class ::LayoutCompatible const* __this) {
   return __this->get();
 }
 
@@ -269,23 +271,23 @@ static_assert((int (::LayoutCompatible::*)() const) & ::LayoutCompatible::get);
 
 extern "C" void
 __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(
-    class LayoutCompatible* __return, const unsigned char* f,
-    class LayoutCompatible* arg) {
+    class ::LayoutCompatible* __return, const unsigned char* f,
+    class ::LayoutCompatible* arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<class LayoutCompatible(
-          class LayoutCompatible) const>::kSize,
+      ::rs_std::internal_dyn_callable::DynCallableAbi<class ::LayoutCompatible(
+          class ::LayoutCompatible) const>::kSize,
       f);
-  new (__return) auto(map_layout_compatible(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<class LayoutCompatible(
-          class LayoutCompatible) const>(
+  new (__return) auto(::map_layout_compatible(
+      ::rs_std::internal_dyn_callable::DynCallableAbi<class ::LayoutCompatible(
+          class ::LayoutCompatible) const>(
           __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state,
              ::absl::internal_any_invocable::ForwardedParameterType<
-                 class LayoutCompatible>
-                 param_0) noexcept -> class LayoutCompatible {
-            ::crubit::Slot<class LayoutCompatible> stack_param_0(
+                 class ::LayoutCompatible>
+                 param_0) noexcept -> class ::LayoutCompatible {
+            ::crubit::Slot<class ::LayoutCompatible> stack_param_0(
                 std::move(param_0));
-            ::crubit::Slot<class LayoutCompatible> out;
+            ::crubit::Slot<class ::LayoutCompatible> out;
             __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state, stack_param_0.Get(), out.Get());
             return std::move(out).AssumeInitAndTakeValue();
@@ -295,9 +297,9 @@ __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibl
 }
 
 static_assert(
-    (class LayoutCompatible (*)(
-        class rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const>,
-        class LayoutCompatible)) &
+    (class ::LayoutCompatible (*)(
+        class ::rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const>,
+        class ::LayoutCompatible)) &
     ::map_layout_compatible);
 
 extern "C" int

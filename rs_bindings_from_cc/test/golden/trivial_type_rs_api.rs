@@ -19,14 +19,14 @@ pub mod ns {
     /// only trivial members.
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: Trivial
+    ///CRUBIT_ANNOTATE: cpp_type=:: ns :: Trivial
     pub struct Trivial {
         pub trivial_field: ::ffi_11::c_int,
     }
     impl !Send for Trivial {}
     impl !Sync for Trivial {}
     unsafe impl ::cxx::ExternType for Trivial {
-        type Id = ::cxx::type_id!("ns :: Trivial");
+        type Id = ::cxx::type_id!(":: ns :: Trivial");
         type Kind = ::cxx::kind::Trivial;
     }
     impl Trivial {

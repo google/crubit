@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeStruct
+///CRUBIT_ANNOTATE: cpp_type=:: SomeStruct
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
 unsafe impl ::cxx::ExternType for SomeStruct {
-    type Id = ::cxx::type_id!("SomeStruct");
+    type Id = ::cxx::type_id!(":: SomeStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -47,14 +47,14 @@ pub mod some_struct {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
+///CRUBIT_ANNOTATE: cpp_type=:: SomeOtherStruct
 pub struct SomeOtherStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeOtherStruct {}
 impl !Sync for SomeOtherStruct {}
 unsafe impl ::cxx::ExternType for SomeOtherStruct {
-    type Id = ::cxx::type_id!("SomeOtherStruct");
+    type Id = ::cxx::type_id!(":: SomeOtherStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -75,14 +75,14 @@ impl Default for SomeOtherStruct {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeUnion
+///CRUBIT_ANNOTATE: cpp_type=:: SomeUnion
 pub union SomeUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeUnion {}
 impl !Sync for SomeUnion {}
 unsafe impl ::cxx::ExternType for SomeUnion {
-    type Id = ::cxx::type_id!("SomeUnion");
+    type Id = ::cxx::type_id!(":: SomeUnion");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -106,14 +106,14 @@ impl Default for SomeUnion {
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion
+///CRUBIT_ANNOTATE: cpp_type=:: SomeOtherUnion
 pub union SomeOtherUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SomeOtherUnion {}
 impl !Sync for SomeOtherUnion {}
 unsafe impl ::cxx::ExternType for SomeOtherUnion {
-    type Id = ::cxx::type_id!("SomeOtherUnion");
+    type Id = ::cxx::type_id!(":: SomeOtherUnion");
     type Kind = ::cxx::kind::Trivial;
 }
 

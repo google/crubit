@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/destructors:destructors
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -17,7 +17,7 @@
 
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=10
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
+///CRUBIT_ANNOTATE: cpp_type=:: DestructionOrderRecorder
 pub struct DestructionOrderRecorder {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -27,7 +27,7 @@ pub struct DestructionOrderRecorder {
 impl !Send for DestructionOrderRecorder {}
 impl !Sync for DestructionOrderRecorder {}
 unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
-    type Id = ::cxx::type_id!("DestructionOrderRecorder");
+    type Id = ::cxx::type_id!(":: DestructionOrderRecorder");
     type Kind = ::cxx::kind::Trivial;
 }
 impl DestructionOrderRecorder {
@@ -142,7 +142,7 @@ pub mod destruction_order_recorder {
 
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
+///CRUBIT_ANNOTATE: cpp_type=:: FieldDestructionOrderTester
 pub struct FieldDestructionOrderTester {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -158,7 +158,7 @@ pub struct FieldDestructionOrderTester {
 impl !Send for FieldDestructionOrderTester {}
 impl !Sync for FieldDestructionOrderTester {}
 unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
-    type Id = ::cxx::type_id!("FieldDestructionOrderTester");
+    type Id = ::cxx::type_id!(":: FieldDestructionOrderTester");
     type Kind = ::cxx::kind::Trivial;
 }
 impl FieldDestructionOrderTester {

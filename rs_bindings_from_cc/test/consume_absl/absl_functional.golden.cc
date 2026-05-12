@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/consume_absl:absl_functional
-// Features: callables, fmt, supported, types
+// Features: callables, fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/bridge.h"
 #include "support/internal/cxx20_backports.h"
@@ -60,7 +60,8 @@ __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2
 }
 extern "C" void
 __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
-    ::absl::AnyInvocable<struct MyOption<int>(struct MyOption<int>) const>* f,
+    ::absl::AnyInvocable<struct ::MyOption<int>(struct ::MyOption<int>) const>*
+        f,
     unsigned char* param_0, unsigned char* out) {
   ::crubit::internal::Encode(
       ::crubit::MyOptionAbi<::crubit::TransmuteAbi<int>>(
@@ -80,7 +81,7 @@ __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2
 extern "C" void __rust_thunk___Z12CallVoidVoidN4absl12AnyInvocableIFvvOEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(::crubit::AnyInvocableAbi<void() &&>::kSize, f);
-  CallVoidVoid(
+  ::CallVoidVoid(
       ::crubit::AnyInvocableAbi<void() &&>(
           __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
@@ -91,7 +92,8 @@ extern "C" void __rust_thunk___Z12CallVoidVoidN4absl12AnyInvocableIFvvOEEE(
           .Decode(__f_decoder));
 }
 
-static_assert((void (*)(class absl::AnyInvocable<void() &&>)) & ::CallVoidVoid);
+static_assert((void (*)(class ::absl::AnyInvocable<void() &&>)) &
+              ::CallVoidVoid);
 
 extern "C" void __rust_thunk___Z15ReturnIntMapperv(
     unsigned char* __return_abi_buffer) {
@@ -105,24 +107,25 @@ extern "C" void __rust_thunk___Z15ReturnIntMapperv(
         return __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
             state, param_0);
       })
-      .Encode(ReturnIntMapper(), __return_encoder);
+      .Encode(::ReturnIntMapper(), __return_encoder);
 }
 
-static_assert((class absl::AnyInvocable<int(int) const> (*)()) &
+static_assert((class ::absl::AnyInvocable<int(int) const> (*)()) &
               ::ReturnIntMapper);
 
 extern "C" void __rust_thunk___Z17MyOptionIntMapperv(
     unsigned char* __return_abi_buffer) {
   ::crubit::Encoder __return_encoder(
-      ::crubit::AnyInvocableAbi<struct MyOption<int>(struct MyOption<int>)
+      ::crubit::AnyInvocableAbi<struct ::MyOption<int>(struct ::MyOption<int>)
                                     const>::kSize,
       __return_abi_buffer);
-  ::crubit::AnyInvocableAbi<struct MyOption<int>(struct MyOption<int>) const>(
+  ::crubit::AnyInvocableAbi<struct ::MyOption<int>(struct ::MyOption<int>)
+                                const>(
       __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
       [](::absl::internal_any_invocable::TypeErasedState* state,
          ::absl::internal_any_invocable::ForwardedParameterType<
-             struct MyOption<int>>
-             param_0) noexcept -> struct MyOption<int> {
+             struct ::MyOption<int>>
+             param_0) noexcept -> struct ::MyOption<int> {
         unsigned char bridge_param_0
             [::crubit::MyOptionAbi<::crubit::TransmuteAbi<int>>::kSize];
         ::crubit::internal::Encode(
@@ -139,11 +142,11 @@ extern "C" void __rust_thunk___Z17MyOptionIntMapperv(
                 ::crubit::TransmuteAbi<int>()),
             out);
       })
-      .Encode(MyOptionIntMapper(), __return_encoder);
+      .Encode(::MyOptionIntMapper(), __return_encoder);
 }
 
 static_assert(
-    (class absl::AnyInvocable<MyOption<int>(MyOption<int>) const> (*)()) &
+    (class ::absl::AnyInvocable<MyOption<int>(MyOption<int>) const> (*)()) &
     ::MyOptionIntMapper);
 
 #pragma clang diagnostic pop

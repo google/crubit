@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/simple:simple
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -52,7 +52,7 @@ static_assert((crubit::type_identity_t<int(int, int)> & (*)()) &
 
 extern "C" crubit::type_identity_t<int(int, int)>*
 __rust_thunk___Z39inline_get_pointer_to_multiply_functionv() {
-  return inline_get_pointer_to_multiply_function();
+  return ::inline_get_pointer_to_multiply_function();
 }
 
 static_assert((crubit::type_identity_t<int(int, int)> * (*)()) &
@@ -60,7 +60,7 @@ static_assert((crubit::type_identity_t<int(int, int)> * (*)()) &
 
 extern "C" int __rust_thunk___Z15apply_binary_opiiPFiiiE(
     int x, int y, crubit::type_identity_t<int(int, int)>* op) {
-  return apply_binary_op(x, y, op);
+  return ::apply_binary_op(x, y, op);
 }
 
 static_assert((int (*)(int, int, crubit::type_identity_t<int(int, int)>*)) &

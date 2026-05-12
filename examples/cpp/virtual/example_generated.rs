@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/virtual:example_lib
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -18,7 +18,7 @@
 /// Generated from: examples/cpp/virtual/example.h;l=13
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=RustDerived
+///CRUBIT_ANNOTATE: cpp_type=:: RustDerived
 pub struct RustDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
     /// Reason for representing this field as a blob of bytes:
@@ -28,7 +28,7 @@ pub struct RustDerived {
 impl !Send for RustDerived {}
 impl !Sync for RustDerived {}
 unsafe impl ::cxx::ExternType for RustDerived {
-    type Id = ::cxx::type_id!("RustDerived");
+    type Id = ::cxx::type_id!(":: RustDerived");
     type Kind = ::cxx::kind::Opaque;
 }
 impl RustDerived {

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:do_not_bind
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -20,14 +20,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToBoundOverload
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ArgumentToBoundOverload
         pub struct ArgumentToBoundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for ArgumentToBoundOverload {}
         impl !Sync for ArgumentToBoundOverload {}
         unsafe impl ::cxx::ExternType for ArgumentToBoundOverload {
-            type Id = ::cxx::type_id!("crubit :: test :: ArgumentToBoundOverload");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ArgumentToBoundOverload");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -48,14 +48,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToUnboundOverload
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: ArgumentToUnboundOverload
         pub struct ArgumentToUnboundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for ArgumentToUnboundOverload {}
         impl !Sync for ArgumentToUnboundOverload {}
         unsafe impl ::cxx::ExternType for ArgumentToUnboundOverload {
-            type Id = ::cxx::type_id!("crubit :: test :: ArgumentToUnboundOverload");
+            type Id = ::cxx::type_id!(":: crubit :: test :: ArgumentToUnboundOverload");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -88,14 +88,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: StructWithDoNotBindConstructor
         pub struct StructWithDoNotBindConstructor {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for StructWithDoNotBindConstructor {}
         impl !Sync for StructWithDoNotBindConstructor {}
         unsafe impl ::cxx::ExternType for StructWithDoNotBindConstructor {
-            type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindConstructor");
+            type Id = ::cxx::type_id!(":: crubit :: test :: StructWithDoNotBindConstructor");
             type Kind = ::cxx::kind::Trivial;
         }
 
@@ -125,14 +125,14 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod
+        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: StructWithDoNotBindMethod
         pub struct StructWithDoNotBindMethod {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         impl !Send for StructWithDoNotBindMethod {}
         impl !Sync for StructWithDoNotBindMethod {}
         unsafe impl ::cxx::ExternType for StructWithDoNotBindMethod {
-            type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindMethod");
+            type Id = ::cxx::type_id!(":: crubit :: test :: StructWithDoNotBindMethod");
             type Kind = ::cxx::kind::Trivial;
         }
         impl StructWithDoNotBindMethod {

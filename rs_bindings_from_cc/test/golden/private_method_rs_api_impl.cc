@@ -18,10 +18,10 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class Outer) == 1);
-static_assert(alignof(class Outer) == 1);
+static_assert(sizeof(class ::Outer) == 1);
+static_assert(alignof(class ::Outer) == 1);
 
-extern "C" void __rust_thunk___ZN5OuterC1Ev(class Outer* __this) {
+extern "C" void __rust_thunk___ZN5OuterC1Ev(class ::Outer* __this) {
   crubit::construct_at(__this);
 }
 

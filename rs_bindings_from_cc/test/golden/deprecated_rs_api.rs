@@ -29,14 +29,14 @@ pub fn deprecated_function_with_message() {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[deprecated]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedStruct
+///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedStruct
 pub struct DeprecatedStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for DeprecatedStruct {}
 impl !Sync for DeprecatedStruct {}
 unsafe impl ::cxx::ExternType for DeprecatedStruct {
-    type Id = ::cxx::type_id!("DeprecatedStruct");
+    type Id = ::cxx::type_id!(":: DeprecatedStruct");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -54,14 +54,14 @@ impl Default for DeprecatedStruct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[deprecated = "old"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedStructWithMessage
+///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedStructWithMessage
 pub struct DeprecatedStructWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for DeprecatedStructWithMessage {}
 impl !Sync for DeprecatedStructWithMessage {}
 unsafe impl ::cxx::ExternType for DeprecatedStructWithMessage {
-    type Id = ::cxx::type_id!("DeprecatedStructWithMessage");
+    type Id = ::cxx::type_id!(":: DeprecatedStructWithMessage");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -81,7 +81,7 @@ impl Default for DeprecatedStructWithMessage {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[deprecated]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnum
+///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedEnum
 pub struct DeprecatedEnum(::ffi_11::c_uint);
 impl DeprecatedEnum {}
 impl From<::ffi_11::c_uint> for DeprecatedEnum {
@@ -98,7 +98,7 @@ impl From<DeprecatedEnum> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[deprecated = "old"]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumWithMessage
+///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedEnumWithMessage
 pub struct DeprecatedEnumWithMessage(::ffi_11::c_uint);
 impl DeprecatedEnumWithMessage {}
 impl From<::ffi_11::c_uint> for DeprecatedEnumWithMessage {
@@ -134,7 +134,7 @@ pub mod DeprecatedNamespaceWithMessage {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumerators
+///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedEnumerators
 pub struct DeprecatedEnumerators(::ffi_11::c_uint);
 impl DeprecatedEnumerators {
     #[deprecated]
@@ -163,7 +163,7 @@ pub type DeprecatedUsingWithMessage = ::ffi_11::c_int;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedFields
+///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedFields
 pub struct DeprecatedFields {
     #[deprecated]
     pub no_message: ::ffi_11::c_int,
@@ -173,7 +173,7 @@ pub struct DeprecatedFields {
 impl !Send for DeprecatedFields {}
 impl !Sync for DeprecatedFields {}
 unsafe impl ::cxx::ExternType for DeprecatedFields {
-    type Id = ::cxx::type_id!("DeprecatedFields");
+    type Id = ::cxx::type_id!(":: DeprecatedFields");
     type Kind = ::cxx::kind::Trivial;
 }
 

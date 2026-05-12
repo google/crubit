@@ -18,18 +18,18 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct TopLevel) == 1);
-static_assert(alignof(struct TopLevel) == 1);
+static_assert(sizeof(struct ::TopLevel) == 1);
+static_assert(alignof(struct ::TopLevel) == 1);
 
-extern "C" void __rust_thunk___ZN8TopLevelC1Ev(struct TopLevel* __this) {
+extern "C" void __rust_thunk___ZN8TopLevelC1Ev(struct ::TopLevel* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert(sizeof(struct test_namespace_bindings::Inner) == 1);
-static_assert(alignof(struct test_namespace_bindings::Inner) == 1);
+static_assert(sizeof(struct ::test_namespace_bindings::Inner) == 1);
+static_assert(alignof(struct ::test_namespace_bindings::Inner) == 1);
 
 extern "C" void __rust_thunk___ZN23test_namespace_bindings5InnerC1Ev(
-    struct test_namespace_bindings::Inner* __this) {
+    struct ::test_namespace_bindings::Inner* __this) {
   crubit::construct_at(__this);
 }
 

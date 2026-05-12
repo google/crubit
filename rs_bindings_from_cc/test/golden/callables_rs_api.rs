@@ -81,14 +81,14 @@ pub fn map_bridged(
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ABICompatible
+///CRUBIT_ANNOTATE: cpp_type=:: ABICompatible
 pub struct ABICompatible {
     pub x: ::ffi_11::c_int,
 }
 impl !Send for ABICompatible {}
 impl !Sync for ABICompatible {}
 unsafe impl ::cxx::ExternType for ABICompatible {
-    type Id = ::cxx::type_id!("ABICompatible");
+    type Id = ::cxx::type_id!(":: ABICompatible");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -122,7 +122,7 @@ pub fn map_abi_compatible(
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=LayoutCompatible
+///CRUBIT_ANNOTATE: cpp_type=:: LayoutCompatible
 pub struct LayoutCompatible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -132,7 +132,7 @@ pub struct LayoutCompatible {
 impl !Send for LayoutCompatible {}
 impl !Sync for LayoutCompatible {}
 unsafe impl ::cxx::ExternType for LayoutCompatible {
-    type Id = ::cxx::type_id!("LayoutCompatible");
+    type Id = ::cxx::type_id!(":: LayoutCompatible");
     type Kind = ::cxx::kind::Trivial;
 }
 impl LayoutCompatible {

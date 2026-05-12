@@ -18,11 +18,11 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct CannotUpcastInCrubit) == 4);
-static_assert(alignof(struct CannotUpcastInCrubit) == 4);
+static_assert(CRUBIT_SIZEOF(struct ::CannotUpcastInCrubit) == 4);
+static_assert(alignof(struct ::CannotUpcastInCrubit) == 4);
 
 extern "C" void __rust_thunk___ZN20CannotUpcastInCrubitC1Ev(
-    struct CannotUpcastInCrubit* __this) {
+    struct ::CannotUpcastInCrubit* __this) {
   crubit::construct_at(__this);
 }
 

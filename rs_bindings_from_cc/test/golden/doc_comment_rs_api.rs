@@ -19,7 +19,7 @@
 ///  * with three slashes
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DocCommentSlashes
+///CRUBIT_ANNOTATE: cpp_type=:: DocCommentSlashes
 pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
@@ -28,7 +28,7 @@ pub struct DocCommentSlashes {
 impl !Send for DocCommentSlashes {}
 impl !Sync for DocCommentSlashes {}
 unsafe impl ::cxx::ExternType for DocCommentSlashes {
-    type Id = ::cxx::type_id!("DocCommentSlashes");
+    type Id = ::cxx::type_id!(":: DocCommentSlashes");
     type Kind = ::cxx::kind::Trivial;
 }
 impl DocCommentSlashes {
@@ -137,7 +137,7 @@ pub mod doc_comment_slashes {
 ///  * with slashes and bang
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DocCommentBang
+///CRUBIT_ANNOTATE: cpp_type=:: DocCommentBang
 pub struct DocCommentBang {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -145,7 +145,7 @@ pub struct DocCommentBang {
 impl !Send for DocCommentBang {}
 impl !Sync for DocCommentBang {}
 unsafe impl ::cxx::ExternType for DocCommentBang {
-    type Id = ::cxx::type_id!("DocCommentBang");
+    type Id = ::cxx::type_id!(":: DocCommentBang");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -185,7 +185,7 @@ impl Default for DocCommentBang {
 ///  with two stars
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MultilineCommentTwoStars
+///CRUBIT_ANNOTATE: cpp_type=:: MultilineCommentTwoStars
 pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -193,7 +193,7 @@ pub struct MultilineCommentTwoStars {
 impl !Send for MultilineCommentTwoStars {}
 impl !Sync for MultilineCommentTwoStars {}
 unsafe impl ::cxx::ExternType for MultilineCommentTwoStars {
-    type Id = ::cxx::type_id!("MultilineCommentTwoStars");
+    type Id = ::cxx::type_id!(":: MultilineCommentTwoStars");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -233,7 +233,7 @@ impl Default for MultilineCommentTwoStars {
 ///  * with two slashes
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=LineComment
+///CRUBIT_ANNOTATE: cpp_type=:: LineComment
 pub struct LineComment {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -241,7 +241,7 @@ pub struct LineComment {
 impl !Send for LineComment {}
 impl !Sync for LineComment {}
 unsafe impl ::cxx::ExternType for LineComment {
-    type Id = ::cxx::type_id!("LineComment");
+    type Id = ::cxx::type_id!(":: LineComment");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -281,7 +281,7 @@ impl Default for LineComment {
 ///  with one star
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MultilineOneStar
+///CRUBIT_ANNOTATE: cpp_type=:: MultilineOneStar
 pub struct MultilineOneStar {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -289,7 +289,7 @@ pub struct MultilineOneStar {
 impl !Send for MultilineOneStar {}
 impl !Sync for MultilineOneStar {}
 unsafe impl ::cxx::ExternType for MultilineOneStar {
-    type Id = ::cxx::type_id!("MultilineOneStar");
+    type Id = ::cxx::type_id!(":: MultilineOneStar");
     type Kind = ::cxx::kind::Trivial;
 }
 

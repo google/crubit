@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/global:global
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -99,14 +99,14 @@ pub mod foo {
 /// Generated from: rs_bindings_from_cc/test/global/global.h;l=45
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum
+///CRUBIT_ANNOTATE: cpp_type=:: StructWithAnonEnum
 pub struct StructWithAnonEnum {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for StructWithAnonEnum {}
 impl !Sync for StructWithAnonEnum {}
 unsafe impl ::cxx::ExternType for StructWithAnonEnum {
-    type Id = ::cxx::type_id!("StructWithAnonEnum");
+    type Id = ::cxx::type_id!(":: StructWithAnonEnum");
     type Kind = ::cxx::kind::Trivial;
 }
 

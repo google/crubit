@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // pass_by_value_unmovable_golden
-// Features: fmt, supported, types
+// Features: fmt, leading_colons_for_cpp_type, supported, types
 
 #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]

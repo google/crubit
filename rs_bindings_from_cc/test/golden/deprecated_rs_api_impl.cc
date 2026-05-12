@@ -19,52 +19,52 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 extern "C" void __rust_thunk___Z19deprecated_functionv() {
-  deprecated_function();
+  ::deprecated_function();
 }
 
 static_assert((void (*)()) & ::deprecated_function);
 
 extern "C" void __rust_thunk___Z32deprecated_function_with_messagev() {
-  deprecated_function_with_message();
+  ::deprecated_function_with_message();
 }
 
 static_assert((void (*)()) & ::deprecated_function_with_message);
 
-static_assert(sizeof(struct DeprecatedStruct) == 1);
-static_assert(alignof(struct DeprecatedStruct) == 1);
+static_assert(sizeof(struct ::DeprecatedStruct) == 1);
+static_assert(alignof(struct ::DeprecatedStruct) == 1);
 
 extern "C" void __rust_thunk___ZN16DeprecatedStructC1Ev(
-    struct DeprecatedStruct* __this) {
+    struct ::DeprecatedStruct* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert(sizeof(struct DeprecatedStructWithMessage) == 1);
-static_assert(alignof(struct DeprecatedStructWithMessage) == 1);
+static_assert(sizeof(struct ::DeprecatedStructWithMessage) == 1);
+static_assert(alignof(struct ::DeprecatedStructWithMessage) == 1);
 
 extern "C" void __rust_thunk___ZN27DeprecatedStructWithMessageC1Ev(
-    struct DeprecatedStructWithMessage* __this) {
+    struct ::DeprecatedStructWithMessage* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void __rust_thunk___ZN19DeprecatedNamespace1fEv() {
-  DeprecatedNamespace::f();
+  ::DeprecatedNamespace::f();
 }
 
 static_assert((void (*)()) & ::DeprecatedNamespace::f);
 
 extern "C" void __rust_thunk___ZN30DeprecatedNamespaceWithMessage1fEv() {
-  DeprecatedNamespaceWithMessage::f();
+  ::DeprecatedNamespaceWithMessage::f();
 }
 
 static_assert((void (*)()) & ::DeprecatedNamespaceWithMessage::f);
 
-static_assert(CRUBIT_SIZEOF(struct DeprecatedFields) == 8);
-static_assert(alignof(struct DeprecatedFields) == 4);
-static_assert(CRUBIT_OFFSET_OF(no_message, struct DeprecatedFields) == 0);
-static_assert(CRUBIT_OFFSET_OF(message, struct DeprecatedFields) == 4);
+static_assert(CRUBIT_SIZEOF(struct ::DeprecatedFields) == 8);
+static_assert(alignof(struct ::DeprecatedFields) == 4);
+static_assert(CRUBIT_OFFSET_OF(no_message, struct ::DeprecatedFields) == 0);
+static_assert(CRUBIT_OFFSET_OF(message, struct ::DeprecatedFields) == 4);
 
 extern "C" void __rust_thunk___ZN16DeprecatedFieldsC1Ev(
-    struct DeprecatedFields* __this) {
+    struct ::DeprecatedFields* __this) {
   crubit::construct_at(__this);
 }
 

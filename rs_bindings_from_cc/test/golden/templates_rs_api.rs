@@ -16,14 +16,14 @@
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DifferentScope
+///CRUBIT_ANNOTATE: cpp_type=:: DifferentScope
 pub struct DifferentScope {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for DifferentScope {}
 impl !Sync for DifferentScope {}
 unsafe impl ::cxx::ExternType for DifferentScope {
-    type Id = ::cxx::type_id!("DifferentScope");
+    type Id = ::cxx::type_id!(":: DifferentScope");
     type Kind = ::cxx::kind::Trivial;
 }
 
@@ -50,14 +50,14 @@ pub mod test_namespace_bindings {
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateParam
+    ///CRUBIT_ANNOTATE: cpp_type=:: test_namespace_bindings :: TemplateParam
     pub struct TemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for TemplateParam {}
     impl !Sync for TemplateParam {}
     unsafe impl ::cxx::ExternType for TemplateParam {
-        type Id = ::cxx::type_id!("test_namespace_bindings :: TemplateParam");
+        type Id = ::cxx::type_id!(":: test_namespace_bindings :: TemplateParam");
         type Kind = ::cxx::kind::Trivial;
     }
 
@@ -141,14 +141,14 @@ pub mod forward_declared_template { // error: class `forward_declared_template::
 pub mod private_classes {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=private_classes :: HasPrivateType
+    ///CRUBIT_ANNOTATE: cpp_type=:: private_classes :: HasPrivateType
     pub struct HasPrivateType {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for HasPrivateType {}
     impl !Sync for HasPrivateType {}
     unsafe impl ::cxx::ExternType for HasPrivateType {
-        type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
+        type Id = ::cxx::type_id!(":: private_classes :: HasPrivateType");
         type Kind = ::cxx::kind::Trivial;
     }
 }
