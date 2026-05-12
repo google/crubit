@@ -529,7 +529,6 @@ aria-label="Show hidden lines"></button>';
     const sidebarCheckbox = document.getElementById('mdbook-sidebar-toggle-anchor');
     let firstContact = null;
 
-
     /* Because we cannot change the `display` using only CSS after/before the transition, we
        need JS to do it. We change the display to prevent the browsers search to find text inside
        the collapsed sidebar. */
@@ -647,6 +646,15 @@ aria-label="Show hidden lines"></button>';
             firstContact = null;
         }
     }, { passive: true });
+
+
+    const sidebarScrollbox = sidebar.querySelector('.sidebar-scrollbox');
+    // Insert logo at the top of the sidebar.
+    const img = document.createElement('img');
+    img.src = "/images/crubit_logo_subtitled.svg";
+    img.alt = "Crubit's Mascot Cardi accompanied by the text `Crubit` and subtitled `C++/Rust bidirectional interop tool`";
+    img.style.maxWidth = "100%";
+    sidebarScrollbox.prepend(img);
 })();
 
 (function chapterNavigation() {
