@@ -382,7 +382,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     use error_report::Category;
     db.errors().add_category(Category::Type);
     let record_safety = db.record_safety(record.clone());
-    if matches!(record_safety, database::rs_snippet::Safety::Unsafe { .. }) {
+    if record_safety.is_some() {
         db.errors().add_category(Category::Unsafe);
     }
     if !record.is_unpin() {
@@ -713,7 +713,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
             record.doc_comment.as_deref(),
-            record_safety.unsafe_reason().as_deref(),
+            record_safety.as_deref(),
             Some(&record.source_loc),
             db.environment(),
             db.kythe_annotations(),

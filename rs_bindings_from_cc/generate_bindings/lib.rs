@@ -18,7 +18,7 @@ use database::code_snippet::{
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
     BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions, Mutability,
-    PassingConvention, RsTypeKind, RustPtrKind, Safety, UniformReprTemplateType,
+    PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -633,12 +633,12 @@ pub fn generate_bindings_tokens(
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind_safety`.
-fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safety {
+fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Option<UnsafeReason> {
     match rs_type_kind {
-        RsTypeKind::Error { error, .. } => {
-            Safety::unsafe_because(format!("Crubit cannot assume unknown types are safe: {error}"))
-        }
-        RsTypeKind::Pointer { .. } => Safety::unsafe_because("raw pointer"),
+        RsTypeKind::Error { error, .. } => Some(UnsafeReason(
+            format!("Crubit cannot assume unknown types are safe: {error}").into(),
+        )),
+        RsTypeKind::Pointer { .. } => Some(UnsafeReason("raw pointer".into())),
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
         | RsTypeKind::TypeAlias { underlying_type: t, .. } => {
@@ -650,51 +650,35 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safe
         RsTypeKind::IncompleteRecord { .. } => {
             // TODO(b/390474240): Add a way to mark a forward declaration as being an unsafe
             // type.
-            Safety::Safe
+            None
         }
         RsTypeKind::Enum { .. }
         | RsTypeKind::Primitive(..)
-        | RsTypeKind::ExistingRustType { .. } => Safety::Safe,
+        | RsTypeKind::ExistingRustType { .. } => None,
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-            BridgeRsTypeKind::Bridge { .. } => {
-                if record_safety(db, original_type.clone()).is_safe() {
-                    Safety::Safe
-                } else {
-                    // Full unsafe reason is not shown here, it's documented on the type instead.
-                    Safety::unsafe_because("unsafe bridge type")
-                }
-            }
-            BridgeRsTypeKind::ProtoMessageBridge { .. } => {
-                if record_safety(db, original_type.clone()).is_safe() {
-                    Safety::Safe
-                } else {
-                    // Full unsafe reason is not shown here, it's documented on the type instead.
-                    Safety::unsafe_because("unsafe proto message type")
-                }
-            }
+            BridgeRsTypeKind::Bridge { .. } => record_safety(db, original_type.clone())
+                // Full unsafe reason is not shown here, it's documented on the type instead.
+                .map(|_reason| UnsafeReason("unsafe bridge type".into())),
+            BridgeRsTypeKind::ProtoMessageBridge { .. } => record_safety(db, original_type.clone())
+                // Full unsafe reason is not shown here, it's documented on the type instead.
+                .map(|_reason| UnsafeReason("unsafe proto message type".into())),
             BridgeRsTypeKind::StdOptional(t) => db.rs_type_kind_safety(t.as_ref().clone()),
             BridgeRsTypeKind::StdPair(t1, t2) => {
                 let s1 = db.rs_type_kind_safety(t1.as_ref().clone());
                 let s2 = db.rs_type_kind_safety(t2.as_ref().clone());
 
-                let r1 = s1
-                    .unsafe_reason()
-                    .map(|reason| format!("pair's first element is unsafe: {reason}"));
-                let r2 = s2
-                    .unsafe_reason()
-                    .map(|reason| format!("pair's second element is unsafe: {reason}"));
-                if let (Some(r1), Some(r2)) = (&r1, &r2) {
-                    Safety::unsafe_because(format!("{r1}; {r2}"))
-                } else if let Some(r1) = r1 {
-                    Safety::unsafe_because(r1)
-                } else if let Some(r2) = r2 {
-                    Safety::unsafe_because(r2)
-                } else {
-                    Safety::Safe
+                let r1 = s1.map(|reason| format!("pair's first element is unsafe: {reason}"));
+                let r2 = s2.map(|reason| format!("pair's second element is unsafe: {reason}"));
+
+                match (r1, r2) {
+                    (Some(r1), Some(r2)) => Some(UnsafeReason(format!("{r1}; {r2}").into())),
+                    (Some(r1), None) => Some(UnsafeReason(r1.into())),
+                    (None, Some(r2)) => Some(UnsafeReason(r2.into())),
+                    (None, None) => None,
                 }
             }
-            BridgeRsTypeKind::StdString { .. } => Safety::Safe,
+            BridgeRsTypeKind::StdString { .. } => None,
             BridgeRsTypeKind::Callable(callable) => {
                 callable_safety(db, &callable.param_types, &callable.return_type)
             }
@@ -713,26 +697,24 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safe
                 match (db.codegen_functions().decl_lifetime_arity)(db, record.id()) {
                     Ok(arity) => {
                         if arity != 0 && lifetimes.len() != arity {
-                            return Safety::unsafe_because(format!(
+                            return Some(UnsafeReason(format!(
                                 "type {} has {} lifetime parameter{}, but {} {} provided; callers must ensure that arguments have the appropriate lifetime",
                                 record.rs_name, arity, if arity == 1 { "" } else { "s" }, lifetimes.len(), if lifetimes.len() == 1 { "was" } else { "were" }
-                            ));
+                            ).into()));
                         }
                     }
                     _ => {
-                        return Safety::unsafe_because(format!(
+                        return Some(UnsafeReason(format!(
                             "unable to determine lifetime how many lifetime parameters {} accepts; callers must ensure that arguments have the appropriate lifetime",
                             record.rs_name
-                        ));
+                        ).into()));
                     }
                 }
             }
-            if record_safety(db, record.clone()).is_safe() {
-                Safety::Safe
-            } else {
-                // Full unsafe reason is not shown here, it's documented on the type instead.
-                Safety::unsafe_because("unsafe struct or union")
-            }
+
+            // Full unsafe reason is not shown here, it's documented on the type instead.
+            record_safety(db, record.clone())
+                .map(|_reason| UnsafeReason("unsafe struct or union".into()))
         }
     }
 }
@@ -743,22 +725,21 @@ fn callable_safety(
     db: &BindingsGenerator,
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
-) -> Safety {
+) -> Option<UnsafeReason> {
     let param_reasons = param_types
         .iter()
         .cloned()
         .enumerate()
         .filter_map(|(i, param_type)| {
-            let safety = db.rs_type_kind_safety(param_type);
-            let reason = safety.unsafe_reason()?;
+            let reason = db.rs_type_kind_safety(param_type)?;
             let i = i + 1;
             Some(format!("param {i} is of unsafe type {reason}"))
         })
         .collect_vec();
     let return_safety = db.rs_type_kind_safety(return_type.clone());
 
-    if param_reasons.is_empty() && return_safety.is_safe() {
-        return Safety::Safe;
+    if param_reasons.is_empty() && return_safety.is_none() {
+        return None;
     }
 
     let mut reasons = if param_reasons.is_empty() {
@@ -767,7 +748,7 @@ fn callable_safety(
         format!("Callable takes unsafe parameters: {}", param_reasons.join(", "))
     };
 
-    if let Some(return_reason) = return_safety.unsafe_reason() {
+    if let Some(return_reason) = return_safety {
         if reasons.is_empty() {
             reasons = format!("Callable return type is unsafe: {return_reason}");
         } else {
@@ -775,33 +756,33 @@ fn callable_safety(
         }
     }
 
-    Safety::unsafe_because(reasons)
+    Some(UnsafeReason(reasons.into()))
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
-fn record_field_safety(db: &BindingsGenerator, field: Field) -> Safety {
+fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
     if field.access != AccessSpecifier::Public {
-        return Safety::Safe;
+        return None;
     }
     let field_rs_type_kind = match db.rs_type_kind(field.type_.clone()) {
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
-            return Safety::unsafe_because(
-                format!("Rust type is unknown; safety requirements cannot be automatically generated: {err}"),
-            );
+            return Some(UnsafeReason(
+                format!("Rust type is unknown; safety requirements cannot be automatically generated: {err}").into(),
+            ));
         }
     };
     db.rs_type_kind_safety(field_rs_type_kind)
 }
 
 /// Implementation of `BindingsGenerator::record_safety`.
-fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
+fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeReason> {
     let mut doc = String::new();
 
     match record.safety_annotation {
         SafetyAnnotation::DisableUnsafe => {
-            return Safety::Safe;
+            return None;
         }
         SafetyAnnotation::Unsafe => {
             // TODO(b/480191443): allow C++ annotations to provide a specific reason.
@@ -818,7 +799,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
         .fields
         .iter()
         .filter_map(|field| {
-            let reason = db.record_field_safety(field.clone()).unsafe_reason()?;
+            let reason = db.record_field_safety(field.clone())?;
 
             // TODO(nicholasbishop): handle unnamed better.
             let mut name = field
@@ -835,7 +816,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
         && !record.is_union()
         && reasons.is_empty()
     {
-        return Safety::Safe;
+        return None;
     }
 
     if !reasons.is_empty() {
@@ -849,8 +830,11 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
     // Verify that we didn't generate an empty safety doc.
     assert!(!doc.is_empty());
 
-    Safety::unsafe_because(format!(
-        "To call a function that accepts this type, you must uphold these requirements:\n{doc}"
+    Some(UnsafeReason(
+        format!(
+            "To call a function that accepts this type, you must uphold these requirements:\n{doc}"
+        )
+        .into(),
     ))
 }
 

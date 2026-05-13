@@ -855,7 +855,7 @@ fn api_func_shape_for_identifier(
                 // an unsafe type is safe, but using one is not.
                 let _ = param_type_iter.next();
             }
-            param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe())
+            param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_some())
         }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
@@ -972,7 +972,7 @@ fn issue_unsafe_constructor_errors(
                 .zip(param_types)
                 .skip(1)
                 .filter_map(|(param_name, param_type)| {
-                    let reason = db.rs_type_kind_safety((*param_type).clone()).unsafe_reason()?;
+                    let reason = db.rs_type_kind_safety((*param_type).clone())?;
                     Some(format!("\n    `{param_name}`: {reason}"))
                 })
                 .collect::<Vec<String>>()
@@ -1668,7 +1668,7 @@ fn generate_func_safety_doc(
 
     let mut param_unsafe_reasons = String::new();
     for (ident, param_type) in param_idents.iter().zip(param_types.iter()) {
-        if let Some(reason) = db.rs_type_kind_safety(param_type.clone()).unsafe_reason() {
+        if let Some(reason) = db.rs_type_kind_safety(param_type.clone()) {
             writeln!(&mut param_unsafe_reasons, "* `{ident}`: {reason}").unwrap();
         }
     }

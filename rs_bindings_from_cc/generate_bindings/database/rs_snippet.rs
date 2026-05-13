@@ -16,6 +16,7 @@ use ir::*;
 use proc_macro2::{Delimiter, Group, Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::HashSet;
+use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
 
@@ -67,35 +68,19 @@ impl Mutability {
     }
 }
 
-/// Whether a type or function is safe.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum Safety {
-    Safe,
-    Unsafe(
-        /// Reason why it's unsafe.
-        Rc<str>,
-    ),
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub struct UnsafeReason(pub Rc<str>);
+
+impl Display for UnsafeReason {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
 }
 
-impl Safety {
-    pub fn is_safe(&self) -> bool {
-        matches!(self, Self::Safe)
-    }
-
-    pub fn is_unsafe(&self) -> bool {
-        matches!(self, Self::Unsafe(_))
-    }
-
-    pub fn unsafe_because(s: impl Into<Rc<str>>) -> Self {
-        Self::Unsafe(s.into())
-    }
-
-    pub fn unsafe_reason(&self) -> Option<Rc<str>> {
-        if let Self::Unsafe(reason) = self {
-            Some(reason.clone())
-        } else {
-            None
-        }
+impl Deref for UnsafeReason {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -1595,7 +1580,7 @@ impl RsTypeKind {
                 {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
                 }
-                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe()) {
+                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_some()) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {
@@ -1869,7 +1854,7 @@ impl RsTypeKind {
                 if let Some(return_frag) = return_type.format_as_return_type_fragment(db, None) {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
                 }
-                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe()) {
+                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_some()) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {
