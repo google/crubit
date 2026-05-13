@@ -44,7 +44,7 @@ Examples of C++ features that may mutate a value that Rust holds a reference to:
     reference to.
 *   Mutating public fields of a C++ struct that Rust has a reference to.
 
-TODO: Try to succintly mention the idea that short-lived / non-retained
+TODO: Try to succinctly mention the idea that short-lived / non-retained
 references are safe from the mutation risk.
 
 ## Dangling or null references

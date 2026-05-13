@@ -235,7 +235,7 @@ takes the form of implementation-specific attributes which the compiler can read
 to inform what warnings to give.
 
 It is possible to lose safety unless FFI correctly propagates the relevant
-information to the ohter side. And in Rust, incorrectly marking functions as
+information to the other side. And in Rust, incorrectly marking functions as
 unsafe can lead to safety fatigue, where most calls are trivially correct, and
 the few that aren't have insufficient review.
 
