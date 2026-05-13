@@ -682,13 +682,30 @@ pub fn generate_trait_thunks<'tcx>(
         bail!("`{display_name}` doesn't implement the `{trait_name}` trait");
     }
 
+    fn is_supported_trait_method<'tcx>(tcx: TyCtxt<'tcx>, method_def_id: DefId) -> bool {
+        // We want to check the `self` type of the method (and not the enclosing impl) so that we see Pin<Self>/Box<Self>.
+        let fn_sig = crate::normalize_ty(
+            tcx,
+            tcx.param_env(method_def_id),
+            tcx.fn_sig(method_def_id).instantiate_identity(),
+        )
+        .skip_binder();
+        // If our method has no parameters, we treat it as supported.
+        let Some(self_ty) = fn_sig.inputs().first() else {
+            return true;
+        };
+        // We don't support trait methods that use `Box<Self>` or `Pin<Self>` yet.
+        self_ty.pinned_ty().is_none() && self_ty.boxed_ty().is_none()
+    }
+
     let mut method_name_to_cc_thunk_name = HashMap::new();
     let mut cc_thunk_decls = CcSnippet::default();
     let mut rs_thunk_impls = RsSnippet::default();
     let methods = tcx
         .associated_items(trait_id)
         .in_definition_order()
-        .filter(|item| matches!(item.kind, ty::AssocKind::Fn { .. }));
+        .filter(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
+        .filter(|item| is_supported_trait_method(tcx, item.def_id));
     for method in methods {
         let substs = {
             let generics = tcx.generics_of(method.def_id);
