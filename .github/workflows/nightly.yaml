@@ -5,6 +5,8 @@ name: Crubit Nightly Test Matrix
 on:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   use-test-matrix:
     runs-on: ubuntu-latest
