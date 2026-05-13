@@ -71,6 +71,42 @@ cc_library(
 )
 
 cc_library(
+    name = "waker",
+    srcs = ["waker.cc"],
+    hdrs = ["waker.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+)
+
+rust_library(
+    name = "dyn_erased_future",
+    srcs = ["dyn_erased_future.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+    deps = [
+        # We depend on extern "C" symbols exported by waker.
+        ":waker",
+    ],
+)
+
+cc_library(
+    name = "dyn_erased_future_cc",
+    hdrs = ["dyn_erased_future.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+    deps = [":waker"],
+)
+
+cc_library(
     name = "slice_ref",
     hdrs = ["slice_ref.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
@@ -330,6 +366,7 @@ bazel_to_builds(
     targets = [
         ":char",
         ":dyn_callable",
+        ":dyn_erased_future_cc",
         ":iterator_adapter",
         ":lossy_formatter_for_bindings",
         ":option",
