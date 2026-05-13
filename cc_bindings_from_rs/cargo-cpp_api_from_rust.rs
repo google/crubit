@@ -179,15 +179,15 @@ fn build_crate_and_stream_artifacts(
 
 struct Directories {
     /// Target-arch specific target directory, e.g.
-    /// "/path/to/target/release/x86_64-unknown-linux-gnu".
+    /// "/path/to/target/x86_64-unknown-linux-gnu/release".
     profile_dir: Utf8PathBuf,
     /// Profile name, e.g. "release".
     profile_name: String,
     /// Contains target-arch specific dependencies, e.g.
-    /// "/path/to/target/release/x86_64-unknown-linux-gnu/deps".
+    /// "/path/to/target/x86_64-unknown-linux-gnu/release/deps".
     deps_dir: Utf8PathBuf,
     /// Contains target-arch specific headers, e.g.
-    /// "/path/to/target/release/x86_64-unknown-linux-gnu/include".
+    /// "/path/to/target/x86_64-unknown-linux-gnu/release/include".
     headers_dir: Utf8PathBuf,
     /// Contains host-arch specific dependencies (proc macros), e.g. "/path/to/target/release/deps".
     host_deps_dir: Utf8PathBuf,
