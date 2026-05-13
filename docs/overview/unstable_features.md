@@ -37,7 +37,7 @@ For each feature we use, we document the following:
 ### `negative_impls`
 
 *   **Crubit feature:** `supported`
-*   **Use case:** Used to implement `ctor` / nontrivial intialization, so that
+*   **Use case:** Used to implement `ctor` / nontrivial initialization, so that
     we can dispatch on the existence of the `SelfCtor` trait. Also used so that
     we can pin/unpin a type without adding a field (which is not possible with
     `PhantomPinned`).

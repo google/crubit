@@ -109,7 +109,7 @@ Cons:
 
 -   **Assumes a particular ABI** - a function template specialization uses the
     calling convention prescribed by the platform C++ ABI.  We know that
-    [the Itanium ABI maps C++ sigatures to the C
+    [the Itanium ABI maps C++ signatures to the C
     ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#functions) and
     therefore will be compatible with the calling convention expected by the
     generated `..._rs_api.rs`.  Further research is needed to investigate the
