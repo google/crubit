@@ -802,7 +802,7 @@ impl<T: ?Sized> RvalueReference<'_, T> {
         // rules by coexisting with my_pin. Thus, get_ref must return &T, not
         // &'a T. (For the same reason, as_const returns a ConstRvalueReference
         // whose lifetime is bound by self, not 'a.)
-        &*self.0
+        &self.0
     }
 }
 
@@ -943,6 +943,7 @@ unsafe impl<T: SelfCtor> Ctor for T {
     type Output = T;
     type Error = Infallible;
     unsafe fn ctor(self, dest: *mut Self) -> Result<(), Infallible> {
+        // SAFETY: dest is valid for writes and uninitialized.
         unsafe {
             dest.write(self);
         }
@@ -957,7 +958,7 @@ impl<T, E> !SelfCtor for RustMoveCtor<T, E> {}
 
 impl<T, E> RustMoveCtor<T, E> {
     pub fn new(x: T) -> Self {
-        RustMoveCtor(x, PhantomData::default())
+        RustMoveCtor(x, PhantomData)
     }
 }
 
@@ -966,7 +967,10 @@ unsafe impl<T, E> Ctor for RustMoveCtor<T, E> {
     type Output = T;
     type Error = E;
     unsafe fn ctor(self, dest: *mut T) -> Result<(), E> {
-        dest.write(self.0);
+        // SAFETY: dest is valid for writes and uninitialized.
+        unsafe {
+            dest.write(self.0);
+        }
         Ok(())
     }
 }
@@ -993,7 +997,7 @@ unsafe impl<T, E> Ctor for RustMoveCtor<T, E> {
 pub struct UnreachableCtor<T: ?Sized, E = Infallible>(PhantomData<(fn() -> T, fn() -> E)>);
 impl<T: ?Sized, E> UnreachableCtor<T, E> {
     pub fn new() -> Self {
-        UnreachableCtor(PhantomData::default())
+        UnreachableCtor(PhantomData)
     }
 }
 impl<T: ?Sized, E> !SelfCtor for UnreachableCtor<T, E> {}
@@ -1829,7 +1833,9 @@ pub trait UnsafeCtorNew<ConstructorArgs> {
 pub struct ManuallyDropCtor<T: Ctor>(T);
 
 impl<T: Ctor> ManuallyDropCtor<T> {
-    /// Safety: this structurally pins the contents of ManuallyDrop.
+    /// # Safety
+    ///
+    /// This structurally pins the contents of ManuallyDrop.
     /// Therefore, it is not safe to use with anything that assumes that
     /// ManuallyDrop is not structurally pinned.
     pub unsafe fn new(x: T) -> Self {
