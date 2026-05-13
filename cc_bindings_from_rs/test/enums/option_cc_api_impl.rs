@@ -144,11 +144,31 @@ unsafe extern "C" fn __crubit_thunk_with_unone(__ret_ptr: *mut core::ffi::c_void
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasOptions, direct) == 0);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasOptions, niche) == 2);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasOptions, nested) == 3);
-const _: () = assert!(::std::mem::size_of::<::option_golden::NonMaxU8>() == 1);
-const _: () = assert!(::std::mem::align_of::<::option_golden::NonMaxU8>() == 1);
+const _: () = assert!(::std::mem::size_of::<::option_golden::LessThan20U8>() == 1);
+const _: () = assert!(::std::mem::align_of::<::option_golden::LessThan20U8>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_value(__self: &'static ::option_golden::NonMaxU8) -> u8 {
-    unsafe { ::option_golden::NonMaxU8::value(__self) }
+unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_uchar) -> () {
+    unsafe {
+        let __rs_return_value = ::option_golden::LessThan20U8::new(value);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
+                    ::option_golden::LessThan20U8,
+                >()),
+                __ret_ptr as *mut core::ffi::c_uchar,
+                __rs_return_value,
+            );
+        }
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_value(
+    __self: &'static mut ::core::mem::MaybeUninit<::option_golden::LessThan20U8>,
+) -> u8 {
+    unsafe {
+        let __self = __self.assume_init_read();
+        ::option_golden::LessThan20U8::value(__self)
+    }
 }
 const _: () = assert!(::std::mem::size_of::<::option_golden::OptCloneNoDefault>() == 2);
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptCloneNoDefault>() == 1);
