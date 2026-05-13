@@ -8,7 +8,9 @@ use database::code_snippet::BindingsTokens;
 use generate_struct_and_union::generate_derives;
 use googletest::{expect_that, gtest, matchers::contains_substring};
 use ir_testing::with_lifetime_macros;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record};
+use multiplatform_ir_testing::{
+    ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_dependency, ir_record,
+};
 use proc_macro2::TokenStream;
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
@@ -410,8 +412,8 @@ fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
 /// even via Copy/Clone.
 #[gtest]
 fn test_trivial_nonpublic_destructor() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Indestructible final {
           Indestructible() = default;
           Indestructible(int);
@@ -435,15 +437,15 @@ fn test_trivial_nonpublic_destructor() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Indestructible});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn TakesReference<'a>(x: &'a crate::Indestructible)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn TakesReference<'x>(x: &'x crate::Indestructible)});
     Ok(())
 }
 
 #[gtest]
 fn test_nontrivial_nonpublic_destructor() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Indestructible final {
           Indestructible() = default;
           Indestructible(int);
@@ -468,8 +470,8 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
     );
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Indestructible});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn TakesReference<'a>(x: &'a crate::Indestructible)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn TakesReference<'x>(x: &'x crate::Indestructible)});
     Ok(())
 }
 
@@ -480,8 +482,8 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
 /// restriction will likely be lifted later.
 #[gtest]
 fn test_trivial_abstract_by_value() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Abstract final {
           Abstract() = default;
           Abstract(int);
@@ -500,16 +502,16 @@ fn test_trivial_abstract_by_value() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Abstract});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'a>(&'a self)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'__this>(&'__this self)});
     assert_rs_matches!(rs_api, quote! {fn TakesAbstract<'a>(a: &'a crate::Abstract)});
     Ok(())
 }
 
 #[gtest]
 fn test_nontrivial_abstract_by_value() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Abstract final {
           Abstract() {};
           Abstract(int);
@@ -524,8 +526,8 @@ fn test_nontrivial_abstract_by_value() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {CtorNew});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Abstract});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'a>(&'a self)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'__this>(&'__this self)});
     assert_rs_matches!(rs_api, quote! {fn TakesAbstract<'a>(a: &'a crate::Abstract)});
     Ok(())
 }
@@ -1860,9 +1862,8 @@ fn test_struct_from_other_target() -> Result<()> {
 
 #[gtest]
 fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
-    let ir = ir_from_cc(
+    let ir = ir_from_assumed_lifetimes_cc(
         r#"
-        #pragma clang lifetime_elision
         struct SomeStruct final {
             void Method1() {}
             void Method2() {}
@@ -1878,17 +1879,17 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
             impl SomeStruct {
                 ...
                 #[inline(always)]
-                pub fn Method1<'a>(&'a mut self) {
+                pub fn Method1<'__this>(&'__this mut self) {
                     unsafe { self::some_struct::Method1(self) }
                 }
                 ...
                 #[inline(always)]
-                pub fn Method2<'a>(&'a mut self) {
+                pub fn Method2<'__this>(&'__this mut self) {
                     unsafe { self::some_struct::Method2(self) }
                 }
                 ...
                 #[inline(always)]
-                pub fn Method3<'a>(&'a mut self) {
+                pub fn Method3<'__this>(&'__this mut self) {
                     unsafe { self::some_struct::Method3(self) }
                 }
             }

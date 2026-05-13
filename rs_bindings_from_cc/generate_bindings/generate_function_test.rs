@@ -491,8 +491,8 @@ fn test_impl_default_non_trivial_struct() -> Result<()> {
 }
 #[gtest]
 fn test_impl_cc_index_for_member_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct SomeStruct final {
             inline const int& operator[](unsigned int index) const {
                 return items[index];
@@ -518,8 +518,8 @@ fn test_impl_cc_index_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct SomeStruct final {
             inline int& operator[](unsigned int index) {
                 return items[index];
@@ -545,8 +545,8 @@ fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_member_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
                 return i == other.i;
@@ -560,7 +560,7 @@ fn test_impl_eq_for_member_function() -> Result<()> {
         quote! {
             impl PartialEq for SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, other: &'b Self) -> bool {
+                fn eq<'__this, 'other>(&'__this self, other: &'other Self) -> bool {
                     unsafe { crate::detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
                 }
             }
@@ -580,8 +580,8 @@ fn test_impl_eq_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_free_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         namespace ns {
             struct SomeStruct final { int i; };
         }
@@ -596,7 +596,7 @@ fn test_impl_eq_for_free_function() -> Result<()> {
         quote! {
             impl PartialEq for crate::ns::SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
+                fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
                     unsafe { crate::detail::__rust_thunk___ZeqRKN2ns10SomeStructES2_(self, rhs) }
                 }
             }
@@ -607,8 +607,8 @@ fn test_impl_eq_for_free_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_ne_for_member_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
                 return i == other.i;
@@ -625,7 +625,7 @@ fn test_impl_eq_ne_for_member_function() -> Result<()> {
         quote! {
             impl PartialEq for SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, other: &'b Self) -> bool {
+                fn eq<'__this, 'other>(&'__this self, other: &'other Self) -> bool {
                     unsafe { crate::detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
                 }
             }
@@ -645,8 +645,8 @@ fn test_impl_eq_ne_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_ne_for_free_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         namespace ns {
             struct SomeStruct final { int i; };
         }
@@ -664,7 +664,7 @@ fn test_impl_eq_ne_for_free_function() -> Result<()> {
         quote! {
             impl PartialEq for crate::ns::SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
+                fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
                     unsafe { crate::detail::__rust_thunk___ZeqRKN2ns10SomeStructES2_(self, rhs) }
                 }
 
@@ -676,8 +676,8 @@ fn test_impl_eq_ne_for_free_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_ne_for_member_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct SomeStruct final {
             inline bool operator!=(const SomeStruct& other) const {
                 return i != other.i;
@@ -691,7 +691,7 @@ fn test_impl_ne_for_member_function() -> Result<()> {
         quote! {
             impl PartialEq for SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, other: &'b Self) -> bool {
+                fn eq<'__this, 'other>(&'__this self, other: &'other Self) -> bool {
                     unsafe { !crate::detail::__rust_thunk___ZNK10SomeStructneERKS_(self, other) }
                 }
             }
@@ -711,8 +711,8 @@ fn test_impl_ne_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_ne_for_free_function() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         namespace ns {
             struct SomeStruct final { int i; };
         }
@@ -727,7 +727,7 @@ fn test_impl_ne_for_free_function() -> Result<()> {
         quote! {
             impl PartialEq for crate::ns::SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
+                fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
                     unsafe { !crate::detail::__rust_thunk___ZneRKN2ns10SomeStructES2_(self, rhs) }
                 }
             }
@@ -738,8 +738,8 @@ fn test_impl_ne_for_free_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_free_function_different_types() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct SomeStruct final { int i; };
         struct SomeOtherStruct final { int i; };
         bool operator==(const SomeStruct& lhs, const SomeOtherStruct& rhs) {
@@ -752,7 +752,7 @@ fn test_impl_eq_for_free_function_different_types() -> Result<()> {
         quote! {
             impl PartialEq<crate::SomeOtherStruct> for crate::SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeOtherStruct) -> bool {
+                fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs crate::SomeOtherStruct) -> bool {
                     unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructRK15SomeOtherStruct(self, rhs) }
                 }
             }
@@ -789,8 +789,8 @@ fn test_impl_eq_for_free_function_by_value() -> Result<()> {
 
 #[gtest]
 fn test_impl_ne_for_free_function_different_types() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct SomeStruct final { int i; };
         struct SomeOtherStruct final { int i; };
         bool operator!=(const SomeStruct& lhs, const SomeOtherStruct& rhs) {
@@ -803,7 +803,7 @@ fn test_impl_ne_for_free_function_different_types() -> Result<()> {
         quote! {
             impl PartialEq<crate::SomeOtherStruct> for crate::SomeStruct {
                 #[inline(always)]
-                fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeOtherStruct) -> bool {
+                fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs crate::SomeOtherStruct) -> bool {
                     unsafe { !crate::detail::__rust_thunk___ZneRK10SomeStructRK15SomeOtherStruct(self, rhs) }
                 }
             }

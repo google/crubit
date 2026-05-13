@@ -9,7 +9,7 @@ use googletest::{expect_eq, gtest};
 use ir::IR;
 use ir_matchers::assert_ir_matches;
 use ir_testing::retrieve_func;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
+use multiplatform_ir_testing::{ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_dependency};
 use quote::quote;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
 use test_generators::{generate_bindings_tokens_for_test, TestDbFactory};
@@ -1343,8 +1343,8 @@ fn test_existing_rust_type_assert_incomplete() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_reordered_template_args() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             namespace crubit::rust_type {
             template <typename...>
             struct Args {};
@@ -1384,8 +1384,8 @@ fn test_existing_rust_type_reordered_template_args() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_default_template_args() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             namespace crubit::rust_type {
             template <typename...>
             struct Args {};
@@ -1422,8 +1422,8 @@ fn test_existing_rust_type_default_template_args() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_specialized_template_args() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             namespace crubit::rust_type {
             template <typename...>
             struct Args {};

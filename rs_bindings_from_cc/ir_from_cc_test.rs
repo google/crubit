@@ -1835,9 +1835,8 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
 
 #[gtest]
 fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
-
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             template <typename T>
             struct MyStruct { T value; };
 
@@ -1868,7 +1867,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
                 type_: CcType {
                     variant: Pointer(PointerType {
                         kind: LValueRef,
-                        lifetime: Some(...),
+                        lifetime: None,
                         pointee_type: CcType {
                             variant: Decl{ id: ItemId(#record_id), ...}, ...
                         }, ...
@@ -2021,8 +2020,8 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
     // 1) SubstTemplateTypeParm (i.e. the template *argument* has `const`:
     // `MyTemplate<const int>`) 2) TemplateTypeParmType used inside the template
     // definition: `const T& GetConstRef()`
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             template <typename T>
             struct MyTemplate {
                 const T& GetConstRef() const { return value; }
@@ -2043,7 +2042,7 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
                 return_type: CcType {
                     variant: Pointer(PointerType {
                         kind: LValueRef,
-                        lifetime: Some(...),
+                        lifetime: None,
                         pointee_type: CcType {
                             variant: Primitive(Int),
                             is_const: true, ...
@@ -2063,7 +2062,7 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
                 return_type: CcType {
                     variant: Pointer(PointerType {
                         kind: LValueRef,
-                        lifetime: Some(...),
+                        lifetime: None,
                         pointee_type: CcType {
                             variant: Primitive(Int),
                             is_const: false, ...
@@ -2086,8 +2085,8 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
     // 1) SubstTemplateTypeParm (i.e. the template *argument* has `const`:
     // `MyTemplate<const int>`) 2) TemplateTypeParmType used inside the template
     // definition: `const T& GetConstRef()`
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             template <typename T>
             struct MyTemplate {
                 const T& GetConstRef() const { return value; }
@@ -2108,7 +2107,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                 return_type: CcType {
                     variant: Pointer(PointerType {
                         kind: LValueRef,
-                        lifetime: Some(...),
+                        lifetime: None,
                         pointee_type: CcType {
                             variant: Primitive(Int),
                             is_const: true, ...
@@ -2128,7 +2127,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                 return_type: CcType {
                     variant: Pointer(PointerType {
                         kind: LValueRef,
-                        lifetime: Some(...),
+                        lifetime: None,
                         pointee_type: CcType {
                             variant: Primitive(Int),
                             is_const: true, ...
@@ -3009,8 +3008,8 @@ fn test_member_function_rvalue() {
 
 #[gtest]
 fn test_member_function_rvalue_ref_qualified_this_param_type() {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             struct StructWithRvalueRefQualifiedMethod final {
                 void rvalue_ref_qualified_method() &&;
                 void rvalue_ref_const_qualified_method() const &&;
