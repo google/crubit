@@ -1209,7 +1209,10 @@ fn generate_variant_ctor<'tcx>(
                 // visibility in C++.
                 bail!("Field `{}` is not public", field_def.name)
             }
+            #[rustversion::before(2026-05-13)]
             let ty = field_def.ty(tcx, adt_generic_args);
+            #[rustversion::since(2026-05-13)]
+            let ty = field_def.ty(tcx, adt_generic_args).skip_normalization();
 
             let is_default =
                 query_compiler::does_type_implement_trait(tcx, ty, default_trait_id, []);
@@ -1470,7 +1473,10 @@ pub(crate) fn generate_fields<'tcx>(
                 .map(|field_iter| {
                     field_iter
                         .map(|IndexedVariantField { index, field_def }| {
+                            #[rustversion::before(2026-05-13)]
                             let ty = field_def.ty(tcx, adt_generic_args);
+                            #[rustversion::since(2026-05-13)]
+                            let ty = field_def.ty(tcx, adt_generic_args).skip_normalization();
                             let size = get_layout(tcx, ty).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
                                 if is_bridged_type(db, ty)
