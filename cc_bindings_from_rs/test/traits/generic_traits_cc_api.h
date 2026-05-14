@@ -96,13 +96,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `generic_traits_golden::StructWithAlias`
+// Error generating bindings for struct `generic_traits_golden::StructWithAlias`
 // defined at
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=60:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for `generic_traits_golden::TraitWithConst` defined
-// at
+// Error generating bindings for trait `generic_traits_golden::TraitWithConst`
+// defined at
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=49:
 // Trait is not yet supported
 
@@ -126,7 +126,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace generic_traits
 
-// Error generating bindings for `<generic_traits_golden::AnotherStruct as
+// Error generating bindings for implementation
+// `<generic_traits_golden::AnotherStruct as
 // generic_traits_golden::TraitWithTwoGenerics<i32, U>>` defined at
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=42:
 // The following Rust type is not supported yet: U
@@ -195,7 +196,7 @@ inline void StructGeneric::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructGeneric, x));
 }
 
-// Error generating bindings for `generic_traits_golden::TraitWithGeneric`
+// Error generating bindings for trait `generic_traits_golden::TraitWithGeneric`
 // defined at
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=5:
 // Aliases to generic trait `generic_traits_golden::TraitWithGeneric` are not

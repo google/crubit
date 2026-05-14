@@ -258,7 +258,7 @@ namespace functions::generic_fn_tests::into_trait_tests {
 // cc_bindings_from_rs/test/functions/functions.rs;l=169
 ::std::int32_t reused_generic_param(::std::int32_t x, ::std::int32_t y);
 
-// Error generating bindings for
+// Error generating bindings for function
 // `functions_golden::generic_fn_tests::into_trait_tests::unused_generic_param`
 // defined at
 // cc_bindings_from_rs/test/functions/functions.rs;l=204:

@@ -343,7 +343,7 @@ unsafe impl<'a> Ctor for PanicCtor<'a> {
     type Output = DropNotify<'a>;
     type Error = Infallible;
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Infallible> {
-        self.0.ctor(dest)?;
+        unsafe { self.0.ctor(dest) }?;
         panic!();
     }
 }
@@ -461,7 +461,7 @@ unsafe impl<'a> Ctor for LoggingCtor<'a> {
     type Error = Infallible;
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Infallible> {
         self.log.borrow_mut().push(self.ctor_message);
-        dest.write(DropCtorLogger { log: self.log });
+        unsafe { dest.write(DropCtorLogger { log: self.log }) };
         Ok(())
     }
 }
@@ -504,7 +504,7 @@ fn test_move_ctor_drop_order() {
     let log = &log;
 
     let notify_tester = emplace!(DropCtorLogger { log });
-    let new_value = emplace!(DropCtorLogger { log });
+    let mut new_value = emplace!(DropCtorLogger { log });
     notify_tester.assign(mov!(new_value));
     assert_eq!(*log.borrow(), vec!["move ctor", "drop"]);
 }
@@ -516,7 +516,7 @@ fn takes_rvalue_reference<T>(_: RvalueReference<T>) {}
 #[gtest]
 fn test_mov_box() {
     struct S;
-    let x: Pin<Box<S>> = Box::pin(S);
+    let mut x: Pin<Box<S>> = Box::pin(S);
     takes_rvalue_reference(mov!(x));
     // let _x = x; // fails to compile: x is moved!
 }
@@ -529,7 +529,7 @@ fn test_mov_mut_ref_to_unpin() {
 #[gtest]
 fn test_mov_pinned_mut_ref() {
     let x = &mut 2;
-    let pinned_mut_ref = Pin::new(x);
+    let mut pinned_mut_ref = Pin::new(x);
     takes_rvalue_reference(mov!(pinned_mut_ref));
 }
 
@@ -615,12 +615,14 @@ fn test_ctor_trait_captures() {
         x: &'a i32,
         y: &'b i32,
     ) -> impl Ctor<Output = i32, Error = Infallible> + use<'a, 'b> {
-        FnCtor::new(|dest: *mut i32| {
+        let init = |dest: *mut i32| {
             // SAFETY: dest is valid and uninitialized.
             unsafe {
                 dest.write(*x + *y);
             }
-        })
+        };
+        // SAFETY: unconditionally initializes dest.
+        unsafe { FnCtor::new(init) }
     }
 
     let sum = emplace!(adder(&40, &2));

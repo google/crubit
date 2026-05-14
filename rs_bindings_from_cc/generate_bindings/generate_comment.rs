@@ -124,6 +124,16 @@ pub fn generate_doc_comment(
 /// Generates Rust source code for a given `UnsupportedItem`.
 pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -> ApiSnippets {
     db.assert_in_error_scope(item.id);
+
+    // Avoid generating unsupported item comments for standard library templates.
+    if !item.must_bind {
+        let defined_in_libcxx =
+            item.source_loc.as_ref().map(|loc| loc.contains("libcxx")).unwrap_or(false);
+        if defined_in_libcxx {
+            return ApiSnippets::default();
+        }
+    }
+
     for error in item.errors() {
         db.errors().report(error);
     }

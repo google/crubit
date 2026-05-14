@@ -4,7 +4,7 @@
 
 use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedName, Visibility};
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
-use crate::rs_snippet::{LifetimeOptions, RsTypeKind, Safety};
+use crate::rs_snippet::{LifetimeOptions, RsTypeKind, UnsafeReason};
 use arc_anyhow::{anyhow, Error, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiType;
@@ -49,28 +49,28 @@ memoized::query_group! {
         #[input]
         fn codegen_functions(&self) -> CodegenFunctions;
 
-        #[break_cycles_with = Safety::Safe]
+        #[break_cycles_with = None]
         /// Returns whether the given Rust type is an unsafe type, such as a raw pointer.
         ///
         /// Returns `None` if the type is safe.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:rs_type_kind_safety
-        fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Safety;
+        fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Option<UnsafeReason>;
 
-        #[break_cycles_with = Safety::Safe]
+        #[break_cycles_with = None]
         /// Returns whether the given field is unsafe to access.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_field_safety
-        fn record_field_safety(&self, field: Field) -> Safety;
+        fn record_field_safety(&self, field: Field) -> Option<UnsafeReason>;
 
-        #[break_cycles_with = Safety::Safe]
+        #[break_cycles_with = None]
         /// Returns whether the given record is unsafe.
         ///
         /// A record may be unsafe due to an explicitly annotation, or by being a union,
         /// or by having an unsafe public field (see `record_field_safety`).
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_safety
-        fn record_safety(&self, record: Rc<Record>) -> Safety;
+        fn record_safety(&self, record: Rc<Record>) -> Option<UnsafeReason>;
 
         /// Returns the bindings info for the given item, or an error if the item is not supported.
         ///

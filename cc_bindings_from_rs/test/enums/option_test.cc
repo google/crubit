@@ -11,20 +11,21 @@ namespace {
 
 TEST(OptionTest, OptionWithNicheIsConvertibleToStd) {
   option::HasOptions has_options = option::HasOptions::new_(1);
-  std::optional<option::NonMaxU8> opt_niche = std::move(has_options.niche);
+  std::optional<option::LessThan20U8> opt_niche = std::move(has_options.niche);
   EXPECT_TRUE(opt_niche.has_value());
   EXPECT_EQ(opt_niche.value().value(), 1);
 }
 
 TEST(OptionTest, NestedOptionIsConvertibleToStd) {
   option::HasOptions has_options = option::HasOptions::new_(1);
-  std::optional<rs_std::Option<option::NonMaxU8>> opt_nested =
+  std::optional<rs_std::Option<option::LessThan20U8>> opt_nested =
       std::move(has_options.nested);
   EXPECT_TRUE(opt_nested.has_value());
-  EXPECT_FALSE((static_cast<std::optional<rs_std::Option<option::NonMaxU8>>>(
-                    std::move(has_options.nested)))
-                   .has_value());
-  std::optional<option::NonMaxU8> opt_nested_inner =
+  EXPECT_FALSE(
+      (static_cast<std::optional<rs_std::Option<option::LessThan20U8>>>(
+           std::move(has_options.nested)))
+          .has_value());
+  std::optional<option::LessThan20U8> opt_nested_inner =
       std::move(opt_nested.value());
   EXPECT_TRUE(opt_nested_inner.has_value());
   EXPECT_EQ(opt_nested_inner.value().value(), 1);
@@ -39,9 +40,10 @@ TEST(OptionTest, OptionWithDirectTagIsConvertibleToStd) {
 
 TEST(OptionTest, OptionNoneIsNullOpt) {
   option::HasOptions has_options_none = option::HasOptions::with_none();
-  std::optional<option::NonMaxU8> opt_niche = std::move(has_options_none.niche);
+  std::optional<option::LessThan20U8> opt_niche =
+      std::move(has_options_none.niche);
   EXPECT_FALSE(opt_niche.has_value());
-  std::optional<rs_std::Option<option::NonMaxU8>> opt_nested =
+  std::optional<rs_std::Option<option::LessThan20U8>> opt_nested =
       std::move(has_options_none.nested);
   EXPECT_FALSE(opt_nested.has_value());
   std::optional<uint8_t> opt_direct = std::move(has_options_none.direct);
@@ -49,11 +51,11 @@ TEST(OptionTest, OptionNoneIsNullOpt) {
 }
 
 TEST(OptionTest, MoveIntoOptionalSetsOptionToNone) {
-  option::HasOptions has_options = option::HasOptions::new_(100);
-  std::optional<option::NonMaxU8> opt_niche = std::move(has_options.niche);
+  option::HasOptions has_options = option::HasOptions::new_(19);
+  std::optional<option::LessThan20U8> opt_niche = std::move(has_options.niche);
   EXPECT_TRUE(opt_niche.has_value());
-  EXPECT_EQ(opt_niche.value().value(), 100);
-  std::optional<option::NonMaxU8> opt_niche_retake =
+  EXPECT_EQ(opt_niche.value().value(), 19);
+  std::optional<option::LessThan20U8> opt_niche_retake =
       std::move(has_options.niche);
   EXPECT_FALSE(opt_niche_retake.has_value());
 }
@@ -67,13 +69,13 @@ TEST(OptionTest, ConstructFromOption) {
 }
 
 TEST(OptionTest, StructWithNicheIsConvertibleToStd) {
-  option::HasHasOptions has_has_options = option::HasHasOptions::new_(42);
+  option::HasHasOptions has_has_options = option::HasHasOptions::new_(19);
   std::optional<option::HasOptions> has_options = std::move(has_has_options.me);
   EXPECT_TRUE(has_options.has_value());
-  std::optional<option::NonMaxU8> opt_niche =
+  std::optional<option::LessThan20U8> opt_niche =
       std::move(has_options.value().niche);
   EXPECT_TRUE(opt_niche.has_value());
-  std::optional<rs_std::Option<option::NonMaxU8>> opt_nested =
+  std::optional<rs_std::Option<option::LessThan20U8>> opt_nested =
       std::move(has_options.value().nested);
   EXPECT_TRUE(opt_nested.has_value());
   std::optional<uint8_t> opt_direct = std::move(has_options.value().direct);

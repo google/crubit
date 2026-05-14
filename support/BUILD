@@ -18,7 +18,6 @@ rust_library(
     name = "cref",
     srcs = ["cref.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    edition = "2021",
     visibility = [
         "//visibility:public",
     ],
@@ -37,7 +36,6 @@ rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    edition = "2021",
     proc_macro_deps = [":ctor_proc_macros"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=allow_internal_unstable,auto_traits,negative_impls,super_let"],
@@ -302,6 +300,7 @@ bazel_to_builds(
         ":annotations",
         ":annotations_internal",
         ":bridge_cpp",
+        ":bridge_rust",
         ":lifetime_annotations",
     ],
 )

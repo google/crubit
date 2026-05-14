@@ -45,7 +45,7 @@ TEST(RsFromCcTest, FunctionDeclaration) {
   EXPECT_THAT(rs_code, Eq(R"end_of_string(
 // Unsupported decl:
 //
-// FunctionDecl <testing/file_name.cc:1:1, col:11> col:6 f 'void ()'
+// FunctionDecl <testing/file_name.cc:1:1, col:11> col:6 f 'void ()' external-linkage
 // `-CompoundStmt <col:10, col:11>
 )end_of_string"));
 }

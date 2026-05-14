@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![cfg_attr(test, feature(negative_impls))]
+#![feature(negative_impls)]
 
 //! # Object-Oriented Programming Support (OOPS).
 //!

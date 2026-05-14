@@ -8,7 +8,9 @@ use database::code_snippet::BindingsTokens;
 use generate_struct_and_union::generate_derives;
 use googletest::{expect_that, gtest, matchers::contains_substring};
 use ir_testing::with_lifetime_macros;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record};
+use multiplatform_ir_testing::{
+    ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_dependency, ir_record,
+};
 use proc_macro2::TokenStream;
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
@@ -410,8 +412,8 @@ fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
 /// even via Copy/Clone.
 #[gtest]
 fn test_trivial_nonpublic_destructor() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Indestructible final {
           Indestructible() = default;
           Indestructible(int);
@@ -435,15 +437,15 @@ fn test_trivial_nonpublic_destructor() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Indestructible});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn TakesReference<'a>(x: &'a crate::Indestructible)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn TakesReference<'x>(x: &'x crate::Indestructible)});
     Ok(())
 }
 
 #[gtest]
 fn test_nontrivial_nonpublic_destructor() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Indestructible final {
           Indestructible() = default;
           Indestructible(int);
@@ -468,8 +470,8 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
     );
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Indestructible});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn TakesReference<'a>(x: &'a crate::Indestructible)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn TakesReference<'x>(x: &'x crate::Indestructible)});
     Ok(())
 }
 
@@ -480,8 +482,8 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
 /// restriction will likely be lifted later.
 #[gtest]
 fn test_trivial_abstract_by_value() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Abstract final {
           Abstract() = default;
           Abstract(int);
@@ -500,16 +502,16 @@ fn test_trivial_abstract_by_value() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Abstract});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'a>(&'a self)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'__this>(&'__this self)});
     assert_rs_matches!(rs_api, quote! {fn TakesAbstract<'a>(a: &'a crate::Abstract)});
     Ok(())
 }
 
 #[gtest]
 fn test_nontrivial_abstract_by_value() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
         struct Abstract final {
           Abstract() {};
           Abstract(int);
@@ -524,8 +526,8 @@ fn test_nontrivial_abstract_by_value() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {CtorNew});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Abstract});
-    assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
-    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'a>(&'a self)});
+    assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
+    assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'__this>(&'__this self)});
     assert_rs_matches!(rs_api, quote! {fn TakesAbstract<'a>(a: &'a crate::Abstract)});
     Ok(())
 }
@@ -1860,9 +1862,8 @@ fn test_struct_from_other_target() -> Result<()> {
 
 #[gtest]
 fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
-    let ir = ir_from_cc(
+    let ir = ir_from_assumed_lifetimes_cc(
         r#"
-        #pragma clang lifetime_elision
         struct SomeStruct final {
             void Method1() {}
             void Method2() {}
@@ -1878,17 +1879,17 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
             impl SomeStruct {
                 ...
                 #[inline(always)]
-                pub fn Method1<'a>(&'a mut self) {
+                pub fn Method1<'__this>(&'__this mut self) {
                     unsafe { self::some_struct::Method1(self) }
                 }
                 ...
                 #[inline(always)]
-                pub fn Method2<'a>(&'a mut self) {
+                pub fn Method2<'__this>(&'__this mut self) {
                     unsafe { self::some_struct::Method2(self) }
                 }
                 ...
                 #[inline(always)]
-                pub fn Method3<'a>(&'a mut self) {
+                pub fn Method3<'__this>(&'__this mut self) {
                     unsafe { self::some_struct::Method3(self) }
                 }
             }
@@ -1921,5 +1922,79 @@ fn test_display() -> Result<()> {
             }
         }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_thread_safe_annotation_generates_send_sync() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_thread_safe")]] ThreadSafeStruct final {
+            int field;
+        };
+    "#,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Thread-safe types should get `unsafe impl Send` and `unsafe impl Sync`.
+    assert_rs_matches!(rs_api, quote! { unsafe impl Send for ThreadSafeStruct {} });
+    assert_rs_matches!(rs_api, quote! { unsafe impl Sync for ThreadSafeStruct {} });
+
+    Ok(())
+}
+
+#[gtest]
+fn test_thread_safe_annotation_generates_unsafe_cell_body() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_thread_safe")]] ThreadSafeStruct final {
+            int field;
+        };
+    "#,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Thread-safe types should have an opaque UnsafeCell body instead of individual fields.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct ThreadSafeStruct {
+                __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 4]>,
+            }
+        }
+    );
+
+    // Individual fields should NOT appear.
+    assert_rs_not_matches!(rs_api, quote! { pub field });
+
+    Ok(())
+}
+
+#[gtest]
+fn test_non_thread_safe_struct_has_negative_send_sync() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct RegularStruct final {
+            int field;
+        };
+    "#,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Non-thread-safe types should NOT have `unsafe impl Send/Sync`.
+    assert_rs_not_matches!(rs_api, quote! { unsafe impl Send for RegularStruct {} });
+    assert_rs_not_matches!(rs_api, quote! { unsafe impl Sync for RegularStruct {} });
+
+    // They should have negative impls instead.
+    assert_rs_matches!(rs_api, quote! { impl !Send for RegularStruct {} });
+    assert_rs_matches!(rs_api, quote! { impl !Sync for RegularStruct {} });
+
+    // And should have normal fields, not UnsafeCell wrapping.
+    assert_rs_matches!(rs_api, quote! { pub field: ::ffi_11::c_int });
+    assert_rs_not_matches!(rs_api, quote! { __opaque });
+
     Ok(())
 }

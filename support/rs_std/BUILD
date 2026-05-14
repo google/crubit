@@ -19,6 +19,10 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:char",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
 
     # It is important to be thoughtful when adding new dependencies for `char`
@@ -75,6 +79,10 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:slice_ref",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -110,6 +118,10 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:str_ref",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -160,6 +172,10 @@ cc_library(
         "//features:wrapper",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:dyn_callable",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//support:bridge_cpp",
@@ -185,6 +201,10 @@ cc_library(
     hdrs = ["traits.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:traits",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -196,6 +216,10 @@ cc_library(
     hdrs = ["option.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:option",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -207,6 +231,10 @@ cc_library(
     hdrs = ["result.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:result",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],

@@ -332,10 +332,33 @@ pub mod crubit {
             }
         }
 
-        // Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=35
-        // error: constructor `crubit::test::ContainerUnpinItemNonUnpin::ContainerUnpinItemNonUnpin` could not be bound
-        //   Constructors cannot be `unsafe`, but this constructor accepts:
-        //       `items`: raw pointer
+        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=35
+        impl ::ctor::UnsafeCtorNew<*mut crate::crubit::test::ItemNonUnpin> for ContainerUnpinItemNonUnpin {
+            type CtorType = ::ctor::Ctor![Self];
+            type Error = ::ctor::Infallible;
+            #[inline(always)]
+            unsafe fn ctor_new(args: *mut crate::crubit::test::ItemNonUnpin) -> Self::CtorType {
+                let mut items = args;
+                unsafe {
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        crate::detail::__rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1EPNS0_12ItemNonUnpinE(__crubit_dest as*mut::core::ffi::c_void,items);
+                    })
+                }
+            }
+        }
+        impl ::ctor::UnsafeCtorNew<(*mut crate::crubit::test::ItemNonUnpin,)>
+            for ContainerUnpinItemNonUnpin
+        {
+            type CtorType = ::ctor::Ctor![Self];
+            type Error = ::ctor::Infallible;
+            #[inline(always)]
+            unsafe fn ctor_new(args: (*mut crate::crubit::test::ItemNonUnpin,)) -> Self::CtorType {
+                let (arg,) = args;
+                unsafe {
+                    <Self as::ctor::UnsafeCtorNew<*mut crate::crubit::test::ItemNonUnpin>>::ctor_new(arg)
+                }
+            }
+        }
 
         /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=37
         impl ::operator::CcIndex<::ffi_11::c_uint> for ContainerUnpinItemNonUnpin {
@@ -834,6 +857,10 @@ mod detail {
         ) -> ::core::pin::Pin<&'__return_lifetime mut crate::crubit::test::ContainerUnpinItemNonUnpin>;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1EPNS0_12ItemNonUnpinE(
+            __this: *mut ::core::ffi::c_void,
+            items: *mut crate::crubit::test::ItemNonUnpin,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test26ContainerUnpinItemNonUnpinixEj<
             '__return_lifetime,

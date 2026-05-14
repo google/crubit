@@ -1,46 +1,65 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#![allow(internal_features)]
-#![feature(rustc_attrs)]
 
-#[rustc_layout_scalar_valid_range_end(250)]
-#[derive(Debug)]
-pub struct NonMaxU8(u8);
+#[derive(Copy, Clone)]
+#[repr(u8)]
+pub enum LessThan20U8 {
+    N0,
+    N1,
+    N2,
+    N3,
+    N4,
+    N5,
+    N6,
+    N7,
+    N8,
+    N9,
+    N10,
+    N11,
+    N12,
+    N13,
+    N14,
+    N15,
+    N16,
+    N17,
+    N18,
+    N19,
+}
 
-impl NonMaxU8 {
-    pub fn value(&self) -> u8 {
-        self.0
+impl LessThan20U8 {
+    pub fn new(value: u8) -> Option<Self> {
+        if value > 19 {
+            return None;
+        }
+        // Safety: we're sure the value is in 0-19,
+        // and this enum is `repr(u8)`.
+        Some(unsafe { std::mem::transmute(value) })
+    }
+
+    pub fn value(self) -> u8 {
+        self as u8
     }
 }
 
 pub struct HasOptions {
-    pub niche: Option<NonMaxU8>,
-    pub nested: Option<Option<NonMaxU8>>,
+    pub niche: Option<LessThan20U8>,
+    pub nested: Option<Option<LessThan20U8>>,
     pub direct: Option<u8>,
 }
 
 impl HasOptions {
     pub fn new(value: u8) -> Self {
-        assert!(value <= 250);
-        unsafe {
-            HasOptions {
-                niche: Some(NonMaxU8(value)),
-                nested: Some(Some(NonMaxU8(value))),
-                direct: Some(value),
-            }
+        HasOptions {
+            niche: LessThan20U8::new(value),
+            nested: Some(LessThan20U8::new(value)),
+            direct: Some(value),
         }
     }
 
     pub fn with_option(value: Option<u8>) -> Self {
-        assert!(value.map(|v| v <= 250).unwrap_or(true));
-        unsafe {
-            HasOptions {
-                niche: value.map(|v| NonMaxU8(v)),
-                nested: Some(value.map(|v| NonMaxU8(v))),
-                direct: value,
-            }
-        }
+        let lt20 = value.and_then(LessThan20U8::new);
+        HasOptions { niche: lt20, nested: Some(lt20), direct: value }
     }
 
     pub fn from_ref(value: &Option<u8>) -> Self {

@@ -26,6 +26,12 @@ pub fn MakeOwnedThing(value: ::ffi_11::c_int) -> ::owned_ptr::OwnedThing {
 
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=16
 #[inline(always)]
+pub fn MakeCustomOwnedThing(value: ::ffi_11::c_int) -> ::owned_ptr::CustomOwnedThing {
+    unsafe { ::core::mem::transmute(crate::detail::__rust_thunk___Z20MakeCustomOwnedThingi(value)) }
+}
+
+/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=18
+#[inline(always)]
 pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
     unsafe { crate::detail::__rust_thunk___Z9MakeThingi(value) }
 }
@@ -35,7 +41,7 @@ pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `thingptr`: raw pointer
 ///
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=18
+/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=20
 #[inline(always)]
 pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int {
     unsafe {
@@ -48,19 +54,11 @@ pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `thingptr`: raw pointer
 ///
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=20
+/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=22
 #[inline(always)]
 pub unsafe fn GetThingValue(thingptr: *mut ::owned_ptr::RawThing) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z13GetThingValueP5Thing(thingptr) }
 }
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, false>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, true>` could not be bound
-//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]
@@ -70,6 +68,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z14MakeOwnedThingi(
             value: ::ffi_11::c_int,
         ) -> *mut ::owned_ptr::RawThing;
+        #[link_name = "_Z20MakeCustomOwnedThingi"]
+        pub(crate) unsafe fn __rust_thunk___Z20MakeCustomOwnedThingi(
+            value: ::ffi_11::c_int,
+        ) -> *mut ::owned_ptr::CustomRawThing;
         #[link_name = "_Z9MakeThingi"]
         pub(crate) unsafe fn __rust_thunk___Z9MakeThingi(
             value: ::ffi_11::c_int,

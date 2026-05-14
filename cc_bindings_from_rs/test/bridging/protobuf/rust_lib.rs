@@ -28,4 +28,6 @@ impl FooService {
     pub fn update_request_stats(&mut self, updated_stats: FooRequestStats) {
         self.stats = updated_stats;
     }
+
+    pub fn enum_in_signature(_e: foo_rust_proto::FooEnum) {}
 }

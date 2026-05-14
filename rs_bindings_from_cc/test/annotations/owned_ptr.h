@@ -21,4 +21,13 @@ struct CRUBIT_OWNED_POINTEE("OwnedThing") CRUBIT_RUST_NAME("RawThing") Thing {
   void Close() { delete this; }
 };
 
+// A struct that specifies a custom drop method name.
+struct CRUBIT_OWNED_POINTEE("CustomOwnedThing", "CustomDropImpl")
+    CRUBIT_RUST_NAME("CustomRawThing") CustomThing {
+  explicit CustomThing(int32_t value) : value(value) {}
+  int32_t value;
+
+  void CustomDropImpl() { delete this; }
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ANNOTATIONS_OWNED_PTR_H_

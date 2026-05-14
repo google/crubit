@@ -144,7 +144,7 @@ source_set("tuple") {
   ]
 }
 
-group("rs_std") {
+group("rs_std_cpp") {
   public_deps = [
     ":char",
     ":slice_ref",
@@ -156,3 +156,4 @@ group("rs_std") {
     ":tuple",
   ]
 }
+

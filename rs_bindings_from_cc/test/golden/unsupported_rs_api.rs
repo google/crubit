@@ -97,7 +97,7 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 
 // error: function `FuncWithUnknownAttribute` could not be bound
 //   crubit.rs/errors/unknown_attribute: unknown function attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:unsupported_cc
-//   Unknown attribute: gnu::abi_tag`
+//   Unknown attribute: gnu::cold`
 
 // error: function `ParamWithUnknownAttribute` could not be bound
 //   crubit.rs/errors/unknown_attribute: param i has unknown attribute(s): gnu::abi_tag

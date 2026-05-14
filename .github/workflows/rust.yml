@@ -22,12 +22,12 @@ jobs:
     - uses: actions/checkout@v6
     - name: Test Cargo project
       run: >
-        cargo test --verbose --workspace --no-fail-fast
+        cargo test --verbose --locked --workspace --no-fail-fast
         --exclude '*_sys'
         --exclude 'rs_bindings_from_cc*'
     - name: Build not-yet-testable Cargo crates
       run: >
-        cargo build --verbose --workspace
+        cargo build --verbose --locked --workspace
         --exclude '*_sys'
         --exclude=rs_bindings_from_cc
         --exclude=rs_bindings_from_cc_cc_api
@@ -43,7 +43,10 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Install ccache
-      run: sudo apt-get update && sudo apt-get install -y ccache
+      run: |
+        curl -sL -o ccache.tar.xz https://github.com/ccache/ccache/releases/download/v4.13.6/ccache-4.13.6-linux-x86_64-glibc.tar.xz
+        echo "508b2a1217dc6e04a23e967c7b95a0fb45d8a7e16fde9e180919698f2e2be060  ccache.tar.xz" | sha256sum --check
+        sudo tar -xJf ccache.tar.xz -C /usr/local/bin --strip-components=1 ccache-4.13.6-linux-x86_64-glibc/ccache
     - name: Cache CMake with ccache
       uses: actions/cache@v5
       with:

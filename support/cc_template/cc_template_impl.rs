@@ -93,7 +93,9 @@ mod tests {
 
     #[gtest]
     fn test_instantiations_file_not_found() {
-        env::set_var("CRUBIT_INSTANTIATIONS_FILE", "path/does/not/exist");
+        unsafe {
+            env::set_var("CRUBIT_INSTANTIATIONS_FILE", "path/does/not/exist");
+        }
 
         let err_message =
             get_error_from_read_instantiations_map("The file was unexpectedly found.");
@@ -108,7 +110,9 @@ mod tests {
     fn test_instantiations_file_deserialization_error() {
         let path = Path::join(Path::new(&env::var("TEST_TMPDIR").unwrap()), "my_file.not_json");
         std::fs::write(&path, "definitely not json").unwrap();
-        env::set_var("CRUBIT_INSTANTIATIONS_FILE", &path);
+        unsafe {
+            env::set_var("CRUBIT_INSTANTIATIONS_FILE", &path);
+        }
 
         let err_message = get_error_from_read_instantiations_map(
             "The file was unexpectedly deserialized successfully.",
@@ -129,7 +133,9 @@ mod tests {
         let key = "std::string<bool>";
         let value = "__CcTemplateInst_std_string_bool";
         std::fs::write(&path, serde_json::to_string(&hashmap! {key => value}).unwrap()).unwrap();
-        env::set_var("CRUBIT_INSTANTIATIONS_FILE", &path);
+        unsafe {
+            env::set_var("CRUBIT_INSTANTIATIONS_FILE", &path);
+        }
 
         let deserialized_map =
             read_instantiations_map().expect("Expected successful deserialization.");

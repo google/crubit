@@ -62,10 +62,10 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // In terms of runtime performance, since this only occurs for virtual function
     // calls, which are already slow, it may not be such a big deal. We can
     // benchmark it later. :)
-    if let Some(inst_meta) = &func.instance_method_metadata {
-        if inst_meta.is_virtual {
-            return false;
-        }
+    if let Some(inst_meta) = &func.instance_method_metadata
+        && inst_meta.is_virtual
+    {
+        return false;
     }
     // ## Custom calling convention requires a thunk.
     //
@@ -87,10 +87,10 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // Note: if the RsTypeKind cannot be parsed / rs_type_kind returns Err, then
     // bindings generation will fail for this function, so it doesn't really matter
     // what we do here.
-    if let Ok(return_type) = db.rs_type_kind(func.return_type.clone()) {
-        if !return_type.is_c_abi_compatible_by_value() {
-            return false;
-        }
+    if let Ok(return_type) = db.rs_type_kind(func.return_type.clone())
+        && !return_type.is_c_abi_compatible_by_value()
+    {
+        return false;
     }
     // ## Nontrivial parameter types.
     //
@@ -107,10 +107,10 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // (As a side effect, this, like return values, means that support is
     // ABI-agnostic.)
     for param in &func.params {
-        if let Ok(param_type) = db.rs_type_kind(param.type_.clone()) {
-            if !param_type.is_c_abi_compatible_by_value() {
-                return false;
-            }
+        if let Ok(param_type) = db.rs_type_kind(param.type_.clone())
+            && !param_type.is_c_abi_compatible_by_value()
+        {
+            return false;
         }
     }
 
@@ -189,6 +189,7 @@ pub fn generate_function_thunk(
 
     // Of the remaining lifetimes, put them in the generic parameters.
     let lifetimes: Vec<_> = unique_lifetimes(param_types.clone(), &func.lifetime_inputs)
+        .into_iter()
         .chain(extra_return_lifetime)
         .filter(|lifetime| !lifetime.is_elided())
         .collect();
@@ -489,7 +490,11 @@ pub fn generate_function_thunk_impl(
                             })
                         }
                         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
-                            Ok(quote! { std::move(* #ident) })
+                            if rs_type_kind.is_c_abi_compatible_by_value() {
+                                Ok(quote! { std::move( #ident) })
+                            } else {
+                                Ok(quote! { std::move(* #ident) })
+                            }
                         }
                         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
                             if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {

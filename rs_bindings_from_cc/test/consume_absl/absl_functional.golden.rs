@@ -77,303 +77,11 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
 // error: function `CallIncompleteMapper` could not be bound
 //   Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
 
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, false>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, true>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/iterator_traits.h;l=340
-// error: struct `std::iterator_traits<char32_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/iterator_traits.h;l=340
-// error: struct `std::iterator_traits<char16_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/iterator_traits.h;l=340
-// error: struct `std::iterator_traits<const char32_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/iterator_traits.h;l=340
-// error: struct `std::iterator_traits<const char16_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/iterator_traits.h;l=340
-// error: struct `std::iterator_traits<const char *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/iterator_traits.h;l=340
-// error: struct `std::iterator_traits<char *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/pointer_traits.h;l=110
-// error: struct `std::pointer_traits<char32_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/pointer_traits.h;l=110
-// error: struct `std::pointer_traits<char16_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/pointer_traits.h;l=110
-// error: struct `std::pointer_traits<char *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<10>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<1>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<2>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<3>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<4>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<5>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<6>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<7>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<8>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__functional/bind.h;l=51
-// error: struct `std::placeholders::__ph<9>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator.h;l=62
-// error: class `std::allocator<char32_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator.h;l=62
-// error: class `std::allocator<char16_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator.h;l=62
-// error: class `std::allocator<char>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory_resource/polymorphic_allocator.h;l=45
-// error: class `std::pmr::polymorphic_allocator<char32_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory_resource/polymorphic_allocator.h;l=45
-// error: class `std::pmr::polymorphic_allocator<char16_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory_resource/polymorphic_allocator.h;l=45
-// error: class `std::pmr::polymorphic_allocator<char>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string;l=738
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string;l=738
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string;l=738
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string;l=738
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'char8_t': Unsupported builtin type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'char8_t': Unsupported builtin type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'wchar_t': Unsupported builtin type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'wchar_t': Unsupported builtin type
-
 // error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
 //   incomplete type
 
 // error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=97
-// error: struct `std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=97
-// error: struct `std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=97
-// error: struct `std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=233
-// error: struct `std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=233
-// error: struct `std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=233
-// error: struct `std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=265
-// error: struct `std::__allocator_traits_base<std::allocator<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=265
-// error: struct `std::__allocator_traits_base<std::allocator<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=265
-// error: struct `std::__allocator_traits_base<std::allocator<char>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=297
-// error: struct `std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=297
-// error: struct `std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=297
-// error: struct `std::allocator_traits<std::pmr::polymorphic_allocator<char>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=297
-// error: struct `std::allocator_traits<std::allocator<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=297
-// error: struct `std::allocator_traits<std::allocator<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocator_traits.h;l=297
-// error: struct `std::allocator_traits<std::allocator<char>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/initializer_list;l=62
-// error: class `std::initializer_list<char32_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/initializer_list;l=62
-// error: class `std::initializer_list<char16_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/initializer_list;l=62
-// error: class `std::initializer_list<char>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<std::__wrap_iter<char32_t *>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<std::__wrap_iter<char16_t *>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<std::__wrap_iter<const char32_t *>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<std::__wrap_iter<const char16_t *>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<std::__wrap_iter<const char *>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<std::__wrap_iter<char *>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char32_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char16_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char8_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const wchar_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/wrap_iter.h;l=34
-// error: class `std::__wrap_iter<char32_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/wrap_iter.h;l=34
-// error: class `std::__wrap_iter<char16_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/wrap_iter.h;l=34
-// error: class `std::__wrap_iter<const char32_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/wrap_iter.h;l=34
-// error: class `std::__wrap_iter<const char16_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/wrap_iter.h;l=34
-// error: class `std::__wrap_iter<const char *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/wrap_iter.h;l=34
-// error: class `std::__wrap_iter<char *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocate_at_least.h;l=23
-// error: struct `std::__allocation_result<char32_t *, unsigned long>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocate_at_least.h;l=23
-// error: struct `std::__allocation_result<char16_t *, unsigned long>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__memory/allocate_at_least.h;l=23
-// error: struct `std::__allocation_result<char *, unsigned long>` could not be bound
-//   template instantiation is not yet supported
 
 // error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
 //   incomplete type
@@ -450,54 +158,6 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
 // error: class `std::fpos<__mbstate_t>` could not be bound
 //   incomplete type
 
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=81
-// error: struct `std::char_traits<char>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<char32_t, unsigned int, 4294967295U>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<char8_t, unsigned int, 4294967295U>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<wchar_t, unsigned int, 4294967295U>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=247
-// error: struct `std::char_traits<wchar_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=270
-// error: struct `std::char_traits<char8_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=289
-// error: struct `std::char_traits<char16_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=324
-// error: struct `std::char_traits<char32_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// error: class `std::basic_string_view<char32_t, std::char_traits<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// error: class `std::basic_string_view<char16_t, std::char_traits<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// error: class `std::basic_string_view<char8_t, std::char_traits<char8_t>>` could not be bound
-//   template instantiation is not yet supported
-
 // Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
 // error: class `absl::internal_any_invocable::CoreImpl<false, MyOption<int>, MyOption<int>>` could not be bound
 //   Crubit is not enabled on defining target:
@@ -559,7 +219,9 @@ mod detail {
             dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     unsafe extern "C" {
         pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
@@ -579,15 +241,19 @@ mod detail {
         param_0: *mut ::core::ffi::c_uchar,
         bridge_buffer: *mut ::core::ffi::c_uchar,
     ) {
-        let param_0 = ::bridge_rust::internal::decode(
-            crate::MyOptionAbi(::bridge_rust::transmute_abi::<::core::ffi::c_int>()),
-            param_0,
-        );
-        ::bridge_rust::internal::encode(
-            crate::MyOptionAbi(::bridge_rust::transmute_abi::<::core::ffi::c_int>()),
-            bridge_buffer,
-            (unsafe { &*f })(param_0),
-        );
+        let param_0 = unsafe {
+            ::bridge_rust::internal::decode(
+                crate::MyOptionAbi(::bridge_rust::transmute_abi::<::core::ffi::c_int>()),
+                param_0,
+            )
+        };
+        unsafe {
+            ::bridge_rust::internal::encode(
+                crate::MyOptionAbi(::bridge_rust::transmute_abi::<::core::ffi::c_int>()),
+                bridge_buffer,
+                (unsafe { &*f })(param_0),
+            )
+        };
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
@@ -609,7 +275,9 @@ mod detail {
                 + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     unsafe extern "C" {
         pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
@@ -646,7 +314,9 @@ mod detail {
                 + 'static,
         >,
     ) {
-        ::dyn_callable_rs::manager(operation, from, to);
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
     unsafe extern "C" {
         pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(

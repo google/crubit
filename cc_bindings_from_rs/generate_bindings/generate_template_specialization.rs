@@ -24,7 +24,7 @@ use rustc_abi::VariantIdx;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-#[rustversion::since(2026-04-22)]
+#[rustversion::since(2026-04-20)]
 use rustc_middle::ty::Unnormalized;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
@@ -75,9 +75,9 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     // This avoids what would be wasted work normalizing a type we're immediately going to
     // return None for.
     self_ty.ty_adt_def()?;
-    #[rustversion::before(2026-04-22)]
+    #[rustversion::before(2026-04-20)]
     let unnorm_ty = self_ty;
-    #[rustversion::since(2026-04-22)]
+    #[rustversion::since(2026-04-20)]
     let unnorm_ty = Unnormalized::new(self_ty);
     let self_ty = replace_all_regions_with_static(
         tcx,
@@ -857,7 +857,7 @@ fn specialize_result<'tcx>(
                 },
             }
         }
-        rustc_abi::TagEncoding::Niche { niche_start, ref niche_variants, untagged_variant } => {
+        rustc_abi::TagEncoding::Niche { niche_start, niche_variants, untagged_variant } => {
             let mut has_value_impl = quote! {};
             let (write_ok_to_tag, ok_ptr_val) = if *untagged_variant == ok_idx {
                 // Untagged variant is Ok, we don't need to set the tag when we write Ok.
@@ -1078,7 +1078,7 @@ fn specialize_option<'tcx>(
                 tag_type_cc: tag_type_cc.clone(),
             }
         }
-        rustc_abi::TagEncoding::Niche { niche_start, ref niche_variants, .. } => {
+        rustc_abi::TagEncoding::Niche { niche_start, niche_variants, .. } => {
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
             let none_relative_val =
@@ -1277,7 +1277,11 @@ fn generate_trait_impl_specialization<'tcx>(
     let trait_header = tcx.impl_trait_header(impl_def_id);
     #[rustversion::all(before(1.95), before(2025-10-17))]
     let trait_header = trait_header.expect("Trait impl should have a trait header");
-    let trait_ref = crate::normalize_ty(tcx, trait_header.trait_ref.instantiate_identity());
+    let trait_ref = crate::normalize_ty(
+        tcx,
+        tcx.param_env(impl_def_id),
+        trait_header.trait_ref.instantiate_identity(),
+    );
     let trait_def_id = trait_ref.def_id;
 
     let canonical_trait_name = db.symbol_canonical_name(trait_def_id).expect(
@@ -1319,6 +1323,9 @@ fn generate_trait_impl_specialization<'tcx>(
     let trait_name_with_args = quote! { #trait_name #type_args };
 
     prereqs.depend_on_def(db, trait_def_id).map_err(|err| (impl_def_id, err))?;
+    if let Some(adt) = trait_ref.self_ty().ty_adt_def() {
+        prereqs.depend_on_def(db, adt.did()).map_err(|err| (impl_def_id, err))?;
+    }
 
     let mut member_function_names = HashSet::new();
     let assoc_items: ApiSnippets = tcx

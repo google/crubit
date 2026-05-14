@@ -454,6 +454,8 @@ pub fn format_ty_for_cc<'tcx>(
                 };
                 #[rustversion::since(2026-04-19)]
                 let sig = {
+                    // Trait was replaced with inherent methods in nightly-2026-05-01.
+                    #[cfg_accessible(rustc_type_ir::inherent::FSigKind)]
                     use rustc_type_ir::inherent::FSigKind;
                     rustc_middle::ty::FnSig {
                         inputs_and_output: sig_tys.inputs_and_output,
@@ -1021,7 +1023,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 ensure!(
                     db.has_move_ctor_and_assignment_operator(
                         adt.did(),
-                        crate::normalize_ty(tcx, tcx.type_of(adt.did()).instantiate(tcx, substs))
+                        crate::normalize_ty(tcx, tcx.param_env(adt.did()), tcx.type_of(adt.did()).instantiate(tcx, substs))
                     ).is_some(),
                     "Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator."
                 );
@@ -1037,7 +1039,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
         }
         ty::TyKind::Never => bail!("Never type is unsupported in bridging"),
         ty::TyKind::Tuple(_tys) => bail!("composably bridging tuples is not yet supported."),
-        ty::TyKind::RawPtr(mut pointee, mutability) => {
+        &ty::TyKind::RawPtr(mut pointee, mutability) => {
             let mut is_rust_slice = false;
             if let ty::TyKind::Slice(slice_ty) = pointee.kind() {
                 pointee = *slice_ty;
@@ -1054,6 +1056,8 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     is_rust_slice,
                     rust_type,
                     cpp_type,
+                    is_cref: false,
+                    is_cpp_ref: false,
                 },
                 prereqs,
             });
@@ -1067,7 +1071,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 prereqs,
             });
         }
-        _ => bail!("Unsupported bridge type: {ty:?}"),
+        _ => bail!("Unsupported bridge type: {ty}"),
     }))
 }
 

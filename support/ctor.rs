@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![cfg_attr(not(test), no_std)]
-#![feature(auto_traits, negative_impls, allow_internal_unstable, super_let)]
+#![feature(auto_traits, negative_impls, allow_internal_unstable)]
 #![allow(internal_features)] // allow_internal_unstable 🤔
 //! Traits for memory management operations on wrapped C++ objects, inspired by
 //! moveit, pin-init, and the current in-place initialization proposal at
@@ -703,9 +703,17 @@ impl<T> Emplace<T> for Arc<T> {
 pub auto trait SelfCtor {}
 
 #[must_use = must_use_ctor!()]
-pub struct FnCtor<Output, F: FnOnce(*mut Output)>(pub F, PhantomData<fn(Output)>);
+pub struct FnCtor<Output, F: FnOnce(*mut Output)>(F, PhantomData<fn(Output)>);
 impl<Output, F: FnOnce(*mut Output)> FnCtor<Output, F> {
-    pub fn new(f: F) -> Self {
+    /// Create a new `Ctor` whose `ctor()` method invokes `f`.
+    ///
+    /// # Safety
+    ///
+    /// If `f` does not panic, then it must initialize its argument to a valid value.
+    ///
+    /// `f` may rely on the same safety preconditions described by `Ctor::ctor`. In particular,
+    /// the pointer argument is guaranteed to be valid for writes.
+    pub unsafe fn new(f: F) -> Self {
         Self(f, PhantomData)
     }
 }
@@ -743,7 +751,7 @@ where
     type Error = Error;
 
     unsafe fn ctor(self, dest: *mut Output) -> Result<(), Self::Error> {
-        Output::ctor_new(&*self.0).ctor(dest)
+        unsafe { Output::ctor_new(&*self.0).ctor(dest) }
     }
 }
 
@@ -794,7 +802,7 @@ impl<T: ?Sized> RvalueReference<'_, T> {
         // rules by coexisting with my_pin. Thus, get_ref must return &T, not
         // &'a T. (For the same reason, as_const returns a ConstRvalueReference
         // whose lifetime is bound by self, not 'a.)
-        &*self.0
+        &self.0
     }
 }
 
@@ -814,7 +822,7 @@ where
     type Error = <T as CtorNew<Self>>::Error;
 
     unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
-        T::ctor_new(self).ctor(dest)
+        unsafe { T::ctor_new(self).ctor(dest) }
     }
 }
 
@@ -882,7 +890,7 @@ where
     type Error = <T as CtorNew<Self>>::Error;
 
     unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
-        T::ctor_new(self).ctor(dest)
+        unsafe { T::ctor_new(self).ctor(dest) }
     }
 }
 
@@ -903,7 +911,7 @@ impl<'a, T: ?Sized> !SelfCtor for ConstRvalueReference<'a, T> {}
 #[macro_export]
 macro_rules! mov {
     ($p:expr) => {
-        $crate::DerefRvalueReference::deref_rvalue_reference(&mut { $p })
+        $crate::DerefRvalueReference::deref_rvalue_reference(&mut ($p))
     };
 }
 
@@ -935,7 +943,10 @@ unsafe impl<T: SelfCtor> Ctor for T {
     type Output = T;
     type Error = Infallible;
     unsafe fn ctor(self, dest: *mut Self) -> Result<(), Infallible> {
-        dest.write(self);
+        // SAFETY: dest is valid for writes and uninitialized.
+        unsafe {
+            dest.write(self);
+        }
         Ok(())
     }
 }
@@ -947,7 +958,7 @@ impl<T, E> !SelfCtor for RustMoveCtor<T, E> {}
 
 impl<T, E> RustMoveCtor<T, E> {
     pub fn new(x: T) -> Self {
-        RustMoveCtor(x, PhantomData::default())
+        RustMoveCtor(x, PhantomData)
     }
 }
 
@@ -956,7 +967,10 @@ unsafe impl<T, E> Ctor for RustMoveCtor<T, E> {
     type Output = T;
     type Error = E;
     unsafe fn ctor(self, dest: *mut T) -> Result<(), E> {
-        dest.write(self.0);
+        // SAFETY: dest is valid for writes and uninitialized.
+        unsafe {
+            dest.write(self.0);
+        }
         Ok(())
     }
 }
@@ -983,7 +997,7 @@ unsafe impl<T, E> Ctor for RustMoveCtor<T, E> {
 pub struct UnreachableCtor<T: ?Sized, E = Infallible>(PhantomData<(fn() -> T, fn() -> E)>);
 impl<T: ?Sized, E> UnreachableCtor<T, E> {
     pub fn new() -> Self {
-        UnreachableCtor(PhantomData::default())
+        UnreachableCtor(PhantomData)
     }
 }
 impl<T: ?Sized, E> !SelfCtor for UnreachableCtor<T, E> {}
@@ -1298,7 +1312,9 @@ pub mod macro_internal {
     ) -> impl Drop {
         // safety: the field is not yet initialized, the caller guarantees it's
         // pinned.
-        Ctor::ctor(ctor, field).unwrap();
+        unsafe {
+            Ctor::ctor(ctor, field).unwrap();
+        }
         UnsafeDropGuard(field)
     }
 
@@ -1308,6 +1324,12 @@ pub mod macro_internal {
     ///
     /// This gives a pleasing error message, as they have the same name.
     pub unsafe fn raw_ctor() {}
+
+    /// Create an `FnOnce`. This works around Rust trying to infer that a closure is
+    /// `Fn`.
+    pub fn make_fn_once<Output, F: FnOnce(*mut Output)>(f: F) -> impl FnOnce(*mut Output) {
+        f
+    }
 }
 
 // =====================
@@ -1498,6 +1520,11 @@ macro_rules! raw_ctor {
     };
 }
 
+/// Implementation of the ctor! macro.
+///
+/// # Safety
+///
+/// * fields_ty must have every field that `$Type` does.
 // Note: we're using `ident (::ident)*` for the type names because neither `ident` nor `path`
 // really work perfectly -- `ident` is great, except that `foo::bar` isn't an ident. `path` is
 // great, except that e.g. parentheses can't follow a path. (This is not fixable: FnOnce(T) is
@@ -1527,7 +1554,7 @@ macro_rules! unsafe_ctor_impl {
         // that we can progressively unpack.
         let capture = $crate::internal_hlist!($($sub_ctor,)*);
         let _ = &capture;  // silence unused_variables warning if Type is fieldless.
-        $crate::FnCtor::new(move |x: *mut $Type $(< $( $gp ),+ >)?| {
+        let init = $crate::macro_internal::make_fn_once(move |x: *mut $Type $(< $( $gp ),+ >)?| {
             struct DropGuard;
             let drop_guard = DropGuard;
             let _ = &x; // silence unused_variables warning if Type is fieldless.
@@ -1567,7 +1594,17 @@ macro_rules! unsafe_ctor_impl {
             )*
             #[allow(clippy::forget_non_drop)] // if fieldless
             ::core::mem::forget(drop_guard);
-        })
+        });
+        // SAFETY: In the non-panicking case, we initialize each field using `Ctor::ctor`, which
+        // guarantees initialization.
+        //
+        // We guarantee that no fields are missed by pretending to construct using ordinary Rust
+        // struct syntax in a never-executed code path. If the user failed to
+        // mention initialization of a field, then this will fail with a compilation error.
+        // The type used is specified by $fields_ty, which must be correct for this to be
+        // safe to call. (In practice, it's either unsafely passed by the user, or
+        // automatically generated to match by `#[recursively_pinned]`).
+        unsafe {$crate::FnCtor::new(init)}
     }};
 }
 
@@ -1622,10 +1659,12 @@ macro_rules! internal_hlist {
 /// guarantee, and is allowed to then re-init it with something else. In effect, this
 /// is just the in-place Ctor version of the existing method `Pin<T>::set(T)`.)
 pub unsafe fn reconstruct<T>(p: Pin<&mut T>, ctor: impl Ctor<Output = T, Error = Infallible>) {
-    let raw_ptr = Pin::into_inner_unchecked(p) as *mut _;
-    core::ptr::drop_in_place(raw_ptr);
+    let raw_ptr = unsafe { Pin::into_inner_unchecked(p) } as *mut _;
+    unsafe {
+        core::ptr::drop_in_place(raw_ptr);
+    }
     abort_on_unwind(move || {
-        ctor.ctor(raw_ptr).unwrap();
+        unsafe { ctor.ctor(raw_ptr) }.unwrap();
     });
 }
 
@@ -1725,6 +1764,19 @@ pub trait UnpinAssign<From> {
     fn unpin_assign(&mut self, src: From);
 }
 
+/// A conversion trait that is considered unsafe.
+///
+/// This is used for `Unpin` types when the conversion involves unsafe operations
+/// or types.
+pub trait UnsafeFrom<From> {
+    /// Performs the conversion.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the conversion is safe.
+    unsafe fn unsafe_from(src: From) -> Self;
+}
+
 // =======================
 // Constructor overloading
 // =======================
@@ -1749,6 +1801,25 @@ pub trait CtorNew<ConstructorArgs> {
     fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
 }
 
+/// Overloaded constructor trait for constructors that are considered unsafe.
+///
+/// This is used when the constructor accepts arguments that are unsafe to use,
+/// or when the constructor itself is marked unsafe in C++.
+///
+/// `T : UnsafeCtorNew<(A, B, C)>` is roughly equivalent to the C++ "T has an
+/// unsafe constructor taking arguments of type A, B, and C".
+pub trait UnsafeCtorNew<ConstructorArgs> {
+    type CtorType: Ctor<Output = Self, Error = Self::Error>;
+    type Error;
+
+    /// Creates a new constructor.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the arguments are safe to use for construction.
+    unsafe fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
+}
+
 // ====
 // Misc
 // ====
@@ -1762,7 +1833,9 @@ pub trait CtorNew<ConstructorArgs> {
 pub struct ManuallyDropCtor<T: Ctor>(T);
 
 impl<T: Ctor> ManuallyDropCtor<T> {
-    /// Safety: this structurally pins the contents of ManuallyDrop.
+    /// # Safety
+    ///
+    /// This structurally pins the contents of ManuallyDrop.
     /// Therefore, it is not safe to use with anything that assumes that
     /// ManuallyDrop is not structurally pinned.
     pub unsafe fn new(x: T) -> Self {
@@ -1777,7 +1850,7 @@ unsafe impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
         // Safety: ManuallyDrop<T> and T have the same layout.
         // All other preconditions are satisfied by the caller.
-        self.0.ctor(dest as *mut _)
+        unsafe { self.0.ctor(dest as *mut _) }
     }
 }
 

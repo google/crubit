@@ -13,8 +13,11 @@
 #include <variant>
 #include <vector>
 
+#include "clang/Sema/Initialization.h"
+#include "clang/Sema/Template.h"
 #include "absl/algorithm/container.h"
 #include "absl/container/btree_set.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -36,6 +39,9 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclarationName.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticIDs.h"
@@ -184,6 +190,186 @@ bool FunctionNameIsIdentifier(clang::FunctionDecl& function_decl) {
          clang::DeclarationName::Identifier;
 }
 
+// Attempts to define the implicit/default function `function_decl`. Has no
+// effect if `function_decl` is not an interesting special member or is not
+// implicit. Returns `false` if there were errors defining the function
+// (e.g., an implicit copy constructor could rely on a deleted copy constructor
+// for a member variable).
+bool ForceDefineImplicitFunction(ImportContext& ictx,
+                                 clang::FunctionDecl* function_decl) {
+  if (auto defaulted_kind = ictx.sema_.getDefaultedFunctionKind(function_decl);
+      defaulted_kind.isSpecialMember()) {
+    auto special_member_kind = defaulted_kind.asSpecialMember();
+    if (!function_decl->isDeleted() && function_decl->isImplicit() &&
+        !function_decl->doesThisDeclarationHaveABody()) {
+      crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+          crubit::RecordDiagnostics(ictx.sema_.getDiagnostics(), [&] {
+            FakeTUScope fake_tu_scope(ictx);
+            clang::Sema::SynthesizedFunctionScope synthesized_function_scope(
+                ictx.sema_, function_decl);
+            // This is slightly different from DefineDefaultedFunction in that
+            // we only consider certain special member kinds and we clear
+            // the WillHaveBody flag. (We also run it in our diagnostic
+            // sandbox.)
+            switch (special_member_kind) {
+              case clang::CXXSpecialMemberKind::CopyAssignment:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitCopyAssignment(
+                    function_decl->getLocation(),
+                    cast<clang::CXXMethodDecl>(function_decl));
+                break;
+              case clang::CXXSpecialMemberKind::MoveAssignment:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitMoveAssignment(
+                    function_decl->getLocation(),
+                    cast<clang::CXXMethodDecl>(function_decl));
+                break;
+              case clang::CXXSpecialMemberKind::MoveConstructor:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitMoveConstructor(
+                    function_decl->getLocation(),
+                    cast<clang::CXXConstructorDecl>(function_decl));
+                break;
+              case clang::CXXSpecialMemberKind::CopyConstructor:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitCopyConstructor(
+                    function_decl->getLocation(),
+                    cast<clang::CXXConstructorDecl>(function_decl));
+                break;
+              default:
+                break;
+            }
+          });
+      if (diagnostic_recorder.getNumErrors() != 0) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Checks to see if `function_decl` can reach an invalid template instantiation
+// or an invalid default/implicit member (including if `function_decl` itself
+// is invalid). Returns the fully-qualified name of the first invalid decl
+// reached (suitable for including in a diagnostic message). Returns the empty
+// string if no such decl was found.
+//
+// Clang won't diagnose invalid template declarations multiple times, but we
+// can crawl over the syntax tree to determine if a template instantiation will
+// be invalid because it transitively reaches an invalid declaration.
+//
+// Note that we only need to recurse on template instantiations. Concrete
+// declaration instances can't hide like templates can.
+//
+// TODO(zarko): Should we ForceDefineImplicitFunction each function we
+// encounter?
+std::string GetInvalidCallTarget(ImportContext& ictx,
+                                 clang::FunctionDecl* function_decl) {
+  std::string invalid_decl_name;
+  absl::flat_hash_set<clang::FunctionDecl*> visited_decls;
+  struct BodyVisitor : public clang::RecursiveASTVisitor<BodyVisitor> {
+    std::string& invalid_decl_name;
+    absl::flat_hash_set<clang::FunctionDecl*>& visited_decls;
+    ImportContext& ictx;
+    clang::NamedDecl* blame_decl;
+    BodyVisitor(std::string& invalid_decl_name,
+                absl::flat_hash_set<clang::FunctionDecl*>& visited_decls,
+                ImportContext& ictx, clang::NamedDecl* blame_decl)
+        : invalid_decl_name(invalid_decl_name),
+          visited_decls(visited_decls),
+          ictx(ictx),
+          blame_decl(blame_decl) {}
+    bool VisitCXXConstructExpr(clang::CXXConstructExpr* expr) {
+      if (auto* mfn = clang::dyn_cast<clang::CXXConstructorDecl>(
+              expr->getConstructor())) {
+        if (mfn->isTemplateInstantiation()) {
+          if (mfn->isInvalidDecl() || mfn->isDeleted()) {
+            invalid_decl_name = mfn->getQualifiedNameAsString();
+            return false;
+          }
+          if (mfn->getBody() != nullptr) {
+            if (visited_decls.contains(mfn)) {
+              return true;
+            }
+            visited_decls.insert(mfn);
+            BodyVisitor really_recurse(invalid_decl_name, visited_decls, ictx,
+                                       blame_decl);
+            really_recurse.TraverseDecl(mfn);
+          }
+        }
+      }
+      return true;
+    }
+    bool VisitMemberExpr(clang::MemberExpr* expr) {
+      if (auto* mfn =
+              clang::dyn_cast<clang::CXXMethodDecl>(expr->getMemberDecl())) {
+        if (mfn->isTemplateInstantiation()) {
+          if (mfn->isInvalidDecl()) {
+            invalid_decl_name = mfn->getQualifiedNameAsString();
+            return false;
+          }
+          if (mfn->getBody() != nullptr) {
+            if (visited_decls.contains(mfn)) {
+              return true;
+            }
+            visited_decls.insert(mfn);
+            BodyVisitor really_recurse(invalid_decl_name, visited_decls, ictx,
+                                       blame_decl);
+            really_recurse.TraverseStmt(mfn->getBody());
+          }
+        }
+      }
+      return true;
+    }
+    bool VisitStaticAssertDecl(clang::StaticAssertDecl* decl) {
+      if (decl->isFailed()) {
+        invalid_decl_name = blame_decl->getQualifiedNameAsString();
+        return false;
+      }
+      return true;
+    }
+    bool VisitRecoveryExpr(clang::RecoveryExpr* expr) {
+      // Clang appears to insert a RecoveryExpr in template bodies that fail
+      // to instantiate properly.
+      if (expr->containsErrors()) {
+        invalid_decl_name = blame_decl->getQualifiedNameAsString();
+        return false;
+      }
+      return true;
+    }
+    bool VisitDeclRefExpr(clang::DeclRefExpr* expr) {
+      if (auto* fn = clang::dyn_cast<clang::FunctionDecl>(expr->getDecl())) {
+        if (fn->isTemplateInstantiation()) {
+          if (fn->isInvalidDecl()) {
+            invalid_decl_name = fn->getQualifiedNameAsString();
+            return false;
+          }
+          if (fn->getBody() != nullptr) {
+            if (visited_decls.contains(fn)) {
+              return true;
+            }
+            visited_decls.insert(fn);
+            BodyVisitor really_recurse(invalid_decl_name, visited_decls, ictx,
+                                       blame_decl);
+            really_recurse.TraverseStmt(fn->getBody());
+          }
+        }
+      }
+      return true;
+    }
+  } visitor(invalid_decl_name, visited_decls, ictx, function_decl);
+  auto qnas = function_decl->getQualifiedNameAsString();
+  if (!ForceDefineImplicitFunction(ictx, function_decl)) {
+    return qnas;
+  }
+  if (function_decl->isInvalidDecl()) {
+    return qnas;
+  }
+  if (function_decl->getBody() != nullptr) {
+    visitor.TraverseStmt(function_decl->getBody());
+  }
+  return invalid_decl_name;
+}
 }  // namespace
 
 std::optional<IR::Item> FunctionDeclImporter::Import(
@@ -202,8 +388,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
       return ictx_.ImportUnsupportedItem(
           *function_decl, std::nullopt,
-          FormattedError::Static("Internal functions from the standard "
-                                 "library are not supported"));
+          {FormattedError::Static("Internal functions from the standard "
+                                  "library are not supported")},
+          must_bind_);
     }
   }
   // Method is private, we don't need to import it.
@@ -226,15 +413,17 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!translated_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        FormattedError::PrefixedStrCat("Function name is not supported",
-                                       translated_name.status().message()));
+        {FormattedError::PrefixedStrCat("Function name is not supported",
+                                        translated_name.status().message())},
+        must_bind_);
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id).status()));
+        {FormattedError::FromStatus(std::move(enclosing_item_id).status())},
+        must_bind_);
   }
 
   // Reports an unsupported function with the given error.
@@ -248,7 +437,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         *function_decl,
         UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        error);
+        {std::move(error)}, must_bind_);
   };
 
   // We should only import methods of class template specializations
@@ -260,79 +449,82 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   clang::FunctionDecl* template_decl_for_method =
       function_decl->getInstantiatedFromMemberFunction();
   if (template_decl_for_method) {
-    // Some methods in STL are explicitly marked with
-    // `__attribute__((exclude_from_explicit_instantiation))`, and attempt to
-    // instantiate them may crash clang, so we skip them for now.
-    bool skip_instantiation = false;
-    if (template_decl_for_method->hasAttrs()) {
-      skip_instantiation = std::any_of(
-          function_decl->attr_begin(), function_decl->attr_end(),
-          [](auto attr) {
-            return clang::isa<clang::ExcludeFromExplicitInstantiationAttr>(
-                attr);
-          });
+    // It turns out that some of the functions marked with
+    // `__attribute__((exclude_from_explicit_instantiation))` can cause us to
+    // generate invalid bindings. For example, std::forward_list::sort() is
+    // marked with _LIBCPP_HIDE_FROM_ABI (which includes
+    // exclude_from_explicit_instantiations); sort() does not compile for types
+    // that don't work with __less<>(). Previously, we avoided instantiating
+    // these entirely because of some alleged instability in clang (though we
+    // still tried to generate bindings for them!).
+    //
+    // We can either instantiate these functions (as we do now) or possibly
+    // allowlist them. We can't just unconditionally try to bind them because
+    // we will generate bad code.
+    //
+    // Note that inline definitions (`void sort() { sort(__less<>()); }`)
+    // are considered to be "defined" even if we don't try and instantiate
+    // their dependencies.
+    //
+    // We attempt to instantiate as many transitive templates as we can.
+    // The first time a template is instantiated, we'll get diagnostics from
+    // Clang (for substitution failure, bad static_asserts, etc). We only get
+    // these once. However, we can (and, as it turns out, we must) still crawl
+    // the AST of already-instantiated templates to check for error conditions.
+    //
+    // We have also explored using typechecking functions in Sema directly to
+    // detect bad instantiations (e.g., by building up a function definition
+    // that looks exactly like a Crubit thunk and trying to typecheck that).
+    // This does not work, presumably because Clang does not re-check for
+    // deeply broken instantiations (like ones that have RecoveryExprs in them)
+    // until some subsequent full AST traversal like lowering to LLVM.
+    auto point_of_instantiation = function_decl->getPointOfInstantiation();
+    // Point of instantiation is invalid if Crubit is eagerly
+    // instantiating a method of a class template specialization.
+    if (point_of_instantiation.isInvalid()) {
+      point_of_instantiation = function_decl->getLocation();
     }
-    if (!function_decl->isDefined() && !skip_instantiation) {
-      // Here, we have the option to instantiate the function
-      // definition recursively, that is, to instantiate the function
-      // templates invoked within the (templated) body. This checks the
-      // validity of the function template more thoroughly than simply
-      // ensuring the type of the invoked function template is correct: e.g.,
-      // If `Recursive` is set, a diagnostic would be emitted if the function
-      // template invoked in the body fails to instantiate (e.g., due to a
-      // static_assert) but still passes type checking. However, this has the
-      // side effect of actually instantiating the invoked function template
-      // and the invoked function template would be considered "defined", so
-      // we wouldn't be able to get diagnostics when actually importing the
-      // invoked function template.
-      // TODO(b/248542210): Propagate the validity check of function templates
-      // in a function template body.
-      // TODO(b/248542210): `clang::Sema::InstantiateClassMembers` checks more
-      // constraints (than here) when instantiating the methods, consider use
-      // that API instead (and avoid calling `InstantiateFunctionDefinition`
-      // here). We don't use it now because we cannot clearly attribute
-      // emitted diagnostics to a member decl (we need diagnostics because the
-      // decl may be considered valid `!decl->isInvalidDecl()` while its
-      // instantiation may fail.)
-      auto point_of_instantiation = function_decl->getPointOfInstantiation();
-      // Point of instantiation is invalid if Crubit is eagerly
-      // instantiating a method of a class template specialization.
-      if (point_of_instantiation.isInvalid()) {
-        point_of_instantiation = function_decl->getLocation();
-      }
-      crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-          crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
-            // Generally, clang is able to instantiate templates like this even
-            // after parsing completes. However, in rare cases it accesses
-            // transient parsing state (Scope) which was already cleaned up.
-            //
-            // HACK: We need to create a fake TU scope to avoid a crash in
-            // `clang::Sema::InstantiateFunctionDefinition` when it tries to
-            // access the translation unit scope, which it incorrectly assumes
-            // is always non-null. This should be fixed in clang.
-            //
-            // Specifically, the crash happens when Crubit instantiates a
-            // class template with a defaulted copy constructor, introducing
-            // lazily-injected builtins such as `memcpy` to be introduced to the
-            // TU scope.
-            //
-            // See b/401857961 where this was observed and cl/265779405 where a
-            // similar issue was fixed in CLIF.
-            FakeTUScope fake_tu_scope(ictx_);
-            ictx_.sema_.InstantiateFunctionDefinition(point_of_instantiation,
-                                                      function_decl);
-          });
-      std::string diagnostics =
-          diagnostic_recorder.ConcatenatedDiagnostics("Diagnostics emitted:\n");
-      if (diagnostic_recorder.getNumErrors() != 0) {
-        // Clang considers the function decl valid even fatal diagnostics is
-        // emitted during instantiation. However, such diagnostics would fail
-        // compilation of generated bindings, so it's invalid as far as Crubit
-        // is concerned, thus set it as invalid here.
-        function_decl->setInvalidDecl();
-        return unsupported(FormattedError::PrefixedStrCat(
-            "Failed to instantiate the function/method template", diagnostics));
-      }
+    crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+        crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
+          // Generally, clang is able to instantiate templates like this even
+          // after parsing completes. However, in rare cases it accesses
+          // transient parsing state (Scope) which was already cleaned up.
+          //
+          // HACK: We need to create a fake TU scope to avoid a crash in
+          // `clang::Sema::InstantiateFunctionDefinition` when it tries to
+          // access the translation unit scope, which it incorrectly assumes
+          // is always non-null. This should be fixed in clang.
+          //
+          // Specifically, the crash happens when Crubit instantiates a
+          // class template with a defaulted copy constructor, introducing
+          // lazily-injected builtins such as `memcpy` to be introduced to the
+          // TU scope.
+          //
+          // See b/401857961 where this was observed and cl/265779405 where a
+          // similar issue was fixed in CLIF.
+          FakeTUScope fake_tu_scope(ictx_);
+          ictx_.sema_.InstantiateFunctionDefinition(point_of_instantiation,
+                                                    function_decl);
+          // Check that any newly discovered dependencies can be instantiated.
+          ictx_.sema_.PerformPendingInstantiations();
+        });
+    std::string diagnostics =
+        diagnostic_recorder.ConcatenatedDiagnostics("Diagnostics emitted:\n");
+    if (diagnostic_recorder.getNumErrors() != 0) {
+      // Clang considers the function decl valid even fatal diagnostics is
+      // emitted during instantiation. However, such diagnostics would fail
+      // compilation of generated bindings, so it's invalid as far as Crubit
+      // is concerned, thus set it as invalid here.
+      function_decl->setInvalidDecl();
+      return unsupported(FormattedError::PrefixedStrCat(
+          "Failed to instantiate the function/method template", diagnostics));
+    } else if (auto invalid_decl_name =
+                   GetInvalidCallTarget(ictx_, function_decl);
+               !invalid_decl_name.empty()) {
+      // TODO(zarko): This error message doesn't appear in the output code,
+      return unsupported(FormattedError::PrefixedStrCat(
+          "Instantiating this template relies on an invalid decl",
+          invalid_decl_name));
     }
   }
   if (function_decl->isInvalidDecl()) {
@@ -344,31 +536,12 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // copy assignments) right now. See b/436870965.
   if (auto defaulted_kind = ictx_.sema_.getDefaultedFunctionKind(function_decl);
       defaulted_kind.isSpecialMember()) {
-    auto special_member_kind = defaulted_kind.asSpecialMember();
-    if (special_member_kind == clang::CXXSpecialMemberKind::CopyAssignment &&
-        !function_decl->isDeleted() && function_decl->isImplicit() &&
-        !function_decl->doesThisDeclarationHaveABody()) {
-      crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-          crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
-            if (auto* mutable_method =
-                    dyn_cast<clang::CXXMethodDecl>(function_decl);
-                mutable_method != nullptr) {
-              FakeTUScope fake_tu_scope(ictx_);
-              clang::Sema::SynthesizedFunctionScope synthesized_function_scope(
-                  ictx_.sema_, mutable_method);
-              // TODO(zarko): Strangely, clang has this flag set on
-              // an unused implicit default operator=. Should we undo the
-              // changes after running DefineImplicitCopyAssignment (i.e.,
-              // delete the body and restore the flag)?
-              mutable_method->setWillHaveBody(false);
-              ictx_.sema_.DefineImplicitCopyAssignment(
-                  function_decl->getLocation(), mutable_method);
-            }
-          });
-      if (diagnostic_recorder.getNumErrors() != 0) {
-        return unsupported(FormattedError::Static(
-            "Implicit copy assignment is considered invalid"));
-      }
+    // TODO(zarko): Possibly eliminate a redundant check here (have we done this
+    // already if function_decl is a function template that is also defaulted?)
+    if (auto target = GetInvalidCallTarget(ictx_, function_decl);
+        !target.empty()) {
+      return unsupported(FormattedError::PrefixedStrCat(
+          "Defaulted function relies on an invalid decl", target));
     }
   }
 
@@ -656,7 +829,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         *function_decl,
         UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        std::vector(errors.error_set.begin(), errors.error_set.end()));
+        std::vector(errors.error_set.begin(), errors.error_set.end()),
+        must_bind_);
   }
 
   bool has_c_calling_convention =
@@ -714,6 +888,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::ReleaseCapabilityAttr>(attr) ||
                    clang::isa<clang::NoThreadSafetyAnalysisAttr>(attr) ||
                    clang::isa<clang::LockReturnedAttr>(attr) ||
+                   clang::isa<clang::AbiTagAttr>(attr) ||
                    clang::isa<clang::LocksExcludedAttr>(attr)) {
           // These attributes don't affect Rust.
           return true;
@@ -725,7 +900,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         *function_decl,
         UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        FormattedError::FromStatus(std::move(unknown_attr).status()));
+        {FormattedError::FromStatus(std::move(unknown_attr).status())},
+        must_bind_);
   }
 
   // Silence ClangTidy, checked above: calling `errors.Add` if

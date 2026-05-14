@@ -28,7 +28,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   if (!decl_context) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        FormattedError::Static("DeclContext was unexpectedly null"));
+        {FormattedError::Static("DeclContext was unexpectedly null")});
   }
   if (!decl_context->isTranslationUnit() && !decl_context->isExternCContext() &&
       !decl_context->isExternCXXContext() && !decl_context->isNamespace() &&
@@ -39,7 +39,13 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   if (var_decl->isStaticDataMember()) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        FormattedError::Static("static data members are not supported"));
+        {FormattedError::Static("static data members are not supported")});
+  }
+
+  if (var_decl->getTLSKind() != clang::VarDecl::TLS_None) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        {FormattedError::Static("thread_local variables are not supported")});
   }
 
   // Note that `[const|inline] T x = /* constant initializer */;` acts like
@@ -59,7 +65,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   if (llvm::isa<clang::VarTemplateSpecializationDecl>(var_decl)) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        FormattedError::Static("templated variables are not supported"));
+        {FormattedError::Static("templated variables are not supported")});
   }
 
   absl::StatusOr<TranslatedIdentifier> var_name =
@@ -67,15 +73,15 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   if (!var_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        FormattedError::PrefixedStrCat("variable name is not supported",
-                                       var_name.status().message()));
+        {FormattedError::PrefixedStrCat("variable name is not supported",
+                                        var_name.status().message())});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(var_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
   }
 
   std::optional<std::string> deprecated;
@@ -91,7 +97,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
+        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
   CcType type =
@@ -104,21 +110,22 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
     if (!var_type.isBooleanType() && !var_type.isIntegerType()) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
-          FormattedError::Static("only boolean and integer constexpr variables "
-                                 "are supported"));
+          {FormattedError::Static(
+              "only boolean and integer constexpr variables "
+              "are supported")});
     }
     const clang::APValue* value = var_decl->evaluateValue();
     if (value == nullptr || !value->isInt()) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
-          FormattedError::Static("unable to evaluate constexpr value"));
+          {FormattedError::Static("unable to evaluate constexpr value")});
     }
     absl::StatusOr<IntegerConstant> integer_constant =
         IntegerConstant::FromAPValue(value->getInt());
     if (!integer_constant.ok()) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
-          FormattedError::FromStatus(std::move(integer_constant.status())));
+          {FormattedError::FromStatus(std::move(integer_constant.status()))});
     }
     ictx_.MarkAsSuccessfullyImported(var_decl);
     return Constant{

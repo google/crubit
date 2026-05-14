@@ -26,12 +26,11 @@ rust_library(
         "get_generic_args.rs",
         "lib.rs",
     ],
-    edition = "2021",
     proc_macro_deps = [
         "@crate_index//:rustversion",  # v1
     ],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":query_compiler",
@@ -126,6 +125,7 @@ rust_library(
         "//cc_bindings_from_rs:run_compiler_test_support",
         "//cc_bindings_from_rs/generate_bindings/database",
         "//common:arc_anyhow",
+        "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:dyn_format",
         "//common:error_report",

@@ -8,6 +8,7 @@
 extern crate rustc_middle;
 
 use arc_anyhow::Result;
+use code_gen_utils::CcInclude;
 use database::code_snippet::ApiSnippets;
 use database::{BindingsGenerator, IncludeGuard};
 use error_report::{FatalErrors, IgnoreErrors};
@@ -73,6 +74,28 @@ fn bindings_db_for_tests_with_features(
     features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     with_kythe_annotations: bool,
 ) -> BindingsGenerator {
+    const KNOWN_CRATE_NAMES: &[&str] = &["alloc", "core", "std"];
+    let crate_name_to_include_paths = KNOWN_CRATE_NAMES
+        .iter()
+        .map(|&name| {
+            (
+                Rc::from(name),
+                vec![CcInclude::user_header(Rc::from(
+                    format!("fake_bindings_for_unittests/{name}_cc_api.h").as_str(),
+                ))],
+            )
+        })
+        .collect();
+    let crate_name_to_features = KNOWN_CRATE_NAMES
+        .iter()
+        .copied()
+        .chain(std::iter::once("self"))
+        .map(|name| (Rc::from(name), features))
+        .collect();
+    let crate_name_to_namespace = KNOWN_CRATE_NAMES
+        .iter()
+        .map(|&name| (Rc::from(name), Rc::from(format!("rs::{name}").as_str())))
+        .collect();
     new_database(
         tcx,
         /* source_crate_name= */ None,
@@ -83,10 +106,9 @@ fn bindings_db_for_tests_with_features(
         /* default_features= */ Default::default(),
         /* kythe_annotations= */ with_kythe_annotations,
         /* enable_rmeta_interface= */ false,
-        /* crate_name_to_include_paths= */ Default::default(),
-        /* crate_name_to_features= */
-        Rc::new(HashMap::from([(Rc::from("self"), features)])),
-        /* crate_name_to_namespace= */ HashMap::default().into(),
+        Rc::new(crate_name_to_include_paths),
+        Rc::new(crate_name_to_features),
+        Rc::new(crate_name_to_namespace),
         /* crate_renames= */ HashMap::default().into(),
         /* errors = */ Rc::new(IgnoreErrors),
         /* fatal_errors= */ Rc::new(FatalErrors::new()),

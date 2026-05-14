@@ -137,27 +137,6 @@ crubit_rust_test(
 )
 
 crubit_test_cc_library(
-    name = "assumed_c9",
-    srcs = ["assumed_c9.cc"],
-    hdrs = ["assumed_c9.h"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
-    deps = [
-        ":test_annotations",
-        "//rs_bindings_from_cc/test/c9:co",
-    ],
-)
-
-golden_test(
-    name = "assumed_c9_golden_test",
-    basename = "assumed_c9",
-    cc_library = "assumed_c9",
-    golden_cc = "assumed_c9_api_impl.cc",
-    golden_rs = "assumed_c9_rs_api.rs",
-)
-
-crubit_test_cc_library(
     name = "assumed_span",
     srcs = ["assumed_span.cc"],
     hdrs = ["assumed_span.h"],

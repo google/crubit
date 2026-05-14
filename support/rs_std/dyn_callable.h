@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// IWYU pragma: private, include "support/rs_std/dyn_callable.h"
+
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_DYN_CALLABLE_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_DYN_CALLABLE_H_
 

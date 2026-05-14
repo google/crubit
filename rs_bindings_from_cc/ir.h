@@ -706,6 +706,13 @@ struct TraitDerives {
   std::vector<std::string> custom;
 };
 
+struct OwnedPtrConfig {
+  llvm::json::Value ToJson() const;
+
+  std::string owned_ptr_type;
+  std::string drop_impl;
+};
+
 // A record (struct, class, union).
 struct Record {
   llvm::json::Value ToJson() const;
@@ -730,7 +737,7 @@ struct Record {
   std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;
   std::optional<BridgeType> bridge_type;
-  std::optional<std::string> owned_ptr_type;
+  std::optional<OwnedPtrConfig> owned_ptr_config;
   std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;

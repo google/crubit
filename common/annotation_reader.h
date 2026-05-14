@@ -79,6 +79,16 @@ absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
 absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
     const clang::Decl& decl, absl::string_view annotation_name);
 
+// Returns the string arguments of [[clang::annotate(annotation_name,
+// string_arg1, string_arg2, ...)]] annotation on `decl`, or none if the
+// annotation does not exist.
+//
+// Returns an error if there are conflicting annotations or if any argument is
+// not a string.
+absl::StatusOr<std::optional<std::vector<std::string>>>
+GetAnnotationWithStringArgs(const clang::Decl& decl,
+                            absl::string_view annotation_name);
+
 // Returns true if `decl` has an annotation with the given name.
 //
 // Returns an error if an annotation with the given name exists, but it has

@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![feature(cfg_accessible)]
 #![feature(rustc_private)]
 #![feature(stmt_expr_attributes)]
 #![feature(proc_macro_hygiene)]
@@ -303,7 +304,7 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
 
     let mut extern_crate_decls: Vec<TokenStream> = vec![];
     let (mut core_renamed, mut alloc_renamed) = (false, false);
-    for (name, renamed) in db.crate_renames().iter() {
+    for (name, renamed) in db.crate_renames().iter().sorted() {
         if name.as_ref() == "core" {
             core_renamed = true;
         }
@@ -476,8 +477,34 @@ fn public_paths_by_def_id(
         // Map type aliases to their underlying type.
         let mut type_alias_def_id = None;
         if def_kind == DefKind::TyAlias {
-            let underlying_type = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
-            if let crate::ty::TyKind::Adt(def, _) = underlying_type.kind() {
+            let underlying_type = normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            );
+            if let crate::ty::TyKind::Adt(def, args) = underlying_type.kind() {
+                let alias_generics = tcx.generics_of(def_id);
+                // Check if generics match.
+                let generics_do_not_match = args.len() != alias_generics.own_params.len()
+                    || args.iter().zip(alias_generics.own_params.iter()).any(|(arg, param)| {
+                        !matches!(
+                            (arg.kind(), &param.kind),
+                            (ty::GenericArgKind::Type(_), ty::GenericParamDefKind::Type { .. })
+                                | (
+                                    ty::GenericArgKind::Const(_),
+                                    ty::GenericParamDefKind::Const { .. }
+                                )
+                                | (
+                                    ty::GenericArgKind::Lifetime(_),
+                                    ty::GenericParamDefKind::Lifetime
+                                )
+                        )
+                    });
+                // If our generics do not match for our type alias, do not consider them a public
+                // path for their underlying type.
+                if generics_do_not_match {
+                    return;
+                }
                 type_alias_def_id = Some(def_id);
                 def_id = def.did();
             }
@@ -551,15 +578,7 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
         std::iter::once(LOCAL_CRATE).chain(tcx.used_crates(()).iter().cloned()).filter(|&krate|
         // Check if our krate can be imported (and so should provide public paths for DefIds).
         krate == db.source_crate_num()
-            || db.crate_name_to_include_paths().contains_key(db.renamed_crate_original_name(krate)
-                .unwrap_or_else(|| Rc::from(tcx.crate_name(krate).as_str())).as_ref())
-            // TODO - b/391443811: We don't need this workaround once we depend on `std`, `core`,
-            // and `alloc` implicitly.
-            || {
-                let sym = tcx.crate_name(krate);
-                let name = sym.as_str();
-                name == "std" || name == "core" || name == "alloc" || name == "proc_macro"
-            })
+            || db.crate_name_to_include_paths().contains_key(&Rc::from(tcx.crate_name(krate).as_str())))
     {
         let public_paths = db.public_paths_by_def_id(krate);
         for (def_id, mut paths) in public_paths {
@@ -874,7 +893,11 @@ fn generate_using<'tcx>(
         DefKind::Struct | DefKind::Enum => {
             // This points directly to a type definition, not an alias or compound data
             // type, so we can drop the hir type.
-            let use_type = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
+            let use_type = normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            );
             create_type_alias(db, def_id, using_name.as_str(), use_type)
         }
         DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str()),
@@ -943,7 +966,7 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
             tcx.item_name(def_id).as_str()
         )
     }
-    let ty = normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
+    let ty = normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity());
     let rust_type = ty;
     let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
 
@@ -994,29 +1017,32 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
 // Implementation of `BindingsGenerator::supported_traits`.
 fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
     let tcx = db.tcx();
+
     let traits = tcx
         .visible_traits()
         .filter(|trait_id| {
+            // Does the trait get bindings?
+            db.symbol_canonical_name(*trait_id).is_some()
+        })
+        .filter(|trait_id| {
+            // Traits do not support const generics.
+            let has_const_generics = tcx
+                .generics_of(*trait_id)
+                .own_params
+                .iter()
+                .any(|param| matches!(param.kind, GenericParamDefKind::Const { .. }));
+            !has_const_generics
+        })
+        .filter(|trait_id| {
+            // TODO(b/483382648): Generate bindings for other `std`, `core`, and `alloc` traits.
+            // At least for _most_ other traits - we probably still want to exclude traits that
+            // get idiomatic C++ bindings elsewhere, such as `Clone`, `Default`, `Drop`, `From`,
+            // `Index`, and `Into`.
             let crate_name = tcx.crate_name(trait_id.krate);
-            // TODO: b/269294366 - Support traits in stdlib once we can generate bindings for the
-            // stdlib that can be depended on.
             let not_in_stdlib = crate_name.as_str() != "std"
                 && crate_name.as_str() != "core"
                 && crate_name.as_str() != "alloc";
-
-            let generics = tcx.generics_of(*trait_id);
-            // Traits do not support const generics.
-            let no_generic_args = generics
-                .own_params
-                .iter()
-                .filter(|param| matches!(param.kind, GenericParamDefKind::Const { .. }))
-                .count()
-                == 0;
-
-            let is_exposed_trait = db.symbol_canonical_name(*trait_id).is_some();
-            // We might want to explicitly omit certain marker traits here that are already handled by the bindings for structs/enums (Copy, Clone, Default, etc.).
-            // Unless, we think there's value in exposing them explicitly as traits.
-            not_in_stdlib && no_generic_args && is_exposed_trait
+            not_in_stdlib || tcx.def_path_str(*trait_id) == "std::iter::Iterator"
         })
         .collect::<Vec<DefId>>()
         .into_boxed_slice();
@@ -1081,7 +1107,11 @@ fn generate_type_alias<'tcx>(
     def_id: DefId,
     using_name: &str,
 ) -> Result<CcSnippet<'tcx>> {
-    let alias_type = normalize_ty(db.tcx(), db.tcx().type_of(def_id).instantiate_identity());
+    let alias_type = normalize_ty(
+        db.tcx(),
+        db.tcx().param_env(def_id),
+        db.tcx().type_of(def_id).instantiate_identity(),
+    );
     create_type_alias(db, def_id, using_name, alias_type)
 }
 
@@ -1584,28 +1614,13 @@ pub(crate) fn report_must_bind_error<'tcx>(
 ) {
     let tcx = db.tcx();
     let item_path = tcx.def_path_str(def_id);
-    let def_kind = tcx.def_kind(def_id);
-    let kind_str = match def_kind {
-        rustc_hir::def::DefKind::Struct => "struct",
-        rustc_hir::def::DefKind::Enum => "enum",
-        rustc_hir::def::DefKind::Union => "union",
-        rustc_hir::def::DefKind::Fn => "function",
-        rustc_hir::def::DefKind::TyAlias => "type alias",
-        rustc_hir::def::DefKind::Const { .. } => "constant",
-        rustc_hir::def::DefKind::Trait => "trait",
-        rustc_hir::def::DefKind::AssocFn => "function",
-        rustc_hir::def::DefKind::AssocConst { .. } => "constant",
-        rustc_hir::def::DefKind::AssocTy => "associated type",
-        _ => "item",
-    };
-    let error_details = format!("  {err:#}").replace('\n', "\n  ");
     let bold = "\x1B[1m";
     let reset = "\x1B[0m";
     let red = "\x1B[31m";
     let must_bind_message = format!(
-        "{bold}{red}error:{reset}{bold} {kind_str} `{item_path}` could not be bound{reset}\n\
-        {error_details}\n\
-        {bold}note:{reset} hard error because `#[crubit_annotate::must_bind]` was applied to `{item_path}`"
+        "{bold}{red}error:{reset}{bold}{}\n\
+        {bold}note:{reset} hard error because `#[crubit_annotate::must_bind]` was applied to `{item_path}`",
+        unsupported_def_error_message(db, def_id, err, ErrorStyle::Terminal),
     );
     db.fatal_errors().report(&must_bind_message);
 }
@@ -1667,6 +1682,37 @@ fn generate_item_impl<'tcx>(
     }
 }
 
+enum ErrorStyle {
+    // This message will be formatted as a comment.
+    Comment,
+    // This message will be printed to a terminal.
+    Terminal,
+}
+
+pub(crate) fn unsupported_def_error_message(
+    db: &BindingsGenerator,
+    def_id: DefId,
+    err: &Error,
+    style: ErrorStyle,
+) -> String {
+    let tcx = db.tcx();
+    let source_loc = generate_source_location(db, def_id);
+    let name = tcx.def_path_str(def_id);
+    let def_kind = tcx.def_kind(def_id);
+    let kind_str = def_kind.descr(def_id);
+    let err_msg = if let ErrorStyle::Terminal = style {
+        format!("\n  {err:#}").replace('\n', "\n  ")
+    } else {
+        format!(" {err:#}")
+    };
+    let bold = if let ErrorStyle::Terminal = style { "\x1B[1m" } else { "" };
+    let reset = if let ErrorStyle::Terminal = style { "\x1B[0m" } else { "" };
+
+    // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
+    // says: To print causes as well [...], use the alternate selector “{:#}”.
+    format!("{bold}{kind_str} `{name}` defined at {source_loc}:{reset}{err_msg}")
+}
+
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
 pub(crate) fn generate_unsupported_def<'tcx>(
@@ -1674,15 +1720,12 @@ pub(crate) fn generate_unsupported_def<'tcx>(
     def_id: DefId,
     err: Error,
 ) -> CcSnippet<'tcx> {
-    let tcx = db.tcx();
     db.errors().assert_in_item(item_name_for_error_report(db, def_id));
     db.errors().report(&err);
-    let source_loc = generate_source_location(db, def_id);
-    let name = tcx.def_path_str(def_id);
-
-    // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
-    // says: To print causes as well [...], use the alternate selector “{:#}”.
-    let msg = format!("Error generating bindings for `{name}` defined at {source_loc}: {err:#}");
+    let msg = format!(
+        "Error generating bindings for {}",
+        unsupported_def_error_message(db, def_id, &err, ErrorStyle::Comment)
+    );
     CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ })
 }
 
@@ -1905,11 +1948,19 @@ impl NodeSortKey {
             TemplateSpecialization::RsStdEnum(e) => {
                 let ty = e.core.self_ty_rs;
 
-                use rustc_data_structures::stable_hasher::{HashStable, StableHasher};
+                #[cfg_accessible(rustc_data_structures::stable_hash)]
+                use rustc_data_structures::stable_hash;
+                #[cfg_accessible(rustc_data_structures::stable_hasher)]
+                use rustc_data_structures::stable_hasher as stable_hash;
 
                 let hash = tcx.with_stable_hashing_context(|mut hcx| {
-                    let mut hasher = StableHasher::new();
-                    ty.hash_stable(&mut hcx, &mut hasher);
+                    let mut hasher = stable_hash::StableHasher::new();
+
+                    #[rustversion::before(2026-05-03)]
+                    stable_hash::HashStable::hash_stable(&ty, &mut hcx, &mut hasher);
+                    #[rustversion::since(2026-05-03)]
+                    stable_hash::StableHash::stable_hash(&ty, &mut hcx, &mut hasher);
+
                     hasher
                         .finish::<rustc_data_structures::fingerprint::Fingerprint>()
                         .to_smaller_hash()
@@ -2218,14 +2269,18 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
 }
 
 #[rustversion::before(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, val: T) -> T {
+pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
     val
 }
 
 #[rustversion::since(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(tcx: TyCtxt<'tcx>, val: ty::Unnormalized<'tcx, T>) -> T
+pub fn normalize_ty<'tcx, T>(
+    tcx: TyCtxt<'tcx>,
+    param_env: ty::ParamEnv<'tcx>,
+    val: ty::Unnormalized<'tcx, T>,
+) -> T
 where
-    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+    T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Display + std::fmt::Debug,
 {
     use rustc_infer::infer::TyCtxtInferExt;
     use rustc_infer::traits::ObligationCause;
@@ -2233,11 +2288,7 @@ where
     use rustc_trait_selection::traits::ObligationCtxt;
 
     let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
-    let ocx = ObligationCtxt::new(&infcx);
+    let ocx = ObligationCtxt::new_with_diagnostics(&infcx);
     let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
-    let param_env = ty::ParamEnv::empty();
-    let val = ocx.normalize(&cause, param_env, val);
-    let errors = ocx.evaluate_obligations_error_on_ambiguity();
-    assert!(errors.is_empty(), "Failed to normalize: {errors:?}");
-    val
+    ocx.normalize(&cause, param_env, val)
 }

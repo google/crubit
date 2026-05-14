@@ -165,12 +165,12 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
         format!("{context}:\n  {desc}")
     };
 
-    if !have_feature(CrubitFeature::Experimental) {
-        if let Some(unknown_attr) = item.unknown_attr() {
-            missing_features.push(format!(
-                "crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}"
-            ));
-        }
+    if !have_feature(CrubitFeature::Experimental)
+        && let Some(unknown_attr) = item.unknown_attr()
+    {
+        missing_features.push(format!(
+            "crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}"
+        ));
     }
 
     match item {
@@ -540,10 +540,12 @@ pub fn generated_items_to_tokens<'db>(
                     nested_items,
                     indirect_functions,
                     delete,
-                    owned_type_name,
+                    owned_ptr_config,
                     member_methods,
                     free_functions,
                     lifetime_params,
+                    is_thread_safe,
+                    size,
                 } = record_item.as_ref();
 
                 let type_param_tokens = if !lifetime_params.is_empty() {
@@ -557,15 +559,37 @@ pub fn generated_items_to_tokens<'db>(
                     quote! { align(#align) }
                 }));
 
-                let head_padding = head_padding.map(|n| {
-                    let n = Literal::usize_unsuffixed(n);
-                    // TODO(b/481405536): Do this unconditionally.
-                    if *internally_mutable_unknown_fields {
-                        quote! { __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n], }
-                    } else {
-                        quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
+                // For thread-safe types, generate an opaque UnsafeCell body instead of
+                // individual fields. This enables interior mutability, allowing non-const
+                // C++ methods to be called through shared references (&self).
+                let struct_body = if *is_thread_safe {
+                    let size_literal = Literal::usize_unsuffixed(*size);
+                    quote! {
+                        __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; #size_literal]>,
                     }
-                });
+                } else {
+                    let head_padding = head_padding.map(|n| {
+                        let n = Literal::usize_unsuffixed(n);
+                        // TODO(b/481405536): Do this unconditionally.
+                        if *internally_mutable_unknown_fields {
+                            quote! { __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n], }
+                        } else {
+                            quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
+                        }
+                    });
+                    let lifetime_markers: Vec<TokenStream> = lifetime_params
+                        .iter()
+                        .map(|lt| {
+                            let field_name = format_ident!("__marker_{}", lt.ident);
+                            quote! { #field_name: ::core::marker::PhantomData<& #lt ()> }
+                        })
+                        .collect();
+                    quote! {
+                        #head_padding
+                        #( #field_definitions )*
+                        #( #lifetime_markers )*
+                    }
+                };
 
                 let send_impl = match implements_send {
                     true => {
@@ -604,10 +628,12 @@ pub fn generated_items_to_tokens<'db>(
                     None
                 };
 
-                let owned_type_def = owned_type_name.as_ref().map(|owned_type_name| {
+                let owned_type_def = owned_ptr_config.as_ref().map(|cfg| {
+                    let owned_type_name = &cfg.owned_type_name;
+                    let drop_meth = &cfg.drop_impl;
                     let doc_comment = format!(
-                        "Wrapper for a C++ {} owned by Rust. \n\n Style guide: The C++ type to which this refers should be wrapped in an `Arc` or `Mutex` if it is not already thread-safe. \n\n THIS TYPE REQUIRES A MANUAL DROP IMPLEMENTATION. \n You MUST provide an `impl {} {{ pub fn DropImpl(&mut self) {{ ... }} }}` block in a separate Rust file (e.g., via `additional_rust_srcs`). Failure to do so will result in a compile-time error: `method not found in `{}``.",
-                        ident, owned_type_name, owned_type_name
+                        "Wrapper for a C++ {} owned by Rust. \n\n Style guide: The C++ type to which this refers should be wrapped in an `Arc` or `Mutex` if it is not already thread-safe. \n\n THIS TYPE REQUIRES A MANUAL DROP IMPLEMENTATION. \n You MUST provide an `impl {} {{ pub fn {}(&mut self) {{ ... }} }}` block in a separate Rust file (e.g., via `additional_rust_srcs`). Failure to do so will result in a compile-time error: `method not found in `{}``.",
+                        ident, owned_type_name, drop_meth, owned_type_name
                     );
                     quote! {
                         __NEWLINE__ __NEWLINE__
@@ -618,10 +644,10 @@ pub fn generated_items_to_tokens<'db>(
 
                         impl Drop for #owned_type_name {
                             fn drop(&mut self) {
-                                __COMMENT__ "IMPORTANT: The DropImpl method for `{}` MUST be implemented in a user-written .rs file (e.g., using `additional_rust_srcs`)."
+                                __COMMENT__ "IMPORTANT: The drop method MUST be implemented in a user-written .rs file (e.g., using `additional_rust_srcs`)."
                                 __COMMENT__ "Crubit cannot automatically generate the destruction logic for this type."
                                 __COMMENT__ "See the struct documentation for more details."
-                                self.DropImpl();
+                                self.#drop_meth();
                             }
                         }
                     }
@@ -637,14 +663,6 @@ pub fn generated_items_to_tokens<'db>(
                     None
                 };
 
-                let lifetime_markers: Vec<TokenStream> = lifetime_params
-                    .iter()
-                    .map(|lt| {
-                        let field_name = format_ident!("__marker_{}", lt.ident);
-                        quote! { #field_name: ::core::marker::PhantomData<& #lt ()> }
-                    })
-                    .collect();
-
                 quote! {
                     #doc_comment_attr
                     #derive_attr
@@ -654,9 +672,7 @@ pub fn generated_items_to_tokens<'db>(
                     #[repr(#(#repr_attrs),*)]
                     #crubit_annotation
                     #visibility #struct_or_union #ident #type_param_tokens {
-                        #head_padding
-                        #( #field_definitions )*
-                        #( #lifetime_markers )*
+                        #struct_body
                     }
 
                     #send_impl
@@ -978,6 +994,12 @@ impl GeneratedItem {
 }
 
 #[derive(Clone, Debug)]
+pub struct OwnedPtrConfig {
+    pub owned_type_name: Ident,
+    pub drop_impl: Ident,
+}
+
+#[derive(Clone, Debug)]
 pub struct Record {
     pub doc_comment_attr: Option<DocCommentAttr>,
     pub derive_attr: DeriveAttr,
@@ -1005,11 +1027,15 @@ pub struct Record {
     /// Functions that get attached either by a trait or from a base class.
     pub indirect_functions: Vec<TokenStream>,
     pub delete: Option<DeleteImpl>,
-    /// The name of the owning wrapper type when the type was annotated with CRUBIT_OWNED_POINTEE.
-    pub owned_type_name: Option<Ident>,
+    /// The owning wrapper type configuration when the type was annotated with CRUBIT_OWNED_POINTEE.
+    pub owned_ptr_config: Option<OwnedPtrConfig>,
     pub member_methods: Vec<TokenStream>,
     pub free_functions: Vec<TokenStream>,
     pub lifetime_params: Vec<syn::Lifetime>,
+    /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
+    pub is_thread_safe: bool,
+    /// The size of the type in bytes (needed for opaque UnsafeCell wrapping).
+    pub size: usize,
 }
 
 #[derive(Clone, Debug)]

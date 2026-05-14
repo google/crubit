@@ -21,6 +21,8 @@
 
 static_assert((struct Thing * (*)(int)) & ::MakeOwnedThing);
 
+static_assert((struct CustomThing * (*)(int)) & ::MakeCustomOwnedThing);
+
 static_assert((struct Thing * (*)(int)) & ::MakeThing);
 
 static_assert((int (*)(struct Thing*)) & ::ThingToValue);

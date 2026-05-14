@@ -18,7 +18,7 @@ use database::code_snippet::{
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
     BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions, Mutability,
-    PassingConvention, RsTypeKind, RustPtrKind, Safety,
+    PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -247,10 +247,10 @@ fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Resul
 
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
-    if let Some(owning_target) = item.owning_target() {
-        if !db.ir().is_current_target(&owning_target) {
-            return Ok(ApiSnippets::default());
-        }
+    if let Some(owning_target) = item.owning_target()
+        && !db.ir().is_current_target(&owning_target)
+    {
+        return Ok(ApiSnippets::default());
     }
     let _scope = db.error_scope(item.id());
     let err = match generate_item_impl(db, &item) {
@@ -633,12 +633,12 @@ pub fn generate_bindings_tokens(
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind_safety`.
-fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safety {
+fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Option<UnsafeReason> {
     match rs_type_kind {
-        RsTypeKind::Error { error, .. } => {
-            Safety::unsafe_because(format!("Crubit cannot assume unknown types are safe: {error}"))
-        }
-        RsTypeKind::Pointer { .. } => Safety::unsafe_because("raw pointer"),
+        RsTypeKind::Error { error, .. } => Some(UnsafeReason(
+            format!("Crubit cannot assume unknown types are safe: {error}").into(),
+        )),
+        RsTypeKind::Pointer { .. } => Some(UnsafeReason("raw pointer".into())),
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
         | RsTypeKind::TypeAlias { underlying_type: t, .. } => {
@@ -650,51 +650,35 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safe
         RsTypeKind::IncompleteRecord { .. } => {
             // TODO(b/390474240): Add a way to mark a forward declaration as being an unsafe
             // type.
-            Safety::Safe
+            None
         }
         RsTypeKind::Enum { .. }
         | RsTypeKind::Primitive(..)
-        | RsTypeKind::ExistingRustType { .. } => Safety::Safe,
+        | RsTypeKind::ExistingRustType { .. } => None,
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-            BridgeRsTypeKind::Bridge { .. } => {
-                if record_safety(db, original_type.clone()).is_safe() {
-                    Safety::Safe
-                } else {
-                    // Full unsafe reason is not shown here, it's documented on the type instead.
-                    Safety::unsafe_because("unsafe bridge type")
-                }
-            }
-            BridgeRsTypeKind::ProtoMessageBridge { .. } => {
-                if record_safety(db, original_type.clone()).is_safe() {
-                    Safety::Safe
-                } else {
-                    // Full unsafe reason is not shown here, it's documented on the type instead.
-                    Safety::unsafe_because("unsafe proto message type")
-                }
-            }
+            BridgeRsTypeKind::Bridge { .. } => record_safety(db, original_type.clone())
+                // Full unsafe reason is not shown here, it's documented on the type instead.
+                .map(|_reason| UnsafeReason("unsafe bridge type".into())),
+            BridgeRsTypeKind::ProtoMessageBridge { .. } => record_safety(db, original_type.clone())
+                // Full unsafe reason is not shown here, it's documented on the type instead.
+                .map(|_reason| UnsafeReason("unsafe proto message type".into())),
             BridgeRsTypeKind::StdOptional(t) => db.rs_type_kind_safety(t.as_ref().clone()),
             BridgeRsTypeKind::StdPair(t1, t2) => {
                 let s1 = db.rs_type_kind_safety(t1.as_ref().clone());
                 let s2 = db.rs_type_kind_safety(t2.as_ref().clone());
 
-                let r1 = s1
-                    .unsafe_reason()
-                    .map(|reason| format!("pair's first element is unsafe: {reason}"));
-                let r2 = s2
-                    .unsafe_reason()
-                    .map(|reason| format!("pair's second element is unsafe: {reason}"));
-                if let (Some(r1), Some(r2)) = (&r1, &r2) {
-                    Safety::unsafe_because(format!("{r1}; {r2}"))
-                } else if let Some(r1) = r1 {
-                    Safety::unsafe_because(r1)
-                } else if let Some(r2) = r2 {
-                    Safety::unsafe_because(r2)
-                } else {
-                    Safety::Safe
+                let r1 = s1.map(|reason| format!("pair's first element is unsafe: {reason}"));
+                let r2 = s2.map(|reason| format!("pair's second element is unsafe: {reason}"));
+
+                match (r1, r2) {
+                    (Some(r1), Some(r2)) => Some(UnsafeReason(format!("{r1}; {r2}").into())),
+                    (Some(r1), None) => Some(UnsafeReason(r1.into())),
+                    (None, Some(r2)) => Some(UnsafeReason(r2.into())),
+                    (None, None) => None,
                 }
             }
-            BridgeRsTypeKind::StdString { .. } => Safety::Safe,
+            BridgeRsTypeKind::StdString { .. } => None,
             BridgeRsTypeKind::Callable(callable) => {
                 callable_safety(db, &callable.param_types, &callable.return_type)
             }
@@ -713,26 +697,24 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safe
                 match (db.codegen_functions().decl_lifetime_arity)(db, record.id()) {
                     Ok(arity) => {
                         if arity != 0 && lifetimes.len() != arity {
-                            return Safety::unsafe_because(format!(
+                            return Some(UnsafeReason(format!(
                                 "type {} has {} lifetime parameter{}, but {} {} provided; callers must ensure that arguments have the appropriate lifetime",
                                 record.rs_name, arity, if arity == 1 { "" } else { "s" }, lifetimes.len(), if lifetimes.len() == 1 { "was" } else { "were" }
-                            ));
+                            ).into()));
                         }
                     }
                     _ => {
-                        return Safety::unsafe_because(format!(
+                        return Some(UnsafeReason(format!(
                             "unable to determine lifetime how many lifetime parameters {} accepts; callers must ensure that arguments have the appropriate lifetime",
                             record.rs_name
-                        ));
+                        ).into()));
                     }
                 }
             }
-            if record_safety(db, record.clone()).is_safe() {
-                Safety::Safe
-            } else {
-                // Full unsafe reason is not shown here, it's documented on the type instead.
-                Safety::unsafe_because("unsafe struct or union")
-            }
+
+            // Full unsafe reason is not shown here, it's documented on the type instead.
+            record_safety(db, record.clone())
+                .map(|_reason| UnsafeReason("unsafe struct or union".into()))
         }
     }
 }
@@ -743,22 +725,21 @@ fn callable_safety(
     db: &BindingsGenerator,
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
-) -> Safety {
+) -> Option<UnsafeReason> {
     let param_reasons = param_types
         .iter()
         .cloned()
         .enumerate()
         .filter_map(|(i, param_type)| {
-            let safety = db.rs_type_kind_safety(param_type);
-            let reason = safety.unsafe_reason()?;
+            let reason = db.rs_type_kind_safety(param_type)?;
             let i = i + 1;
             Some(format!("param {i} is of unsafe type {reason}"))
         })
         .collect_vec();
     let return_safety = db.rs_type_kind_safety(return_type.clone());
 
-    if param_reasons.is_empty() && return_safety.is_safe() {
-        return Safety::Safe;
+    if param_reasons.is_empty() && return_safety.is_none() {
+        return None;
     }
 
     let mut reasons = if param_reasons.is_empty() {
@@ -767,7 +748,7 @@ fn callable_safety(
         format!("Callable takes unsafe parameters: {}", param_reasons.join(", "))
     };
 
-    if let Some(return_reason) = return_safety.unsafe_reason() {
+    if let Some(return_reason) = return_safety {
         if reasons.is_empty() {
             reasons = format!("Callable return type is unsafe: {return_reason}");
         } else {
@@ -775,33 +756,33 @@ fn callable_safety(
         }
     }
 
-    Safety::unsafe_because(reasons)
+    Some(UnsafeReason(reasons.into()))
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
-fn record_field_safety(db: &BindingsGenerator, field: Field) -> Safety {
+fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
     if field.access != AccessSpecifier::Public {
-        return Safety::Safe;
+        return None;
     }
     let field_rs_type_kind = match db.rs_type_kind(field.type_.clone()) {
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
-            return Safety::unsafe_because(
-                format!("Rust type is unknown; safety requirements cannot be automatically generated: {err}"),
-            );
+            return Some(UnsafeReason(
+                format!("Rust type is unknown; safety requirements cannot be automatically generated: {err}").into(),
+            ));
         }
     };
     db.rs_type_kind_safety(field_rs_type_kind)
 }
 
 /// Implementation of `BindingsGenerator::record_safety`.
-fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
+fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeReason> {
     let mut doc = String::new();
 
     match record.safety_annotation {
         SafetyAnnotation::DisableUnsafe => {
-            return Safety::Safe;
+            return None;
         }
         SafetyAnnotation::Unsafe => {
             // TODO(b/480191443): allow C++ annotations to provide a specific reason.
@@ -818,7 +799,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
         .fields
         .iter()
         .filter_map(|field| {
-            let reason = db.record_field_safety(field.clone()).unsafe_reason()?;
+            let reason = db.record_field_safety(field.clone())?;
 
             // TODO(nicholasbishop): handle unnamed better.
             let mut name = field
@@ -835,7 +816,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
         && !record.is_union()
         && reasons.is_empty()
     {
-        return Safety::Safe;
+        return None;
     }
 
     if !reasons.is_empty() {
@@ -849,8 +830,11 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
     // Verify that we didn't generate an empty safety doc.
     assert!(!doc.is_empty());
 
-    Safety::unsafe_because(format!(
-        "To call a function that accepts this type, you must uphold these requirements:\n{doc}"
+    Some(UnsafeReason(
+        format!(
+            "To call a function that accepts this type, you must uphold these requirements:\n{doc}"
+        )
+        .into(),
     ))
 }
 
@@ -983,11 +967,183 @@ fn generate_rs_api_impl_includes(
     CppIncludes { internal_includes, ir_includes }
 }
 
+/// Returns `t` with all lifetimes replaced with `'static`.
+fn all_static_lifetimes(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
+    if t.lifetimes().all(|l| l.0.as_ref() == "static") {
+        // nb: .all() returns true if the iterator is empty.
+        return t;
+    }
+    all_static_lifetimes_internal(t)
+}
+
+fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
+    match t.as_ref() {
+        RsTypeKind::Error { .. } => t,
+        RsTypeKind::Pointer { pointee, kind, mutability } => Rc::new(RsTypeKind::Pointer {
+            pointee: all_static_lifetimes_internal(pointee.clone()),
+            kind: *kind,
+            mutability: *mutability,
+        }),
+        RsTypeKind::Reference { referent, mutability, lifetime: _, is_cref } => {
+            Rc::new(RsTypeKind::Reference {
+                referent: all_static_lifetimes_internal(referent.clone()),
+                mutability: *mutability,
+                lifetime: database::rs_snippet::Lifetime::new("static"),
+                is_cref: *is_cref,
+            })
+        }
+        RsTypeKind::RvalueReference { referent, mutability, lifetime: _ } => {
+            Rc::new(RsTypeKind::RvalueReference {
+                referent: all_static_lifetimes_internal(referent.clone()),
+                mutability: *mutability,
+                lifetime: database::rs_snippet::Lifetime::new("static"),
+            })
+        }
+        RsTypeKind::FuncPtr { option, cc_calling_conv, return_type, param_types } => {
+            Rc::new(RsTypeKind::FuncPtr {
+                option: *option,
+                cc_calling_conv: *cc_calling_conv,
+                return_type: all_static_lifetimes_internal(return_type.clone()),
+                param_types: param_types
+                    .iter()
+                    .map(|param_type| {
+                        all_static_lifetimes_internal(Rc::new(param_type.clone())).as_ref().clone()
+                    })
+                    .collect(),
+            })
+        }
+        RsTypeKind::IncompleteRecord { .. } => t,
+        RsTypeKind::Record {
+            record,
+            crate_path,
+            uniform_repr_template_type,
+            owned_ptr_type,
+            lifetimes,
+        } => Rc::new(RsTypeKind::Record {
+            record: record.clone(),
+            crate_path: crate_path.clone(),
+            uniform_repr_template_type: uniform_repr_template_type.as_ref().map(|r| {
+                Rc::new(match r.as_ref() {
+                    UniformReprTemplateType::StdVector { element_type } => {
+                        UniformReprTemplateType::StdVector {
+                            element_type: all_static_lifetimes_internal(Rc::new(
+                                element_type.clone(),
+                            ))
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::StdUniquePtr { element_type } => {
+                        UniformReprTemplateType::StdUniquePtr {
+                            element_type: all_static_lifetimes_internal(Rc::new(
+                                element_type.clone(),
+                            ))
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::AbslSpan {
+                        is_const,
+                        include_lifetime,
+                        element_type,
+                        lifetime,
+                    } => UniformReprTemplateType::AbslSpan {
+                        is_const: *is_const,
+                        include_lifetime: *include_lifetime,
+                        element_type: all_static_lifetimes_internal(Rc::new(element_type.clone()))
+                            .as_ref()
+                            .clone(),
+                        lifetime: lifetime
+                            .as_ref()
+                            .map(|_| database::rs_snippet::Lifetime::new("static")),
+                    },
+                    UniformReprTemplateType::StdStringView { in_cc_std, lifetime: _ } => {
+                        UniformReprTemplateType::StdStringView {
+                            in_cc_std: *in_cc_std,
+                            lifetime: database::rs_snippet::Lifetime::new("static"),
+                        }
+                    }
+                })
+            }),
+            owned_ptr_type: owned_ptr_type.clone(),
+            lifetimes: lifetimes
+                .iter()
+                .map(|_| database::rs_snippet::Lifetime::new("static"))
+                .collect(),
+        }),
+        RsTypeKind::Enum { .. } => t,
+        RsTypeKind::TypeAlias { type_alias, underlying_type, crate_path, lifetimes } => {
+            Rc::new(RsTypeKind::TypeAlias {
+                type_alias: type_alias.clone(),
+                underlying_type: all_static_lifetimes_internal(underlying_type.clone()),
+                crate_path: crate_path.clone(),
+                lifetimes: lifetimes
+                    .iter()
+                    .map(|_| database::rs_snippet::Lifetime::new("static"))
+                    .collect(),
+            })
+        }
+        RsTypeKind::Primitive(_) => t,
+        RsTypeKind::BridgeType { bridge_type, original_type } => Rc::new(RsTypeKind::BridgeType {
+            bridge_type: match bridge_type {
+                BridgeRsTypeKind::Bridge { rust_name, abi_rust, abi_cpp, generic_types } => {
+                    BridgeRsTypeKind::Bridge {
+                        rust_name: rust_name.clone(),
+                        abi_rust: abi_rust.clone(),
+                        abi_cpp: abi_cpp.clone(),
+                        generic_types: generic_types
+                            .iter()
+                            .map(|generic_type| {
+                                all_static_lifetimes_internal(Rc::new(generic_type.clone()))
+                                    .as_ref()
+                                    .clone()
+                            })
+                            .collect(),
+                    }
+                }
+                BridgeRsTypeKind::ProtoMessageBridge { .. } => bridge_type.clone(),
+                BridgeRsTypeKind::StdOptional(element_type) => BridgeRsTypeKind::StdOptional(
+                    all_static_lifetimes_internal(element_type.clone()),
+                ),
+                BridgeRsTypeKind::StdPair(first, second) => BridgeRsTypeKind::StdPair(
+                    all_static_lifetimes_internal(first.clone()),
+                    all_static_lifetimes_internal(second.clone()),
+                ),
+                BridgeRsTypeKind::StdString { .. } => bridge_type.clone(),
+                BridgeRsTypeKind::Callable(k) => BridgeRsTypeKind::Callable(Rc::new(Callable {
+                    return_type: all_static_lifetimes_internal(k.return_type.clone()),
+                    param_types: k
+                        .param_types
+                        .iter()
+                        .map(|param_type| {
+                            all_static_lifetimes_internal(Rc::new(param_type.clone()))
+                                .as_ref()
+                                .clone()
+                        })
+                        .collect(),
+                    ..k.as_ref().clone()
+                })),
+                BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime } => {
+                    BridgeRsTypeKind::C9Co {
+                        has_reference_param: *has_reference_param,
+                        result_type: all_static_lifetimes_internal(result_type.clone()),
+                        lifetime: lifetime
+                            .as_ref()
+                            .map(|_| database::rs_snippet::Lifetime::new("static")),
+                    }
+                }
+            },
+            original_type: original_type.clone(),
+        }),
+        RsTypeKind::ExistingRustType { .. } => t,
+    }
+}
+
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
-        RsTypeKind::Error { error, .. } => {
-            bail!("Type has an error and cannot be bridged: {error}")
+        RsTypeKind::Error { symbol, error, .. } => {
+            bail!("Type '{symbol}' has an error and cannot be bridged: {error}")
         }
         RsTypeKind::TypeAlias { underlying_type, .. } => {
             // We don't actually _have_ to expand the type alias here
@@ -1002,6 +1158,8 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 is_rust_slice: kind == RustPtrKind::Slice,
                 rust_type: rust_tokens,
                 cpp_type: cpp_tokens,
+                is_cref: false,
+                is_cpp_ref: kind == RustPtrKind::CcPtr(PointerTypeKind::LValueRef),
             })
         }
         RsTypeKind::Reference { referent, mutability, lifetime: _, is_cref: true } => {
@@ -1013,6 +1171,8 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 is_rust_slice: false,
                 rust_type: rust_tokens,
                 cpp_type: cpp_tokens,
+                is_cref: true,
+                is_cpp_ref: false,
             })
         }
         RsTypeKind::Enum { ref enum_, .. } => {
@@ -1134,7 +1294,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 let result_type_tokens = if result_type.is_void() {
                     quote! { () }
                 } else {
-                    result_type.to_token_stream(db)
+                    all_static_lifetimes(result_type.clone()).to_token_stream(db)
                 };
                 let rust_type_tokens = quote! {
                     ::co::internal_crubit::CoCrubitAbi<#result_type_tokens>
@@ -1384,7 +1544,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                 }
                 PassingConvention::LayoutCompatible => {
                     ffi_to_rust_transforms.extend(quote! {
-                        let #ident = ::core::ptr::read(#ident);
+                        let #ident = unsafe { ::core::ptr::read(#ident) };
                     });
                     let ty_tokens = ty.to_token_stream(db);
                     Some(quote! { , #ident: *mut #ty_tokens })
@@ -1393,7 +1553,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                     let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
                     let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                     ffi_to_rust_transforms.extend(quote! {
-                        let #ident = ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident);
+                        let #ident = unsafe { ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident) };
                     });
                     Some(quote! { , #ident: *mut ::core::ffi::c_uchar })
                 }
@@ -1454,11 +1614,13 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone()).ok()?;
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
             invoke_rust_and_return_to_ffi = quote! {
-                ::bridge_rust::internal::encode(
-                    #crubit_abi_type_expr_tokens,
-                    bridge_buffer,
-                    #invoke_rust_and_return_to_ffi
-                );
+                unsafe {
+                    ::bridge_rust::internal::encode(
+                        #crubit_abi_type_expr_tokens,
+                        bridge_buffer,
+                        #invoke_rust_and_return_to_ffi
+                    )
+                };
             };
 
             return_type_fragment = None;
@@ -1502,7 +1664,9 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             from: *mut ::alloc::boxed::Box<#dyn_fn_spelling>,
             to: *mut ::alloc::boxed::Box<#dyn_fn_spelling>
         ) {
-            ::dyn_callable_rs::manager(operation, from, to);
+            unsafe {
+                ::dyn_callable_rs::manager(operation, from, to);
+            }
         }
     })
 }

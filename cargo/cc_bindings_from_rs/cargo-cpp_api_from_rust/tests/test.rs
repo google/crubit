@@ -212,3 +212,41 @@ fn test_subcommand_with_dependency() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test] // allow_core_test
+fn test_subcommand_with_proc_macro() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_with_proc_macro");
+    let target = "x86_64-unknown-linux-gnu";
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+    cmd.arg("--");
+    cmd.arg("--target");
+    cmd.arg(&target);
+
+    let output = cmd.output().expect("Failed to execute");
+
+    if !output.status.success() {
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        panic!("cargo-cpp_api_from_rust failed");
+    }
+
+    // Verify output files
+    let target_dir = tmp_dir.path();
+    let debug_dir = target_dir.join(&target).join("debug");
+    let headers_dir = debug_dir.join("include");
+
+    // We expect to find headers for the root crate and its library dependency,
+    // but not for the proc-macro crate.
+    assert!(headers_dir.join("test_with_proc_macro.h").exists());
+    assert!(headers_dir.join("lib_using_proc_macro.h").exists());
+    assert!(!headers_dir.join("my_proc_macro.h").exists());
+
+    // We expect the final staticlib for the root crate.
+    assert!(debug_dir.join("libtest_with_proc_macro.a").exists());
+
+    Ok(())
+}

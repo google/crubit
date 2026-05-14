@@ -400,7 +400,8 @@ struct rs_std::impl<::traits::StructWithAssociatedConst,
   static constexpr bool kIsImplemented = true;
   static constexpr ::std::int32_t CONST_INT = INT32_C(10);
 
-  // Error generating bindings for `<traits_golden::StructWithAssociatedConst as
+  // Error generating bindings for associated constant
+  // `<traits_golden::StructWithAssociatedConst as
   // traits_golden::TraitWithAssociatedConst>::CONST_STRUCT` defined at
   // cc_bindings_from_rs/test/traits/traits.rs;l=180:
   // Unsupported constant type: traits_golden::StructWithAssociatedConst

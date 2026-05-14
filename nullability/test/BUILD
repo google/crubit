@@ -1,6 +1,5 @@
 # Integration tests for nullability verification.
 
-load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
@@ -14,7 +13,7 @@ cc_library(
     srcs = ["check_diagnostics.cc"],
     hdrs = ["check_diagnostics.h"],
     deps = [
-        ":test_headers",
+        ":mock_headers",
         "//nullability:pointer_nullability_diagnosis",
         "//nullability:pragma",
         "@llvm-project//clang:analysis",
@@ -56,7 +55,7 @@ cc_binary(
     testonly = 1,
     srcs = ["nullability_test.cc"],
     deps = [
-        ":test_headers",
+        ":mock_headers",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
@@ -79,26 +78,12 @@ sh_test(
     data = [":nullability_test"],
 )
 
-cc_embed_data(
-    name = "test_headers",
-    srcs = [
-        "nullability_annotations.h",
-        "nullability_test.h",
-        "check.h",
-        "check_diagnostics_preamble.h",
-        "new",
-        "memory",
-        "optional",
-        "type_traits",
-        "utility",
-    ],
-    outs = [
-        "test_headers.cc",
-        "test_headers.h",
-        "test_headers.o",
-    ],
-    embedopts = ["--namespace=clang::tidy::nullability"],
+cc_library(
+    name = "mock_headers",
+    srcs = ["mock_headers.cc"],
+    hdrs = ["mock_headers.h"],
     visibility = ["//nullability:__subpackages__"],
+    deps = ["@llvm-project//llvm:Support"],
 )
 
 cc_test(

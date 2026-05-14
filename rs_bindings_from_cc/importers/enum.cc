@@ -33,15 +33,15 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   if (!enum_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_decl, std::nullopt,
-        FormattedError::PrefixedStrCat("Enum name is not supported",
-                                       enum_name.status().message()));
+        {FormattedError::PrefixedStrCat("Enum name is not supported",
+                                        enum_name.status().message())});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
   }
 
   // Reports an unsupported enum with the given error.
@@ -55,7 +55,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         *enum_decl,
         UnsupportedItem::Path{.ident = (*enum_name).rs_identifier(),
                               .enclosing_item_id = *enclosing_item_id},
-        error);
+        {std::move(error)});
   };
 
   clang::QualType cpp_type = enum_decl->getIntegerType();

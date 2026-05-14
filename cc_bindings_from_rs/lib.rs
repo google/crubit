@@ -26,6 +26,7 @@ use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError, SourceLanguage};
 use generate_bindings::{BindingsGenerator, IncludeGuard};
+use itertools::Itertools;
 use kythe_metadata::cc_embed_provenance_map;
 use run_compiler::{run_compiler, run_compiler_with_input};
 use token_stream_printer::{
@@ -52,12 +53,6 @@ fn new_db<'tcx>(
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
 ) -> BindingsGenerator<'tcx> {
-    let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
-    for (crate_name, include_path) in &cmdline.crate_headers {
-        let paths = crate_name_to_include_paths.entry(crate_name.as_str().into()).or_default();
-        paths.push(CcInclude::user_header(include_path.as_str().into()));
-    }
-
     let mut crate_name_to_features =
         <HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new();
     for (crate_name, features) in &cmdline.crate_features {
@@ -85,6 +80,13 @@ fn new_db<'tcx>(
     let mut crate_renames = <HashMap<Rc<str>, Rc<str>>>::new();
     for (name, renamed) in &cmdline.crate_rename {
         crate_renames.insert(name.as_str().into(), renamed.as_str().into());
+    }
+    let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
+    for (crate_name, include_path) in &cmdline.crate_headers {
+        let name =
+            crate_renames.get(crate_name.as_str()).cloned().unwrap_or(crate_name.as_str().into());
+        let paths = crate_name_to_include_paths.entry(name).or_default();
+        paths.push(CcInclude::user_header(include_path.as_str().into()));
     }
     let mut ignore_symbols_from_files: HashSet<PathBuf> = HashSet::new();
     for file in &cmdline.ignore_symbols_from_files {
@@ -196,24 +198,26 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     // These will cause a compilation error when we load our metadata if the crate under compilation
     // set them and we did not. But we don't care about setting them because we aren't actually
     // going to do codegen, so we mark them all as ignored via `unsafe_allow_abi_mismatch`.
-    rustc_session::config::CG_OPTIONS
-        .iter()
-        .map(|opt| opt.name())
-        .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
-        .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
-        .for_each(|name| {
-            at_args.push(format!("-Cunsafe_allow_abi_mismatch={name}"));
-        });
+    at_args.push(format!(
+        "-Cunsafe-allow-abi-mismatch={}",
+        rustc_session::config::CG_OPTIONS
+            .iter()
+            .map(|opt| opt.name())
+            .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
+            .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
+            .join(",")
+    ));
 
     let Some(crate_name) = cmdline.source_crate_name.as_ref() else {
         bail!("--source-crate-name must be provided when using rmetas")
     };
     at_args.push("--crate-type=lib".to_string());
 
-    // Tell rustc to expect a file on stdin.
-    // We won't pass a file on stdin, we just need to pass CLI validation, so we can override the
-    // input in our callback in run_compiler.
-    at_args.push("-".to_string());
+    // Tell rustc to expect an input file.
+    // We won't pass a real file, we just need to pass CLI validation, so we can override the
+    // input in our callback in run_compiler. We cannot use `-` because then rustc sometimes hangs,
+    // waiting for stdin.
+    at_args.push("unused_this_does_not_exist.rs".to_string());
 
     let compiler_args = at_args;
 
@@ -231,10 +235,10 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
         };
-        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd(_)) {
+        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. }) {
             crate_attrs.push("#![no_std]");
         }
-        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore(_)) {
+        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. }) {
             crate_attrs.extend([
                 "#![allow(internal_features)]",
                 "#![feature(no_core)]",

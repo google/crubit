@@ -10,7 +10,7 @@
 #include "nullability/inference/ctn_replacement_macros.h"
 #include "nullability/inference/replace_macros.h"
 #include "nullability/pragma.h"
-#include "nullability/test/test_headers.h"
+#include "nullability/test/mock_headers.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Testing/CommandLineArgs.h"
@@ -23,9 +23,9 @@ TestInputs getAugmentedTestInputs(llvm::StringRef Source,
                                   NullabilityPragmas& Pragmas) {
   TestInputs Inputs = Source;
   Inputs.Language = TestLanguage::Lang_CXX20;
-  for (const auto& Entry :
-       llvm::ArrayRef(test_headers_create(), test_headers_size()))
-    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  auto Headers = clang::tidy::nullability::test::getMockHeaders();
+  for (const auto& Entry : Headers)
+    Inputs.ExtraFiles.try_emplace(Entry.first, Entry.second);
   for (const auto& Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
                                           ctn_replacement_macros_size()))
     Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);

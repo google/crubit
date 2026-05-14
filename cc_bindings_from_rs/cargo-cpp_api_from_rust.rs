@@ -23,7 +23,7 @@
 
 use arc_anyhow::{anyhow, bail, Result};
 use cargo_metadata::camino::Utf8PathBuf;
-use cargo_metadata::{Message, Metadata, Package, PackageId, Resolve};
+use cargo_metadata::{Artifact, Message, Metadata, Package, PackageId, Resolve};
 use clap::Parser;
 use cmdline::Cmdline;
 
@@ -105,7 +105,7 @@ use std::process::Child;
 
 fn stream_cargo_build(
     args: &[String],
-) -> Result<(Child, impl Iterator<Item = Result<Message, std::io::Error>>)> {
+) -> Result<(Child, impl Iterator<Item = Result<Artifact, std::io::Error>>)> {
     let mut build_command = Command::new(cargo_bin());
     build_command.args(args);
 
@@ -117,40 +117,54 @@ fn stream_cargo_build(
     let reader = std::io::BufReader::new(
         command.stdout.take().ok_or_else(|| anyhow!("Failed to open cargo stdout"))?,
     );
-    Ok((command, cargo_metadata::Message::parse_stream(reader)))
+    // Print out any compiler diagnostics when we walk the iterator leaving only the complier artifacts.
+    Ok((
+        command,
+        cargo_metadata::Message::parse_stream(reader).filter_map(|message| match message {
+            Ok(message) => match message {
+                Message::CompilerMessage(msg) => {
+                    eprint!("{}", msg);
+                    None
+                }
+                Message::TextLine(msg) => {
+                    eprint!("{}", msg);
+                    None
+                }
+                Message::CompilerArtifact(artifact) => Some(Ok(artifact)),
+                _ => None,
+            },
+            Err(err) => Some(Err(err)),
+        }),
+    ))
 }
 
 fn build_crate_and_stream_artifacts(
     build_args: &[String],
 ) -> Result<HashMap<String, ArtifactInfo>> {
-    let mut args = vec!["build".to_string(), "--message-format=json".to_string()];
+    let mut args = vec!["rustc".to_string(), "--message-format=json".to_string()];
     args.extend(build_args.iter().cloned());
 
     let mut pkg_to_artifact = HashMap::new();
     let (command, stream) = stream_cargo_build(&args)?;
-    for message in stream {
-        let message = message.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
-        if let Message::CompilerArtifact(artifact) = message {
-            let find_metadata_file = artifact.filenames.iter().find(|filename| {
-                filename.extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib")
-            });
-            if let Some(filename) = find_metadata_file {
-                let hash = filename
-                    .file_stem()
-                    .and_then(|s| s.rsplitn(2, '-').next())
-                    .unwrap_or("")
-                    .to_string();
-                pkg_to_artifact.insert(
-                    artifact.package_id.repr.clone(),
-                    ArtifactInfo {
-                        path: filename.clone(),
-                        name: artifact.target.name.clone(),
-                        hash,
-                        fresh: artifact.fresh,
-                    },
-                );
-            }
-        }
+    for artifact in stream {
+        let artifact = artifact.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
+        let find_metadata_file = artifact.filenames.iter().find(|filename| {
+            filename.extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib")
+        });
+        let Some(filename) = find_metadata_file else {
+            continue;
+        };
+        let hash =
+            filename.file_stem().and_then(|s| s.rsplitn(2, '-').next()).unwrap_or("").to_string();
+        pkg_to_artifact.insert(
+            artifact.package_id.repr.clone(),
+            ArtifactInfo {
+                path: filename.clone(),
+                name: artifact.target.name.clone(),
+                hash,
+                fresh: artifact.fresh,
+            },
+        );
     }
 
     let cargo_output =
@@ -164,16 +178,33 @@ fn build_crate_and_stream_artifacts(
 }
 
 struct Directories {
-    target_dir: Utf8PathBuf,
+    /// Target-arch specific target directory, e.g.
+    /// "/path/to/target/x86_64-unknown-linux-gnu/release".
     profile_dir: Utf8PathBuf,
+    /// Profile name, e.g. "release".
+    profile_name: String,
+    /// Contains target-arch specific dependencies, e.g.
+    /// "/path/to/target/x86_64-unknown-linux-gnu/release/deps".
     deps_dir: Utf8PathBuf,
+    /// Contains target-arch specific headers, e.g.
+    /// "/path/to/target/x86_64-unknown-linux-gnu/release/include".
     headers_dir: Utf8PathBuf,
+    /// Contains host-arch specific dependencies (proc macros), e.g. "/path/to/target/release/deps".
+    host_deps_dir: Utf8PathBuf,
 }
 impl Directories {
-    fn new(target_dir: Utf8PathBuf, profile_dir: Utf8PathBuf) -> Self {
-        let deps_dir = target_dir.join(&profile_dir).join("deps");
-        let headers_dir = target_dir.join(&profile_dir).join("include");
-        Directories { target_dir, profile_dir, deps_dir, headers_dir }
+    fn new(target_dir: Utf8PathBuf, profile_dir: Utf8PathBuf) -> Result<Self> {
+        let profile_name = profile_dir
+            .file_name()
+            .ok_or_else(|| {
+                anyhow!("Expected profile directory '{profile_dir}' to include a profile component")
+            })?
+            .to_string();
+        let profile_dir = target_dir.join(profile_dir);
+        let deps_dir = profile_dir.join("deps");
+        let headers_dir = profile_dir.join("include");
+        let host_deps_dir = target_dir.join(&profile_name).join("deps");
+        Ok(Directories { profile_dir, profile_name, deps_dir, headers_dir, host_deps_dir })
     }
 }
 
@@ -201,7 +232,7 @@ impl BindingGenerationContext {
                 rel_path.parent().map(|p| p.to_owned())
             })
             .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
-        let dirs = Directories::new(target_dir.to_owned(), profile_dir);
+        let dirs = Directories::new(target_dir.to_owned(), profile_dir)?;
 
         let resolve = metadata
             .resolve
@@ -230,12 +261,18 @@ impl BindingGenerationContext {
         let mut lib_rs_content = String::new();
         let deps_dir = &self.dirs.deps_dir;
         let headers_dir = &self.dirs.headers_dir;
+        let host_deps_dir = &self.dirs.host_deps_dir;
+        let profile_dir = &self.dirs.profile_dir;
 
         fs::create_dir_all(headers_dir)?;
         for pkg_id in self.ordered.iter() {
             let Some(artifact_info) = self.pkg_to_artifact.get(&pkg_id.repr) else {
                 continue;
             };
+            if !artifact_info.path.starts_with(&profile_dir) {
+                // Skip crates outside profile dir, e.g. proc macros.
+                continue;
+            }
             let crate_name = &artifact_info.name;
             let rs_crate_name = crate_name.replace('-', "_");
             let hash = &artifact_info.hash;
@@ -264,6 +301,7 @@ impl BindingGenerationContext {
                 format!("--rs-out={}", intermediate_rs),
                 format!("--extern={}={}", crate_name, artifact_info.path),
                 format!("-Ldependency={}", deps_dir.as_str()),
+                format!("-Ldependency={}", host_deps_dir.as_str()),
             ];
             let resolve_node = self
                 .resolve
@@ -311,14 +349,14 @@ impl BindingGenerationContext {
     fn compile_staticlib(&self, mut lib_rs_content: String, metadata: &Metadata) -> Result<()> {
         let root_name = &self.root.name;
         let deps_dir = &self.dirs.deps_dir;
-        let target_dir = &self.dirs.target_dir;
         let profile_dir = &self.dirs.profile_dir;
+        let profile_name = &self.dirs.profile_name;
         let lib_rs_path = deps_dir.join(format!("{}_cc_api.rs", root_name));
         let root_crate_name = root_name.replace('-', "_");
         lib_rs_content.push_str(&format!("pub use r#{}::*;\n", root_crate_name));
         fs::write(&lib_rs_path, lib_rs_content)?;
 
-        let static_lib_path = target_dir.join(&profile_dir).join(format!("lib{}.a", root_name));
+        let static_lib_path = profile_dir.join(format!("lib{}.a", root_name));
         let mut cargo_toml_content = format!(
             r#"[package]
 name = "{root_name}-cc-api"
@@ -344,7 +382,12 @@ bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
         for pkg in self
             .ordered
             .iter()
-            .filter(|pkg_id| self.pkg_to_artifact.contains_key(&pkg_id.repr))
+            .filter(|pkg_id| {
+                self.pkg_to_artifact
+                    .get(&pkg_id.repr)
+                    // Skip crates outside profile dir, e.g. proc macros.
+                    .is_some_and(|art| art.path.starts_with(&profile_dir))
+            })
             .filter_map(|pkg_id| pkg_id_to_package.get(pkg_id))
         {
             if pkg.source.as_ref().is_some_and(|source| source.is_crates_io()) {
@@ -372,20 +415,18 @@ bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
             "--message-format=json".to_string(),
         ];
 
-        if profile_dir.as_str() == "release" {
+        if profile_name.as_str() == "release" {
             cargo_build.push("--release".to_string());
         }
         let (child, stream) = stream_cargo_build(&cargo_build)?;
         let mut cargo_static_lib_path = None;
-        for message in stream {
-            let message =
-                message.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
-            // TODO: Extract an iterator wrapper that prints out lines out output and returns artifacts.
-            let Message::CompilerArtifact(artifact) = message else {
-                continue;
-            };
+        for artifact in stream {
+            let artifact =
+                artifact.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
             if artifact.target.kind.contains(&cargo_metadata::TargetKind::StaticLib) {
                 cargo_static_lib_path = artifact.filenames.first().cloned();
+                // It's important to consume the entire iterator, even after we've found the
+                // artifact, so we don't miss any diagnostics emitted.
             }
         }
 

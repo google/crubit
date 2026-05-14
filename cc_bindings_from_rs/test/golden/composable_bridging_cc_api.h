@@ -27,13 +27,13 @@
 
 namespace composable_bridging_rust {
 
-// Error generating bindings for `composable_bridging_rust_golden::MyOptionRust`
-// defined at
+// Error generating bindings for struct
+// `composable_bridging_rust_golden::MyOptionRust` defined at
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=39:
 // Type bindings for composable_bridging_rust_golden::MyOptionRust suppressed
 // due to being mapped to an existing C++ type (std::optional)
 
-// Error generating bindings for
+// Error generating bindings for struct
 // `composable_bridging_rust_golden::MyOptionRustAbi` defined at
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=50:
 // Generic types are not supported yet (b/259749095)

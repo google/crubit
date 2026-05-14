@@ -62,6 +62,16 @@ fn trait_name_to_token_stream_removing_trait_record(
                 format_tuple_except_singleton_replacing_by_self(db, arg_types, self_type);
             quote! { From < #formatted_arg_types > }
         }
+        UnsafeCtorNew(arg_types) => {
+            let formatted_arg_types =
+                format_tuple_except_singleton_replacing_by_self(db, arg_types, self_type);
+            quote! { ::ctor::UnsafeCtorNew < #formatted_arg_types > }
+        }
+        UnsafeFrom(arg_types) => {
+            let formatted_arg_types =
+                format_tuple_except_singleton_replacing_by_self(db, arg_types, self_type);
+            quote! { ::ctor::UnsafeFrom < #formatted_arg_types > }
+        }
         PartialEq { param, .. } => {
             if self_type.is_some_and(|self_type| param.as_ref() == self_type) {
                 quote! {PartialEq}
@@ -430,7 +440,7 @@ fn generate_cc_operator_index_nonmut_impls(
             (*pointer_data.pointee_type).clone()
         }
 
-        _other_variant => {
+        _ => {
             bail_to_errors!(
                 errors,
                 "operator[] should return a reference (values are not yet supported), found {}",
@@ -487,7 +497,7 @@ fn generate_cc_operator_index_mut_impls(
             (*pointer_data.pointee_type).clone()
         }
 
-        _other_variant => {
+        _ => {
             bail_to_errors!(
                 errors,
                 "(mutable) operator[] should return a reference (values are not yet supported), found {}",
@@ -845,7 +855,7 @@ fn api_func_shape_for_identifier(
                 // an unsafe type is safe, but using one is not.
                 let _ = param_type_iter.next();
             }
-            param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe())
+            param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_some())
         }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
@@ -931,18 +941,20 @@ fn api_func_shape_for_destructor(
 }
 
 /// Issue any errors related to unsafe constructors being unsupported.
+/// Returns the unsafe parameters if any, instead of adding errors, when appropriate.
 fn issue_unsafe_constructor_errors(
     db: &BindingsGenerator,
     func: &Func,
     record: &Record,
     param_types: &[RsTypeKind],
     errors: &Errors,
-) {
+) -> Option<String> {
     match func.safety_annotation {
-        SafetyAnnotation::DisableUnsafe => {}
+        SafetyAnnotation::DisableUnsafe => None,
         SafetyAnnotation::Unsafe => {
             errors.add(anyhow!(
                 "Constructors cannot be `unsafe`, but an explicit unsafe annotation was provided. See b/216648347."));
+            None
         }
         SafetyAnnotation::Unannotated => {
             // Move and copy constructors are excepted from this check, as Google C++ style
@@ -950,7 +962,7 @@ fn issue_unsafe_constructor_errors(
             // fields of the source object.
             let is_move_or_copy_ctor = matches!(param_types, [_this, arg] if arg.is_ref_to(record));
             if is_move_or_copy_ctor {
-                return;
+                return None;
             }
 
             // We skip the first parameter because it's the implicit `this` parameter.
@@ -960,16 +972,15 @@ fn issue_unsafe_constructor_errors(
                 .zip(param_types)
                 .skip(1)
                 .filter_map(|(param_name, param_type)| {
-                    let reason = db.rs_type_kind_safety((*param_type).clone()).unsafe_reason()?;
+                    let reason = db.rs_type_kind_safety((*param_type).clone())?;
                     Some(format!("\n    `{param_name}`: {reason}"))
                 })
                 .collect::<Vec<String>>()
                 .join("");
             if !unsafe_params.is_empty() {
-                errors.add(anyhow!(
-                    "Constructors cannot be `unsafe`, but this constructor accepts:{unsafe_params}"
-                ));
+                return Some(unsafe_params);
             }
+            None
         }
     }
 }
@@ -988,11 +999,9 @@ fn api_func_shape_for_constructor(
         errors.add(err);
     }
     materialize_ctor_in_caller(func, param_types);
-    issue_unsafe_constructor_errors(db, func, record, param_types, errors);
+    let unsafe_params = issue_unsafe_constructor_errors(db, func, record, param_types, errors);
 
     if !record.is_unpin() {
-        let func_name = make_rs_ident("ctor_new");
-
         let [_this, params @ ..] = param_types else {
             errors.add(anyhow!(
                 "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {:?}",
@@ -1007,10 +1016,9 @@ fn api_func_shape_for_constructor(
         for param in &mut params[..] {
             if let RsTypeKind::Reference { lifetime, .. }
             | RsTypeKind::RvalueReference { lifetime, .. } = param
+                && lifetime.is_elided()
             {
-                if lifetime.is_elided() {
-                    *lifetime = Lifetime::new("__unelided");
-                }
+                *lifetime = Lifetime::new("__unelided");
             }
         }
         // Check if there's still any elided lifetimes after the minimal transform above:
@@ -1021,9 +1029,16 @@ fn api_func_shape_for_constructor(
                 }
             }
         }
+
+        let trait_name = if unsafe_params.is_some() {
+            TraitName::UnsafeCtorNew(params.iter().cloned().collect())
+        } else {
+            TraitName::CtorNew(params.iter().cloned().collect())
+        };
+
         let impl_kind = ImplKind::Trait {
             record: record.clone(),
-            trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
+            trait_name,
             impl_for: ImplFor::T,
             format_first_param_as_self: false,
             drop_return: false,
@@ -1033,8 +1048,20 @@ fn api_func_shape_for_constructor(
             // meaning it's only usable within the current target anyway.
             always_public: true,
         };
+        return Some((make_rs_ident("ctor_new"), impl_kind));
+    }
+
+    if unsafe_params.is_some() {
+        let func_name = make_rs_ident("unsafe_from");
+        let impl_kind = ImplKind::new_trait(
+            TraitName::UnsafeFrom(Rc::from(param_types[1..].to_vec())),
+            record.clone(),
+            /* format_first_param_as_self= */ false,
+            /* force_const_reference_params= */ false,
+        );
         return Some((func_name, impl_kind));
     }
+
     match func.params.len() {
         0 => {
             errors.add(anyhow!(
@@ -1322,7 +1349,8 @@ fn generate_func_body(
 
     match &impl_kind {
         ImplKind::Trait {
-            trait_name: TraitName::Clone | TraitName::Default | TraitName::From(_),
+            trait_name:
+                TraitName::Clone | TraitName::Default | TraitName::From(_) | TraitName::UnsafeFrom(_),
             ..
         }
         | ImplKind::Struct { is_renamed_unpin_constructor: true, .. } => {
@@ -1537,6 +1565,17 @@ fn rs_type_kinds_for_func(
             let mut param_type = param.type_.clone();
             let mut infer_param_lifetimes = infer_lifetimes;
             if i == 0 && func.is_instance_method() {
+                if !func.cc_name.is_constructor() && !func.cc_name.is_destructor()
+                    && let Some(Item::Record(record)) = func.enclosing_item_id.map(|id| db.find_untyped_decl(id))
+                        && record.is_thread_safe
+                            && let CcTypeVariant::Pointer(ptr) = &mut param_type.variant {
+                                let mut new_pointee = (*ptr.pointee_type).clone();
+                                new_pointee.is_const = true;
+                                ptr.pointee_type = Rc::new(new_pointee);
+                                ptr.kind = PointerTypeKind::LValueRef;
+                                infer_param_lifetimes = true;
+                            }
+
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.
                 let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _ }) =
@@ -1629,7 +1668,7 @@ fn generate_func_safety_doc(
 
     let mut param_unsafe_reasons = String::new();
     for (ident, param_type) in param_idents.iter().zip(param_types.iter()) {
-        if let Some(reason) = db.rs_type_kind_safety(param_type.clone()).unsafe_reason() {
+        if let Some(reason) = db.rs_type_kind_safety(param_type.clone()) {
             writeln!(&mut param_unsafe_reasons, "* `{ident}`: {reason}").unwrap();
         }
     }
@@ -1758,14 +1797,17 @@ pub fn generate_function(
         quoted_return_type = quote! {};
     }
 
-    if !errors.is_empty() {
-        if let ImplKind::Trait { trait_name: TraitName::CtorNew(_), .. } = impl_kind {
-            // Generated CtorNew functions return an `impl Trait` type which can't use
-            // the `errors_as_unsatisfied_trait_bound` reporting system because
-            // the `'error` lifetime causes an error when combined with `impl Trait due to
-            // https://github.com/rust-lang/rust/issues/134804
-            errors.consolidate()?;
-        }
+    if !errors.is_empty()
+        && let ImplKind::Trait {
+            trait_name: TraitName::CtorNew(_) | TraitName::UnsafeCtorNew(_),
+            ..
+        } = impl_kind
+    {
+        // Generated CtorNew and UnsafeCtorNew functions return an `impl Trait` type which can't use
+        // the `errors_as_unsatisfied_trait_bound` reporting system because
+        // the `'error` lifetime causes an error when combined with `impl Trait due to
+        // https://github.com/rust-lang/rust/issues/134804
+        errors.consolidate()?;
     }
 
     let reportable_status: Result<(), ErrorList> = errors.consolidate();
@@ -2159,7 +2201,7 @@ pub fn generate_function(
             } else {
                 quote! {}
             };
-            if matches!(trait_name, TraitName::CtorNew(_)) {
+            if matches!(trait_name, TraitName::CtorNew(_) | TraitName::UnsafeCtorNew(_)) {
                 extra_body.extend(quote! {
                     type Error = ::ctor::Infallible;
                 });
@@ -2172,10 +2214,10 @@ pub fn generate_function(
                 assumed_lifetime_params = trait_record
                     .lifetime_inputs
                     .iter()
-                    .map(|id| make_rs_lifetime_ident(&*id))
+                    .map(|id| make_rs_lifetime_ident(id))
                     .collect();
                 trait_lifetime_params =
-                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(&*id)).collect();
+                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
             }
             let trait_record_param_tokens = if !assumed_lifetime_params.is_empty() {
                 quote! { < #( #assumed_lifetime_params ),* > }
@@ -2210,6 +2252,24 @@ pub fn generate_function(
                         }
                     }
                 }
+                TraitName::UnsafeCtorNew(params) if params.len() == 1 => {
+                    let single_param_ = format_tuple_except_singleton_replacing_by_self(
+                        db,
+                        params,
+                        Some(&self_type_for_extra),
+                    );
+                    quote! {
+                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<(#single_param_,)> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                            #extra_body
+
+                            #[inline (always)]
+                            unsafe fn ctor_new(args: (#single_param_,)) -> Self::CtorType {
+                                let (arg,) = args;
+                                unsafe { <Self as ::ctor::UnsafeCtorNew<#single_param_>>::ctor_new(arg) }
+                            }
+                        }
+                    }
+                }
                 TraitName::From(params) if reportable_status.is_ok() => {
                     let single_param_ = format_tuple_except_singleton_replacing_by_self(
                         db,
@@ -2224,6 +2284,24 @@ pub fn generate_function(
                             #[inline (always)]
                             fn ctor_new(args: #single_param_) -> Self::CtorType {
                                 <Self as From<#single_param_>>::from(args)
+                            }
+                        }
+                    }
+                }
+                TraitName::UnsafeFrom(params) if reportable_status.is_ok() => {
+                    let single_param_ = format_tuple_except_singleton_replacing_by_self(
+                        db,
+                        params,
+                        Some(&self_type_for_extra),
+                    );
+                    quote! {
+                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<#single_param_> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                            type CtorType = Self;
+                            type Error = ::ctor::Infallible;
+
+                            #[inline (always)]
+                            unsafe fn ctor_new(args: #single_param_) -> Self::CtorType {
+                                unsafe { <Self as ::ctor::UnsafeFrom<#single_param_>>::unsafe_from(args) }
                             }
                         }
                     }
@@ -2263,7 +2341,7 @@ pub fn generate_function(
                 // needed for better readability.
                 quote! { #record_name }
             } else {
-                let t = db.rs_type_kind((&*trait_record).into())?;
+                let t = db.rs_type_kind(trait_record.into())?;
                 t.to_token_stream(db)
             };
             let mut self_type = db.rs_type_kind(trait_record.into())?;
@@ -2275,15 +2353,14 @@ pub fn generate_function(
                 ImplFor::T => (
                     trait_name_to_token_stream_removing_trait_record(
                         db,
-                        &trait_name,
+                        trait_name,
                         Some(&self_type),
                     ),
                     qualified_record_name,
                 ),
-                ImplFor::RefT => (
-                    trait_name_to_token_stream(db, &trait_name),
-                    param_types[0].to_token_stream(db),
-                ),
+                ImplFor::RefT => {
+                    (trait_name_to_token_stream(db, trait_name), param_types[0].to_token_stream(db))
+                }
             };
             let func_body = create_func_body()?;
             api_func = quote! {
@@ -2306,7 +2383,7 @@ pub fn generate_function(
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: {
-                    let trait_name_tokens = trait_name_to_token_stream(db, &trait_name);
+                    let trait_name_tokens = trait_name_to_token_stream(db, trait_name);
                     syn::parse2(quote! { #trait_name_tokens :: #func_name }).unwrap()
                 },
             };
@@ -2556,11 +2633,12 @@ fn function_signature(
     let parent_lifetimes = collect_parent_lifetime_bindings(db, func)?;
 
     let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types, &func.lifetime_inputs)
+        .into_iter()
         .filter(|lifetime| !parent_lifetimes.contains(lifetime.0.as_ref()))
         .collect();
 
     let mut lifetimes_including_impl: Vec<Lifetime> =
-        unique_lifetimes(&*param_types, &func.lifetime_inputs).collect();
+        unique_lifetimes(&*param_types, &func.lifetime_inputs);
 
     let mut lifetime_inputs_and_parents = func.lifetime_inputs.clone();
     for lifetime in parent_lifetimes {
@@ -2568,6 +2646,7 @@ fn function_signature(
     }
     let all_lifetimes: Vec<Lifetime> =
         unique_lifetimes(&*param_types, &lifetime_inputs_and_parents)
+            .into_iter()
             .filter(|lifetime| !lifetime.is_elided())
             .collect();
 
@@ -2614,7 +2693,12 @@ fn function_signature(
             }
         }
         Some(
-            TraitName::Clone | TraitName::CtorNew(..) | TraitName::Default | TraitName::From(..),
+            TraitName::Clone
+            | TraitName::CtorNew(..)
+            | TraitName::Default
+            | TraitName::From(..)
+            | TraitName::UnsafeCtorNew(..)
+            | TraitName::UnsafeFrom(..),
         ) => {
             move_self_from_out_param_to_return_value(
                 db,
@@ -2628,7 +2712,13 @@ fn function_signature(
             quoted_return_type = Some(quote! { Self });
 
             // CtorNew and From group parameters into a tuple.
-            if let Some(TraitName::CtorNew(args_type) | TraitName::From(args_type)) = trait_name {
+            if let Some(
+                TraitName::CtorNew(args_type)
+                | TraitName::From(args_type)
+                | TraitName::UnsafeCtorNew(args_type)
+                | TraitName::UnsafeFrom(args_type),
+            ) = trait_name
+            {
                 let args_type = if let Some(self_type) = self_type.as_ref() {
                     format_tuple_except_singleton_replacing_by_self(db, args_type, Some(self_type))
                 } else {

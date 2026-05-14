@@ -831,10 +831,6 @@ std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
 
 bool IsKnownAttr(const clang::Attr& attr) {
   return clang::isa<clang::AlignedAttr>(attr) ||
-         clang::isa<clang::CoroAwaitElidableAttr>(attr) ||
-         clang::isa<clang::CoroLifetimeBoundAttr>(attr) ||
-         clang::isa<clang::CoroOnlyDestroyWhenCompleteAttr>(attr) ||
-         clang::isa<clang::CoroReturnTypeAttr>(attr) ||
          clang::isa<clang::FinalAttr>(attr) ||
          clang::isa<clang::OwnerAttr>(attr) ||
          clang::isa<clang::PointerAttr>(attr) ||
@@ -868,8 +864,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (clang::isa<clang::ClassTemplatePartialSpecializationDecl>(record_decl)) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        FormattedError::Static(
-            "Partially-specialized class templates are not supported"));
+        {FormattedError::Static(
+            "Partially-specialized class templates are not supported")});
   }
 
   if (record_decl->isInvalidDecl()) {
@@ -890,8 +886,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
               clang::VisibilityAttr::VisibilityType::Hidden) {
             attr_error_item = ictx_.ImportUnsupportedItem(
                 *record_decl, std::nullopt,
-                FormattedError::Static("Records from the standard library with "
-                                       "hidden visibility are not supported"));
+                {FormattedError::Static(
+                    "Records from the standard library with "
+                    "hidden visibility are not supported")});
           }
           return true;
         } else if (auto* unused_attr =
@@ -908,7 +905,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(unknown_attr).status()));
+        {FormattedError::FromStatus(std::move(unknown_attr).status())});
   }
   if (attr_error_item.has_value()) {
     return attr_error_item;
@@ -922,12 +919,36 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::optional<BridgeType> bridge_type =
       GetBridgeTypeAnnotation(ictx_, *record_decl);
 
-  absl::StatusOr<std::optional<std::string>> owned_ptr_type =
-      GetAnnotationWithStringArg(*record_decl, "crubit_owned_pointee");
-  if (!owned_ptr_type.ok()) {
+  absl::StatusOr<std::optional<std::vector<std::string>>> args =
+      GetAnnotationWithStringArgs(*record_decl, "crubit_owned_pointee");
+  if (!args.ok()) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(owned_ptr_type).status()));
+        {FormattedError::FromStatus(std::move(args).status())});
+  }
+
+  std::optional<OwnedPtrConfig> owned_ptr_config;
+
+  if (args->has_value()) {
+    const auto& args_vec = **args;
+    if (args_vec.empty() || args_vec.size() > 2) {
+      return ictx_.ImportUnsupportedItem(
+          *record_decl, std::nullopt,
+          {FormattedError::Static(
+              "crubit_owned_pointee takes 1 or 2 arguments")});
+    }
+
+    std::string owned_ptr_type = args_vec[0];
+    std::string drop_impl = "DropImpl";
+
+    if (args_vec.size() == 2) {
+      drop_impl = args_vec[1];
+    }
+
+    owned_ptr_config = OwnedPtrConfig{
+        .owned_ptr_type = std::move(owned_ptr_type),
+        .drop_impl = std::move(drop_impl),
+    };
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
@@ -945,7 +966,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         UnsupportedItem::Path{
             .ident = Identifier(rs_name),
             .enclosing_item_id = std::move(enclosing_item_id)},
-        error);
+        {std::move(error)});
   };
 
   absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
@@ -966,7 +987,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     if (!status_or_cc_name.ok()) {
       return ictx_.ImportUnsupportedItem(
           *record_decl, std::nullopt,
-          FormattedError::FromStatus(std::move(status_or_cc_name).status()));
+          {FormattedError::FromStatus(std::move(status_or_cc_name).status())});
     }
     cc_name = *std::move(status_or_cc_name);
 
@@ -977,7 +998,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     if (!status_or_ts_kind.ok()) {
       return ictx_.ImportUnsupportedItem(
           *record_decl, std::nullopt,
-          FormattedError::FromStatus(std::move(status_or_ts_kind).status()));
+          {FormattedError::FromStatus(std::move(status_or_ts_kind).status())});
     }
     ts.kind = *std::move(status_or_ts_kind);
 
@@ -1019,8 +1040,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       if (!alias_name.ok()) {
         return ictx_.ImportUnsupportedItem(
             *record_decl, std::nullopt,
-            FormattedError::PrefixedStrCat("preferred_name is not supported",
-                                           alias_name.status().message()));
+            {FormattedError::PrefixedStrCat("preferred_name is not supported",
+                                            alias_name.status().message())});
       }
       owning_target = ictx_.GetOwningTarget(alias_decl);
       rs_name = alias_name->rs_identifier().Ident();
@@ -1031,8 +1052,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       if (!alias_enclosing_item_id.ok()) {
         return ictx_.ImportUnsupportedItem(
             *record_decl, std::nullopt,
-            FormattedError::FromStatus(
-                std::move(alias_enclosing_item_id).status()));
+            {FormattedError::FromStatus(
+                std::move(alias_enclosing_item_id).status())});
       }
       enclosing_item_id = *std::move(alias_enclosing_item_id);
     }
@@ -1042,8 +1063,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       if (!extracted_callable->ok()) {
         return ictx_.ImportUnsupportedItem(
             *record_decl, std::nullopt,
-            FormattedError::FromStatus(
-                std::move(extracted_callable)->status()));
+            {FormattedError::FromStatus(
+                std::move(extracted_callable)->status())});
       }
       bridge_type = **std::move(extracted_callable);
     }
@@ -1054,8 +1075,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       if (!builtin_bridge_type.ok()) {
         return ictx_.ImportUnsupportedItem(
             *record_decl, std::nullopt,
-            FormattedError::FromStatus(
-                std::move(builtin_bridge_type).status()));
+            {FormattedError::FromStatus(
+                std::move(builtin_bridge_type).status())});
       }
       bridge_type = *std::move(builtin_bridge_type);
     }
@@ -1076,8 +1097,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     if (!record_name.ok()) {
       return ictx_.ImportUnsupportedItem(
           *record_decl, std::nullopt,
-          FormattedError::PrefixedStrCat("Record name is not supported",
-                                         record_name.status().message()));
+          {FormattedError::PrefixedStrCat("Record name is not supported",
+                                          record_name.status().message())});
     }
     rs_name = record_name->rs_identifier().Ident();
     cc_name = record_name->cc_identifier.Ident();
@@ -1091,8 +1112,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     if (!real_enclosing_item_id.ok()) {
       return ictx_.ImportUnsupportedItem(
           *record_decl, std::nullopt,
-          FormattedError::FromStatus(
-              std::move(real_enclosing_item_id).status()));
+          {FormattedError::FromStatus(
+              std::move(real_enclosing_item_id).status())});
     }
     enclosing_item_id = *std::move(real_enclosing_item_id);
   }
@@ -1156,6 +1177,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(trait_derives).status()));
   }
 
+  if (*is_thread_safe) {
+    trait_derives->send = true;
+    trait_derives->sync = true;
+  }
+
   absl::StatusOr<SafetyAnnotation> safety_annotation =
       GetSafetyAnnotation(*record_decl);
   if (!safety_annotation.ok()) {
@@ -1198,7 +1224,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .unknown_attr = std::move(*unknown_attr),
       .doc_comment = std::move(doc_comment),
       .bridge_type = std::move(bridge_type),
-      .owned_ptr_type = *std::move(owned_ptr_type),
+      .owned_ptr_config = std::move(owned_ptr_config),
       .source_loc = ictx_.ConvertSourceLocation(source_loc, nullptr),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),

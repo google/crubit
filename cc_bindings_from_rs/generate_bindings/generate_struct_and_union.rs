@@ -77,7 +77,11 @@ pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
     }
 
     let field_def_id = fields[0].did;
-    let field_ty = crate::normalize_ty(tcx, tcx.type_of(field_def_id).instantiate_identity());
+    let field_ty = crate::normalize_ty(
+        tcx,
+        tcx.param_env(field_def_id),
+        tcx.type_of(field_def_id).instantiate_identity(),
+    );
 
     Ok(field_ty)
 }
@@ -329,6 +333,7 @@ pub(crate) fn generate_associated_item<'tcx>(
                     #[rustversion::since(2026-04-19)]
                     let trait_ref = crate::normalize_ty(
                         tcx,
+                        tcx.param_env(impl_id),
                         tcx.impl_trait_header(impl_id).trait_ref.instantiate_identity(),
                     );
                     let trait_rs_name = db
@@ -337,8 +342,11 @@ pub(crate) fn generate_associated_item<'tcx>(
                         .format_for_rs();
                     // The first argument of a trait ref is the self type.
                     let self_ty = trait_ref.args.type_at(0);
-                    let alias_type =
-                        crate::normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity());
+                    let alias_type = crate::normalize_ty(
+                        tcx,
+                        tcx.param_env(def_id),
+                        tcx.type_of(def_id).instantiate_identity(),
+                    );
                     let rs_type_spelling = format!("<{} as {}>::{}", self_ty, trait_rs_name, name);
                     crate::create_type_alias_with_rs_type(
                         db,
@@ -378,7 +386,11 @@ fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::Tr
     #[rustversion::all(before(1.95), before(2025-10-17))]
     let middle_trait_header =
         tcx.impl_trait_header(impl_id).expect("DefId for a trait impl lacked a trait header");
-    crate::normalize_ty(tcx, middle_trait_header.trait_ref.instantiate_identity())
+    crate::normalize_ty(
+        tcx,
+        tcx.param_env(impl_id),
+        middle_trait_header.trait_ref.instantiate_identity(),
+    )
 }
 
 pub fn from_trait_impls_by_argument<'tcx>(
@@ -1003,8 +1015,10 @@ pub fn generate_adt_core<'tcx>(
     #[rustversion::before(2026-04-19)]
     let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
     #[rustversion::since(2026-04-19)]
-    let self_ty =
-        erase_regions(tcx, crate::normalize_ty(tcx, tcx.type_of(def_id).instantiate_identity()));
+    let self_ty = erase_regions(
+        tcx,
+        crate::normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
+    );
     assert!(self_ty.is_adt());
     assert!(db.symbol_canonical_name(def_id).is_some(), "Caller should verify");
 

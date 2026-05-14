@@ -121,6 +121,10 @@ fn decl_lifetime_arity_impl(
                 | ir::TemplateSpecialization {
                     kind: ir::TemplateSpecializationKind::AbslSpan { .. },
                     ..
+                }
+                | ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::C9Co { .. },
+                    ..
                 },
             ) => Ok(1),
             _ => record_lifetime_arity(db, rc),

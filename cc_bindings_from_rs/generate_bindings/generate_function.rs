@@ -92,6 +92,7 @@ fn thunk_name(
                 .map(|impl_id| {
                     let trait_id = crate::normalize_ty(
                         tcx,
+                        tcx.param_env(impl_id),
                         tcx.impl_trait_ref(impl_id).instantiate_identity(),
                     )
                     .def_id;
@@ -374,7 +375,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 let core = db.generate_adt_core(adt_def.did())?;
                 // Note: the error here is an ApiSnippets which is not propagated.
                 db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
-                    anyhow!("Can't return a type by value inside a compound data type without a move constructor")
+                    anyhow!("Can't return type `{ty}` by value inside a compound data type without a move constructor")
                 })?;
             }
         }
@@ -431,7 +432,11 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
-    return crate::normalize_ty(tcx, tcx.type_of(impl_id).instantiate_identity());
+    return crate::normalize_ty(
+        tcx,
+        tcx.param_env(impl_id),
+        tcx.type_of(impl_id).instantiate_identity(),
+    );
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
@@ -767,6 +772,24 @@ pub fn generate_function<'tcx>(
     let sig_mid = {
         let generic_args = db.get_generic_args(def_id)?;
         let early_bound_fn_sig = tcx.fn_sig(def_id).instantiate(tcx, generic_args);
+        let is_trait_method = tcx.trait_impl_of_assoc(def_id).is_some();
+        let early_bound_fn_sig = if is_trait_method {
+            let fn_sig = query_compiler::try_normalize(
+                tcx,
+                ty::PseudoCanonicalInput {
+                    typing_env: ty::TypingEnv::fully_monomorphized(),
+                    value: crate::normalize_ty(tcx, tcx.param_env(def_id), early_bound_fn_sig),
+                },
+            )
+            .map_err(|_| anyhow!("Failed to normalize fn sig for {}", tcx.def_path_str(def_id)))?;
+            // We need this to line up the types going into `liberate_and_deanonymize_late_bound_regions`
+            // which expects a `ty::Unnormalized` input.
+            #[rustversion::since(2026-04-19)]
+            let fn_sig = ty::Unnormalized::new(fn_sig);
+            fn_sig
+        } else {
+            early_bound_fn_sig
+        };
         liberate_and_deanonymize_late_bound_regions(tcx, early_bound_fn_sig, def_id)
     };
     check_fn_sig(&sig_mid)?;
@@ -774,7 +797,9 @@ pub fn generate_function<'tcx>(
     let trait_ref = tcx
         .impl_of_assoc(def_id)
         .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
-        .map(|trait_ref| crate::normalize_ty(tcx, trait_ref.instantiate_identity()));
+        .map(|trait_ref| {
+            crate::normalize_ty(tcx, tcx.param_env(def_id), trait_ref.instantiate_identity())
+        });
     let function_kind = function_kind(tcx, def_id, &sig_mid)?;
     let self_ty = function_kind.self_ty();
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.

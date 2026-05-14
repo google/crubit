@@ -11,7 +11,7 @@ use code_gen_utils::make_rs_ident;
 use crubit_feature::CrubitFeature;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::cell::OnceCell;
 use std::cmp::Ordering;
 use std::collections::hash_map::{Entry, HashMap};
@@ -1165,6 +1165,13 @@ pub struct TraitDerives {
     pub custom: Vec<Rc<str>>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
+#[serde(deny_unknown_fields)]
+pub struct OwnedPtrConfig {
+    pub owned_ptr_type: Rc<str>,
+    pub drop_impl: Rc<str>,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Record {
@@ -1191,7 +1198,8 @@ pub struct Record {
     pub unknown_attr: Option<Rc<str>>,
     pub doc_comment: Option<Rc<str>>,
     pub bridge_type: Option<BridgeType>,
-    pub owned_ptr_type: Option<Rc<str>>,
+    #[serde(default)]
+    pub owned_ptr_config: Option<OwnedPtrConfig>,
     pub source_loc: Rc<str>,
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,
@@ -1353,6 +1361,11 @@ impl Record {
     }
 
     pub fn should_derive_copy(&self) -> bool {
+        // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>,
+        // which prevents them from deriving Copy.
+        if self.is_thread_safe {
+            return false;
+        }
         match self.trait_derives.copy {
             TraitImplPolarity::Positive => true,
             TraitImplPolarity::Negative => false,

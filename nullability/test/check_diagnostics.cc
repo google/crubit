@@ -14,7 +14,7 @@
 
 #include "nullability/pointer_nullability_diagnosis.h"
 #include "nullability/pragma.h"
-#include "nullability/test/test_headers.h"
+#include "nullability/test/mock_headers.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -26,7 +26,6 @@
 #include "clang/Testing/TestAST.h"
 #include "clang/Tooling/Tooling.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -145,9 +144,9 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
       "check_diagnostics_preamble.h",
       "-I.",
   };
-  for (const auto &Entry :
-       llvm::ArrayRef(test_headers_create(), test_headers_size()))
-    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  auto Headers = clang::tidy::nullability::test::getMockHeaders();
+  for (const auto& Entry : Headers)
+    Inputs.ExtraFiles.try_emplace(Entry.first, Entry.second);
   NullabilityPragmas Pragmas;
   Inputs.MakeAction = [&] {
     struct Action : public SyntaxOnlyAction {

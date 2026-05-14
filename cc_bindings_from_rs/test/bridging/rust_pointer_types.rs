@@ -43,7 +43,7 @@ mod type_converters {
     use super::*;
     use std::ffi::{c_int, c_void};
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub unsafe extern "C" fn crubit_test_rust_owned_struct_to_cpp_owned_pointer(
         rs_in: *const c_void,
         cpp_out: *mut *mut c_void,
@@ -54,7 +54,7 @@ mod type_converters {
         }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub unsafe extern "C" fn crubit_test_cpp_owned_pointer_to_rust_owned_struct(
         cpp_in: *mut c_void,
         rs_out: *mut c_void,
@@ -65,7 +65,7 @@ mod type_converters {
         }
     }
 
-    extern "C" {
+    unsafe extern "C" {
         pub(super) fn crubit_test_cpp_type_get_x(cpp_type: *const c_void) -> c_int;
     }
 }

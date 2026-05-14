@@ -159,3 +159,32 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_test_cc_library(
+    name = "thread_safe",
+    hdrs = ["thread_safe.h"],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+crubit_rust_test(
+    name = "thread_safe_test",
+    srcs = ["thread_safe_test.rs"],
+    cc_deps = [
+        ":thread_safe",
+    ],
+    deps = [
+        "//support:ctor",
+        "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
+    ],
+)
+
+golden_test(
+    name = "thread_safe_golden_test",
+    basename = "thread_safe",
+    cc_library = "thread_safe",
+    golden_cc = "thread_safe_api_impl.cc",
+    golden_rs = "thread_safe_rs_api.rs",
+)

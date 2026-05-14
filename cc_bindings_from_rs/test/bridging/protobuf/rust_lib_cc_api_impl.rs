@@ -92,6 +92,10 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
         ::rust_lib_golden::FooService::update_request_stats(__self, updated_stats)
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: ::foo_proto::FooEnum) -> () {
+    unsafe { ::rust_lib_golden::FooService::enum_in_signature(_e) }
+}
 unsafe extern "C" {
     fn proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_cpp_to_rust_converter(
         cpp_in: *const core::ffi::c_void,

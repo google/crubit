@@ -356,7 +356,7 @@ pub mod internal {
 
     fn match_tree(actual_token: &TokenTree, pattern_token: &TokenTree) -> MatchInfo {
         match (actual_token, pattern_token) {
-            (TokenTree::Group(ref actual_group), TokenTree::Group(ref pattern_group)) => {
+            (TokenTree::Group(actual_group), TokenTree::Group(pattern_group)) => {
                 if actual_group.delimiter() != pattern_group.delimiter() {
                     return MatchInfo::Mismatch(Mismatch {
                         match_length: 0,

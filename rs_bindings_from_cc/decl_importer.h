@@ -108,15 +108,27 @@ class ImportContext {
   // generation time.
   virtual IR::Item HardError(const clang::Decl& decl, FormattedError error) = 0;
 
-  // Imports an unsupported function with a vector of formatted error messages.
+  // Imports an unsupported item with a vector of formatted error messages.
+  //
+  // `is_hard_error` determines the effect of the error:
+  // If true, a failure to bind this item is treated as a fatal error that fails
+  // the entire binding generation process (e.g. due to
+  // `[[crubit::must_bind]]`). If false, the error is instead emitted as a
+  // comment in the generated Rust source, allowing the rest of the target's
+  // bindings to be generated.
   virtual IR::Item ImportUnsupportedItem(
       const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
-      std::vector<FormattedError> error) = 0;
+      std::vector<FormattedError> errors, bool is_hard_error) = 0;
 
-  // Imports an unsupported item with a single formatted error message.
-  virtual IR::Item ImportUnsupportedItem(
-      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
-      FormattedError error) = 0;
+  // Convenience wrapper for `ImportUnsupportedItem` with `is_hard_error=false`.
+  // This results in a diagnostic comment in the generated Rust code rather than
+  // a build failure.
+  IR::Item ImportUnsupportedItem(const clang::Decl& decl,
+                                 std::optional<UnsupportedItem::Path> path,
+                                 std::vector<FormattedError> errors) {
+    return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
+                                 /*is_hard_error=*/false);
+  }
 
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.

@@ -121,6 +121,7 @@ NON_BUILDABLE_TEST = [
     # We can't support additional Rust srcs so we can't run the test.
     "composable_bridging",
     "composable_bridging_template_type",
+    "bridge_wrapping_alias",
 ]
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]

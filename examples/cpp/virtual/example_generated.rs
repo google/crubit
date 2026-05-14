@@ -158,14 +158,6 @@ pub mod rust_derived {
     }
 }
 
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, false>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, true>` could not be bound
-//   template instantiation is not yet supported
-
 // error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
 //   incomplete type
 
@@ -178,27 +170,11 @@ pub mod rust_derived {
 // error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
 //   incomplete type
 
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'char8_t': Unsupported builtin type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'char8_t': Unsupported builtin type
-
 // error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
 //   incomplete type
 
 // error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
 //   incomplete type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'wchar_t': Unsupported builtin type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'wchar_t': Unsupported builtin type
 
 // error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
 //   incomplete type

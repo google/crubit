@@ -1201,20 +1201,6 @@ IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
                                /*is_hard_error=*/true);
 }
 
-IR::Item Importer::ImportUnsupportedItem(
-    const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
-    std::vector<FormattedError> errors) {
-  return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
-                               /*is_hard_error=*/false);
-}
-
-IR::Item Importer::ImportUnsupportedItem(
-    const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
-    FormattedError error) {
-  return ImportUnsupportedItem(decl, std::move(path),
-                               std::vector<FormattedError>({std::move(error)}),
-                               /*is_hard_error=*/false);
-}
 
 IR::Item Importer::ImportUnsupportedItem(
     const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,

@@ -13,6 +13,8 @@
 
 Thing* CRUBIT_OWNED_POINTER MakeOwnedThing(int value);
 
+CustomThing* CRUBIT_OWNED_POINTER MakeCustomOwnedThing(int value);
+
 Thing* MakeThing(int value);
 
 int ThingToValue(Thing* CRUBIT_OWNED_POINTER thingptr);

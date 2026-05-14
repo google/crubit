@@ -294,7 +294,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -313,7 +313,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -560,7 +560,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithLifetimeboundRefCtor<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -582,7 +582,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithLifetimeboundRefCtor<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -683,7 +683,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -705,7 +705,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -1035,7 +1035,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithRefCtorAndMemberFunction<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -1057,7 +1057,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithRefCtorAndMemberFunction<'__implicit>
 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>
-        + use<'__param_0, '__param_0_0, '__implicit>;
+        + use<'__implicit, '__param_0, '__param_0_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
@@ -1187,8 +1187,8 @@ mod detail {
             __param_0: &'__param_0 crate::DropClassWithLifetimeboundMemberFunction,
         );
         pub(crate) unsafe fn __rust_thunk___ZN40DropClassWithLifetimeboundMemberFunctionaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::DropClassWithLifetimeboundMemberFunction>,
             __param_0: &'__param_0 crate::DropClassWithLifetimeboundMemberFunction,
@@ -1216,10 +1216,10 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionaSERKS_<
-            '__this,
-            '__this_0,
             '__param_0,
             '__param_0_0,
+            '__this,
+            '__this_0,
         >(
             __this: ::core::pin::Pin<
                 &'__this_0 mut crate::DropClassWithLifetimeboundRefMemberFunction<'__this>,
@@ -1259,8 +1259,8 @@ mod detail {
             __param_0: &'__param_0 crate::DropStructWithLifetimeboundCtor,
         );
         pub(crate) unsafe fn __rust_thunk___ZN31DropStructWithLifetimeboundCtoraSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::DropStructWithLifetimeboundCtor>,
             __param_0: &'__param_0 crate::DropStructWithLifetimeboundCtor,
@@ -1281,10 +1281,10 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN34DropStructWithLifetimeboundRefCtoraSERKS_<
-            '__this,
-            '__this_0,
             '__param_0,
             '__param_0_0,
+            '__this,
+            '__this_0,
         >(
             __this: ::core::pin::Pin<
                 &'__this_0 mut crate::DropStructWithLifetimeboundRefCtor<'__this>,
@@ -1314,10 +1314,10 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionaSERKS_<
-            '__this,
-            '__this_0,
             '__param_0,
             '__param_0_0,
+            '__this,
+            '__this_0,
         >(
             __this: ::core::pin::Pin<
                 &'__this_0 mut crate::DropStructWithRefCtorAndRefMemberFunction<'__this>,
@@ -1355,8 +1355,8 @@ mod detail {
             __param_0: &'__param_0 crate::DropStructWithCtorAndMemberFunction,
         );
         pub(crate) unsafe fn __rust_thunk___ZN35DropStructWithCtorAndMemberFunctionaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::DropStructWithCtorAndMemberFunction>,
             __param_0: &'__param_0 crate::DropStructWithCtorAndMemberFunction,
@@ -1380,8 +1380,8 @@ mod detail {
             __param_0: &'__param_0 crate::DropStructWithCtorAndRefMemberFunction,
         );
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionaSERKS_<
-            '__this,
             '__param_0,
+            '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::DropStructWithCtorAndRefMemberFunction>,
             __param_0: &'__param_0 crate::DropStructWithCtorAndRefMemberFunction,
@@ -1410,10 +1410,10 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionaSERKS_<
-            '__this,
-            '__this_0,
             '__param_0,
             '__param_0_0,
+            '__this,
+            '__this_0,
         >(
             __this: ::core::pin::Pin<
                 &'__this_0 mut crate::DropStructWithRefCtorAndMemberFunction<'__this>,

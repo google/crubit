@@ -25,15 +25,15 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
   if (!enumerator_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        FormattedError::PrefixedStrCat("Enumerator name is not supported",
-                                       enumerator_name.status().message()));
+        {FormattedError::PrefixedStrCat("Enumerator name is not supported",
+                                        enumerator_name.status().message())});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_constant_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
   }
 
   const clang::EnumDecl* enum_decl =
@@ -44,7 +44,7 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
   if (cpp_type.isNull()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        FormattedError::Static("Enumerator's enum has no underlying type"));
+        {FormattedError::Static("Enumerator's enum has no underlying type")});
   }
 
   absl::StatusOr<CcType> type =
@@ -54,7 +54,7 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
   if (!type.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(type.status())));
+        {FormattedError::FromStatus(std::move(type.status()))});
   }
 
   std::optional<std::string> deprecated;
@@ -70,7 +70,7 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
+        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_constant_decl);
@@ -79,7 +79,7 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
   if (!value.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(value.status())));
+        {FormattedError::FromStatus(std::move(value.status()))});
   }
   return Constant{
       .value = std::move(*value),

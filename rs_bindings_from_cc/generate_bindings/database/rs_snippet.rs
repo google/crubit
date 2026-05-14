@@ -16,6 +16,7 @@ use ir::*;
 use proc_macro2::{Delimiter, Group, Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::HashSet;
+use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
 
@@ -67,35 +68,19 @@ impl Mutability {
     }
 }
 
-/// Whether a type or function is safe.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum Safety {
-    Safe,
-    Unsafe(
-        /// Reason why it's unsafe.
-        Rc<str>,
-    ),
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub struct UnsafeReason(pub Rc<str>);
+
+impl Display for UnsafeReason {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
 }
 
-impl Safety {
-    pub fn is_safe(&self) -> bool {
-        matches!(self, Self::Safe)
-    }
-
-    pub fn is_unsafe(&self) -> bool {
-        matches!(self, Self::Unsafe(_))
-    }
-
-    pub fn unsafe_because(s: impl Into<Rc<str>>) -> Self {
-        Self::Unsafe(s.into())
-    }
-
-    pub fn unsafe_reason(&self) -> Option<Rc<str>> {
-        if let Self::Unsafe(reason) = self {
-            Some(reason.clone())
-        } else {
-            None
-        }
+impl Deref for UnsafeReason {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -191,7 +176,7 @@ impl ToTokens for CratePath {
 pub fn unique_lifetimes<'a>(
     types: impl IntoIterator<Item = &'a RsTypeKind> + 'a,
     assumed_inputs: &Vec<Rc<str>>,
-) -> impl Iterator<Item = Lifetime> + 'a {
+) -> Vec<Lifetime> {
     let mut unordered_lifetimes = HashSet::new();
     let mut saved_assumed_inputs: Vec<Lifetime> = Vec::new();
     for lt in assumed_inputs {
@@ -200,11 +185,14 @@ pub fn unique_lifetimes<'a>(
             saved_assumed_inputs.push(rs_lt);
         }
     }
-    types
+    let mut all_lifetimes: Vec<Lifetime> = types
         .into_iter()
         .flat_map(|ty| ty.lifetimes())
         .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
         .chain(saved_assumed_inputs)
+        .collect();
+    all_lifetimes.sort_by(|a, b| a.0.cmp(&b.0));
+    all_lifetimes
 }
 
 pub fn format_generic_params<'a, T: ToTokens>(
@@ -244,6 +232,11 @@ pub fn format_generic_params_replacing_by_self<'db, 'a>(
 // Otherwise, these functions should be moved into a separate module.
 
 pub fn should_derive_clone(record: &Record) -> bool {
+    // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>,
+    // which prevents them from deriving Clone.
+    if record.is_thread_safe {
+        return false;
+    }
     match record.trait_derives.clone {
         TraitImplPolarity::Positive => true,
         TraitImplPolarity::Negative => false,
@@ -660,8 +653,10 @@ pub enum BridgeRsTypeKind {
     Callable(Rc<Callable>),
     /// c9::Co<T>
     C9Co {
+        // TODO(b/489098131): Remove has_reference_param after assume_lifetimes is supported.
         has_reference_param: bool,
         result_type: Rc<RsTypeKind>,
+        lifetime: Option<Lifetime>,
     },
 }
 
@@ -774,7 +769,7 @@ fn new_c9_co_record(
     options: &LifetimeOptions,
     record: &Record,
     template_args: &Option<Rc<[CcType]>>,
-    _lifetimes: &[Lifetime],
+    lifetimes: &[Lifetime],
     db: &BindingsGenerator,
 ) -> Result<Option<BridgeRsTypeKind>> {
     let Some(TemplateSpecialization {
@@ -797,9 +792,19 @@ fn new_c9_co_record(
               {desc}"
         ));
     };
+    let lifetime = if options.assume_lifetimes {
+        if lifetimes.is_empty() {
+            Some(Lifetime::new("static"))
+        } else {
+            Some(lifetimes[0].clone())
+        }
+    } else {
+        None
+    };
     Ok(Some(BridgeRsTypeKind::C9Co {
         has_reference_param: options.have_reference_param,
         result_type: Rc::new(arg_type_kind),
+        lifetime,
     }))
 }
 
@@ -863,9 +868,9 @@ impl RsTypeKind {
             return Ok(underlying_type);
         }
         let crate_path = Rc::new(CratePath::new(
-            &ir,
+            ir,
             db.namespace_qualifier(&type_alias),
-            rs_imported_crate_name(&type_alias.owning_target, &ir),
+            rs_imported_crate_name(&type_alias.owning_target, ir),
         ));
         Ok(RsTypeKind::TypeAlias {
             type_alias,
@@ -907,7 +912,7 @@ impl RsTypeKind {
                 lifetimes,
                 in_cc_std,
             )?,
-            owned_ptr_type: record.owned_ptr_type.clone(),
+            owned_ptr_type: record.owned_ptr_config.as_ref().map(|cfg| cfg.owned_ptr_type.clone()),
             record,
             crate_path,
             lifetimes: lifetimes.to_vec(),
@@ -1213,7 +1218,10 @@ impl RsTypeKind {
     /// it can't.
     pub fn check_by_value(&self) -> Result<()> {
         match self.unalias() {
-            RsTypeKind::Error { error, .. } => Err(error.clone()),
+            RsTypeKind::Error { error, symbol, .. } => {
+                let desc = error.to_string().replace("\n", "\n  ");
+                bail!("Cannot use an error type `{symbol}` by value:\n  {desc}")
+            }
             RsTypeKind::Record { record, .. } => record.check_by_value(),
             RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
                 bail!(
@@ -1511,7 +1519,7 @@ impl RsTypeKind {
             )
         };
 
-        let owned_ptr_type = record.owned_ptr_type.as_ref().expect(
+        let owned_ptr_type = record.owned_ptr_config.as_ref().map(|cfg| cfg.owned_ptr_type.as_ref()).expect(
             "CRUBIT_OWNED_POINTER annotated pointers should point to a struct with an associated CRUBIT_OWNED_POINTEE",
         );
 
@@ -1572,7 +1580,7 @@ impl RsTypeKind {
                 {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
                 }
-                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe()) {
+                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_some()) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {
@@ -1846,7 +1854,7 @@ impl RsTypeKind {
                 if let Some(return_frag) = return_type.format_as_return_type_fragment(db, None) {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
                 }
-                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe()) {
+                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_some()) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {
@@ -1868,7 +1876,7 @@ impl RsTypeKind {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(&db);
                 }
-                let arity = (db.codegen_functions().decl_lifetime_arity)(&*db, record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
+                let arity = (db.codegen_functions().decl_lifetime_arity)(&db, record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
                 if arity == 0 || lifetimes.len() == arity || record.is_raw_string_view() {
                     // Use the safe projection.
                     let lts = if lifetimes.is_empty() {
@@ -1963,7 +1971,7 @@ impl RsTypeKind {
                         let callable_spelling = callable.dyn_fn_spelling(&db);
                         quote! { ::alloc::boxed::Box<#callable_spelling> }
                     }
-                    BridgeRsTypeKind::C9Co { has_reference_param, result_type, .. } => {
+                    BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime, .. } => {
                         let result_type_tokens = if result_type.is_void() {
                             quote! { () }
                         } else {
@@ -1971,9 +1979,10 @@ impl RsTypeKind {
                         };
                         // When there are reference parameters, the coroutine must finish before they are
                         // invalidated (http://shortn/_XPma06AwZh).
-                        match has_reference_param {
-                            false => quote! { ::co::Co<'static, #result_type_tokens> },
-                            true => quote! { ::co::Co<'_, #result_type_tokens> },
+                        match (lifetime, has_reference_param) {
+                            (Some(lt), _) => quote! { ::co::Co<#lt, #result_type_tokens> },
+                            (_, false) => quote! { ::co::Co<'static, #result_type_tokens> },
+                            (_, true) => quote! { ::co::Co<'_, #result_type_tokens> },
                         }
                     }
                 }

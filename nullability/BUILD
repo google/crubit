@@ -211,7 +211,6 @@ cc_test(
     deps = [
         ":pragma",
         ":type_nullability",
-        "//nullability/test:test_headers",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
@@ -255,21 +254,6 @@ cc_test(
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "proto_matchers",
-    testonly = 1,
-    srcs = ["proto_matchers.cc"],
-    hdrs = ["proto_matchers.h"],
-    visibility = [":__subpackages__"],
-    deps = [
-        "//third_party/protobuf",
-        "@abseil-cpp//absl/base:nullability",
-        "@llvm-project//llvm:Support",
-        "@llvm-project//third-party/unittest:gmock",
-        "@llvm-project//third-party/unittest:gtest",
     ],
 )
 

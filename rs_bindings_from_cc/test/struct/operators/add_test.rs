@@ -51,7 +51,7 @@ fn test_add_returns_void() {
 #[gtest]
 fn test_add_nontrivial_by_value() {
     let s1 = emplace!(ctor::ctor!(AddableNontrivialByValue { i: 11 }));
-    let s2 = emplace!(ctor::ctor!(AddableNontrivialByValue { i: 22 }));
+    let mut s2 = emplace!(ctor::ctor!(AddableNontrivialByValue { i: 22 }));
     let sum = emplace!(&*s1 + ctor::mov!(s2));
     assert_eq!(sum.i, 33);
 }

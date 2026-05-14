@@ -9,7 +9,7 @@ use googletest::{expect_eq, gtest};
 use ir::IR;
 use ir_matchers::assert_ir_matches;
 use ir_testing::retrieve_func;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
+use multiplatform_ir_testing::{ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_dependency};
 use quote::quote;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
 use test_generators::{generate_bindings_tokens_for_test, TestDbFactory};
@@ -560,7 +560,7 @@ fn test_rs_type_kind_implements_copy() -> Result<()> {
         let db = db_factory.make_db();
         let ir = db.ir();
 
-        let f = retrieve_func(&ir, "func");
+        let f = retrieve_func(ir, "func");
         let t = db.rs_type_kind(f.params[0].type_.clone())?;
 
         let fmt = t.to_token_stream(&db).to_string();
@@ -580,8 +580,8 @@ fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
     let db = db_factory.make_db();
     let ir = db.ir();
     let record = ir.records().next().unwrap();
-    let foo_func = retrieve_func(&ir, "foo");
-    let bar_func = retrieve_func(&ir, "bar");
+    let foo_func = retrieve_func(ir, "foo");
+    let bar_func = retrieve_func(ir, "bar");
 
     // const-ref + lifetimes in C++  ===>  shared-ref in Rust
     assert_eq!(foo_func.params.len(), 1);
@@ -610,7 +610,7 @@ fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
     let db = db_factory.make_db();
     let ir = db.ir();
     let record = ir.records().next().unwrap();
-    let foo_func = retrieve_func(&ir, "foo");
+    let foo_func = retrieve_func(ir, "foo");
 
     // const-ref + *no* lifetimes in C++  ===>  const-pointer in Rust
     assert_eq!(foo_func.params.len(), 1);
@@ -633,7 +633,7 @@ fn test_rs_type_kind_lifetimes() -> Result<()> {
     let db_factory = TestDbFactory::from_cc(cc_input)?;
     let db = db_factory.make_db();
     let ir = db.ir();
-    let func = retrieve_func(&ir, "foo");
+    let func = retrieve_func(ir, "foo");
     let ret = db.rs_type_kind(func.return_type.clone())?;
     let a = db.rs_type_kind(func.params[0].type_.clone())?;
     let b = db.rs_type_kind(func.params[1].type_.clone())?;
@@ -660,7 +660,7 @@ fn test_rs_type_kind_lifetimes_raw_ptr() -> Result<()> {
     let db_factory = TestDbFactory::from_cc(cc_input)?;
     let db = db_factory.make_db();
     let ir = db.ir();
-    let f = retrieve_func(&ir, "foo");
+    let f = retrieve_func(ir, "foo");
     let a = db.rs_type_kind(f.params[0].type_.clone())?;
     assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int*`.
     Ok(())
@@ -677,7 +677,7 @@ fn test_rs_type_kind_rejects_func_ptr_that_returns_struct_by_value() -> Result<(
     let db_factory = TestDbFactory::from_cc(cc_input)?;
     let db = db_factory.make_db();
     let ir = db.ir();
-    let f = retrieve_func(&ir, "get_ptr_to_func");
+    let f = retrieve_func(ir, "get_ptr_to_func");
 
     // Expecting an error, because passing a struct by value requires a thunk and
     // function pointers don't have a thunk.
@@ -702,7 +702,7 @@ fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()>
     let db_factory = TestDbFactory::from_cc(cc_input)?;
     let db = db_factory.make_db();
     let ir = db.ir();
-    let f = retrieve_func(&ir, "get_ptr_to_func");
+    let f = retrieve_func(ir, "get_ptr_to_func");
 
     // Expecting an error, because passing a struct by value requires a thunk and
     // function pointers don't have a thunk.
@@ -1343,8 +1343,8 @@ fn test_existing_rust_type_assert_incomplete() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_reordered_template_args() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             namespace crubit::rust_type {
             template <typename...>
             struct Args {};
@@ -1384,8 +1384,8 @@ fn test_existing_rust_type_reordered_template_args() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_default_template_args() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             namespace crubit::rust_type {
             template <typename...>
             struct Args {};
@@ -1422,8 +1422,8 @@ fn test_existing_rust_type_default_template_args() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_specialized_template_args() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" #pragma clang lifetime_elision
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
             namespace crubit::rust_type {
             template <typename...>
             struct Args {};

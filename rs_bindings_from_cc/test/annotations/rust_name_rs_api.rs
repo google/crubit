@@ -66,7 +66,7 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
         impl SomeStruct {
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub fn ConstructorNewName(
@@ -81,7 +81,7 @@ pub mod crubit {
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
             ///
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const Self) {
@@ -104,7 +104,7 @@ pub mod crubit {
         }
 
         pub mod some_struct {
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub(crate) fn ConstructorNewName(
@@ -128,7 +128,7 @@ pub mod crubit {
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
             ///
-            /// Generated from: support/annotations_internal.h;l=14
+            /// Generated from: support/annotations_internal.h;l=16
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub(crate) unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
@@ -143,14 +143,6 @@ pub mod crubit {
 }
 
 // namespace crubit::test
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, false>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, true>` could not be bound
-//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

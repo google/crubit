@@ -98,7 +98,7 @@ fn test_status_of_pointer_is_bridged() {
     let result = AcceptsVoidPtrAndReturnsStatusErrorIfNull(core::ptr::null_mut());
     expect_that!(
         result,
-        status_rs_matchers::status_is(status::absl::StatusErrorCode::InvalidArgument)
+        status_rs_matchers::status_is(status::absl::StatusCodeError::INVALID_ARGUMENT)
     );
 
     let mut thing = true;
@@ -113,7 +113,7 @@ fn test_status_of_slice_ref_is_bridged_as_slice_ptr() {
     let result = AcceptsSliceAndReturnsStatusErrorIfEmpty(empty_slice as *const _);
     expect_that!(
         result,
-        status_rs_matchers::status_is(status::absl::StatusErrorCode::InvalidArgument)
+        status_rs_matchers::status_is(status::absl::StatusCodeError::INVALID_ARGUMENT)
     );
 
     let non_empty_slice: &[core::ffi::c_int] = &[1, 2, 3];

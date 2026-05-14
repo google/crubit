@@ -201,10 +201,10 @@ pub fn collect_unqualified_member_functions(
                 return None;
             };
 
-            if let Item::Func(member_function) = child_item {
-                if let UnqualifiedIdentifier::Identifier(_) = &member_function.rs_name {
-                    return Some(member_function.clone());
-                }
+            if let Item::Func(member_function) = child_item
+                && let UnqualifiedIdentifier::Identifier(_) = &member_function.rs_name
+            {
+                return Some(member_function.clone());
             }
 
             None
@@ -278,7 +278,7 @@ fn field_definition(
     {
         0
     } else {
-        let padding_start = (prev_end + 7) / 8 * 8; // round up to byte boundary
+        let padding_start = prev_end.div_ceil(8) * 8; // round up to byte boundary
         offset - padding_start
     };
 
@@ -382,7 +382,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     use error_report::Category;
     db.errors().add_category(Category::Type);
     let record_safety = db.record_safety(record.clone());
-    if matches!(record_safety, database::rs_snippet::Safety::Unsafe { .. }) {
+    if record_safety.is_some() {
         db.errors().add_category(Category::Unsafe);
     }
     if !record.is_unpin() {
@@ -634,7 +634,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     let mut lifetime_params = vec![];
     if assume_lifetimes {
         lifetime_params =
-            record.lifetime_inputs.iter().map(|id| make_rs_lifetime_ident(&*id)).collect();
+            record.lifetime_inputs.iter().map(|id| make_rs_lifetime_ident(id)).collect();
     }
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
         let (new_upcast_impls, thunks, thunk_impls) = cc_struct_upcast_impl(db, &record, ir)?;
@@ -702,14 +702,18 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         })
     };
 
-    let owned_type_name = record.owned_ptr_type.as_ref().map(|opt| make_rs_ident(opt.as_ref()));
+    let owned_ptr_config =
+        record.owned_ptr_config.as_ref().map(|cfg| database::code_snippet::OwnedPtrConfig {
+            owned_type_name: make_rs_ident(cfg.owned_ptr_type.as_ref()),
+            drop_impl: make_rs_ident(cfg.drop_impl.as_ref()),
+        });
     let member_methods = api_snippets.member_functions.remove(&record.id).unwrap_or_default();
     let free_functions = api_snippets.free_functions.remove(&record.id).unwrap_or_default();
 
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
             record.doc_comment.as_deref(),
-            record_safety.unsafe_reason().as_deref(),
+            record_safety.as_deref(),
             Some(&record.source_loc),
             db.environment(),
             db.kythe_annotations(),
@@ -718,7 +722,9 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         recursively_pinned_attr,
         must_use_attr: record.nodiscard.clone().map(MustUseAttr),
         deprecated_attr: record.deprecated.clone().map(DeprecatedAttr),
-        align: if override_alignment && record.size_align.alignment > 1 {
+        // Thread-safe types always need explicit alignment because the opaque
+        // UnsafeCell<[MaybeUninit<u8>; N]> body has alignment 1.
+        align: if (override_alignment || record.is_thread_safe) && record.size_align.alignment > 1 {
             Some(record.size_align.alignment)
         } else {
             None
@@ -751,11 +757,13 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         items,
         nested_items,
         indirect_functions,
-        owned_type_name,
+        owned_ptr_config,
         member_methods,
         free_functions,
         delete: operator_delete_impl,
         lifetime_params,
+        is_thread_safe: record.is_thread_safe,
+        size: record.size_align.size,
     };
 
     api_snippets.features |= Feature::negative_impls;
@@ -787,14 +795,18 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
 
     api_snippets.assertions.push(rs_size_align_assertions(qualified_ident, &record.size_align));
     api_snippets.assertions.push(record_trait_assertions);
-    api_snippets.assertions.push(field_offset_assertions);
-    api_snippets.assertions.extend(fields_that_must_be_copy.into_iter().map(
-        |formatted_field_type| Assertion::Impls {
-            type_name: formatted_field_type,
-            all_of: AssertableTrait::Copy.into(),
-            none_of: FlagSet::empty(),
-        },
-    ));
+    // For thread-safe types, the struct body is opaque (UnsafeCell), so the original
+    // field names don't exist. Skip field offset assertions and field copy assertions.
+    if !record.is_thread_safe {
+        api_snippets.assertions.push(field_offset_assertions);
+        api_snippets.assertions.extend(fields_that_must_be_copy.into_iter().map(
+            |formatted_field_type| Assertion::Impls {
+                type_name: formatted_field_type,
+                all_of: AssertableTrait::Copy.into(),
+                none_of: FlagSet::empty(),
+            },
+        ));
+    }
 
     api_snippets.generated_items.insert(record.id, GeneratedItem::Record(Box::new(record_tokens)));
     Ok(api_snippets)
@@ -827,6 +839,12 @@ pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAli
 }
 
 pub fn generate_derives(record: &Record) -> DeriveAttr {
+    // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>.
+    // This opaque byte array doesn't support useful standard derives, and Clone/Copy
+    // are explicitly prevented to support interior mutability anyway.
+    if record.is_thread_safe {
+        return DeriveAttr(vec![]);
+    }
     let mut derives = vec![];
     if should_derive_clone(record) {
         derives.push(quote! { Clone });

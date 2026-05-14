@@ -98,7 +98,7 @@ namespace modules::outer {
 
 namespace [[deprecated]] inner_deprecated {
 
-// Error generating bindings for
+// Error generating bindings for struct
 // `modules_golden::outer::inner_deprecated::SomeType` defined at
 // cc_bindings_from_rs/test/modules/modules.rs;l=26:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -111,7 +111,7 @@ namespace modules::outer::middle {
 
 namespace [[deprecated]] innermost_deprecated {
 
-// Error generating bindings for
+// Error generating bindings for struct
 // `modules_golden::outer::middle::innermost_deprecated::SomeType` defined at
 // cc_bindings_from_rs/test/modules/modules.rs;l=32:
 // Zero-sized types (ZSTs) are not supported (b/258259459)

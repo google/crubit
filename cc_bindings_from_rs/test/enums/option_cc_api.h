@@ -38,13 +38,13 @@
 namespace option {
 struct HasOptions;
 
-// Error generating bindings for `option_golden::BridgedType` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=178:
+// Error generating bindings for struct `option_golden::BridgedType` defined at
+// cc_bindings_from_rs/test/enums/option.rs;l=197:
 // Type bindings for option_golden::BridgedType suppressed due to being mapped
 // to an existing C++ type (int)
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=120
+// cc_bindings_from_rs/test/enums/option.rs;l=139
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
@@ -67,7 +67,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=121
+    // cc_bindings_from_rs/test/enums/option.rs;l=140
     ::std::uint8_t val;
   };
 
@@ -76,7 +76,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=135
+// cc_bindings_from_rs/test/enums/option.rs;l=154
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
@@ -97,7 +97,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=136
+    // cc_bindings_from_rs/test/enums/option.rs;l=155
     ::std::uint8_t val;
   };
 
@@ -106,7 +106,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=69
+// cc_bindings_from_rs/test/enums/option.rs;l=88
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
@@ -127,17 +127,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=74
+  // cc_bindings_from_rs/test/enums/option.rs;l=93
   static ::option::HasDefault new_(rs_std::StrRef s);
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=78
+  // cc_bindings_from_rs/test/enums/option.rs;l=97
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=70
+    // cc_bindings_from_rs/test/enums/option.rs;l=89
     ::rs::alloc::string::String foo;
   };
 
@@ -146,7 +146,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=92
+// cc_bindings_from_rs/test/enums/option.rs;l=111
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
@@ -169,22 +169,22 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=97
+  // cc_bindings_from_rs/test/enums/option.rs;l=116
   static ::option::HasNoDefault new_(rs_std::StrRef s);
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=100
+  // cc_bindings_from_rs/test/enums/option.rs;l=119
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=93
+    // cc_bindings_from_rs/test/enums/option.rs;l=112
     ::rs::alloc::string::String foo;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=94
+    // cc_bindings_from_rs/test/enums/option.rs;l=113
     ::std::uint32_t a;
   };
 
@@ -196,46 +196,134 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=9
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: NonMaxU8") alignas(1)
-    [[clang::trivial_abi]] NonMaxU8 final {
+// cc_bindings_from_rs/test/enums/option.rs;l=7
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
+    [[clang::trivial_abi]] LessThan20U8 final {
  public:
-  // `option_golden::NonMaxU8` doesn't implement the `Default` trait
-  NonMaxU8() = delete;
+  // `option_golden::LessThan20U8` doesn't implement the `Default` trait
+  LessThan20U8() = delete;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=8
+  static constexpr LessThan20U8 MakeN0();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=9
+  static constexpr LessThan20U8 MakeN1();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=10
+  static constexpr LessThan20U8 MakeN2();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=11
+  static constexpr LessThan20U8 MakeN3();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=12
+  static constexpr LessThan20U8 MakeN4();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=13
+  static constexpr LessThan20U8 MakeN5();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=14
+  static constexpr LessThan20U8 MakeN6();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=15
+  static constexpr LessThan20U8 MakeN7();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=16
+  static constexpr LessThan20U8 MakeN8();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=17
+  static constexpr LessThan20U8 MakeN9();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=18
+  static constexpr LessThan20U8 MakeN10();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=19
+  static constexpr LessThan20U8 MakeN11();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=20
+  static constexpr LessThan20U8 MakeN12();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=21
+  static constexpr LessThan20U8 MakeN13();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=22
+  static constexpr LessThan20U8 MakeN14();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=23
+  static constexpr LessThan20U8 MakeN15();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=24
+  static constexpr LessThan20U8 MakeN16();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=25
+  static constexpr LessThan20U8 MakeN17();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=26
+  static constexpr LessThan20U8 MakeN18();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=27
+  static constexpr LessThan20U8 MakeN19();
 
   // No custom `Drop` impl and no custom "drop glue" required
-  ~NonMaxU8() = default;
-  NonMaxU8(NonMaxU8&&) = default;
-  NonMaxU8& operator=(NonMaxU8&&) = default;
+  ~LessThan20U8() = default;
+  LessThan20U8(LessThan20U8&&) = default;
+  LessThan20U8& operator=(LessThan20U8&&) = default;
 
-  // `option_golden::NonMaxU8` doesn't implement the `Clone` trait
-  NonMaxU8(const NonMaxU8&) = delete;
-  NonMaxU8& operator=(const NonMaxU8&) = delete;
-  NonMaxU8(::crubit::UnsafeRelocateTag, NonMaxU8&& value) {
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  LessThan20U8(const LessThan20U8&) = default;
+  LessThan20U8& operator=(const LessThan20U8&) = default;
+  LessThan20U8(::crubit::UnsafeRelocateTag, LessThan20U8&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=12
+  // cc_bindings_from_rs/test/enums/option.rs;l=31
+  static ::std::optional<::option::LessThan20U8> new_(::std::uint8_t value);
+
+  // Generated from:
+  // cc_bindings_from_rs/test/enums/option.rs;l=40
   ::std::uint8_t value() const;
 
  private:
-  union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=9
-    ::std::uint8_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr LessThan20U8(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
 
  private:
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `option_golden::OptUninhabited` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=153:
+// Error generating bindings for struct `option_golden::OptUninhabited` defined
+// at cc_bindings_from_rs/test/enums/option.rs;l=172:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=161
+// cc_bindings_from_rs/test/enums/option.rs;l=180
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
     [[clang::trivial_abi]] OptZst final {
  public:
@@ -265,7 +353,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=169
+// cc_bindings_from_rs/test/enums/option.rs;l=188
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptionWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 OptionWithSizeTypes final {
@@ -298,16 +386,17 @@ OptionWithSizeTypes final {
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `option_golden::UninhabitedEnum` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=151:
+// Error generating bindings for enum `option_golden::UninhabitedEnum` defined
+// at cc_bindings_from_rs/test/enums/option.rs;l=170:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for `option_golden::Unit` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=158:
+// Error generating bindings for struct `option_golden::Unit` defined at
+// cc_bindings_from_rs/test/enums/option.rs;l=177:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for `option_golden::take_option_bridged` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=180:
+// Error generating bindings for function `option_golden::take_option_bridged`
+// defined at
+// cc_bindings_from_rs/test/enums/option.rs;l=199:
 // Error handling parameter #0 of type
 // `std::option::Option<option_golden::BridgedType>`: Failed to format type for
 // the definition of `option_golden::BridgedType`: Error formatting the
@@ -364,7 +453,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=125
+// cc_bindings_from_rs/test/enums/option.rs;l=144
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCloneNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCloneNoDefault final {
@@ -388,12 +477,12 @@ OptCloneNoDefault final {
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=129
+  // cc_bindings_from_rs/test/enums/option.rs;l=148
   static ::option::OptCloneNoDefault new_(::std::uint8_t x);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=126
+    // cc_bindings_from_rs/test/enums/option.rs;l=145
     rs_std::Option<::option::CloneNoDefault> val;
   };
 
@@ -449,7 +538,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=140
+// cc_bindings_from_rs/test/enums/option.rs;l=159
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCopyNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCopyNoDefault final {
@@ -471,12 +560,12 @@ OptCopyNoDefault final {
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=145
+  // cc_bindings_from_rs/test/enums/option.rs;l=164
   static ::option::OptCopyNoDefault new_(::std::uint8_t x);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=141
+    // cc_bindings_from_rs/test/enums/option.rs;l=160
     rs_std::Option<::option::CopyNoDefault> val;
   };
 
@@ -530,7 +619,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=83
+// cc_bindings_from_rs/test/enums/option.rs;l=102
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptDefaultWithDrop") alignas(8) [[clang::trivial_abi]]
 OptDefaultWithDrop final {
@@ -554,12 +643,12 @@ OptDefaultWithDrop final {
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=87
+  // cc_bindings_from_rs/test/enums/option.rs;l=106
   static ::option::OptDefaultWithDrop new_(rs_std::StrRef s);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=84
+    // cc_bindings_from_rs/test/enums/option.rs;l=103
     rs_std::Option<::option::HasDefault> opt;
   };
 
@@ -568,7 +657,7 @@ OptDefaultWithDrop final {
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=165
+// cc_bindings_from_rs/test/enums/option.rs;l=184
 ::std::optional<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x);
 
@@ -615,7 +704,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=105
+// cc_bindings_from_rs/test/enums/option.rs;l=124
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptNoDefaultWithDrop") alignas(8)
     [[clang::trivial_abi]] OptNoDefaultWithDrop final {
@@ -640,17 +729,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=110
+  // cc_bindings_from_rs/test/enums/option.rs;l=129
   static ::option::OptNoDefaultWithDrop new_(rs_std::StrRef s);
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=114
+  // cc_bindings_from_rs/test/enums/option.rs;l=133
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=106
+    // cc_bindings_from_rs/test/enums/option.rs;l=125
     rs_std::Option<::option::HasNoDefault> val;
   };
 
@@ -702,16 +791,17 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: NonMaxU8 >")
-    rs_std::Option<::option::NonMaxU8> {
+    "std :: option :: Option < :: option_golden :: LessThan20U8 >")
+    rs_std::Option<::option::LessThan20U8> {
  public:
-  // `core::option::Option` doesn't implement the `Clone` trait
-  Option(const Option&) = delete;
-  Option& operator=(const Option&) = delete;
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Option(const Option&) = default;
+  Option& operator=(const Option&) = default;
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
@@ -723,16 +813,16 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr explicit Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
 
-  Option(::option::NonMaxU8&& value) noexcept;
-  Option& operator=(::option::NonMaxU8&& value) noexcept;
+  Option(::option::LessThan20U8&& value) noexcept;
+  Option& operator=(::option::LessThan20U8&& value) noexcept;
 
-  explicit Option(::std::optional<::option::NonMaxU8>&& value) noexcept;
-  Option& operator=(::std::optional<::option::NonMaxU8>&& value) noexcept;
+  explicit Option(::std::optional<::option::LessThan20U8>&& value) noexcept;
+  Option& operator=(::std::optional<::option::LessThan20U8>&& value) noexcept;
 
   template <typename... Args>
   Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator ::std::optional<::option::NonMaxU8>() && noexcept;
+  operator ::std::optional<::option::LessThan20U8>() && noexcept;
   bool has_value() noexcept;
 
  private:
@@ -744,16 +834,18 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: option :: Option < :: core :: option :: Option < :: option_golden "
-    ":: NonMaxU8 > >") rs_std::Option<rs_std::Option<::option::NonMaxU8>> {
+    ":: LessThan20U8 > >")
+    rs_std::Option<rs_std::Option<::option::LessThan20U8>> {
  public:
-  // `core::option::Option` doesn't implement the `Clone` trait
-  Option(const Option&) = delete;
-  Option& operator=(const Option&) = delete;
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Option(const Option&) = default;
+  Option& operator=(const Option&) = default;
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
@@ -765,18 +857,19 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr explicit Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
 
-  Option(rs_std::Option<::option::NonMaxU8>&& value) noexcept;
-  Option& operator=(rs_std::Option<::option::NonMaxU8>&& value) noexcept;
+  Option(rs_std::Option<::option::LessThan20U8>&& value) noexcept;
+  Option& operator=(rs_std::Option<::option::LessThan20U8>&& value) noexcept;
 
   explicit Option(
-      ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept;
+      ::std::optional<rs_std::Option<::option::LessThan20U8>>&& value) noexcept;
   Option& operator=(
-      ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept;
+      ::std::optional<rs_std::Option<::option::LessThan20U8>>&& value) noexcept;
 
   template <typename... Args>
   Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator ::std::optional<rs_std::Option<::option::NonMaxU8>>() && noexcept;
+  operator ::std::optional<
+      rs_std::Option<::option::LessThan20U8>>() && noexcept;
   bool has_value() noexcept;
 
  private:
@@ -833,7 +926,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=17
+// cc_bindings_from_rs/test/enums/option.rs;l=45
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
     [[clang::trivial_abi]] HasOptions final {
  public:
@@ -853,37 +946,37 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=24
+  // cc_bindings_from_rs/test/enums/option.rs;l=52
   static ::option::HasOptions new_(::std::uint8_t value);
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=35
+  // cc_bindings_from_rs/test/enums/option.rs;l=60
   static ::option::HasOptions with_option(
       ::std::optional<::std::uint8_t> value);
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=46
+  // cc_bindings_from_rs/test/enums/option.rs;l=65
   static ::option::HasOptions from_ref(
       rs_std::Option<::std::uint8_t> const& value);
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=53
+  // cc_bindings_from_rs/test/enums/option.rs;l=72
   static ::option::HasOptions with_none();
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=20
+    // cc_bindings_from_rs/test/enums/option.rs;l=48
     rs_std::Option<::std::uint8_t> direct;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=18
-    rs_std::Option<::option::NonMaxU8> niche;
+    // cc_bindings_from_rs/test/enums/option.rs;l=46
+    rs_std::Option<::option::LessThan20U8> niche;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=19
-    rs_std::Option<rs_std::Option<::option::NonMaxU8>> nested;
+    // cc_bindings_from_rs/test/enums/option.rs;l=47
+    rs_std::Option<rs_std::Option<::option::LessThan20U8>> nested;
   };
 
  private:
@@ -891,7 +984,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=58
+// cc_bindings_from_rs/test/enums/option.rs;l=77
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
     [[clang::trivial_abi]] HasHasOptions final {
  public:
@@ -911,12 +1004,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=63
+  // cc_bindings_from_rs/test/enums/option.rs;l=82
   static ::option::HasHasOptions new_(::std::uint8_t value);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=59
+    // cc_bindings_from_rs/test/enums/option.rs;l=78
     rs_std::Option<::option::HasOptions> me;
   };
 
@@ -1146,23 +1239,140 @@ inline void HasOptions::__crubit_field_offset_assertions() {
   static_assert(3 == offsetof(HasOptions, nested));
 }
 static_assert(
-    sizeof(NonMaxU8) == 1,
+    sizeof(LessThan20U8) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonMaxU8) == 1,
+    alignof(LessThan20U8) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NonMaxU8>);
-static_assert(::std::is_trivially_move_constructible_v<::option::NonMaxU8>);
-static_assert(::std::is_trivially_move_assignable_v<::option::NonMaxU8>);
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN0() {
+  return LessThan20U8(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN1() {
+  return LessThan20U8(PrivateBytesTag{}, {1});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN2() {
+  return LessThan20U8(PrivateBytesTag{}, {2});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN3() {
+  return LessThan20U8(PrivateBytesTag{}, {3});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN4() {
+  return LessThan20U8(PrivateBytesTag{}, {4});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN5() {
+  return LessThan20U8(PrivateBytesTag{}, {5});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN6() {
+  return LessThan20U8(PrivateBytesTag{}, {6});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN7() {
+  return LessThan20U8(PrivateBytesTag{}, {7});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN8() {
+  return LessThan20U8(PrivateBytesTag{}, {8});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN9() {
+  return LessThan20U8(PrivateBytesTag{}, {9});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN10() {
+  return LessThan20U8(PrivateBytesTag{}, {10});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN11() {
+  return LessThan20U8(PrivateBytesTag{}, {11});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN12() {
+  return LessThan20U8(PrivateBytesTag{}, {12});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN13() {
+  return LessThan20U8(PrivateBytesTag{}, {13});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN14() {
+  return LessThan20U8(PrivateBytesTag{}, {14});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN15() {
+  return LessThan20U8(PrivateBytesTag{}, {15});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN16() {
+  return LessThan20U8(PrivateBytesTag{}, {16});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN17() {
+  return LessThan20U8(PrivateBytesTag{}, {17});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN18() {
+  return LessThan20U8(PrivateBytesTag{}, {18});
+}
+
+// `static` constructor
+inline constexpr LessThan20U8 LessThan20U8::MakeN19() {
+  return LessThan20U8(PrivateBytesTag{}, {19});
+}
+static_assert(::std::is_trivially_destructible_v<LessThan20U8>);
+static_assert(::std::is_trivially_move_constructible_v<::option::LessThan20U8>);
+static_assert(::std::is_trivially_move_assignable_v<::option::LessThan20U8>);
+static_assert(::std::is_trivially_copy_constructible_v<::option::LessThan20U8>);
+static_assert(::std::is_trivially_copy_assignable_v<::option::LessThan20U8>);
 namespace __crubit_internal {
-extern "C" ::std::uint8_t __crubit_thunk_value(::option::NonMaxU8 const&);
+extern "C" void __crubit_thunk_new(::std::uint8_t, unsigned char* __ret_ptr);
 }
-inline ::std::uint8_t NonMaxU8::value() const {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_value(self);
+inline ::std::optional<::option::LessThan20U8> LessThan20U8::new_(
+    ::std::uint8_t value) {
+  unsigned char __return_value_storage[::crubit::OptionAbi<
+      ::crubit::TransmuteAbi<::option::LessThan20U8>>::kSize];
+  __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
+  return ::crubit::internal::Decode<
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::option::LessThan20U8>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::option::LessThan20U8>>(
+          ::crubit::TransmuteAbi<::option::LessThan20U8>()),
+      __return_value_storage);
 }
-inline void NonMaxU8::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonMaxU8, __field0));
+
+namespace __crubit_internal {
+extern "C" ::std::uint8_t __crubit_thunk_value(::option::LessThan20U8*);
+}
+inline ::std::uint8_t LessThan20U8::value() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::__crubit_thunk_value(&self);
+}
+inline void LessThan20U8::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(LessThan20U8, __opaque_blob_of_bytes));
 }
 static_assert(
     sizeof(OptCloneNoDefault) == 2,
@@ -1949,97 +2159,107 @@ inline constexpr void rs_std::Option<::option::HasOptions>::set_tag(
 }
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Option<::option::LessThan20U8>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Option<::option::LessThan20U8>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Option<::option::NonMaxU8>>);
-static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::option::NonMaxU8>>);
-inline constexpr rs_std::Option<::option::NonMaxU8>::Option() { set_tag(251); }
-inline constexpr rs_std::Option<::option::NonMaxU8>::Option(
-    ::std::nullopt_t) noexcept {
-  set_tag(251);
+              rs_std::Option<::option::LessThan20U8>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Option<::option::LessThan20U8>>);
+inline constexpr rs_std::Option<::option::LessThan20U8>::Option() {
+  set_tag(20);
 }
-inline constexpr rs_std::Option<::option::NonMaxU8>&
-rs_std::Option<::option::NonMaxU8>::operator=(::std::nullopt_t) noexcept {
-  if (tag() != 251) {
-    ::std::destroy_at(reinterpret_cast<::option::NonMaxU8*>(storage_));
+inline constexpr rs_std::Option<::option::LessThan20U8>::Option(
+    ::std::nullopt_t) noexcept {
+  set_tag(20);
+}
+inline constexpr rs_std::Option<::option::LessThan20U8>&
+rs_std::Option<::option::LessThan20U8>::operator=(::std::nullopt_t) noexcept {
+  if (tag() != 20) {
+    ::std::destroy_at(reinterpret_cast<::option::LessThan20U8*>(storage_));
   }
-  set_tag(251);
+  set_tag(20);
   return *this;
 }
-inline rs_std::Option<::option::NonMaxU8>::Option(
-    ::option::NonMaxU8&& value) noexcept {
-  ::std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
+inline rs_std::Option<::option::LessThan20U8>::Option(
+    ::option::LessThan20U8&& value) noexcept {
+  ::std::construct_at(reinterpret_cast<::option::LessThan20U8*>(storage_),
                       ::std::move(value));
 }
-inline rs_std::Option<::option::NonMaxU8>& rs_std::Option<
-    ::option::NonMaxU8>::operator=(::option::NonMaxU8&& value) noexcept {
-  if (tag() != 251) {
+inline rs_std::Option<::option::LessThan20U8>&
+rs_std::Option<::option::LessThan20U8>::operator=(
+    ::option::LessThan20U8&& value) noexcept {
+  if (tag() != 20) {
     ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::option::NonMaxU8*>(storage_), ::std::move(value));
+        reinterpret_cast<::option::LessThan20U8*>(storage_),
+        ::std::move(value));
   } else {
-    ::std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
+    ::std::construct_at(reinterpret_cast<::option::LessThan20U8*>(storage_),
                         ::std::move(value));
   }
   return *this;
 }
-inline rs_std::Option<::option::NonMaxU8>::Option(
-    ::std::optional<::option::NonMaxU8>&& value) noexcept {
+inline rs_std::Option<::option::LessThan20U8>::Option(
+    ::std::optional<::option::LessThan20U8>&& value) noexcept {
   if (value.has_value()) {
-    ::option::NonMaxU8* some = reinterpret_cast<::option::NonMaxU8*>(storage_);
+    ::option::LessThan20U8* some =
+        reinterpret_cast<::option::LessThan20U8*>(storage_);
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(251);
+    set_tag(20);
   }
 }
-inline rs_std::Option<::option::NonMaxU8>&
-rs_std::Option<::option::NonMaxU8>::operator=(
-    ::std::optional<::option::NonMaxU8>&& value) noexcept {
-  if (tag() != 251) {
-    ::std::destroy_at(reinterpret_cast<::option::NonMaxU8*>(storage_));
+inline rs_std::Option<::option::LessThan20U8>&
+rs_std::Option<::option::LessThan20U8>::operator=(
+    ::std::optional<::option::LessThan20U8>&& value) noexcept {
+  if (tag() != 20) {
+    ::std::destroy_at(reinterpret_cast<::option::LessThan20U8*>(storage_));
   }
   if (value.has_value()) {
-    ::option::NonMaxU8* some = reinterpret_cast<::option::NonMaxU8*>(storage_);
+    ::option::LessThan20U8* some =
+        reinterpret_cast<::option::LessThan20U8*>(storage_);
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(251);
+    set_tag(20);
   }
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::option::NonMaxU8>::Option(::std::in_place_t,
-                                                  Args&&... args) noexcept {
-  ::std::construct_at(reinterpret_cast<::option::NonMaxU8*>(storage_),
+inline rs_std::Option<::option::LessThan20U8>::Option(::std::in_place_t,
+                                                      Args&&... args) noexcept {
+  ::std::construct_at(reinterpret_cast<::option::LessThan20U8*>(storage_),
                       ::std::forward<Args>(args)...);
 }
 static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::option::NonMaxU8>>);
-inline rs_std::Option<::option::NonMaxU8>::operator ::std::optional<
-    ::option::NonMaxU8>() && noexcept {
-  if (tag() == 251) {
+    ::std::is_trivially_destructible_v<rs_std::Option<::option::LessThan20U8>>);
+inline rs_std::Option<::option::LessThan20U8>::operator ::std::optional<
+    ::option::LessThan20U8>() && noexcept {
+  if (tag() == 20) {
     return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
-      rs_std::Option<::option::NonMaxU8>* _value;
-      DeferSetTagNone(rs_std::Option<::option::NonMaxU8>* self)
+      rs_std::Option<::option::LessThan20U8>* _value;
+      DeferSetTagNone(rs_std::Option<::option::LessThan20U8>* self)
           : _value(self) {}
-      ~DeferSetTagNone() { set_tag(251); }
+      ~DeferSetTagNone() { set_tag(20); }
 
      private:
       void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return ::std::make_optional<::option::NonMaxU8>(
+    return ::std::make_optional<::option::LessThan20U8>(
         crubit::UnsafeRelocateTag{},
-        ::std::move(*reinterpret_cast<::option::NonMaxU8*>(storage_)));
+        ::std::move(*reinterpret_cast<::option::LessThan20U8*>(storage_)));
   }
 }
-inline bool rs_std::Option<::option::NonMaxU8>::has_value() noexcept {
-  return tag() != 251;
+inline bool rs_std::Option<::option::LessThan20U8>::has_value() noexcept {
+  return tag() != 20;
 }
-inline constexpr ::std::uint8_t rs_std::Option<::option::NonMaxU8>::tag()
+inline constexpr ::std::uint8_t rs_std::Option<::option::LessThan20U8>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
@@ -2047,7 +2267,7 @@ inline constexpr ::std::uint8_t rs_std::Option<::option::NonMaxU8>::tag()
   }
   return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::option::NonMaxU8>::set_tag(
+inline constexpr void rs_std::Option<::option::LessThan20U8>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
@@ -2057,120 +2277,127 @@ inline constexpr void rs_std::Option<::option::NonMaxU8>::set_tag(
 }
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020NonMaxU8_x00000020_x0000003e_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Option<rs_std::Option<::option::NonMaxU8>>>);
+              rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Option<rs_std::Option<::option::NonMaxU8>>>);
-inline constexpr rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option() {
-  set_tag(252);
+              rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
+inline constexpr rs_std::Option<
+    rs_std::Option<::option::LessThan20U8>>::Option() {
+  set_tag(21);
 }
-inline constexpr rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
+inline constexpr rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
     ::std::nullopt_t) noexcept {
-  set_tag(252);
+  set_tag(21);
 }
-inline constexpr rs_std::Option<rs_std::Option<::option::NonMaxU8>>&
-rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
+inline constexpr rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
     ::std::nullopt_t) noexcept {
-  if (tag() != 252) {
+  if (tag() != 21) {
     ::std::destroy_at(
-        reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_));
+        reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_));
   }
-  set_tag(252);
+  set_tag(21);
   return *this;
 }
-inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
-    rs_std::Option<::option::NonMaxU8>&& value) noexcept {
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
+    rs_std::Option<::option::LessThan20U8>&& value) noexcept {
   ::std::construct_at(
-      reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
+      reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_),
       ::std::move(value));
 }
-inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>&
-rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
-    rs_std::Option<::option::NonMaxU8>&& value) noexcept {
-  if (tag() != 252) {
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
+    rs_std::Option<::option::LessThan20U8>&& value) noexcept {
+  if (tag() != 21) {
     ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
+        reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_),
         ::std::move(value));
   } else {
     ::std::construct_at(
-        reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
+        reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_),
         ::std::move(value));
   }
   return *this;
 }
-inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
-    ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept {
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
+    ::std::optional<rs_std::Option<::option::LessThan20U8>>&& value) noexcept {
   if (value.has_value()) {
-    rs_std::Option<::option::NonMaxU8>* some =
-        reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_);
+    rs_std::Option<::option::LessThan20U8>* some =
+        reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_);
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(252);
+    set_tag(21);
   }
 }
-inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>&
-rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator=(
-    ::std::optional<rs_std::Option<::option::NonMaxU8>>&& value) noexcept {
-  if (tag() != 252) {
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
+    ::std::optional<rs_std::Option<::option::LessThan20U8>>&& value) noexcept {
+  if (tag() != 21) {
     ::std::destroy_at(
-        reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_));
+        reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_));
   }
   if (value.has_value()) {
-    rs_std::Option<::option::NonMaxU8>* some =
-        reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_);
+    rs_std::Option<::option::LessThan20U8>* some =
+        reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_);
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(252);
+    set_tag(21);
   }
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::Option(
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
     ::std::in_place_t, Args&&... args) noexcept {
   ::std::construct_at(
-      reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_),
+      reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_),
       ::std::forward<Args>(args)...);
 }
 static_assert(::std::is_trivially_destructible_v<
-              rs_std::Option<rs_std::Option<::option::NonMaxU8>>>);
-inline rs_std::Option<rs_std::Option<::option::NonMaxU8>>::operator ::std::
-    optional<rs_std::Option<::option::NonMaxU8>>() && noexcept {
-  if (tag() == 252) {
+              rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator ::std::
+    optional<rs_std::Option<::option::LessThan20U8>>() && noexcept {
+  if (tag() == 21) {
     return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
-      rs_std::Option<rs_std::Option<::option::NonMaxU8>>* _value;
-      DeferSetTagNone(rs_std::Option<rs_std::Option<::option::NonMaxU8>>* self)
+      rs_std::Option<rs_std::Option<::option::LessThan20U8>>* _value;
+      DeferSetTagNone(
+          rs_std::Option<rs_std::Option<::option::LessThan20U8>>* self)
           : _value(self) {}
-      ~DeferSetTagNone() { set_tag(252); }
+      ~DeferSetTagNone() { set_tag(21); }
 
      private:
       void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
     } defer(this);
-    return ::std::make_optional<rs_std::Option<::option::NonMaxU8>>(
+    return ::std::make_optional<rs_std::Option<::option::LessThan20U8>>(
         crubit::UnsafeRelocateTag{},
-        ::std::move(
-            *reinterpret_cast<rs_std::Option<::option::NonMaxU8>*>(storage_)));
+        ::std::move(*reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(
+            storage_)));
   }
 }
 inline bool
-rs_std::Option<rs_std::Option<::option::NonMaxU8>>::has_value() noexcept {
-  return tag() != 252;
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::has_value() noexcept {
+  return tag() != 21;
 }
 inline constexpr ::std::uint8_t
-rs_std::Option<rs_std::Option<::option::NonMaxU8>>::tag() const& noexcept {
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::tag() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
   return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline constexpr void rs_std::Option<
-    rs_std::Option<::option::NonMaxU8>>::set_tag(::std::uint8_t tag) noexcept {
+inline constexpr void
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::set_tag(
+    ::std::uint8_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
   for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {

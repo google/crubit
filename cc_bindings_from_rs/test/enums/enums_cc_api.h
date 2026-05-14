@@ -54,7 +54,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // cc_bindings_from_rs/test/enums/enums.rs;l=14
   static MyEnum MakeF();
 
-  // Error generating bindings for `enums_golden::repr_c::MyEnum::Z` defined at
+  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::Z`
+  // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=15:
   // Tuple types cannot be used inside of compound data types, because
   // std::tuple is not layout-compatible with a Rust tuple.
@@ -63,12 +64,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // cc_bindings_from_rs/test/enums/enums.rs;l=16
   static MyEnum MakeG();
 
-  // Error generating bindings for `enums_golden::repr_c::MyEnum::B` defined at
+  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::B`
+  // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=17:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
-  // Error generating bindings for `enums_golden::repr_c::MyEnum::C` defined at
+  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::C`
+  // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=18:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
@@ -254,7 +257,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   CloneCount();
 
-  // Error generating bindings for
+  // Error generating bindings for variant
   // `enums_golden::repr_c_clone_counter::CloneCount::A` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=56:
   // Constructing non-tuple, struct-like enum variants is not supported:
@@ -324,8 +327,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/enums/enums.rs;l=34
   static DropMe MakeQ();
 
-  // Error generating bindings for `enums_golden::repr_c_drop::DropMe::C`
-  // defined at
+  // Error generating bindings for variant
+  // `enums_golden::repr_c_drop::DropMe::C` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=35:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
@@ -481,7 +484,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::enums::repr_rust::RustReprEnum MakeTuplePayloadVariant(
       ::std::int32_t __param_0, ::std::int32_t __param_1);
 
-  // Error generating bindings for
+  // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprEnum::StructPayloadVariant` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=122:
   // Constructing non-tuple, struct-like enum variants is not supported:
@@ -537,19 +540,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // doesn't implement the `Default` trait
   RustReprWithNamingConflictBetweenCtorsAndMethods() = delete;
 
-  // Error generating bindings for
+  // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::NoPayloadVariant`
   // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=160:
   // Conflicting member function name: MakeNoPayloadVariant
 
-  // Error generating bindings for
+  // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::TuplePayloadVariant`
   // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=161:
   // Conflicting member function name: MakeTuplePayloadVariant
 
-  // Error generating bindings for
+  // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::StructPayloadVariant`
   // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=162:
@@ -610,7 +613,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for
+// Error generating bindings for enum
 // `enums_golden::repr_rust::RustReprWithSingleNoPayloadVariant` defined at
 // cc_bindings_from_rs/test/enums/enums.rs;l=151:
 // Zero-sized types (ZSTs) are not supported (b/258259459)

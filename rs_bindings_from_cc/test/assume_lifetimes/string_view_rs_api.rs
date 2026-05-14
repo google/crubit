@@ -72,14 +72,6 @@ pub fn unambiguous_string_view_return_annotated<'a>(
     }
 }
 
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, false>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// error: struct `std::integral_constant<bool, true>` could not be bound
-//   template instantiation is not yet supported
-
 // error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
 //   incomplete type
 
@@ -92,65 +84,17 @@ pub fn unambiguous_string_view_return_annotated<'a>(
 // error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
 //   incomplete type
 
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'char8_t': Unsupported builtin type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'char8_t': Unsupported builtin type
-
 // error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
 //   incomplete type
 
 // error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
 //   incomplete type
 
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'wchar_t': Unsupported builtin type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__fwd/string.h;l=42
-// error: class `std::basic_string` could not be bound
-//   Unsupported type 'wchar_t': Unsupported builtin type
-
 // error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
 //   incomplete type
 
 // error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
-
-// Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// error: class `std::basic_string_view<char32_t, std::char_traits<char32_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// error: class `std::basic_string_view<char16_t, std::char_traits<char16_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/string_view;l=287
-// error: class `std::basic_string_view<char8_t, std::char_traits<char8_t>>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char32_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char16_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char8_t *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const char *>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
-// error: class `std::reverse_iterator<const wchar_t *>` could not be bound
-//   template instantiation is not yet supported
 
 // error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
 //   incomplete type
@@ -226,42 +170,6 @@ pub fn unambiguous_string_view_return_annotated<'a>(
 
 // error: class `std::fpos<__mbstate_t>` could not be bound
 //   incomplete type
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=81
-// error: struct `std::char_traits<char>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<char32_t, unsigned int, 4294967295U>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<char16_t, unsigned short, (unsigned short)65535>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<char8_t, unsigned int, 4294967295U>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=180
-// error: struct `std::__char_traits_base<wchar_t, unsigned int, 4294967295U>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=247
-// error: struct `std::char_traits<wchar_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=270
-// error: struct `std::char_traits<char8_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=289
-// error: struct `std::char_traits<char16_t>` could not be bound
-//   template instantiation is not yet supported
-
-// Generated from: nowhere/llvm/src/libcxx/include/__string/char_traits.h;l=324
-// error: struct `std::char_traits<char32_t>` could not be bound
-//   template instantiation is not yet supported
 
 mod detail {
     #[allow(unused_imports)]

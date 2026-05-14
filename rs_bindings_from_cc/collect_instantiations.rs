@@ -65,25 +65,25 @@ fn find_cc_template_calls(input: TokenStream, results: &mut HashSet<String>) {
         // 3 token trees starting at the current 'next' ('cc_template', '!', 'group with
         // the macro body').
         let macro_tokens = std::iter::once(next.clone()).chain(iter.clone().take(2)).collect();
-        if let Ok(m) = syn::parse2::<syn::Macro>(macro_tokens) {
-            if m.path.is_ident("cc_template") {
-                // In theory `TokenStream` -> `instantiation_name` translation could go through
-                // `token_stream_printer::tokens_to_string`.  This route is not used because:
-                // - The dependencies it would bring would run into b/216638047
-                // - Extra functionality from that route is not needed (e.g. no need for
-                //   `__COMMENT__`-aware or `__SPACE__`-aware processing, nor for special
-                //   handling of `TokenTree::Group`).
-                //
-                // TODO(lukasza, hlopko): In the future, extra canonicalization might be
-                // considered, so that `std::vector<int>`, and `std::vector<(int)>`, and
-                // `std::vector<int32_t>` are treated as equivalent.
-                //
-                // TODO(lukasza, hlopko): More explicitly ensure that the same canonicalization
-                // (e.g. TokenStream->String transformation) is used here and in
-                // `cc_template/cc_template_impl.rs`.
-                let instantiation_name = m.tokens.to_string().replace(' ', "");
-                results.insert(instantiation_name);
-            }
+        if let Ok(m) = syn::parse2::<syn::Macro>(macro_tokens)
+            && m.path.is_ident("cc_template")
+        {
+            // In theory `TokenStream` -> `instantiation_name` translation could go through
+            // `token_stream_printer::tokens_to_string`.  This route is not used because:
+            // - The dependencies it would bring would run into b/216638047
+            // - Extra functionality from that route is not needed (e.g. no need for
+            //   `__COMMENT__`-aware or `__SPACE__`-aware processing, nor for special
+            //   handling of `TokenTree::Group`).
+            //
+            // TODO(lukasza, hlopko): In the future, extra canonicalization might be
+            // considered, so that `std::vector<int>`, and `std::vector<(int)>`, and
+            // `std::vector<int32_t>` are treated as equivalent.
+            //
+            // TODO(lukasza, hlopko): More explicitly ensure that the same canonicalization
+            // (e.g. TokenStream->String transformation) is used here and in
+            // `cc_template/cc_template_impl.rs`.
+            let instantiation_name = m.tokens.to_string().replace(' ', "");
+            results.insert(instantiation_name);
         }
         if let TokenTree::Group(group) = next {
             find_cc_template_calls(group.stream(), results);

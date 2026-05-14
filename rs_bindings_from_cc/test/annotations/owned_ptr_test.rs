@@ -29,3 +29,8 @@ fn make_and_use_thing_with_raw_ptr() {
         owned_ptr::RawThing::Close(thing);
     }
 }
+
+#[gtest]
+fn make_and_drop_custom_thing_with_owned_ptr() {
+    let _thing: owned_ptr::CustomOwnedThing = owned_ptr_user::MakeCustomOwnedThing(42);
+}

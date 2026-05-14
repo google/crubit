@@ -41,13 +41,13 @@ struct PackedLayout final {
 // currently supported.
 volatile int* MultipleReasons(volatile int* n);
 
-// Unknown attributes could have all kinds of effects and are rejected outisde
+// Unknown attributes could have all kinds of effects and are rejected outside
 // of experimental. The `gnu::abi_tag` attribute is arbitrarily selected for
 // being accepted by our toolchain and unknown by Crubit.
 
 struct [[gnu::abi_tag("foo")]] TypeWithUnknownAttribute {};
 
-[[gnu::abi_tag("foo")]] void FuncWithUnknownAttribute();
+[[gnu::cold]] void FuncWithUnknownAttribute();
 
 void ParamWithUnknownAttribute([[gnu::abi_tag("foo")]] int i);
 

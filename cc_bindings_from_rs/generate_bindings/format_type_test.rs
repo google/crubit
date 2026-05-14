@@ -299,6 +299,11 @@ fn test_format_ty_for_cc_successes() {
             cc: "::std::array < ::std::int32_t, 42>",
             includes: ["<array>", "<cstdint>"]
         ),
+        case!(
+            rs: "std::cmp::Ordering",
+            cc: "::rs::core::cmp::Ordering",
+            includes: ["\"fake_bindings_for_unittests/core_cc_api.h\""]
+        ),
     ];
     let preamble = quote! {
         #![allow(unused_parens)]
@@ -425,7 +430,8 @@ fn test_format_ty_for_cc_failures() {
         (
             "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)
             "Generic function pointers are not supported yet (b/259749023)",
-        ),        (
+        ),
+        (
             "impl Eq", // TyKind::Alias
             "The following Rust type is not supported yet: impl Eq",
         ),
@@ -456,16 +462,9 @@ fn test_format_ty_for_cc_failures() {
             "Generic types are not supported yet (b/259749095)",
         ),
         (
-            "std::cmp::Ordering",
-            "Definition `std::cmp::Ordering` comes from the `core` crate, \
-             but no `--crate-header` was specified for this crate",
-        ),
-        (
-            // TODO(b/258261328): Once cross-crate bindings are supported we should try
-            // to test them via a test crate that we control (rather than testing via
-            // implementation details of the std crate).
             "core::alloc::LayoutError",
-            "Definition `std::alloc::LayoutError` comes from the `core` crate, but no `--crate-header` was specified for this crate",
+            "Failed to format type for the definition of `std::alloc::LayoutError`: \
+             Zero-sized types (ZSTs) are not supported (b/258259459)",
         ),
     ];
     let preamble = quote! {

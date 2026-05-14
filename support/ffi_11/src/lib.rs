@@ -59,8 +59,12 @@
 //!
 //! For now, the only supported platforms are:
 //!
-//! * LP64: Any LP64 platform which uses the smallest suitable fundamental type
-//!   for `intN_t`. For example, Linux on x86_64 or Aarch64. But not OpenBSD.
+//! * LP64:
+//!     * Any LP64 platform which uses the smallest suitable fundamental type
+//!       for `intN_t` (i.e., `int64_t` is `long`). For example, Linux on
+//!       x86_64 or Aarch64, but not iOS or OpenBSD.
+//!     * Listed LP64 platforms where `int64_t` is `long long`: iOS and OpenBSD.
+//!       (other platforms in this category but not on this list will be broken)
 //! * LLP64: 64-bit Windows.
 //!
 //! We will add support over time to other commonly used platforms.
@@ -262,7 +266,10 @@ pub const fn new_c_uint(value: u32) -> c_uint {
 }
 
 /// LP64 with long int64_t.
-#[cfg(all(target_pointer_width = "64", not(windows), not(target_os = "openbsd")))]
+#[cfg(all(
+    target_pointer_width = "64",
+    not(any(windows, target_os = "ios", target_os = "openbsd"))
+))]
 mod long_integers {
     use super::*;
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
@@ -288,20 +295,32 @@ mod long_integers {
     }
 }
 
-// TODO(b/333759161): This is the mirror image of the above.
-//
-// /// LP64 with long long int64_t
-// ///
-// /// TODO(b/333759161): List out the full list of LP64 platforms which use long
-// /// long here.
-// #[cfg(all(target_pointer_width = "64", any(target_os = "openbsd")))]
-// mod long_integers {
-//     pub type c_long = isize;
-//     pub type c_ulong = usize;
+/// LP64 with long long int64_t
+#[cfg(all(target_pointer_width = "64", any(target_os = "ios", target_os = "openbsd")))]
+mod long_integers {
+    use super::*;
+    new_integer! {
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+      pub struct c_long(i64);
+      pub const fn new_c_long;
+    }
+    new_integer! {
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+      pub struct c_ulong(u64);
+      pub const fn new_c_ulong;
+    }
 
-//     pub type c_longlong = i64;
-//     pub type c_ulonglong = u64;
-// }
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+    pub type c_longlong = i64;
+    pub const fn new_c_longlong(value: i64) -> c_longlong {
+        value
+    }
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+    pub type c_ulonglong = u64;
+    pub const fn new_c_ulonglong(value: u64) -> c_ulonglong {
+        value
+    }
+}
 
 /// LLP64 (Windows)
 #[cfg(all(target_pointer_width = "64", windows))]

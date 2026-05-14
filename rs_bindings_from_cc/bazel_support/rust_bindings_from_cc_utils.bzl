@@ -113,6 +113,7 @@ def generate_and_compile_bindings(
 
     # Relocate the rs files so that they can be read by rustc using relative paths.
     extra_rs_srcs_relocated = []
+    remap_paths = {}
     for (file, ns_path) in extra_rs_srcs:
         file_path = file.path
         if ns_path:
@@ -120,6 +121,7 @@ def generate_and_compile_bindings(
         new_file = ctx.actions.declare_file(file_path, sibling = rs_output)
         ctx.actions.symlink(output = new_file, target_file = file)
         extra_rs_srcs_relocated.append(new_file)
+        remap_paths[new_file.path] = file.path
 
     # We use a separate feature_configuration for the clang compile action as the feature
     # configuration for bindings generation needs to use a param file. The clang wrapper script
@@ -173,6 +175,7 @@ def generate_and_compile_bindings(
         force_all_deps_direct = True,
         allow_lto = False,
         aliases = aliases,
+        remap_path_prefix = remap_paths,
     )
 
     return [

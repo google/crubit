@@ -29,22 +29,27 @@ unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
     type Kind = ::cxx::kind::Trivial;
 }
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr`: raw pointer"
-)]
-pub trait BindingFailedFor_ZN22TypeWithPtrConstructorC1EPi {}
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=10
-impl From<*mut ::ffi_11::c_int> for TypeWithPtrConstructor
-where
-    for<'error> &'error (): BindingFailedFor_ZN22TypeWithPtrConstructorC1EPi,
-{
+impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
     #[inline(always)]
-    fn from(args: *mut ::ffi_11::c_int) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a crubit.rs-bug."
-        )
+    unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
+        let mut ptr = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN22TypeWithPtrConstructorC1EPi(
+                &raw mut tmp as *mut _,
+                ptr,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
+        unsafe { <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args) }
     }
 }
 
@@ -62,22 +67,27 @@ unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
     type Kind = ::cxx::kind::Trivial;
 }
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr`: raw pointer"
-)]
-pub trait BindingFailedFor_ZN29TypeWithNonNullPtrConstructorC1EPi {}
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=15
-impl From<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor
-where
-    for<'error> &'error (): BindingFailedFor_ZN29TypeWithNonNullPtrConstructorC1EPi,
-{
+impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor {
     #[inline(always)]
-    fn from(args: *mut ::ffi_11::c_int) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a crubit.rs-bug."
-        )
+    unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
+        let mut ptr = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN29TypeWithNonNullPtrConstructorC1EPi(
+                &raw mut tmp as *mut _,
+                ptr,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
+        unsafe { <Self as ::ctor::UnsafeFrom<*mut ::ffi_11::c_int>>::unsafe_from(args) }
     }
 }
 
@@ -123,6 +133,14 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN22TypeWithPtrConstructorC1EPi(
+            __this: *mut ::core::ffi::c_void,
+            ptr: *mut ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN29TypeWithNonNullPtrConstructorC1EPi(
+            __this: *mut ::core::ffi::c_void,
+            ptr: *mut ::ffi_11::c_int,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN28TypeWithReferenceConstructorC1ERi(
             __this: *mut ::core::ffi::c_void,
             r#ref: &mut ::ffi_11::c_int,

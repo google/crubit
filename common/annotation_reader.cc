@@ -7,6 +7,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
@@ -301,6 +302,30 @@ absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
                      " must have a single string argument."));
   }
   return std::string(*arg);
+}
+
+absl::StatusOr<std::optional<std::vector<std::string>>>
+GetAnnotationWithStringArgs(const clang::Decl& decl,
+                            absl::string_view annotation_name) {
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> maybe_args,
+                          GetAnnotateAttrArgs(decl, annotation_name));
+  if (!maybe_args.has_value()) {
+    return std::nullopt;
+  }
+  const AnnotateArgs& args = *maybe_args;
+  std::vector<std::string> result;
+  result.reserve(args.size());
+  for (const clang::Expr* arg_expr : args) {
+    absl::StatusOr<absl::string_view> arg =
+        GetExprAsStringLiteral(*arg_expr, decl.getASTContext());
+    if (!arg.ok()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Annotation ", annotation_name,
+                       " arguments must be string literals."));
+    }
+    result.push_back(std::string(*arg));
+  }
+  return result;
 }
 
 absl::StatusOr<const clang::AnnotateTypeAttr* absl_nullable>

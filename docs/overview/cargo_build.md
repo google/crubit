@@ -18,15 +18,42 @@ freshness: { owner: 'lukasza' reviewed: '2025-12-19' }
 ```
 $ cargo build --release --verbose --bin cc_bindings_from_rs \
     --manifest-path \
-    $CRUBIT_GIT_REPO/cargo/cc_bindings_from_rs/cc_bindings_from_rs/Cargo.toml
+    $CRUBIT_ROOT/cargo/cc_bindings_from_rs/cc_bindings_from_rs/Cargo.toml
 ```
+
+This will work from a git checkout of the public project or from Google's
+internal mirror of the repo. If you plan to iterate on a cargo build, it is
+recommended to `cd third_party/crubit` so you can build/test without specifying
+the manifest path explicitly:
+
+```
+$ cargo build -p cc_bindings_from_rs
+```
+
+## Target Directory
+
+A default Cargo build will generate a `target/` directory adjacent to the
+Cargo.toml that will clutter your VCS client with intermediate build files. You
+can avoid this by setting your target directory somewhere outside your VCS. A
+`config.toml` can set your target directory to a non-standard location:
+
+```toml
+[build]
+# You can also use something like `~/.cargo/target` if you want to keep the intermediaries around
+target-dir = "/tmp/target/"
+```
+
+If you want your `config.toml` to apply to all your projects, place it at
+`~/.cargo/config.toml`. See [Cargo's configuration
+documentation](https://doc.rust-lang.org/cargo/reference/config.html) for the
+other locations you can place a `config.toml` and their scope.
 
 ### Troubleshooting
 
 #### `rustc_driver*.rmeta` build dependency
 
-If `cargo build ... --bin cc_bindings_from_rs` fails to build, then check
-if the following problem has been reported as one of the first errors:
+If `cargo build ... --bin cc_bindings_from_rs` fails to build, then check if the
+following problem has been reported as one of the first errors:
 
 ```
 error[E0463]: can't find crate for `rustc_driver`
@@ -38,16 +65,15 @@ error[E0463]: can't find crate for `rustc_driver`
    = help: maybe you need to install the missing components with: `rustup component add rust-src rustc-dev llvm-tools-preview`
 ```
 
-If you build Crubit using `cargo` and `rustc` that are managed by `rustup`,
-then you can just run the suggested command to add the `rustc-dev` component:
-`rustup component add rustc-dev`.
+If you build Crubit using `cargo` and `rustc` that are managed by `rustup`, then
+you can just run the suggested command to add the `rustc-dev` component: `rustup
+component add rustc-dev`.
 
-If you build Crubit using `cargo` and `rustc`
-that are built and installed using `x.py install`,
-then please ensure that `x.py`'s `config.toml` covers the `rustc-dev` component
-(h/t @Nadrieril for [the PR](https://github.com/rust-lang/rust/pull/149655)
-to teach `x.py install` about this component).
-For example:
+If you build Crubit using `cargo` and `rustc` that are built and installed using
+`x.py install`, then please ensure that `x.py`'s `config.toml` covers the
+`rustc-dev` component (h/t @Nadrieril for [the
+PR](https://github.com/rust-lang/rust/pull/149655) to teach `x.py install` about
+this component). For example:
 
 ```
 $ cat third_party/rust-src/config.toml
@@ -70,9 +96,9 @@ tools = [
 
 #### `librustc_driver*.so` runtime dependency
 
-`cc_bindings_from_rs` depends at runtime on `librustc_driver*.so`.
-If the runtime linker cannot find this library,
-then launching `cc_bindings_from_rs` may fail with the following error:
+`cc_bindings_from_rs` depends at runtime on `librustc_driver*.so`. If the
+runtime linker cannot find this library, then launching `cc_bindings_from_rs`
+may fail with the following error:
 
 ```
 $ third_party/rust-toolchain/bin/cc_bindings_from_rs --help
@@ -81,8 +107,8 @@ error while loading shared libraries: librustc_driver-871558eb5abca9d6.so:
 cannot open shared object file: No such file or directory
 ```
 
-`rustc` is able to find the `librustc_driver*.so` library,
-because (on certain platforms) `x.py` sets a `RUNPATH` in the `rustc` binary:
+`rustc` is able to find the `librustc_driver*.so` library, because (on certain
+platforms) `x.py` sets a `RUNPATH` in the `rustc` binary:
 
 ```
 $ readelf -d third_party/rust-toolchain/bin/rustc | grep RUNPATH
@@ -91,25 +117,23 @@ $ ls third_party/rust-toolchain/lib/librustc_driver-*.so
 third_party/rust-toolchain/lib/librustc_driver-871558eb5abca9d6.so
 ```
 
-If `cc_bindings_from_rs` is distributed/installed next to `rustc`, then
-you can fix the linking error by setting an identical `RUNPATH` when
-building `cc_bindings_from_rs`.
-This can be done by asking `cargo`
-to pass additional `rustc` command-line flags
-(e.g. using `RUSTFLAGS` or `CARGO_ENCODED_RUSTFLAGS`
-[environment variables](https://doc.rust-lang.org/cargo/reference/environment-variables.html)).
-The following command-line flags should work
-(they are based on
-[`x.py`'s sources](https://github.com/rust-lang/rust/blob/b889870082dd0b0e3594bbfbebb4545d54710829/src/bootstrap/src/core/builder/cargo.rs#L285-L306)):
+If `cc_bindings_from_rs` is distributed/installed next to `rustc`, then you can
+fix the linking error by setting an identical `RUNPATH` when building
+`cc_bindings_from_rs`. This can be done by asking `cargo` to pass additional
+`rustc` command-line flags (e.g. using `RUSTFLAGS` or `CARGO_ENCODED_RUSTFLAGS`
+[environment
+variables](https://doc.rust-lang.org/cargo/reference/environment-variables.html)).
+The following command-line flags should work (they are based on [`x.py`'s
+sources](https://github.com/rust-lang/rust/blob/b889870082dd0b0e3594bbfbebb4545d54710829/src/bootstrap/src/core/builder/cargo.rs#L285-L306)):
 
-* Linux:
-    - `-Clink-args=-Wl,-z,origin`
-    - `-Clink-args=-Wl,-rpath,$ORIGIN/../lib`
-* Mac:
-    - `-Zosx-rpath-install-name`
-    - `-Clink-args=-Wl,-rpath,@loader_path/../lib`
-* Windows:
-    - no extra command-line flags needed (TODO: verify this)
+  * Linux:
+      - `-Clink-args=-Wl,-z,origin`
+      - `-Clink-args=-Wl,-rpath,$ORIGIN/../lib`
+  * Mac:
+      - `-Zosx-rpath-install-name`
+      - `-Clink-args=-Wl,-rpath,@loader_path/../lib`
+  * Windows:
+      - no extra command-line flags needed (TODO: verify this)
 
 ## rs_bindings_from_cc
 

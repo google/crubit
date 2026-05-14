@@ -9,3 +9,11 @@ impl crate::OwnedThing {
         }
     }
 }
+
+impl crate::CustomOwnedThing {
+    pub(crate) fn CustomDropImpl(&mut self) {
+        unsafe {
+            crate::CustomRawThing::CustomDropImpl(self.0.as_mut());
+        }
+    }
+}

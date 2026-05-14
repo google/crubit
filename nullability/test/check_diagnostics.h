@@ -11,9 +11,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Testing/Annotations/Annotations.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 /// Runs nullability verification on `SourceCode` and returns whether
 /// diagnostics are produced on those lines marked in the source code with
@@ -31,8 +29,6 @@ bool checkDiagnostics(ASTContext& AST, llvm::Annotations AnnotatedCode,
                       const NullabilityPragmas& Pragmas = NullabilityPragmas(),
                       bool AllowUntracked = false);
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_

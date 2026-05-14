@@ -29,9 +29,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseMap.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 /// Factory function for creating a solver implementation.
 using SolverFactory = std::function<std::unique_ptr<dataflow::Solver>()>;
@@ -125,8 +123,7 @@ class PointerNullabilityAnalysis
   // Storage locations that represent "top" for each given type.
   llvm::DenseMap<QualType, dataflow::StorageLocation *> TopStorageLocations;
 };
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+
+}  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
