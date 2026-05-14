@@ -2,94 +2,105 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use database::code_snippet::{Bindings, FfiBindings};
+use database::code_snippet::Bindings;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
-use ffi_types::{Environment, FfiU8Slice, FfiU8SliceBox};
+use ffi_types::Environment;
 use generate_bindings::generate_bindings;
-use std::ffi::OsString;
+use generate_bindings_rust_proto::{GenerateBindingsRequestView, GenerateBindingsResponseMut};
+use protobuf::{MessageMutInterop, MessageViewInterop};
+use std::ffi::{c_void, OsString};
 use std::panic::catch_unwind;
 use std::process;
+use std::sync::Once;
 
-/// Deserializes IR from `json` and generates bindings source code.
-///
-/// This function aborts on error.
+/// Deserializes IR from `request` and generates bindings source code
+/// into the `response` object.
+pub fn generate_bindings_impl(
+    request: GenerateBindingsRequestView<'_>,
+    mut response: GenerateBindingsResponseMut<'_>,
+) {
+
+    let json: &[u8] = request.json().as_bytes();
+    let crubit_support_path_format: &str = request
+        .crubit_support_path_format()
+        .to_str()
+        .expect("crubit_support_path_format is not valid UTF-8");
+    let clang_format_exe_path: OsString = request
+        .clang_format_exe_path()
+        .to_str()
+        .expect("clang_format_exe_path is not valid UTF-8")
+        .into();
+    let rustfmt_exe_path: OsString =
+        request.rustfmt_exe_path().to_str().expect("rustfmt_exe_path is not valid UTF-8").into();
+    let rustfmt_config_path: OsString = request
+        .rustfmt_config_path()
+        .to_str()
+        .expect("rustfmt_config_path is not valid UTF-8")
+        .into();
+    let kythe_default_corpus: &str =
+        request.kythe_default_corpus().to_str().expect("kythe_default_corpus is not valid UTF-8");
+    let generate_error_report: bool = request.generate_error_report();
+    let environment = if request.skip_source_location_in_doc_comments() {
+        Environment::GoldenTest
+    } else {
+        Environment::Production
+    };
+    let kythe_annotations: bool = request.kythe_annotations();
+
+    let mut error_report: Option<ErrorReport> = None;
+    let errors: &dyn ErrorReporting = if generate_error_report {
+        error_report.insert(ErrorReport::new(SourceLanguage::Cpp))
+    } else {
+        &error_report::IgnoreErrors
+    };
+    let fatal_errors = FatalErrors::new();
+    let Bindings { rs_api, rs_api_impl } = generate_bindings(
+        json,
+        crubit_support_path_format,
+        &clang_format_exe_path,
+        &rustfmt_exe_path,
+        &rustfmt_config_path,
+        errors,
+        &fatal_errors,
+        environment,
+        kythe_annotations,
+        kythe_default_corpus,
+    )
+    .unwrap();
+
+    response.set_rs_api(rs_api);
+    response.set_rs_api_impl(rs_api_impl);
+
+    if let Some(err) = error_report.map(|s| s.to_json_string()) {
+        response.set_error_report(err);
+    }
+
+    response.set_fatal_errors(fatal_errors.take_string());
+}
+
+/// C API for `generate_bindings_impl`.
 ///
 /// # Safety
 ///
 /// Expectations:
-///    * `json` should be a FfiU8Slice for a valid array of bytes with the given
-///      size.
-///    * `crubit_support_path_format` should be a FfiU8Slice for a valid array
-///      of bytes representing an UTF8-encoded string
-///    * `rustfmt_exe_path` and `rustfmt_config_path` should both be a
-///      FfiU8Slice for a valid array of bytes representing an UTF8-encoded
-///      string (without the UTF-8 requirement, it seems that Rust doesn't offer
-///      a way to convert to OsString on Windows)
-///    * `json`, `crubit_support_path_format`, `rustfmt_exe_path`, and
-///      `rustfmt_config_path` shouldn't change during the call.
+///     * `raw_request` must point to a valid C++ `GenerateBindingsRequest` object.
+///     * `raw_response` must point to a valid C++ `GenerateBindingsResponse` object.
 ///
 /// Ownership:
-///    * function doesn't take ownership of (in other words it borrows) the
-///      input params: `json`, `crubit_support_path_format`, `rustfmt_exe_path`,
-///      and `rustfmt_config_path`
-///    * function passes ownership of the returned value to the caller
+///     * The function does not take ownership of the `raw_request` and `raw_response` pointers.
+///     * The caller is responsible for their memory.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn GenerateBindingsImpl(
-    json: FfiU8Slice,
-    crubit_support_path_format: FfiU8Slice,
-    clang_format_exe_path: FfiU8Slice,
-    rustfmt_exe_path: FfiU8Slice,
-    rustfmt_config_path: FfiU8Slice,
-    generate_error_report: bool,
-    environment: Environment,
-    kythe_annotations: bool,
-    kythe_default_corpus: FfiU8Slice,
-) -> FfiBindings {
-    let json: &[u8] = json.as_slice();
-    let crubit_support_path_format: &str =
-        std::str::from_utf8(crubit_support_path_format.as_slice()).unwrap();
-    let clang_format_exe_path: OsString =
-        std::str::from_utf8(clang_format_exe_path.as_slice()).unwrap().into();
-    let rustfmt_exe_path: OsString =
-        std::str::from_utf8(rustfmt_exe_path.as_slice()).unwrap().into();
-    let rustfmt_config_path: OsString =
-        std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
-    let kythe_default_corpus: &str = std::str::from_utf8(kythe_default_corpus.as_slice()).unwrap();
-    catch_unwind(|| {
-        let mut error_report: Option<ErrorReport> = None;
-        let errors: &dyn ErrorReporting = if generate_error_report {
-            error_report.insert(ErrorReport::new(SourceLanguage::Cpp))
-        } else {
-            &error_report::IgnoreErrors
+    raw_request: *const c_void,
+    mut raw_response: *mut c_void,
+) {
+    catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let request =
+            unsafe { GenerateBindingsRequestView::__unstable_wrap_raw_message(&raw_request) };
+        let response = unsafe {
+            GenerateBindingsResponseMut::__unstable_wrap_raw_message_mut(&mut raw_response)
         };
-        let fatal_errors = FatalErrors::new();
-        let Bindings { rs_api, rs_api_impl } = generate_bindings(
-            json,
-            crubit_support_path_format,
-            &clang_format_exe_path,
-            &rustfmt_exe_path,
-            &rustfmt_config_path,
-            errors,
-            &fatal_errors,
-            environment,
-            kythe_annotations,
-            kythe_default_corpus,
-        )
-        .unwrap();
-        FfiBindings {
-            rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
-            rs_api_impl: FfiU8SliceBox::from_boxed_slice(
-                rs_api_impl.into_bytes().into_boxed_slice(),
-            ),
-            error_report: FfiU8SliceBox::from_boxed_slice(
-                error_report
-                    .map(|s| s.to_json_string().into_bytes().into_boxed_slice())
-                    .unwrap_or_else(|| Box::new([])),
-            ),
-            fatal_errors: FfiU8SliceBox::from_boxed_slice(
-                fatal_errors.take_string().into_bytes().into_boxed_slice(),
-            ),
-        }
-    })
-    .unwrap_or_else(|_| process::abort())
+        generate_bindings_impl(request, response);
+    }))
+    .unwrap_or_else(|_| process::abort());
 }
