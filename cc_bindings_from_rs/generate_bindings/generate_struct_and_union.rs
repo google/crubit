@@ -1210,6 +1210,8 @@ fn generate_variant_ctor<'tcx>(
                 bail!("Field `{}` is not public", field_def.name)
             }
             let ty = field_def.ty(tcx, adt_generic_args);
+            #[rustversion::since(2026-05-13)]
+            let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
 
             let is_default =
                 query_compiler::does_type_implement_trait(tcx, ty, default_trait_id, []);
@@ -1223,7 +1225,7 @@ fn generate_variant_ctor<'tcx>(
 
             Ok(ty)
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<Ty<'tcx>>>>()?;
 
     // If we fail to convert a field type, don't generate a constructor.
     // Our uncovertible fields will be replaced by a blob of bytes that we do not want to appear
@@ -1471,6 +1473,8 @@ pub(crate) fn generate_fields<'tcx>(
                     field_iter
                         .map(|IndexedVariantField { index, field_def }| {
                             let ty = field_def.ty(tcx, adt_generic_args);
+                            #[rustversion::since(2026-05-13)]
+                            let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
                             let size = get_layout(tcx, ty).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
                                 if is_bridged_type(db, ty)
