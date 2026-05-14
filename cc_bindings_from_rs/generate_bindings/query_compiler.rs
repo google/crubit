@@ -148,7 +148,7 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     let sig = sig.skip_normalization();
     let mut anon_count: u32 = 0;
     let mut translated_kinds: HashMap<ty::BoundVar, ty::BoundRegionKind> = HashMap::new();
-    #[rustversion::before(2026-01-29)]
+    #[rustversion::all(before(1.95), before(2026-01-29))]
     let region_f = |br: ty::BoundRegion| {
         let new_kind: &ty::BoundRegionKind = translated_kinds.entry(br.var).or_insert_with(|| {
             if br.kind.is_named(tcx) {
@@ -166,7 +166,7 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
             ty::LateParamRegionKind::from_bound(br.var, *new_kind),
         )
     };
-    #[rustversion::since(2026-01-29)]
+    #[rustversion::any(since(1.95), since(2026-01-29))]
     let region_f = |br: ty::BoundRegion<'tcx>| {
         let new_kind: &ty::BoundRegionKind = translated_kinds.entry(br.var).or_insert_with(|| {
             if br.kind.is_named(tcx) {

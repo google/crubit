@@ -426,9 +426,9 @@ fn function_kind<'tcx>(
 }
 
 fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
-    #[rustversion::before(2025-07-29)]
+    #[rustversion::all(before(1.95), before(2025-07-29))]
     let impl_id = tcx.impl_of_method(def_id);
-    #[rustversion::since(2025-07-29)]
+    #[rustversion::any(since(1.95), since(2025-07-29))]
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");

@@ -21,10 +21,10 @@ use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 
-#[rustversion::before(2025-05-26)]
+#[rustversion::all(before(1.95), before(2025-05-26))]
 use rustc_span::symbol::kw;
 
-#[rustversion::since(2025-05-26)]
+#[rustversion::any(since(1.95), since(2025-05-26))]
 use rustc_span::symbol::sym;
 
 /// A collection of attributes applied via `#[crubit_annotate::...]`.
@@ -119,10 +119,10 @@ pub struct CrubitAttrs {
     pub must_bind: bool,
 }
 
-#[rustversion::before(2025-05-26)]
+#[rustversion::all(before(1.95), before(2025-05-26))]
 const EMPTY_SYMBOL: Symbol = kw::Empty;
 
-#[rustversion::since(2025-05-26)]
+#[rustversion::any(since(1.95), since(2025-05-26))]
 const EMPTY_SYMBOL: Symbol = sym::empty;
 
 impl CrubitAttrs {

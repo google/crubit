@@ -54,9 +54,9 @@ fn is_status_additional_srcs<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
         Ok(filelines) => filelines,
         Err(_) => return false,
     };
-    #[rustversion::before(2025-12-14)]
+    #[rustversion::all(before(1.95), before(2025-12-14))]
     let file_name = file.name.prefer_local().to_string();
-    #[rustversion::since(2025-12-14)]
+    #[rustversion::any(since(1.95), since(2025-12-14))]
     let file_name = file.name.prefer_local_unconditionally().to_string();
     // Virtual paths will have a "./" prefix that we don't want to display.
     let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
@@ -1275,7 +1275,7 @@ fn generate_trait_impl_specialization<'tcx>(
     let tcx = db.tcx();
     let impl_def_id = trait_impl.trait_impl;
     let trait_header = tcx.impl_trait_header(impl_def_id);
-    #[rustversion::before(2025-10-17)]
+    #[rustversion::all(before(1.95), before(2025-10-17))]
     let trait_header = trait_header.expect("Trait impl should have a trait header");
     let trait_ref = crate::normalize_ty(
         tcx,

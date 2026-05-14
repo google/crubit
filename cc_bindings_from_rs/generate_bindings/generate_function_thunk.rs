@@ -321,12 +321,12 @@ fn c_abi_for_param_type<'tcx>(
     }
 }
 
-#[rustversion::before(2025-03-19)]
+#[rustversion::all(before(1.95), before(2025-03-19))]
 pub(crate) fn ident_or_opt_ident(i: &rustc_span::Ident) -> Option<&rustc_span::Ident> {
     Some(i)
 }
 
-#[rustversion::since(2025-03-19)]
+#[rustversion::any(since(1.95), since(2025-03-19))]
 pub(crate) fn ident_or_opt_ident(i: &Option<rustc_span::Ident>) -> Option<&rustc_span::Ident> {
     i.as_ref()
 }
@@ -737,9 +737,9 @@ pub fn generate_trait_thunks<'tcx>(
                 };
                 format!("__crubit_thunk_{}", method_name)
             } else {
-                #[rustversion::since(2025-05-06)]
+                #[rustversion::any(since(1.95), since(2025-05-06))]
                 let instance = ty::Instance::new_raw(method.def_id, substs);
-                #[rustversion::before(2025-05-06)]
+                #[rustversion::all(before(1.95), before(2025-05-06))]
                 let instance = ty::Instance::new(method.def_id, substs);
 
                 let symbol = tcx.symbol_name(instance);

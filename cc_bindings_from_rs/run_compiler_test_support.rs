@@ -107,7 +107,7 @@ static USING_INTERNAL_FEATURES: std::sync::atomic::AtomicBool =
 
 const TEST_FILENAME: &str = "crubit_unittests.rs";
 
-#[rustversion::before(2025-10-22)]
+#[rustversion::all(before(1.95), before(2025-10-22))]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {
         opts,
@@ -135,8 +135,8 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
     }
 }
 
-#[rustversion::since(2025-10-22)]
-#[rustversion::before(2026-02-07)]
+#[rustversion::any(since(1.95), since(2025-10-22))]
+#[rustversion::all(before(1.95), before(2026-02-07))]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {
         opts,
@@ -163,8 +163,8 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
     }
 }
 
-#[rustversion::since(2026-02-07)]
-#[rustversion::before(2026-02-08)]
+#[rustversion::any(since(1.95), since(2026-02-07))]
+#[rustversion::all(before(1.95), before(2026-02-08))]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {
         opts,
@@ -190,8 +190,8 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
     }
 }
 
-#[rustversion::since(2026-02-08)]
-#[rustversion::before(2026-03-18)]
+#[rustversion::any(since(1.95), since(2026-02-08))]
+#[rustversion::all(before(1.95), before(2026-03-18))]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {
         opts,
@@ -216,7 +216,7 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
     }
 }
 
-#[rustversion::since(2026-03-18)]
+#[rustversion::any(since(1.95), since(2026-03-18))]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {
         opts,
