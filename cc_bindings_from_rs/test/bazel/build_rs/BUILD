@@ -9,6 +9,8 @@ load(
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
+licenses(["notice"])
+
 cargo_build_script(
     name = "build_script",
     srcs = ["build.rs"],

@@ -13,6 +13,8 @@ load(
     "additional_rust_srcs_for_crubit_bindings",
 )
 
+licenses(["notice"])
+
 rust_library(
     name = "rust_library",
     srcs = ["rust_library.rs"],

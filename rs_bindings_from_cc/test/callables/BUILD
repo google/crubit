@@ -4,6 +4,8 @@ load(
 )
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
+licenses(["notice"])
+
 crubit_test_cc_library(
     name = "calls_back_to_rust",
     srcs = ["calls_back_to_rust.cc"],

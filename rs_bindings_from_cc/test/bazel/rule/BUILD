@@ -6,6 +6,8 @@ load(
     "rust_api_from_cpp",
 )
 
+licenses(["notice"])
+
 cc_library(
     name = "lib",
     srcs = ["lib.cc"],

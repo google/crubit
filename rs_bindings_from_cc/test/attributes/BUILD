@@ -1,6 +1,8 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
+licenses(["notice"])
+
 cc_library(
     name = "annotalysis",
     hdrs = ["annotalysis.h"],

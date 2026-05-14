@@ -6,6 +6,8 @@ load(
     "additional_rust_srcs_for_crubit_bindings",
 )
 
+licenses(["notice"])
+
 additional_rust_srcs_for_crubit_bindings(
     name = "public_extra",
     srcs = ["public_extra.rs"],

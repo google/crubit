@@ -1,6 +1,8 @@
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
+licenses(["notice"])
+
 crubit_test_cc_library(
     name = "lib",
     hdrs = [

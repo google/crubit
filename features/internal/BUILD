@@ -8,6 +8,8 @@ load(
     "crubit_feature_hint",
 )
 
+licenses(["notice"])
+
 # A feature set with a stable expansion, only for use in Bazel unit tests.
 crubit_feature_hint(
     name = "testonly_supported",

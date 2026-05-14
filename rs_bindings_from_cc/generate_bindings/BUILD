@@ -8,6 +8,8 @@ load(
     "multiplatform_rust_test",
 )
 
+licenses(["notice"])
+
 rust_library(
     name = "cc_api",
     srcs = [

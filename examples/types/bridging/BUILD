@@ -8,6 +8,8 @@ load(
     "additional_rust_srcs_for_crubit_bindings",
 )
 
+licenses(["notice"])
+
 cc_library(
     name = "either",
     srcs = ["either_internal.h"],

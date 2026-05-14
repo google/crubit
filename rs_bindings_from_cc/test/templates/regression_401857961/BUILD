@@ -5,6 +5,8 @@ load(
     "golden_test",
 )
 
+licenses(["notice"])
+
 cc_library(
     name = "repro",
     hdrs = ["repro.h"],

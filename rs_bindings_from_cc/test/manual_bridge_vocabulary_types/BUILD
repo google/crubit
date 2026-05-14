@@ -4,6 +4,8 @@ load(
     "crubit_rust_test",
 )
 
+licenses(["notice"])
+
 cc_library(
     name = "common",
     hdrs = ["common.h"],

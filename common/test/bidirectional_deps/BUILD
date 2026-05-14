@@ -15,6 +15,8 @@ load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 #     cc_golden_test = "golden_test",
 # )
 
+licenses(["notice"])
+
 rust_library(
     name = "leaf_rs_lib",
     srcs = ["leaf_rs_lib.rs"],

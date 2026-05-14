@@ -6,6 +6,8 @@ load(
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(":additional_rust_srcs_for_crubit_bindings_aspect_hint_test.bzl", "additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite")
 
+licenses(["notice"])
+
 additional_rust_srcs_for_crubit_bindings(
     name = "additional_rust_srcs_test_stub",
     srcs = [
