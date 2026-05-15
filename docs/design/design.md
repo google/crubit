@@ -226,7 +226,7 @@ language, as that provides the most natural way to define Rust APIs.
     C++ code.** When making changes to C++ code, engineers are less likely to
     notice and update the annotations in sidecar files.
     *   Presubmits can catch some cases of desynchronization between C++ headers
-        and sidecar filles. However, presubmit errors that remind engineers to
+        and sidecar files. However, presubmit errors that remind engineers to
         edit more files create an inferior user experience.
 *   **Sidecar files create extra friction to modify the code.** Where previously
     one had to edit only a C++ header and a C++ source file, now one also likely
@@ -377,7 +377,7 @@ the more library and team-specific interop customizations we will have to
 support, and the more it will make sense for the performance team to tweak
 generated code to implement sweeping optimizations. These kinds of changes
 should be readily possible, and they should not create conflicts of interest
-between diferent users of the interop tooling.
+between different users of the interop tooling.
 
 ### Interop tooling should facilitate C++ to Rust migration
 
@@ -570,7 +570,7 @@ C++ headers for Rust libraries which expose a public C API**.
         generation is driven by the build system (i.e. by Bazel, or Cargo, or
         GN/ninja, rather than manually) and that the integration between the FFI
         tools and the build system doesn't have any bugs (e.g. that it
-        faithfully replicates all relevent compilation flags).
+        faithfully replicates all relevant compilation flags).
 
 **Evaluation**
 
