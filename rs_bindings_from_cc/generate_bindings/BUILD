@@ -1,3 +1,4 @@
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -8,7 +9,11 @@ load(
     "multiplatform_rust_test",
 )
 
-licenses(["notice"])
+proto_library(
+    name = "generate_bindings_proto",
+    srcs = ["generate_bindings.proto"],
+    visibility = ["//visibility:public"],
+)
 
 rust_library(
     name = "cc_api",

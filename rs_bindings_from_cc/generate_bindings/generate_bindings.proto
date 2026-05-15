@@ -1,0 +1,41 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+edition = "2024";
+
+package rs_bindings_from_cc.generate_bindings;
+
+// Parameters for invoking the Rust (backend) binding generator.
+message GenerateBindingsRequest {
+  // Serialized JSON representation of the intermediate representation
+  // produced by the C++ importer.
+  string json = 1;
+  string crubit_support_path_format = 2;
+  string clang_format_exe_path = 3;
+  string rustfmt_exe_path = 4;
+  string rustfmt_config_path = 5;
+  // When true, the generator will populate the `error_report` field in the
+  // response with a JSON-formatted diagnostic report.
+  bool generate_error_report = 6;
+  // If true, Crubit will skip embedding the original C++ source location and
+  // enabled features inside the generated Rust/C++ documentation comments.
+  // Generally set to true golden file tests to ensure test outputs are
+  // deterministic, and false in production.
+  bool skip_source_location_in_doc_comments = 7;
+  bool kythe_annotations = 8;
+  string kythe_default_corpus = 9;
+}
+
+// Encapsulates the successful or failed output of binding generation.
+message GenerateBindingsResponse {
+  string rs_api = 1;
+  string rs_api_impl = 2;
+  // JSON-formatted diagnostic information detailing any warnings or non-fatal
+  // errors hit during generation.
+  string error_report = 3;
+  // Text description of a fatal error that aborted generation.
+  // If this string is not empty, generation has failed and other fields in
+  // this message should be ignored.
+  string fatal_errors = 4;
+}
