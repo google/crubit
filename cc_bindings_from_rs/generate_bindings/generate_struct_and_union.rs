@@ -1547,7 +1547,10 @@ pub(crate) fn generate_fields<'tcx>(
                                 type_info,
                                 cc_name,
                                 rs_name,
-                                is_public: field_def.vis == ty::Visibility::Public,
+                                is_public: field_def.vis == ty::Visibility::Public
+                                    && tcx
+                                        .lookup_stability(field_def.did)
+                                        .is_none_or(|stability| stability.is_stable()),
                                 index,
                                 offset,
                                 offset_of_next_field,
