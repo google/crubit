@@ -9,4 +9,5 @@ visibility(["//..."])
 SUPPORTED_FEATURES = [
     "supported",
     "fmt",
+    "callables",
 ]
