@@ -46,6 +46,7 @@
 # Integration notes
 
 - [Cargo build](./overview/cargo_build.md)
+- [Agent Skills Installation](./skills_installation.md)
 
 # Design
 
