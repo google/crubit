@@ -5,11 +5,10 @@
 # Automatically @generated BUILD.gn.
 
 import("../../crubit.gni")
-
-visibility = [ "$crubit_src_dir/*" ]
+import("//build/rust/rust_static_library.gni")
 
 source_set("bindings_support") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }

@@ -5,11 +5,10 @@
 # Automatically @generated BUILD.gn.
 
 import("../../crubit.gni")
-
-visibility = [ "$crubit_src_dir/*" ]
+import("//build/rust/rust_static_library.gni")
 
 source_set("char") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -31,7 +30,7 @@ source_set("char") {
 }
 
 source_set("slice_ref") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -50,7 +49,7 @@ source_set("slice_ref") {
 }
 
 source_set("str_ref") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -71,7 +70,7 @@ source_set("str_ref") {
 }
 
 source_set("dyn_callable") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -89,7 +88,7 @@ source_set("dyn_callable") {
 }
 
 source_set("traits") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -103,7 +102,7 @@ source_set("traits") {
 }
 
 source_set("option") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -117,7 +116,7 @@ source_set("option") {
 }
 
 source_set("result") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -131,7 +130,7 @@ source_set("result") {
 }
 
 source_set("tuple") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }

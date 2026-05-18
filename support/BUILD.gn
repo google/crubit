@@ -5,11 +5,10 @@
 # Automatically @generated BUILD.gn.
 
 import("../crubit.gni")
-
-visibility = [ "$crubit_src_dir/*" ]
+import("//build/rust/rust_static_library.gni")
 
 source_set("annotations") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -26,7 +25,7 @@ source_set("annotations") {
 }
 
 source_set("annotations_internal") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -43,7 +42,7 @@ source_set("annotations_internal") {
 }
 
 source_set("bridge_cpp") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }
@@ -57,7 +56,7 @@ source_set("bridge_cpp") {
 }
 
 source_set("lifetime_annotations") {
-  public_configs = [ "$crubit_src_dir/support:config" ]
+  public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
   }

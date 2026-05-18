@@ -7,14 +7,24 @@ import("crubit.gni")
 group("cpp_api_from_rust_bindings_rs_deps") {
   # These are the dependencies required by Rust implementations of bindings.
   public_deps = [
+    "$crubit_src_dir/support:support_rust",
   ]
 }
 
 group("cpp_api_from_rust_bindings_cpp_deps") {
   # These are the dependencies required by C++ implementations of bindings.
   public_deps = [
-    "$crubit_src_dir/support",
-    "$crubit_src_dir/support/rs_std",
-    "$crubit_src_dir/support/internal",
+    "$crubit_src_dir/support:support_cpp",
+    "$crubit_src_dir/support/rs_std:rs_std_cpp",
+    "$crubit_src_dir/support/internal:internal_cpp",
+  ]
+}
+
+config("config") {
+  # TODO(b/474627465): Once the linked bug is resolved, only one of these
+  # include paths should be needed.
+  include_dirs = [
+    "${crubit_src_dir}",
+    "${crubit_src_dir}/..",
   ]
 }
