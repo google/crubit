@@ -46,6 +46,7 @@
 # Integration notes
 
 - [Cargo build](./overview/cargo_build.md)
+- [Build System Integrations](./overview/build_systems.md)
 
 # Design
 

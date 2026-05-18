@@ -9,9 +9,6 @@ crubit.rs/overview/build_systems
 freshness: { owner: 'ethansmith' reviewed: '2026-05-13' }
 *-->
 
-This is a docs Markdown page. For more information, see the Markdown Reference
-(<internal link>) and the docs Style Guide (<internal link>).
-
 [TOC]
 
 ## CMake
