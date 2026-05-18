@@ -543,6 +543,7 @@ private_common_attrs = {
             "//support/public:traits",
             "//support/public:option",
             "//support/public:result",
+            "//support/public:tuple",
         ],
     ),
     "_process_wrapper": attr.label(
