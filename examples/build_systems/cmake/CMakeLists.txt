@@ -23,7 +23,7 @@ FetchContent_declare(
 FetchContent_Declare(
   Corrosion
   GIT_REPOSITORY https://github.com/thunderseethe/corrosion
-  GIT_TAG master # RESPECTFUL_TERMS_EXCEPTION
+  GIT_TAG main
 )
 
 FetchContent_MakeAvailable(Corrosion)
