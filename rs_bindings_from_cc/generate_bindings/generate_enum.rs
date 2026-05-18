@@ -86,7 +86,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
         None,
         None,
         Some(&enum_.source_loc),
-        db.environment(),
+        db.skip_source_location_in_doc_comments(),
         db.kythe_annotations(),
     );
     let capture_tags = if db.kythe_annotations() {

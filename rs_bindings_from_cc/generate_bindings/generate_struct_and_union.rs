@@ -309,7 +309,7 @@ fn field_definition(
             field.doc_comment.as_deref(),
             None,
             None,
-            db.environment(),
+            db.skip_source_location_in_doc_comments(),
             db.kythe_annotations(),
         ),
         Err(msg) => {
@@ -328,7 +328,7 @@ fn field_definition(
                 Some(new_text.as_str()),
                 None,
                 None,
-                db.environment(),
+                db.skip_source_location_in_doc_comments(),
                 db.kythe_annotations(),
             )
         }
@@ -715,7 +715,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
             record.doc_comment.as_deref(),
             record_safety.as_deref(),
             Some(&record.source_loc),
-            db.environment(),
+            db.skip_source_location_in_doc_comments(),
             db.kythe_annotations(),
         ),
         derive_attr: generate_derives(&record),
@@ -943,7 +943,7 @@ fn cc_struct_no_unique_address_impl(
                     field.doc_comment.as_deref(),
                     None,
                     None,
-                    db.environment(),
+                    db.skip_source_location_in_doc_comments(),
                     db.kythe_annotations(),
                 )
             } else {

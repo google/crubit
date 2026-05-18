@@ -103,22 +103,9 @@ ABSL_FLAG(std::string, namespaces_out, "",
           "namespace hierarchy.");
 ABSL_FLAG(std::string, error_report_out, "",
           "(optional) output path for the JSON error report");
-ABSL_FLAG(std::string, environment, "production",
-          "The environment that the bindings are generated for. When set to "
-          "'production', non mandatory (but potentially useful) information is "
-          "generated. When set to 'golden_test', unnecessary information is "
-          "omitted to reduce noise.");
-// TODO(okabayashi): This is now an alias for --environment.
-// Remove this flag once the alias is no longer used.
 ABSL_FLAG(bool, generate_source_location_in_doc_comment, true,
-          "add the source code location from which the binding originates in"
-          "the doc comment of the binding")
-    .OnUpdate([] {
-      absl::SetFlag(&FLAGS_environment,
-                    absl::GetFlag(FLAGS_generate_source_location_in_doc_comment)
-                        ? "production"
-                        : "golden_test");
-    });
+          "add the source code location from which the binding originates in "
+          "the doc comment of the binding");
 ABSL_FLAG(bool, kythe_annotations, false,
           "Emit extra source information for generating cross-references.");
 
@@ -205,20 +192,6 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
   return absl::OkStatus();
 }
 
-absl::Status ParseEnvironment(absl::string_view environment_str,
-                              CmdlineArgs& args) {
-  if (environment_str == "production") {
-    args.environment = Environment::Production;
-    return absl::OkStatus();
-  } else if (environment_str == "golden_test") {
-    args.environment = Environment::GoldenTest;
-    return absl::OkStatus();
-  } else {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Unknown environment: ", environment_str));
-  }
-}
-
 }  // namespace internal
 
 absl::StatusOr<Cmdline> Cmdline::FromFlags() {
@@ -236,6 +209,8 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .rustfmt_config_path = absl::GetFlag(FLAGS_rustfmt_config_path),
       .error_report_out = absl::GetFlag(FLAGS_error_report_out),
       .do_nothing = absl::GetFlag(FLAGS_do_nothing),
+      .skip_source_location_in_doc_comments =
+          !absl::GetFlag(FLAGS_generate_source_location_in_doc_comment),
       .kythe_annotations = absl::GetFlag(FLAGS_kythe_annotations),
       .kythe_default_corpus = absl::GetFlag(FLAGS_kythe_default_corpus),
       .public_headers = PublicHeaders(),
@@ -244,20 +219,15 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
           absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
       .instantiations_out = absl::GetFlag(FLAGS_instantiations_out),
       .do_not_bind_allowlist = absl::GetFlag(FLAGS_do_not_bind_allowlist)};
-  absl::Status parse_environment_status =
-      internal::ParseEnvironment(absl::GetFlag(FLAGS_environment), args);
 
   absl::Status parse_target_args_status =
       internal::ParseTargetArgs(absl::GetFlag(FLAGS_target_args), args);
 
   absl::StatusOr<Cmdline> cmdline = Cmdline::Create(std::move(args));
-  if (!parse_target_args_status.ok() || !parse_environment_status.ok() ||
-      !cmdline.ok()) {
+  if (!parse_target_args_status.ok() || !cmdline.ok()) {
     return absl::InvalidArgumentError(
         absl::StrCat(cmdline.status().message(), cmdline.ok() ? "" : "\n",
-                     parse_target_args_status.message(),
-                     parse_target_args_status.ok() ? "" : "\n",
-                     parse_environment_status.message()));
+                     parse_target_args_status.message()));
   }
   return cmdline;
 }

@@ -42,7 +42,7 @@ Cmdline MakeCmdline(std::string header) {
       .clang_format_exe_path = std::string(ClangFormatExePath()),
       .rustfmt_exe_path = std::string(RustfmtExePath()),
       .rustfmt_config_path = "nowhere/rustfmt.toml",
-      .environment = Environment::Production,
+      .skip_source_location_in_doc_comments = false,
       .public_headers = {HeaderName(header)},
   };
   args.headers_to_targets[args.public_headers[0]] = args.current_target;

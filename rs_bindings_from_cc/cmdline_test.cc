@@ -48,7 +48,7 @@ absl::StatusOr<CmdlineArgs> TestCmdlineArgs(
       .clang_format_exe_path = "clang_format_exe_path",
       .rustfmt_exe_path = "rustfmt_exe_path",
       .rustfmt_config_path = "rustfmt_config_path",
-      .environment = Environment::GoldenTest};
+      .skip_source_location_in_doc_comments = true};
   std::transform(public_headers.begin(), public_headers.end(),
                  std::back_inserter(args.public_headers),
                  [](std::string header) { return HeaderName(header); });
@@ -91,7 +91,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
   absl::SetFlag(&FLAGS_instantiations_out, "instantiations_out");
   absl::SetFlag(&FLAGS_namespaces_out, "namespaces_out");
   absl::SetFlag(&FLAGS_error_report_out, "error_report_out");
-  absl::SetFlag(&FLAGS_environment, "golden_test");
+  absl::SetFlag(&FLAGS_generate_source_location_in_doc_comment, false);
   ASSERT_OK_AND_ASSIGN(Cmdline cmdline, Cmdline::FromFlags());
   const CmdlineArgs& args = cmdline.args();
   EXPECT_EQ(args.cc_out, "cc_out");
@@ -114,7 +114,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
       args.headers_to_targets,
       UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("//:t1")),
                            Pair(HeaderName("h2"), BazelLabel("//:t1"))));
-  EXPECT_EQ(args.environment, Environment::GoldenTest);
+  EXPECT_EQ(args.skip_source_location_in_doc_comments, true);
 }
 
 TEST(CmdlineTest, TargetArgsEmpty) {

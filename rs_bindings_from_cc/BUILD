@@ -520,9 +520,8 @@ cc_library(
     hdrs = ["src_code_gen.h"],
     deps = [
         ":cc_ir",
-        "//common:cc_ffi_types",
-        "//common:status_macros",
         "//rs_bindings_from_cc/generate_bindings:cc_api",  # buildcleaner: keep
+        "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",

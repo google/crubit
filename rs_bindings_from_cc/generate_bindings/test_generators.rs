@@ -8,7 +8,6 @@ use arc_anyhow::Result;
 use database::code_snippet::BindingsTokens;
 use database::db::BindingsGenerator;
 use error_report::{bail, ErrorReport, FatalErrors, SourceLanguage};
-use ffi_types::Environment;
 use generate_bindings::{generate_bindings_tokens, new_database};
 use ir::IR;
 use multiplatform_ir_testing::ir_from_cc;
@@ -20,7 +19,7 @@ pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
         dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
         &error_report::IgnoreErrors,
         &fatal_errors,
-        Environment::Production,
+        false,
         /*kythe_annotations=*/ false,
     )?;
     let fatal = fatal_errors.take_string();
@@ -37,7 +36,7 @@ pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<Bind
         dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
         &error_report::IgnoreErrors,
         &fatal_errors,
-        Environment::Production,
+        false,
         /*kythe_annotations=*/ true,
     )?;
     let fatal = fatal_errors.take_string();
@@ -66,7 +65,7 @@ impl TestDbFactory {
             &self.ir,
             &self.errors,
             &self.fatal_errors,
-            Environment::Production,
+            false,
             /*kythe_annotations=*/ false,
         )
     }

@@ -22,7 +22,7 @@ use database::rs_snippet::{
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
-use ffi_types::Environment;
+
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
@@ -44,6 +44,7 @@ use token_stream_printer::{
 
 mod generate_dyn_callable;
 
+#[allow(clippy::too_many_arguments)]
 /// Deserializes IR from `json` and generates bindings source code.
 pub fn generate_bindings(
     json: &[u8],
@@ -53,7 +54,7 @@ pub fn generate_bindings(
     rustfmt_config_path: &OsStr,
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
-    environment: Environment,
+    skip_source_location_in_doc_comments: bool,
     kythe_annotations: bool,
     kythe_default_corpus: &str,
 ) -> Result<Bindings> {
@@ -70,11 +71,11 @@ pub fn generate_bindings(
         crubit_support_path_format,
         errors,
         fatal_errors,
-        environment,
+        skip_source_location_in_doc_comments,
         kythe_annotations,
     )?;
 
-    let top_level_comment = generate_top_level_comment(&ir, environment);
+    let top_level_comment = generate_top_level_comment(&ir, skip_source_location_in_doc_comments);
 
     let rs_api: String = {
         let rustfmt_exe_path =
@@ -160,7 +161,7 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
             type_alias.doc_comment.as_deref(),
             None,
             Some(&type_alias.source_loc),
-            db.environment(),
+            db.skip_source_location_in_doc_comments(),
             db.kythe_annotations(),
         ),
         visibility: db.type_visibility(&type_alias.owning_target, rs_type_kind).unwrap_or_default(),
@@ -380,14 +381,14 @@ pub fn new_database<'db>(
     ir: &'db IR,
     errors: &'db dyn ErrorReporting,
     fatal_errors: &'db dyn ReportFatalError,
-    environment: Environment,
+    skip_source_location_in_doc_comments: bool,
     kythe_annotations: bool,
 ) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         ir,
         errors,
         fatal_errors,
-        environment,
+        skip_source_location_in_doc_comments,
         kythe_annotations,
         CodegenFunctions {
             generate_enum: generate_enum::generate_enum,
@@ -420,10 +421,16 @@ pub fn generate_bindings_tokens(
     crubit_support_path_format: Format<1>,
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
-    environment: Environment,
+    skip_source_location_in_doc_comments: bool,
     kythe_annotations: bool,
 ) -> Result<BindingsTokens> {
-    let db = new_database(ir, errors, fatal_errors, environment, kythe_annotations);
+    let db = new_database(
+        ir,
+        errors,
+        fatal_errors,
+        skip_source_location_in_doc_comments,
+        kythe_annotations,
+    );
     let mut snippets = ApiSnippets::default();
 
     // For #![rustfmt::skip].

@@ -15,7 +15,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "common/ffi_types.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 
@@ -35,7 +34,7 @@ struct CmdlineArgs {
   std::string rustfmt_config_path;
   std::string error_report_out;
   bool do_nothing = true;
-  Environment environment = Environment::Production;
+  bool skip_source_location_in_doc_comments = false;
   bool kythe_annotations = false;
   std::string kythe_default_corpus;
 
@@ -78,10 +77,6 @@ namespace internal {
 absl::Status ParseTargetArgs(absl::string_view target_args_str,
                              CmdlineArgs& args);
 
-// Parses --environment into CmdlineArgs. Only exposed so it can
-// be unit tested.
-absl::Status ParseEnvironment(absl::string_view environment_str,
-                              CmdlineArgs& args);
 }  // namespace internal
 
 // Expands paramfiles (@path/to/file) in-place in argv.

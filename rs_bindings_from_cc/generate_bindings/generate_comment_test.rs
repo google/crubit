@@ -8,7 +8,6 @@ use arc_anyhow::Result;
 use database::code_snippet;
 use database::BindingsGenerator;
 use error_report::{ErrorReport, FatalErrors, SourceLanguage};
-use ffi_types::Environment;
 use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
 use googletest::prelude::gtest;
@@ -20,14 +19,13 @@ use token_stream_matchers::assert_rs_matches;
 
 #[gtest]
 fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment_production() {
-    let actual = generate_doc_comment(None, None, None, Environment::Production, false);
+    let actual = generate_doc_comment(None, None, None, false, false);
     assert!(actual.is_none());
 }
 
 #[gtest]
 fn test_generate_doc_comment_with_no_comment_with_source_loc_with_environment_production() {
-    let actual =
-        generate_doc_comment(None, None, Some("some/header;l=11"), Environment::Production, false);
+    let actual = generate_doc_comment(None, None, Some("some/header;l=11"), false, false);
     assert_rs_matches!(quote! { #actual }, quote! {#[doc = " some/header;l=11"]});
 }
 
@@ -37,7 +35,7 @@ fn test_generate_doc_comment_with_comment_with_source_loc_with_environment_produ
         Some("Some doc comment"),
         None,
         Some("some/header;l=12"),
-        Environment::Production,
+        false,
         false,
     );
     assert_rs_matches!(
@@ -48,52 +46,39 @@ fn test_generate_doc_comment_with_comment_with_source_loc_with_environment_produ
 
 #[gtest]
 fn test_generate_doc_comment_with_comment_with_no_source_loc_with_environment_production() {
-    let actual =
-        generate_doc_comment(Some("Some doc comment"), None, None, Environment::Production, false);
+    let actual = generate_doc_comment(Some("Some doc comment"), None, None, false, false);
     assert_rs_matches!(quote! { #actual }, quote! {#[doc = " Some doc comment"]});
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment_golden_test() {
-    let actual = generate_doc_comment(None, None, None, Environment::GoldenTest, false);
+    let actual = generate_doc_comment(None, None, None, true, false);
     assert!(actual.is_none());
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_environment_golden_test() {
-    let actual =
-        generate_doc_comment(None, None, Some("some/header;l=13"), Environment::GoldenTest, false);
+    let actual = generate_doc_comment(None, None, Some("some/header;l=13"), true, false);
     assert!(actual.is_none());
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_comment_with_source_loc_with_environment_golden_test() {
-    let actual = generate_doc_comment(
-        Some("Some doc comment"),
-        None,
-        Some("some/header;l=14"),
-        Environment::GoldenTest,
-        false,
-    );
+    let actual =
+        generate_doc_comment(Some("Some doc comment"), None, Some("some/header;l=14"), true, false);
     assert_rs_matches!(quote! { #actual }, quote! {#[doc = " Some doc comment"]});
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_environment_golden_test() {
-    let actual =
-        generate_doc_comment(Some("Some doc comment"), None, None, Environment::GoldenTest, false);
+    let actual = generate_doc_comment(Some("Some doc comment"), None, None, true, false);
     assert_rs_matches!(quote! { #actual }, quote! {#[doc = " Some doc comment"]});
 }
 
 #[gtest]
 fn test_generate_doc_comment_with_safety() {
-    let actual = generate_doc_comment(
-        Some("Some doc comment"),
-        Some("Some safety doc"),
-        None,
-        Environment::GoldenTest,
-        false,
-    );
+    let actual =
+        generate_doc_comment(Some("Some doc comment"), Some("Some safety doc"), None, true, false);
     assert_rs_matches!(
         quote! { #actual },
         quote! {#[doc = " Some doc comment\n \n # Safety\n \n Some safety doc"]}
@@ -158,12 +143,12 @@ impl TestDbFactory {
             fatal_errors: FatalErrors::new(),
         }
     }
-    fn make_db(&self, environment: Environment) -> BindingsGenerator {
+    fn make_db(&self, skip_source_location_in_doc_comments: bool) -> BindingsGenerator {
         new_database(
             &self.ir,
             &self.errors,
             &self.fatal_errors,
-            environment,
+            skip_source_location_in_doc_comments,
             /*kythe_annotations=*/ false,
         )
     }
@@ -172,7 +157,7 @@ impl TestDbFactory {
 #[gtest]
 fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let factory = TestDbFactory::new();
-    let db = factory.make_db(Environment::Production);
+    let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -204,7 +189,7 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
 #[gtest]
 fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     let factory = TestDbFactory::new();
-    let db = factory.make_db(Environment::Production);
+    let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -233,7 +218,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
 #[gtest]
 fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let factory = TestDbFactory::new();
-    let db = factory.make_db(Environment::GoldenTest);
+    let db = factory.make_db(true);
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
