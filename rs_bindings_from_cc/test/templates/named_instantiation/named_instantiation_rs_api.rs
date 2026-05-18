@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/named_instantiation:named_instantiation
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, fmt, leading_colons_for_cpp_type, supported, types, unsafe_view, wrapper
+// Features: callables, fmt, supported, template_instantiation, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -25,25 +25,26 @@
 /// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=16
 pub type NiIF = crate::__CcTemplateInst2NiIifE;
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `i`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=17
 #[inline(always)]
-pub fn SomeApi<'i>(i: &'i crate::NiIF) {
+pub unsafe fn SomeApi(i: *const crate::NiIF) {
     unsafe { crate::detail::__rust_thunk___Z7SomeApiRK2NiIifE(i) }
 }
 
 /// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=12
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: Ni < int , float >
+///CRUBIT_ANNOTATE: cpp_type=Ni < int , float >
 pub struct __CcTemplateInst2NiIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for __CcTemplateInst2NiIifE {}
 impl !Sync for __CcTemplateInst2NiIifE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: Ni < int , float >"),
-    crate::__CcTemplateInst2NiIifE
-);
 
 /// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=13
 impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2NiIifE {
@@ -71,7 +72,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         #[link_name = "_Z7SomeApiRK2NiIifE"]
-        pub(crate) unsafe fn __rust_thunk___Z7SomeApiRK2NiIifE<'i>(i: &'i crate::NiIF);
+        pub(crate) unsafe fn __rust_thunk___Z7SomeApiRK2NiIifE(i: *const crate::NiIF);
         pub(crate) unsafe fn __rust_thunk___ZN2NiIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fnamed_5finstantiation_3anamed_5finstantiation(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_int,

@@ -50,6 +50,9 @@ flagset::flags! {
 
         /// Prepend `::` to `cpp_type` in annotations.
         LeadingColonsForCppType,
+
+        /// Generate bindings for (non-Crubit special-cased) template instances.
+        TemplateInstantiation,
     }
 }
 
@@ -73,6 +76,7 @@ impl CrubitFeature {
             Self::UnsafeView => "unsafe_view",
             Self::CheckDefaultInitialized => "check_default_initialized",
             Self::LeadingColonsForCppType => "leading_colons_for_cpp_type",
+            Self::TemplateInstantiation => "template_instantiation",
         }
     }
 
@@ -97,6 +101,7 @@ impl CrubitFeature {
             Self::LeadingColonsForCppType => {
                 "//features:leading_colons_for_cpp_type"
             }
+            Self::TemplateInstantiation => "//features:template_instantiation",
         }
     }
 }
@@ -119,6 +124,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"unsafe_view" => CrubitFeature::UnsafeView.into(),
         b"check_default_initialized" => CrubitFeature::CheckDefaultInitialized.into(),
         b"leading_colons_for_cpp_type" => CrubitFeature::LeadingColonsForCppType.into(),
+        b"template_instantiation" => CrubitFeature::TemplateInstantiation.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -237,6 +243,7 @@ mod tests {
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
+                | CrubitFeature::TemplateInstantiation
         );
     }
 
@@ -272,6 +279,7 @@ mod tests {
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
+                | CrubitFeature::TemplateInstantiation
         );
     }
 
@@ -292,6 +300,7 @@ mod tests {
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
+                | CrubitFeature::TemplateInstantiation
         );
     }
 
@@ -313,6 +322,7 @@ mod tests {
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
+                | CrubitFeature::TemplateInstantiation
         );
     }
 }

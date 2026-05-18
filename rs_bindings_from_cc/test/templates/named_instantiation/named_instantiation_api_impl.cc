@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/named_instantiation:named_instantiation
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, fmt, leading_colons_for_cpp_type, supported, types, unsafe_view, wrapper
+// Features: callables, fmt, supported, template_instantiation, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -19,14 +19,14 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert((void (*)(::NiIF const&)) & ::SomeApi);
+static_assert((void (*)(NiIF const&)) & ::SomeApi);
 
-static_assert(sizeof(struct ::Ni<int, float>) == 1);
-static_assert(alignof(struct ::Ni<int, float>) == 1);
+static_assert(sizeof(struct Ni<int, float>) == 1);
+static_assert(alignof(struct Ni<int, float>) == 1);
 
 extern "C" void
 __rust_thunk___ZN2NiIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fnamed_5finstantiation_3anamed_5finstantiation(
-    struct ::Ni<int, float>* __this, int t, float s) {
+    struct Ni<int, float>* __this, int t, float s) {
   crubit::construct_at(__this, t, s);
 }
 

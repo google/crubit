@@ -12,7 +12,8 @@ crubit_test_cc_library(
     srcs = ["named_instantiation.cc"],
     hdrs = ["named_instantiation.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
+        "//features:template_instantiation",
     ],
 )
 

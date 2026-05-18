@@ -6,7 +6,7 @@
 // consts_golden
 // Features: assume_lifetimes, assume_this_lifetimes, callables,
 // check_default_initialized, experimental, fmt, leading_colons_for_cpp_type,
-// supported, types, unsafe_view, wrapper
+// supported, template_instantiation, types, unsafe_view, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_CONSTS_CONSTS_GOLDEN

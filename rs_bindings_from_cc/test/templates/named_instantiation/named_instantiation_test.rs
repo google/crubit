@@ -7,5 +7,7 @@ use googletest::prelude::*;
 #[gtest]
 fn niif_use_test() {
     let i: named_instantiation::NiIF = (1, 2f32).into();
-    named_instantiation::SomeApi(&i);
+    unsafe {
+        named_instantiation::SomeApi(&i);
+    }
 }

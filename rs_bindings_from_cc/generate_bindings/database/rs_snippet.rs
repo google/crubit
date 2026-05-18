@@ -1068,20 +1068,18 @@ impl RsTypeKind {
         target: &BazelLabel,
         enabled_features: flagset::FlagSet<CrubitFeature>,
     ) -> Vec<String> {
-        let mut missing_features = <flagset::FlagSet<CrubitFeature>>::default();
         let mut reasons = std::collections::BTreeSet::<String>::new();
-        let mut require_feature = |required_feature: CrubitFeature, reason: std::fmt::Arguments| {
-            let required_features = <flagset::FlagSet<CrubitFeature>>::from(required_feature);
-            let missing = required_features - enabled_features;
-            if !missing.is_empty() {
-                missing_features |= missing;
-                reasons.insert(reason.to_string());
-            }
-        };
+        let mut require_any_feature =
+            |any_required_feature: flagset::FlagSet<CrubitFeature>, reason: std::fmt::Arguments| {
+                let missing = any_required_feature & enabled_features;
+                if missing.is_empty() {
+                    reasons.insert(reason.to_string());
+                }
+            };
 
         if !enabled_features.contains(CrubitFeature::Types) {
-            require_feature(
-                CrubitFeature::Types,
+            require_any_feature(
+                <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Types),
                 format_args!("Crubit is not enabled on defining target:\n  {target}"),
             );
         }
@@ -1090,25 +1088,28 @@ impl RsTypeKind {
             match rs_type_kind {
                 RsTypeKind::Error { error, visibility_override, .. } => {
                     if visibility_override.is_none() {
-                        require_feature(CrubitFeature::Wrapper, format_args!("{error}"))
+                        require_any_feature(
+                            <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Wrapper),
+                            format_args!("{error}"),
+                        )
                     }
                 }
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
-                    require_feature(
-                        CrubitFeature::Experimental,
+                    require_any_feature(
+                        <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Experimental),
                         format_args!("references are not yet supported"),
                     );
                 }
                 RsTypeKind::FuncPtr { cc_calling_conv, .. } => {
                     if *cc_calling_conv != CcCallingConv::C {
-                        require_feature(
-                            CrubitFeature::Experimental,
+                        require_any_feature(
+                            <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Experimental),
                             format_args!("function pointers using a non-`C` calling convention are not yet supported"),
                         );
                     }
                 }
-                RsTypeKind::IncompleteRecord { .. } => require_feature(
-                    CrubitFeature::Wrapper,
+                RsTypeKind::IncompleteRecord { .. } => require_any_feature(
+                    <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Wrapper),
                     format_args!("forward declared types are not yet supported"),
                 ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
@@ -1127,10 +1128,13 @@ impl RsTypeKind {
                     // instantiations.
 
                     if uniform_repr_template_type.is_none() && !record.has_unique_owning_target() {
-                        require_feature(
-                            CrubitFeature::Wrapper,
+                        require_any_feature(
+                            <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Wrapper)
+                                | <flagset::FlagSet<CrubitFeature>>::from(
+                                    CrubitFeature::TemplateInstantiation,
+                                ),
                             format_args!("template instantiation is not yet supported"),
-                        )
+                        );
                     }
                 }
 

@@ -226,7 +226,7 @@ fn func_has_bindings(
 
     if func.is_member_or_descendant_of_class_template
         && func.rs_name != ir::UnqualifiedIdentifier::Destructor
-        && !enabled_features.contains(CrubitFeature::Experimental)
+        && !enabled_features.contains(CrubitFeature::TemplateInstantiation)
     {
         missing_features.push(
             "b/248542210: template instantiation of member function cannot reliably get bindings"
@@ -353,17 +353,19 @@ fn type_target_restriction_shallow(
         // All non-record types are `pub` if they receive bindings.
         return None;
     };
+    let target = &record.owning_target;
     // Template types (except for the special-cased ones like `[w]string_view`)
     // are the only types whose bindings have restrictions, and they do not have
     // unique owning targets.
-    if record.has_unique_owning_target() {
+    if record.has_unique_owning_target()
+        || db.ir().target_crubit_features(target).contains(CrubitFeature::TemplateInstantiation)
+    {
         return None;
     }
     // Instantiations of UniformReprTemplateTypes are unrestricted.
     if let RsTypeKind::Record { uniform_repr_template_type: Some(_), .. } = rs_type_kind {
         return None;
     }
-    let target = &record.owning_target;
     // Targets with experimental features generate `pub` bindings (for now?), no matter what.
     if db.ir().target_crubit_features(target).contains(CrubitFeature::Experimental) {
         return None;

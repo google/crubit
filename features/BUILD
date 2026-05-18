@@ -144,6 +144,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling bindings for arbitrary template instantiations.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "template_instantiation",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["template_instantiation"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
