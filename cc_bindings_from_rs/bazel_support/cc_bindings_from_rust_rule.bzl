@@ -466,6 +466,14 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     features = find_crubit_features(target, ctx)
     cli_flags = collect_cc_bindings_from_rust_cli_flags(target, ctx)
+
+    ignore_symbols_from_files = depset(transitive = [
+        dep[RustBindingsFromCcInfo].additional_rust_srcs
+        for dep in getattr(ctx.rule.attr, "deps", []) + getattr(ctx.rule.attr, "cc_deps", [])
+        if RustBindingsFromCcInfo in dep
+    ])
+    for file in ignore_symbols_from_files.to_list():
+        cli_flags.append("--ignore-symbols-from-files=" + file.path)
     dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + [
         target[CcBindingsFromRustInfo]
         for target in ctx.attr._stdlib_bindings
