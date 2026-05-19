@@ -276,7 +276,7 @@ pub fn format_ty_for_cc<'tcx>(
             if location.is_bridgeable() && is_c_abi_compatible_by_value(tcx, ty) {
                 ensure!(
                     db.has_move_ctor_and_assignment_operator(
-                        adt.did(),
+                        Some(adt.did()),
                         ty,
                     )
                     .is_some(),
@@ -1022,7 +1022,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 let tcx = db.tcx();
                 ensure!(
                     db.has_move_ctor_and_assignment_operator(
-                        adt.did(),
+                        Some(adt.did()),
                         crate::normalize_ty(tcx, tcx.param_env(adt.did()), tcx.type_of(adt.did()).instantiate(tcx, substs))
                     ).is_some(),
                     "Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator."

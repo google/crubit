@@ -1244,7 +1244,7 @@ fn generate_default_ctor<'tcx>(
 
 fn has_copy_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
+    def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
 ) -> Option<CopyCtorStyle> {
     let tcx = db.tcx();
@@ -1271,8 +1271,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
         let cc_struct_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
 
-        match core.def_id.and_then(|id| db.has_copy_ctor_and_assignment_operator(id, core.self_ty))
-        {
+        match db.has_copy_ctor_and_assignment_operator(core.def_id, core.self_ty) {
             Some(CopyCtorStyle::Copy) => {
                 let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                         and assignment operator.";
@@ -1362,11 +1361,13 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
 
 fn has_move_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
+    def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
 ) -> Option<MoveCtorStyle> {
     let tcx = db.tcx();
-    let typing_env = post_analysis_typing_env(tcx, def_id);
+    let typing_env = def_id
+        .map(|id| post_analysis_typing_env(tcx, id))
+        .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
     // If our type has no drop glue we can use the default move constructor and assignment operator.
     if !self_ty.needs_drop(tcx, typing_env) {
         return Some(MoveCtorStyle::Default);
@@ -1394,8 +1395,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     ) -> Result<ApiSnippets<'tcx>> {
         let adt_cc_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
-        match core.def_id.and_then(|id| db.has_move_ctor_and_assignment_operator(id, core.self_ty))
-        {
+        match db.has_move_ctor_and_assignment_operator(core.def_id, core.self_ty) {
             // We rely on the copy constructor and assignment operator to handle the move
             // operations.
             Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),

@@ -219,7 +219,7 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_copy_ctor_and_assignment_operator
       fn has_copy_ctor_and_assignment_operator(
           &self,
-          def_id: DefId,
+          def_id: Option<DefId>,
           self_ty: Ty<'tcx>,
       ) -> Option<CopyCtorStyle>;
 
@@ -230,7 +230,7 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_move_ctor_and_assignment_operator
       fn has_move_ctor_and_assignment_operator(
           &self,
-          def_id: DefId,
+          def_id: Option<DefId>,
           self_ty: Ty<'tcx>,
       ) -> Option<MoveCtorStyle>;
 

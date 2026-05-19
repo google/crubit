@@ -35,7 +35,7 @@ use std::rc::Rc;
 
 fn is_cpp_movable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
     ty.ty_adt_def()
-        .map(|adt| db.has_move_ctor_and_assignment_operator(adt.did(), ty).is_some())
+        .map(|adt| db.has_move_ctor_and_assignment_operator(Some(adt.did()), ty).is_some())
         // Primitive types bind to C++ primitives that support move construction and assignment.
         .unwrap_or_else(|| ty.is_primitive_ty())
 }
