@@ -18,8 +18,10 @@ extern crate rustc_trait_selection;
 
 use arc_anyhow::Result;
 use error_report::anyhow;
+#[rustversion::before(2026-05-18)]
+use rustc_abi::FieldsShape;
 use rustc_abi::IntegerType;
-use rustc_abi::{FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, Variants};
+use rustc_abi::{FieldIdx, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_hir::attrs::IntType;
 use rustc_infer::infer::TyCtxtInferExt;
@@ -339,6 +341,7 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
     match layout.variants() {
         Variants::Single { .. } | Variants::Empty => 0,
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
+            #[rustversion::before(2026-05-18)]
             let mut variant_offsets = variants.iter().map(|variant| match &variant.fields {
                 FieldsShape::Arbitrary { offsets, .. } => {
                     if offsets.is_empty() {
@@ -349,6 +352,15 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
                     }
                 }
                 _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
+            });
+
+            #[rustversion::since(2026-05-18)]
+            let mut variant_offsets = variants.iter().map(|variant| {
+                if variant.field_offsets.is_empty() {
+                    variant.size.bytes()
+                } else {
+                    variant.field_offsets[FieldIdx::from_usize(0)].bytes()
+                }
             });
 
             // There are two equivalent ways to express a rust enum:

@@ -29,7 +29,9 @@ use query_compiler::{
     liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, try_normalize,
 };
 use quote::{format_ident, quote};
-use rustc_abi::{Endian, FieldsShape, VariantIdx, Variants};
+#[rustversion::since(2026-05-18)]
+use rustc_abi::VariantLayout;
+use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants};
 use rustc_infer::infer::{RegionVariableOrigin, TyCtxtInferExt};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
@@ -1429,9 +1431,17 @@ pub(crate) fn generate_fields<'tcx>(
     // If the ADT has multiple variants, then we need to use the layout of each
     // variant. The `layout.fields` just contains the tag.
     let fields_shape = match layout_variants {
-        Variants::Single { .. } | Variants::Empty => vec![&layout.fields],
+        Variants::Single { .. } | Variants::Empty => vec![layout.fields.clone()],
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-            variants.iter().map(|variant| &variant.fields).collect_vec()
+            #[rustversion::before(2026-05-18)]
+            let get_fields = |(_, variant): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
+                variant.fields.clone()
+            };
+            #[rustversion::since(2026-05-18)]
+            let get_fields = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
+                LayoutData::for_variant(&layout, i).fields
+            };
+            variants.iter_enumerated().map(get_fields).collect_vec()
         }
     };
 
@@ -1994,10 +2004,17 @@ pub(crate) fn generate_fields<'tcx>(
                 // We need to get the alignment of each variant struct.
                 let variant_alignments = match layout_variants {
                     Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-                        variants
-                            .iter()
-                            .map(|layout| layout.align.abi.bytes() - tag_size_with_padding)
-                            .collect_vec()
+                        #[rustversion::before(2026-05-18)]
+                        let get_align =
+                            |(_, layout): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
+                                layout.align.abi.bytes() - tag_size_with_padding
+                            };
+                        #[rustversion::since(2026-05-18)]
+                        let get_align = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
+                            LayoutData::for_variant(&layout, i).align.abi.bytes()
+                                - tag_size_with_padding
+                        };
+                        variants.iter_enumerated().map(get_align).collect_vec()
                     }
                     Variants::Single { .. } | Variants::Empty => {
                         vec![alignment_in_bytes]

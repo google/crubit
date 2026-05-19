@@ -1138,7 +1138,9 @@ pub fn get_async_future_output_ty<'tcx>(
         .ok_or_else(|| anyhow!("crubit.rs-bug: Future::Output lang item not found"))?;
     tcx.explicit_item_bounds(alias_ty.kind.def_id())
         .iter_instantiated_copied(tcx, alias_ty.args)
-        .find_map(|(predicate, _span)| {
+        .find_map(|unnorm| {
+            let (predicate, _span) =
+                crate::normalize_ty(tcx, tcx.param_env(alias_ty.kind.def_id()), unnorm);
             if let ty::ClauseKind::Projection(projection_predicate) = predicate.kind().skip_binder()
                 && Some(projection_predicate.def_id()) == Some(future_output)
             {

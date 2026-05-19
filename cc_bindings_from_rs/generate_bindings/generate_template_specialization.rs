@@ -20,6 +20,8 @@ use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use query_compiler::{get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
+#[rustversion::since(2026-05-18)]
+use rustc_abi::LayoutData;
 use rustc_abi::VariantIdx;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
@@ -830,33 +832,36 @@ fn specialize_result<'tcx>(
     );
     let err_discr_val = literal_of_tag_ty(tcx, discr_for_err.val, tag_type);
 
+    #[rustversion::before(2026-05-18)]
+    let (ok_offset, err_offset) = (
+        Literal::u64_unsuffixed(variants[ok_idx].fields.offset(0).bytes()),
+        Literal::u64_unsuffixed(variants[err_idx].fields.offset(0).bytes()),
+    );
+    #[rustversion::since(2026-05-18)]
+    let (ok_offset, err_offset) = (
+        Literal::u64_unsuffixed(LayoutData::for_variant(&layout, ok_idx).fields.offset(0).bytes()),
+        Literal::u64_unsuffixed(LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes()),
+    );
+
     let result_api = match tag_encoding {
-        rustc_abi::TagEncoding::Direct => {
-            let ok_variant = &variants[ok_idx];
-            let ok_offset = Literal::u64_unsuffixed(ok_variant.fields.offset(0).bytes());
-
-            let err_variant = &variants[err_idx];
-            let err_offset = Literal::u64_unsuffixed(err_variant.fields.offset(0).bytes());
-
-            ResultApiGenerator {
-                db,
-                ok_ty_rs: ok_ty.ty,
-                ok_ty_cpp: ok_ty_tokens.clone(),
-                err_ty_rs: err_ty.ty,
-                err_ty_cpp: err_ty_tokens.clone(),
-                needs_drop,
-                tag_method,
-                has_value_impl: quote! { tag() == #ok_discr_val },
-                write_ok_to_tag: quote! { set_tag(#ok_discr_val); },
-                write_err_to_tag: quote! { set_tag(#err_discr_val); },
-                ok_ptr_val: quote! {
-                    __storage + #ok_offset
-                },
-                err_ptr_val: quote! {
-                    __storage + #err_offset
-                },
-            }
-        }
+        rustc_abi::TagEncoding::Direct => ResultApiGenerator {
+            db,
+            ok_ty_rs: ok_ty.ty,
+            ok_ty_cpp: ok_ty_tokens.clone(),
+            err_ty_rs: err_ty.ty,
+            err_ty_cpp: err_ty_tokens.clone(),
+            needs_drop,
+            tag_method,
+            has_value_impl: quote! { tag() == #ok_discr_val },
+            write_ok_to_tag: quote! { set_tag(#ok_discr_val); },
+            write_err_to_tag: quote! { set_tag(#err_discr_val); },
+            ok_ptr_val: quote! {
+                __storage + #ok_offset
+            },
+            err_ptr_val: quote! {
+                __storage + #err_offset
+            },
+        },
         rustc_abi::TagEncoding::Niche { niche_start, niche_variants, untagged_variant } => {
             let mut has_value_impl = quote! {};
             let (write_ok_to_tag, ok_ptr_val) = if *untagged_variant == ok_idx {
@@ -868,8 +873,6 @@ fn specialize_result<'tcx>(
                     ok_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
                 let ok_relative_val =
                     literal_of_tag_ty(tcx, *niche_start + ok_relative_idx, tag_type);
-                let ok_variant = &variants[ok_idx];
-                let ok_offset = Literal::u64_unsuffixed(ok_variant.fields.offset(0).bytes());
                 has_value_impl = quote! { tag() == #ok_relative_val };
                 (
                     quote! { set_tag(#ok_relative_val); },
@@ -885,8 +888,6 @@ fn specialize_result<'tcx>(
                     err_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
                 let err_relative_val =
                     literal_of_tag_ty(tcx, *niche_start + err_relative_idx, tag_type);
-                let err_variant = &variants[err_idx];
-                let err_offset = Literal::u64_unsuffixed(err_variant.fields.offset(0).bytes());
                 has_value_impl = quote! { tag() != #err_relative_val };
                 (
                     quote! { set_tag(#err_relative_val); },
@@ -1058,8 +1059,13 @@ fn specialize_option<'tcx>(
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
-            let some_variant = &variants[some_idx];
-            let payload_offset = Literal::u64_unsuffixed(some_variant.fields.offset(0).bytes());
+            #[rustversion::before(2026-05-18)]
+            let payload_offset =
+                Literal::u64_unsuffixed(variants[some_idx].fields.offset(0).bytes());
+            #[rustversion::since(2026-05-18)]
+            let payload_offset = Literal::u64_unsuffixed(
+                LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes(),
+            );
             let discr_for_some =
                 core.self_ty_rs.discriminant_for_variant(tcx, some_idx).expect(expect_msg);
             let some_discr_val = literal_of_tag_ty(tcx, discr_for_some.val, tag_type);

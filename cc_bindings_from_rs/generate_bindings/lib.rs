@@ -2284,7 +2284,7 @@ pub fn normalize_ty<'tcx, T>(
     val: ty::Unnormalized<'tcx, T>,
 ) -> T
 where
-    T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Display + std::fmt::Debug,
+    T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
     use rustc_infer::infer::TyCtxtInferExt;
     use rustc_infer::traits::ObligationCause;
