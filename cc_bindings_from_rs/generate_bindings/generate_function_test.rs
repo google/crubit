@@ -1030,12 +1030,18 @@ fn test_format_item_unsupported_fn_async() {
         "#;
     test_format_item(test_src, "async_function", |result| {
         let err = result.unwrap_err();
-        assert_eq!(
-            err,
-            "Error formatting function return type `impl std::future::Future<Output = ()>`: \
-                         The following Rust type is not supported yet: \
-                         impl std::future::Future<Output = ()>"
-        );
+        assert_eq!(err, "async functions are not yet supported, consider manually wrapping with `DynFuture` instead and writing to an output `*mut ()` parameter instead.");
+    });
+}
+
+#[test]
+fn test_format_item_unsupported_fn_async_returning_type() {
+    let test_src = r#"
+            pub async fn async_function() -> i32 { 42 }
+        "#;
+    test_format_item(test_src, "async_function", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(err, "async functions are not yet supported, consider manually wrapping with `DynFuture` instead and writing to an output `*mut i32` parameter instead.");
     });
 }
 

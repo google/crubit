@@ -794,6 +794,13 @@ pub fn generate_function<'tcx>(
     };
     check_fn_sig(&sig_mid)?;
 
+    let rs_return_type = sig_mid.output();
+    if tcx.asyncness(def_id).is_async() {
+        let return_ty = get_async_future_output_ty(tcx, rs_return_type)?;
+        // TODO(b/453897096): Support async functions.
+        bail!("async functions are not yet supported, consider manually wrapping with `DynFuture` instead and writing to an output `*mut {return_ty}` parameter instead.");
+    }
+
     let trait_ref = tcx
         .impl_of_assoc(def_id)
         .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
@@ -929,7 +936,6 @@ pub fn generate_function<'tcx>(
             quote! { #cpp_type #cc_name #annotation }
         })
         .collect_vec();
-    let rs_return_type = sig_mid.output();
     let thunk_name_cc = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
     let impl_body = generate_thunk_call(
         db,
@@ -1116,4 +1122,34 @@ pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// If `rs_return_type` represents an async future desugared type, extracts and returns its `Output` type.
+pub fn get_async_future_output_ty<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    rs_return_type: Ty<'tcx>,
+) -> Result<Ty<'tcx>> {
+    let ty::TyKind::Alias(alias_ty) = rs_return_type.kind() else {
+        bail!("async functions should always return a TyKind::Alias, this should never happen.");
+    };
+    let future_output = tcx
+        .lang_items()
+        .future_output()
+        .ok_or_else(|| anyhow!("crubit.rs-bug: Future::Output lang item not found"))?;
+    tcx.explicit_item_bounds(alias_ty.kind.def_id())
+        .iter_instantiated_copied(tcx, alias_ty.args)
+        .find_map(|(predicate, _span)| {
+            if let ty::ClauseKind::Projection(projection_predicate) = predicate.kind().skip_binder()
+                && Some(projection_predicate.def_id()) == Some(future_output)
+            {
+                return projection_predicate.term.as_type();
+            }
+            None
+        })
+        .ok_or_else(|| {
+            anyhow!(
+                "Failed to find Future::Output associated type in bounds of {:?}",
+                rs_return_type
+            )
+        })
 }
