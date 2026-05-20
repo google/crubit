@@ -2134,7 +2134,20 @@ fn test_format_item_unsupported_generic_type_alias() {
 
 #[test]
 fn test_format_item_unsupported_type_without_direct_existence() {
-    let test_src = r#"
+    #[rustversion::before(2026-05-10)]
+    fn f(test_src: &str) {
+        test_format_item(test_src, "EvilAlias", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "The following Rust type is not supported yet: <i64 as Evil>::Type");
+        });
+    }
+    #[rustversion::since(2026-05-10)]
+    fn f(test_src: &str) {
+        test_format_item(test_src, "EvilAlias", |result| {
+            assert!(matches!(result, Ok(None)));
+        });
+    }
+    f(r#"
         pub trait Evil {
             type Type;
         }
@@ -2146,11 +2159,7 @@ fn test_format_item_unsupported_type_without_direct_existence() {
             }
         };
         pub type EvilAlias = <i64 as Evil>::Type;
-        "#;
-    test_format_item(test_src, "EvilAlias", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(err, "The following Rust type is not supported yet: <i64 as Evil>::Type");
-    });
+        "#);
 }
 
 #[test]

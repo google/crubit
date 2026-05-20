@@ -45,3 +45,4 @@ token_stream_printer = { path = "../../../../cargo/common/token_stream_printer"}
 proc-macro2.workspace = true
 quote.workspace = true
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+rustversion.workspace = true

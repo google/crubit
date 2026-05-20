@@ -72,6 +72,9 @@ crubit_rust_test(
 crubit_rust_test(
     name = "generate_bindings_test",
     srcs = ["generate_bindings_test.rs"],
+    proc_macro_deps = [
+        "@crate_index//:rustversion",  # v1
+    ],
     rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":generate_bindings",
