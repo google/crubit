@@ -265,15 +265,16 @@ macro_rules! new_integer {
       $crate::newtype::wrapped_to_primitive!{
         impl From<$IntegerType> for i32;
         impl From<$IntegerType> for i64;
-        impl From<$IntegerType> for u64;
         impl From<$IntegerType> for i128;
-        impl From<$IntegerType> for u128;
         impl From<$IntegerType> for ::core::sync::atomic::AtomicI32;
         impl From<$IntegerType> for f64;
       }
       $crate::newtype::primitive_to_wrapped!{
+        impl From<u8> for $IntegerType;
         impl From<i8> for $IntegerType;
+        impl From<u16> for $IntegerType;
         impl From<i16> for $IntegerType;
+        impl From<i32> for $IntegerType;
       }
     };
     (@__from, $IntegerType:ident, u32) => {
@@ -285,6 +286,11 @@ macro_rules! new_integer {
         impl From<$IntegerType> for u128;
         impl From<$IntegerType> for ::core::sync::atomic::AtomicU32;
         impl From<$IntegerType> for f64;
+      }
+      $crate::newtype::primitive_to_wrapped!{
+        impl From<u8> for $IntegerType;
+        impl From<u16> for $IntegerType;
+        impl From<u32> for $IntegerType;
       }
     };
     (@__from, $IntegerType:ident, i64) => {
