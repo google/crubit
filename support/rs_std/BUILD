@@ -1,6 +1,5 @@
 """C++ libraries that help work with Rust types."""
 
-load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("//build_integration:build_integration.bzl", "bazel_to_builds")
 load(
@@ -62,15 +61,6 @@ crubit_cc_test(
         "@fuzztest//:fuzztest_gtest_main",
         "@googletest//:gmock",
     ],
-)
-
-cc_library(
-    name = "cpp_waker",
-    srcs = ["cpp_waker.cc"],
-    hdrs = ["cpp_waker.h"],
-    aspect_hints = ["//features:supported"],
-    compatible_with = ["//buildenv/target:non_prod"],
-    visibility = ["//visibility:public"],
 )
 
 cc_library(
