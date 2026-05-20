@@ -91,10 +91,9 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     // If our specialization contains a status type from additonal srcs, we should not generate a
     // specialization for it.
     if self_ty.walk().any(|arg| {
-        arg.as_type().and_then(|ty| ty.ty_adt_def()).is_some_and(|adt| {
-            is_status_additional_srcs(db.tcx(), adt.did())
-                || !crate::should_receive_bindings(db, adt.did())
-        })
+        arg.as_type()
+            .and_then(|ty| ty.ty_adt_def())
+            .is_some_and(|adt| !crate::should_receive_bindings(db, adt.did()))
     }) {
         return None;
     }

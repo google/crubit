@@ -186,7 +186,7 @@ def generate_and_compile_bindings(
             namespaces = namespaces_output,
             pass_through_dep_variant_infos = depset(),
             additional_rust_srcs = depset(
-                direct = extra_rs_srcs_relocated,
+                direct = [file for (file, _) in extra_rs_srcs],
                 transitive = [additional_rust_srcs],
             ),
         ),
