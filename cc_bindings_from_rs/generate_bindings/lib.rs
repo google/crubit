@@ -66,6 +66,7 @@ use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::fmt::{self, Display, Formatter};
 use std::iter::once;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -2295,4 +2296,35 @@ where
     let ocx = ObligationCtxt::new_with_diagnostics(&infcx);
     let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
     ocx.normalize(&cause, param_env, val)
+}
+
+/// Returns true if the field is public and stable.
+///
+/// Notably, this rejects public fields that are unstable, which may exist for macro accessibility
+/// reasons.
+pub fn field_def_is_pub_and_stable(
+    tcx: TyCtxt<'_>,
+    field_def: &ty::FieldDef,
+) -> Result<(), PrivateOrUnstableField> {
+    if field_def.vis != ty::Visibility::Public {
+        return Err(PrivateOrUnstableField::Private);
+    }
+    if tcx.lookup_stability(field_def.did).is_some_and(|stability| stability.is_unstable()) {
+        return Err(PrivateOrUnstableField::Unstable);
+    }
+    Ok(())
+}
+
+pub enum PrivateOrUnstableField {
+    Private,
+    Unstable,
+}
+
+impl Display for PrivateOrUnstableField {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            PrivateOrUnstableField::Private => write!(f, "private"),
+            PrivateOrUnstableField::Unstable => write!(f, "unstable"),
+        }
+    }
 }

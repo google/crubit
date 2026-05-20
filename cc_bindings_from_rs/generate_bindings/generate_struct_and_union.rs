@@ -1205,11 +1205,11 @@ fn generate_variant_ctor<'tcx>(
         .fields
         .iter()
         .map(|field_def| {
-            if field_def.vis != ty::Visibility::Public {
+            if let Err(private_or_unstable) = crate::field_def_is_pub_and_stable(tcx, field_def) {
                 // If our synthesized constructor would have a non public
                 // visibility, don't generate it as we can't mirror that
                 // visibility in C++.
-                bail!("Field `{}` is not public", field_def.name)
+                bail!("Field `{}` is {private_or_unstable}", field_def.name)
             }
             let ty = field_def.ty(tcx, adt_generic_args);
             #[rustversion::since(2026-05-13)]
@@ -1557,7 +1557,8 @@ pub(crate) fn generate_fields<'tcx>(
                                 type_info,
                                 cc_name,
                                 rs_name,
-                                is_public: field_def.vis == ty::Visibility::Public,
+                                is_public: crate::field_def_is_pub_and_stable(tcx, field_def)
+                                    .is_ok(),
                                 index,
                                 offset,
                                 offset_of_next_field,
