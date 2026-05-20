@@ -27,8 +27,13 @@ jobs:
         id: set-matrix
         run: |
           # Fetch and format the versions into a JSON object
-          VERSIONS=$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/rustc-dev.json | \
-            jq -c 'del(.last_available) | keys | sort | reverse | to_entries | {include: [.[] | {version: ("nightly-" + .value), id: .key}]}')
+          NIGHTLIES=$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/rustc-dev.json | \
+            jq -c 'del(.last_available) | keys | sort | reverse | to_entries | [.[] | {version: ("nightly-" + .value), id: ("nightly-" + (.key | tostring))}]')
+          
+          STABLES=$(curl -s https://api.github.com/repos/rust-lang/rust/releases | \
+            jq -c '[.[].tag_name | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))] | map(split(".") | .[0] + "." + .[1] + ".0") | def distinct: reduce .[] as $x ([]; if index($x) then . else . + [$x] end); distinct | .[:2] | to_entries | [.[] | {version: .value, id: ("stable-" + (.key | tostring))}]')
+          
+          VERSIONS=$(jq -c -n --argjson n "$NIGHTLIES" --argjson s "$STABLES" '{include: ($n + $s)}')
           
           # Write to file for repo persistence
           echo "$VERSIONS" > matrix.json
@@ -73,6 +78,8 @@ jobs:
         env:
           RUSTUP_TOOLCHAIN: ${{ matrix.version }}
           RUSTFLAGS: -Awarnings
+          # This allows stable Rust versions to use nightly features, which we rely on.
+          RUSTC_BOOTSTRAP: 1
         run: |
           cd crubit
           cargo check --bin cc_bindings_from_rs
@@ -87,14 +94,14 @@ jobs:
             COLOR="red"
             MESSAGE="failing"
           fi
-          echo "{\"schemaVersion\": 1, \"label\": \"${{ matrix.version }}\", \"message\": \"$MESSAGE\", \"color\": \"$COLOR\"}" > nightly-${{ matrix.id }}.json
+          echo "{\"schemaVersion\": 1, \"label\": \"${{ matrix.version }}\", \"message\": \"$MESSAGE\", \"color\": \"$COLOR\"}" > ${{ matrix.id }}.json
 
       - name: Upload JSON Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: badge-${{ matrix.id }}
-          path: nightly-${{ matrix.id }}.json
+          path: ${{ matrix.id }}.json
 
   upload-badges:
     needs: build
