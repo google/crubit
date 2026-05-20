@@ -25,7 +25,7 @@ rust_library(
         "@crate_index//:rustversion",  # v1
     ],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    rustc_flags = ["-Zallow-features=never_type,rustc_private,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":cmdline",
@@ -110,7 +110,7 @@ crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cpp_api_from_rust_lib",
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    rustc_flags = ["-Zallow-features=never_type,rustc_private,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     # We don't yet support running cc_bindings_from_rs itself on macOS (we only target macOS).
     tags = ["not_run:mac"],

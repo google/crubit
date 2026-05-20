@@ -107,7 +107,7 @@ static USING_INTERNAL_FEATURES: std::sync::atomic::AtomicBool =
 
 const TEST_FILENAME: &str = "crubit_unittests.rs";
 
-#[rustversion::all(before(1.95), before(2025-10-22))]
+#[rustversion::all(before(1.94), before(2025-10-22))]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {
         opts,
@@ -135,7 +135,7 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
     }
 }
 
-#[rustversion::any(since(1.95), since(2025-10-22))]
+#[rustversion::any(since(1.94), since(2025-10-22))]
 #[rustversion::all(before(1.95), before(2026-02-07))]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {

@@ -376,16 +376,16 @@ pub(crate) fn generate_associated_item<'tcx>(
 }
 
 fn erase_regions<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
-    #[rustversion::any(since(1.95), since(2025-09-10))]
+    #[rustversion::any(since(1.94), since(2025-09-10))]
     return tcx.erase_and_anonymize_regions(ty);
-    #[rustversion::all(before(1.95), before(2025-09-10))]
+    #[rustversion::all(before(1.94), before(2025-09-10))]
     return tcx.erase_regions(ty);
 }
 
 fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::TraitRef<'tcx> {
-    #[rustversion::any(since(1.95), since(2025-10-17))]
+    #[rustversion::any(since(1.94), since(2025-10-17))]
     let middle_trait_header = tcx.impl_trait_header(impl_id);
-    #[rustversion::all(before(1.95), before(2025-10-17))]
+    #[rustversion::all(before(1.94), before(2025-10-17))]
     let middle_trait_header =
         tcx.impl_trait_header(impl_id).expect("DefId for a trait impl lacked a trait header");
     crate::normalize_ty(

@@ -426,9 +426,9 @@ fn function_kind<'tcx>(
 }
 
 fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
-    #[rustversion::all(before(1.95), before(2025-07-29))]
+    #[rustversion::all(before(1.94), before(2025-07-29))]
     let impl_id = tcx.impl_of_method(def_id);
-    #[rustversion::any(since(1.95), since(2025-07-29))]
+    #[rustversion::any(since(1.94), since(2025-07-29))]
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
@@ -1129,6 +1129,11 @@ pub fn get_async_future_output_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     rs_return_type: Ty<'tcx>,
 ) -> Result<Ty<'tcx>> {
+    #[rustversion::stable]
+    let ty::TyKind::Alias(_, alias_ty) = rs_return_type.kind() else {
+        bail!("async functions should always return a TyKind::Alias, this should never happen.");
+    };
+    #[rustversion::nightly]
     let ty::TyKind::Alias(alias_ty) = rs_return_type.kind() else {
         bail!("async functions should always return a TyKind::Alias, this should never happen.");
     };
@@ -1136,11 +1141,14 @@ pub fn get_async_future_output_ty<'tcx>(
         .lang_items()
         .future_output()
         .ok_or_else(|| anyhow!("crubit.rs-bug: Future::Output lang item not found"))?;
-    tcx.explicit_item_bounds(alias_ty.kind.def_id())
+    #[rustversion::stable]
+    let alias_def_id = alias_ty.def_id;
+    #[rustversion::nightly]
+    let alias_def_id = alias_ty.kind.def_id();
+    tcx.explicit_item_bounds(alias_def_id)
         .iter_instantiated_copied(tcx, alias_ty.args)
         .find_map(|unnorm| {
-            let (predicate, _span) =
-                crate::normalize_ty(tcx, tcx.param_env(alias_ty.kind.def_id()), unnorm);
+            let (predicate, _span) = crate::normalize_ty(tcx, tcx.param_env(alias_def_id), unnorm);
             if let ty::ClauseKind::Projection(projection_predicate) = predicate.kind().skip_binder()
                 && Some(projection_predicate.def_id()) == Some(future_output)
             {

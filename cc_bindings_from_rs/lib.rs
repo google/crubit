@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #![feature(rustc_private)]
+#![feature(proc_macro_hygiene)]
 
 extern crate rustc_driver;
 extern crate rustc_errors;
@@ -235,10 +236,19 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
         };
-        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. }) {
+        #[rustversion::stable]
+        let has_no_std = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ()).is_some();
+        #[rustversion::nightly]
+        let has_no_std = rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. });
+        if has_no_std {
             crate_attrs.push("#![no_std]");
         }
-        if rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. }) {
+        #[rustversion::stable]
+        let has_no_core = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoCore { .. } => ()).is_some();
+        #[rustversion::nightly]
+        let has_no_core =
+            rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. });
+        if has_no_core {
             crate_attrs.extend([
                 "#![allow(internal_features)]",
                 "#![feature(no_core)]",

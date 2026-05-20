@@ -667,11 +667,10 @@ fn format_transparent_pointee<'tcx>(
 fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
     substs.iter().any(|subst| subst.as_region().is_none())
 }
-
-#[rustversion::all(before(1.95), before(2026-01-19))]
+#[rustversion::all(before(1.94), before(2026-01-19))]
 type BinderWithFnSigTys<'tcx> = ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>;
 
-#[rustversion::any(since(1.95), since(2026-01-19))]
+#[rustversion::any(since(1.94), since(2026-01-19))]
 type BinderWithFnSigTys<'tcx> = ty::Binder<'tcx, ty::FnSigTys<TyCtxt<'tcx>>>;
 
 fn format_fn_ptr_for_rs<'tcx>(
