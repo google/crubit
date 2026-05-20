@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // transitive_reexports_golden
-// Features: callables, fmt, supported, types
+// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_TRASITIVE_REEXPORTS_TRANSITIVE_REEXPORTS_GOLDEN

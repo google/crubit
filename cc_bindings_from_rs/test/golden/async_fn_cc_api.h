@@ -5,7 +5,7 @@
 // Automatically @generated C++ bindings for the following Rust crate:
 // async_fn_rust_golden
 // Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, fmt, leading_colons_for_cpp_type,
+// check_default_initialized, experimental, leading_colons_for_cpp_type,
 // supported, template_instantiation, types, unsafe_view, wrapper
 
 // clang-format off
