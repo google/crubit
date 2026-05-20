@@ -20,11 +20,14 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace non_trivially_destructible_rust {
 
@@ -56,6 +59,16 @@ NonTriviallyDestructable final {
                            NonTriviallyDestructable&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<NonTriviallyDestructable,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NonTriviallyDestructable& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<NonTriviallyDestructable,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=7

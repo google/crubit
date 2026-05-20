@@ -2313,3 +2313,29 @@ fn test_trait_impl_for_std_iter_iterator_trait() {
         assert_cc_matches!(bindings.cc_api, quote! { next ( ... ) },);
     });
 }
+
+#[test]
+fn test_trait_impl_for_std_cmp_partial_eq_trait() {
+    let test_src = r#"
+            #![allow(unused)]
+
+            #[derive(PartialEq)]
+            pub struct MyStruct(i32);
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                template <>
+                struct rs_std::impl<::rust_out::MyStruct,
+                                    ::rs::core::cmp::PartialEq<::rust_out::MyStruct>> {
+                    static constexpr bool kIsImplemented = true;
+                    ...
+                    static bool eq( ... );
+                };
+            }
+        );
+    });
+}

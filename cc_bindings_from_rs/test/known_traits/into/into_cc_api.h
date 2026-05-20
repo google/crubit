@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -25,6 +26,8 @@
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace into {
 
@@ -68,6 +71,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=38
   explicit operator ::std::int16_t();
 
+  template <typename TOther>
+    requires(rs_std::where_v<Convert, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Convert& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Convert, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/into/into.rs;l=14
@@ -110,6 +120,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=103
   explicit operator ::std::int64_t();
+
+  template <typename TOther>
+    requires(rs_std::where_v<ConvertModule, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const ConvertModule& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<ConvertModule, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -163,6 +181,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   // cc_bindings_from_rs/test/known_traits/into/into.rs;l=67
   explicit operator ::into::Convert();
 
+  template <typename TOther>
+    requires(rs_std::where_v<ConvertRef, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const ConvertRef& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<ConvertRef, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   union {
     // Generated from:
@@ -194,6 +219,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<NotFfiSafe, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NotFfiSafe& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<NotFfiSafe, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:

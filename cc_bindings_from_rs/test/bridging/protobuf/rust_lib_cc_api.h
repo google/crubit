@@ -19,6 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -27,6 +28,7 @@
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo_cpp_rust_proto.h"
+#include "support/rs_std/rs_core.h"
 
 namespace rust_lib {
 
@@ -72,6 +74,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=36
   static void enum_in_signature(::foo_proto::FooEnum _e);
+
+  template <typename TOther>
+    requires(rs_std::where_v<FooService, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const FooService& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<FooService, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Field is a bridged type

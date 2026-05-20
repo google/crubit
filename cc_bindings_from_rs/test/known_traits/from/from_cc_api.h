@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -25,6 +26,8 @@
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace from {
 struct OpaqueRef;
@@ -59,6 +62,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=78
   explicit operator ::std::int32_t();
+
+  template <typename TOther>
+    requires(rs_std::where_v<NotFfiSafe, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NotFfiSafe& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<NotFfiSafe, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Function pointers can't
@@ -114,6 +124,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=38
   explicit operator ::from::OpaqueRef();
 
+  template <typename TOther>
+    requires(rs_std::where_v<Opaque, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Opaque& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Opaque, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/from/from.rs;l=11
@@ -161,6 +178,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/from/from.rs;l=59
   explicit operator rs_std::StrRef();
+
+  template <typename TOther>
+    requires(rs_std::where_v<OpaqueRef, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OpaqueRef& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<OpaqueRef, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {

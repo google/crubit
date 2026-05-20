@@ -17,11 +17,14 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace never {
 
@@ -52,6 +55,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   // Generated from:
   // cc_bindings_from_rs/test/never/never.rs;l=29
   [[noreturn]] void method_never_return() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<NeverStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NeverStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<NeverStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {

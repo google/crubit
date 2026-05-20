@@ -21,12 +21,15 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/slice_ref.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace aliasing_references {
 
@@ -65,6 +68,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=38
   void shared_self_mut_ref_allows_alias(::std::int32_t& __param_1) const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<NonFreezeType, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NonFreezeType& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<NonFreezeType, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
@@ -113,6 +124,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=23
   void shared_self_and_shared_ref_allows_alias(
       ::std::int32_t const& __param_1) const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

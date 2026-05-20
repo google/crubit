@@ -158,28 +158,28 @@ pub mod rust_derived {
     }
 }
 
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
+// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
+// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
+// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
 mod detail {

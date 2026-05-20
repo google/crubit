@@ -18,12 +18,15 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace unions::repr_c {
 
@@ -46,6 +49,13 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=12
   ::std::uint32_t x;
@@ -88,6 +98,13 @@ U final {
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=78
   ::std::uint32_t x;
@@ -124,6 +141,13 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=123
   ::std::int32_t* x;
@@ -156,6 +180,13 @@ __attribute__((packed)) U final {
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=52
   ::std::uint32_t x;
@@ -210,6 +241,13 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=42
   ::std::uint32_t get_y() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=24
@@ -266,6 +304,13 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/unions/unions.rs;l=112
   ::std::uint32_t get_x() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=95
   struct {
@@ -314,6 +359,13 @@ U final {
   // cc_bindings_from_rs/test/unions/unions.rs;l=161
   ::std::int32_t* get_x() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=142
   struct {
@@ -348,6 +400,13 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<U, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const U& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<U, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=65
   struct {

@@ -24,6 +24,8 @@
 #include <cstring>
 #include <type_traits>
 
+#include "support/rs_std/rs_core.h"
+
 namespace trait_definition {
 
 // Generated from:
@@ -45,6 +47,12 @@ MyStruct final {
   MyStruct& operator=(const MyStruct&) = delete;
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<MyStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:

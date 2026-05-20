@@ -18,11 +18,14 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace example_crate {
 
@@ -48,6 +51,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<NonTrivialStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NonTrivialStruct& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<NonTrivialStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // examples/rust/non_trivial_struct/example.rs;l=7

@@ -32,6 +32,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace traits {
 
@@ -59,6 +60,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   AssociatedTypeStruct(::crubit::UnsafeRelocateTag,
                        AssociatedTypeStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<AssociatedTypeStruct,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const AssociatedTypeStruct& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<AssociatedTypeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -119,6 +128,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   // cc_bindings_from_rs/test/traits/traits.rs;l=29
   static ::traits::Foo new_(::std::int32_t x, ::std::int32_t y);
 
+  template <typename TOther>
+    requires(rs_std::where_v<Foo, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Foo& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Foo, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   // Field type has been replaced with a blob of bytes: Tuple types cannot be
   // used inside of compound data types, because std::tuple is not
@@ -147,6 +163,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   LifetimeStruct& operator=(const LifetimeStruct&) = delete;
   LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<LifetimeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const LifetimeStruct& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<LifetimeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -193,6 +217,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   // cc_bindings_from_rs/test/traits/traits.rs;l=51
   static ::traits::MyStruct new_(::std::int32_t x);
 
+  template <typename TOther>
+    requires(rs_std::where_v<MyStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   union {
     // Generated from:
@@ -223,6 +254,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
   MyStruct2& operator=(const MyStruct2&) = default;
   MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<MyStruct2, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyStruct2& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyStruct2, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -268,6 +305,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                             StructWithAssociatedConst&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<StructWithAssociatedConst,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructWithAssociatedConst& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<StructWithAssociatedConst,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/traits.rs;l=174

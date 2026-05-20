@@ -24,12 +24,15 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/char.h"
 #include "support/rs_std/slice_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace functions::fn_abi_tests {
 
@@ -182,6 +185,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/functions/functions.rs;l=252
   static ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct new_(
       ::std::int32_t x);
+
+  template <typename TOther>
+    requires(rs_std::where_v<MyStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {

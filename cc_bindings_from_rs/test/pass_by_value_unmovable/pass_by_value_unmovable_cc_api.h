@@ -18,11 +18,14 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace pass_by_value_unmovable {
 
@@ -52,6 +55,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CppMovable(::crubit::UnsafeRelocateTag, CppMovable&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<CppMovable, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CppMovable& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<CppMovable, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=8
@@ -91,6 +101,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NotCppMovable(::crubit::UnsafeRelocateTag, NotCppMovable&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<NotCppMovable, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NotCppMovable& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<NotCppMovable, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=17

@@ -17,12 +17,15 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace cpp_name {
 
@@ -53,6 +56,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   // Generated from:
   // cc_bindings_from_rs/test/attribute/cpp_name.rs;l=12
   static ::cpp_name::Replaced create();
+
+  template <typename TOther>
+    requires(rs_std::where_v<Replaced, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Replaced& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Replaced, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -26,6 +27,8 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace tuple_structs {
 
@@ -50,6 +53,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<CloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CloneNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -91,6 +102,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=157
   static ::tuple_structs::CopyNoDefault create(::std::int32_t value);
 
+  template <typename TOther>
+    requires(rs_std::where_v<CopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CopyNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=153
@@ -128,6 +147,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                          DefaultAndCloneNoUnpin&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<DefaultAndCloneNoUnpin,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const DefaultAndCloneNoUnpin& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<DefaultAndCloneNoUnpin,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=196
@@ -161,6 +189,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                        DefaultNoCopyNoClone&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<DefaultNoCopyNoClone,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const DefaultNoCopyNoClone& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<DefaultNoCopyNoClone, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=167
@@ -193,6 +230,12 @@ DontMoveMe final {
   DontMoveMe& operator=(const DontMoveMe&) = delete;
   DontMoveMe(::crubit::UnsafeRelocateTag, DontMoveMe&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<DontMoveMe, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const DontMoveMe& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<DontMoveMe, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -242,6 +285,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=33
   ::std::int32_t get_arg() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructOnePrivateArg,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructOnePrivateArg& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructOnePrivateArg,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {
@@ -295,6 +348,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=17
   ::std::int32_t get_arg() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructOnePublicArg,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructOnePublicArg& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructOnePublicArg,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -351,6 +414,16 @@ struct
   // Generated from:
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=91
   ::std::int32_t get_second_arg() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructOnePublicArgOnePrivateArg,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructOnePublicArgOnePrivateArg& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructOnePublicArgOnePrivateArg,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -414,6 +487,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=75
   ::std::int32_t get_second_arg() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructTwoPrivateArgs,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructTwoPrivateArgs& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructTwoPrivateArgs,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {
@@ -481,6 +564,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=54
   ::std::int32_t get_second_arg() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructTwoPublicArgs,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructTwoPublicArgs& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructTwoPublicArgs,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=40
@@ -540,6 +633,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=188
   ::std::int32_t const& $(__anon1)
       get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructWithCloneNoDefault,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructWithCloneNoDefault& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructWithCloneNoDefault,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -602,6 +705,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=145
   ::std::int32_t const& $(__anon1)
       get_second_arg() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructWithCppImmovableType,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructWithCppImmovableType& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructWithCppImmovableType,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -666,6 +779,16 @@ struct
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=209
   ::std::int32_t get_arg() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructWithDefaultAndCloneNoUnpin,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructWithDefaultAndCloneNoUnpin& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructWithDefaultAndCloneNoUnpin,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=201
@@ -711,6 +834,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       TupleStructWithDefaultNoCopyNoClone&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructWithDefaultNoCopyNoClone,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructWithDefaultNoCopyNoClone& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructWithDefaultNoCopyNoClone,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=171
@@ -763,6 +896,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=107
   ::std::tuple<::std::int32_t, ::std::int32_t> get_arg() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructWithInvalidArgumentType,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructWithInvalidArgumentType& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructWithInvalidArgumentType,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   // Field type has been replaced with a blob of bytes: Tuple types cannot be
   // used inside of compound data types, because std::tuple is not
@@ -802,6 +945,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                            TupleStructWithNoDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructWithNoDefault,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructWithNoDefault& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructWithNoDefault,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=163
@@ -847,6 +1000,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=119
   static ::tuple_structs::TupleStructWithNonExhaustiveCtor create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStructWithNonExhaustiveCtor,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStructWithNonExhaustiveCtor& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<TupleStructWithNonExhaustiveCtor,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

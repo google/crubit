@@ -26,6 +26,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/rs_std/rs_core.h"
+
 namespace example_crate {
 
 // Generated from:
@@ -52,6 +54,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
   // Generated from:
   // examples/rust/trait/example.rs;l=17
   static ::example_crate::MyStruct new_(::std::int32_t x);
+
+  template <typename TOther>
+    requires(rs_std::where_v<MyStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {

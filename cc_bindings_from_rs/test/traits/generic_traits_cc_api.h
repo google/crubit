@@ -27,6 +27,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/rs_std/rs_core.h"
+
 namespace generic_traits {
 
 // Generated from:
@@ -50,6 +52,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   AnotherStruct(::crubit::UnsafeRelocateTag, AnotherStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<AnotherStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const AnotherStruct& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<AnotherStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/generic_traits.rs;l=38
@@ -85,6 +95,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/traits/generic_traits.rs;l=14
   static ::generic_traits::StructGeneric new_(::std::int32_t x);
+
+  template <typename TOther>
+    requires(rs_std::where_v<StructGeneric, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructGeneric& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<StructGeneric, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

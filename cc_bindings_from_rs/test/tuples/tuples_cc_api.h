@@ -20,6 +20,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -28,6 +29,8 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace tuples {
 
@@ -51,6 +54,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   AdtHoldingFiveAndSix(::crubit::UnsafeRelocateTag,
                        AdtHoldingFiveAndSix&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<AdtHoldingFiveAndSix,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const AdtHoldingFiveAndSix& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<AdtHoldingFiveAndSix, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -94,6 +105,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   NonCppMovable(::crubit::UnsafeRelocateTag, NonCppMovable&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<NonCppMovable, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NonCppMovable& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<NonCppMovable, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/tuples/tuples.rs;l=59
@@ -123,6 +142,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   NontrivialDrop& operator=(const NontrivialDrop&) = delete;
   NontrivialDrop(::crubit::UnsafeRelocateTag, NontrivialDrop&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<NontrivialDrop, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NontrivialDrop& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<NontrivialDrop, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -168,6 +195,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   // pointee of the pointer type `*const ()`: Tuple types cannot be used inside
   // of compound data types, because std::tuple is not layout-compatible with a
   // Rust tuple.
+
+  template <typename TOther>
+    requires(rs_std::where_v<TupleStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TupleStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<TupleStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Tuple types cannot be

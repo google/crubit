@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -25,6 +26,8 @@
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace move {
 
@@ -60,6 +63,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=42
   ::std::uint8_t consume_self() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<Copyable, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Copyable& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Copyable, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -103,6 +113,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=22
   ::std::uint8_t into_byte() &&;
+
+  template <typename TOther>
+    requires(rs_std::where_v<Foo, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Foo& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Foo, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not

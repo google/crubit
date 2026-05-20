@@ -17,6 +17,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -25,6 +26,7 @@
 #include <utility>
 
 #include "cc_bindings_from_rs/test/uses/extern_crate.h"
+#include "support/rs_std/rs_core.h"
 
 namespace uses {
 
@@ -55,6 +57,15 @@ AliasOfExportedStruct final {
   // Generated from:
   // cc_bindings_from_rs/test/uses/uses.rs;l=26
   static ::uses::AliasOfExportedStruct create(::std::int32_t field);
+
+  template <typename TOther>
+    requires(rs_std::where_v<AliasOfExportedStruct,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const AliasOfExportedStruct& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<AliasOfExportedStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -91,6 +102,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   Original(::crubit::UnsafeRelocateTag, Original&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<Original, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Original& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Original, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/uses/uses.rs;l=64
@@ -128,6 +146,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   OtherPublicName(::crubit::UnsafeRelocateTag, OtherPublicName&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<OtherPublicName, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OtherPublicName& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<OtherPublicName, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/uses/uses.rs;l=74

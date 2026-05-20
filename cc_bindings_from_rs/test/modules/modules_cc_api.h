@@ -17,12 +17,15 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace modules::basic_module {
 
@@ -81,6 +84,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/modules/modules.rs;l=59
   static ::std::int32_t into_i32(
       ::modules::impl_in_separate_private_module::Foo s);
+
+  template <typename TOther>
+    requires(rs_std::where_v<Foo, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Foo& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Foo, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

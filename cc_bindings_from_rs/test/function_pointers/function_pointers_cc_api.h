@@ -20,12 +20,15 @@
 #include "support/annotations_internal.h"
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace function_pointers {
 
@@ -63,6 +66,13 @@ CStruct final {
   CStruct(::crubit::UnsafeRelocateTag, CStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<CStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<CStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=58
@@ -101,6 +111,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=17
   static ::function_pointers::HasFnPtrField with_add_ten();
+
+  template <typename TOther>
+    requires(rs_std::where_v<HasFnPtrField, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasFnPtrField& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<HasFnPtrField, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

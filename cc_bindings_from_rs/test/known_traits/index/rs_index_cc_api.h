@@ -19,6 +19,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -27,6 +28,8 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace rs_index {
 
@@ -58,6 +61,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=69
   static ::rs_index::CustomIndex new_(::std::uintptr_t index);
+
+  template <typename TOther>
+    requires(rs_std::where_v<CustomIndex, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CustomIndex& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<CustomIndex, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -95,6 +105,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=129
   static ::rs_index::Id new_(::std::int32_t id);
+
+  template <typename TOther>
+    requires(rs_std::where_v<Id, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Id& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Id, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -159,6 +176,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=87
   ::std::int32_t& $(__anon1) operator[](::rs_index::CustomIndex index) &;
 
+  template <typename TOther>
+    requires(rs_std::where_v<IntPair, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const IntPair& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<IntPair, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=11
@@ -215,6 +239,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
   // std::ops::IndexMut<(usize, usize)>>` defined at
   // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=121:
   // Mutable references to `str` are not yet supported.
+
+  template <typename TOther>
+    requires(rs_std::where_v<Map, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Map& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Map, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not

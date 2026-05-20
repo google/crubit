@@ -32,7 +32,7 @@
 namespace stdlib {
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=19
+// cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=21
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
     [[clang::trivial_abi]] MyStruct final {
  public:
@@ -56,12 +56,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=24
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=26
   static ::stdlib::MyStruct new_(::std::int32_t x);
+
+  template <typename TOther>
+    requires(rs_std::where_v<MyStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=20
+    // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=22
     ::std::int32_t x;
   };
 
@@ -79,16 +86,27 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
 }  // namespace stdlib
 
 template <>
+struct rs_std::impl<::stdlib::MyStruct,
+                    ::rs::core::cmp::PartialEq<::stdlib::MyStruct>> {
+  static constexpr bool kIsImplemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=20
+  static bool eq(::stdlib::MyStruct const& self,
+                 ::stdlib::MyStruct const& other);
+};
+
+template <>
 struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=47
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=49
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: iter :: Iterator>::Item") =
       ::std::int32_t;
 
   // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=49
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=51
   static ::std::optional<::std::int32_t> next(::stdlib::MyStruct& self);
 };
 
@@ -149,6 +167,18 @@ inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
 }
 }  // namespace stdlib
+
+namespace stdlib {
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_PartialEq_ueq(::stdlib::MyStruct const&,
+                                             ::stdlib::MyStruct const&);
+}
+}  // namespace stdlib
+inline bool rs_std::impl<::stdlib::MyStruct,
+                         ::rs::core::cmp::PartialEq<::stdlib::MyStruct>>::
+    eq(::stdlib::MyStruct const& self, ::stdlib::MyStruct const& other) {
+  return stdlib::__crubit_internal::__crubit_thunk_PartialEq_ueq(self, other);
+}
 
 namespace stdlib {
 namespace __crubit_internal {

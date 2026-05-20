@@ -19,12 +19,15 @@
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace str {
 static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
@@ -66,6 +69,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/str/str.rs;l=22
   ::std::uint8_t const* get_str_data() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<TypeWithStr, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TypeWithStr& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<TypeWithStr, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

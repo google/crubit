@@ -17,6 +17,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -24,6 +25,8 @@
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace leaf_rs_lib {
 
@@ -63,6 +66,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<LeafRsEnum, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const LeafRsEnum& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<LeafRsEnum, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
@@ -97,6 +106,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   LeafRsType& operator=(const LeafRsType&) = default;
   LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<LeafRsType, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const LeafRsType& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<LeafRsType, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:

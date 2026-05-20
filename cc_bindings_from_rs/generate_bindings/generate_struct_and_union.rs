@@ -428,6 +428,68 @@ pub fn from_trait_impls_by_argument<'tcx>(
     Rc::new(map)
 }
 
+fn generate_trait_based_operators<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets<'tcx> {
+    let cc_struct_name = &core.cc_short_name;
+    [
+        generate_trait_based_operator(db, sym::PartialEq, |trait_name| {
+            quote! {
+                __NEWLINE__
+                template <typename TOther>
+                requires(rs_std::where_v<#cc_struct_name, #trait_name<TOther>>)
+                friend bool operator==(const #cc_struct_name& lhs, const TOther& rhs) {
+                    using impl = rs_std::impl<#cc_struct_name, #trait_name<TOther>>;
+                    return impl::eq(lhs, rhs);
+                }
+                __NEWLINE__
+            }
+        }),
+        // TODO(b/483382648): Consider implementing other bindings like:
+        // - `PartialOrd` => `operator<=>`
+        // - `Add` => `operator+`
+        // - `AddAssign` => `operator+=`
+        // - `Debug` => `operator<<`
+        // - `Index` => `operator[]` (refactoring / simplifying `generate_index_impls`?)
+        // - etc.
+    ]
+    .into_iter()
+    .collect()
+}
+
+fn generate_trait_based_operator<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_symbol: rustc_span::Symbol,
+    format_bindings: impl FnOnce(TokenStream) -> TokenStream,
+) -> ApiSnippets<'tcx> {
+    let inner = || -> Result<CcSnippet<'tcx>> {
+        let tcx = db.tcx();
+        let trait_def_id = tcx
+            .get_diagnostic_item(trait_symbol)
+            .ok_or_else(|| anyhow!("Could not find {trait_symbol} trait"))?;
+        let canonical_trait_name = db
+            .symbol_canonical_name(trait_def_id)
+            .ok_or_else(|| anyhow!("Could not find canonical name for {trait_symbol} trait"))?;
+        let trait_name = canonical_trait_name.format_for_cc(db)?;
+
+        let mut prereqs = CcPrerequisites::default();
+        prereqs.depend_on_def(db, trait_def_id)?;
+        prereqs.includes.insert(db.support_header("rs_std/traits.h"));
+
+        let tokens = format_bindings(trait_name);
+
+        Ok(CcSnippet { tokens, prereqs })
+    };
+
+    let main_api = inner().unwrap_or_else(|err| {
+        db.errors().report(&err);
+        let msg = format!("Error generating {trait_symbol} bindings: {err:#}");
+        CcSnippet::new(quote! { __NEWLINE__ __COMMENT__ #msg __NEWLINE__ })
+    });
+    ApiSnippets { main_api, ..Default::default() }
+}
+
 fn generate_into_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -832,6 +894,7 @@ pub fn generate_adt<'tcx>(
     let adt_based_ctors = generate_adt_based_ctors(db, core.clone(), &mut member_function_names);
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
     let index_operator_snippets = generate_index_impls(db, core.as_ref());
+    let other_trait_based_operators_snippets = generate_trait_based_operators(db, core.as_ref());
 
     let ApiSnippets {
         main_api: public_functions_main_api,
@@ -847,6 +910,7 @@ pub fn generate_adt<'tcx>(
         impl_items_snippets,
         into_operator_snippets,
         index_operator_snippets,
+        other_trait_based_operators_snippets,
     ]
     .into_iter()
     .collect();

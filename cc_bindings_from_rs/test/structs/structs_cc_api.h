@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/char.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -25,6 +26,8 @@
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace structs::abi_classification {
 
@@ -74,6 +77,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/structs/structs.rs;l=184
   static float inspect(::structs::abi_classification::StructFloat s);
+
+  template <typename TOther>
+    requires(rs_std::where_v<StructFloat, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructFloat& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<StructFloat, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {
@@ -139,6 +149,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/structs.rs;l=167
   static ::std::int32_t inspect(::structs::abi_classification::StructInteger s);
 
+  template <typename TOther>
+    requires(rs_std::where_v<StructInteger, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructInteger& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<StructInteger, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   union {
     // Generated from:
@@ -197,6 +215,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/structs.rs;l=200
   static ::std::int32_t inspect(::structs::abi_classification::StructMemory s);
 
+  template <typename TOther>
+    requires(rs_std::where_v<StructMemory, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructMemory& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<StructMemory, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   union {
     // Generated from:
@@ -239,6 +264,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<Point, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Point& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Point, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=40
@@ -302,6 +334,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
@@ -348,6 +386,13 @@ struct
   // cc_bindings_from_rs/test/structs/structs.rs;l=395
   ::std::int32_t operator_() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<AField, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const AField& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<AField, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   union {
     // Generated from:
@@ -386,6 +431,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=322
@@ -432,6 +484,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<Point, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Point& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Point, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=61
@@ -485,6 +544,13 @@ Point final {
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<Point, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Point& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Point, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=15
@@ -539,6 +605,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructFloat& operator=(const StructFloat&) = delete;
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<StructFloat, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructFloat& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<StructFloat, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -610,6 +682,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<StructFloat, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructFloat& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<StructFloat, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -685,6 +763,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/structs.rs;l=379
   static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
 
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=374
@@ -737,6 +822,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ZstFields(::crubit::UnsafeRelocateTag, ZstFields&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<ZstFields, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const ZstFields& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<ZstFields, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=97

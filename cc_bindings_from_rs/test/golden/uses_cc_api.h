@@ -19,12 +19,15 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace uses_rust {
 
@@ -46,6 +49,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   Bar& operator=(const Bar&) = delete;
   Bar(::crubit::UnsafeRelocateTag, Bar&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<Bar, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Bar& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Bar, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -86,6 +95,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   // Generated from:
   // cc_bindings_from_rs/test/golden/uses.rs;l=45
   static ::uses_rust::Bar bar();
+
+  template <typename TOther>
+    requires(rs_std::where_v<Foo, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Foo& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Foo, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {
@@ -128,6 +144,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
   G(::crubit::UnsafeRelocateTag, G&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<G, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const G& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<G, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=78
@@ -161,6 +184,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<InnerX, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const InnerX& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<InnerX, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=68
@@ -193,6 +223,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
   X1& operator=(const X1&) = delete;
   X1(::crubit::UnsafeRelocateTag, X1&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<X1, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const X1& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<X1, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:

@@ -21,6 +21,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -29,6 +30,7 @@
 #include <utility>
 
 #include "support/ffi_11/ffi_11.h"
+#include "support/rs_std/rs_core.h"
 
 namespace primitive_types::argument_types {
 
@@ -66,6 +68,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Types(::crubit::UnsafeRelocateTag, Types&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<Types, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Types& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Types, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=200
@@ -381,6 +390,16 @@ StructWithCVoidPointerMember final {
                                StructWithCVoidPointerMember&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<StructWithCVoidPointerMember,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructWithCVoidPointerMember& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<StructWithCVoidPointerMember,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=10

@@ -17,11 +17,14 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace rs_default::derived_impl {
 
@@ -54,6 +57,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=31
   static ::std::int32_t extract_int(::rs_default::derived_impl::SomeStruct s);
+
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -99,6 +109,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=19
   static ::std::int32_t extract_int(::rs_default::explicit_impl::SomeStruct s);
 
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=10
@@ -140,6 +157,14 @@ StructWithoutDefault final {
   StructWithoutDefault(::crubit::UnsafeRelocateTag,
                        StructWithoutDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<StructWithoutDefault,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructWithoutDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<StructWithoutDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -184,6 +209,16 @@ StructWithFieldWithNoDefault final {
   static ::std::int32_t extract_int(
       ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s);
 
+  template <typename TOther>
+    requires(rs_std::where_v<StructWithFieldWithNoDefault,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructWithFieldWithNoDefault& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<StructWithFieldWithNoDefault,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=41
@@ -224,6 +259,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=64
@@ -267,6 +309,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=73
   ::std::int32_t extract_int() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const SomeStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<SomeStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

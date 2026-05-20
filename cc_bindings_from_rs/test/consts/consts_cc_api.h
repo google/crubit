@@ -19,6 +19,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -26,6 +27,7 @@
 #include <type_traits>
 
 #include "support/ffi_11/ffi_11.h"
+#include "support/rs_std/rs_core.h"
 
 namespace consts {
 static constexpr decltype(char(0)) CHAR = 42;
@@ -84,6 +86,14 @@ TyWithAssocConsts final {
     ::std::memcpy(this, &value, sizeof(value));
   }
   static constexpr ::std::int32_t ASSOC_42 = INT32_C(42);
+  template <typename TOther>
+    requires(
+        rs_std::where_v<TyWithAssocConsts, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const TyWithAssocConsts& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<TyWithAssocConsts, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   union {

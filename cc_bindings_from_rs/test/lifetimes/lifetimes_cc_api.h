@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -26,6 +27,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace lifetimes {
 
@@ -96,6 +98,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=25
   explicit operator ::std::int32_t();
 
+  template <typename TOther>
+    requires(
+        rs_std::where_v<StructWithLifetime, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructWithLifetime& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<StructWithLifetime, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=10
@@ -138,6 +149,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=78
   static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
+
+  template <typename TOther>
+    requires(rs_std::where_v<StructWithLifetimeAndDropGlue,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const StructWithLifetimeAndDropGlue& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<StructWithLifetimeAndDropGlue,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

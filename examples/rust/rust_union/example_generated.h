@@ -17,11 +17,14 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace example_crate {
 
@@ -53,6 +56,14 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // examples/rust/rust_union/example.rs;l=25
   void set_b(double b);
+
+  template <typename TOther>
+    requires(rs_std::where_v<ReprRustUnion, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const ReprRustUnion& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<ReprRustUnion, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Generated from:

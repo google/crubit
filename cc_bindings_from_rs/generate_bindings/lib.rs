@@ -1018,7 +1018,16 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
 // Implementation of `BindingsGenerator::supported_traits`.
 fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
     let tcx = db.tcx();
-    let iterator_trait_id = tcx.get_diagnostic_item(sym::Iterator);
+
+    // TODO(b/483382648): Generate bindings for other `std`, `core`, and `alloc` traits.
+    // At least for _most_ other traits - we probably still want to exclude traits that
+    // get idiomatic C++ bindings elsewhere, such as `Clone`, `Default`, `Drop`, `From`,
+    // `Index`, and `Into`.
+    let supported_standard_trait_ids =
+        [tcx.get_diagnostic_item(sym::Iterator), tcx.get_diagnostic_item(sym::PartialEq)]
+            .into_iter()
+            .flatten()
+            .collect::<HashSet<DefId>>();
 
     let traits = tcx
         .visible_traits()
@@ -1036,18 +1045,13 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
             !has_const_generics
         })
         .filter(|trait_id| {
-            // TODO(b/483382648): Generate bindings for other `std`, `core`, and `alloc` traits.
-            // At least for _most_ other traits - we probably still want to exclude traits that
-            // get idiomatic C++ bindings elsewhere, such as `Clone`, `Default`, `Drop`, `From`,
-            // `Index`, and `Into`.
             let not_in_stdlib = {
                 let crate_name = tcx.crate_name(trait_id.krate);
                 crate_name.as_str() != "std"
                     && crate_name.as_str() != "core"
                     && crate_name.as_str() != "alloc"
             };
-            let is_iterator_trait = iterator_trait_id == Some(*trait_id);
-            not_in_stdlib || is_iterator_trait
+            not_in_stdlib || supported_standard_trait_ids.contains(trait_id)
         })
         .collect::<Vec<DefId>>()
         .into_boxed_slice();

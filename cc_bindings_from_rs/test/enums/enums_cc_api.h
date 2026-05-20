@@ -20,6 +20,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -29,6 +30,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace enums::repr_c {
 
@@ -92,6 +94,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   MyEnum(::crubit::UnsafeRelocateTag, MyEnum&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<MyEnum, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyEnum& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyEnum, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   struct alignas(0) __crubit_E_struct {
    public:
     ::rs::alloc::string::String __field0;
@@ -195,6 +204,15 @@ CloneActiveVariant final {
   CloneActiveVariant(::crubit::UnsafeRelocateTag, CloneActiveVariant&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<CloneActiveVariant, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CloneActiveVariant& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CloneActiveVariant, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   struct alignas(0) __crubit_A_struct {
    public:
     ::std::int32_t __field0;
@@ -277,6 +295,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CloneCount(::crubit::UnsafeRelocateTag, CloneCount&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<CloneCount, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CloneCount& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<CloneCount, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   struct alignas(0) __crubit_A_struct {
    public:
     ::std::int32_t* p;
@@ -345,6 +370,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DropMe(::crubit::UnsafeRelocateTag, DropMe&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<DropMe, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const DropMe& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<DropMe, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   struct alignas(0) __crubit_A_struct {
    public:
     ::std::int32_t __field0;
@@ -434,6 +466,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/enums/enums.rs;l=197
   bool is_no_payload2() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<IntReprEnumWithNoPayload,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const IntReprEnumWithNoPayload& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<IntReprEnumWithNoPayload,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
@@ -513,6 +555,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=143
   ::std::int32_t get_first_item_from_tuple_payload() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<RustReprEnum, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const RustReprEnum& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<RustReprEnum, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
@@ -598,6 +647,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
   MakeStructPayloadVariant(::std::int32_t x);
 
+  template <typename TOther>
+    requires(rs_std::where_v<RustReprWithNamingConflictBetweenCtorsAndMethods,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(
+      const RustReprWithNamingConflictBetweenCtorsAndMethods& lhs,
+      const TOther& rhs) {
+    using impl = rs_std::impl<RustReprWithNamingConflictBetweenCtorsAndMethods,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
@@ -651,6 +711,15 @@ RustReprWithSingleTuplePayloadVariant final {
       ::crubit::UnsafeRelocateTag,
       RustReprWithSingleTuplePayloadVariant&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<RustReprWithSingleTuplePayloadVariant,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const RustReprWithSingleTuplePayloadVariant& lhs,
+                         const TOther& rhs) {
+    using impl = rs_std::impl<RustReprWithSingleTuplePayloadVariant,
+                              ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:

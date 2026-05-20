@@ -19,11 +19,14 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace struct_with_conflicting_fields_and_member_functions_rust {
 
@@ -57,6 +60,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=16
   ::std::int32_t b() const;
+
+  template <typename TOther>
+    requires(rs_std::where_v<X, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const X& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<X, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

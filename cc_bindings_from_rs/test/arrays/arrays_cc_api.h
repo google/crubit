@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -26,6 +27,8 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace arrays {
 
@@ -49,6 +52,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<ArrayStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const ArrayStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<ArrayStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/arrays/arrays.rs;l=42
@@ -86,6 +96,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   // cc_bindings_from_rs/test/arrays/arrays.rs;l=55
   static ::arrays::HasDrop new_(::std::int32_t x);
 
+  template <typename TOther>
+    requires(rs_std::where_v<HasDrop, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasDrop& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<HasDrop, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/arrays/arrays.rs;l=51
@@ -117,6 +134,15 @@ HasDropAndDefault final {
   HasDropAndDefault(::crubit::UnsafeRelocateTag, HasDropAndDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<HasDropAndDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasDropAndDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<HasDropAndDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/arrays/arrays.rs;l=78

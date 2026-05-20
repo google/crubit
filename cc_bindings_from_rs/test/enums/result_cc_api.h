@@ -23,6 +23,7 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <bit>
@@ -33,6 +34,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace result {
 
@@ -58,6 +60,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<CloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CloneNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=42
@@ -88,6 +99,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
   CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<CopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CopyNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=27
@@ -127,6 +146,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
   // cc_bindings_from_rs/test/enums/result.rs;l=66
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
+  template <typename TOther>
+    requires(rs_std::where_v<HasDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasDefault& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<HasDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=59
@@ -164,6 +190,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
   // cc_bindings_from_rs/test/enums/result.rs;l=87
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
+  template <typename TOther>
+    requires(rs_std::where_v<HasNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasNoDefault& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<HasNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=84
@@ -194,6 +227,14 @@ ResultWithSizeTypes final {
   ResultWithSizeTypes(::crubit::UnsafeRelocateTag,
                       ResultWithSizeTypes&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<ResultWithSizeTypes,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const ResultWithSizeTypes& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<ResultWithSizeTypes, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -488,6 +529,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
   // cc_bindings_from_rs/test/enums/result.rs;l=9
   static ::result::GetsResult new_(::std::uint32_t val);
 
+  template <typename TOther>
+    requires(rs_std::where_v<GetsResult, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const GetsResult& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<GetsResult, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=6
@@ -620,6 +668,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult") alignas(4)
   // cc_bindings_from_rs/test/enums/result.rs;l=20
   static ::result::NestedResult new_(::std::uint32_t val);
 
+  template <typename TOther>
+    requires(rs_std::where_v<NestedResult, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NestedResult& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<NestedResult, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=15
@@ -717,6 +772,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/enums/result.rs;l=49
   static ::result::CloneNoDefaultResult new_(::std::uint8_t val);
 
+  template <typename TOther>
+    requires(rs_std::where_v<CloneNoDefaultResult,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CloneNoDefaultResult& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CloneNoDefaultResult, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=45
@@ -811,6 +875,15 @@ CopyNoDefaultResult final {
   // cc_bindings_from_rs/test/enums/result.rs;l=35
   static ::result::CopyNoDefaultResult new_(::std::uint8_t val);
 
+  template <typename TOther>
+    requires(rs_std::where_v<CopyNoDefaultResult,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CopyNoDefaultResult& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CopyNoDefaultResult, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/result.rs;l=31
@@ -903,6 +976,15 @@ HasDefaultResult final {
   // Generated from:
   // cc_bindings_from_rs/test/enums/result.rs;l=75
   static ::result::HasDefaultResult new_(rs_std::StrRef val);
+
+  template <typename TOther>
+    requires(
+        rs_std::where_v<HasDefaultResult, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasDefaultResult& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<HasDefaultResult, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -997,6 +1079,15 @@ HasNoDefaultResult final {
   // Generated from:
   // cc_bindings_from_rs/test/enums/result.rs;l=96
   static ::result::HasNoDefaultResult new_(rs_std::StrRef val);
+
+  template <typename TOther>
+    requires(
+        rs_std::where_v<HasNoDefaultResult, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasNoDefaultResult& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<HasNoDefaultResult, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:

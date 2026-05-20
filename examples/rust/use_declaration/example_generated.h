@@ -17,11 +17,14 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace example_crate {
 
@@ -44,6 +47,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
   Type(::crubit::UnsafeRelocateTag, Type&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<Type, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const Type& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<Type, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // examples/rust/use_declaration/example.rs;l=9

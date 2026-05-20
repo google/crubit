@@ -27,6 +27,7 @@
 
 #include "cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.h"
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace trait_impl {
 
@@ -53,6 +54,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   // Generated from:
   // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=12
   static ::trait_impl::MyStruct new_(::std::int32_t x);
+
+  template <typename TOther>
+    requires(rs_std::where_v<MyStruct, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const MyStruct& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<MyStruct, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -87,6 +95,15 @@ NotImplemented final {
   NotImplemented(::crubit::UnsafeRelocateTag, NotImplemented&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<NotImplemented, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const NotImplemented& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<NotImplemented, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=24

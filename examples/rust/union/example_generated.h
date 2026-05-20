@@ -17,11 +17,14 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+
+#include "support/rs_std/rs_core.h"
 
 namespace example_crate {
 
@@ -44,6 +47,13 @@ ReprCUnion final {
   ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<ReprCUnion, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const ReprCUnion& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<ReprCUnion, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   // Generated from:
   // examples/rust/union/example.rs;l=7
   ::std::int32_t a;

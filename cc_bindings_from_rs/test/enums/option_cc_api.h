@@ -23,6 +23,7 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/option.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <bit>
@@ -34,6 +35,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace option {
 struct HasOptions;
@@ -65,6 +67,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(
+        rs_std::where_v<CloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CloneNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=140
@@ -95,6 +106,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
   CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<CopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const CopyNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<CopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=155
@@ -134,6 +153,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   // cc_bindings_from_rs/test/enums/option.rs;l=97
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
+
+  template <typename TOther>
+    requires(rs_std::where_v<HasDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasDefault& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<HasDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -176,6 +202,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   // cc_bindings_from_rs/test/enums/option.rs;l=119
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
+
+  template <typename TOther>
+    requires(rs_std::where_v<HasNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasNoDefault& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<HasNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -304,6 +337,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
   // cc_bindings_from_rs/test/enums/option.rs;l=40
   ::std::uint8_t value() const;
 
+  template <typename TOther>
+    requires(rs_std::where_v<LessThan20U8, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const LessThan20U8& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<LessThan20U8, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
@@ -341,6 +381,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   OptZst(::crubit::UnsafeRelocateTag, OptZst&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TOther>
+    requires(rs_std::where_v<OptZst, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OptZst& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<OptZst, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: Failed to format type
@@ -372,6 +418,14 @@ OptionWithSizeTypes final {
   OptionWithSizeTypes(::crubit::UnsafeRelocateTag,
                       OptionWithSizeTypes&& value) {
     ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TOther>
+    requires(rs_std::where_v<OptionWithSizeTypes,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OptionWithSizeTypes& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<OptionWithSizeTypes, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
   }
 
  private:
@@ -480,6 +534,15 @@ OptCloneNoDefault final {
   // cc_bindings_from_rs/test/enums/option.rs;l=148
   static ::option::OptCloneNoDefault new_(::std::uint8_t x);
 
+  template <typename TOther>
+    requires(
+        rs_std::where_v<OptCloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OptCloneNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<OptCloneNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=145
@@ -563,6 +626,15 @@ OptCopyNoDefault final {
   // cc_bindings_from_rs/test/enums/option.rs;l=164
   static ::option::OptCopyNoDefault new_(::std::uint8_t x);
 
+  template <typename TOther>
+    requires(
+        rs_std::where_v<OptCopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OptCopyNoDefault& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<OptCopyNoDefault, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=160
@@ -645,6 +717,15 @@ OptDefaultWithDrop final {
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=106
   static ::option::OptDefaultWithDrop new_(rs_std::StrRef s);
+
+  template <typename TOther>
+    requires(
+        rs_std::where_v<OptDefaultWithDrop, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OptDefaultWithDrop& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<OptDefaultWithDrop, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -736,6 +817,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/enums/option.rs;l=133
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
+
+  template <typename TOther>
+    requires(rs_std::where_v<OptNoDefaultWithDrop,
+                             ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const OptNoDefaultWithDrop& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<OptNoDefaultWithDrop, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
@@ -963,6 +1053,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   // cc_bindings_from_rs/test/enums/option.rs;l=72
   static ::option::HasOptions with_none();
 
+  template <typename TOther>
+    requires(rs_std::where_v<HasOptions, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasOptions& lhs, const TOther& rhs) {
+    using impl = rs_std::impl<HasOptions, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/enums/option.rs;l=48
@@ -1006,6 +1103,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
   // Generated from:
   // cc_bindings_from_rs/test/enums/option.rs;l=82
   static ::option::HasHasOptions new_(::std::uint8_t value);
+
+  template <typename TOther>
+    requires(rs_std::where_v<HasHasOptions, ::rs::core::cmp::PartialEq<TOther>>)
+  friend bool operator==(const HasHasOptions& lhs, const TOther& rhs) {
+    using impl =
+        rs_std::impl<HasHasOptions, ::rs::core::cmp::PartialEq<TOther>>;
+    return impl::eq(lhs, rhs);
+  }
 
   union {
     // Generated from:
