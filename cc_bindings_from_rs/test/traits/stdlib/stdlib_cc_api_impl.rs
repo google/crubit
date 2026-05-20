@@ -53,6 +53,17 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
 }
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::MyStruct, x) == 0);
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+    __self: &'static ::stdlib_golden::MyStruct,
+    other: &'static ::stdlib_golden::MyStruct,
+) -> bool {
+    unsafe {
+        <::stdlib_golden::MyStruct as ::core::cmp::PartialEq<::stdlib_golden::MyStruct>>::eq(
+            __self, other,
+        )
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Iterator_unext(
     __self: &'static mut ::stdlib_golden::MyStruct,
     __ret_ptr: *mut core::ffi::c_uchar,

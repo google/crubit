@@ -15,7 +15,9 @@ impl MyTrait for i32 {
 
 // Deriving `Clone` and `Default` to verify via goldens that they don't get
 // trait-shaped bindings (since they already get other, idiomatic C++ bindings).
-#[derive(Clone, Default)]
+//
+// Deriving `PartialEq` to verify bindings for `operator==`.
+#[derive(Clone, Default, PartialEq)]
 pub struct MyStruct {
     pub x: i32,
 }

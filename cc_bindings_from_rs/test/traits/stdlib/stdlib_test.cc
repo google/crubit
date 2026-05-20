@@ -27,5 +27,15 @@ TEST(StdlibTraitTest, IteratorNext) {
   EXPECT_EQ(std::optional(impl::next(s)), std::nullopt);
 }
 
+TEST(StdlibTraitTest, PartialEqCallingTraitImplDirectly) {
+  using impl =
+      rs::core::cmp::PartialEq<stdlib::MyStruct>::impl<stdlib::MyStruct>;
+  auto three1 = stdlib::MyStruct::new_(3);
+  auto three2 = stdlib::MyStruct::new_(3);
+  auto four1 = stdlib::MyStruct::new_(4);
+  EXPECT_TRUE(impl::eq(three1, three2));
+  EXPECT_FALSE(impl::eq(three1, four1));
+}
+
 }  // namespace
 }  // namespace crubit
