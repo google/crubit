@@ -10,7 +10,6 @@ use crubit_abi_type::{
     CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens,
     CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens, FullyQualifiedPath,
 };
-use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     self, integer_constant_to_token_stream, ApiSnippets, Bindings, BindingsTokens, CppDetails,
     CppIncludes, DeprecatedAttr, Feature, GeneratedItem,
@@ -451,14 +450,6 @@ pub fn generate_bindings_tokens(
         let (mut cpp_api, rust_api): (TokenStream, TokenStream) = ir
             .records()
             .filter_map(|record| {
-                // If the record doesn't belong to a target with the Callables feature, skip.
-                if !ir
-                    .target_crubit_features(&record.owning_target)
-                    .contains(CrubitFeature::Callables)
-                {
-                    return None;
-                }
-
                 // We assume !has_reference_param: it doesn't matter since we're just checking for
                 // presence of DynCallable.
 
@@ -1282,12 +1273,6 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             }
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
             BridgeRsTypeKind::Callable(callable) => {
-                ensure!(
-                    db.ir()
-                        .target_crubit_features(&original_type.owning_target)
-                        .contains(CrubitFeature::Callables),
-                    "callables (e.g. `AnyInvocable`) are not yet supported",
-                );
                 generate_dyn_callable::callable_crubit_abi_type(db, &callable)
             }
             BridgeRsTypeKind::C9Co { result_type, .. } => {
