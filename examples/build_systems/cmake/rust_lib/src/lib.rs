@@ -14,3 +14,20 @@ pub fn make_engine() -> base64::engine::GeneralPurpose {
     .unwrap();
     base64::engine::GeneralPurpose::new(&alphabet, base64::engine::general_purpose::PAD)
 }
+
+pub fn print_path(path: &std::path::Path) -> String {
+    path.display().to_string()
+}
+
+pub struct Gymnastics {
+    internal: std::string::String,
+}
+impl Gymnastics {
+    pub fn new(path: std::path::PathBuf) -> Self {
+        Self { internal: print_path(&path) }
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.internal
+    }
+}

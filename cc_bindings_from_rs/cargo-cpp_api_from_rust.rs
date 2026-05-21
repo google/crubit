@@ -208,6 +208,17 @@ impl Directories {
     }
 }
 
+struct CrateBindingInfo<'a> {
+    pkg_id_repr: &'a str,
+    crate_name: &'a str,
+    rs_crate_name: &'a str,
+    artifact_path: &'a cargo_metadata::camino::Utf8Path,
+    hash: &'a str,
+    fresh: bool,
+    is_stdlib: bool,
+    stdlib_externs: &'a [(String, Utf8PathBuf)],
+}
+
 struct BindingGenerationContext {
     pkg_to_artifact: HashMap<String, ArtifactInfo>,
     root: Package,
@@ -256,58 +267,142 @@ impl BindingGenerationContext {
         Ok(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone() })
     }
 
-    fn generate_bindings(&self) -> Result<String> {
-        let mut pkg_to_header = HashMap::new();
-        let mut lib_rs_content = String::new();
+    fn get_sysroot(&self) -> Result<Utf8PathBuf> {
+        let output = std::process::Command::new(cargo_bin())
+            .arg("rustc")
+            .arg("--manifest-path")
+            .arg(&self.root.manifest_path)
+            .arg("--")
+            .arg("--print")
+            .arg("sysroot")
+            .output()?;
+        if !output.status.success() {
+            bail!("Failed to get sysroot from cargo rustc");
+        }
+        let path = std::str::from_utf8(&output.stdout)?.trim();
+        Ok(Utf8PathBuf::from(path))
+    }
+
+    fn find_stdlib_rmetas(sysroot: &Utf8PathBuf) -> Result<Vec<(String, Utf8PathBuf)>> {
+        // Walk the lib directory to find the matching rmeta files.
+        // Usually <sysroot>/lib/rustlib/<target>/lib/
+        let rustlib = sysroot.join("lib").join("rustlib");
+        let mut target_lib_dir = None;
+        if !rustlib.exists() {
+            bail!("Could not find target lib dir in sysroot");
+        }
+        for entry in std::fs::read_dir(rustlib)? {
+            let entry = entry?;
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let lib_sub = path.join("lib");
+            if !lib_sub.exists() {
+                continue;
+            }
+            // Make sure it's the target directory by checking if any rlib/rmeta is there.
+            for sub_entry in std::fs::read_dir(&lib_sub)? {
+                let sub_entry = sub_entry?;
+                if sub_entry.path().extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib") {
+                    target_lib_dir = Some(Utf8PathBuf::from_path_buf(lib_sub).unwrap());
+                    break;
+                }
+            }
+            if target_lib_dir.is_some() {
+                break;
+            }
+        }
+        let lib_dir =
+            target_lib_dir.ok_or_else(|| anyhow!("Could not find target lib dir in sysroot"))?;
+
+        let libs = ["core", "alloc", "std", "proc_macro"];
+        let mut rmetas = vec![(String::default(), Utf8PathBuf::default()); 4];
+        // This order is important because we rely on it to determine what standard library
+        // crates depend on each other. std depends on core and alloc, alloc depends on core, etc.
+        for entry in std::fs::read_dir(&lib_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            let Some(ext) = path.extension() else {
+                continue;
+            };
+            if ext != "rmeta" {
+                continue;
+            }
+            let Some(file_name) = path.file_name().and_then(|s| s.to_str()) else {
+                continue;
+            };
+            for (i, lib) in libs.iter().enumerate() {
+                if file_name.starts_with(&format!("lib{}-", lib)) {
+                    rmetas[i] = (lib.to_string(), Utf8PathBuf::from_path_buf(path).unwrap());
+                    break;
+                }
+            }
+        }
+        Ok(rmetas)
+    }
+
+    fn generate_crate_bindings(
+        &self,
+        info: CrateBindingInfo<'_>,
+        pkg_to_header: &mut HashMap<String, String>,
+        lib_rs_content: &mut String,
+    ) -> Result<()> {
         let deps_dir = &self.dirs.deps_dir;
         let headers_dir = &self.dirs.headers_dir;
         let host_deps_dir = &self.dirs.host_deps_dir;
-        let profile_dir = &self.dirs.profile_dir;
 
-        fs::create_dir_all(headers_dir)?;
-        for pkg_id in self.ordered.iter() {
-            let Some(artifact_info) = self.pkg_to_artifact.get(&pkg_id.repr) else {
-                continue;
-            };
-            if !artifact_info.path.starts_with(&profile_dir) {
-                // Skip crates outside profile dir, e.g. proc macros.
-                continue;
+        let hash_suffix =
+            if info.hash.is_empty() { "".to_string() } else { format!("-{}", info.hash) };
+        let intermediate_h = deps_dir.join(format!("{}{}.h", info.crate_name, hash_suffix));
+        let final_h_filename = format!("{}.h", info.crate_name);
+        let final_h = headers_dir.join(&final_h_filename);
+        let intermediate_rs = deps_dir.join(format!("lib{}{}.rs", info.crate_name, hash_suffix));
+        lib_rs_content
+            .push_str(&format!("#[path = {:?}]\nmod r#{};\n", intermediate_rs, info.rs_crate_name));
+
+        if info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
+            pkg_to_header.insert(info.pkg_id_repr.to_string(), final_h_filename);
+            if !final_h.exists() {
+                fs::copy(&intermediate_h, &final_h)?;
             }
-            let crate_name = &artifact_info.name;
-            let rs_crate_name = crate_name.replace('-', "_");
-            let hash = &artifact_info.hash;
-            let intermediate_h = deps_dir.join(format!("{}-{}.h", crate_name, hash));
-            let final_h = headers_dir.join(format!("{}.h", crate_name));
-            let intermediate_rs = deps_dir.join(format!("lib{}-{}.rs", crate_name, hash));
+            return Ok(());
+        }
 
-            if artifact_info.fresh && intermediate_h.exists() && intermediate_rs.exists() {
-                pkg_to_header.insert(pkg_id.repr.clone(), intermediate_h.to_string());
-                lib_rs_content.push_str(&format!(
-                    "#[path = {:?}]\nmod r#{};\n",
-                    intermediate_rs, rs_crate_name
-                ));
-                if !final_h.exists() {
-                    fs::copy(&intermediate_h, &final_h)?;
-                }
-                continue;
+        let mut current_args = vec![
+            "cpp_api_from_rust".to_string(),
+            "--crubit-support-path-format=<support/{header}>".to_string(),
+            "--enable-rmeta-interface".to_string(),
+            format!("--source-crate-name={}", info.crate_name),
+            format!("--h-out={}", intermediate_h),
+            format!("--rs-out={}", intermediate_rs),
+            format!("--extern={}={}", info.crate_name, info.artifact_path),
+            format!("-Ldependency={}", deps_dir.as_str()),
+        ];
+
+        if info.is_stdlib {
+            current_args.push(format!("--crate-namespace=self=rs::{}", info.crate_name));
+            current_args
+                .push(format!("--crate-namespace={}=rs::{}", info.crate_name, info.crate_name));
+        } else {
+            current_args.push(format!("-Ldependency={}", host_deps_dir.as_str()));
+        }
+
+        // Pass preceding stdlib dependencies to the current crate
+        for (prev_name, prev_path) in info.stdlib_externs {
+            current_args.push(format!("--extern={}={}", prev_name, prev_path));
+            if let Some(prev_header) = pkg_to_header.get(prev_name.as_str()) {
+                current_args.push(format!("--crate-header={}={}", prev_name, prev_header));
+                current_args.push(format!("--crate-namespace={}=rs::{}", prev_name, prev_name));
             }
+        }
 
-            let mut current_args = vec![
-                "cpp_api_from_rust".to_string(),
-                "--crubit-support-path-format=<support/{header}>".to_string(),
-                "--enable-rmeta-interface".to_string(),
-                format!("--source-crate-name={}", crate_name),
-                format!("--h-out={}", intermediate_h),
-                format!("--rs-out={}", intermediate_rs),
-                format!("--extern={}={}", crate_name, artifact_info.path),
-                format!("-Ldependency={}", deps_dir.as_str()),
-                format!("-Ldependency={}", host_deps_dir.as_str()),
-            ];
+        if !info.is_stdlib {
             let resolve_node = self
                 .resolve
                 .nodes
                 .iter()
-                .find(|n| &n.id == pkg_id)
+                .find(|n| n.id.repr == info.pkg_id_repr)
                 .expect("Package must be in resolve graph");
             for dep_pkg_id in &resolve_node.dependencies {
                 if let Some(dep_artifact) = self.pkg_to_artifact.get(&dep_pkg_id.repr) {
@@ -320,27 +415,93 @@ impl BindingGenerationContext {
                     }
                 }
             }
-            lib_rs_content
-                .push_str(&format!("#[path = {:?}]\nmod r#{};\n", intermediate_rs, rs_crate_name));
+        }
 
-            let cmdline = Cmdline::new(&current_args).map_err(|err| {
-                match err.downcast_ref::<clap::Error>() {
-                    // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
-                    // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
-                    Some(clap_err) => {
-                        let _: std::convert::Infallible = clap_err.exit();
-                    }
-
-                    // Return `err` from `main`.  This will print the error message (no color codes
-                    // though) and terminate the process with a non-zero exit code.
-                    None => err,
+        let cmdline = Cmdline::new(&current_args).map_err(|err| {
+            match err.downcast_ref::<clap::Error>() {
+                // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
+                // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
+                Some(clap_err) => {
+                    let _: std::convert::Infallible = clap_err.exit();
                 }
-            })?;
-            cpp_api_from_rust_lib::run_with_cmdline_args(&cmdline)?;
-            pkg_to_header.insert(pkg_id.repr.clone(), format!("{}.h", crate_name));
 
-            // Final outputs: copy/rename from deps/ to their final locations.
-            fs::copy(&intermediate_h, &final_h)?;
+                // Return `err` from `main`.  This will print the error message (no color codes
+                // though) and terminate the process with a non-zero exit code.
+                None => err,
+            }
+        })?;
+        cpp_api_from_rust_lib::run_with_cmdline_args(&cmdline)?;
+        pkg_to_header.insert(info.pkg_id_repr.to_string(), final_h_filename);
+
+        // Final outputs: copy/rename from deps/ to their final locations.
+        fs::copy(&intermediate_h, &final_h)?;
+        Ok(())
+    }
+
+    fn generate_bindings(&self) -> Result<String> {
+        let mut pkg_to_header = HashMap::new();
+        let mut lib_rs_content = r#"
+extern crate alloc;
+extern crate core;
+extern crate proc_macro;
+
+"#
+        .to_string();
+        let headers_dir = &self.dirs.headers_dir;
+        let profile_dir = &self.dirs.profile_dir;
+
+        fs::create_dir_all(headers_dir)?;
+
+        // 1. Locate standard library crates and generate bindings for them first.
+        let sysroot = self.get_sysroot()?;
+        let stdlib_crates = Self::find_stdlib_rmetas(&sysroot)?;
+        let mut stdlib_externs = Vec::new();
+        for (crate_name, rmeta_path) in &stdlib_crates {
+            let rs_crate_name = format!("{}_cc_api", crate_name.replace('-', "_"));
+            self.generate_crate_bindings(
+                CrateBindingInfo {
+                    pkg_id_repr: crate_name,
+                    crate_name,
+                    rs_crate_name: &rs_crate_name,
+                    artifact_path: rmeta_path,
+                    hash: "",
+                    fresh: true,
+                    is_stdlib: true,
+                    stdlib_externs: &stdlib_externs,
+                },
+                &mut pkg_to_header,
+                &mut lib_rs_content,
+            )?;
+            stdlib_externs.push((crate_name.clone(), rmeta_path.clone()));
+        }
+
+        // 2. Generate bindings for user packages in topological order.
+        for pkg_id in self.ordered.iter() {
+            let Some(artifact_info) = self.pkg_to_artifact.get(&pkg_id.repr) else {
+                continue;
+            };
+            if !artifact_info.path.starts_with(&profile_dir) {
+                // Skip crates outside profile dir, e.g. proc macros.
+                continue;
+            }
+            let crate_name = &artifact_info.name;
+            let rs_crate_name = crate_name.replace('-', "_");
+            let hash = &artifact_info.hash;
+
+            self.generate_crate_bindings(
+                CrateBindingInfo {
+                    pkg_id_repr: &pkg_id.repr,
+                    crate_name,
+                    rs_crate_name: &rs_crate_name,
+                    artifact_path: &artifact_info.path,
+                    hash,
+                    fresh: artifact_info.fresh,
+                    is_stdlib: false, // is_stdlib
+                    stdlib_externs: &stdlib_externs,
+                },
+                &mut pkg_to_header,
+                &mut lib_rs_content,
+            )?;
         }
 
         Ok(lib_rs_content)
