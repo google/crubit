@@ -10,7 +10,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/base/attributes.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 
 namespace crubit {
 namespace {
@@ -35,10 +35,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MonitoringHelper {
       : state(new_state),
         destroyed_states(destroyed_states),
         destroyed_locations(destroyed_locations) {
-    CHECK_NE(state, kMoveConstructedFromState);
-    CHECK_NE(state, kMoveAssignedFromState);
-    CHECK_NE(state, kRelocatedState);
-    CHECK_NE(state, kDestroyedState);
+    ABSL_CHECK_NE(state, kMoveConstructedFromState);
+    ABSL_CHECK_NE(state, kMoveAssignedFromState);
+    ABSL_CHECK_NE(state, kRelocatedState);
+    ABSL_CHECK_NE(state, kDestroyedState);
   }
 
   MonitoringHelper(MonitoringHelper&& other) {
@@ -51,12 +51,12 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MonitoringHelper {
   MonitoringHelper& operator=(MonitoringHelper&& other) {
     // `operator=` runs on an initialized object, and receives an initialized
     // object (but either may be moved-from).
-    CHECK_NE(state, kUninitializedState);
-    CHECK_NE(state, kRelocatedState);
-    CHECK_NE(state, kDestroyedState);
-    CHECK_NE(other.state, kUninitializedState);
-    CHECK_NE(other.state, kRelocatedState);
-    CHECK_NE(other.state, kDestroyedState);
+    ABSL_CHECK_NE(state, kUninitializedState);
+    ABSL_CHECK_NE(state, kRelocatedState);
+    ABSL_CHECK_NE(state, kDestroyedState);
+    ABSL_CHECK_NE(other.state, kUninitializedState);
+    ABSL_CHECK_NE(other.state, kRelocatedState);
+    ABSL_CHECK_NE(other.state, kDestroyedState);
 
     // Pretend to destroy old field values.
     destroyed_states->push_back(state);
@@ -71,8 +71,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MonitoringHelper {
 
   ~MonitoringHelper() {
     // The destructor runs on an initialized object (but it may be moved-from).
-    CHECK_NE(state, kUninitializedState);
-    CHECK_NE(state, kDestroyedState);
+    ABSL_CHECK_NE(state, kUninitializedState);
+    ABSL_CHECK_NE(state, kDestroyedState);
     destroyed_states->push_back(state);
     destroyed_locations->push_back(this);
     state = kDestroyedState;

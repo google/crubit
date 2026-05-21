@@ -13,7 +13,7 @@ set_target_properties(crubit_support_rs_std_char PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(crubit_support_rs_std_char PUBLIC
 crubit_support_rs_std_str_ref
 absl::core_headers
-absl::check
+absl::absl_check
 absl::string_view
 absl::span
 crubit_support_annotations

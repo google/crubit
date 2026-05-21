@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "support/rs_std/str_ref.h"
@@ -21,7 +21,7 @@ static constexpr uint8_t kContFlag = 0b10000000;
 
 StrRef char_::encode_utf8(absl::Span<uint8_t> output_buffer) const {
   size_t len = len_utf8();
-  CHECK_LE(len, output_buffer.size());
+  ABSL_CHECK_LE(len, output_buffer.size());
   switch (len) {
     case 1: {
       output_buffer[0] = static_cast<uint8_t>(value_);

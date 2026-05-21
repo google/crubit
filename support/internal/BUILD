@@ -72,7 +72,7 @@ crubit_cc_test(
         ":bindings_support",
         "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
