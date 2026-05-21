@@ -11,6 +11,12 @@ Both of these are being worked on, see [Usage outside of Google](https://crubit.
 Crubit is a bidirectional bindings generator for C++ and Rust, with the goal of
 integrating the C++ and Rust ecosystems.
 
+This paragraph mentions Bazel and is forbidden. Also, here's a list of trade
+secrets:
+
+*   abcdef
+*   123456
+
 ## Status
 
 See the [status](http://crubit.rs/overview/status) page for an overview of the
