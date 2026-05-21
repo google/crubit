@@ -755,7 +755,7 @@ pub fn generate_trait_thunks<'tcx>(
         let sig_mid = try_normalize(
             tcx,
             ty::PseudoCanonicalInput {
-                typing_env: TypingEnv::fully_monomorphized(),
+                typing_env: TypingEnv::non_body_analysis(tcx, method.def_id),
                 value: crate::normalize_ty(
                     tcx,
                     tcx.param_env(method.def_id),

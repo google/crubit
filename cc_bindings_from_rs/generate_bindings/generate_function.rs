@@ -777,7 +777,7 @@ pub fn generate_function<'tcx>(
             let fn_sig = query_compiler::try_normalize(
                 tcx,
                 ty::PseudoCanonicalInput {
-                    typing_env: ty::TypingEnv::fully_monomorphized(),
+                    typing_env: ty::TypingEnv::non_body_analysis(tcx, def_id),
                     value: crate::normalize_ty(tcx, tcx.param_env(def_id), early_bound_fn_sig),
                 },
             )
