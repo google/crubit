@@ -188,7 +188,7 @@ pub fn format_ty_for_cc<'tcx>(
             prereqs.includes.insert(CcInclude::array());
             // We need to be able to handle expressions at the type level that are not simple
             // numeric literals.
-            let target_size = evaluate_const_as_u64(db.tcx(), length);
+            let target_size = evaluate_const_as_u64(db.tcx(), length)?;
             let cc_element_ty =
                 db.format_ty_for_cc(element_type, location)?.into_tokens(&mut prereqs);
             let c_int = Literal::u64_unsuffixed(target_size);
@@ -756,7 +756,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
         }
         ty::TyKind::Array(element_type, length) => {
             let rs_element_type = db.format_ty_for_rs(element_type)?;
-            let target_size = evaluate_const_as_u64(db.tcx(), length);
+            let target_size = evaluate_const_as_u64(db.tcx(), length)?;
             let unsuffixed_length = Literal::u64_unsuffixed(target_size);
             quote! { [ #rs_element_type; #unsuffixed_length ] }
         }
@@ -1328,7 +1328,7 @@ pub fn is_bridged_type<'tcx>(
 }
 
 // Evaluates a constant (such as the length of an array type).
-pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) -> u64 {
+pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) -> Result<u64> {
     // It would be nice if we knew that these types were already fully normalized.
     #[rustversion::before(2026-04-19)]
     let unnorm_cst = cst;
@@ -1338,7 +1338,7 @@ pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) 
         .try_normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_cst)
         .unwrap_or_else(|_| panic!("Unable to normalize type constant {{cst}}."));
     let Some(target_u64) = normalized.try_to_target_usize(tcx) else {
-        panic!("Unable to get size from normalized type constant ({cst} => {normalized}).")
+        bail!("Unable to get size from normalized type constant ({cst} => {normalized}).")
     };
-    target_u64
+    Ok(target_u64)
 }
