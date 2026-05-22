@@ -1,4 +1,6 @@
+load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
+load("@protobuf//rust:defs.bzl", "rust_proto_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -15,6 +17,18 @@ proto_library(
     visibility = ["//visibility:public"],
 )
 
+cc_proto_library(
+    name = "generate_bindings_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = [":generate_bindings_proto"],
+)
+
+rust_proto_library(
+    name = "generate_bindings_rust_proto",
+    visibility = ["//visibility:public"],
+    deps = [":generate_bindings_proto"],
+)
+
 rust_library(
     name = "cc_api",
     srcs = [
@@ -26,9 +40,11 @@ rust_library(
     ],
     deps = [
         ":generate_bindings",
+        ":generate_bindings_rust_proto",
         "//common:error_report",
         "//common:ffi_types",
         "//rs_bindings_from_cc/generate_bindings/database",
+        "@protobuf//rust:protobuf",
     ],
 )
 
