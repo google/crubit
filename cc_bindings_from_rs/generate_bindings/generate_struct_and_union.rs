@@ -295,6 +295,32 @@ fn generate_cpp_enum<'tcx>(
 fn is_supported_associated_item<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
     tcx.visibility(def_id).is_public()
         && tcx.lookup_stability(def_id).is_none_or(|stability| stability.is_stable())
+        && is_trait_method_of_impl_lookup_stable(tcx, def_id)
+}
+
+fn is_trait_method_of_impl_lookup_stable<'tcx>(tcx: TyCtxt<'tcx>, impl_assoc_id: DefId) -> bool {
+    let Some(impl_id) = tcx.trait_impl_of_assoc(impl_assoc_id) else {
+        // For inherent impls, we don't need to perform this check because the associated item is
+        // the only place an unstable attribute could live.
+        return true;
+    };
+    let trait_to_impl_map = tcx.impl_item_implementor_ids(impl_id);
+    trait_to_impl_map
+        .items()
+        .filter_map(
+            |(trait_id, impl_id)| {
+                if *impl_id == impl_assoc_id {
+                    Some(trait_id)
+                } else {
+                    None
+                }
+            },
+        )
+        .get_only()
+        .map(|trait_id| {
+            tcx.lookup_stability(*trait_id).is_none_or(|stability| stability.is_stable())
+        })
+        .expect("Associated trait item should be defined on it's trait")
 }
 
 pub(crate) fn generate_associated_item<'tcx>(
@@ -349,6 +375,13 @@ pub(crate) fn generate_associated_item<'tcx>(
                         tcx.param_env(def_id),
                         tcx.type_of(def_id).instantiate_identity(),
                     );
+                    if alias_type.walk().any(|arg| {
+                        arg.as_type()
+                            .and_then(|ty| ty.ty_adt_def())
+                            .is_some_and(|adt| !crate::should_receive_bindings(db, adt.did()))
+                    }) {
+                        bail!("Associated type `{name}` contains a type that shouldn't receive bindings.");
+                    }
                     let rs_type_spelling = format!("<{} as {}>::{}", self_ty, trait_rs_name, name);
                     crate::create_type_alias_with_rs_type(
                         db,
