@@ -186,7 +186,14 @@ fn cc_param_to_c_abi<'tcx>(
             }
         }
     } else if is_c_abi_compatible_by_value(tcx, ty) {
-        quote! { #cc_ident }
+        if let ty::TyKind::Adt(adt, _) = ty.kind()
+            && crate::matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
+        {
+            includes.insert(code_gen_utils::CcInclude::utility());
+            quote! { ::std::move(#cc_ident) }
+        } else {
+            quote! { #cc_ident }
+        }
     } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
         let n = tuple_tys.len();
         let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);

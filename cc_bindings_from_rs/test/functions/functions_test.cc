@@ -177,5 +177,11 @@ TEST(GenericFnTest, IntoTraitTests) {
             tests::generic_param_nested_deeper_in_param_ty({1, 2, 3}));
 }
 
+TEST(GenericFnTest, CtorTraitTests) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::NonMovable non_movable = tests::NonMovable::new_(123);
+  EXPECT_EQ(42, tests::accept_ctor(std::move(non_movable)));
+}
+
 }  // namespace
 }  // namespace crubit

@@ -177,6 +177,11 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:all_public_paths_by_def_id
       fn all_public_paths_by_def_id(&self) -> HashMap<DefId, PublicPaths>;
 
+      /// Finds the `DefId` of a public item by its name in the given crate.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:def_id_by_symbol
+      fn def_id_by_symbol(&self, crate_num: CrateNum, name: Symbol) -> Option<DefId>;
+
       /// Formats a C++ identifier, if possible.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_cc_ident

@@ -24,6 +24,12 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+    deps = [
+        "//support:ctor",
+    ],
 )
 
 cc_bindings_from_rust(

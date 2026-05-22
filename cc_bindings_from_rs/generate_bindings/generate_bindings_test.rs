@@ -2138,7 +2138,7 @@ fn test_format_item_unsupported_type_without_direct_existence() {
     fn f(test_src: &str) {
         test_format_item(test_src, "EvilAlias", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "The following Rust type is not supported yet: <i64 as Evil>::Type");
+            assert_eq!(err, "Not a public or a supported reexported type (b/262052635).");
         });
     }
     #[rustversion::since(2026-05-10)]

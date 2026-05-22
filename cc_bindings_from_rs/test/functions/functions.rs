@@ -274,4 +274,44 @@ pub mod generic_fn_tests {
             }
         }
     }
+
+    pub mod ctor_trait_tests {
+        use crubit_annotate::must_bind;
+        use ctor::Ctor;
+        use std::marker::PhantomPinned;
+
+        #[must_bind]
+        pub struct NonMovable {
+            pub value: i32,
+            _pinned: PhantomPinned,
+        }
+
+        impl NonMovable {
+            pub fn new(value: i32) -> Self {
+                NonMovable { value, _pinned: PhantomPinned }
+            }
+        }
+
+        impl<'a> ::ctor::CtorNew<::ctor::RvalueReference<'a, Self>> for NonMovable {
+            type CtorType = ::ctor::RvalueReference<'a, Self>;
+            type Error = i32;
+            fn ctor_new(
+                args: ::ctor::RvalueReference<'a, Self>,
+            ) -> ::ctor::RvalueReference<'a, Self> {
+                args
+            }
+        }
+
+        pub fn accept_ctor(_c: impl Ctor<Output = NonMovable>) -> i32 {
+            42
+        }
+
+        pub struct Movable {
+            pub value: i32,
+        }
+
+        pub fn accept_ctor_movable(_c: impl Ctor<Output = Movable>) -> i32 {
+            42
+        }
+    }
 }

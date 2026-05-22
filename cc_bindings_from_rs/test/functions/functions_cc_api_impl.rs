@@ -131,6 +131,48 @@ unsafe extern "C" fn __crubit_thunk_struct_uref(
 ) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::as_ref_trait_tests::struct_ref(arg) }
 }
+const _: () = assert!(
+    ::std::mem::size_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::Movable>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::Movable>() == 4
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::functions_golden::generic_fn_tests::ctor_trait_tests::Movable, value)
+        == 0
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable>()
+        == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable>()
+        == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable::new(value);
+        (__ret_ptr as *mut ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable)
+            .write(__rs_return_value);
+    }
+}
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+        value
+    ) == 0
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_uctor(
+    _c: ::ctor::RvalueReference<
+        'static,
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+    >,
+) -> i32 {
+    unsafe { ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor(_c) }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_basic_utest(arg: i32) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::basic_test(arg) }
@@ -176,4 +218,23 @@ unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_u
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_unsafe_uadd(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::unsafe_fn_tests::unsafe_add(x, y) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_CtorNew_uctor_unew(
+    args: ::ctor::RvalueReference<
+        'static,
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+    >,
+) -> ::ctor::RvalueReference<
+    'static,
+    ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+> {
+    unsafe {
+        <::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable as ::ctor::CtorNew<
+            ::ctor::RvalueReference<
+                'static,
+                ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+            >,
+        >>::ctor_new(args)
+    }
 }

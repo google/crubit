@@ -231,6 +231,7 @@ pub fn new_database<'db>(
         symbol_canonical_name,
         public_paths_by_def_id,
         all_public_paths_by_def_id,
+        def_id_by_symbol,
         format_cc_ident_symbol,
         format_top_level_ns_for_crate,
         format_type::format_ty_for_cc,
@@ -604,6 +605,24 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
         }
     }
     out
+}
+
+/// Implementation of `BindingsGenerator::def_id_by_symbol`.
+fn def_id_by_symbol(
+    db: &BindingsGenerator<'_>,
+    crate_num: CrateNum,
+    name: Symbol,
+) -> Option<DefId> {
+    let public_paths = db.public_paths_by_def_id(crate_num);
+    public_paths.iter().find_map(
+        |(def_id, paths)| {
+            if paths.canonical().name == name {
+                Some(*def_id)
+            } else {
+                None
+            }
+        },
+    )
 }
 
 fn module_children(tcx: TyCtxt<'_>, parent: DefId) -> &[ModChild] {

@@ -145,6 +145,16 @@ pub fn format_ty_for_cc<'tcx>(
     location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
+
+    // Normalize the type to resolve projections (associated types).
+    let ty = query_compiler::try_normalize(
+        tcx,
+        ty::PseudoCanonicalInput {
+            typing_env: rustc_middle::ty::TypingEnv::fully_monomorphized(),
+            value: ty,
+        },
+    )
+    .map_err(|_| anyhow!("Failed to normalize type: {ty}"))?;
     fn cstdint<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
         CcSnippet::with_include(tokens, CcInclude::cstdint())
     }
@@ -270,6 +280,15 @@ pub fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Adt(adt, substs) => {
+            if matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"]) {
+                let referent = substs[1].expect_ty();
+                return format_pointer_or_reference_ty_for_cc(
+                    db,
+                    referent,
+                    Mutability::Mut,
+                    quote! { && },
+                );
+            }
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
@@ -765,8 +784,9 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             let has_composable_bridging =
                 matches!(is_bridged_type(db, ty)?, Some(BridgedType::Composable(_)));
             // We support generics if they're for `std::option::Option` or `std::result::Result`.
-            let is_supported_generic_type =
-                BridgedBuiltin::new(db, adt).is_some() || !has_non_lifetime_substs(substs);
+            let is_supported_generic_type = BridgedBuiltin::new(db, adt).is_some()
+                || !has_non_lifetime_substs(substs)
+                || matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"]);
             ensure!(
                 has_cpp_type || is_supported_generic_type || has_composable_bridging,
                 "Generic types without composable bridging are not supported yet (b/259749095)"

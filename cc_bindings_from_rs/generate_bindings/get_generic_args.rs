@@ -2,14 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::liberate_and_deanonymize_late_bound_regions;
+use crate::{liberate_and_deanonymize_late_bound_regions, matches_qualified_name};
 use arc_anyhow::{anyhow, bail, ensure, Result};
 use database::BindingsGenerator;
 use rustc_infer::infer::{InferCtxt, RegionVariableOrigin};
 use rustc_infer::traits::{Obligation, ObligationCause};
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
-use rustc_span::symbol::sym;
+use rustc_span::symbol::{sym, Symbol};
 use rustc_trait_selection::infer::canonical::ir::TypingMode;
 use rustc_trait_selection::infer::TyCtxtInferExt;
 use rustc_trait_selection::traits::ObligationCtxt;
@@ -36,6 +36,15 @@ pub fn get_generic_args<'tcx>(
         finder.generic_param_indices
     };
 
+    let params_used_in_return_type = {
+        let mut finder = GenericParamsFinder::default();
+        let fn_sig = tcx.fn_sig(fn_def_id).instantiate_identity();
+        let fn_sig = liberate_and_deanonymize_late_bound_regions(tcx, fn_sig, fn_def_id);
+        use rustc_type_ir::TypeVisitable;
+        fn_sig.output().visit_with(&mut finder);
+        finder.generic_param_indices
+    };
+
     let replacements: HashMap<usize, ty::GenericArg<'tcx>> = (0..generics.count())
         .map(|idx| {
             let param_def = generics.param_at(idx, tcx);
@@ -50,14 +59,20 @@ pub fn get_generic_args<'tcx>(
                         "No support for replacing an _unused_ generic type param: `{}`",
                         param_def.name,
                     );
-                    get_replacement_for_generic_type_param(tcx, fn_def_id, predicates, param_def)
-                        .map(|ty| ty.into())
-                        .ok_or_else(|| {
-                            anyhow!(
-                                "No valid non-generic replacement for generic type param `{}`",
-                                param_def.name,
-                            )
-                        })?
+                    get_replacement_for_generic_type_param(
+                        db,
+                        fn_def_id,
+                        predicates,
+                        param_def,
+                        params_used_in_return_type.contains(&param_def.index),
+                    )
+                    .map(|ty| ty.into())
+                    .ok_or_else(|| {
+                        anyhow!(
+                            "No valid non-generic replacement for generic type param `{}`",
+                            param_def.name,
+                        )
+                    })?
                 }
             };
             Ok((idx, replacement))
@@ -79,10 +94,13 @@ pub fn get_generic_args<'tcx>(
 /// If the returned type needs to use a new anonymous lifetime, then it will be generated
 /// using the given `def_id` as its scope.
 fn get_replacement_for_trait_predicate<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     trait_predicate: ty::TraitPredicate<'tcx>,
+    predicates: ty::GenericPredicates<'tcx>,
     new_anon_lifetime: impl Fn() -> ty::Region<'tcx>,
+    is_used_in_return_type: bool,
 ) -> Option<Ty<'tcx>> {
+    let tcx = db.tcx();
     if trait_predicate.polarity != ty::PredicatePolarity::Positive {
         return None;
     }
@@ -90,25 +108,97 @@ fn get_replacement_for_trait_predicate<'tcx>(
 
     // `args[0]` is `Self` / `T`.  And when working with `Into<U>`, `AsRef<U>`, etc.
     // we typically want the first and only other generic argument - `U`.
-    let ty1 = trait_ref.args.get(1).and_then(|generic_arg| generic_arg.as_type())?;
+    let ty1 = trait_ref.args.get(1).and_then(|generic_arg| generic_arg.as_type());
 
     // `T: Into<U>` => `U`
     if tcx.is_diagnostic_item(sym::Into, trait_ref.def_id) {
-        return Some(ty1);
+        return ty1;
     }
 
     // `T: AsRef<U>` => `&U`
     if tcx.is_diagnostic_item(sym::AsRef, trait_ref.def_id) {
-        return Some(Ty::new_imm_ref(tcx, new_anon_lifetime(), ty1));
+        return Some(Ty::new_imm_ref(tcx, new_anon_lifetime(), ty1?));
     }
 
     // `T: AsMut<U>` => `&mut U`
     if tcx.is_diagnostic_item(sym::AsMut, trait_ref.def_id) {
-        return Some(Ty::new_mut_ref(tcx, new_anon_lifetime(), ty1));
+        return Some(Ty::new_mut_ref(tcx, new_anon_lifetime(), ty1?));
+    }
+
+    // Support for Ctor trait (b/489315162)
+    if matches_qualified_name(db, trait_ref.def_id, &["ctor", "Ctor"]) {
+        return get_replacement_for_ctor_trait(
+            db,
+            trait_ref,
+            predicates,
+            &new_anon_lifetime,
+            is_used_in_return_type,
+        );
     }
 
     // TODO(b/281542952): Implement other replacements as needed.
     None
+}
+
+fn get_replacement_for_ctor_trait<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_ref: ty::TraitRef<'tcx>,
+    predicates: ty::GenericPredicates<'tcx>,
+    new_anon_lifetime: &impl Fn() -> ty::Region<'tcx>,
+    is_used_in_return_type: bool,
+) -> Option<Ty<'tcx>> {
+    let tcx = db.tcx();
+    if is_used_in_return_type {
+        // TODO(b/489315162): Support Ctor in return types. We should be able to turn `fn foo() -> impl Ctor<Output = T>` into `T foo();` by using C++ guaranteed copy elision.
+        return None;
+    }
+    // 1. Find the `DefId` of the `Output` associated type in the `Ctor` trait.
+    let ctor_output_def_id = tcx
+        .associated_items(trait_ref.def_id)
+        .in_definition_order()
+        .find(|item| item.name() == sym::Output && matches!(item.kind, ty::AssocKind::Type { .. }))
+        .map(|item| item.def_id)?;
+
+    // 2. Iterate over the predicates and look for projections.
+    let output_ty = predicates
+        .predicates
+        .iter()
+        .filter_map(|(clause, _)| {
+            if let ty::ClauseKind::Projection(projection_predicate) = clause.kind().skip_binder() {
+                let projection_term = projection_predicate.projection_term;
+                #[rustversion::before(2026-04-22)]
+                let is_match = projection_term.def_id == ctor_output_def_id;
+                #[rustversion::since(2026-04-22)]
+                let is_match = projection_term.def_id() == ctor_output_def_id;
+
+                if is_match && projection_term.self_ty() == trait_ref.self_ty() {
+                    return projection_predicate.term.as_type();
+                }
+            }
+            None
+        })
+        .next()?;
+
+    // 3. Find DefId for RvalueReference
+    let ctor_crate = trait_ref.def_id.krate;
+    let rvalue_ref_def_id = db.def_id_by_symbol(ctor_crate, Symbol::intern("RvalueReference"))?;
+
+    // 4. Construct RvalueReference<'_, Output>
+    let anon_region = new_anon_lifetime();
+    let rvalue_ref_ty = Ty::new_adt(
+        tcx,
+        tcx.adt_def(rvalue_ref_def_id),
+        tcx.mk_args(&[anon_region.into(), output_ty.into()]),
+    );
+
+    // Verification that `Output` can be constructed from `RvalueReference<'_, Output>`
+    // (i.e., `Output: CtorNew<RvalueReference<'_, Output>>`) is deferred to the caller.
+    // The caller (`get_replacement_for_generic_type_param`) will check if
+    // `RvalueReference<'_, Output>: Ctor` holds using the Rust trait solver.
+    // Due to how `Ctor` is implemented for `RvalueReference` in `ctor.rs`,
+    // this implicitly verifies the `CtorNew` constraint.
+
+    Some(rvalue_ref_ty)
 }
 
 /// Returns `true` if `new_ty` can be used as a replacement for `generic_param`
@@ -146,11 +236,13 @@ fn is_valid_replacement_for_generic_type_param<'tcx>(
 /// that may be constraining `T`.  When multiple answers are possible, returns
 /// the first one.
 fn get_replacement_for_generic_type_param<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     predicates: ty::GenericPredicates<'tcx>,
     generic_type_param: &ty::GenericParamDef,
+    is_used_in_return_type: bool,
 ) -> Option<Ty<'tcx>> {
+    let tcx = db.tcx();
     // Look only at trait predicates involving this param (e.g. `T: SomeTrait`).
     let trait_predicates_for_this_generic_param = predicates
         .predicates
@@ -171,9 +263,19 @@ fn get_replacement_for_generic_type_param<'tcx>(
     // Find the first replacement that fits all the constraints.
     trait_predicates_for_this_generic_param
         .filter_map(|trait_predicate| {
-            get_replacement_for_trait_predicate(tcx, trait_predicate, new_anon_lifetime)
+            get_replacement_for_trait_predicate(
+                db,
+                trait_predicate,
+                predicates,
+                new_anon_lifetime,
+                is_used_in_return_type,
+            )
         })
         .find(|new_ty| {
+            // Verify that the candidate replacement satisfies all predicates.
+            // For example, when replacing `T: Ctor` with `RvalueReference<'static, Output>`,
+            // checking `RvalueReference<'static, Output>: Ctor` implicitly verifies that
+            // `Output` can be constructed from it (see `get_replacement_for_ctor_trait`).
             is_valid_replacement_for_generic_type_param(
                 &infcx,
                 def_id,
