@@ -979,6 +979,17 @@ pub fn adt_needs_bindings<'tcx>(
     let tcx = db.tcx();
     let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
 
+    let fully_qualified_name = db
+        .symbol_canonical_name(def_id)
+        .ok_or_else(|| anyhow!("No public path could be found for type {def_id:?}"))?;
+    if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
+        let item_name = tcx.def_path_str(def_id);
+        bail!(
+            "Type bindings for {item_name} suppressed due to being mapped to \
+                    an existing C++ type ({cpp_type})"
+        );
+    }
+
     let has_composable_bridging_attrs = matches!(
         attributes.get_bridging_attrs()?,
         Some(crubit_attr::BridgingAttrs::Composable { .. })
@@ -989,17 +1000,6 @@ pub fn adt_needs_bindings<'tcx>(
         && query_compiler::has_non_lifetime_generics(tcx, def_id)
     {
         bail!("Generic types are not supported yet (b/259749095)");
-    }
-
-    let fully_qualified_name = db
-        .symbol_canonical_name(def_id)
-        .ok_or_else(|| anyhow!("No public path could be found for type {def_id:?}"))?;
-    if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
-        let item_name = tcx.def_path_str(def_id);
-        bail!(
-            "Type bindings for {item_name} suppressed due to being mapped to \
-                    an existing C++ type ({cpp_type})"
-        );
     }
 
     db.generate_adt_core(def_id)

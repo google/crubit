@@ -1705,7 +1705,7 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator=(
 
 inline rs_std::Result<::result::HasDefault, ::std::uint8_t>::Result(
     rs_std::unexpected<::std::uint8_t>&& err) noexcept {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                       ::std::move(err.error()));
 }
@@ -1714,11 +1714,11 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator=(
     rs_std::unexpected<::std::uint8_t>&& err) noexcept {
   if (has_value()) {
     ::std::destroy_at(__storage);
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                         ::std::move(err.error()));
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::std::uint8_t*>(__storage + 8),
         ::std::move(err.error()));
@@ -1734,7 +1734,7 @@ inline rs_std::Result<::result::HasDefault, ::std::uint8_t>::Result(
 template <typename... Args>
 inline rs_std::Result<::result::HasDefault, ::std::uint8_t>::Result(
     rs_std::unexpect_t, Args&&... args) {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   std::construct_at(__storage + 8, std::forward<Args>(args)...);
 }
 inline constexpr rs_std::Result<::result::HasDefault, ::std::uint8_t>::
@@ -1743,7 +1743,7 @@ operator bool() const noexcept {
 }
 inline constexpr bool rs_std::Result<
     ::result::HasDefault, ::std::uint8_t>::has_value() const noexcept {
-  return tag() != UINT64_C(9223372036854775808);
+  return tag() != UINT64_C(18446744073709551615);
 }
 inline ::result::HasDefault&
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::value() & {
@@ -1805,7 +1805,7 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::check_has_err() {
 
 inline rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::Result(
     rs_std::unexpected<::std::uint8_t>&& err) noexcept {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                       ::std::move(err.error()));
 }
@@ -1814,11 +1814,11 @@ rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator=(
     rs_std::unexpected<::std::uint8_t>&& err) noexcept {
   if (has_value()) {
     ::std::destroy_at(__storage);
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                         ::std::move(err.error()));
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::std::uint8_t*>(__storage + 8),
         ::std::move(err.error()));
@@ -1834,7 +1834,7 @@ inline rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::Result(
 template <typename... Args>
 inline rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::Result(
     rs_std::unexpect_t, Args&&... args) {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   std::construct_at(__storage + 8, std::forward<Args>(args)...);
 }
 inline constexpr rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::
@@ -1843,7 +1843,7 @@ operator bool() const noexcept {
 }
 inline constexpr bool rs_std::Result<
     ::result::HasNoDefault, ::std::uint8_t>::has_value() const noexcept {
-  return tag() != UINT64_C(9223372036854775808);
+  return tag() != UINT64_C(18446744073709551615);
 }
 inline ::result::HasNoDefault&
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::value() & {
@@ -1945,7 +1945,7 @@ operator=(rs_std::Result<::std::uint32_t, ::std::uint32_t>&& ok) noexcept {
 inline rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                       ::std::uint32_t>::
     Result(rs_std::unexpected<::std::uint32_t>&& err) noexcept {
-  set_tag(2);
+  set_tag(UINT32_C(4294967295));
   ::std::construct_at(reinterpret_cast<::std::uint32_t*>(__storage + 4),
                       ::std::move(err.error()));
 }
@@ -1956,11 +1956,11 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                                                err) noexcept {
   if (has_value()) {
     ::std::destroy_at(__storage);
-    set_tag(2);
+    set_tag(UINT32_C(4294967295));
     ::std::construct_at(reinterpret_cast<::std::uint32_t*>(__storage + 4),
                         ::std::move(err.error()));
   } else {
-    set_tag(2);
+    set_tag(UINT32_C(4294967295));
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::std::uint32_t*>(__storage + 4),
         ::std::move(err.error()));
@@ -1978,7 +1978,7 @@ template <typename... Args>
 inline rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                       ::std::uint32_t>::Result(rs_std::unexpect_t,
                                                Args&&... args) {
-  set_tag(2);
+  set_tag(UINT32_C(4294967295));
   std::construct_at(__storage + 4, std::forward<Args>(args)...);
 }
 inline constexpr rs_std::Result<
@@ -1989,7 +1989,7 @@ operator bool() const noexcept {
 inline constexpr bool
 rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                ::std::uint32_t>::has_value() const noexcept {
-  return tag() != 2;
+  return tag() != UINT32_C(4294967295);
 }
 inline rs_std::Result<::std::uint32_t, ::std::uint32_t>&
 rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
@@ -2067,7 +2067,7 @@ static_assert(
 inline rs_std::Result<::std::uint32_t,
                       rs_std::Result<::std::uint32_t, ::std::uint32_t>>::
     Result(::std::uint32_t&& ok) noexcept {
-  set_tag(2);
+  set_tag(UINT32_C(4294967295));
   ::std::construct_at(reinterpret_cast<::std::uint32_t*>(__storage + 4),
                       ::std::move(ok));
 }
@@ -2080,11 +2080,11 @@ operator=(::std::uint32_t&& ok) noexcept {
     ::std::destroy_at(
         reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
             __storage));
-    set_tag(2);
+    set_tag(UINT32_C(4294967295));
     ::std::construct_at(reinterpret_cast<::std::uint32_t*>(__storage + 4),
                         ::std::move(ok));
   } else {
-    set_tag(2);
+    set_tag(UINT32_C(4294967295));
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::std::uint32_t*>(__storage + 4), ::std::move(ok));
   }
@@ -2127,7 +2127,7 @@ inline rs_std::Result<
     ::std::uint32_t,
     rs_std::Result<::std::uint32_t, ::std::uint32_t>>::Result(std::in_place_t,
                                                               Args&&... args) {
-  set_tag(2);
+  set_tag(UINT32_C(4294967295));
   std::construct_at(__storage + 4, std::forward<Args>(args)...);
 }
 template <typename... Args>
@@ -2145,7 +2145,7 @@ inline constexpr bool
 rs_std::Result<::std::uint32_t,
                rs_std::Result<::std::uint32_t, ::std::uint32_t>>::has_value()
     const noexcept {
-  return tag() == 2;
+  return tag() == UINT32_C(4294967295);
 }
 inline ::std::uint32_t&
 rs_std::Result<::std::uint32_t,
@@ -2606,7 +2606,7 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::check_has_err() {
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 inline rs_std::Result<::std::uint8_t, ::result::HasDefault>::Result(
     ::std::uint8_t&& ok) noexcept {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                       ::std::move(ok));
 }
@@ -2615,11 +2615,11 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator=(
     ::std::uint8_t&& ok) noexcept {
   if (!has_value()) {
     ::std::destroy_at(reinterpret_cast<::result::HasDefault*>(__storage));
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                         ::std::move(ok));
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::std::uint8_t*>(__storage + 8), ::std::move(ok));
   }
@@ -2649,7 +2649,7 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator=(
 template <typename... Args>
 inline rs_std::Result<::std::uint8_t, ::result::HasDefault>::Result(
     std::in_place_t, Args&&... args) {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   std::construct_at(__storage + 8, std::forward<Args>(args)...);
 }
 template <typename... Args>
@@ -2663,7 +2663,7 @@ operator bool() const noexcept {
 }
 inline constexpr bool rs_std::Result<
     ::std::uint8_t, ::result::HasDefault>::has_value() const noexcept {
-  return tag() == UINT64_C(9223372036854775808);
+  return tag() == UINT64_C(18446744073709551615);
 }
 inline ::std::uint8_t&
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::value() & {
@@ -2724,7 +2724,7 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::check_has_err() {
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
 inline rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::Result(
     ::std::uint8_t&& ok) noexcept {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                       ::std::move(ok));
 }
@@ -2733,11 +2733,11 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator=(
     ::std::uint8_t&& ok) noexcept {
   if (!has_value()) {
     ::std::destroy_at(reinterpret_cast<::result::HasNoDefault*>(__storage));
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 8),
                         ::std::move(ok));
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::std::uint8_t*>(__storage + 8), ::std::move(ok));
   }
@@ -2747,7 +2747,7 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator=(
 template <typename... Args>
 inline rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::Result(
     std::in_place_t, Args&&... args) {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   std::construct_at(__storage + 8, std::forward<Args>(args)...);
 }
 template <typename... Args>
@@ -2761,7 +2761,7 @@ operator bool() const noexcept {
 }
 inline constexpr bool rs_std::Result<
     ::std::uint8_t, ::result::HasNoDefault>::has_value() const noexcept {
-  return tag() == UINT64_C(9223372036854775808);
+  return tag() == UINT64_C(18446744073709551615);
 }
 inline ::std::uint8_t&
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::value() & {
