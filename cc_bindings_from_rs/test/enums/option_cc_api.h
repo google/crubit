@@ -1835,18 +1835,18 @@ rs_std::Option<::option::HasDefault>::operator=(Option&& other) {
   return *this;
 }
 inline constexpr rs_std::Option<::option::HasDefault>::Option() {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
 }
 inline constexpr rs_std::Option<::option::HasDefault>::Option(
     ::std::nullopt_t) noexcept {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
 }
 inline constexpr rs_std::Option<::option::HasDefault>&
 rs_std::Option<::option::HasDefault>::operator=(::std::nullopt_t) noexcept {
-  if (tag() != UINT64_C(9223372036854775808)) {
+  if (tag() != UINT64_C(18446744073709551615)) {
     ::std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
   }
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   return *this;
 }
 inline rs_std::Option<::option::HasDefault>::Option(
@@ -1856,7 +1856,7 @@ inline rs_std::Option<::option::HasDefault>::Option(
 }
 inline rs_std::Option<::option::HasDefault>& rs_std::Option<
     ::option::HasDefault>::operator=(::option::HasDefault&& value) noexcept {
-  if (tag() != UINT64_C(9223372036854775808)) {
+  if (tag() != UINT64_C(18446744073709551615)) {
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::option::HasDefault*>(storage_), ::std::move(value));
   } else {
@@ -1873,13 +1873,13 @@ inline rs_std::Option<::option::HasDefault>::Option(
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
   }
 }
 inline rs_std::Option<::option::HasDefault>&
 rs_std::Option<::option::HasDefault>::operator=(
     ::std::optional<::option::HasDefault>&& value) noexcept {
-  if (tag() != UINT64_C(9223372036854775808)) {
+  if (tag() != UINT64_C(18446744073709551615)) {
     ::std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
   }
   if (value.has_value()) {
@@ -1888,7 +1888,7 @@ rs_std::Option<::option::HasDefault>::operator=(
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
   }
   return *this;
 }
@@ -1899,20 +1899,20 @@ inline rs_std::Option<::option::HasDefault>::Option(::std::in_place_t,
                       ::std::forward<Args>(args)...);
 }
 inline constexpr rs_std::Option<::option::HasDefault>::~Option() noexcept {
-  if (tag() != UINT64_C(9223372036854775808)) {
+  if (tag() != UINT64_C(18446744073709551615)) {
     ::std::destroy_at(reinterpret_cast<::option::HasDefault*>(storage_));
   }
 }
 inline rs_std::Option<::option::HasDefault>::operator ::std::optional<
     ::option::HasDefault>() && noexcept {
-  if (tag() == UINT64_C(9223372036854775808)) {
+  if (tag() == UINT64_C(18446744073709551615)) {
     return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::HasDefault>* _value;
       DeferSetTagNone(rs_std::Option<::option::HasDefault>* self)
           : _value(self) {}
-      ~DeferSetTagNone() { set_tag(UINT64_C(9223372036854775808)); }
+      ~DeferSetTagNone() { set_tag(UINT64_C(18446744073709551615)); }
 
      private:
       void set_tag(::std::uint64_t tag) { _value->set_tag(tag); }
@@ -1923,7 +1923,7 @@ inline rs_std::Option<::option::HasDefault>::operator ::std::optional<
   }
 }
 inline bool rs_std::Option<::option::HasDefault>::has_value() noexcept {
-  return tag() != UINT64_C(9223372036854775808);
+  return tag() != UINT64_C(18446744073709551615);
 }
 inline constexpr ::std::uint64_t rs_std::Option<::option::HasDefault>::tag()
     const& noexcept {
@@ -1956,18 +1956,18 @@ rs_std::Option<::option::HasNoDefault>::operator=(Option&& other) {
   return *this;
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>::Option() {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>::Option(
     ::std::nullopt_t) noexcept {
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>&
 rs_std::Option<::option::HasNoDefault>::operator=(::std::nullopt_t) noexcept {
-  if (tag() != UINT64_C(9223372036854775808)) {
+  if (tag() != UINT64_C(18446744073709551615)) {
     ::std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
   }
-  set_tag(UINT64_C(9223372036854775808));
+  set_tag(UINT64_C(18446744073709551615));
   return *this;
 }
 inline rs_std::Option<::option::HasNoDefault>::Option(
@@ -1978,13 +1978,13 @@ inline rs_std::Option<::option::HasNoDefault>::Option(
     ::std::construct_at(some, crubit::UnsafeRelocateTag{}, ::std::move(*value));
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
   }
 }
 inline rs_std::Option<::option::HasNoDefault>&
 rs_std::Option<::option::HasNoDefault>::operator=(
     ::std::optional<::option::HasNoDefault>&& value) noexcept {
-  if (tag() != UINT64_C(9223372036854775808)) {
+  if (tag() != UINT64_C(18446744073709551615)) {
     ::std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
   }
   if (value.has_value()) {
@@ -1993,7 +1993,7 @@ rs_std::Option<::option::HasNoDefault>::operator=(
     ::std::construct_at(some, crubit::UnsafeRelocateTag{}, ::std::move(*value));
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(UINT64_C(9223372036854775808));
+    set_tag(UINT64_C(18446744073709551615));
   }
   return *this;
 }
@@ -2004,20 +2004,20 @@ inline rs_std::Option<::option::HasNoDefault>::Option(::std::in_place_t,
                       ::std::forward<Args>(args)...);
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>::~Option() noexcept {
-  if (tag() != UINT64_C(9223372036854775808)) {
+  if (tag() != UINT64_C(18446744073709551615)) {
     ::std::destroy_at(reinterpret_cast<::option::HasNoDefault*>(storage_));
   }
 }
 inline rs_std::Option<::option::HasNoDefault>::operator ::std::optional<
     ::option::HasNoDefault>() && noexcept {
-  if (tag() == UINT64_C(9223372036854775808)) {
+  if (tag() == UINT64_C(18446744073709551615)) {
     return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::HasNoDefault>* _value;
       DeferSetTagNone(rs_std::Option<::option::HasNoDefault>* self)
           : _value(self) {}
-      ~DeferSetTagNone() { set_tag(UINT64_C(9223372036854775808)); }
+      ~DeferSetTagNone() { set_tag(UINT64_C(18446744073709551615)); }
 
      private:
       void set_tag(::std::uint64_t tag) { _value->set_tag(tag); }
@@ -2028,7 +2028,7 @@ inline rs_std::Option<::option::HasNoDefault>::operator ::std::optional<
   }
 }
 inline bool rs_std::Option<::option::HasNoDefault>::has_value() noexcept {
-  return tag() != UINT64_C(9223372036854775808);
+  return tag() != UINT64_C(18446744073709551615);
 }
 inline constexpr ::std::uint64_t rs_std::Option<::option::HasNoDefault>::tag()
     const& noexcept {
@@ -2170,18 +2170,18 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::option::LessThan20U8>>);
 inline constexpr rs_std::Option<::option::LessThan20U8>::Option() {
-  set_tag(20);
+  set_tag(255);
 }
 inline constexpr rs_std::Option<::option::LessThan20U8>::Option(
     ::std::nullopt_t) noexcept {
-  set_tag(20);
+  set_tag(255);
 }
 inline constexpr rs_std::Option<::option::LessThan20U8>&
 rs_std::Option<::option::LessThan20U8>::operator=(::std::nullopt_t) noexcept {
-  if (tag() != 20) {
+  if (tag() != 255) {
     ::std::destroy_at(reinterpret_cast<::option::LessThan20U8*>(storage_));
   }
-  set_tag(20);
+  set_tag(255);
   return *this;
 }
 inline rs_std::Option<::option::LessThan20U8>::Option(
@@ -2192,7 +2192,7 @@ inline rs_std::Option<::option::LessThan20U8>::Option(
 inline rs_std::Option<::option::LessThan20U8>&
 rs_std::Option<::option::LessThan20U8>::operator=(
     ::option::LessThan20U8&& value) noexcept {
-  if (tag() != 20) {
+  if (tag() != 255) {
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<::option::LessThan20U8*>(storage_),
         ::std::move(value));
@@ -2210,13 +2210,13 @@ inline rs_std::Option<::option::LessThan20U8>::Option(
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(20);
+    set_tag(255);
   }
 }
 inline rs_std::Option<::option::LessThan20U8>&
 rs_std::Option<::option::LessThan20U8>::operator=(
     ::std::optional<::option::LessThan20U8>&& value) noexcept {
-  if (tag() != 20) {
+  if (tag() != 255) {
     ::std::destroy_at(reinterpret_cast<::option::LessThan20U8*>(storage_));
   }
   if (value.has_value()) {
@@ -2225,7 +2225,7 @@ rs_std::Option<::option::LessThan20U8>::operator=(
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(20);
+    set_tag(255);
   }
   return *this;
 }
@@ -2239,14 +2239,14 @@ static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::option::LessThan20U8>>);
 inline rs_std::Option<::option::LessThan20U8>::operator ::std::optional<
     ::option::LessThan20U8>() && noexcept {
-  if (tag() == 20) {
+  if (tag() == 255) {
     return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
       rs_std::Option<::option::LessThan20U8>* _value;
       DeferSetTagNone(rs_std::Option<::option::LessThan20U8>* self)
           : _value(self) {}
-      ~DeferSetTagNone() { set_tag(20); }
+      ~DeferSetTagNone() { set_tag(255); }
 
      private:
       void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
@@ -2257,7 +2257,7 @@ inline rs_std::Option<::option::LessThan20U8>::operator ::std::optional<
   }
 }
 inline bool rs_std::Option<::option::LessThan20U8>::has_value() noexcept {
-  return tag() != 20;
+  return tag() != 255;
 }
 inline constexpr ::std::uint8_t rs_std::Option<::option::LessThan20U8>::tag()
     const& noexcept {
@@ -2289,20 +2289,20 @@ static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
 inline constexpr rs_std::Option<
     rs_std::Option<::option::LessThan20U8>>::Option() {
-  set_tag(21);
+  set_tag(254);
 }
 inline constexpr rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
     ::std::nullopt_t) noexcept {
-  set_tag(21);
+  set_tag(254);
 }
 inline constexpr rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
 rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
     ::std::nullopt_t) noexcept {
-  if (tag() != 21) {
+  if (tag() != 254) {
     ::std::destroy_at(
         reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_));
   }
-  set_tag(21);
+  set_tag(254);
   return *this;
 }
 inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
@@ -2314,7 +2314,7 @@ inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
 inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
 rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
     rs_std::Option<::option::LessThan20U8>&& value) noexcept {
-  if (tag() != 21) {
+  if (tag() != 254) {
     ::crubit::MoveAssignOrDestroyAndConstruct(
         reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_),
         ::std::move(value));
@@ -2333,13 +2333,13 @@ inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(21);
+    set_tag(254);
   }
 }
 inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
 rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
     ::std::optional<rs_std::Option<::option::LessThan20U8>>&& value) noexcept {
-  if (tag() != 21) {
+  if (tag() != 254) {
     ::std::destroy_at(
         reinterpret_cast<rs_std::Option<::option::LessThan20U8>*>(storage_));
   }
@@ -2349,7 +2349,7 @@ rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
     *some = ::std::move(value.value());
     ::std::construct_at(&value, ::std::nullopt);
   } else {
-    set_tag(21);
+    set_tag(254);
   }
   return *this;
 }
@@ -2364,7 +2364,7 @@ static_assert(::std::is_trivially_destructible_v<
               rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
 inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator ::std::
     optional<rs_std::Option<::option::LessThan20U8>>() && noexcept {
-  if (tag() == 21) {
+  if (tag() == 254) {
     return ::std::nullopt;
   } else {
     struct DeferSetTagNone {
@@ -2372,7 +2372,7 @@ inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator ::std::
       DeferSetTagNone(
           rs_std::Option<rs_std::Option<::option::LessThan20U8>>* self)
           : _value(self) {}
-      ~DeferSetTagNone() { set_tag(21); }
+      ~DeferSetTagNone() { set_tag(254); }
 
      private:
       void set_tag(::std::uint8_t tag) { _value->set_tag(tag); }
@@ -2385,7 +2385,7 @@ inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator ::std::
 }
 inline bool
 rs_std::Option<rs_std::Option<::option::LessThan20U8>>::has_value() noexcept {
-  return tag() != 21;
+  return tag() != 254;
 }
 inline constexpr ::std::uint8_t
 rs_std::Option<rs_std::Option<::option::LessThan20U8>>::tag() const& noexcept {
