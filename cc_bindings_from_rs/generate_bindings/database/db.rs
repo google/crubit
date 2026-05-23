@@ -8,7 +8,7 @@ extern crate rustc_span;
 
 use crate::adt_core_bindings::{AdtCoreBindings, CopyCtorStyle, MoveCtorStyle, NoMoveOrAssign};
 use crate::code_snippet::{
-    ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs, RsStdEnumTemplateSpecialization,
+    ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs, RsStdTemplateSpecialization,
 };
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
@@ -343,7 +343,7 @@ memoized::query_group! {
       fn parse_rs_std_template_specialization(
           &self,
           self_ty: Ty<'tcx>,
-      ) -> Option<Result<RsStdEnumTemplateSpecialization<'tcx>>>;
+      ) -> Option<Result<RsStdTemplateSpecialization<'tcx>>>;
   }
 }
 

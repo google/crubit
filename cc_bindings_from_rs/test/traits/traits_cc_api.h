@@ -22,8 +22,8 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/traits.h"
+#include "support/rs_std/tuple.h"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -92,41 +92,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: DifferentTraitSameName")
     DifferentTraitSameName {
   template <typename T>
   using impl = rs_std::impl<T, DifferentTraitSameName>;
-};
-
-// Generated from:
-// cc_bindings_from_rs/test/traits/traits.rs;l=25
-struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
-    [[clang::trivial_abi]] Foo final {
- public:
-  // Default::default
-  Foo();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Foo() = default;
-  Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Foo(const Foo&) = default;
-  Foo& operator=(const Foo&) = default;
-  Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/traits.rs;l=29
-  static ::traits::Foo new_(::std::int32_t x, ::std::int32_t y);
-
- private:
-  // Field type has been replaced with a blob of bytes: Tuple types cannot be
-  // used inside of compound data types, because std::tuple is not
-  // layout-compatible with a Rust tuple.
-  ::std::array<unsigned char, 8> a;
-
- private:
-  static void __crubit_field_offset_assertions();
 };
 
 // Generated from:
@@ -284,6 +249,56 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
     TraitWithAssociatedConst {
   template <typename T>
   using impl = rs_std::impl<T, TraitWithAssociatedConst>;
+};
+
+}  // namespace traits
+
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
+ private:
+  unsigned char __storage[8];
+};
+#endif
+
+namespace traits {
+
+// Generated from:
+// cc_bindings_from_rs/test/traits/traits.rs;l=25
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
+    [[clang::trivial_abi]] Foo final {
+ public:
+  // Default::default
+  Foo();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~Foo() = default;
+  Foo(Foo&&) = default;
+  Foo& operator=(Foo&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Foo(const Foo&) = default;
+  Foo& operator=(const Foo&) = default;
+  Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/traits.rs;l=29
+  static ::traits::Foo new_(::std::int32_t x, ::std::int32_t y);
+
+ private:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/traits/traits.rs;l=26
+    rs_std::Tuple<::std::int32_t, ::std::int32_t> a;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 
 }  // namespace traits

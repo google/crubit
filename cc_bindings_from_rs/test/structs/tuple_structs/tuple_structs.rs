@@ -95,9 +95,9 @@ impl TupleStructOnePublicArgOnePrivateArg {
 
 #[derive(Default, Copy, Clone)]
 #[must_bind]
-pub struct TupleStructWithInvalidArgumentType(pub (i32, i32));
+pub struct TupleStructWithTupleFieldType(pub (i32, i32));
 
-impl TupleStructWithInvalidArgumentType {
+impl TupleStructWithTupleFieldType {
     #[must_bind]
     pub fn create((first_arg, second_arg): (i32, i32)) -> Self {
         Self((first_arg, second_arg))

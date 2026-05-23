@@ -1969,8 +1969,8 @@ impl NodeSortKey {
 
     fn new<'tcx>(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
         match spec {
-            TemplateSpecialization::RsStdEnum(e) => {
-                let ty = e.core.self_ty_rs;
+            TemplateSpecialization::RsStd(e) => {
+                let ty = e.self_ty_rs;
 
                 #[cfg_accessible(rustc_data_structures::stable_hash)]
                 use rustc_data_structures::stable_hash;

@@ -57,8 +57,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Error generating bindings for variant `enums_golden::repr_c::MyEnum::Z`
   // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=15:
-  // Tuple types cannot be used inside of compound data types, because
-  // std::tuple is not layout-compatible with a Rust tuple.
+  // Tuple type `()` is not supported in this context
 
   // Generated from:
   // cc_bindings_from_rs/test/enums/enums.rs;l=16

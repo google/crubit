@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/tuple.h"
 
 #include <array>
 #include <cstddef>
@@ -220,11 +221,25 @@ function_with_nested_drop_default_arrays(
 // b/260128806 - nested array [[arrays_golden::HasDrop; 2]; 2] is not supported
 // because it contains a type that implements Drop but not Default
 
-// Error generating bindings for function
-// `arrays_golden::function_with_tuple_array_id` defined at
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=27:
-// Tuple types cannot be used inside of compound data types, because std::tuple
-// is not layout-compatible with a Rust tuple.
+}  // namespace arrays
+
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
+ private:
+  unsigned char __storage[8];
+};
+#endif
+
+namespace arrays {
+
+// Generated from:
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=27
+::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2>
+function_with_tuple_array_id(
+    ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2> tup_array);
 
 static_assert(
     sizeof(ArrayStruct) == 8,
@@ -464,6 +479,21 @@ function_with_nested_drop_default_arrays(
   __crubit_internal::
       __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
           array_slot.Get(), __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_function_uwith_utuple_uarray_uid(
+    void*, void* __ret_ptr);
+}
+inline ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2>
+function_with_tuple_array_id(
+    ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2> tup_array) {
+  crubit::Slot<::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_function_uwith_utuple_uarray_uid(
+      &tup_array, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 

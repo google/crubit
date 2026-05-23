@@ -76,7 +76,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
-  void set_tag(::std::uint8_t tag) noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -240,7 +240,8 @@ inline constexpr ::std::uint8_t rs_std::Result<
   }
   return std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline void rs_std::Result<::struct_with_const_field, ::std::uint8_t>::set_tag(
+inline constexpr void
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);

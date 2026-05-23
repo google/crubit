@@ -185,3 +185,14 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_unested_udrop_udefault_uarray
         (__ret_ptr as *mut [[::arrays_golden::HasDropAndDefault; 2]; 2]).write(__rs_return_value);
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_utuple_uarray_uid(
+    tup_array: &'static mut ::core::mem::MaybeUninit<[(i32, i32); 2]>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let tup_array = tup_array.assume_init_read();
+        let __rs_return_value = ::arrays_golden::function_with_tuple_array_id(tup_array);
+        (__ret_ptr as *mut [(i32, i32); 2]).write(__rs_return_value);
+    }
+}

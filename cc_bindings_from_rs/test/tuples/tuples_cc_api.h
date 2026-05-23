@@ -20,8 +20,8 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/tuple.h"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -142,45 +142,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
 // Unsupported constant type: (i32,)
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=94
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
-    [[clang::trivial_abi]] TupleStruct final {
- public:
-  // `tuples_golden::TupleStruct` doesn't implement the `Default` trait
-  TupleStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStruct() = default;
-  TupleStruct(TupleStruct&&) = default;
-  TupleStruct& operator=(TupleStruct&&) = default;
-
-  // `tuples_golden::TupleStruct` doesn't implement the `Clone` trait
-  TupleStruct(const TupleStruct&) = delete;
-  TupleStruct& operator=(const TupleStruct&) = delete;
-  TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  // Error generating bindings for associated function
-  // `tuples_golden::TupleStruct::tuple_not_by_value` defined at
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=101:
-  // Error formatting function return type `*const ()`: Failed to format the
-  // pointee of the pointer type `*const ()`: Tuple types cannot be used inside
-  // of compound data types, because std::tuple is not layout-compatible with a
-  // Rust tuple.
-
- private:
-  // Field type has been replaced with a blob of bytes: Tuple types cannot be
-  // used inside of compound data types, because std::tuple is not
-  // layout-compatible with a Rust tuple.
-  ::std::array<unsigned char, 4> tuple_field;
-  // Skipped bindings for field `empty_tuple_field`: ZST fields are not
-  // supported (b/258259459)
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-// Generated from:
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=52
 void assert_nontrivial_drop_count(::std::uint8_t drop_count);
 
@@ -247,6 +208,58 @@ return_triply_nested_tuple();
 // Generated from:
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=11
 void return_unit_is_not_tuple();
+
+}  // namespace tuples
+
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+template <>
+struct alignas(4)
+    CRUBIT_INTERNAL_RUST_TYPE("(i32 ,)") rs_std::Tuple<::std::int32_t> {
+ private:
+  unsigned char __storage[4];
+};
+#endif
+
+namespace tuples {
+
+// Generated from:
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=94
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
+    [[clang::trivial_abi]] TupleStruct final {
+ public:
+  // `tuples_golden::TupleStruct` doesn't implement the `Default` trait
+  TupleStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~TupleStruct() = default;
+  TupleStruct(TupleStruct&&) = default;
+  TupleStruct& operator=(TupleStruct&&) = default;
+
+  // `tuples_golden::TupleStruct` doesn't implement the `Clone` trait
+  TupleStruct(const TupleStruct&) = delete;
+  TupleStruct& operator=(const TupleStruct&) = delete;
+  TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // Error generating bindings for associated function
+  // `tuples_golden::TupleStruct::tuple_not_by_value` defined at
+  // cc_bindings_from_rs/test/tuples/tuples.rs;l=101:
+  // Error formatting function return type `*const ()`: Failed to format the
+  // pointee of the pointer type `*const ()`: Tuple type `()` is not supported
+  // in this context
+
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/tuples/tuples.rs;l=95
+    rs_std::Tuple<::std::int32_t> tuple_field;
+  };
+  // Skipped bindings for field `empty_tuple_field`: ZST fields are not
+  // supported (b/258259459)
+ private:
+  static void __crubit_field_offset_assertions();
+};
 
 static_assert(
     sizeof(AdtHoldingFiveAndSix) == 8,

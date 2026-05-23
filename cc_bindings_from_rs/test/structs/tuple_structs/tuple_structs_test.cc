@@ -25,9 +25,9 @@ using ::tuple_structs::TupleStructWithCloneNoDefault;
 using ::tuple_structs::TupleStructWithCppImmovableType;
 using ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin;
 using ::tuple_structs::TupleStructWithDefaultNoCopyNoClone;
-using ::tuple_structs::TupleStructWithInvalidArgumentType;
 using ::tuple_structs::TupleStructWithNoDefault;
 using ::tuple_structs::TupleStructWithNonExhaustiveCtor;
+using ::tuple_structs::TupleStructWithTupleFieldType;
 
 template <typename T>
 concept HasFieldZero = requires(T t) { t.__field0; };
@@ -66,13 +66,11 @@ TEST(TupleStructsTest, TupleStructTwoPrivateArgs) {
   static_assert(!HasFieldOne<TupleStructTwoPrivateArgs>);
 }
 
-TEST(TupleStructsTest,
-     TupleStructWithInvalidArgumentTypeIsNotConstructableFromArg) {
-  static_assert(!std::is_constructible_v<TupleStructWithInvalidArgumentType,
+TEST(TupleStructsTest, TupleStructWithFieldTupleTypeIsNotConstructableFromArg) {
+  static_assert(!std::is_constructible_v<TupleStructWithTupleFieldType,
                                          std::tuple<int32_t, int32_t>>);
   std::tuple<int32_t, int32_t> tuple(49, 144);
-  TupleStructWithInvalidArgumentType arg =
-      TupleStructWithInvalidArgumentType::create(tuple);
+  auto arg = TupleStructWithTupleFieldType::create(tuple);
   std::tuple<int32_t, int32_t> tuple_from_arg = arg.get_arg();
   EXPECT_EQ(std::get<0>(tuple_from_arg), 49);
   EXPECT_EQ(std::get<1>(tuple_from_arg), 144);

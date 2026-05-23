@@ -371,62 +371,6 @@ const _: () = assert!(
 const _: () = assert!(
     ::core::mem::offset_of!(::tuple_structs_golden::TupleStructWithDefaultNoCopyNoClone, 0) == 0
 );
-const _: () = assert!(
-    ::std::mem::size_of::<::tuple_structs_golden::TupleStructWithInvalidArgumentType>() == 8
-);
-const _: () = assert!(
-    ::std::mem::align_of::<::tuple_structs_golden::TupleStructWithInvalidArgumentType>() == 4
-);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value=<::tuple_structs_golden::TupleStructWithInvalidArgumentType as::core::default::Default>::default();
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithInvalidArgumentType)
-            .write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(
-    __param_0: *const [*const core::ffi::c_void; 2usize],
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __param_0 = (
-            {
-                let __param_0_0: i32 = ((*__param_0)[0usize] as *const i32).read();
-                __param_0_0
-            },
-            {
-                let __param_0_1: i32 = ((*__param_0)[1usize] as *const i32).read();
-                __param_0_1
-            },
-        );
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructWithInvalidArgumentType::create(__param_0);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithInvalidArgumentType)
-            .write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_get_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::tuple_structs_golden::TupleStructWithInvalidArgumentType,
-    >,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __self = __self.assume_init_read();
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructWithInvalidArgumentType::get_arg(__self);
-        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
-        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
-        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
-        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
-    }
-}
-const _: () = assert!(
-    ::core::mem::offset_of!(::tuple_structs_golden::TupleStructWithInvalidArgumentType, 0) == 0
-);
 const _: () =
     assert!(::std::mem::size_of::<::tuple_structs_golden::TupleStructWithNoDefault>() == 4);
 const _: () =
@@ -465,3 +409,56 @@ const _: () = assert!(
 const _: () = assert!(
     ::core::mem::offset_of!(::tuple_structs_golden::TupleStructWithNonExhaustiveCtor, 1) == 4
 );
+const _: () =
+    assert!(::std::mem::size_of::<::tuple_structs_golden::TupleStructWithTupleFieldType>() == 8);
+const _: () =
+    assert!(::std::mem::align_of::<::tuple_structs_golden::TupleStructWithTupleFieldType>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value=<::tuple_structs_golden::TupleStructWithTupleFieldType as::core::default::Default>::default();
+        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithTupleFieldType)
+            .write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create(
+    __param_0: *const [*const core::ffi::c_void; 2usize],
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __param_0 = (
+            {
+                let __param_0_0: i32 = ((*__param_0)[0usize] as *const i32).read();
+                __param_0_0
+            },
+            {
+                let __param_0_1: i32 = ((*__param_0)[1usize] as *const i32).read();
+                __param_0_1
+            },
+        );
+        let __rs_return_value =
+            ::tuple_structs_golden::TupleStructWithTupleFieldType::create(__param_0);
+        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithTupleFieldType)
+            .write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_uarg(
+    __self: &'static mut ::core::mem::MaybeUninit<
+        ::tuple_structs_golden::TupleStructWithTupleFieldType,
+    >,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __self = __self.assume_init_read();
+        let __rs_return_value =
+            ::tuple_structs_golden::TupleStructWithTupleFieldType::get_arg(__self);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
+    }
+}
+const _: () =
+    assert!(::core::mem::offset_of!(::tuple_structs_golden::TupleStructWithTupleFieldType, 0) == 0);

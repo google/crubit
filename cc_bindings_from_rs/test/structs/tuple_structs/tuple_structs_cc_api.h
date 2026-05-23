@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/tuple.h"
 
 #include <array>
 #include <cstddef>
@@ -724,58 +725,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=98
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithInvalidArgumentType") alignas(4)
-    [[clang::trivial_abi]] TupleStructWithInvalidArgumentType final {
- public:
-  // Default::default
-  TupleStructWithInvalidArgumentType();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStructWithInvalidArgumentType() = default;
-  TupleStructWithInvalidArgumentType(TupleStructWithInvalidArgumentType&&) =
-      default;
-  TupleStructWithInvalidArgumentType& operator=(
-      TupleStructWithInvalidArgumentType&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  TupleStructWithInvalidArgumentType(
-      const TupleStructWithInvalidArgumentType&) = default;
-  TupleStructWithInvalidArgumentType& operator=(
-      const TupleStructWithInvalidArgumentType&) = default;
-  TupleStructWithInvalidArgumentType(
-      ::crubit::UnsafeRelocateTag, TupleStructWithInvalidArgumentType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=102
-  static ::tuple_structs::TupleStructWithInvalidArgumentType create(
-      ::std::tuple<::std::int32_t, ::std::int32_t> __param_0);
-
-  // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=107
-  ::std::tuple<::std::int32_t, ::std::int32_t> get_arg() const;
-
- private:
-  // Field type has been replaced with a blob of bytes: Tuple types cannot be
-  // used inside of compound data types, because std::tuple is not
-  // layout-compatible with a Rust tuple.
-  ::std::array<unsigned char, 8> __field0;
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-// CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
 // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=163
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithNoDefault") alignas(4)
@@ -857,6 +806,75 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=115
     ::std::int32_t __field1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace tuple_structs
+
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
+ private:
+  unsigned char __storage[8];
+};
+#endif
+
+namespace tuple_structs {
+
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
+// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=98
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: tuple_structs_golden :: TupleStructWithTupleFieldType") alignas(4)
+    [[clang::trivial_abi]] TupleStructWithTupleFieldType final {
+ public:
+  // Default::default
+  TupleStructWithTupleFieldType();
+
+  // Synthesized tuple constructor
+  explicit TupleStructWithTupleFieldType(
+      rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0)
+      : __field0(::std::move(__field0)) {}
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~TupleStructWithTupleFieldType() = default;
+  TupleStructWithTupleFieldType(TupleStructWithTupleFieldType&&) = default;
+  TupleStructWithTupleFieldType& operator=(TupleStructWithTupleFieldType&&) =
+      default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  TupleStructWithTupleFieldType(const TupleStructWithTupleFieldType&) = default;
+  TupleStructWithTupleFieldType& operator=(
+      const TupleStructWithTupleFieldType&) = default;
+  TupleStructWithTupleFieldType(::crubit::UnsafeRelocateTag,
+                                TupleStructWithTupleFieldType&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // CRUBIT_ANNOTATE: must_bind=
+  //
+  // Generated from:
+  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=102
+  static ::tuple_structs::TupleStructWithTupleFieldType create(
+      ::std::tuple<::std::int32_t, ::std::int32_t> __param_0);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  //
+  // Generated from:
+  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=107
+  ::std::tuple<::std::int32_t, ::std::int32_t> get_arg() const;
+
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=98
+    rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0;
   };
 
  private:
@@ -1379,71 +1397,6 @@ TupleStructWithDefaultNoCopyNoClone::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithDefaultNoCopyNoClone, __field0));
 }
 static_assert(
-    sizeof(TupleStructWithInvalidArgumentType) == 8,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(TupleStructWithInvalidArgumentType) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
-    ::tuple_structs::TupleStructWithInvalidArgumentType* __ret_ptr);
-}
-inline ::tuple_structs::TupleStructWithInvalidArgumentType::
-    TupleStructWithInvalidArgumentType() {
-  __crubit_internal::__crubit_thunk_default(this);
-}
-static_assert(
-    ::std::is_trivially_destructible_v<TupleStructWithInvalidArgumentType>);
-static_assert(::std::is_trivially_move_constructible_v<
-              ::tuple_structs::TupleStructWithInvalidArgumentType>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::tuple_structs::TupleStructWithInvalidArgumentType>);
-static_assert(::std::is_trivially_copy_constructible_v<
-              ::tuple_structs::TupleStructWithInvalidArgumentType>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              ::tuple_structs::TupleStructWithInvalidArgumentType>);
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(
-    void**, ::tuple_structs::TupleStructWithInvalidArgumentType* __ret_ptr);
-}
-inline ::tuple_structs::TupleStructWithInvalidArgumentType
-TupleStructWithInvalidArgumentType::create(
-    ::std::tuple<::std::int32_t, ::std::int32_t> __param_0) {
-  auto&& __param_0_0 = ::std::get<0>(__param_0);
-  auto&& __param_0_cabi_0 = __param_0_0;
-  auto&& __param_0_1 = ::std::get<1>(__param_0);
-  auto&& __param_0_cabi_1 = __param_0_1;
-  void* __param_0_cabi[] = {&__param_0_cabi_0, &__param_0_cabi_1};
-  crubit::Slot<::tuple_structs::TupleStructWithInvalidArgumentType>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_create(__param_0_cabi,
-                                           __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_get_uarg(
-    ::tuple_structs::TupleStructWithInvalidArgumentType*, void** __ret_ptr);
-}
-inline ::std::tuple<::std::int32_t, ::std::int32_t>
-TupleStructWithInvalidArgumentType::get_arg() const {
-  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
-  ::std::int32_t __return_value_0_ret_val_holder;
-  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
-  ::std::int32_t __return_value_1_ret_val_holder;
-  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
-  void* __return_value_storage[] = {__return_value_0_storage,
-                                    __return_value_1_storage};
-  __crubit_internal::__crubit_thunk_get_uarg(&self, __return_value_storage);
-  return ::std::make_tuple(*__return_value_0_storage,
-                           *__return_value_1_storage);
-}
-inline void
-TupleStructWithInvalidArgumentType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithInvalidArgumentType, __field0));
-}
-static_assert(
     sizeof(TupleStructWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
@@ -1500,6 +1453,70 @@ inline void
 TupleStructWithNonExhaustiveCtor::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithNonExhaustiveCtor, __field0));
   static_assert(4 == offsetof(TupleStructWithNonExhaustiveCtor, __field1));
+}
+static_assert(
+    sizeof(TupleStructWithTupleFieldType) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(TupleStructWithTupleFieldType) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_default(
+    ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
+}
+inline ::tuple_structs::TupleStructWithTupleFieldType::
+    TupleStructWithTupleFieldType() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
+static_assert(
+    ::std::is_trivially_destructible_v<TupleStructWithTupleFieldType>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::tuple_structs::TupleStructWithTupleFieldType>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::tuple_structs::TupleStructWithTupleFieldType>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::tuple_structs::TupleStructWithTupleFieldType>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::tuple_structs::TupleStructWithTupleFieldType>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create(
+    void**, ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
+}
+inline ::tuple_structs::TupleStructWithTupleFieldType
+TupleStructWithTupleFieldType::create(
+    ::std::tuple<::std::int32_t, ::std::int32_t> __param_0) {
+  auto&& __param_0_0 = ::std::get<0>(__param_0);
+  auto&& __param_0_cabi_0 = __param_0_0;
+  auto&& __param_0_1 = ::std::get<1>(__param_0);
+  auto&& __param_0_cabi_1 = __param_0_1;
+  void* __param_0_cabi[] = {&__param_0_cabi_0, &__param_0_cabi_1};
+  crubit::Slot<::tuple_structs::TupleStructWithTupleFieldType>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(__param_0_cabi,
+                                           __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_get_uarg(
+    ::tuple_structs::TupleStructWithTupleFieldType*, void** __ret_ptr);
+}
+inline ::std::tuple<::std::int32_t, ::std::int32_t>
+TupleStructWithTupleFieldType::get_arg() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  ::std::int32_t __return_value_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  ::std::int32_t __return_value_1_ret_val_holder;
+  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage,
+                                    __return_value_1_storage};
+  __crubit_internal::__crubit_thunk_get_uarg(&self, __return_value_storage);
+  return ::std::make_tuple(*__return_value_0_storage,
+                           *__return_value_1_storage);
+}
+inline void TupleStructWithTupleFieldType::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(TupleStructWithTupleFieldType, __field0));
 }
 }  // namespace tuple_structs
 

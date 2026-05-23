@@ -22,7 +22,6 @@ use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
 use database::code_snippet::{
     CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
-    TemplateSpecializationKind,
 };
 use database::BindingsGenerator;
 use database::{FineGrainedFeature, TypeLocation};
@@ -174,7 +173,15 @@ pub fn format_ty_for_cc<'tcx>(
             if types.is_empty() && matches!(location, TypeLocation::FnReturn { .. }) {
                 keyword(quote! { void })
             } else if !location.is_bridgeable() {
-                bail!("Tuple types cannot be used inside of compound data types, because std::tuple is not layout-compatible with a Rust tuple.");
+                let Some(rs_std) = db.parse_rs_std_template_specialization(ty) else {
+                    bail!("Tuple type `{ty}` is not supported in this context");
+                };
+                let rs_std = rs_std?;
+                let mut prereqs = CcPrerequisites::default();
+                let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
+                prereqs.includes.insert(rs_std.support_header(db));
+                prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
+                return Ok(CcSnippet { tokens, prereqs });
             } else {
                 let mut prereqs = CcPrerequisites::default();
                 prereqs.includes.insert(CcInclude::tuple());
@@ -200,7 +207,7 @@ pub fn format_ty_for_cc<'tcx>(
             // numeric literals.
             let target_size = evaluate_const_as_u64(db.tcx(), length)?;
             let cc_element_ty =
-                db.format_ty_for_cc(element_type, location)?.into_tokens(&mut prereqs);
+                db.format_ty_for_cc(element_type, TypeLocation::Other)?.into_tokens(&mut prereqs);
             let c_int = Literal::u64_unsuffixed(target_size);
             CcSnippet { prereqs, tokens: quote! { ::std::array<#cc_element_ty, #c_int> } }
         }
@@ -309,25 +316,15 @@ pub fn format_ty_for_cc<'tcx>(
                 // Otherwise, fallthrough to the normal bridging logic.
                 let error_occurred = !location.is_bridgeable() && specialization.is_err();
                 let is_option_or_result = specialization.as_ref().is_ok_and(|rs_std_enum| {
-                    !location.is_bridgeable()
-                        && matches!(rs_std_enum.kind, TemplateSpecializationKind::Option { .. })
-                        || matches!(rs_std_enum.kind, TemplateSpecializationKind::Result { .. })
+                    (!location.is_bridgeable() && rs_std_enum.is_option())
+                        || rs_std_enum.is_result()
                 });
                 error_occurred || is_option_or_result
             }) {
-                let rs_std_enum = specialization.unwrap()?;
-                let tokens = rs_std_enum.core.self_ty_cc.clone().into_tokens(&mut prereqs);
-                match rs_std_enum.kind {
-                    TemplateSpecializationKind::Option { .. } => {
-                        prereqs.includes.insert(db.support_header("rs_std/option.h"));
-                    }
-                    TemplateSpecializationKind::Result { .. } => {
-                        prereqs.includes.insert(db.support_header("rs_std/result.h"));
-                    }
-                }
-                prereqs
-                    .template_specializations
-                    .insert(TemplateSpecialization::RsStdEnum(rs_std_enum));
+                let rs_std = specialization.unwrap()?;
+                let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
+                prereqs.includes.insert(rs_std.support_header(db));
+                prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
                 return Ok(CcSnippet { tokens, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 ensure!(

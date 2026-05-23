@@ -254,7 +254,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
-  void set_tag(::std::uint8_t tag) noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -298,7 +298,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
-  void set_tag(::std::uint8_t tag) noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -353,7 +353,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
-  void set_tag(::std::uint64_t tag) noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -409,7 +409,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
-  void set_tag(::std::uint64_t tag) noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -453,7 +453,7 @@ struct alignas(4)
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
-  void set_tag(::std::uint32_t tag) noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -537,7 +537,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
-  void set_tag(::std::uint32_t tag) noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -585,7 +585,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
-  void set_tag(::std::uint32_t tag) noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -680,7 +680,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
-  void set_tag(::std::uint8_t tag) noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -774,7 +774,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
-  void set_tag(::std::uint8_t tag) noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -865,7 +865,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
-  void set_tag(::std::uint64_t tag) noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -959,7 +959,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
-  void set_tag(::std::uint64_t tag) noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -1050,7 +1050,7 @@ struct alignas(1)
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
-  void set_tag(::std::uint8_t tag) noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
   void check_has_ok();
   void check_has_err();
 
@@ -1536,7 +1536,8 @@ inline constexpr ::std::uint8_t rs_std::Result<
   }
   return std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline void rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::set_tag(
+inline constexpr void
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
@@ -1663,7 +1664,8 @@ rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline void rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::set_tag(
+inline constexpr void
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
@@ -1781,7 +1783,8 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline void rs_std::Result<::result::HasDefault, ::std::uint8_t>::set_tag(
+inline constexpr void
+rs_std::Result<::result::HasDefault, ::std::uint8_t>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
@@ -1881,7 +1884,8 @@ rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline void rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::set_tag(
+inline constexpr void
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
@@ -2030,7 +2034,7 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
   }
   return std::bit_cast<::std::uint32_t>(__bytes);
 }
-inline void
+inline constexpr void
 rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                ::std::uint32_t>::set_tag(::std::uint32_t tag) noexcept {
   auto __bytes =
@@ -2186,8 +2190,8 @@ inline constexpr ::std::uint32_t rs_std::Result<
   }
   return std::bit_cast<::std::uint32_t>(__bytes);
 }
-inline void rs_std::Result<::std::uint32_t,
-                           rs_std::Result<::std::uint32_t, ::std::uint32_t>>::
+inline constexpr void rs_std::Result<
+    ::std::uint32_t, rs_std::Result<::std::uint32_t, ::std::uint32_t>>::
     set_tag(::std::uint32_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
@@ -2313,7 +2317,7 @@ rs_std::Result<::std::uint32_t, ::std::uint32_t>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint32_t>(__bytes);
 }
-inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::set_tag(
+inline constexpr void rs_std::Result<::std::uint32_t, ::std::uint32_t>::set_tag(
     ::std::uint32_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
@@ -2456,7 +2460,8 @@ inline constexpr ::std::uint8_t rs_std::Result<
   }
   return std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline void rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::set_tag(
+inline constexpr void
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
@@ -2583,7 +2588,8 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline void rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::set_tag(
+inline constexpr void
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
@@ -2701,7 +2707,8 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline void rs_std::Result<::std::uint8_t, ::result::HasDefault>::set_tag(
+inline constexpr void
+rs_std::Result<::std::uint8_t, ::result::HasDefault>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
@@ -2799,7 +2806,8 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline void rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::set_tag(
+inline constexpr void
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
@@ -2921,7 +2929,7 @@ rs_std::Result<::std::uint8_t, ::std::uint8_t>::tag() const& noexcept {
   }
   return std::bit_cast<::std::uint8_t>(__bytes);
 }
-inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::set_tag(
+inline constexpr void rs_std::Result<::std::uint8_t, ::std::uint8_t>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
