@@ -1566,6 +1566,7 @@ fn rs_type_kinds_for_func(
             let mut infer_param_lifetimes = infer_lifetimes;
             if i == 0 && func.is_instance_method() {
                 if !func.cc_name.is_constructor() && !func.cc_name.is_destructor()
+                    && !matches!(&func.cc_name, ir::UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "=")
                     && let Some(Item::Record(record)) = func.enclosing_item_id.map(|id| db.find_untyped_decl(id))
                         && record.is_thread_safe
                             && let CcTypeVariant::Pointer(ptr) = &mut param_type.variant {

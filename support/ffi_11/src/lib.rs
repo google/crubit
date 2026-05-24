@@ -92,7 +92,7 @@
 extern crate core;
 mod newtype;
 
-use newtype::{new_integer, wrapped_to_wrapped};
+use newtype::{new_atomic, new_integer, wrapped_to_wrapped};
 
 pub use core::ffi::c_void;
 
@@ -127,6 +127,7 @@ new_integer! {
     pub struct c_char(u8);
     pub const fn new_c_char;
 }
+new_atomic! { c_atomic_char, c_char, ::core::sync::atomic::AtomicU8 }
 
 impl c_char {
     pub const fn new(value: u8) -> Self {
@@ -234,33 +235,39 @@ impl From<i8> for c_char {
 
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=signed char")]
 pub type c_schar = i8;
+pub type c_atomic_schar = ::core::sync::atomic::AtomicI8;
 pub const fn new_c_schar(value: i8) -> c_schar {
     value
 }
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned char")]
 pub type c_uchar = u8;
+pub type c_atomic_uchar = ::core::sync::atomic::AtomicU8;
 pub const fn new_c_uchar(value: u8) -> c_uchar {
     value
 }
 
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=short")]
 pub type c_short = i16;
+pub type c_atomic_short = ::core::sync::atomic::AtomicI16;
 pub const fn new_c_short(value: i16) -> c_short {
     value
 }
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned short")]
 pub type c_ushort = u16;
+pub type c_atomic_ushort = ::core::sync::atomic::AtomicU16;
 pub const fn new_c_ushort(value: u16) -> c_ushort {
     value
 }
 
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=int")]
 pub type c_int = i32;
+pub type c_atomic_int = ::core::sync::atomic::AtomicI32;
 pub const fn new_c_int(value: i32) -> c_int {
     value
 }
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned int")]
 pub type c_uint = u32;
+pub type c_atomic_uint = ::core::sync::atomic::AtomicU32;
 pub const fn new_c_uint(value: u32) -> c_uint {
     value
 }

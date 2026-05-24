@@ -1173,6 +1173,11 @@ pub enum TemplateSpecializationKind {
         #[serde(rename(deserialize = "element_type"))]
         raw_element_type: CcType,
     },
+    /// std::atomic<T>
+    StdAtomic {
+        #[serde(rename(deserialize = "element_type"))]
+        raw_element_type: CcType,
+    },
     /// absl::Span<T>
     AbslSpan {
         #[serde(rename(deserialize = "element_type"))]

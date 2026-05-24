@@ -1066,6 +1066,12 @@ llvm::json::Value TemplateSpecialization::ToJson() const {
                      {"C9Co", llvm::json::Object{
                                   {"element_type", c9_co.element_type}}}};
                },
+               [&](const StdAtomic& std_atomic) {
+                 return llvm::json::Object{
+                     {"StdAtomic",
+                      llvm::json::Object{
+                          {"element_type", std_atomic.element_type}}}};
+               },
                [&](const NonSpecial&) {
                  return llvm::json::Object{{"NonSpecial", nullptr}};
                },
@@ -1096,6 +1102,10 @@ flat_proto::TemplateSpecialization TemplateSpecialization::ToFlatProto() const {
           [&](const C9Co& c9_co) {
             *proto.mutable_c9_co()->mutable_element_type() =
                 c9_co.element_type.ToFlatProto();
+          },
+          [&](const StdAtomic& std_atomic) {
+            *proto.mutable_std_atomic()->mutable_element_type() =
+                std_atomic.element_type.ToFlatProto();
           },
           [&](const NonSpecial&) { proto.mutable_non_special(); },
       },
