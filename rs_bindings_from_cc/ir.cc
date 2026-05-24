@@ -629,6 +629,12 @@ llvm::json::Value TemplateSpecialization::ToJson() const {
                      {"C9Co", llvm::json::Object{
                                   {"element_type", c9_co.element_type}}}};
                },
+               [&](const StdAtomic& std_atomic) {
+                 return llvm::json::Object{
+                     {"StdAtomic",
+                      llvm::json::Object{
+                          {"element_type", std_atomic.element_type}}}};
+               },
                [&](const NonSpecial&) {
                  return llvm::json::Object{{"NonSpecial", nullptr}};
                },

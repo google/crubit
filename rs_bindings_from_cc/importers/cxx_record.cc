@@ -630,6 +630,17 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
           ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
                                ictx.AreAssumedLifetimesEnabledForTarget(
                                    ictx.GetOwningTarget(specialization_decl))));
+    } else if (templated_decl->getName() == "atomic") {
+      if (specialization_decl->getTemplateArgs().size() != 1) {
+        return absl::InvalidArgumentError(
+            "std::atomic should have 1 template arg");
+      }
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+
+      return TemplateSpecialization::StdAtomic{
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(specialization_decl)))};
     }
   } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
@@ -1177,6 +1188,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (!is_thread_safe.ok()) {
     return unsupported(
         FormattedError::FromStatus(std::move(is_thread_safe).status()));
+  }
+
+  // Automatically treat std::atomic<T> as CRUBIT_THREAD_SAFE so that its
+  // generated methods take &self (interior mutability) and it derives
+  // Send+Sync.
+  if (template_specialization.has_value() &&
+      std::holds_alternative<TemplateSpecialization::StdAtomic>(
+          template_specialization->kind)) {
+    *is_thread_safe = true;
   }
 
   absl::StatusOr<TraitDerives> trait_derives = GetTraitDerives(*record_decl);

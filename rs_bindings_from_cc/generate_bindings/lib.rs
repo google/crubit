@@ -1032,6 +1032,15 @@ fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
                             .clone(),
                         }
                     }
+                    UniformReprTemplateType::StdAtomic { element_type } => {
+                        UniformReprTemplateType::StdAtomic {
+                            element_type: all_static_lifetimes_internal(Rc::new(
+                                element_type.clone(),
+                            ))
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
                     UniformReprTemplateType::AbslSpan {
                         is_const,
                         include_lifetime,

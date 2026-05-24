@@ -408,6 +408,10 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     ..
                 }) => Some(raw_element_type.clone()),
                 Some(ir::TemplateSpecialization {
+                    kind: ir::TemplateSpecializationKind::StdAtomic { raw_element_type, .. },
+                    ..
+                }) => Some(raw_element_type.clone()),
+                Some(ir::TemplateSpecialization {
                     kind: ir::TemplateSpecializationKind::StdUniquePtr { raw_element_type, .. },
                     ..
                 }) => Some(raw_element_type.clone()),

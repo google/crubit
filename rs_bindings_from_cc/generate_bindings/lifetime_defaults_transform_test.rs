@@ -1429,3 +1429,34 @@ fn test_static_lifetime_is_not_abstracted() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_lifetime_defaults_std_atomic() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+        namespace std { template <typename T> struct atomic {}; }
+        void f(std::atomic<int*>& a);
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                       identifier: "a", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
