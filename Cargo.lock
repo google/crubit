@@ -144,7 +144,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -833,6 +833,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "protobuf"
+version = "3.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d65a1d4ddae7d8b5de68153b48f6aa3bba8cb002b243dbdbc55a5afbc98f99f4"
+dependencies = [
+ "once_cell",
+ "protobuf-support",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "protobuf-support"
+version = "3.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e36c2f31e0a47f9280fb347ef5e461ffcd2c52dd520d8e216b52f93b0b0d7d6"
+dependencies = [
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -945,8 +965,18 @@ version = "0.0.0"
 dependencies = [
  "error_report",
  "ffi_types",
+ "protobuf",
  "rs_bindings_from_cc_database",
  "rs_bindings_from_cc_generate_bindings",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_cc_api_ffi"
+version = "0.0.0"
+dependencies = [
+ "ffi_types",
+ "protobuf",
+ "rs_bindings_from_cc_cc_api",
 ]
 
 [[package]]
@@ -1489,13 +1519,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "rs_bindings_from_cc_src_code_gen_ffi_sys"
+version = "0.0.0"
+dependencies = [
+ "cc_ffi_types_sys",
+ "crubit_build",
+]
+
+[[package]]
 name = "rs_bindings_from_cc_src_code_gen_sys"
 version = "0.0.0"
 dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
- "rs_bindings_from_cc_cc_api",
+ "rs_bindings_from_cc_cc_api_ffi",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_src_code_gen_ffi_sys",
 ]
 
 [[package]]
@@ -1661,11 +1700,31 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
+dependencies = [
+ "thiserror-impl 1.0.69",
+]
+
+[[package]]
+name = "thiserror"
 version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 2.0.18",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

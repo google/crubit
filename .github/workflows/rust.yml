@@ -31,6 +31,7 @@ jobs:
         --exclude '*_sys'
         --exclude=rs_bindings_from_cc
         --exclude=rs_bindings_from_cc_cc_api
+        --exclude=rs_bindings_from_cc_cc_api_ffi
         --exclude=rs_bindings_from_cc_ir_matchers
         --exclude=rs_bindings_from_cc_ir_testing
         --exclude=rs_bindings_from_cc_multiplatform_ir_testing

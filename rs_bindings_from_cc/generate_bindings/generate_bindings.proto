@@ -2,18 +2,22 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-edition = "2024";
+syntax = "proto3";
 
-package rs_bindings_from_cc.generate_bindings;
+package crubit.rs_bindings_from_cc.generate_bindings;
 
 // Parameters for invoking the Rust (backend) binding generator.
 message GenerateBindingsRequest {
   // Serialized JSON representation of the intermediate representation
   // produced by the C++ importer.
   string json = 1;
+  // Format string for the path to the Crubit support libraries.
   string crubit_support_path_format = 2;
+  // Path to the clang-format executable.
   string clang_format_exe_path = 3;
+  // Path to the rustfmt executable.
   string rustfmt_exe_path = 4;
+  // Path to the rustfmt configuration file.
   string rustfmt_config_path = 5;
   // When true, the generator will populate the `error_report` field in the
   // response with a JSON-formatted diagnostic report.

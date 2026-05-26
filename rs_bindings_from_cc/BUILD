@@ -515,14 +515,27 @@ multiplatform_rust_test(
 )
 
 cc_library(
+    name = "src_code_gen_ffi",
+    srcs = ["src_code_gen_ffi.cc"],
+    hdrs = ["src_code_gen_ffi.h"],
+    deps = [
+        "//common:cc_ffi_types",
+        "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_library(
     name = "src_code_gen",
     srcs = ["src_code_gen.cc"],
     hdrs = ["src_code_gen.h"],
     deps = [
         ":cc_ir",
+        ":src_code_gen_ffi",
         "//common:cc_ffi_types",
         "//common:status_macros",
-        "//rs_bindings_from_cc/generate_bindings:cc_api",  # buildcleaner: keep
+        "//rs_bindings_from_cc/generate_bindings:cc_api_ffi",  # buildcleaner: keep
+        "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
