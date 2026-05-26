@@ -67,8 +67,8 @@ TEST(TupleStructsTest, TupleStructTwoPrivateArgs) {
 }
 
 TEST(TupleStructsTest, TupleStructWithFieldTupleTypeIsNotConstructableFromArg) {
-  static_assert(!std::is_constructible_v<TupleStructWithTupleFieldType,
-                                         std::tuple<int32_t, int32_t>>);
+  static_assert(std::is_constructible_v<TupleStructWithTupleFieldType,
+                                        std::tuple<int32_t, int32_t>>);
   std::tuple<int32_t, int32_t> tuple(49, 144);
   auto arg = TupleStructWithTupleFieldType::create(tuple);
   std::tuple<int32_t, int32_t> tuple_from_arg = arg.get_arg();

@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "support/rs_std/rs_alloc.h"
 
 namespace crubit {
 namespace {
@@ -100,6 +101,97 @@ TEST(TuplesTest, TupleStruct) {
 
   EXPECT_FALSE(HasBadTupleMethod<tuples::TupleStruct>)
       << "Tuples cannot be bridged to std::tuple except when used by value";
+}
+
+TEST(TuplesTest, GetsTuple) {
+  auto res = tuples::GetsTuple::new_(42);
+  std::tuple<uint32_t, uint32_t> t = std::move(res.value);
+  EXPECT_EQ(std::get<0>(t), 42);
+  EXPECT_EQ(std::get<1>(t), 42);
+}
+
+TEST(TuplesTest, NestedTupleStruct) {
+  auto res = tuples::NestedTupleStruct::new_(42);
+  std::tuple<rs_std::Tuple<rs_std::Tuple<uint32_t, uint32_t>, uint32_t>,
+             uint32_t>
+      t1 = std::move(res.in_tuple1);
+  EXPECT_EQ(std::get<1>(t1), 42);
+  std::tuple<uint32_t,
+             rs_std::Tuple<uint32_t, rs_std::Tuple<uint32_t, uint32_t>>>
+      t2 = std::move(res.in_tuple2);
+  EXPECT_EQ(std::get<0>(t2), 42);
+}
+
+TEST(TuplesTest, CopyNoDefaultTuple) {
+  auto res = tuples::CopyNoDefaultTuple::new_(42);
+  std::tuple<tuples::CopyNoDefault, uint8_t> t1 = std::move(res.in_tuple1);
+  EXPECT_EQ(std::get<0>(t1).val, 42);
+  std::tuple<uint8_t, tuples::CopyNoDefault> t2 = std::move(res.in_tuple2);
+  EXPECT_EQ(std::get<1>(t2).val, 42);
+}
+
+TEST(TuplesTest, CloneNoDefaultTuple) {
+  auto res = tuples::CloneNoDefaultTuple::new_(42);
+  std::tuple<tuples::CloneNoDefault, uint8_t> t1 = std::move(res.in_tuple1);
+  EXPECT_EQ(std::get<0>(t1).val, 42);
+  std::tuple<uint8_t, tuples::CloneNoDefault> t2 = std::move(res.in_tuple2);
+  EXPECT_EQ(std::get<1>(t2).val, 42);
+}
+
+TEST(TuplesTest, HasDefaultTuple) {
+  auto res = tuples::HasDefaultTuple::new_("hello");
+  std::tuple<tuples::HasDefault, uint8_t> t1 = std::move(res.in_tuple1);
+  EXPECT_EQ(std::get<0>(t1).val().to_string_view(), "hello");
+  std::tuple<uint8_t, tuples::HasDefault> t2 = std::move(res.in_tuple2);
+  EXPECT_EQ(std::get<1>(t2).val().to_string_view(), "hello");
+}
+
+TEST(TuplesTest, ConstructAndPassTupleCopyNoDefault) {
+  rs_std::Tuple<tuples::CopyNoDefault, std::uint8_t> res(
+      std::make_tuple(tuples::CopyNoDefault::new_(42), std::uint8_t{10}));
+  EXPECT_EQ(tuples::take_tuple_copy_no_default_1(res), 42);
+}
+
+TEST(TuplesTest, ConstructAndPassTupleCloneNoDefault) {
+  rs_std::Tuple<std::uint8_t, tuples::CloneNoDefault> res(
+      std::make_tuple(std::uint8_t{10}, tuples::CloneNoDefault::new_(42)));
+  EXPECT_EQ(tuples::take_tuple_clone_no_default_2(res), 42);
+}
+
+TEST(TuplesTest, ConstructAndPassTupleHasDefault) {
+  rs_std::Tuple<tuples::HasDefault, std::uint8_t> res(std::make_tuple(
+      tuples::HasDefault::new_("halo strategy"), std::uint8_t{15}));
+  EXPECT_EQ(tuples::take_tuple_has_default(&res), "halo strategy");
+  std::tuple<tuples::HasDefault, std::uint8_t> t = std::move(res);
+  EXPECT_EQ(std::get<0>(t).val().to_string_view(), "halo strategy");
+}
+
+TEST(TuplesTest, ConstructAndPassCppMovedTupleHasDefault) {
+  rs_std::Tuple<tuples::HasDefault, std::uint8_t> res(std::make_tuple(
+      tuples::HasDefault::new_("halo strategy"), std::uint8_t{15}));
+  std::tuple<tuples::HasDefault, std::uint8_t> t = std::move(res);
+  EXPECT_EQ(std::get<0>(t).val().to_string_view(), "halo strategy");
+  // This should be the default empty string, after C++ move.
+  EXPECT_EQ(tuples::take_tuple_has_default(&res), "");
+}
+
+TEST(TuplesTest, OptionInTupleRef) {
+  rs_std::Tuple<rs_std::Option<std::int32_t>> res(
+      std::make_tuple(rs_std::Option<std::int32_t>(42)));
+  std::optional<int32_t> opt = tuples::return_option_in_tuple_ref(res);
+  EXPECT_EQ(opt, 42);
+}
+
+TEST(TuplesTest, StructWithOptionTuple) {
+  auto s = tuples::StructWithOptionTuple::new_(42);
+  std::tuple<rs_std::Option<int32_t>,
+             rs_std::Result<int32_t, rs::alloc::string::String>>
+      t = std::move(s.opt_tuple);
+  EXPECT_EQ(std::optional<int32_t>(std::move(std::get<0>(t))), 42);
+  rs_std::Result<int32_t, rs::alloc::string::String> res =
+      std::move(std::get<1>(t));
+  EXPECT_TRUE(res.has_value());
+  EXPECT_EQ(res.value(), 42);
 }
 
 }  // namespace

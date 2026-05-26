@@ -462,3 +462,13 @@ unsafe extern "C" fn __crubit_thunk_get_uarg(
 }
 const _: () =
     assert!(::core::mem::offset_of!(::tuple_structs_golden::TupleStructWithTupleFieldType, 0) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
+    }
+}

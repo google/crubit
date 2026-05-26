@@ -20,6 +20,9 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
 )
 
 golden_test(
@@ -41,6 +44,7 @@ crubit_cc_test(
     srcs = ["tuples_test.cc"],
     deps = [
         ":tuples_cc_api",
+        "//support/rs_std:rs_alloc",
         "//testing/base/public:gunit_main",
     ],
 )

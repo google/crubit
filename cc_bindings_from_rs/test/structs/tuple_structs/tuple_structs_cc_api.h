@@ -819,8 +819,26 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
+ public:
+  // Default::default
+  Tuple();
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Tuple(const Tuple&) = default;
+  Tuple& operator=(const Tuple&) = default;
+  Tuple(Tuple&&) = default;
+  Tuple& operator=(Tuple&&) = default;
+
+  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
+  ~Tuple() = default;
+  operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
+
  private:
-  unsigned char __storage[8];
+  unsigned char storage_[8];
 };
 #endif
 
@@ -1519,6 +1537,39 @@ inline void TupleStructWithTupleFieldType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithTupleFieldType, __field0));
 }
 }  // namespace tuple_structs
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_default(
+    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
+}
+inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
+  __crubit_internal::__crubit_thunk_default(this);
+}
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
+    std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
+  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
+                    std::move(std::get<0>(tuple)));
+  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
+                    std::move(std::get<1>(tuple)));
+}
+inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
+    ::std::int32_t, ::std::int32_t>() && noexcept {
+  return std::tuple<::std::int32_t, ::std::int32_t>(
+      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)),
+      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4)));
+}
+
+#endif
 
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_TUPLE_STRUCTS_TUPLE_STRUCTS_GOLDEN

@@ -30,7 +30,7 @@ use rustc_middle::ty::layout::PrimitiveExt;
 use rustc_middle::ty::Flags;
 #[rustversion::since(2026-04-20)]
 use rustc_middle::ty::Unnormalized;
-use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt};
+use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
 use std::collections::HashSet;
 use std::rc::Rc;
@@ -772,8 +772,106 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
     }
 }
 
+struct TupleApiGenerator<'a, 'tcx> {
+    db: &'a BindingsGenerator<'tcx>,
+    element_tys: Vec<FormattedTy<'tcx>>,
+    self_ty: Ty<'tcx>,
+    layout: rustc_abi::Layout<'tcx>,
+}
+
+impl<'tcx> TupleApiGenerator<'_, 'tcx> {
+    fn api_snippets(self) -> ApiSnippets<'tcx> {
+        let mut prereqs = CcPrerequisites::default();
+        prereqs.includes.insert(CcInclude::tuple());
+        prereqs.includes.insert(CcInclude::utility());
+
+        let element_cc_tys: Vec<_> =
+            self.element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect();
+        let full_self_ty = quote! { rs_std::Tuple<#(#element_cc_tys),*> };
+
+        let mut construct_elements = quote! {};
+        let mut convert_elements = Vec::new();
+        for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
+            let offset = Literal::u64_unsuffixed(self.layout.fields().offset(i).bytes());
+            let element_ptr = quote! { reinterpret_cast<#element_cc_ty*>(storage_ + #offset) };
+            let i_idx = Literal::usize_unsuffixed(i);
+
+            construct_elements.extend(quote! {
+                std::construct_at(#element_ptr, std::move(std::get<#i_idx>(tuple)));
+            });
+            convert_elements.push(quote! {
+                    std::move(*#element_ptr)
+            });
+        }
+
+        let needs_drop = self.self_ty.needs_drop(self.db.tcx(), TypingEnv::fully_monomorphized());
+
+        let (drop_decl, drop_impl) = if needs_drop {
+            let mut drop_elements = quote! {};
+            for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
+                let offset = Literal::u64_unsuffixed(self.layout.fields().offset(i).bytes());
+                drop_elements.extend(quote! {
+                    std::destroy_at(reinterpret_cast<#element_cc_ty*>(storage_ + #offset));
+                });
+            }
+            (
+                quote! { ~Tuple(); },
+                quote! {
+                    inline #full_self_ty::~Tuple() {
+                        #drop_elements
+                    }
+                },
+            )
+        } else {
+            (quote! { ~Tuple() = default; }, quote! {})
+        };
+
+        let all_elements_cpp_movable = self.element_tys.iter().all(|element| {
+            self.db.has_move_ctor_and_assignment_operator(None, element.ty).is_some()
+        });
+
+        let (std_tuple_main_api_ctor, std_tuple_main_api_conv, std_tuple_cc_details) =
+            if all_elements_cpp_movable {
+                (
+                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept; },
+                    quote! { operator std::tuple<#(#element_cc_tys),*>() && noexcept; },
+                    quote! {
+                        inline #full_self_ty::Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept {
+                            #construct_elements
+                        } __NEWLINE__
+                        inline #full_self_ty::operator std::tuple<#(#element_cc_tys),*>() && noexcept {
+                            return std::tuple<#(#element_cc_tys),*>(#(#convert_elements),*);
+                        }
+                    },
+                )
+            } else {
+                (
+                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) = delete; },
+                    quote! { operator std::tuple<#(#element_cc_tys),*>() && = delete; },
+                    quote! {},
+                )
+            };
+
+        ApiSnippets {
+            main_api: CcSnippet {
+                tokens: quote! {
+                    #std_tuple_main_api_ctor
+                    #drop_decl
+                    #std_tuple_main_api_conv
+                },
+                prereqs,
+            },
+            cc_details: CcSnippet::new(quote! {
+                #std_tuple_cc_details __NEWLINE__
+                #drop_impl __NEWLINE__
+            }),
+            ..Default::default()
+        }
+    }
+}
+
 fn specialize_tuple<'tcx>(
-    _db: &BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     rs_std: &RsStdTemplateSpecialization<'tcx>,
     element_tys: Vec<FormattedTy<'tcx>>,
 ) -> ApiSnippets<'tcx> {
@@ -782,12 +880,49 @@ fn specialize_tuple<'tcx>(
     let element_cc_tys =
         element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect_vec();
 
+    let tuple_api = TupleApiGenerator {
+        db,
+        element_tys: element_tys.clone(),
+        self_ty: rs_std.self_ty_rs,
+        layout,
+    };
+
     let rs_fully_qualified_name = {
         let element_rs_tys = element_tys.iter().map(|ty| &ty.for_rs);
         quote! { (#(#element_rs_tys,)*) }
     };
     let cc_fully_qualified_name = quote! { ::rs_std::Tuple<#(#element_cc_tys),*> };
 
+    let core = Rc::new(database::AdtCoreBindings {
+        def_id: None,
+        keyword: quote! { struct },
+        cc_short_name: format_ident!("Tuple"),
+        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
+        cc_fully_qualified_name: cc_fully_qualified_name.clone(),
+        self_ty: rs_std.self_ty_rs,
+        alignment_in_bytes: layout.align().abi.bytes(),
+        size_in_bytes: layout.size().bytes(),
+    });
+
+    let copy_ctor_and_assignment_snippets =
+        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+    let move_ctor_and_assignment_snippets = db
+        .generate_move_ctor_and_assignment_operator(core.clone())
+        .unwrap_or_else(|err| err.explicitly_deleted);
+    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
+    let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
+
+    let ApiSnippets { main_api, cc_details, rs_details } = [
+        default_ctor_snippets,
+        copy_ctor_and_assignment_snippets,
+        move_ctor_and_assignment_snippets,
+        relocating_ctor_snippets,
+        tuple_api.api_snippets(),
+    ]
+    .into_iter()
+    .collect();
+
+    let main_api_tokens = main_api.into_tokens(&mut prereqs);
     let qualified_name = cc_fully_qualified_name.to_string();
     let name = escape_non_identifier_chars(&qualified_name);
     let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
@@ -802,13 +937,28 @@ fn specialize_tuple<'tcx>(
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
         rs_std::Tuple<#(#element_cc_tys),*> { __NEWLINE__
+        public:
+            #main_api_tokens __NEWLINE__
         private:
-            unsigned char __storage[#size_literal]; __NEWLINE__
+            unsigned char storage_[#size_literal]; __NEWLINE__
         }; __NEWLINE__
         __HASH_TOKEN__ endif __NEWLINE__
     };
 
-    CcSnippet { tokens: main_api_tokens, prereqs }.into_main_api()
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
+    let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
+    let cc_details_tokens = quote! {
+        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
+        __HASH_TOKEN__ define #guard_name __NEWLINE__
+        #cc_details_tokens
+        __HASH_TOKEN__ endif __NEWLINE__
+    };
+
+    ApiSnippets {
+        main_api: CcSnippet { tokens: main_api_tokens, prereqs },
+        cc_details: CcSnippet::new(cc_details_tokens),
+        rs_details,
+    }
 }
 
 fn specialize_result<'tcx>(

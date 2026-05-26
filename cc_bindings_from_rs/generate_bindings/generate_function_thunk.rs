@@ -62,6 +62,17 @@ fn is_drop_not_default<'tcx>(tcx: ty::TyCtxt<'tcx>, ty: ty::Ty<'tcx>) -> bool {
     !does_type_implement_trait(tcx, ty, trait_id, [])
 }
 
+/// Returns true for types that appear as both bridged types and layout-compatible types.
+///
+/// For example, `Option<T>` will be bridged as `std::optional<T>` in function signatures, but
+/// appears as `rs_std::Option<T>` in struct fields.
+fn is_bridged_layout_compat_type<'tcx>(db: &BindingsGenerator<'tcx>, ret_ty: ty::Ty<'tcx>) -> bool {
+    ret_ty
+        .ty_adt_def()
+        .is_some_and(|adt| matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option)))
+        || ret_ty.opt_tuple_fields().is_some_and(|fields| !fields.is_empty())
+}
+
 /// Returns a C ABI-compatible C type to pass a [inner_ty; _].
 ///
 /// Layout-compatible arrays are passed through memory.
@@ -134,12 +145,7 @@ pub fn generate_thunk_decl<'tcx>(
     // TODO: b/ 459482188 - The order of this check must align with the order in `cc_return_value_from_c_abi`.
     // We should centralize this logic so that the order exists in a singular location used by both
     // places.
-    let thunk_ret_type = if is_constructor
-        && sig_mid
-            .output()
-            .ty_adt_def()
-            .is_some_and(|adt| matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option)))
-    {
+    let thunk_ret_type = if is_constructor && is_bridged_layout_compat_type(db, sig_mid.output()) {
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
         quote! { void }
     } else if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
@@ -559,10 +565,7 @@ pub fn generate_thunk_impl<'tcx>(
         let rs_return_value_ident = format_ident!("__rs_return_value");
         thunk_return_type = quote! { () };
 
-        let return_ptr_type = if is_constructor
-            && sig.output().ty_adt_def().is_some_and(|adt| {
-                matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option))
-            }) {
+        let return_ptr_type = if is_constructor && is_bridged_layout_compat_type(db, sig.output()) {
             quote! { *mut core::ffi::c_void }
         } else if let Some(BridgedType::Composable(_)) = output_is_bridged {
             // Composable bridging writes its Crubit ABI form in an unsigned char array.
