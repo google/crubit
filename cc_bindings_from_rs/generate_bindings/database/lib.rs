@@ -12,7 +12,7 @@ mod adt_core_bindings;
 pub use adt_core_bindings::{AdtCoreBindings, CopyCtorStyle, MoveCtorStyle, NoMoveOrAssign};
 pub mod cpp_type;
 mod db;
-pub use db::BindingsGenerator;
+pub use db::{BindingsGenerator, CppTypeSpecialization};
 mod fine_grained_feature;
 pub use fine_grained_feature::FineGrainedFeature;
 mod fully_qualified_name;

@@ -25,6 +25,19 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::rc::Rc;
 
+/// A specialization of a C++ type.
+///
+/// For example, `std::vector<int>` and `std::vector<double>` are two different
+/// specializations of the `std::vector` type.
+pub struct CppTypeSpecialization<'tcx> {
+    /// The Rust type that the specialization is for.
+    pub ty: Ty<'tcx>,
+    /// The C++ spelling of the type.
+    pub cpp_type: Rc<str>,
+    /// The include path of the type, if required.
+    pub include_path: Option<Rc<str>>,
+}
+
 memoized::query_group! {
   pub struct BindingsGenerator<'tcx> {
       #[input]
@@ -104,6 +117,11 @@ memoized::query_group! {
 
       #[input]
       fn ignore_symbols_from_files(&self) -> Rc<HashSet<PathBuf>>;
+
+      /// Computes all specializations specified in the crate.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:specializations
+      fn specializations(&self) -> Rc<[CppTypeSpecialization<'tcx>]>;
 
       /// The `CrateNum` of the crate that the bindings should be generated for.
       /// This will be `LOCAL_CRATE` if no `source_crate_name` was provided.

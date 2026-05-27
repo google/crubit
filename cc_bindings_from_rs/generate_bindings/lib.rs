@@ -47,7 +47,9 @@ use database::{
     rename_clang_builtin_macros, AdtCoreBindings, ExportedPath, FineGrainedFeature,
     FullyQualifiedName, NoMoveOrAssign, PublicPaths, TypeLocation, UnqualifiedName,
 };
-pub use database::{BindingsGenerator, CopyCtorStyle, IncludeGuard, MoveCtorStyle};
+pub use database::{
+    BindingsGenerator, CopyCtorStyle, CppTypeSpecialization, IncludeGuard, MoveCtorStyle,
+};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -188,6 +190,61 @@ fn source_crate_num(db: &BindingsGenerator<'_>) -> CrateNum {
     }
 }
 
+fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpecialization<'tcx>]> {
+    let tcx = db.tcx();
+    let mut specializations = Vec::new();
+
+    let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
+    for (adt_or_alias_def_id, paths) in defs_in_crate {
+        specializations.extend(
+            std::iter::once(adt_or_alias_def_id)
+                .chain(
+                    paths
+                        .into_extern_aliases()
+                        .into_iter()
+                        .filter_map(|path| path.type_alias_def_id),
+                )
+                .filter_map(|def_id| {
+                    let rustc_hir::def::DefKind::TyAlias = tcx.def_kind(def_id) else {
+                        return None;
+                    };
+                    let attrs = crubit_attr::get_attrs(tcx, def_id)
+                        .map_err(|err| {
+                            db.fatal_errors().report(&format!(
+                                "Failed to parse Crubit attributes for `{}`: {}",
+                                tcx.def_path_str(def_id),
+                                err
+                            ));
+                        })
+                        .ok()?;
+                    if !attrs.specializes_cpp_type {
+                        return None;
+                    }
+                    let Some(cpp_type) = attrs.cpp_type else {
+                        let alias_name = tcx.def_path_str(def_id);
+                        db.fatal_errors().report(&format!(
+                            "Type alias `{alias_name}` marked with `specializes_cpp_type` must have \
+                                `cpp_type` attribute"
+                        ));
+                        return None;
+                    };
+                    let ty = crate::normalize_ty(
+                        tcx,
+                        tcx.param_env(def_id),
+                        tcx.type_of(def_id).instantiate_identity(),
+                    );
+                    let ty = tcx.erase_and_anonymize_regions(ty);
+                    Some(CppTypeSpecialization {
+                        ty,
+                        cpp_type: Rc::from(cpp_type.as_str()),
+                        include_path: attrs.include_path.map(|s| Rc::from(s.as_str())),
+                    })
+                }),
+        );
+    }
+    specializations.into()
+}
+
 pub fn new_database<'db>(
     tcx: TyCtxt<'db>,
     source_crate_name: Option<Rc<str>>,
@@ -223,6 +280,7 @@ pub fn new_database<'db>(
         no_thunk_name_mangling,
         h_out_include_guard,
         ignore_symbols_from_files,
+        specializations,
         source_crate_num,
         support_header,
         repr_attrs_from_db,
