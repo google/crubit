@@ -54,6 +54,10 @@ pub struct CrubitAttrs {
     ///   #[doc="CRUBIT_ANNOTATE: include_path=<string>]`
     pub include_path: Option<Symbol>,
 
+    /// Whether the annotated item is a specialization of another generic
+    /// layout-compatible type. For example, `StatusOr<()>` mapping to C++ `absl::Status`.
+    pub specializes_cpp_type: bool,
+
     /// The C++ name of the item. This allows us to rename Rust function names
     /// that are not C++-compatible like `new`.
     ///
@@ -135,8 +139,9 @@ impl CrubitAttrs {
     pub const BRIDGE_ABI_RUST: &'static str = "bridge_abi_rust";
     pub const BRIDGE_ABI_CPP: &'static str = "bridge_abi_cpp";
     pub const MUST_BIND: &'static str = "must_bind";
+    pub const SPECIALIZES_CPP_TYPE: &'static str = "specializes_cpp_type";
 
-    fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
+    pub fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
         Ok(match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type,
             CrubitAttrs::CPP_NAME => self.cpp_name,
@@ -148,6 +153,7 @@ impl CrubitAttrs {
             CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp,
             // MUST_BIND is a boolean attribute, so it does not have a Symbol value.
             CrubitAttrs::MUST_BIND => self.must_bind.then_some(EMPTY_SYMBOL),
+            CrubitAttrs::SPECIALIZES_CPP_TYPE => self.specializes_cpp_type.then_some(EMPTY_SYMBOL),
             _ => bail!("Invalid attribute name: \"{name}\""),
         })
     }
@@ -163,6 +169,7 @@ impl CrubitAttrs {
             CrubitAttrs::BRIDGE_ABI_RUST => self.bridge_abi_rust = symbol,
             CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp = symbol,
             CrubitAttrs::MUST_BIND => self.must_bind = true,
+            CrubitAttrs::SPECIALIZES_CPP_TYPE => self.specializes_cpp_type = true,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())

@@ -180,6 +180,33 @@ pub fn cpp_layout_equivalent(attribute: TokenStream, input: TokenStream) -> Toke
     })
 }
 
+/// Marks a Rust type alias as a specialization of a generic type for C++.
+///
+/// This annotation accepts two string arguments:
+/// * `cpp_type`: The fully-qualified name of the C++ type for this specialization.
+/// * `include_path`: The path to the header file that defines the C++ type.
+///
+/// Example:
+/// ```rs
+/// #[crubit_annotate::cpp_specialization(
+///     cpp_type="::std::string",
+///     include_path="<string>",
+/// )]
+/// pub type StringAlias = MyGenericString<()>;
+/// ```
+#[proc_macro_attribute]
+pub fn cpp_specialization(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        let attribute_args = parse_macro_input!(attribute as KeyValueList);
+        if let Err(error) = attribute_args.check_keys(&["cpp_type", "include_path"]) {
+            return TokenStream::from(error.into_compile_error());
+        }
+        let mut tokens = attribute_args.to_doc_comments();
+        tokens.extend(key_value_to_doc_comment("specializes_cpp_type", ""));
+        tokens
+    })
+}
+
 /// Marks a Rust type as being by-value convertible to a particular pre-defined C++ type.
 ///
 /// This annotation prevents Crubit from generating a C++ type for the Rust type,
