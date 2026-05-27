@@ -67,10 +67,14 @@ fn is_drop_not_default<'tcx>(tcx: ty::TyCtxt<'tcx>, ty: ty::Ty<'tcx>) -> bool {
 /// For example, `Option<T>` will be bridged as `std::optional<T>` in function signatures, but
 /// appears as `rs_std::Option<T>` in struct fields.
 fn is_bridged_layout_compat_type<'tcx>(db: &BindingsGenerator<'tcx>, ret_ty: ty::Ty<'tcx>) -> bool {
+    let is_nonempty_tuple = || {
+        let ty::TyKind::Tuple(fields) = ret_ty.kind() else { return false };
+        !fields.is_empty()
+    };
     ret_ty
         .ty_adt_def()
         .is_some_and(|adt| matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option)))
-        || ret_ty.opt_tuple_fields().is_some_and(|fields| !fields.is_empty())
+        || is_nonempty_tuple()
 }
 
 /// Returns a C ABI-compatible C type to pass a [inner_ty; _].
