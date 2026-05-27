@@ -70,11 +70,6 @@ impl Default for PrivatePointer {
     }
 }
 
-#[inline(always)]
-pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
-    unsafe { crate::detail::__rust_thunk___Z19DerefPrivatePointer14PrivatePointer(&mut p) }
-}
-
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
@@ -152,6 +147,11 @@ pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::ffi_11::c_int
     unsafe { crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p) }
 }
 
+#[inline(always)]
+pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
+    unsafe { crate::detail::__rust_thunk___Z19DerefPrivatePointer14PrivatePointer(&mut p) }
+}
+
 /// # Safety
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
@@ -184,9 +184,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointerC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
-            p: &mut crate::PrivatePointer,
-        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointerC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -197,6 +194,9 @@ mod detail {
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z18DerefPublicPointer13PublicPointer(
             p: &mut crate::PublicPointer,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
+            p: &mut crate::PrivatePointer,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(
             p: &mut crate::TransitivePublicPointer,

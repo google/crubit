@@ -35,11 +35,6 @@ extern "C" void __rust_thunk___ZN14PrivatePointerC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" int __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
-    class PrivatePointer* p) {
-  return DerefPrivatePointer(std::move(*p));
-}
-
 static_assert(CRUBIT_SIZEOF(struct TransitivePublicPointer) == 16);
 static_assert(alignof(struct TransitivePublicPointer) == 8);
 static_assert(CRUBIT_OFFSET_OF(pub, struct TransitivePublicPointer) == 0);
@@ -67,6 +62,13 @@ extern "C" int __rust_thunk___Z18DerefPublicPointer13PublicPointer(
 }
 
 static_assert((int (*)(struct PublicPointer)) & ::DerefPublicPointer);
+
+extern "C" int __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
+    class PrivatePointer* p) {
+  return DerefPrivatePointer(std::move(*p));
+}
+
+static_assert((int (*)(class PrivatePointer)) & ::DerefPrivatePointer);
 
 extern "C" int
 __rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(

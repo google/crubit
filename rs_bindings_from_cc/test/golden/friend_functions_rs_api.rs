@@ -44,6 +44,15 @@ pub fn visible_val(mut __param_0: crate::SomeClass) {
     unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(&mut __param_0) }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__param_0`: raw pointer
+#[inline(always)]
+pub unsafe fn multiple_declarations(__param_0: *const crate::SomeClass) -> ::ffi_11::c_int {
+    unsafe { crate::detail::__rust_thunk___Z21multiple_declarationsRK9SomeClass(__param_0) }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -52,6 +61,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
             __param_0: &mut crate::SomeClass,
         );
+        pub(crate) unsafe fn __rust_thunk___Z21multiple_declarationsRK9SomeClass(
+            __param_0: *const crate::SomeClass,
+        ) -> ::ffi_11::c_int;
     }
 }
 

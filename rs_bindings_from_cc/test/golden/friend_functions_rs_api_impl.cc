@@ -30,4 +30,11 @@ extern "C" void __rust_thunk___Z11visible_val9SomeClass(
   visible_val(std::move(*__param_0));
 }
 
+extern "C" int __rust_thunk___Z21multiple_declarationsRK9SomeClass(
+    class SomeClass const* __param_0) {
+  return multiple_declarations(*__param_0);
+}
+
+static_assert((int (*)(class SomeClass const&)) & ::multiple_declarations);
+
 #pragma clang diagnostic pop

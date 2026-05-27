@@ -45,12 +45,15 @@ std::optional<IR::Item> FriendDeclImporter::Import(
             "DeclContext was unexpectedly not a CXXRecordDecl")});
   }
 
-  // If `!is_redeclared_outside_of_friend_decl`, then we need to emit a new item
-  // to support the following case from
-  // https://en.cppreference.com/w/cpp/language/adl: "ADL can find a friend
-  // function (typically, an overloaded operator) that is defined entirely
-  // within a class or class template, even if it was never declared at
-  // namespace level."
+  bool redeclared_outside = false;
+  for (const auto* redecl : named_decl->redecls()) {
+    if (redecl != named_decl && !redecl->getLexicalDeclContext()->isRecord()) {
+      redeclared_outside = true;
+      break;
+    }
+  }
+  if (redeclared_outside) return std::nullopt;
+
   std::optional<IR::Item> item = ictx_.ImportDecl(named_decl);
   if (!item.has_value()) return std::nullopt;
   if (std::holds_alternative<UnsupportedItem>(*item)) return std::nullopt;

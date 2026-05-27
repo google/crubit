@@ -476,6 +476,20 @@ const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
     CHECK(canonical != nullptr);
     return canonical;
   }
+  if (const auto* function_decl = llvm::dyn_cast<clang::FunctionDecl>(decl)) {
+    if (llvm::isa<clang::CXXMethodDecl>(function_decl)) {
+      return function_decl->getCanonicalDecl();
+    }
+    const auto* canonical = function_decl->getCanonicalDecl();
+    if (canonical->getLexicalDeclContext()->isRecord()) {
+      for (const auto* redecl : function_decl->redecls()) {
+        if (!redecl->getLexicalDeclContext()->isRecord()) {
+          return redecl;
+        }
+      }
+    }
+    return canonical;
+  }
   return decl->getCanonicalDecl();
 }
 

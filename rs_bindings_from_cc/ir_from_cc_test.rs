@@ -3965,12 +3965,6 @@ fn test_function_redeclared_as_friend() {
     // The function should appear only once in IR items.  (This is a bit redundant
     // with the assert below, but double-checks that `...` didn't miss a Func
     // item.)
-    let functions = ir
-        .functions()
-        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("bar")))
-        .collect_vec();
-    assert_eq!(1, functions.len());
-    let function_id = functions[0].id;
 
     // There should only be a single Func item.
     //
@@ -3992,7 +3986,6 @@ fn test_function_redeclared_as_friend() {
                         ItemId(...),
                         ItemId(...),
                         ItemId(...),
-                        ItemId(#function_id),
                     ] ...
                     enclosing_item_id: None ...
                 }),
@@ -4006,12 +3999,30 @@ fn test_function_redeclared_as_friend() {
                     cc_name: "bar",
                     rs_name: "bar" ...
                     enclosing_item_id: None ...
-                    adl_enclosing_record: Some(ItemId(...)) ...
+                    adl_enclosing_record: None ...
                 }),
             ],
-            top_level_item_ids: map! { ... BazelLabel(#TESTING_TARGET): [ItemId(...)] ... }
+            top_level_item_ids: map! { ... BazelLabel(#TESTING_TARGET): [ItemId(...), ItemId(...)] ... }
         }
     );
+}
+
+#[gtest]
+fn test_friend_not_definition_not_redeclared() {
+    let ir = ir_from_cc(
+        r#"
+            class SomeClass final {
+              friend void some_friend_func();
+            };
+        "#,
+    )
+    .unwrap();
+
+    let functions = ir
+        .functions()
+        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("some_friend_func")))
+        .collect_vec();
+    assert_eq!(1, functions.len());
 }
 
 #[gtest]
