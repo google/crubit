@@ -578,7 +578,7 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl* decl) {
 
     // We remove comments attached to a child decl or that are within a child
     // decl.
-    if (auto raw_comment = ctx_.getRawCommentForDeclNoCache(decl)) {
+    if (auto raw_comment = ctx_.getRawCommentNoCache(decl)) {
       ordered_comments.erase(raw_comment->getBeginLoc());
     }
     if (decl->getLocation().isValid()) {
@@ -1294,7 +1294,7 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
   // This is going to be a heuristic that needs to be tuned over time.
 
   clang::SourceManager& sm = ctx_.getSourceManager();
-  clang::RawComment* raw_comment = ctx_.getRawCommentForDeclNoCache(decl);
+  clang::RawComment* raw_comment = ctx_.getRawCommentNoCache(decl);
 
   if (raw_comment == nullptr) {
     return {};
