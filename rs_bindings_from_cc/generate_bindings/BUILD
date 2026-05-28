@@ -14,18 +14,19 @@ load(
 proto_library(
     name = "generate_bindings_proto",
     srcs = ["generate_bindings.proto"],
-    visibility = ["//visibility:public"],
+    visibility = ["//:__subpackages__"],
+    deps = ["//rs_bindings_from_cc:ir_proto"],
 )
 
 cc_proto_library(
     name = "generate_bindings_cc_proto",
-    visibility = ["//visibility:public"],
+    visibility = ["//:__subpackages__"],
     deps = [":generate_bindings_proto"],
 )
 
 rust_proto_library(
     name = "generate_bindings_rust_proto",
-    visibility = ["//visibility:public"],
+    visibility = ["//:__subpackages__"],
     deps = [":generate_bindings_proto"],
 )
 

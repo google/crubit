@@ -104,6 +104,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling bindings generation via Protobuf IR rather than JSON IR.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "use_protobuf_ir",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["use_protobuf_ir"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set marking C++ classes with `[[gsl::Pointer]]` as unsafe.
 #
 # See crubit.rs-features#other

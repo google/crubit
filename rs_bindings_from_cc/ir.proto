@@ -1,0 +1,543 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+edition = "2024";
+
+package crubit.rs_bindings_from_cc.ir_proto.flat;
+
+message HeaderName {
+  string name = 1;
+}
+
+message LifetimeName {
+  string name = 1;
+  int32 id = 2;
+}
+
+message FormattedError {
+  string fmt = 1;
+  string message = 2;
+}
+
+enum SafetyAnnotation {
+  SAFETY_ANNOTATION_UNSPECIFIED = 0;
+  SAFETY_ANNOTATION_DISABLE_UNSAFE = 1;
+  SAFETY_ANNOTATION_UNSAFE = 2;
+  SAFETY_ANNOTATION_UNANNOTATED = 3;
+}
+
+enum PointerTypeKind {
+  POINTER_TYPE_KIND_UNSPECIFIED = 0;
+  L_VALUE_REF = 1;
+  R_VALUE_REF = 2;
+  NULLABLE = 3;
+  NON_NULL = 4;
+  OWNED = 5;
+}
+
+enum CallingConv {
+  CALLING_CONV_UNSPECIFIED = 0;
+  C_DECL = 1;
+  FAST_CALL = 2;
+  VECTOR_CALL = 3;
+  THIS_CALL = 4;
+  STD_CALL = 5;
+  MS_ABI = 6;
+}
+
+message CcType {
+  message Primitive {
+    string spelling = 1;
+  }
+  message PointerType {
+    PointerTypeKind kind = 1;
+    int32 lifetime = 2;
+    CcType pointee_type = 3;
+  }
+  message FuncPointer {
+    bool non_null = 1;
+    CallingConv call_conv = 2;
+    repeated CcType param_and_return_types = 3;
+  }
+
+  oneof variant {
+    Primitive primitive = 1;
+    PointerType pointer = 2;
+    FuncPointer func_pointer = 3;
+    int64 decl = 4;
+    FormattedError error = 5;
+  }
+
+  bool is_const = 6;
+  string unknown_attr = 7;
+  repeated string explicit_lifetimes = 8;
+}
+
+message Identifier {
+  string identifier = 1;
+}
+
+message IntegerConstant {
+  bool is_negative = 1;
+  int64 wrapped_value = 2;
+}
+
+message Operator {
+  string name = 1;
+}
+
+enum SpecialName {
+  SPECIAL_NAME_UNSPECIFIED = 0;
+  DESTRUCTOR = 1;
+  CONSTRUCTOR = 2;
+}
+
+message UnqualifiedIdentifier {
+  oneof identifier {
+    Identifier ident = 1;
+    Operator oper = 2;
+    SpecialName special_name = 3;
+  }
+}
+
+message FuncParam {
+  CcType type = 1;
+  Identifier identifier = 2;
+  string unknown_attr = 3;
+  repeated int32 clang_lifetime_capture_by = 4;
+  bool clang_lifetimebound = 5;
+}
+
+message InstanceMethodMetadata {
+  enum ReferenceQualification {
+    REFERENCE_QUALIFICATION_UNSPECIFIED = 0;
+    L_VALUE = 1;
+    R_VALUE = 2;
+    UNQUALIFIED = 3;
+  }
+  ReferenceQualification reference = 1;
+  bool is_const = 2;
+  bool is_virtual = 3;
+}
+
+message Func {
+  UnqualifiedIdentifier cc_name = 1;
+  UnqualifiedIdentifier rs_name = 2;
+  string unique_name = 3;
+  string owning_target = 4;
+  string doc_comment = 5;
+  string mangled_name = 6;
+  CcType return_type = 7;
+  repeated FuncParam params = 8;
+  repeated LifetimeName lifetime_params = 9;
+  bool is_inline = 10;
+  InstanceMethodMetadata instance_method_metadata = 11;
+  bool is_extern_c = 12;
+  bool is_noreturn = 13;
+  bool is_variadic = 14;
+  bool is_consteval = 15;
+  string nodiscard = 16;
+  string deprecated = 17;
+  string unknown_attr = 18;
+  bool has_c_calling_convention = 19;
+  bool is_member_or_descendant_of_class_template = 20;
+  SafetyAnnotation safety_annotation = 21;
+  string source_loc = 22;
+  int64 id = 23;
+  int64 enclosing_item_id = 24;
+  int64 adl_enclosing_record = 25;
+  bool must_bind = 26;
+  repeated string lifetime_inputs = 27;
+}
+
+enum AccessSpecifier {
+  ACCESS_SPECIFIER_UNSPECIFIED = 0;
+  PUBLIC = 1;
+  PROTECTED = 2;
+  PRIVATE = 3;
+}
+
+message StatusOrOptionalString {
+  oneof result {
+    string ok_value = 1;
+    string err = 2;
+  }
+}
+
+message Field {
+  Identifier rust_identifier = 1;
+  Identifier cpp_identifier = 2;
+  string doc_comment = 3;
+  CcType type = 4;
+  AccessSpecifier access = 5;
+  int64 offset = 6;
+  int64 size = 7;
+  StatusOrOptionalString unknown_attr = 8;
+  bool is_no_unique_address = 9;
+  bool is_bitfield = 10;
+  bool is_inheritable = 11;
+  string deprecated = 12;
+}
+
+enum SpecialMemberFunc {
+  SPECIAL_MEMBER_FUNC_UNSPECIFIED = 0;
+  TRIVIAL = 1;
+  NONTRIVIAL_MEMBERS = 2;
+  NONTRIVIAL_USER_DEFINED = 3;
+  UNAVAILABLE = 4;
+}
+
+message BaseClass {
+  int64 base_record_id = 1;
+  int64 offset = 2;
+}
+
+enum RecordType {
+  RECORD_TYPE_UNSPECIFIED = 0;
+  STRUCT = 1;
+  UNION = 2;
+  CLASS = 3;
+}
+
+message SizeAlign {
+  int64 size = 1;
+  int64 alignment = 2;
+}
+
+message TemplateArg {
+  oneof variant {
+    CcType type = 1;
+    bool bool_value = 2;
+    int64 int_value = 3;
+  }
+}
+
+message BridgeType {
+  message Bridge {
+    string rust_name = 1;
+    string abi_rust = 2;
+    string abi_cpp = 3;
+    repeated CcType template_args = 4;
+  }
+  message StdOptional {
+    CcType inner_type = 1;
+  }
+  message StdPair {
+    CcType first_type = 1;
+    CcType second_type = 2;
+  }
+  message StdString {}
+  message ProtoMessageBridge {
+    string rust_name = 1;
+  }
+  message Callable {
+    enum BackingType {
+      BACKING_TYPE_UNSPECIFIED = 0;
+      DYN_CALLABLE = 1;
+      ANY_INVOCABLE = 2;
+    }
+    enum FnTrait {
+      FN_TRAIT_UNSPECIFIED = 0;
+      FN = 1;
+      FN_MUT = 2;
+      FN_ONCE = 3;
+    }
+    BackingType backing_type = 1;
+    FnTrait fn_trait = 2;
+    CcType return_type = 3;
+    repeated CcType param_types = 4;
+  }
+
+  oneof variant {
+    Bridge bridge = 1;
+    StdOptional std_optional = 2;
+    StdPair std_pair = 3;
+    StdString std_string = 4;
+    ProtoMessageBridge proto_message_bridge = 5;
+    Callable callable = 6;
+  }
+}
+
+message Constant {
+  IntegerConstant value = 1;
+  Identifier cc_name = 2;
+  Identifier rs_name = 3;
+  string unique_name = 4;
+  int64 id = 5;
+  string owning_target = 6;
+  string source_loc = 7;
+  CcType type = 8;
+  string unknown_attr = 9;
+  int64 enclosing_item_id = 10;
+  bool must_bind = 11;
+  string deprecated = 12;
+  string doc_comment = 13;
+}
+
+message TemplateSpecialization {
+  message StdStringView {}
+  message StdWStringView {}
+  message StdVector {
+    CcType element_type = 1;
+  }
+  message StdUniquePtr {
+    CcType element_type = 1;
+  }
+  message AbslSpan {
+    CcType element_type = 1;
+  }
+  message C9Co {
+    CcType element_type = 1;
+  }
+  message NonSpecial {}
+
+  string defining_target = 1;
+  oneof kind {
+    StdStringView std_string_view = 2;
+    StdWStringView std_w_string_view = 3;
+    StdVector std_vector = 4;
+    StdUniquePtr std_unique_ptr = 5;
+    AbslSpan absl_span = 6;
+    C9Co c9_co = 7;
+    NonSpecial non_special = 8;
+  }
+}
+
+enum TraitImplPolarity {
+  TRAIT_IMPL_POLARITY_UNSPECIFIED = 0;
+  NEGATIVE = 1;
+  NONE = 2;
+  POSITIVE = 3;
+}
+
+message TraitDerives {
+  TraitImplPolarity clone = 1;
+  TraitImplPolarity copy = 2;
+  TraitImplPolarity debug = 3;
+  bool send = 4;
+  bool sync = 5;
+  repeated string custom = 6;
+}
+
+message OwnedPtrConfig {
+  string owned_ptr_type = 1;
+  string drop_impl = 2;
+}
+
+message Record {
+  Identifier rs_name = 1;
+  Identifier cc_name = 2;
+  string unique_name = 3;
+  string mangled_cc_name = 4;
+  int64 id = 5;
+  string owning_target = 6;
+  TemplateSpecialization template_specialization = 7;
+  string unknown_attr = 8;
+  string doc_comment = 9;
+  BridgeType bridge_type = 10;
+  OwnedPtrConfig owned_ptr_config = 11;
+  string source_loc = 12;
+  repeated BaseClass unambiguous_public_bases = 13;
+  repeated Field fields = 14;
+  repeated LifetimeName lifetime_params = 15;
+  SizeAlign size_align = 16;
+  TraitDerives trait_derives = 17;
+  bool is_derived_class = 18;
+  bool override_alignment = 19;
+  SafetyAnnotation safety_annotation = 20;
+  SpecialMemberFunc copy_constructor = 21;
+  SpecialMemberFunc move_constructor = 22;
+  SpecialMemberFunc destructor = 23;
+  bool is_trivial_abi = 24;
+  bool is_inheritable = 25;
+  bool is_abstract = 26;
+  string nodiscard = 27;
+  RecordType record_type = 28;
+  bool is_aggregate = 29;
+  bool is_canonical_alias = 30;
+  repeated int64 child_item_ids = 31;
+  int64 enclosing_item_id = 32;
+  bool must_bind = 33;
+  bool overloads_operator_delete = 34;
+  bool detected_formatter = 35;
+  bool is_thread_safe = 36;
+  repeated string lifetime_inputs = 37;
+  string deprecated = 38;
+  bool is_explicit_class_template_instantiation_definition = 39;
+}
+
+message IncompleteRecord {
+  Identifier cc_name = 1;
+  Identifier rs_name = 2;
+  string unique_name = 3;
+  int64 id = 4;
+  string owning_target = 5;
+  string unknown_attr = 6;
+  RecordType record_type = 7;
+  int64 enclosing_item_id = 8;
+  bool must_bind = 9;
+}
+
+message Enumerator {
+  Identifier identifier = 1;
+  IntegerConstant value = 2;
+  string unknown_attr = 3;
+  string deprecated = 4;
+  string doc_comment = 5;
+}
+
+message Enum {
+  Identifier cc_name = 1;
+  Identifier rs_name = 2;
+  string unique_name = 3;
+  int64 id = 4;
+  string owning_target = 5;
+  string source_loc = 6;
+  CcType underlying_type = 7;
+  repeated Enumerator enumerators = 8;
+  string unknown_attr = 9;
+  int64 enclosing_item_id = 10;
+  bool must_bind = 11;
+  bool detected_formatter = 12;
+  string nodiscard = 13;
+  string deprecated = 14;
+  string doc_comment = 15;
+}
+
+message GlobalVar {
+  Identifier cc_name = 1;
+  Identifier rs_name = 2;
+  string unique_name = 3;
+  int64 id = 4;
+  string owning_target = 5;
+  string source_loc = 6;
+  string mangled_name = 7;
+  CcType type = 8;
+  string unknown_attr = 9;
+  int64 enclosing_item_id = 10;
+  bool must_bind = 11;
+  string deprecated = 12;
+  string doc_comment = 13;
+}
+
+message TypeAlias {
+  Identifier cc_name = 1;
+  Identifier rs_name = 2;
+  string unique_name = 3;
+  int64 id = 4;
+  string owning_target = 5;
+  string doc_comment = 6;
+  string unknown_attr = 7;
+  CcType underlying_type = 8;
+  string source_loc = 9;
+  int64 enclosing_item_id = 10;
+  bool must_bind = 11;
+  string deprecated = 12;
+}
+
+message UnsupportedItem {
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    FUNC = 1;
+    GLOBAL_VAR = 2;
+    STRUCT = 3;
+    UNION = 4;
+    CLASS = 5;
+    ENUM = 6;
+    TYPE_ALIAS = 7;
+    NAMESPACE = 8;
+    CONSTRUCTOR = 9;
+    OTHER = 10;
+  }
+
+  message Path {
+    UnqualifiedIdentifier ident = 1;
+    int64 enclosing_item_id = 2;
+  }
+
+  string name = 1;
+  string unique_name = 2;
+  Kind kind = 3;
+  Path path = 4;
+  repeated FormattedError errors = 5;
+  string source_loc = 6;
+  int64 id = 7;
+  bool must_bind = 8;
+}
+
+message Comment {
+  string text = 1;
+  int64 id = 2;
+  bool must_bind = 3;
+}
+
+message Namespace {
+  Identifier cc_name = 1;
+  Identifier rs_name = 2;
+  string unique_name = 3;
+  int64 id = 4;
+  int64 canonical_namespace_id = 5;
+  string unknown_attr = 6;
+  string owning_target = 7;
+  repeated int64 child_item_ids = 8;
+  int64 enclosing_item_id = 9;
+  bool is_inline = 10;
+  bool must_bind = 11;
+  string deprecated = 12;
+  string doc_comment = 13;
+}
+
+message UseMod {
+  string path = 1;
+  Identifier mod_name = 2;
+  int64 id = 3;
+  bool must_bind = 4;
+}
+
+message ExistingRustType {
+  string rs_name = 1;
+  string cc_name = 2;
+  string unique_name = 3;
+  repeated TemplateArg template_args = 4;
+  string owning_target = 5;
+  SizeAlign size_align = 6;
+  bool is_same_abi = 7;
+  int64 id = 8;
+  bool must_bind = 9;
+}
+
+message Item {
+  oneof item {
+    Func func = 1;
+    Record record = 2;
+    IncompleteRecord incomplete_record = 3;
+    Enum enum_decl = 4;
+    Constant constant = 5;
+    TypeAlias type_alias = 6;
+    GlobalVar global_var = 7;
+    UnsupportedItem unsupported_item = 8;
+    Comment comment = 9;
+    Namespace namespace_decl = 10;
+    UseMod use_mod = 11;
+    ExistingRustType existing_rust_type = 12;
+  }
+}
+
+// Redundantly naming this `IRProto` for now to avoid overlap with the `IR`
+// struct in `ir.h`.
+message IRProto {
+  message ItemIdList {
+    repeated int64 item_ids = 1;
+  }
+  message FeatureSet {
+    repeated string features = 1;
+  }
+
+  repeated HeaderName public_headers = 1;
+  string current_target = 2;
+  repeated Item items = 3;
+  map<string, ItemIdList> top_level_item_ids = 4;
+  string crate_root_path = 5;
+  map<string, FeatureSet> crubit_features = 6;
+}

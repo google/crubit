@@ -6,11 +6,19 @@ syntax = "proto3";
 
 package crubit.rs_bindings_from_cc.generate_bindings;
 
+import "rs_bindings_from_cc/ir.proto";
+
 // Parameters for invoking the Rust (backend) binding generator.
 message GenerateBindingsRequest {
   // Serialized JSON representation of the intermediate representation
   // produced by the C++ importer.
+  //
+  // Only one of `json` or `ir_proto` is populated for a given request as they
+  // represent the same information.
   string json = 1;
+  // Proto representation of the intermediate representation produced by the
+  // C++ importer.
+  crubit.rs_bindings_from_cc.ir_proto.flat.IRProto ir_proto = 10;
   // Format string for the path to the Crubit support libraries.
   string crubit_support_path_format = 2;
   // Path to the clang-format executable.
