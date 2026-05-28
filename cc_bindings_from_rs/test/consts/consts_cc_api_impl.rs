@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // consts_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
+// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]

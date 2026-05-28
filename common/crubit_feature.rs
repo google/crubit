@@ -50,6 +50,9 @@ flagset::flags! {
 
         /// Generate bindings for (non-Crubit special-cased) template instances.
         TemplateInstantiation,
+
+        /// Emit `rs_std::Tuple` everywhere instead of C++ `std::tuple`.
+        LayoutCompatTuple,
     }
 }
 
@@ -73,6 +76,7 @@ impl CrubitFeature {
             Self::CheckDefaultInitialized => "check_default_initialized",
             Self::LeadingColonsForCppType => "leading_colons_for_cpp_type",
             Self::TemplateInstantiation => "template_instantiation",
+            Self::LayoutCompatTuple => "layout_compat_tuple",
         }
     }
 
@@ -97,6 +101,7 @@ impl CrubitFeature {
                 "//features:leading_colons_for_cpp_type"
             }
             Self::TemplateInstantiation => "//features:template_instantiation",
+            Self::LayoutCompatTuple => "//features:layout_compat_tuple",
         }
     }
 }
@@ -119,6 +124,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"check_default_initialized" => CrubitFeature::CheckDefaultInitialized.into(),
         b"leading_colons_for_cpp_type" => CrubitFeature::LeadingColonsForCppType.into(),
         b"template_instantiation" => CrubitFeature::TemplateInstantiation.into(),
+        b"layout_compat_tuple" => CrubitFeature::LayoutCompatTuple.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -237,6 +243,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::LayoutCompatTuple
         );
     }
 
@@ -272,6 +279,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::LayoutCompatTuple
         );
     }
 
@@ -292,6 +300,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::LayoutCompatTuple
         );
     }
 
@@ -313,6 +322,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::LayoutCompatTuple
         );
     }
 }

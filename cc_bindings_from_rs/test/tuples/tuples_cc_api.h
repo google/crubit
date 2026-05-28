@@ -5,8 +5,9 @@
 // Automatically @generated C++ bindings for the following Rust crate:
 // tuples_golden
 // Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, leading_colons_for_cpp_type,
-// supported, template_instantiation, types, unsafe_view, wrapper
+// check_default_initialized, experimental, layout_compat_tuple,
+// leading_colons_for_cpp_type, supported, template_instantiation, types,
+// unsafe_view, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN
