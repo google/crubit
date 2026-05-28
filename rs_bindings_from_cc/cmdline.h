@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -51,6 +52,8 @@ struct CmdlineArgs {
       target_to_features;
 
   std::optional<std::vector<std::string>> do_not_bind_allowlist;
+
+  std::string template_blocklist_path_regex;
 };
 
 // A valid command line invocation.

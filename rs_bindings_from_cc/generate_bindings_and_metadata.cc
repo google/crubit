@@ -4,15 +4,19 @@
 
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/cmdline.h"
@@ -21,6 +25,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
+#include "llvm/Support/Regex.h"
 
 namespace crubit {
 
@@ -77,20 +82,34 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     }
   }
 
+  absl_nullable std::shared_ptr<const llvm::Regex>
+      template_blocklist_path_regex = nullptr;
+  if (!args.template_blocklist_path_regex.empty()) {
+    template_blocklist_path_regex = std::make_shared<llvm::Regex>(
+        args.template_blocklist_path_regex, llvm::Regex::RegexFlags::NoFlags);
+    if (!template_blocklist_path_regex->isValid()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Failed to parse template_blocklist_path_regex: ",
+                       args.template_blocklist_path_regex, " as llvm::Regex"));
+    }
+  }
+
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, IrFromCc(IrFromCcOptions{
-                 .current_target = args.current_target,
-                 .public_headers = args.public_headers,
-                 .virtual_headers_contents_for_testing =
-                     std::move(virtual_headers_contents_for_testing),
-                 .headers_to_targets = args.headers_to_targets,
-                 .extra_rs_srcs = args.extra_rs_srcs,
-                 .clang_args = clang_args_view,
-                 .extra_instantiations = requested_instantiations,
-                 .crubit_features = args.target_to_features,
-                 .driver_path = args.driver_path,
-                 .do_not_bind_allowlist = std::move(do_not_bind_allowlist),
-                 .kythe_annotations = args.kythe_annotations}));
+      IR ir,
+      IrFromCc(IrFromCcOptions{
+          .current_target = args.current_target,
+          .public_headers = args.public_headers,
+          .virtual_headers_contents_for_testing =
+              std::move(virtual_headers_contents_for_testing),
+          .headers_to_targets = args.headers_to_targets,
+          .extra_rs_srcs = args.extra_rs_srcs,
+          .clang_args = clang_args_view,
+          .extra_instantiations = requested_instantiations,
+          .crubit_features = args.target_to_features,
+          .driver_path = args.driver_path,
+          .do_not_bind_allowlist = std::move(do_not_bind_allowlist),
+          .kythe_annotations = args.kythe_annotations,
+          .template_blocklist_path_regex = template_blocklist_path_regex}));
 
   if (!args.instantiations_out.empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";

@@ -1032,6 +1032,14 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       decl = instantiation_source
                  .dyn_cast<clang::ClassTemplatePartialSpecializationDecl*>();
     }
+    if (!ictx_.invocation_.should_instantiate_template_from_path(
+            ictx_.sema_.getSourceManager(), decl->getLocation())) {
+      return ictx_.ImportUnsupportedItem(
+          *record_decl, std::nullopt,
+          {FormattedError::PrefixedStrCat(
+              "Class template instantiation forbidden by blocklist",
+              record_decl->getQualifiedNameAsString())});
+    }
     ts.defining_target = ictx_.GetOwningTarget(decl);
     if (clang::TypedefNameDecl* alias_decl =
             ictx_.GetTemplateSpecializationAlias(specialization_decl)) {

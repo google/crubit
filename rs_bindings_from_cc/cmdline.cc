@@ -124,6 +124,9 @@ ABSL_FLAG(bool, kythe_annotations, false,
 
 ABSL_FLAG(std::string, kythe_default_corpus, "corpus",
           "Default corpus to use for Kythe vnames.");
+ABSL_FLAG(std::string, template_blocklist_path_regex, "",
+          "If nonempty, do not instantiate templates defined in files with "
+          "paths matching this llvm::Regex.");
 
 namespace crubit {
 
@@ -243,7 +246,10 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .srcs_to_scan_for_instantiations =
           absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
       .instantiations_out = absl::GetFlag(FLAGS_instantiations_out),
-      .do_not_bind_allowlist = absl::GetFlag(FLAGS_do_not_bind_allowlist)};
+      .do_not_bind_allowlist = absl::GetFlag(FLAGS_do_not_bind_allowlist),
+      .template_blocklist_path_regex =
+          absl::GetFlag(FLAGS_template_blocklist_path_regex),
+  };
   absl::Status parse_environment_status =
       internal::ParseEnvironment(absl::GetFlag(FLAGS_environment), args);
 

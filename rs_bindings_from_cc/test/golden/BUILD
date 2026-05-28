@@ -73,6 +73,13 @@ ASPECT_HINTS = {
     "nodiscard_experimental": [
         "//features:experimental",
     ],
+    "blocklist_template_paths": [
+        "//features:template_instantiation",
+        ":template_blocklist_path_regex",
+    ],
+    "template_instantiation": [
+        "//features:template_instantiation",
+    ],
 }
 
 rust_bindings_from_cc_cli_flag(
@@ -83,6 +90,12 @@ rust_bindings_from_cc_cli_flag(
 rust_bindings_from_cc_cli_flag(
     name = "enable_kythe_annotations",
     flags = "--kythe_annotations=True",
+)
+
+rust_bindings_from_cc_cli_flag(
+    name = "template_blocklist_path_regex",
+    # Be careful: everything after the = is passed verbatim, including quotes
+    flags = "--template_blocklist_path_regex=.*blocklist_template_paths.*",
 )
 
 [cc_library(

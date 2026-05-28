@@ -9,6 +9,7 @@
 #include <string>
 #include <type_traits>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/statusor.h"
@@ -16,6 +17,7 @@
 #include "absl/types/span.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/Support/Regex.h"
 
 namespace crubit {
 
@@ -54,6 +56,9 @@ struct IrFromCcOptions final {
 
   // Record additional source information for Kythe annotations.
   bool kythe_annotations = false;
+
+  absl_nullable std::shared_ptr<const llvm::Regex>
+      template_blocklist_path_regex = nullptr;
 };
 
 static_assert(std::is_aggregate_v<IrFromCcOptions>);

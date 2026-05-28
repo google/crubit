@@ -108,11 +108,15 @@ cc_library(
         ":ir_from_cc",
         ":src_code_gen",
         "//common:status_macros",
+        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -273,6 +277,7 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -464,6 +469,7 @@ cc_library(
         ":frontend_action",
         "//common:status_macros",
         "//common:string_view_conversion",
+        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",
@@ -474,6 +480,7 @@ cc_library(
         "@abseil-cpp//absl/types:span",
         "@llvm-project//clang:serialization",
         "@llvm-project//clang:tooling",
+        "@llvm-project//llvm:Support",
     ],
 )
 

@@ -29,6 +29,8 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/Regex.h"
 
 namespace crubit {
 
@@ -41,14 +43,17 @@ class Invocation {
       std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist,
       absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
           crubit_features,
-      bool kythe_annotations)
+      bool kythe_annotations,
+      std::shared_ptr<const llvm::Regex> template_blocklist_path_regex)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
                           clang::tidy::lifetimes::LifetimeAnnotationContext>()),
         do_not_bind_allowlist_(std::move(do_not_bind_allowlist)),
         header_targets_(header_targets),
-        kythe_annotations_(kythe_annotations) {
+        kythe_annotations_(kythe_annotations),
+        template_blocklist_path_regex_(
+            std::move(template_blocklist_path_regex)) {
     // Caller should verify that the inputs are non-empty.
     CHECK(!public_headers_.empty());
     CHECK(!header_targets_.empty());
@@ -84,11 +89,42 @@ class Invocation {
   // Returns whether to record extra location information for Kythe annotations.
   bool kythe_annotations() const { return kythe_annotations_; }
 
+  // Returns true if we should instantiate a template defined at `loc`.
+  // (`loc` is the definition location of the primary or partial template,
+  // *not* the location causing the instantiation to occur.) Fails open;
+  // that is, we only will reject a location if we can get a positive match.
+  bool should_instantiate_template_from_path(
+      const clang::SourceManager& source_manager,
+      clang::SourceLocation loc) const {
+    if (template_blocklist_path_regex_ == nullptr) {
+      return true;
+    }
+    if (loc.isInvalid()) {
+      return true;
+    }
+    loc = source_manager.getSpellingLoc(loc);
+    if (loc.isInvalid()) {
+      return true;
+    }
+    absl::string_view path = source_manager.getFilename(loc);
+    if (path.empty()) {
+      return true;
+    }
+    llvm::SmallVector<llvm::StringRef, 4> captures;
+    return !(template_blocklist_path_regex_->match(path, &captures)
+                 ? captures[0].size() == path.size()
+                 : false);
+  }
+
  private:
   const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets_;
 
   // Whether to record extra location information for Kythe annotations.
   bool kythe_annotations_;
+
+  // If non-null, a regex that matches the paths of definition files of
+  // templates that should not be instantiated.
+  std::shared_ptr<const llvm::Regex> template_blocklist_path_regex_;
 };
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to

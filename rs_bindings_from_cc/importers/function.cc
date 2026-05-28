@@ -449,6 +449,12 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   clang::FunctionDecl* template_decl_for_method =
       function_decl->getInstantiatedFromMemberFunction();
   if (template_decl_for_method) {
+    if (!ictx_.invocation_.should_instantiate_template_from_path(
+            ictx_.sema_.getSourceManager(),
+            template_decl_for_method->getLocation())) {
+      return unsupported(FormattedError::Static(
+          "Function template instantiation forbidden by blocklist"));
+    }
     // It turns out that some of the functions marked with
     // `__attribute__((exclude_from_explicit_instantiation))` can cause us to
     // generate invalid bindings. For example, std::forward_list::sort() is
