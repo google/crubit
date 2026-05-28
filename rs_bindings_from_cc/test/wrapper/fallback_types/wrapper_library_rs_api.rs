@@ -11,6 +11,7 @@
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
+#![deny(rust_2024_compatibility)]
 #![allow(unused)]
 #![allow(deprecated)]
 #![deny(warnings)]
