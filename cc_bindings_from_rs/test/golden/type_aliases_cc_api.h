@@ -105,6 +105,12 @@ struct alignas(4)
 namespace type_aliases_rust::test_generics_matching {
 
 // Generated from:
+// cc_bindings_from_rs/test/golden/type_aliases.rs;l=22
+using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_rust_golden :: test_generics_matching :: "
+    "SpecializedAlias") = rs_std::Result<::std::int32_t, ::std::int32_t>;
+
+// Generated from:
 // cc_bindings_from_rs/test/golden/type_aliases.rs;l=24
 rs_std::Result<::std::int32_t, ::std::int32_t> returns_matching_alias();
 
