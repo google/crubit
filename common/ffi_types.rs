@@ -91,21 +91,6 @@ impl FfiU8SliceBox {
     }
 }
 
-/// The environment that the bindings are generated for. This is used to
-/// determine what kinds of non mandatory (but potentially useful) information is
-/// generated.
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum Environment {
-    /// The bindings are generated for a golden test.
-    /// Source location doc comments and the features list are disabled to reduce
-    /// noise.
-    GoldenTest,
-    /// The bindings are generated for production.
-    /// Source location doc comments and the features list are enabled.
-    Production,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

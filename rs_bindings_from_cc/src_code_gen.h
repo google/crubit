@@ -9,7 +9,6 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "common/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
 
 namespace crubit {
@@ -29,7 +28,7 @@ absl::StatusOr<Bindings> GenerateBindings(
     const IR& ir, absl::string_view crubit_support_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
-    Environment environment, bool kythe_annotations,
+    bool is_golden_test, bool kythe_annotations,
     absl::string_view kythe_default_corpus);
 
 }  // namespace crubit

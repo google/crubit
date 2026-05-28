@@ -1870,7 +1870,7 @@ pub fn generate_function(
         func.doc_comment.as_deref(),
         generate_func_safety_doc(db, &func, &impl_kind, &param_idents, &param_types).as_deref(),
         Some(&func.source_loc),
-        db.environment(),
+        db.is_golden_test(),
         db.kythe_annotations(),
     );
 

@@ -121,7 +121,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       GenerateBindings(ir, args.crubit_support_path_format,
                        args.clang_format_exe_path, args.rustfmt_exe_path,
                        args.rustfmt_config_path, generate_error_report,
-                       args.environment, args.kythe_annotations,
+                       args.is_golden_test, args.kythe_annotations,
                        args.kythe_default_corpus));
 
   absl::flat_hash_map<Identifier, Identifier> instantiations;

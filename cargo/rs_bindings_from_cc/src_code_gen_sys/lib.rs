@@ -5,6 +5,5 @@
 // Automatically @generated lib.rs for the cc_library src_code_gen.
 
 extern crate cc_api_ffi;
-extern crate cc_ffi_types_sys;
 extern crate cc_ir_sys;
 extern crate src_code_gen_ffi_sys;

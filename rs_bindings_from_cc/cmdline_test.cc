@@ -19,7 +19,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -48,7 +47,7 @@ absl::StatusOr<CmdlineArgs> TestCmdlineArgs(
       .clang_format_exe_path = "clang_format_exe_path",
       .rustfmt_exe_path = "rustfmt_exe_path",
       .rustfmt_config_path = "rustfmt_config_path",
-      .environment = Environment::GoldenTest};
+      .is_golden_test = true};
   std::transform(public_headers.begin(), public_headers.end(),
                  std::back_inserter(args.public_headers),
                  [](std::string header) { return HeaderName(header); });
@@ -91,7 +90,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
   absl::SetFlag(&FLAGS_instantiations_out, "instantiations_out");
   absl::SetFlag(&FLAGS_namespaces_out, "namespaces_out");
   absl::SetFlag(&FLAGS_error_report_out, "error_report_out");
-  absl::SetFlag(&FLAGS_environment, "golden_test");
+  absl::SetFlag(&FLAGS_is_golden_test, true);
   ASSERT_OK_AND_ASSIGN(Cmdline cmdline, Cmdline::FromFlags());
   const CmdlineArgs& args = cmdline.args();
   EXPECT_EQ(args.cc_out, "cc_out");
@@ -114,7 +113,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
       args.headers_to_targets,
       UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("//:t1")),
                            Pair(HeaderName("h2"), BazelLabel("//:t1"))));
-  EXPECT_EQ(args.environment, Environment::GoldenTest);
+  EXPECT_EQ(args.is_golden_test, true);
 }
 
 TEST(CmdlineTest, TargetArgsEmpty) {

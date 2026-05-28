@@ -21,7 +21,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
-#include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -107,17 +106,26 @@ ABSL_FLAG(std::string, environment, "production",
           "The environment that the bindings are generated for. When set to "
           "'production', non mandatory (but potentially useful) information is "
           "generated. When set to 'golden_test', unnecessary information is "
-          "omitted to reduce noise.");
-// TODO(okabayashi): This is now an alias for --environment.
-// Remove this flag once the alias is no longer used.
+          "omitted to reduce noise.")
+    .OnUpdate([] {
+      absl::SetFlag(&FLAGS_is_golden_test,
+                    absl::GetFlag(FLAGS_environment) == "golden_test");
+    });
+
+ABSL_FLAG(bool, is_golden_test, false,
+          "If true, unnecessary information (such as source locations) is "
+          "omitted from the generated bindings to reduce noise in golden "
+          "tests.");
+
+// TODO(b/517182898): This is now an alias for --is_golden_test.
+// Remove this flag (and --environment) once the alias is no longer used.
 ABSL_FLAG(bool, generate_source_location_in_doc_comment, true,
           "add the source code location from which the binding originates in"
           "the doc comment of the binding")
     .OnUpdate([] {
-      absl::SetFlag(&FLAGS_environment,
-                    absl::GetFlag(FLAGS_generate_source_location_in_doc_comment)
-                        ? "production"
-                        : "golden_test");
+      absl::SetFlag(
+          &FLAGS_is_golden_test,
+          !absl::GetFlag(FLAGS_generate_source_location_in_doc_comment));
     });
 ABSL_FLAG(bool, kythe_annotations, false,
           "Emit extra source information for generating cross-references.");
@@ -208,20 +216,6 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
   return absl::OkStatus();
 }
 
-absl::Status ParseEnvironment(absl::string_view environment_str,
-                              CmdlineArgs& args) {
-  if (environment_str == "production") {
-    args.environment = Environment::Production;
-    return absl::OkStatus();
-  } else if (environment_str == "golden_test") {
-    args.environment = Environment::GoldenTest;
-    return absl::OkStatus();
-  } else {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Unknown environment: ", environment_str));
-  }
-}
-
 }  // namespace internal
 
 absl::StatusOr<Cmdline> Cmdline::FromFlags() {
@@ -239,6 +233,7 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .rustfmt_config_path = absl::GetFlag(FLAGS_rustfmt_config_path),
       .error_report_out = absl::GetFlag(FLAGS_error_report_out),
       .do_nothing = absl::GetFlag(FLAGS_do_nothing),
+      .is_golden_test = absl::GetFlag(FLAGS_is_golden_test),
       .kythe_annotations = absl::GetFlag(FLAGS_kythe_annotations),
       .kythe_default_corpus = absl::GetFlag(FLAGS_kythe_default_corpus),
       .public_headers = PublicHeaders(),
@@ -250,20 +245,15 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .template_blocklist_path_regex =
           absl::GetFlag(FLAGS_template_blocklist_path_regex),
   };
-  absl::Status parse_environment_status =
-      internal::ParseEnvironment(absl::GetFlag(FLAGS_environment), args);
 
   absl::Status parse_target_args_status =
       internal::ParseTargetArgs(absl::GetFlag(FLAGS_target_args), args);
 
   absl::StatusOr<Cmdline> cmdline = Cmdline::Create(std::move(args));
-  if (!parse_target_args_status.ok() || !parse_environment_status.ok() ||
-      !cmdline.ok()) {
+  if (!parse_target_args_status.ok() || !cmdline.ok()) {
     return absl::InvalidArgumentError(
         absl::StrCat(cmdline.status().message(), cmdline.ok() ? "" : "\n",
-                     parse_target_args_status.message(),
-                     parse_target_args_status.ok() ? "" : "\n",
-                     parse_environment_status.message()));
+                     parse_target_args_status.message()));
   }
   return cmdline;
 }

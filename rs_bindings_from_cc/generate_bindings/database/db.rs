@@ -9,7 +9,6 @@ use arc_anyhow::{anyhow, Error, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
-use ffi_types::Environment;
 use heck::ToSnakeCase;
 use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
@@ -40,7 +39,7 @@ memoized::query_group! {
         fn fatal_errors(&self) -> &'db dyn ReportFatalError;
 
         #[input]
-        fn environment(&self) -> Environment;
+        fn is_golden_test(&self) -> bool;
 
         #[input]
         /// Feature flag enabling Kythe annotations

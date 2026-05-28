@@ -4,7 +4,6 @@
 
 use database::code_snippet::Bindings;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
-use ffi_types::Environment;
 use generate_bindings::generate_bindings as inner_generate_bindings;
 use generate_bindings_rust_proto::{GenerateBindingsRequest, GenerateBindingsResponse};
 use std::ffi::OsString;
@@ -24,11 +23,7 @@ pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsR
     let kythe_default_corpus: &str =
         std::str::from_utf8(request.kythe_default_corpus().as_ref()).unwrap();
     let generate_error_report = request.generate_error_report();
-    let environment = if request.skip_source_location_in_doc_comments() {
-        Environment::GoldenTest
-    } else {
-        Environment::Production
-    };
+    let is_golden_test = request.is_golden_test();
     let kythe_annotations = request.kythe_annotations();
 
     catch_unwind(|| {
@@ -47,7 +42,7 @@ pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsR
             &rustfmt_config_path,
             errors,
             &fatal_errors,
-            environment,
+            is_golden_test,
             kythe_annotations,
             kythe_default_corpus,
         )

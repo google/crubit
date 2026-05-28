@@ -5,7 +5,6 @@
 
 use arc_anyhow::Result;
 use error_report::{ErrorReport, FatalErrors, SourceLanguage};
-use ffi_types::Environment;
 use generate_bindings::new_database;
 use googletest::prelude::*;
 use ir_matchers::assert_ir_matches;
@@ -20,7 +19,7 @@ use std::rc::Rc;
 fn lifetime_defaults_transform_ir(ir: &ir::IR) -> Result<ir::IR> {
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
-    let db = new_database(ir, &errors, &fatal_errors, Environment::Production, false);
+    let db = new_database(ir, &errors, &fatal_errors, false, false);
     lifetime_defaults_transform(&db)
 }
 
@@ -1284,7 +1283,7 @@ fn arity_of_record(ir: &ir::IR, record_name: &str) -> Result<usize> {
     let record = retrieve_record(ir, record_name);
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
-    let db = new_database(ir, &errors, &fatal_errors, Environment::Production, false);
+    let db = new_database(ir, &errors, &fatal_errors, false, false);
     record_lifetime_arity(&db, record)
 }
 

@@ -6,7 +6,6 @@
 
 use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
 use database::BindingsGenerator;
-use ffi_types::Environment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -16,7 +15,7 @@ use std::rc::Rc;
 
 /// Top-level comments that help identify where the generated bindings came
 /// from.
-pub fn generate_top_level_comment(ir: &IR, environment: Environment) -> String {
+pub fn generate_top_level_comment(ir: &IR, is_golden_test: bool) -> String {
     // The "@generated" marker is an informal convention for identifying
     // automatically generated code.  This marker is recognized by `rustfmt`
     // (see the `format_generated_files` option [1]) and some other tools.
@@ -37,7 +36,7 @@ pub fn generate_top_level_comment(ir: &IR, environment: Environment) -> String {
             // {target}\n"
     );
 
-    if environment == Environment::Production {
+    if !is_golden_test {
         // Write the features.
         result.push_str(
             "\
@@ -84,17 +83,16 @@ pub fn generate_doc_comment(
     comment: Option<&str>,
     safety: Option<&str>,
     source_loc: Option<&str>,
-    environment: Environment,
+    is_golden_test: bool,
     kythe_annotations: bool,
 ) -> Option<DocCommentAttr> {
-    let source_loc = match environment {
-        Environment::Production => source_loc,
-        Environment::GoldenTest => {
-            if kythe_annotations {
-                source_loc
-            } else {
-                None
-            }
+    let source_loc = if !is_golden_test {
+        source_loc
+    } else {
+        if kythe_annotations {
+            source_loc
+        } else {
+            None
         }
     };
 
@@ -140,7 +138,7 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
 
     let source_loc = item.source_loc();
     let source_loc = match &source_loc {
-        Some(loc) if db.environment() == Environment::Production => loc.as_ref(),
+        Some(loc) if !db.is_golden_test() => loc.as_ref(),
         _ => "",
     };
 

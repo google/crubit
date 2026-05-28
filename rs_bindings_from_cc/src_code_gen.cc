@@ -9,7 +9,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "common/ffi_types.h"
 #include "rs_bindings_from_cc/generate_bindings/generate_bindings.pb.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
@@ -24,7 +23,7 @@ absl::StatusOr<Bindings> GenerateBindings(
     const IR& ir, absl::string_view crubit_support_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
-    Environment environment, bool kythe_annotations,
+    bool is_golden_test, bool kythe_annotations,
     absl::string_view kythe_default_corpus) {
   GenerateBindingsRequest request;
   request.set_json(llvm::formatv("{0}", ir.ToJson()));
@@ -33,8 +32,7 @@ absl::StatusOr<Bindings> GenerateBindings(
   request.set_rustfmt_exe_path(rustfmt_exe_path);
   request.set_rustfmt_config_path(rustfmt_config_path);
   request.set_generate_error_report(generate_error_report);
-  request.set_skip_source_location_in_doc_comments(environment ==
-                                                   Environment::GoldenTest);
+  request.set_is_golden_test(is_golden_test);
   request.set_kythe_annotations(kythe_annotations);
   request.set_kythe_default_corpus(kythe_default_corpus);
 

@@ -37,7 +37,6 @@ lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/ge
 multiplatform_ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing", package = "rs_bindings_from_cc_multiplatform_ir_testing"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}
-ffi_types = { path = "../../../../cargo/common/ffi_types"}
 multiplatform_testing = { path = "../../../../cargo/common/multiplatform_testing"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 ir_matchers = { path = "../../../../cargo/rs_bindings_from_cc/ir_matchers", package = "rs_bindings_from_cc_ir_matchers"}
