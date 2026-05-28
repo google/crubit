@@ -132,7 +132,7 @@ impl Lifetime {
 impl ToTokens for Lifetime {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let Self(name) = self;
-        let lifetime = syn::Lifetime::new(&format!("'{name}"), proc_macro2::Span::call_site());
+        let lifetime = make_rs_lifetime_ident(name);
         lifetime.to_tokens(tokens);
     }
 }

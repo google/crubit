@@ -19,4 +19,6 @@
 
 static_assert((int& (*)(int&)) & ::increment_int_ref);
 
+static_assert((void (*)(int&)) & ::bad_lifetime_name);
+
 #pragma clang diagnostic pop

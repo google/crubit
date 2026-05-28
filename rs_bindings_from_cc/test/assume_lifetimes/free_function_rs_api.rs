@@ -21,6 +21,12 @@ pub fn increment_int_ref<'a>(a: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::f
     unsafe { crate::detail::__rust_thunk___Z17increment_int_refRi(a) }
 }
 
+/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/free_function.h;l=10
+#[inline(always)]
+pub fn bad_lifetime_name<'r#type>(r#type: &'r#type mut ::ffi_11::c_int) {
+    unsafe { crate::detail::__rust_thunk___Z17bad_lifetime_nameRi(r#type) }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -29,5 +35,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z17increment_int_refRi<'a>(
             a: &'a mut ::ffi_11::c_int,
         ) -> ::cref::CMut<'a, ::ffi_11::c_int>;
+        #[link_name = "_Z17bad_lifetime_nameRi"]
+        pub(crate) unsafe fn __rust_thunk___Z17bad_lifetime_nameRi<'r#type>(
+            r#type: &'r#type mut ::ffi_11::c_int,
+        );
     }
 }

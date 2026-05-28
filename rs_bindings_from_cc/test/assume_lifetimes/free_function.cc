@@ -5,3 +5,5 @@
 #include "rs_bindings_from_cc/test/assume_lifetimes/free_function.h"
 
 int& increment_int_ref(int& a) { return ++a; }
+
+void bad_lifetime_name(int& type) {}

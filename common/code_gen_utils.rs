@@ -267,8 +267,10 @@ pub fn make_rs_ident(ident: &str) -> Ident {
 ///
 /// Hyphens are converted to underscores in the identifier.
 pub fn make_rs_lifetime_ident(ident: &str) -> syn::Lifetime {
-    let ident = hyphen_to_underscore(ident);
-    return syn::Lifetime::new(format!("'{ident}").as_str(), proc_macro2::Span::call_site());
+    if ident == "_" || ident == "static" {
+        return syn::Lifetime::new(&format!("'{ident}"), proc_macro2::Span::call_site());
+    }
+    syn::Lifetime { apostrophe: proc_macro2::Span::call_site(), ident: make_rs_ident(ident) }
 }
 
 pub fn check_valid_cc_name(name: &str) -> Result<()> {
