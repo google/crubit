@@ -48,3 +48,45 @@ fn test_anonymous_enum_constants() {
     assert_eq!(global::foo::kAnonEnumNamespacedConst, 456);
     assert_eq!(global::struct_with_anon_enum::kAnonEnumInStructConst, 789);
 }
+
+#[gtest]
+fn test_thread_local() {
+    let ptr = unsafe { global::thread_local_int() };
+    assert!(!ptr.is_null());
+
+    unsafe { *ptr = 42 };
+    assert_eq!(unsafe { *ptr }, 42);
+
+    let handle = std::thread::spawn(|| {
+        let ptr = unsafe { global::thread_local_int() };
+        assert!(!ptr.is_null());
+        assert_eq!(unsafe { *ptr }, 0); // Assuming default initialized to 0
+        unsafe { *ptr = 24 };
+        assert_eq!(unsafe { *ptr }, 24);
+    });
+
+    handle.join().unwrap();
+
+    // Main thread should still see 42
+    assert_eq!(unsafe { *ptr }, 42);
+}
+
+#[gtest]
+fn test_thread_local_ref() {
+    let ptr = unsafe { global::thread_local_ref() };
+    assert!(!ptr.is_null());
+
+    let int_ptr = unsafe { global::thread_local_int() };
+    unsafe { *int_ptr = 100 };
+    assert_eq!(unsafe { *ptr }, 100);
+
+    unsafe { *ptr = 200 };
+    assert_eq!(unsafe { *int_ptr }, 200);
+}
+
+#[gtest]
+fn test_thread_local_const_int() {
+    let ptr = unsafe { global::thread_local_const_int() };
+    assert!(!ptr.is_null());
+    assert_eq!(unsafe { *ptr }, 5);
+}

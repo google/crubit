@@ -801,6 +801,7 @@ llvm::json::Value GlobalVar::ToJson() const {
       {"unknown_attr", unknown_attr},
       {"enclosing_item_id", enclosing_item_id},
       {"must_bind", must_bind},
+      {"is_thread_local", is_thread_local},
   };
 
   if (deprecated.has_value()) {

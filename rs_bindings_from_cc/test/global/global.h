@@ -8,6 +8,8 @@
 extern int extern_int;
 extern const int kExternConstInt;
 extern thread_local int thread_local_int;
+extern thread_local int& thread_local_ref;
+extern thread_local const int thread_local_const_int;
 
 // Check that duplicate extern declarations are handled correctly.
 extern int extern_int;

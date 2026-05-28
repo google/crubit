@@ -19,6 +19,19 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+extern "C" int* __crubit_get_tls_c_x0000003a_x00000040thread_ulocal_uint() {
+  return std::addressof(thread_local_int);
+}
+
+extern "C" int* __crubit_get_tls_c_x0000003a_x00000040thread_ulocal_uref() {
+  return std::addressof(thread_local_ref);
+}
+
+extern "C" int const*
+__crubit_get_tls_c_x0000003a_x00000040thread_ulocal_uconst_uint() {
+  return std::addressof(thread_local_const_int);
+}
+
 extern "C" void __rust_thunk___Z6Unusedi(int arg) { Unused(arg); }
 
 static_assert((void (*)(int)) & ::Unused);

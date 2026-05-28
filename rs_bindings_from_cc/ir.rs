@@ -1468,6 +1468,8 @@ pub struct GlobalVar {
     #[serde(rename(deserialize = "type"))]
     pub type_: CcType,
     pub must_bind: bool,
+    #[serde(default)]
+    pub is_thread_local: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]

@@ -19,3 +19,7 @@ int GetNamespacedIntVal() { return foo::extern_int_namespaced; }
 int GetCNamespacedIntVal() { return foo::extern_c_int_namespaced; }
 
 int GetInlineIntVal() { return inline_int; }
+
+thread_local int thread_local_int{0};
+thread_local int& thread_local_ref = thread_local_int;
+thread_local const int thread_local_const_int{5};

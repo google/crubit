@@ -4,7 +4,10 @@
 #![allow(clippy::collapsible_else_if)]
 
 use arc_anyhow::{anyhow, ensure, Context, Result};
-use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
+use code_gen_utils::{
+    escape_non_identifier_chars, format_cc_includes, is_cpp_reserved_keyword, make_rs_ident,
+    CcInclude,
+};
 use cpp_type_name::format_cpp_type_with_references;
 use crubit_abi_type::{
     CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens,
@@ -12,7 +15,7 @@ use crubit_abi_type::{
 };
 use database::code_snippet::{
     self, integer_constant_to_token_stream, ApiSnippets, Bindings, BindingsTokens, CppDetails,
-    CppIncludes, DeprecatedAttr, Feature, GeneratedItem,
+    CppIncludes, DeprecatedAttr, Feature, GeneratedItem, Thunk, ThunkImpl,
 };
 use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
@@ -203,17 +206,113 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
     })
 }
 
+/// Generates Rust bindings and C++ thunks for thread-local variables.
+fn generate_thread_local_var(
+    db: &BindingsGenerator,
+    var: &GlobalVar,
+    type_: &RsTypeKind,
+) -> Result<ApiSnippets> {
+    let escaped_name = escape_non_identifier_chars(var.unique_name.as_ref());
+    let thunk_ident = quote::format_ident!("__crubit_get_tls_{}", escaped_name);
+    let cc_type = cpp_type_name::format_cpp_type(type_, db)?;
+    let namespace_qualifier = db.namespace_qualifier(var).format_for_cc()?;
+    let cc_name = code_gen_utils::format_cc_ident(&var.cc_name.identifier)?;
+    let qualified_cc_name = quote::quote! { #namespace_qualifier #cc_name };
+
+    let (is_reference, is_const) = match &var.type_.variant {
+        CcTypeVariant::Pointer(PointerType {
+            kind: PointerTypeKind::LValueRef | PointerTypeKind::RValueRef,
+            pointee_type,
+            ..
+        }) => (true, pointee_type.is_const),
+        _ => (false, var.type_.is_const),
+    };
+
+    let cc_details = if is_reference {
+        vec![ThunkImpl::Function {
+            return_type_name: quote::quote! { #cc_type },
+            thunk_ident: thunk_ident.clone(),
+            param_types: vec![],
+            param_idents: vec![],
+            conversion_stmts: quote::quote! {},
+            return_stmt: quote::quote! { return std::addressof(#qualified_cc_name) },
+        }]
+    } else {
+        let return_type_name = if is_const {
+            quote::quote! { #cc_type const * }
+        } else {
+            quote::quote! { #cc_type * }
+        };
+        vec![ThunkImpl::Function {
+            return_type_name,
+            thunk_ident: thunk_ident.clone(),
+            param_types: vec![],
+            param_idents: vec![],
+            conversion_stmts: quote::quote! {},
+            return_stmt: quote::quote! { return std::addressof(#qualified_cc_name) },
+        }]
+    };
+
+    let type_tokens = match type_ {
+        RsTypeKind::Reference { referent, .. } | RsTypeKind::RvalueReference { referent, .. } => {
+            referent.to_token_stream(db)
+        }
+        RsTypeKind::Pointer { pointee, .. } if is_reference => pointee.to_token_stream(db),
+        _ => type_.to_token_stream(db),
+    };
+
+    let return_type = if is_const {
+        quote::quote! { *const #type_tokens }
+    } else {
+        quote::quote! { *mut #type_tokens }
+    };
+
+    // Raw pointers are !Sync and !Send by default in Rust, which is appropriate
+    // for thread-local variables.
+    let thunks = vec![Thunk::Function {
+        mangled_name: None,
+        thunk_ident: thunk_ident.clone(),
+        generic_params: quote::quote! {},
+        param_idents: vec![],
+        param_types: vec![],
+        return_type_fragment: Some(return_type.clone()),
+    }];
+
+    let rs_ident = code_gen_utils::make_rs_ident(&var.rs_name.identifier);
+    let visibility = db.type_visibility(&var.owning_target, type_.clone()).unwrap_or_default();
+
+    let func_tokens = quote::quote! {
+        #visibility unsafe fn #rs_ident() -> #return_type {
+            detail::#thunk_ident()
+        }
+    };
+
+    Ok(ApiSnippets {
+        generated_items: std::collections::HashMap::from([(
+            var.id,
+            GeneratedItem::Func(func_tokens),
+        )]),
+        thunks,
+        cc_details,
+        ..Default::default()
+    })
+}
+
 fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Variable);
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
+    if var.is_thread_local {
+        return generate_thread_local_var(db, var, &type_);
+    }
+
     Ok(ApiSnippets {
-        generated_items: HashMap::from([(
+        generated_items: std::collections::HashMap::from([(
             var.id,
             GeneratedItem::GlobalVar {
                 link_name: var.mangled_name.clone(),
                 is_mut: !var.type_.is_const,
-                ident: make_rs_ident(&var.rs_name.identifier),
+                ident: code_gen_utils::make_rs_ident(&var.rs_name.identifier),
                 type_tokens: type_.to_token_stream(db),
                 visibility: db.type_visibility(&var.owning_target, type_).unwrap_or_default(),
                 deprecated_attr: var.deprecated.clone().map(DeprecatedAttr),
