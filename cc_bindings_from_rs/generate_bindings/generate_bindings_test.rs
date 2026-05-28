@@ -2313,6 +2313,42 @@ fn test_trait_impl_for_std_iter_iterator_trait() {
         assert_cc_matches!(bindings.cc_api, quote! { next ( ... ) },);
     });
 }
+
+#[test]
+fn test_trait_impl_for_std_future_future_trait() {
+    let test_src = r#"
+            #![allow(unused)]
+
+            pub struct MyStruct(i32);
+
+            impl std::future::Future for MyStruct {
+                type Output = i32;
+                fn poll(
+                    self: std::pin::Pin<&mut Self>,
+                    cx: &mut std::task::Context<'_>,
+                ) -> std::task::Poll<Self::Output> {
+                    todo!()
+                }
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                template <>
+                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::future::Future> {
+                    static constexpr bool kIsImplemented = true;
+                    ...
+                    using Output CRUBIT_INTERNAL_RUST_TYPE(
+                        "<MyStruct as :: core :: future :: Future>::Output") = ::std::int32_t;
+                    ...
+                };
+            }
+        );
+    });
+}
 #[test]
 fn test_const_generic_array() {
     let test_src = r#"

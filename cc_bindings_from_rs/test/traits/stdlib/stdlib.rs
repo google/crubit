@@ -55,3 +55,15 @@ impl Iterator for MyStruct {
         }
     }
 }
+
+// `std::future::Future` should get trait-shaped bindings.
+impl std::future::Future for MyStruct {
+    type Output = i32;
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        _cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        todo!()
+    }
+}

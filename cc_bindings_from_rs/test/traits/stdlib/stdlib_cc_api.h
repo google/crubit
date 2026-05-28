@@ -79,6 +79,22 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
 }  // namespace stdlib
 
 template <>
+struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
+  static constexpr bool kIsImplemented = true;
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=61
+  using Output CRUBIT_INTERNAL_RUST_TYPE(
+      "<stdlib_golden::MyStruct as :: core :: future :: Future>::Output") =
+      ::std::int32_t;
+
+  // Error generating bindings for associated function `<stdlib_golden::MyStruct
+  // as std::future::Future>::poll` defined at
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=63:
+  // Unsupported `self` type `std::pin::Pin<&'__anon1 mut
+  // stdlib_golden::MyStruct>`
+};
+
+template <>
 struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   // Generated from:

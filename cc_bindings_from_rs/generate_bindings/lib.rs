@@ -1097,6 +1097,7 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
 fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
     let tcx = db.tcx();
     let iterator_trait_id = tcx.get_diagnostic_item(sym::Iterator);
+    let future_trait_id = tcx.lang_items().future_trait();
 
     let traits = tcx
         .visible_traits()
@@ -1125,7 +1126,8 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
                     && crate_name.as_str() != "alloc"
             };
             let is_iterator_trait = iterator_trait_id == Some(*trait_id);
-            not_in_stdlib || is_iterator_trait
+            let is_future_trait = future_trait_id == Some(*trait_id);
+            not_in_stdlib || is_iterator_trait || is_future_trait
         })
         .collect::<Vec<DefId>>()
         .into_boxed_slice();
