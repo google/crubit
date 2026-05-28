@@ -13,6 +13,7 @@ use crate::code_snippet::{
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
 use crate::type_location::TypeLocation;
+use crate::StaticMethodMode;
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use dyn_format::Format;
@@ -304,7 +305,7 @@ memoized::query_group! {
       /// - doesn't identify a function
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_function.rs?q=function:generate_function
-      fn generate_function(&self, def_id: DefId) -> Result<ApiSnippets<'tcx>>;
+      fn generate_function(&self, def_id: DefId, method_name_override: Option<&'static str>, static_method_mode: StaticMethodMode) -> Result<ApiSnippets<'tcx>>;
 
       /// Determines if an ADT needs bindings generated in the current crate. This is a distinct method from `generate_adt_core` because we may want core binding information for a type that does not support bindings. For example, when generating bindings that use a type that isn't defined in the current crate.
       ///

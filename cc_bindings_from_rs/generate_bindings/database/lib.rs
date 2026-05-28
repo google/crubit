@@ -21,5 +21,7 @@ pub use fully_qualified_name::{
 };
 mod include_guard;
 pub use include_guard::IncludeGuard;
+mod static_method_mode;
+pub use static_method_mode::StaticMethodMode;
 mod type_location;
 pub use type_location::TypeLocation;

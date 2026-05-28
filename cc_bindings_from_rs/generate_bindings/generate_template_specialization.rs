@@ -15,7 +15,7 @@ use database::code_snippet::{
     RsStdEnumSpecialization, RsStdSpecializationArgs, RsStdTemplateSpecialization,
     TemplateSpecialization, TraitImplTemplateSpecialization,
 };
-use database::{BindingsGenerator, TypeLocation};
+use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::anyhow;
 use itertools::Itertools;
 use proc_macro2::Literal;
@@ -1559,7 +1559,15 @@ fn generate_trait_impl_specialization<'tcx>(
     let assoc_items: ApiSnippets = tcx
         .associated_items(impl_def_id)
         .in_definition_order()
-        .flat_map(|assoc_item| generate_associated_item(db, assoc_item, &mut member_function_names))
+        .flat_map(|assoc_item| {
+            generate_associated_item(
+                db,
+                assoc_item,
+                &mut member_function_names,
+                None,
+                StaticMethodMode::ForceStaticMethod,
+            )
+        })
         .collect();
 
     let main_api = assoc_items.main_api.into_tokens(&mut prereqs);

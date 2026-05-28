@@ -45,7 +45,8 @@ use database::code_snippet::{
 };
 use database::{
     rename_clang_builtin_macros, AdtCoreBindings, ExportedPath, FineGrainedFeature,
-    FullyQualifiedName, NoMoveOrAssign, PublicPaths, TypeLocation, UnqualifiedName,
+    FullyQualifiedName, NoMoveOrAssign, PublicPaths, StaticMethodMode, TypeLocation,
+    UnqualifiedName,
 };
 pub use database::{
     BindingsGenerator, CopyCtorStyle, CppTypeSpecialization, IncludeGuard, MoveCtorStyle,
@@ -944,7 +945,7 @@ fn generate_using<'tcx>(
     }
     match tcx.def_kind(def_id) {
         DefKind::Fn => {
-            let mut prereqs = match db.generate_function(def_id) {
+            let mut prereqs = match db.generate_function(def_id, None, StaticMethodMode::Infer) {
                 Ok(snippet) => snippet.main_api.prereqs,
                 Err(err) => {
                     bail!("Unable to `use` function whose bindings failed: {err:?}");
@@ -1747,7 +1748,7 @@ fn generate_item_impl<'tcx>(
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
             db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
         }
-        DefKind::Fn => db.generate_function(def_id).map(Some),
+        DefKind::Fn => db.generate_function(def_id, None, StaticMethodMode::Infer).map(Some),
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
         DefKind::Const { .. } => generate_const(db, def_id).map(Some),

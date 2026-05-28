@@ -23,6 +23,7 @@ rust_library(
         "fully_qualified_name.rs",
         "include_guard.rs",
         "lib.rs",
+        "static_method_mode.rs",
         "type_location.rs",
     ],
     # LINT.IfChange

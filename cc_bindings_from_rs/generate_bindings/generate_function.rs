@@ -20,7 +20,7 @@ use code_gen_utils::{
 };
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
-use database::{BindingsGenerator, TypeLocation};
+use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -773,6 +773,8 @@ fn format_trait_ref_for_rs<'tcx>(
 pub fn generate_function<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
+    method_name_override: Option<&'static str>,
+    static_method_mode: StaticMethodMode,
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
 
@@ -827,7 +829,13 @@ pub fn generate_function<'tcx>(
         .symbol_unqualified_name(def_id)
         .unwrap_or_else(|| panic!("`generate_function` called on unnamed function {def_id:?}"));
     let unqualified_rust_fn_name = unqualified_fn_name.rs_name;
-    let main_api_fn_name = get_function_cc_name(db, def_id)?;
+    let main_api_fn_name = match method_name_override {
+        Some(name) => name.parse().unwrap(),
+        None => {
+            let cc_name = get_function_cc_name(db, def_id)?;
+            quote! { #cc_name }
+        }
+    };
     let bracketed_decl_name = if db.kythe_annotations() {
         quote! { __CAPTURE_BEGIN__ #main_api_fn_name __CAPTURE_END__ }
     } else {
@@ -867,7 +875,7 @@ pub fn generate_function<'tcx>(
 
     let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue { .. } if is_copy(tcx, def_id, params[0].ty));
     let mut method_qualifiers = quote! {};
-    if trait_ref.is_none() {
+    if static_method_mode != StaticMethodMode::ForceStaticMethod {
         match function_kind {
             FunctionKind::Free | FunctionKind::AssociatedFn { .. } => {}
             FunctionKind::MethodTakingSelfByValue { self_ty } => {
@@ -910,7 +918,7 @@ pub fn generate_function<'tcx>(
     let thunk_self = ThunkSelfParameter::new(
         function_kind.has_self_param(),
         takes_self_by_copy,
-        trait_ref.is_some(),
+        static_method_mode == StaticMethodMode::ForceStaticMethod,
     );
 
     fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
@@ -1029,7 +1037,7 @@ pub fn generate_function<'tcx>(
             /*is_constructor=*/ false,
         )?
         .into_tokens(&mut prereqs);
-        if trait_ref.is_some() {
+        if static_method_mode == StaticMethodMode::ForceStaticMethod {
             let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num())
                 .iter()
                 .map(|ns| db.format_cc_ident(*ns))
@@ -1041,9 +1049,10 @@ pub fn generate_function<'tcx>(
             };
         }
 
-        let decl_name = trait_ref
-            .as_ref()
-            .map(|trait_ref| {
+        let decl_name = match static_method_mode {
+            StaticMethodMode::ForceStaticMethod => {
+                let trait_ref =
+                    trait_ref.as_ref().expect("ForceStaticMethod requires a trait method");
                 let struct_name = struct_name
                     .as_ref()
                     .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
@@ -1052,17 +1061,18 @@ pub fn generate_function<'tcx>(
                     .expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.")
                     .into_tokens(&mut prereqs);
                 quote! { rs_std :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
-            })
-            .or_else(|| {
-                struct_name.as_ref().map(|fully_qualified_name| {
+            }
+            StaticMethodMode::Infer => struct_name
+                .as_ref()
+                .map(|fully_qualified_name| {
                     let name = fully_qualified_name.unqualified.cpp_name;
                     let name = format_cc_ident(db, name.as_str()).expect(
                         "Caller of generate_function should verify struct via generate_adt_core",
                     );
                     quote! { #name :: #bracketed_decl_name }
                 })
-            })
-            .unwrap_or_else(|| quote! { #bracketed_decl_name });
+                .unwrap_or_else(|| quote! { #bracketed_decl_name }),
+        };
         let tokens = quote! {
             __NEWLINE__
             #thunk_decl
@@ -1082,29 +1092,32 @@ pub fn generate_function<'tcx>(
         RsSnippet::default()
     } else {
         // Trait method
-        let fully_qualified_fn_name = trait_ref.as_ref().map(|trait_ref| {
-                let struct_name = struct_name.as_ref()
-                    .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
-                    .expect("Generated trait method for an ADT with an invalid rust name");
-                let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
-                let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref).expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.");
-                quote! { <#struct_name as #trait_name_with_args>::#fn_name }
-        })
-        // Inherent method
-        .or_else(|| struct_name.as_ref().map(|struct_name| {
+        let fully_qualified_fn_name = if let Some(trait_ref) = trait_ref.as_ref() {
+            let struct_name = struct_name
+                .as_ref()
+                .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
+                .expect("Generated trait method for an ADT with an invalid rust name");
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
-            let struct_name = struct_name.format_for_rs();
-            quote! { #struct_name :: #fn_name }
-        }))
-        // Free function
-        .unwrap_or_else(|| db
-                    .symbol_canonical_name(def_id)
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "`generate_function` called on unreachable top-level function {def_id:?}"
-                        )
-                    })
-                    .format_for_rs());
+            let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref).expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.");
+            quote! { <#struct_name as #trait_name_with_args>::#fn_name }
+        } else {
+            struct_name
+                .as_ref()
+                .map(|struct_name| {
+                    let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
+                    let struct_name = struct_name.format_for_rs();
+                    quote! { #struct_name :: #fn_name }
+                })
+                .unwrap_or_else(|| {
+                    db.symbol_canonical_name(def_id)
+                        .unwrap_or_else(|| {
+                            panic!(
+                        "`generate_function` called on unreachable top-level function {def_id:?}"
+                    )
+                        })
+                        .format_for_rs()
+                })
+        };
         generate_thunk_impl(
             db,
             def_id,

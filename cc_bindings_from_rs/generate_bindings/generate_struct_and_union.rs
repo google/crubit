@@ -8,7 +8,7 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::format_cc_ident;
-use crate::format_type::{format_param_types_for_cc, CcParamTy};
+use crate::format_type::CcParamTy;
 use crate::generate_doc_comment;
 use crate::generate_function::{
     format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
@@ -21,25 +21,21 @@ use crate::{
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
-use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
+use database::{AdtCoreBindings, BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, try_normalize,
-};
+use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::VariantLayout;
 use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants};
-use rustc_infer::infer::{RegionVariableOrigin, TyCtxtInferExt};
+
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-use rustc_middle::ty::{
-    self, AssocKind, IntTy, Region, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv, TypingMode, UintTy,
-};
+use rustc_middle::ty::{self, AssocKind, IntTy, Ty, TyCtxt, TyKind, TypeFlags, UintTy};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::sym;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -327,6 +323,8 @@ pub(crate) fn generate_associated_item<'tcx>(
     db: &BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
+    method_name_override: Option<&'static str>,
+    static_method_mode: StaticMethodMode,
 ) -> Option<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     let def_id = assoc_item.def_id;
@@ -335,18 +333,20 @@ pub(crate) fn generate_associated_item<'tcx>(
     }
     crate::error_scope!(db, def_id);
     let result = match assoc_item.kind {
-        ty::AssocKind::Fn { .. } => db.generate_function(def_id).inspect(|_binding| {
-            // If `generate_function` succeeds, record the method in `member_function_names`.
-            let unqualified_name = db
-                .symbol_unqualified_name(def_id)
-                .expect("Associated item should have an unqualified name: {def_id:?}");
-            let cpp_name = unqualified_name.cpp_name.to_string();
-            let was_inserted = member_function_names.insert(cpp_name.clone());
-            assert!(
-                was_inserted, // Bindings for Rust/user-named items are given priority.
-                "Unexpected (user-named 'members' are handled first) naming conflict: {cpp_name}",
+        ty::AssocKind::Fn { .. } => {
+            db.generate_function(def_id, method_name_override, static_method_mode).inspect(|_binding| {
+                // If `generate_function` succeeds, record the method in `member_function_names`.
+                let unqualified_name = db
+                    .symbol_unqualified_name(def_id)
+                    .expect("Associated item should have an unqualified name: {def_id:?}");
+                let cpp_name = unqualified_name.cpp_name.to_string();
+                let was_inserted = member_function_names.insert(cpp_name.clone());
+                assert!(
+                    was_inserted, // Bindings for Rust/user-named items are given priority.
+                    "Unexpected (user-named 'members' are handled first) naming conflict: {cpp_name}",
             );
-        }),
+            })
+        }
         ty::AssocKind::Const { .. } => generate_const(db, def_id),
         // TODO: b/405132277 - Rust does not support inherent associated types, but should support
         // associated types when adding traits.
@@ -592,188 +592,138 @@ fn generate_into_impls<'tcx>(
         .collect()
 }
 
-fn generate_index_impls<'tcx>(
+fn generate_trait_operator_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let cc_struct_name = &core.cc_short_name;
 
-    struct IndexImpl<'tcx> {
+    struct TraitImpl<'tcx> {
         ty: Ty<'tcx>,
-        def_id: DefId,
+        impl_id: DefId,
         snippets: ApiSnippets<'tcx>,
     }
-    struct IndexImpls<'tcx> {
+    struct TraitImpls<'tcx> {
         has_usize_impl: bool,
         has_isize_impl: bool,
-        impls: Vec<Result<IndexImpl<'tcx>, (arc_anyhow::Error, DefId)>>,
+        impls: Vec<Result<TraitImpl<'tcx>, (arc_anyhow::Error, DefId)>>,
     }
-    impl<'tcx> IndexImpls<'tcx> {
-        fn into_iter<'a>(
+    impl<'tcx> TraitImpls<'tcx> {
+        fn avoid_colliding_overloads<'a>(
             self,
             db: &'a BindingsGenerator<'tcx>,
-        ) -> impl Iterator<Item = ApiSnippets<'tcx>> + use<'a, 'tcx> {
-            self.impls.into_iter()
+            trait_name: &str,
+        ) -> Vec<ApiSnippets<'tcx>> {
+            self.impls
+                .into_iter()
                 .map(move |res| match res {
-                    Ok(IndexImpl { ty, def_id, snippets }) => {
-                        // One of these two pairings could overlap based on platform. Technically more if we support 16-bit/8-bit platforms. But Index<usize> is so common, it's worth providing that one over the others.
-                        if matches!(ty.kind(), TyKind::Int(IntTy::I64) | TyKind::Int(IntTy::I32)) && self.has_isize_impl {
-                            return generate_unsupported_def(db, def_id, anyhow!("Index implementation for `{ty}` is not supported when `Index<isize>` is implemented as it may overlap.")).into_main_api()
+                    Ok(TraitImpl { ty, impl_id, snippets }) => {
+                        // One of these two pairings could overlap based on platform. Technically
+                        // more if we support 16-bit/8-bit platforms. But Index<usize> is so common,
+                        // it's worth providing that one over the others.
+                        if matches!(ty.kind(), TyKind::Int(IntTy::I64) | TyKind::Int(IntTy::I32))
+                            && self.has_isize_impl
+                        {
+                            let err = anyhow!(
+                                "{trait_name} implementation for `{ty}` is not supported when \
+                                 `{trait_name}<isize>` is implemented as it may overlap."
+                            );
+                            return generate_unsupported_def(db, impl_id, err).into_main_api();
                         }
-                        if matches!(ty.kind(), TyKind::Uint(UintTy::U64) | TyKind::Uint(UintTy::U32)) && self.has_usize_impl {
-                            return generate_unsupported_def(db, def_id, anyhow!("Index implementation for `{ty}` is not supported when `Index<usize>` is implemented as it may overlap.")).into_main_api()
+                        if matches!(
+                            ty.kind(),
+                            TyKind::Uint(UintTy::U64) | TyKind::Uint(UintTy::U32)
+                        ) && self.has_usize_impl
+                        {
+                            let err = anyhow!(
+                                "{trait_name} implementation for `{ty}` is not supported when \
+                                 `{trait_name}<usize>` is implemented as it may overlap."
+                            );
+                            return generate_unsupported_def(db, impl_id, err).into_main_api();
                         }
                         snippets
-                    },
-                    Err((e, def_id)) => generate_unsupported_def(db, def_id, e).into_main_api(),
+                    }
+                    Err((e, impl_id)) => generate_unsupported_def(db, impl_id, e).into_main_api(),
                 })
+                .collect_vec()
         }
     }
 
-    let query_index_impls = |index_trait: DefId,
-                             method_this_qualifier: TokenStream,
-                             to_ref: fn(TyCtxt<'tcx>, Region<'tcx>, Ty<'tcx>) -> Ty<'tcx>|
-     -> IndexImpls<'tcx> {
+    let query_trait_impls = |trait_def_id: DefId,
+                             method_name: &str,
+                             operator_name: &'static str|
+     -> Vec<ApiSnippets<'_>> {
+        let trait_name = tcx.item_name(trait_def_id).to_string();
         let mut has_usize_impl = false;
         let mut has_isize_impl = false;
 
-        let impls = tcx.non_blanket_impls_for_ty(index_trait, core.self_ty).map(|index_impl_id| {
-            let trait_ref = get_trait_ref_from_impl_id(tcx, index_impl_id);
-            // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
-            // into.
-            let trait_args = trait_ref.args;
-            let index_element_ty = trait_args.type_at(1);
-            if index_element_ty.flags().intersects(has_type_or_const_vars()) {
-                return Err((anyhow!("Index trait impl has uninstantiated generic parameters, which is not yet supported {index_element_ty}"), index_impl_id));
-            }
-
-            if index_element_ty.is_usize() {
-                has_usize_impl = true;
-            } else if matches!(index_element_ty.kind(), TyKind::Int(IntTy::Isize)) {
-                has_isize_impl = true;
-            }
-
-            let index_trait_assoc_fn = tcx.associated_items(index_trait)
-                .in_definition_order()
-                .filter(|assoc_item| matches!(assoc_item.kind, AssocKind::Fn { .. }))
-                // For `Index` or `IndexMut`, we expect exactly one associated fn.
-                .exactly_one()
-                .map_err(|_| (anyhow!("{} impl expected to have a single function", tcx.def_path_str(index_trait)), index_trait))?;
-
-            let unnorm_fn_sig =
-                liberate_and_deanonymize_late_bound_regions(
-                    tcx,
-                    tcx.fn_sig(index_trait_assoc_fn.def_id).instantiate(tcx, trait_args),
-                    index_trait_assoc_fn.def_id);
-            let fn_sig = try_normalize(tcx,
-                ty::PseudoCanonicalInput {
-                    typing_env: TypingEnv::fully_monomorphized(),
-                    value: unnorm_fn_sig,
-                }).expect("Please file a bug at crubit.rs-bug. We failed to normalize the function signature of an `Index` impl.");
-            let output_ty = fn_sig.output();
-
-            // Index::Output isn't the real return type of our index method. We need to wrap it in a
-            // reference before formatting, so that Output types like `str` are formatted correctly as
-            // `&str`.
-            let output_cc_ty = db
-                .format_ty_for_cc(output_ty, TypeLocation::FnReturn { is_constructor: false })
-                .map_err(|e| (e, index_impl_id))?;
-
-            let mut prereqs = CcPrerequisites::default();
-            let output_cc_ty = output_cc_ty.into_tokens(&mut prereqs);
-            let TraitThunks {
-                method_name_to_cc_thunk_name,
-                cc_thunk_decls,
-                rs_thunk_impls: rs_details,
-            } = generate_trait_thunks(
-                db,
-                index_trait,
-                &[index_element_ty],
-                core,
-                /*is_constructor=*/ false,
-            ).map_err(|e| (e, index_impl_id))?;
-
-            let thunk_name = method_name_to_cc_thunk_name
-                .into_values()
-                .exactly_one()
-                .expect("Expecting a single `into` method");
-
-            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-            let doc_comment = generate_doc_comment(db, index_impl_id);
-
-            let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
-            let lifetime = infcx.next_region_var(RegionVariableOrigin::Autoref(tcx.def_span(index_impl_id)));
-
-            let self_by_ref = to_ref(tcx, lifetime, core.self_ty);
-            // We know index has two params, and we use that assumption below to construct our
-            // &[Param] slice with direct indexing.
-            let params = format_param_types_for_cc(db, &fn_sig, /*has_self_param=*/ true).map_err(|e| (e, index_impl_id))?;
-            let impl_body = generate_thunk_call(
-                db,
-                index_impl_id,
-                thunk_name.clone(),
-                output_ty,
-                ThunkSelfParameter::new(
-                    /*has_self=*/ true,
-                    is_copy(tcx, index_impl_id, self_by_ref),
-                    /*is_trait_method =*/ false,
-                ),
-                &[Param {
-                    cc_name: format_ident!("self"),
-                    cpp_type: params[0].clone(),
-                    ty: fn_sig.inputs()[0],
-                }, Param {
-                    cc_name: format_ident!("index"),
-                    cpp_type: params[1].clone(),
-                    ty: fn_sig.inputs()[1],
-                }],
-            ).map_err(|e| (e, index_impl_id))?;
-
-            let index_cc_ty = params[1].snippet.clone().into_tokens(&mut prereqs);
-            let impl_body_tokens = impl_body.into_tokens(&mut prereqs);
-            prereqs.move_defs_to_fwd_decls();
-
-            Ok(IndexImpl {
-                ty: index_element_ty,
-                def_id: index_impl_id,
-                snippets: ApiSnippets {
-                  main_api: CcSnippet {
-                      tokens: quote! {
-                      __NEWLINE__ #doc_comment
-                      #output_cc_ty operator [ ] (#index_cc_ty index) #method_this_qualifier; __NEWLINE__
-                      __NEWLINE__
-                      },
-                      prereqs,
-                  },
-                  cc_details: CcSnippet::new(quote! {
-                      #cc_thunk_decls
-
-                      inline #output_cc_ty #cc_struct_name :: operator  [ ] (#index_cc_ty index) #method_this_qualifier {
-                          #impl_body_tokens
-                      }
-                  }),
-                  rs_details,
+        let impls = tcx
+            .non_blanket_impls_for_ty(trait_def_id, core.self_ty)
+            .map(|impl_id| {
+                let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
+                // Index 0 of our trait ref is the self type, so index 1 is the real type arg
+                // (e.g. `T` in `Index<T>` or in `IndexMut<T>`).
+                let trait_args = trait_ref.args;
+                let trait_arg_ty = trait_args.type_at(1);
+                if trait_arg_ty.flags().intersects(has_type_or_const_vars()) {
+                    let err = anyhow!(
+                        "{trait_name} impl has uninstantiated generic parameters, \
+                               which is not yet supported {trait_arg_ty}"
+                    );
+                    return Err((err, impl_id));
                 }
-            })
-        })
-        .collect();
 
-        IndexImpls { has_usize_impl, has_isize_impl, impls }
+                if trait_arg_ty.is_usize() {
+                    has_usize_impl = true;
+                } else if matches!(trait_arg_ty.kind(), TyKind::Int(IntTy::Isize)) {
+                    has_isize_impl = true;
+                }
+
+                let impl_assoc_fn = tcx
+                    .associated_items(impl_id)
+                    .in_definition_order()
+                    .find(|item| {
+                        item.name().as_str() == method_name
+                            && matches!(item.kind, AssocKind::Fn { .. })
+                    })
+                    .unwrap_or_else(|| {
+                        panic!("Caller should ensure {trait_name} has method {method_name}");
+                    });
+
+                let snippets = db
+                    .generate_function(
+                        impl_assoc_fn.def_id,
+                        Some(operator_name),
+                        StaticMethodMode::Infer,
+                    )
+                    .map_err(|e| (e, impl_id))?;
+
+                Ok(TraitImpl { ty: trait_arg_ty, impl_id, snippets })
+            })
+            .collect();
+
+        TraitImpls { has_usize_impl, has_isize_impl, impls }
+            .avoid_colliding_overloads(db, &trait_name)
     };
 
-    let index_impls: IndexImpls<'tcx> = query_index_impls(
-        tcx.lang_items().index_trait().expect("Could not find Index trait"),
-        quote! { const& },
-        Ty::new_imm_ref,
-    );
-    let index_mut_impls: IndexImpls<'tcx> = query_index_impls(
-        tcx.lang_items().index_mut_trait().expect("Could not find IndexMut trait"),
-        quote! { & },
-        Ty::new_mut_ref,
-    );
-
-    index_impls.into_iter(db).chain(index_mut_impls.into_iter(db)).collect()
+    [
+        query_trait_impls(
+            tcx.lang_items().index_trait().expect("Could not find Index trait"),
+            "index",
+            "operator[]",
+        ),
+        query_trait_impls(
+            tcx.lang_items().index_mut_trait().expect("Could not find IndexMut trait"),
+            "index_mut",
+            "operator[]",
+        ),
+        // TODO(b/483382648): Add support for other traits / operators - e.g. `PartialEq`,
+        // `PartialOrd` (`operator<`, `operator<=`, etc., `operator<=>` seems hard), `Add`,
+        // `AddAssign`, etc.
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
@@ -859,12 +809,20 @@ pub fn generate_adt<'tcx>(
         .copied()
         .sorted_by_def(tcx)
         .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
-        .flat_map(|assoc_item| generate_associated_item(db, assoc_item, &mut member_function_names))
+        .flat_map(|assoc_item| {
+            generate_associated_item(
+                db,
+                assoc_item,
+                &mut member_function_names,
+                None,
+                StaticMethodMode::Infer,
+            )
+        })
         .collect();
 
     let adt_based_ctors = generate_adt_based_ctors(db, core.clone(), &mut member_function_names);
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
-    let index_operator_snippets = generate_index_impls(db, core.as_ref());
+    let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());
 
     let ApiSnippets {
         main_api: public_functions_main_api,
@@ -879,7 +837,7 @@ pub fn generate_adt<'tcx>(
         relocating_ctor_snippets,
         impl_items_snippets,
         into_operator_snippets,
-        index_operator_snippets,
+        trait_operator_snippets,
     ]
     .into_iter()
     .collect();
@@ -1317,7 +1275,7 @@ fn generate_variant_ctor<'tcx>(
                 assert!(was_inserted, "Conflicting names rejected earlier (above)");
             };
             if !main_api_params.is_empty() {
-                let result = db.generate_function(ctor_def_id);
+                let result = db.generate_function(ctor_def_id, None, StaticMethodMode::Infer);
                 if result.is_ok() {
                     mark_method_name_as_used();
                 }
