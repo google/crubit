@@ -102,31 +102,10 @@ ABSL_FLAG(std::string, namespaces_out, "",
           "namespace hierarchy.");
 ABSL_FLAG(std::string, error_report_out, "",
           "(optional) output path for the JSON error report");
-ABSL_FLAG(std::string, environment, "production",
-          "The environment that the bindings are generated for. When set to "
-          "'production', non mandatory (but potentially useful) information is "
-          "generated. When set to 'golden_test', unnecessary information is "
-          "omitted to reduce noise.")
-    .OnUpdate([] {
-      absl::SetFlag(&FLAGS_is_golden_test,
-                    absl::GetFlag(FLAGS_environment) == "golden_test");
-    });
-
 ABSL_FLAG(bool, is_golden_test, false,
           "If true, unnecessary information (such as source locations) is "
           "omitted from the generated bindings to reduce noise in golden "
           "tests.");
-
-// TODO(b/517182898): This is now an alias for --is_golden_test.
-// Remove this flag (and --environment) once the alias is no longer used.
-ABSL_FLAG(bool, generate_source_location_in_doc_comment, true,
-          "add the source code location from which the binding originates in"
-          "the doc comment of the binding")
-    .OnUpdate([] {
-      absl::SetFlag(
-          &FLAGS_is_golden_test,
-          !absl::GetFlag(FLAGS_generate_source_location_in_doc_comment));
-    });
 ABSL_FLAG(bool, kythe_annotations, false,
           "Emit extra source information for generating cross-references.");
 

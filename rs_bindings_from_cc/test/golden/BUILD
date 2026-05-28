@@ -83,8 +83,8 @@ ASPECT_HINTS = {
 }
 
 rust_bindings_from_cc_cli_flag(
-    name = "disable_source_location_in_doc_comment",
-    flags = "--generate_source_location_in_doc_comment=False",
+    name = "is_golden_test",
+    flags = "--is_golden_test=True",
 )
 
 rust_bindings_from_cc_cli_flag(
@@ -103,7 +103,7 @@ rust_bindings_from_cc_cli_flag(
     hdrs = [name + ".h"],
     aspect_hints = [
         "//features:supported",
-        ":disable_source_location_in_doc_comment",
+        ":is_golden_test",
     ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []) + ([":enable_kythe_annotations"] if name.endswith("_annotations") else []),
     deps = [
         ((d + "_cc") if d in TESTS else d)
@@ -144,7 +144,7 @@ cc_library(
     name = "namespaces_json",
     hdrs = ["namespaces_json.h"],
     aspect_hints = [
-        ":disable_source_location_in_doc_comment",
+        ":is_golden_test",
         "//features:supported",
     ],
 )
