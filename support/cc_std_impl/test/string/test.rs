@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use cc_std::std::string;
-use googletest::prelude::*;
+use cc_std::std::string_view;
+use googletest::{expect_eq, expect_ne, expect_that, gtest, matchers::container_eq};
 use rstest::rstest;
 use test_helpers::cpp_std_string_test::RoundTrip;
 
@@ -21,6 +22,33 @@ fn test_ffi_round_trip_handle_non_utf8(#[case] input: &[u8]) {
     let s = string::from(input);
     let s2 = RoundTrip(s.clone());
     expect_eq!(s.as_slice(), s2.as_slice());
+}
+
+#[gtest]
+#[rstest]
+#[case("")]
+#[case("foo")]
+fn utf8_compares_equal_to_str_and_bytes(#[case] input: &str) {
+    let view: string_view<'_> = input.into();
+    let bytes = input.as_bytes();
+    expect_eq!(view, *input);
+    expect_eq!(view, *bytes);
+    expect_eq!(view, view);
+}
+
+#[gtest]
+fn non_utf8_compares_equal_to_bytes() {
+    let view: string_view<'_> = b"\x80\x81".into();
+    let bytes: &[u8] = b"\x80\x81";
+    expect_eq!(view, *bytes);
+}
+
+#[gtest]
+fn different_utf8_strings_compare_unequal() {
+    let foo: string_view<'_> = "foo".into();
+    let bar: &[u8] = b"bar";
+    expect_ne!(foo, *bar);
+    expect_ne!(foo, *"bar");
 }
 
 #[gtest]
@@ -86,21 +114,21 @@ fn test_contains() {
 fn test_display_success() {
     let utf8_str: string = "array".into();
     let utf8_str_formatted = format!("{}", utf8_str.display());
-    expect_that!(utf8_str_formatted, eq("array"));
+    expect_eq!(utf8_str_formatted, "array");
 }
 
 #[gtest]
 fn test_display_error() {
     let non_utf8_str: &[u8] = b"Hello \xF0\xF0World";
     let non_utf8_str_formatted = string::from(non_utf8_str);
-    expect_that!(format!("{}", non_utf8_str_formatted.display()), eq("Hello ��World"));
+    expect_eq!(format!("{}", non_utf8_str_formatted.display()), "Hello ��World");
 }
 
 #[gtest]
 fn test_debug() {
     let utf8_str: string = "array".into();
     let utf8_str_formatted = format!("{:?}", utf8_str);
-    expect_that!(utf8_str_formatted, eq("cc_std::string_wrapper([97, 114, 114, 97, 121])"));
+    expect_eq!(utf8_str_formatted, "cc_std::string_wrapper([97, 114, 114, 97, 121])");
 }
 
 #[gtest]

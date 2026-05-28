@@ -7,20 +7,28 @@ extern crate std;
 use crate::lossy_utf8::LossyUtf8Display;
 use crate::slice_ptr::get_raw_parts;
 use crate::std::raw_string_view;
+use core::fmt::Display;
+use core::hash::{Hash, Hasher};
+use core::ops::Deref;
 use core::ptr;
-use std::fmt::Display;
-use std::str::Utf8Chunks;
+use core::str::Utf8Chunks;
 
 #[cfg(unix)]
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
 
-/// Live type for std::string_view bindings.
+/// A C++ `std::string_view` which is live and immutable for the lifetime `'a`.
 ///
-/// This is a raw_string_view wrapper with an associated lifetime.
+/// This type is similar to `&str` or `&[u8]`. It refers to an immutable slice of bytes, and
+/// commonly refers to text. Conceptually, this is quite similar to the `ByteStr` type, but is
+/// guaranteed to have the same in-memory layout as C++'s `std::string_view`.
 ///
-/// # Invariants
+/// Unlike `&str`, `string_view` data may not be valid UTF-8.
+/// For this reason, `string_view` does not implement `Display` directly, though it does provide a
+/// `.display()` method which will replace invalid UTF-8 with the Unicode replacement character
+/// U+FFFD (`�`).
 ///
-/// The contained raw_string_view is valid and will be immutable for lifetime `'a`.
+/// This type is distinct from the `raw_string_view` type, which does not have a lifetime and
+/// cannot be used directly in safe Rust code.
 #[allow(non_camel_case_types)]
 #[repr(transparent)]
 #[doc = "CRUBIT_ANNOTATE: cpp_type=std::string_view"]
@@ -133,6 +141,65 @@ impl<'a> core::fmt::Debug for string_view<'a> {
         }
         write!(f, "\"")?;
         Ok(())
+    }
+}
+
+impl Deref for string_view<'_> {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        self.as_bytes()
+    }
+}
+
+// `string_view` is comparable to `&str` and `&[u8]`:
+
+impl PartialEq for string_view<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_bytes() == other.as_bytes()
+    }
+}
+
+impl Eq for string_view<'_> {}
+
+impl PartialEq<str> for string_view<'_> {
+    fn eq(&self, other: &str) -> bool {
+        self.as_bytes() == other.as_bytes()
+    }
+}
+
+impl PartialEq<string_view<'_>> for str {
+    fn eq(&self, other: &string_view<'_>) -> bool {
+        self.as_bytes() == other.as_bytes()
+    }
+}
+
+impl PartialEq<[u8]> for string_view<'_> {
+    fn eq(&self, other: &[u8]) -> bool {
+        self.as_bytes() == other
+    }
+}
+
+impl PartialEq<string_view<'_>> for [u8] {
+    fn eq(&self, other: &string_view<'_>) -> bool {
+        self == other.as_bytes()
+    }
+}
+
+impl PartialOrd for string_view<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for string_view<'_> {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.as_bytes().cmp(other.as_bytes())
+    }
+}
+
+impl Hash for string_view<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_bytes().hash(state);
     }
 }
 
