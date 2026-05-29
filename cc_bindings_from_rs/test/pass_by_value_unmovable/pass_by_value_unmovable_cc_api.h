@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // pass_by_value_unmovable_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_PASS_BY_VALUE_UNMOVABLE_PASS_BY_VALUE_UNMOVABLE_GOLDEN
@@ -26,8 +25,6 @@
 
 namespace pass_by_value_unmovable {
 
-// Generated from:
-// cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=8
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: pass_by_value_unmovable_golden :: CppMovable") alignas(4)
     [[clang::trivial_abi]] CppMovable final {
@@ -53,8 +50,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=8
     ::std::int32_t __field0;
   };
 
@@ -62,8 +57,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=17
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: pass_by_value_unmovable_golden :: NotCppMovable") alignas(4)
     [[clang::trivial_abi]] NotCppMovable final {
@@ -92,8 +85,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=17
     ::std::int32_t __field0;
   };
 
@@ -101,8 +92,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=14
 void takes_val_movable(::pass_by_value_unmovable::CppMovable _val);
 
 // Error generating bindings for function

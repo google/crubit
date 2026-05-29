@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // tuples_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN
@@ -44,9 +40,6 @@
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=24
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: AdtHoldingFiveAndSix") alignas(4)
     [[clang::trivial_abi]] AdtHoldingFiveAndSix final {
@@ -69,13 +62,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=25
     ::std::int32_t five;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=26
     ::std::int32_t six;
   };
 
@@ -84,9 +73,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=195
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
@@ -109,14 +95,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=200
   static ::tuples::CloneNoDefault new_(::std::uint8_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=196
     ::std::uint8_t val;
   };
 
@@ -125,9 +106,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=168
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
@@ -148,14 +126,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=173
   static ::tuples::CopyNoDefault new_(::std::uint8_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=169
     ::std::uint8_t val;
   };
 
@@ -164,9 +137,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=221
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
@@ -187,20 +157,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=226
   static ::tuples::HasDefault new_(rs_std::StrRef val);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=231
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=222
     ::rs::alloc::string::String val_;
   };
 
@@ -209,9 +171,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=251
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
@@ -234,14 +193,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=256
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=252
     ::rs::alloc::string::String val_;
   };
 
@@ -252,9 +206,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(8)
 // CRUBIT_ANNOTATE: must_bind=
 //  The same as NontrivialDrop, but without a C++ move operation. This can be
 //  returned by value, even inside a tuple!
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=70
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
     [[clang::trivial_abi]] NonCppMovable final {
  public:
@@ -276,8 +227,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=71
     ::std::uint8_t value;
   };
 
@@ -286,9 +235,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=43
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
     1) [[clang::trivial_abi]] NontrivialDrop final {
  public:
@@ -310,8 +256,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=43
     ::std::uint8_t __field0;
   };
 
@@ -325,79 +269,43 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
 // Unsupported constant type: (i32,)
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=63
 void assert_nontrivial_drop_count(::std::uint8_t drop_count);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=33
 void param_adt_in_tuple(::std::tuple<::tuples::AdtHoldingFiveAndSix> adt);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=19
 void param_c_abi_compatible_five_in_tuple(::std::tuple<::std::int32_t> five);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=104
 void param_ffi_alias_in_tuple(::std::tuple<::std::int8_t> five);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=86
 void param_nested_tuples(
     ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
         v);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=59
 void param_nontrivial_drop_in_tuple(
     ::std::tuple<::tuples::NontrivialDrop> nontrivial_drop);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=295
 void param_option_in_tuple(::std::tuple<::std::optional<::std::int32_t>> opt);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=95
 void param_triply_nested_tuple(
     ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>> v);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=29
 ::std::tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=15
 ::std::tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=108
 ::std::tuple<::std::int8_t> return_ffi_alias_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=90
 ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
 return_nested_tuples();
 
@@ -408,28 +316,16 @@ return_nested_tuples();
 // data type without a move constructor
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=55
 ::std::tuple<::tuples::NontrivialDrop> return_new_nontrivial_drop_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=290
 ::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=99
 ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>>
 return_triply_nested_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=13
 void return_unit_is_not_tuple();
 
 }  // namespace tuples
@@ -465,9 +361,6 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=113
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
     [[clang::trivial_abi]] TupleStruct final {
  public:
@@ -494,8 +387,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   // in this context
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=114
     rs_std::Tuple<::std::int32_t> tuple_field;
   };
   // Skipped bindings for field `empty_tuple_field`: ZST fields are not
@@ -623,9 +514,6 @@ struct alignas(1)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=275
 ::std::uint8_t take_tuple_copy_no_default_1(
     rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t> const& r);
 
@@ -661,9 +549,6 @@ struct alignas(8)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=285
 rs_std::StrRef take_tuple_has_default(
     rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t> const* $(__anon1)
         crubit_nonnull r CRUBIT_LIFETIME_BOUND);
@@ -731,9 +616,6 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=128
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple") alignas(4)
     [[clang::trivial_abi]] GetsTuple final {
  public:
@@ -753,14 +635,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple") alignas(4)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=133
   static ::tuples::GetsTuple new_(::std::uint32_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=129
     rs_std::Tuple<::std::uint32_t, ::std::uint32_t> value;
   };
 
@@ -871,9 +748,6 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=139
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: NestedTupleIntermediate1") alignas(4)
     [[clang::trivial_abi]] NestedTupleIntermediate1 final {
@@ -896,15 +770,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=140
     rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                   ::std::uint32_t>
         v1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=141
     rs_std::Tuple<::std::uint32_t,
                   rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>
         v2;
@@ -958,9 +828,6 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=145
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: NestedTupleIntermediate2") alignas(4)
     [[clang::trivial_abi]] NestedTupleIntermediate2 final {
@@ -983,16 +850,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=146
     rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                                 ::std::uint32_t>,
                   ::std::uint32_t>
         v1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=147
     rs_std::Tuple<
         ::std::uint32_t,
         rs_std::Tuple<::std::uint32_t,
@@ -1005,9 +868,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=151
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: NestedTupleStruct") alignas(4) [[clang::trivial_abi]]
 NestedTupleStruct final {
@@ -1028,22 +888,15 @@ NestedTupleStruct final {
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=158
   static ::tuples::NestedTupleStruct new_(::std::uint32_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=152
     rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                                 ::std::uint32_t>,
                   ::std::uint32_t>
         in_tuple1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=153
     rs_std::Tuple<
         ::std::uint32_t,
         rs_std::Tuple<::std::uint32_t,
@@ -1092,9 +945,6 @@ struct alignas(1)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=205
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: CloneNoDefaultTuple") alignas(1) [[clang::trivial_abi]]
 CloneNoDefaultTuple final {
@@ -1116,19 +966,12 @@ CloneNoDefaultTuple final {
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=211
   static ::tuples::CloneNoDefaultTuple new_(::std::uint8_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=206
     rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t> in_tuple1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=207
     rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault> in_tuple2;
   };
 
@@ -1137,9 +980,6 @@ CloneNoDefaultTuple final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=280
 ::std::uint8_t take_tuple_clone_no_default_2(
     rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault> const& r);
 
@@ -1177,9 +1017,6 @@ struct alignas(1)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=179
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: CopyNoDefaultTuple") alignas(1) [[clang::trivial_abi]]
 CopyNoDefaultTuple final {
@@ -1200,19 +1037,12 @@ CopyNoDefaultTuple final {
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=185
   static ::tuples::CopyNoDefaultTuple new_(::std::uint8_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=180
     rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t> in_tuple1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=181
     rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault> in_tuple2;
   };
 
@@ -1252,9 +1082,6 @@ struct alignas(8)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=236
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple") alignas(
     8) [[clang::trivial_abi]] HasDefaultTuple final {
  public:
@@ -1277,19 +1104,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple") alignas(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=242
   static ::tuples::HasDefaultTuple new_(rs_std::StrRef val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=237
     rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t> in_tuple1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=238
     rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault> in_tuple2;
   };
 
@@ -1333,9 +1153,6 @@ struct alignas(8)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=261
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: HasNoDefaultTuple") alignas(8) [[clang::trivial_abi]]
 HasNoDefaultTuple final {
@@ -1359,19 +1176,12 @@ HasNoDefaultTuple final {
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=267
   static ::tuples::HasNoDefaultTuple new_(rs_std::StrRef val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=262
     rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t> in_tuple1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=263
     rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault> in_tuple2;
   };
 
@@ -1438,8 +1248,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace tuples {
 
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=316
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: TupleWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 TupleWithSizeTypes final {
@@ -1459,23 +1267,15 @@ TupleWithSizeTypes final {
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=318
     rs_std::Tuple<::std::uintptr_t, ::std::uint8_t> uval_in_tuple1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=319
     rs_std::Tuple<::std::uint8_t, ::std::uintptr_t> uval_in_tuple2;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=320
     rs_std::Tuple<::std::intptr_t, ::std::int8_t> ival_in_tuple1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=321
     rs_std::Tuple<::std::int8_t, ::std::intptr_t> ival_in_tuple2;
   };
 
@@ -1559,9 +1359,6 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=300
 ::std::optional<::std::int32_t> return_option_in_tuple_ref(
     rs_std::Tuple<rs_std::Option<::std::int32_t>> const& opt);
 
@@ -1654,9 +1451,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=305
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: StructWithOptionTuple") alignas(8)
     [[clang::trivial_abi]] StructWithOptionTuple final {
@@ -1682,14 +1476,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=311
   static ::tuples::StructWithOptionTuple new_(::std::int32_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/tuples/tuples.rs;l=306
     rs_std::Tuple<rs_std::Option<::std::int32_t>,
                   rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
         opt_tuple;

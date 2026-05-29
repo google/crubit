@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // leaf_rs_lib_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN
@@ -27,28 +26,18 @@
 
 namespace leaf_rs_lib {
 
-// Generated from:
-// common/test/bidirectional_deps/leaf_rs_lib.rs;l=21
 struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
     1) [[clang::trivial_abi]] LeafRsEnum final {
  public:
   // `leaf_rs_lib_golden::LeafRsEnum` doesn't implement the `Default` trait
   LeafRsEnum() = delete;
 
-  // Generated from:
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=22
   static constexpr LeafRsEnum MakeKUnknown();
 
-  // Generated from:
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=23
   static constexpr LeafRsEnum MakeKValue1();
 
-  // Generated from:
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=24
   static constexpr LeafRsEnum MakeKValue2();
 
-  // Generated from:
-  // common/test/bidirectional_deps/leaf_rs_lib.rs;l=25
   static constexpr LeafRsEnum MakeKValue3();
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -78,8 +67,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// common/test/bidirectional_deps/leaf_rs_lib.rs;l=7
 struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
     1) [[clang::trivial_abi]] LeafRsType final {
  public:
@@ -101,8 +88,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
 
  private:
   union {
-    // Generated from:
-    // common/test/bidirectional_deps/leaf_rs_lib.rs;l=8
     ::std::uint8_t field;
   };
 
@@ -110,20 +95,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// common/test/bidirectional_deps/leaf_rs_lib.rs;l=15
 ::std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x);
 
-// Generated from:
-// common/test/bidirectional_deps/leaf_rs_lib.rs;l=37
 ::std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x);
 
-// Generated from:
-// common/test/bidirectional_deps/leaf_rs_lib.rs;l=11
 ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x);
 
-// Generated from:
-// common/test/bidirectional_deps/leaf_rs_lib.rs;l=28
 ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x);
 
 static_assert(
@@ -162,8 +139,6 @@ static_assert(::std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsEnum>);
 inline void LeafRsEnum::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsEnum, __opaque_blob_of_bytes));
 }
-// Generated from:
-// common/test/bidirectional_deps/leaf_rs_lib.rs;l=7
 using LeafRsTypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: leaf_rs_lib_golden :: LeafRsType") = ::leaf_rs_lib::LeafRsType;
 static_assert(

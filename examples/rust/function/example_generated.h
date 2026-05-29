@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_FUNCTION_EXAMPLE_CRATE_GOLDEN
@@ -19,8 +18,6 @@
 
 namespace example_crate {
 
-// Generated from:
-// examples/rust/function/example.rs;l=5
 ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y);
 
 namespace __crubit_internal {

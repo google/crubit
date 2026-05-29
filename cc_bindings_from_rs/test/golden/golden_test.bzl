@@ -24,7 +24,7 @@ load(
 )
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
-    "crubit_flavor_transition",
+    "crubit_golden_flavor_transition",
 )
 
 def _generate_bindings_impl(ctx):
@@ -42,7 +42,7 @@ _generate_bindings = rule(
         "rust_library": attr.label(
             providers = [CrateInfo],
             aspects = [cc_bindings_from_rust_aspect],
-            cfg = crubit_flavor_transition,
+            cfg = crubit_golden_flavor_transition,
         ),
         # Synthetic dependency to ensure even a coarse `bazel query` analysis finds a transitive
         # dependency from Crubit tool sources to golden test bindings.

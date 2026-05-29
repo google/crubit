@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // trait_definition_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_DEFINITION_GOLDEN
@@ -26,8 +25,6 @@
 
 namespace trait_definition {
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: trait_definition_golden :: MyStruct") alignas(4) [[clang::trivial_abi]]
 MyStruct final {
@@ -49,8 +46,6 @@ MyStruct final {
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=10
     ::std::int32_t y;
   };
 
@@ -58,8 +53,6 @@ MyStruct final {
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=5
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_definition_golden :: MyTrait")
     MyTrait {
   template <typename T>
@@ -72,8 +65,6 @@ template <>
 struct rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=14
   static ::std::int32_t do_something(::trait_definition::MyStruct const& self);
 };
 

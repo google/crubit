@@ -108,6 +108,7 @@ fn new_db<'tcx>(
         errors,
         fatal_errors,
         cmdline.no_thunk_name_mangling,
+        cmdline.is_golden_test,
         include_guard,
         ignore_symbols_from_files.into(),
     )

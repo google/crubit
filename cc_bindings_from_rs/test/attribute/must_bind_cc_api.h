@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // must_bind_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_MUST_BIND_GOLDEN
@@ -27,9 +26,6 @@
 namespace must_bind {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/attribute/must_bind.rs;l=7
 struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
@@ -49,14 +45,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/attribute/must_bind.rs;l=14
   static ::must_bind::Original new_();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/attribute/must_bind.rs;l=8
     ::std::int32_t x;
   };
 
@@ -65,9 +56,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/attribute/must_bind.rs;l=20
 void bar();
 
 static_assert(

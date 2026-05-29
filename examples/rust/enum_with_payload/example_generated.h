@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_WITH_PAYLOAD_EXAMPLE_CRATE_GOLDEN
@@ -27,8 +26,6 @@
 
 namespace example_crate {
 
-// Generated from:
-// examples/rust/enum_with_payload/example.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
     [[clang::trivial_abi]] Color final {
  public:
@@ -36,21 +33,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   Color() = delete;
 
   //  A completely transparent color (no payload)
-  //
-  // Generated from:
-  // examples/rust/enum_with_payload/example.rs;l=8
   static constexpr Color MakeTransparent();
 
   //  A grayscale value from 0 to 255
-  //
-  // Generated from:
-  // examples/rust/enum_with_payload/example.rs;l=10
   static ::example_crate::Color MakeGrayscale(::std::uint8_t __param_0);
 
   //  Red, Green, and Blue values from 0 to 255
-  //
-  // Generated from:
-  // examples/rust/enum_with_payload/example.rs;l=12
   static ::example_crate::Color MakeRgb(::std::uint8_t __param_0,
                                         ::std::uint8_t __param_1,
                                         ::std::uint8_t __param_2);

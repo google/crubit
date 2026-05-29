@@ -126,6 +126,11 @@ pub struct Cmdline {
     #[clap(long, value_parser, value_name = "BOOL")]
     pub no_thunk_name_mangling: bool,
 
+    /// If true, unnecessary information (such as source locations) is
+    /// omitted from the generated bindings to reduce noise in golden tests.
+    #[clap(long, value_parser, value_name = "BOOL", default_value_t = false)]
+    pub is_golden_test: bool,
+
     /// The top level namespace of the C++ bindings for a given crate. Keys are
     /// crate names, and values are namespaces. Example:
     /// "--crate-namespace=foo=a_namespace::b_namespace

@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // uses_rust_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN
@@ -29,8 +25,6 @@
 
 namespace uses_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=32
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
     [[clang::trivial_abi]] Bar final {
  public:
@@ -51,8 +45,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/uses.rs;l=33
     ::std::int32_t i;
   };
 
@@ -60,8 +52,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=35
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
     [[clang::trivial_abi]] Foo final {
  public:
@@ -80,25 +70,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/golden/uses.rs;l=41
   static ::uses_rust::Foo create();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/golden/uses.rs;l=45
   static ::uses_rust::Bar bar();
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/uses.rs;l=36
     ::std::int32_t i;
   };
 
  public:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/uses.rs;l=37
     ::uses_rust::Bar bar_;
   };
 
@@ -110,8 +92,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
 
 namespace uses_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=77
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
     [[clang::trivial_abi]] G final {
  public:
@@ -130,8 +110,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/uses.rs;l=78
     ::std::int32_t field;
   };
 
@@ -143,8 +121,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
 
 namespace uses_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=67
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
     [[clang::trivial_abi]] InnerX final {
  public:
@@ -163,8 +139,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/uses.rs;l=68
     ::std::int32_t field;
   };
 
@@ -176,8 +150,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
 
 namespace uses_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=20
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
     [[clang::trivial_abi]] X1 final {
  public:
@@ -198,8 +170,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/uses.rs;l=21
     ::std::int32_t x;
   };
 
@@ -207,24 +177,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=8
 ::std::int32_t f1();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=12
 ::std::int32_t f2();
 
 }  // namespace uses_rust
 
 namespace uses_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=54
 ::std::int32_t g1();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=58
 ::std::int32_t g2();
 
 static_assert(
@@ -275,10 +237,8 @@ inline void Foo::__crubit_field_offset_assertions() {
 
 namespace uses_rust::test_mod {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=77
 using S CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") = ::uses_rust::G;
-}  // namespace uses_rust::test_mod
+}
 
 namespace uses_rust {
 
@@ -314,11 +274,9 @@ inline void InnerX::__crubit_field_offset_assertions() {
 
 namespace uses_rust::test_use_glob {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=20
 using X1 CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") =
     ::uses_rust::X1;
-}  // namespace uses_rust::test_use_glob
+}
 
 namespace uses_rust {
 

@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // const_field_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_CONST_FIELD_CONST_FIELD_GOLDEN
@@ -33,9 +32,6 @@
 namespace const_field {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/const_field/lib.rs;l=13
 ::std::optional<::struct_with_const_field>
 return_struct_with_const_field_by_value_in_option();
 
@@ -88,9 +84,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace const_field {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/const_field/lib.rs;l=7
 rs_std::Result<::struct_with_const_field, ::std::uint8_t>
 return_struct_with_const_field_by_value_in_result();
 

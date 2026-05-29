@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // rust_lib_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
@@ -30,8 +29,6 @@
 
 namespace rust_lib {
 
-// Generated from:
-// cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=12
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
     [[clang::trivial_abi]] FooService final {
  public:
@@ -51,26 +48,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=17
   bool handle_request(const ::foo_service::FooRequest* req,
                       ::foo_service::FooResponse* rsp);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=24
   const ::foo_service::FooRequestStats* request_stats() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=28
   ::foo_service::FooRequestStats clone_request_stats() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=32
   void update_request_stats(::foo_service::FooRequestStats updated_stats);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=36
   static void enum_in_signature(::foo_proto::FooEnum _e);
 
  private:

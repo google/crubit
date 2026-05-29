@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_USE_DECLARATION_EXAMPLE_CRATE_GOLDEN
@@ -25,8 +24,6 @@
 
 namespace example_crate {
 
-// Generated from:
-// examples/rust/use_declaration/example.rs;l=8
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
     [[clang::trivial_abi]] Type final {
  public:
@@ -45,8 +42,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // examples/rust/use_declaration/example.rs;l=9
     ::std::int32_t x;
   };
 
@@ -54,19 +49,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// examples/rust/use_declaration/example.rs;l=6
 void function();
 
 }  // namespace example_crate
 
 namespace example_crate::module {
 
-// Generated from:
-// examples/rust/use_declaration/example.rs;l=8
 using Type CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") =
     ::example_crate::Type;
-}  // namespace example_crate::module
+}
 
 namespace example_crate {
 

@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // into_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN
@@ -29,9 +28,6 @@
 namespace into {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/into/into.rs;l=14
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
     [[clang::trivial_abi]] Convert final {
  public:
@@ -52,25 +48,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   Convert(::crubit::UnsafeRelocateTag, Convert&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=16
   explicit operator ::std::int32_t();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=23
   explicit operator ::std::int64_t();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=30
   explicit operator rs_std::StrRef();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=38
   explicit operator ::std::int16_t();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/into/into.rs;l=14
     ::std::int32_t __field0;
   };
 
@@ -79,9 +65,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/into/into.rs;l=85
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
     [[clang::trivial_abi]] ConvertModule final {
  public:
@@ -103,17 +86,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   ConvertModule(::crubit::UnsafeRelocateTag, ConvertModule&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=91
   explicit operator ::std::int32_t();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=103
   explicit operator ::std::int64_t();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/into/into.rs;l=85
     ::std::int32_t __field0;
   };
 
@@ -122,9 +99,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/into/into.rs;l=46
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
     [[clang::trivial_abi]] ConvertRef final {
  public:
@@ -144,29 +118,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=50
   static ::into::ConvertRef create(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=55
   ::into::Convert transmigrate() &&;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=60
   explicit operator rs_std::StrRef();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=67
   explicit operator ::into::Convert();
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/into/into.rs;l=46
     rs_std::StrRef __field0;
   };
 
@@ -175,9 +137,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/into/into.rs;l=76
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
     [[clang::trivial_abi]] NotFfiSafe final {
  public:

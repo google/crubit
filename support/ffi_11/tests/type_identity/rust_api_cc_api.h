@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // rust_api_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN
@@ -21,72 +20,38 @@
 
 namespace rust_api {
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=5
 decltype(char(0)) c_char();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=60
 decltype(char16_t(0)) c_char16_t();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=64
 decltype(char32_t(0)) c_char32_t();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=56
 decltype(char8_t(0)) c_char8_t();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=44
 double c_double();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=41
 float c_float();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=21
 ::std::int32_t c_int();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=27
 ::std::int64_t c_long();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=34
 long long c_longlong();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=48
 decltype(nullptr) c_nullptr_t();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=11
 ::std::int8_t c_schar();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=15
 ::std::int16_t c_short();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=8
 ::std::uint8_t c_uchar();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=24
 ::std::uint32_t c_uint();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=30
 ::std::uint64_t c_ulong();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=37
 unsigned long long c_ulonglong();
 
-// Generated from:
-// support/ffi_11/tests/type_identity/rust_api.rs;l=18
 ::std::uint16_t c_ushort();
 
 // Error generating bindings for function `rust_api_golden::c_wchar_t` defined

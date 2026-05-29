@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // aliasing_references_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ALIASING_REFERENCES_ALIASING_REFERENCES_GOLDEN
@@ -30,8 +29,6 @@
 
 namespace aliasing_references {
 
-// Generated from:
-// cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=27
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: aliasing_references_golden :: NonFreezeType") alignas(4)
     [[clang::trivial_abi]] NonFreezeType final {
@@ -56,14 +53,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   //
   //  This function must not be called while an outstanding reference to the
   //  underlying `i32` is held.
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=35
   ::std::int32_t& $(__anon1)
       as_mut_unchecked() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=38
   void shared_self_mut_ref_allows_alias(::std::int32_t& __param_1) const;
 
  private:
@@ -75,8 +67,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=15
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: aliasing_references_golden :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
@@ -97,26 +87,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=20
   void mut_self_and_mut_ref(::std::int32_t& __param_1);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=21
   void mut_self_and_shared_ref(::std::int32_t const& __param_1);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=22
   void shared_self_and_mut_ref(::std::int32_t& __param_1) const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=23
   void shared_self_and_shared_ref_allows_alias(
       ::std::int32_t const& __param_1) const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=16
     ::std::int32_t field;
   };
 
@@ -124,28 +104,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=10
 void mut_ref_and_mut_slice(::std::int32_t& __param_0,
                            rs_std::SliceRef<::std::int32_t> __param_1);
 
-// Generated from:
-// cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=9
 void mut_ref_and_shared_refs(::std::int32_t& __param_0,
                              ::std::int32_t const& __param_1,
                              ::std::int32_t const& __param_2);
 
-// Generated from:
-// cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=11
 void mut_ref_and_shared_slice(::std::int32_t& __param_0,
                               rs_std::SliceRef<const ::std::int32_t> __param_1);
 
-// Generated from:
-// cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=12
 void mut_ref_and_str(::std::int32_t& __param_0, rs_std::StrRef __param_1);
 
-// Generated from:
-// cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=8
 void mut_refs(::std::int32_t& __param_0, ::std::int32_t& __param_1);
 
 static_assert(

@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // stdlib_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_STDLIB_STDLIB_GOLDEN
@@ -31,8 +30,6 @@
 
 namespace stdlib {
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=19
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
     [[clang::trivial_abi]] MyStruct final {
  public:
@@ -55,13 +52,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=24
   static ::stdlib::MyStruct new_(::std::int32_t x);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=20
     ::std::int32_t x;
   };
 
@@ -69,8 +62,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=5
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
   template <typename T>
   using impl = rs_std::impl<T, MyTrait>;
@@ -81,8 +72,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
 template <>
 struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
   static constexpr bool kIsImplemented = true;
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=61
   using Output CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: future :: Future>::Output") =
       ::std::int32_t;
@@ -97,14 +86,10 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
 template <>
 struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=47
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: iter :: Iterator>::Item") =
       ::std::int32_t;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=49
   static ::std::optional<::std::int32_t> next(::stdlib::MyStruct& self);
 };
 

@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE_GOLDEN
@@ -25,7 +24,6 @@
 
 namespace example_crate {
 
-// Generated from: examples/rust/union/example.rs;l=6
 union CRUBIT_INTERNAL_RUST_TYPE(
     ":: example_crate_golden :: ReprCUnion") alignas(8) [[clang::trivial_abi]]
 ReprCUnion final {
@@ -44,11 +42,7 @@ ReprCUnion final {
   ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // examples/rust/union/example.rs;l=7
   ::std::int32_t a;
-  // Generated from:
-  // examples/rust/union/example.rs;l=8
   double b;
 
  private:

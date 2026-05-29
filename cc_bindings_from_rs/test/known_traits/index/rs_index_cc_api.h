@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // rs_index_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN
@@ -30,8 +29,6 @@
 
 namespace rs_index {
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=67
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
     [[clang::trivial_abi]] CustomIndex final {
  public:
@@ -55,13 +52,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=69
   static ::rs_index::CustomIndex new_(::std::uintptr_t index);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=67
     ::std::uintptr_t __field0;
   };
 
@@ -69,8 +62,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=127
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
     [[clang::trivial_abi]] Id final {
  public:
@@ -92,13 +83,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=129
   static ::rs_index::Id new_(::std::int32_t id);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=127
     ::std::int32_t __field0;
   };
 
@@ -106,8 +93,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=10
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
     [[clang::trivial_abi]] IntPair final {
  public:
@@ -126,12 +111,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=16
   static ::rs_index::IntPair new_(::std::int32_t x, ::std::int32_t y);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=25
   ::std::int32_t const& $(__anon1) operator[](::std::uintptr_t index) const& $(
       __anon1) CRUBIT_LIFETIME_BOUND;
 
@@ -141,13 +122,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   // Index implementation for `u64` is not supported when `Index<usize>` is
   // implemented as it may overlap.
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=78
   ::std::int32_t const& $(__anon1) operator[](
       ::rs_index::CustomIndex index) const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=35
   ::std::int32_t& $(__anon1) operator[](::std::uintptr_t index) &
       $(__anon1) CRUBIT_LIFETIME_BOUND;
 
@@ -157,19 +134,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   // IndexMut implementation for `u64` is not supported when `IndexMut<usize>`
   // is implemented as it may overlap.
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=88
   ::std::int32_t& $(__anon1) operator[](::rs_index::CustomIndex index) &
       $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=11
     ::std::int32_t x;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=12
     ::std::int32_t y;
   };
 
@@ -177,8 +148,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=97
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
     [[clang::trivial_abi]] Map final {
  public:
@@ -200,18 +169,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=103
   static ::rs_index::Map new_(::std::uintptr_t row_size,
                               ::std::uintptr_t col_size);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=116
   rs_std::StrRef operator[](::std::tuple<::std::uintptr_t, ::std::uintptr_t>
                                 index) const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=137
   rs_std::StrRef operator[](::rs_index::Id const* $(__anon2)
                                 crubit_nonnull _index CRUBIT_LIFETIME_BOUND)
       const& $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -227,8 +190,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
   // supported yet (b/259749095)
   ::std::array<unsigned char, 24> data;
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=98
     ::std::uintptr_t row_size;
   };
 

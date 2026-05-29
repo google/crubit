@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN
@@ -25,8 +24,6 @@
 
 namespace example_crate {
 
-// Generated from:
-// examples/rust/rust_union/example.rs;l=5
 union CRUBIT_INTERNAL_RUST_TYPE(
     ":: example_crate_golden :: ReprRustUnion") alignas(8)
     [[clang::trivial_abi]] ReprRustUnion final {
@@ -46,22 +43,14 @@ union CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // examples/rust/rust_union/example.rs;l=21
   void set_a(::std::int32_t a);
 
-  // Generated from:
-  // examples/rust/rust_union/example.rs;l=25
   void set_b(double b);
 
  private:
-  // Generated from:
-  // examples/rust/rust_union/example.rs;l=6
   struct {
     ::std::int32_t value;
   } a;
-  // Generated from:
-  // examples/rust/rust_union/example.rs;l=7
   struct {
     double value;
   } b;

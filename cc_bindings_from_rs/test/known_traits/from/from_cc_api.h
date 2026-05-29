@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // from_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN
@@ -29,9 +28,6 @@
 namespace from {
 struct OpaqueRef;
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/from/from.rs;l=67
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
     [[clang::trivial_abi]] NotFfiSafe final {
  public:
@@ -51,13 +47,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=74
   static ::from::NotFfiSafe create();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=78
   explicit operator ::std::int32_t();
 
  private:
@@ -71,9 +62,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/from/from.rs;l=11
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
     [[clang::trivial_abi]] Opaque final {
  public:
@@ -94,29 +82,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   Opaque(::crubit::UnsafeRelocateTag, Opaque&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=13
   explicit operator ::std::int32_t();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=19
   explicit operator ::std::int64_t();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=25
   explicit operator rs_std::StrRef();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=32
   explicit operator ::std::int16_t();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=38
   explicit operator ::from::OpaqueRef();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/from/from.rs;l=11
     ::std::int32_t __field0;
   };
 
@@ -125,9 +101,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/from/from.rs;l=45
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
     [[clang::trivial_abi]] OpaqueRef final {
  public:
@@ -147,25 +120,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=49
   static ::from::OpaqueRef create(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=54
   rs_std::StrRef get_arg() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=59
   explicit operator rs_std::StrRef();
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/from/from.rs;l=45
     rs_std::StrRef __field0;
   };
 

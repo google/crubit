@@ -260,6 +260,8 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         if self_rmeta != None:
             crubit_args.add("--extern={}={}".format(self_crate_name, self_rmeta.path))
     crubit_args.add("--enable-rmeta-interface")
+    if ctx.attr._is_golden_test[BuildSettingInfo].value:
+        crubit_args.add("--is-golden-test")
     toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
     if toolchain == None:
         ctx.actions.run_shell(
@@ -584,6 +586,9 @@ private_common_attrs = {
     ),
     "_generate_error_report": attr.label(
         default = "//cc_bindings_from_rs/bazel_support:generate_error_report",
+    ),
+    "_is_golden_test": attr.label(
+        default = "//common/bazel_support:is_golden_test",
     ),
     "_globally_enabled_features": attr.label(
         default = "//common/bazel_support:globally_enabled_features",

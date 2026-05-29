@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // composable_bridging_rust_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_COMPOSABLE_BRIDGING_RUST_GOLDEN
@@ -39,41 +35,25 @@ namespace composable_bridging_rust {
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=50:
 // Generic types are not supported yet (b/259749095)
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=41
 std::optional<::std::int32_t> make_my_option_rust();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=45
 ::std::optional<rs_std::SliceRef<const ::std::int32_t>> maybe_int_slice();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=29
 ::std::optional<::std::int32_t* $(__anon1) crubit_nonnull>
 option_adds_one_to_ref(
     ::std::optional<::std::int32_t* $(__anon1) crubit_nonnull> x);
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=20
 ::std::optional<::std::int32_t> option_increments(
     ::std::optional<::std::int32_t> x);
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=24
 ::std::optional<rs_std::SliceRef<const ::std::int32_t>>
 option_slice_without_first(
     ::std::optional<rs_std::SliceRef<const ::std::int32_t>> x);
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=12
 ::std::optional<::std::int32_t> returns_no_int();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=8
 ::std::optional<::std::int32_t> returns_some_int();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=16
 ::std::int32_t unwrap_or_zero(::std::optional<::std::int32_t> x);
 
 namespace __crubit_internal {

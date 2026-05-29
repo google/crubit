@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // modules_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
@@ -26,28 +25,22 @@
 
 namespace modules::basic_module {
 
-// Generated from:
-// cc_bindings_from_rs/test/modules/modules.rs;l=9
 ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
 
-}  // namespace modules::basic_module
+}
 
 namespace modules {
 
 namespace [[deprecated]] deprecated_module {
 
-// Generated from:
-// cc_bindings_from_rs/test/modules/modules.rs;l=16
 [[deprecated]] ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
 
-}  // namespace deprecated_module
+}
 
 }  // namespace modules
 
 namespace modules::impl_in_separate_private_module {
 
-// Generated from:
-// cc_bindings_from_rs/test/modules/modules.rs;l=48
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: modules_golden :: impl_in_separate_private_module :: Foo") alignas(4)
     [[clang::trivial_abi]] Foo final {
@@ -72,19 +65,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/modules/modules.rs;l=55
   static ::modules::impl_in_separate_private_module::Foo create(
       ::std::int32_t i);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/modules/modules.rs;l=59
   static ::std::int32_t into_i32(
       ::modules::impl_in_separate_private_module::Foo s);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/modules/modules.rs;l=48
     ::std::int32_t __field0;
   };
 

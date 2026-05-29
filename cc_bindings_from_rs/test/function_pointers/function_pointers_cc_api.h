@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // function_pointers_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTION_POINTERS_FUNCTION_POINTERS_GOLDEN
@@ -42,9 +38,6 @@ namespace function_pointers {
 // `extern "C"` requires a thunk
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=57
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: function_pointers_golden :: CStruct") alignas(4) [[clang::trivial_abi]]
 CStruct final {
@@ -65,8 +58,6 @@ CStruct final {
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=58
     ::std::int32_t field;
   };
 
@@ -75,9 +66,6 @@ CStruct final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=12
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: function_pointers_golden :: HasFnPtrField") alignas(8)
     [[clang::trivial_abi]] HasFnPtrField final {
@@ -99,13 +87,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=17
   static ::function_pointers::HasFnPtrField with_add_ten();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=13
     crubit::type_identity_t<::std::int32_t(::std::int32_t)>* ptr;
   };
 
@@ -114,15 +98,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=30
 void call_fn_ptr_no_args_or_return(crubit::type_identity_t<void()>& fn_ptr);
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=40
 ::std::int32_t call_fn_ptr_with_five(
     crubit::type_identity_t<::std::int32_t(::std::int32_t)>& fn_ptr);
 
@@ -146,9 +124,6 @@ void call_fn_ptr_no_args_or_return(crubit::type_identity_t<void()>& fn_ptr);
 // thunk: Type of parameter #0 requires a thunk
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=62
 ::std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
     crubit::type_identity_t<
         ::std::int32_t(::function_pointers::CStruct const*)>& fn_ptr);

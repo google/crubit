@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // cpp_enums_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
@@ -26,9 +25,6 @@ enum class B : ::std::uint8_t;
 namespace cpp_enums::classless_enum {
 
 // CRUBIT_ANNOTATE: cpp_enum=enum
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/cpp_enums.rs;l=11
 enum CRUBIT_INTERNAL_RUST_TYPE(
     ":: cpp_enums_golden :: classless_enum :: Color") Color : ::std::int32_t {
   RED = INT32_C(0),
@@ -40,9 +36,6 @@ enum CRUBIT_INTERNAL_RUST_TYPE(
 namespace cpp_enums::cpp_enum {
 
 // CRUBIT_ANNOTATE: cpp_enum=enum class
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/cpp_enums.rs;l=22
 enum class CRUBIT_INTERNAL_RUST_TYPE(
     ":: cpp_enums_golden :: cpp_enum :: Color") Color : ::std::int32_t {
   RED = INT32_C(0),
@@ -54,9 +47,6 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 namespace cpp_enums::deprecated_enum {
 
 // CRUBIT_ANNOTATE: cpp_enum=enum class
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/cpp_enums.rs;l=38
 enum class CRUBIT_INTERNAL_RUST_TYPE(
     ":: cpp_enums_golden :: deprecated_enum :: Color")
     [[nodiscard]] [[deprecated("Use NewColor")]] Color : ::std::int32_t{
@@ -68,14 +58,9 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace cpp_enums::forward_declared_enum {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/cpp_enums.rs;l=50
 ::cpp_enums::forward_declared_enum::B AFunction();
 
 // CRUBIT_ANNOTATE: cpp_enum=enum class
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/cpp_enums.rs;l=56
 enum class CRUBIT_INTERNAL_RUST_TYPE(
     ":: cpp_enums_golden :: forward_declared_enum :: B") B : ::std::uint8_t {
   ONE = 1,

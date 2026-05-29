@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // cpp_name_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN
@@ -27,9 +26,6 @@
 namespace cpp_name {
 
 // CRUBIT_ANNOTATE: cpp_name=Replaced
-//
-// Generated from:
-// cc_bindings_from_rs/test/attribute/cpp_name.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Replaced final {
  public:
@@ -49,14 +45,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   }
 
   // CRUBIT_ANNOTATE: cpp_name=create
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/attribute/cpp_name.rs;l=12
   static ::cpp_name::Replaced create();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/attribute/cpp_name.rs;l=7
     ::std::int32_t x;
   };
 

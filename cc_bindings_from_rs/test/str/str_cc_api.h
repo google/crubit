@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // str_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN
@@ -34,8 +33,6 @@ static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
 // Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not,
 // nested: false }
 
-// Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
     [[clang::trivial_abi]] TypeWithStr final {
  public:
@@ -55,21 +52,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/str/str.rs;l=14
   static ::str::TypeWithStr create(rs_std::StrRef s);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/str/str.rs;l=18
   ::std::uintptr_t get_str_len() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/str/str.rs;l=22
   ::std::uint8_t const* get_str_data() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/str/str.rs;l=10
     rs_std::StrRef str_field;
   };
 
@@ -77,20 +66,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=37
 rs_std::StrRef foo_as_str();
 
-// Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=33
 ::std::uint8_t const* get_str_data(rs_std::StrRef s);
 
-// Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=29
 ::std::uintptr_t get_str_len(rs_std::StrRef s);
 
-// Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=27
 void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
                                          ::std::uint8_t& __param_1);
 

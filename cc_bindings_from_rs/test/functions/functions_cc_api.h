@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // functions_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
@@ -40,9 +36,6 @@ namespace functions::fn_abi_tests {
 
 //  Testing `#[unsafe(export_name = ...)]` - the generated bindings need to
 //  forward/proxy the call into a function with a different name.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=27
 ::std::int32_t add_i32_via_extern_c_with_export_name(::std::int32_t x,
                                                      ::std::int32_t y);
 
@@ -56,47 +49,32 @@ namespace functions::fn_abi_tests {
 //
 //  TODO(b/262904507): Bazel integration is currently broken and the
 //  coresponding test is commented out in `functions_test.cc`.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=41
 ::std::int32_t add_i32_via_extern_c_with_mangling(::std::int32_t x,
                                                   ::std::int32_t y);
 
 //  Testing the default / Rust ABI (one used in absence of `extern "C"`).
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=46
 ::std::int32_t add_i32_via_rust_abi(::std::int32_t x, ::std::int32_t y);
 
 //  Testing one of simpler function bindings:
 //  - `extern "C"` means that no thunk is required
 //  - `#[unsafe(no_mangle)]` means that the function is already exposed with
 //    the desired, public name (and just needs to be redeclared in C++).
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=20
 extern "C" double get_42_as_f64_via_no_mangle_extern_c();
 
 }  // namespace functions::fn_abi_tests
 
 namespace functions::fn_attribute_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=128
 [[deprecated("★ Deprecated note for add_i32 ★")]] ::std::int32_t add_i32(
     ::std::int32_t x, ::std::int32_t y);
 
-}  // namespace functions::fn_attribute_tests
+}
 
 namespace functions::fn_must_use_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=151
 [[nodiscard("woohoo")]] ::std::int32_t msg_add(::std::int32_t x,
                                                ::std::int32_t y);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=146
 [[nodiscard]] ::std::int32_t no_msg_add(::std::int32_t x, ::std::int32_t y);
 
 }  // namespace functions::fn_must_use_tests
@@ -105,46 +83,28 @@ namespace functions::fn_param_ty_tests {
 
 //  Testing a type that maps to a built-in C++ type (spelled with a
 //  keyword). `float` is one such example.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=55
 double add_f64(double x, double y);
 
 //  Testing a type that requires `#include`ing a standard C++ header.
 //  `std::int32_t` is one such example - it requires `#include <cstdint>`.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=61
 ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=65
 void add_i32_via_ptr(::std::int32_t const* x, ::std::int32_t const* y,
                      ::std::int32_t* sum);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=80
 ::std::int32_t apply_binary_i32_op(
     ::std::int32_t x, ::std::int32_t y,
     crubit::type_identity_t<::std::int32_t(::std::int32_t, ::std::int32_t)>& f);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=72
 rs_std::char_ char_to_ascii_lowercase(rs_std::char_ c);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=92
 ::std::int32_t const& $(__anon1) get_identical_ref_with_inferred_lifetime(
     ::std::int32_t const* $(__anon1) crubit_nonnull x CRUBIT_LIFETIME_BOUND);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=84
 ::std::int32_t const& $a
 get_ref_to_smaller_int(::std::int32_t const* $a crubit_nonnull x,
                        ::std::int32_t const* $a crubit_nonnull y);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=96
 void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
                                 ::std::int32_t y);
 
@@ -152,16 +112,12 @@ void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
 
 namespace functions::generic_fn_tests::as_mut_trait_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=269
 void prefix_sums(rs_std::SliceRef<::std::int32_t> arg);
 
-}  // namespace functions::generic_fn_tests::as_mut_trait_tests
+}
 
 namespace functions::generic_fn_tests::as_ref_trait_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=249
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: functions_golden :: generic_fn_tests :: as_ref_trait_tests :: "
     "MyStruct") alignas(4) [[clang::trivial_abi]] MyStruct final {
@@ -183,15 +139,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/functions/functions.rs;l=252
   static ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct new_(
       ::std::int32_t x);
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/functions/functions.rs;l=249
     ::std::int32_t __field0;
   };
 
@@ -205,16 +157,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 //  or explicit lifetimes. `impl AsRef<[i32]>` is "sandwiched" in the middle to
 //  increase the chances that a conflict would be caught somehow.  The test
 //  never failed, so it's unclear how useful it is.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=219
 void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
                        rs_std::SliceRef<const ::std::int32_t> arg2,
                        rs_std::SliceRef<const ::std::int32_t> arg3,
                        rs_std::SliceRef<::std::int32_t> result);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=208
 ::std::int32_t slice_ref_sum(rs_std::SliceRef<const ::std::int32_t> arg);
 
 //  This is an attempt to trigger an error seen in
@@ -223,14 +170,9 @@ void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
 //  Today the error doesn't happen in Crubit, because the thunks explicitly
 //  declare all their lifetimes as `'static` - see `fn
 //  replace_all_regions_with_static`.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=241
 ::std::int32_t static_lifetime_requirement(
     rs_std::SliceRef<const ::std::int32_t> arg);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=263
 ::std::int32_t struct_ref(
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& arg);
 
@@ -238,8 +180,6 @@ void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
 
 namespace functions::generic_fn_tests::ctor_trait_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=309
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: "
     "Movable") alignas(4) [[clang::trivial_abi]] Movable final {
@@ -261,8 +201,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/functions/functions.rs;l=310
     ::std::int32_t value;
   };
 
@@ -271,9 +209,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=284
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: "
     "NonMovable") alignas(4) [[clang::trivial_abi]] NonMovable final {
@@ -295,14 +230,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/functions/functions.rs;l=290
   static ::functions::generic_fn_tests::ctor_trait_tests::NonMovable new_(
       ::std::int32_t value);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/functions/functions.rs;l=285
     ::std::int32_t value;
   };
   // Skipped bindings for field `_pinned`: ZST fields are not supported
@@ -311,8 +242,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=305
 ::std::int32_t accept_ctor(
     ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c);
 
@@ -327,29 +256,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace functions::generic_fn_tests::into_trait_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=158
 ::std::int32_t basic_test(::std::int32_t arg);
 
 //  This test was initially added to cover/verify the call to
 //  `super_visit_with` from an `impl` of `GenericParamsFinder` in
 //  `get_generic_args.rs`.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=184
 ::std::int32_t generic_param_nested_deeper_in_param_ty(
     ::std::array<::std::int32_t, 3> xs);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=173
 ::std::int32_t multiple_generic_params(::std::int32_t x, ::std::int32_t y);
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=177
 ::std::int32_t return_type();
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=169
 ::std::int32_t reused_generic_param(::std::int32_t x, ::std::int32_t y);
 
 // Error generating bindings for function
@@ -358,30 +276,22 @@ namespace functions::generic_fn_tests::into_trait_tests {
 // cc_bindings_from_rs/test/functions/functions.rs;l=204:
 // No support for replacing an _unused_ generic type param: `T`
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=162
 ::std::int32_t where_clause(::std::int32_t x);
 
 }  // namespace functions::generic_fn_tests::into_trait_tests
 
 namespace functions::other_fn_param_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=121
 ::std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
     ::std::int32_t x, ::std::int32_t y, ::std::int32_t __param_2,
     ::std::int32_t __param_3);
 
-}  // namespace functions::other_fn_param_tests
+}
 
 namespace functions::unit_ret_ty_tests {
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=115
 extern "C" ::std::int32_t get_global_i32_via_extern_c_with_export_name();
 
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=110
 void set_global_i32_via_extern_c_with_export_name(::std::int32_t x);
 
 }  // namespace functions::unit_ret_ty_tests
@@ -392,9 +302,6 @@ namespace functions::unsafe_fn_tests {
 //
 //  This function has no safety requirements - it is only marked as `unsafe`
 //  to facilitate minimal testing of bindings generated for such functions.
-//
-// Generated from:
-// cc_bindings_from_rs/test/functions/functions.rs;l=138
 ::std::int32_t unsafe_add(::std::int32_t x, ::std::int32_t y);
 
 }  // namespace functions::unsafe_fn_tests
@@ -405,20 +312,14 @@ struct rs_std::impl<
     ::ctor::CtorNew<
         ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&>> {
   static constexpr bool kIsImplemented = true;
-  // Generated from:
-  // cc_bindings_from_rs/test/functions/functions.rs;l=296
   using CtorType CRUBIT_INTERNAL_RUST_TYPE(
       "<functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable as :: "
       "ctor :: CtorNew>::CtorType") =
       ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&;
-  // Generated from:
-  // cc_bindings_from_rs/test/functions/functions.rs;l=297
   using Error CRUBIT_INTERNAL_RUST_TYPE(
       "<functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable as :: "
       "ctor :: CtorNew>::Error") = ::std::int32_t;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/functions/functions.rs;l=298
   static ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& ctor_new(
       ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& args);
 };

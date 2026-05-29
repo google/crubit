@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // rs_default_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_DEFAULT_RS_DEFAULT_GOLDEN
@@ -25,8 +24,6 @@
 
 namespace rs_default::derived_impl {
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/default/default.rs;l=28
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: derived_impl :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
@@ -51,13 +48,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/default/default.rs;l=31
   static ::std::int32_t extract_int(::rs_default::derived_impl::SomeStruct s);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/default/default.rs;l=28
     ::std::int32_t __field0;
   };
 
@@ -69,8 +62,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace rs_default::explicit_impl {
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/default/default.rs;l=10
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: explicit_impl :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
@@ -95,13 +86,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/default/default.rs;l=19
   static ::std::int32_t extract_int(::rs_default::explicit_impl::SomeStruct s);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/default/default.rs;l=10
     ::std::int32_t __field0;
   };
 
@@ -116,9 +103,6 @@ namespace rs_default::field_with_no_default {
 //  It is important that `StructWithoutDefault` is `pub` so that `field`
 //  above is typed correctly in the C++ bindings and not replaced with a
 //  blob of bytes.
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/default/default.rs;l=53
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: field_with_no_default :: "
     "StructWithoutDefault") alignas(4) [[clang::trivial_abi]]
@@ -144,8 +128,6 @@ StructWithoutDefault final {
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/default/default.rs;l=53
     ::std::int32_t __field0;
   };
 
@@ -153,8 +135,6 @@ StructWithoutDefault final {
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/default/default.rs;l=40
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: field_with_no_default :: "
     "StructWithFieldWithNoDefault") alignas(4) [[clang::trivial_abi]]
@@ -179,14 +159,10 @@ StructWithFieldWithNoDefault final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/default/default.rs;l=56
   static ::std::int32_t extract_int(
       ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/default/default.rs;l=41
     ::rs_default::field_with_no_default::StructWithoutDefault field;
   };
 
@@ -198,8 +174,6 @@ StructWithFieldWithNoDefault final {
 
 namespace rs_default::no_impl {
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/default/default.rs;l=64
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: no_impl :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
@@ -225,8 +199,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/default/default.rs;l=64
     ::std::int32_t __field0;
   };
 
@@ -238,8 +210,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace rs_default::transparent_struct {
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/default/default.rs;l=70
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: transparent_struct :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
@@ -264,13 +234,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/default/default.rs;l=73
   ::std::int32_t extract_int() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/default/default.rs;l=70
     ::std::int32_t __field0;
   };
 

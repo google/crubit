@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN
@@ -28,8 +27,6 @@
 
 namespace example_crate {
 
-// Generated from:
-// examples/rust/trait/example.rs;l=12
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
     4) [[clang::trivial_abi]] MyStruct final {
  public:
@@ -49,14 +46,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // examples/rust/trait/example.rs;l=17
   static ::example_crate::MyStruct new_(::std::int32_t x);
 
  private:
   union {
-    // Generated from:
-    // examples/rust/trait/example.rs;l=13
     ::std::int32_t x;
   };
 
@@ -64,7 +57,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from: examples/rust/trait/example.rs;l=5
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyTrait") MyTrait {
   template <typename T>
   using impl = rs_std::impl<T, MyTrait>;
@@ -76,13 +68,9 @@ template <>
 struct rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
-  // Generated from:
-  // examples/rust/trait/example.rs;l=23
   static ::std::int32_t add_with(::example_crate::MyStruct const& self,
                                  ::std::int32_t y);
 
-  // Generated from:
-  // examples/rust/trait/example.rs;l=27
   static rs_std::StrRef describe(::example_crate::MyStruct const& self);
 };
 

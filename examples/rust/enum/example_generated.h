@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
@@ -25,23 +24,16 @@
 
 namespace example_crate {
 
-// Generated from: examples/rust/enum/example.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
     [[clang::trivial_abi]] Color final {
  public:
   // Default::default
   Color();
 
-  // Generated from:
-  // examples/rust/enum/example.rs;l=8
   static constexpr Color MakeRed();
 
-  // Generated from:
-  // examples/rust/enum/example.rs;l=9
   static constexpr Color MakeBlue();
 
-  // Generated from:
-  // examples/rust/enum/example.rs;l=10
   static constexpr Color MakeGreen();
 
   // No custom `Drop` impl and no custom "drop glue" required

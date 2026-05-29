@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // transitive_reexports_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_TRASITIVE_REEXPORTS_TRANSITIVE_REEXPORTS_GOLDEN
@@ -24,27 +23,17 @@
 
 namespace transitive_reexports {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/trasitive_reexports/transitive_reexports.rs;l=6
 ::direct::Transitive direct_to_transitive(::direct::Direct const& direct);
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/trasitive_reexports/transitive_reexports.rs;l=10
 ::direct::TransitiveGlobA direct_to_transitive_glob_a(
     ::direct::Direct const& direct);
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/trasitive_reexports/transitive_reexports.rs;l=20
 ::direct::Transitive direct_to_transitive_private_type_alias(
     ::direct::Direct const& direct);
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/trasitive_reexports/transitive_reexports.rs;l=26
 ::direct::Transitive direct_to_transitive_use_alias(
     ::direct::Direct const& direct);
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/trasitive_reexports/transitive_reexports.rs;l=16
 ::direct::Transitive direct_to_transittive_type_alias(
     ::direct::Direct const& direct);
 
@@ -52,12 +41,10 @@ namespace transitive_reexports {
 
 namespace transitive_reexports {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/trasitive_reexports/transitive.rs;l=24
 using DirectReexportOfTransitive CRUBIT_INTERNAL_RUST_TYPE(
     ":: direct :: TransitiveReexportAndDirectReexport") =
     ::direct::TransitiveReexportAndDirectReexport;
-}  // namespace transitive_reexports
+}
 
 namespace transitive_reexports {
 

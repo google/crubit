@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // consts_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_CONSTS_CONSTS_GOLDEN
@@ -64,8 +60,6 @@ static constexpr ::std::uint8_t RUST_UINT8_MIN = 0;
 static constexpr ::std::intptr_t RUST_USIZE_MAX = INT64_C(9223372036854775807);
 static constexpr ::std::intptr_t RUST_USIZE_MIN = INT64_MIN;
 static constexpr ::std::uintptr_t SLICE_LENGTH = 11;
-// Generated from:
-// cc_bindings_from_rs/test/consts/consts.rs;l=49
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: consts_golden :: TyWithAssocConsts") alignas(1) [[clang::trivial_abi]]
 TyWithAssocConsts final {
@@ -88,8 +82,6 @@ TyWithAssocConsts final {
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/consts/consts.rs;l=49
     ::std::uint8_t __field0;
   };
 

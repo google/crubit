@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // result_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN
@@ -36,8 +35,6 @@
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=41
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
@@ -59,8 +56,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=42
     ::std::uint8_t val;
   };
 
@@ -68,8 +63,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=26
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
@@ -89,8 +82,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=27
     ::std::uint8_t val;
   };
 
@@ -98,8 +89,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=58
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
@@ -119,17 +108,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=62
   static ::result::HasDefault new_(rs_std::StrRef val);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=66
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=59
     ::rs::alloc::string::String val_;
   };
 
@@ -137,8 +120,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=83
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
@@ -160,13 +141,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=87
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=84
     ::rs::alloc::string::String val_;
   };
 
@@ -174,8 +151,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=135
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: ResultWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 ResultWithSizeTypes final {
@@ -309,12 +284,10 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=103
 ::std::uint8_t take_result_copy_no_default_ok(
     rs_std::Result<::result::CopyNoDefault, ::std::uint8_t> const& r);
 
-}  // namespace result
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -364,13 +337,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=117
 rs_std::StrRef take_result_has_default(
     rs_std::Result<::result::HasDefault, ::std::uint8_t> const* $(__anon1)
         crubit_nonnull r CRUBIT_LIFETIME_BOUND);
 
-}  // namespace result
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -464,8 +435,6 @@ struct alignas(4)
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=5
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
     [[clang::trivial_abi]] GetsResult final {
  public:
@@ -484,13 +453,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=9
   static ::result::GetsResult new_(::std::uint32_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=6
     rs_std::Result<::std::uint32_t, ::std::uint32_t> value;
   };
 
@@ -596,8 +561,6 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=14
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult") alignas(4)
     [[clang::trivial_abi]] NestedResult final {
  public:
@@ -616,20 +579,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=20
   static ::result::NestedResult new_(::std::uint32_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=15
     rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                    ::std::uint32_t>
         in_ok;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=16
     rs_std::Result<::std::uint32_t,
                    rs_std::Result<::std::uint32_t, ::std::uint32_t>>
         in_err;
@@ -691,8 +648,6 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=44
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: CloneNoDefaultResult") alignas(1)
     [[clang::trivial_abi]] CloneNoDefaultResult final {
@@ -713,18 +668,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=49
   static ::result::CloneNoDefaultResult new_(::std::uint8_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=45
     rs_std::Result<::result::CloneNoDefault, ::std::uint8_t> in_ok;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=46
     rs_std::Result<::std::uint8_t, ::result::CloneNoDefault> in_err;
   };
 
@@ -732,8 +681,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=110
 ::std::uint8_t take_result_clone_no_default_err(
     rs_std::Result<::std::uint8_t, ::result::CloneNoDefault> const& r);
 
@@ -785,8 +732,6 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=30
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: CopyNoDefaultResult") alignas(1) [[clang::trivial_abi]]
 CopyNoDefaultResult final {
@@ -807,18 +752,12 @@ CopyNoDefaultResult final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=35
   static ::result::CopyNoDefaultResult new_(::std::uint8_t val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=31
     rs_std::Result<::result::CopyNoDefault, ::std::uint8_t> in_ok;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=32
     rs_std::Result<::std::uint8_t, ::result::CopyNoDefault> in_err;
   };
 
@@ -876,8 +815,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=70
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: HasDefaultResult") alignas(8) [[clang::trivial_abi]]
 HasDefaultResult final {
@@ -900,18 +837,12 @@ HasDefaultResult final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=75
   static ::result::HasDefaultResult new_(rs_std::StrRef val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=71
     rs_std::Result<::result::HasDefault, ::std::uint8_t> in_ok;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=72
     rs_std::Result<::std::uint8_t, ::result::HasDefault> in_err;
   };
 
@@ -970,8 +901,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=91
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: HasNoDefaultResult") alignas(8) [[clang::trivial_abi]]
 HasNoDefaultResult final {
@@ -994,18 +923,12 @@ HasNoDefaultResult final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/result.rs;l=96
   static ::result::HasNoDefaultResult new_(rs_std::StrRef val);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=92
     rs_std::Result<::result::HasNoDefault, ::std::uint8_t> in_ok;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/result.rs;l=93
     rs_std::Result<::std::uint8_t, ::result::HasNoDefault> in_err;
   };
 
@@ -1061,12 +984,8 @@ struct alignas(1)
 
 namespace result {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=131
 rs_std::Result<::std::uint8_t, ::std::uint8_t> return_result_by_value();
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/result.rs;l=124
 ::std::uint8_t take_result_by_value(
     rs_std::Result<::std::uint8_t, ::std::uint8_t> r);
 

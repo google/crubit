@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // no_core_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_CORE_GOLDEN
@@ -28,8 +27,6 @@
 
 namespace no_core {
 
-// Generated from:
-// cc_bindings_from_rs/test/no_std/no_core.rs;l=12
 struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
     [[clang::trivial_abi]] Test final {
  public:
@@ -51,18 +48,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/no_std/no_core.rs;l=17
   static ::no_core::Test new_();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/no_std/no_core.rs;l=21
   rs_std::StrRef s() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/no_std/no_core.rs;l=13
     ::rs::alloc::string::String s_;
   };
 

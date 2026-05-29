@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // enums_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN
@@ -33,26 +29,18 @@
 
 namespace enums::repr_c {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=11
 struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     8) [[clang::trivial_abi]] MyEnum final {
  public:
   // Default::default
   MyEnum();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=12
   static ::enums::repr_c::MyEnum MakeE(::rs::alloc::string::String __param_0,
                                        ::std::int32_t __param_1);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=13
   static ::enums::repr_c::MyEnum MakeA(::std::int32_t __param_0,
                                        ::std::int64_t __param_1);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=14
   static MyEnum MakeF();
 
   // Error generating bindings for variant `enums_golden::repr_c::MyEnum::Z`
@@ -60,8 +48,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // cc_bindings_from_rs/test/enums/enums.rs;l=15:
   // Tuple type `()` is not supported in this context
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=16
   static MyEnum MakeG();
 
   // Error generating bindings for variant `enums_golden::repr_c::MyEnum::B`
@@ -76,8 +62,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=19
   static MyEnum MakeD();
 
   // Drop::drop
@@ -155,8 +139,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
 namespace enums::repr_c_clone_active_variant {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=79
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_c_clone_active_variant :: "
     "CloneActiveVariant") alignas(4) [[clang::trivial_abi]]
@@ -165,18 +147,12 @@ CloneActiveVariant final {
   // Default::default
   CloneActiveVariant();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=80
   static ::enums::repr_c_clone_active_variant::CloneActiveVariant MakeA(
       ::std::int32_t __param_0);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=81
   static ::enums::repr_c_clone_active_variant::CloneActiveVariant MakeB(
       ::std::int32_t __param_0);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=82
   static ::enums::repr_c_clone_active_variant::CloneActiveVariant MakeC(
       ::std::int32_t __param_0);
 
@@ -232,24 +208,16 @@ CloneActiveVariant final {
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=101
 bool is_a(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=105
 bool is_b(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=109
 bool is_c(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
 }  // namespace enums::repr_c_clone_active_variant
 
 namespace enums::repr_c_clone_counter {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=55
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_c_clone_counter :: CloneCount") alignas(8)
     [[clang::trivial_abi]] CloneCount final {
@@ -306,8 +274,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace enums::repr_c_drop {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=31
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_c_drop :: DropMe") alignas(8)
     [[clang::trivial_abi]] DropMe final {
@@ -315,16 +281,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   DropMe();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=32
   static ::enums::repr_c_drop::DropMe MakeA(::std::int32_t __param_0);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=33
   static ::enums::repr_c_drop::DropMe MakeB(::std::int64_t __param_0);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=34
   static DropMe MakeQ();
 
   // Error generating bindings for variant
@@ -393,9 +353,6 @@ namespace enums::repr_int {
 //  (`NoPayload1` should have a tag of 0 and therefore `NoPayload2` is a
 //  slightly better test for things like encoding the tag value with the
 //  proper endianness, especially given that the tag is 4 bytes wide).
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=188
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_int :: IntReprEnumWithNoPayload") alignas(4)
     [[clang::trivial_abi]] IntReprEnumWithNoPayload final {
@@ -404,12 +361,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Default` trait
   IntReprEnumWithNoPayload() = delete;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=189
   static constexpr IntReprEnumWithNoPayload MakeNoPayload1();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=190
   static constexpr IntReprEnumWithNoPayload MakeNoPayload2();
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -426,12 +379,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=194
   bool is_no_payload1() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=197
   bool is_no_payload2() const;
 
  private:
@@ -454,9 +403,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace enums::repr_rust {
 
 //  Doc comment of RustReprEnum.
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=116
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_rust :: RustReprEnum") alignas(4)
     [[clang::trivial_abi]] RustReprEnum final {
@@ -466,21 +412,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   RustReprEnum() = delete;
 
   //  Doc comment of Variant1.
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=118
   static constexpr RustReprEnum MakeVariant1();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=119
   static constexpr RustReprEnum MakeVariant2();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=120
   static constexpr RustReprEnum MakeVariant3();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=121
   static ::enums::repr_rust::RustReprEnum MakeTuplePayloadVariant(
       ::std::int32_t __param_0, ::std::int32_t __param_1);
 
@@ -502,16 +439,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=129
   ::std::int32_t get_variant_number() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=139
   bool is_tuple_payload_variant() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=143
   ::std::int32_t get_first_item_from_tuple_payload() const;
 
  private:
@@ -528,8 +459,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=159
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_rust :: "
     "RustReprWithNamingConflictBetweenCtorsAndMethods") alignas(4)
@@ -582,19 +511,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   //  is a name of:
   //  1. A static method (here/below).
   //  2. An auto-generated factory/constructor static method
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=170
   static ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
   MakeNoPayloadVariant();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=173
   static ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
   MakeTuplePayloadVariant(::std::int32_t i);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=176
   static ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
   MakeStructPayloadVariant(::std::int32_t x);
 
@@ -618,8 +540,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/enums/enums.rs;l=151:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=155
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_rust :: "
     "RustReprWithSingleTuplePayloadVariant") alignas(4) [[clang::trivial_abi]]
@@ -629,8 +549,6 @@ RustReprWithSingleTuplePayloadVariant final {
   // implement the `Default` trait
   RustReprWithSingleTuplePayloadVariant() = delete;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/enums.rs;l=156
   static ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant
   MakeSingleVariant(::std::int32_t __param_0);
 

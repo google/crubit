@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // trait_impl_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_IMPL_GOLDEN
@@ -30,8 +29,6 @@
 
 namespace trait_impl {
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=7
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
     [[clang::trivial_abi]] MyStruct final {
  public:
@@ -50,13 +47,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=12
   static ::trait_impl::MyStruct new_(::std::int32_t x);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=8
     ::std::int32_t x;
   };
 
@@ -64,8 +57,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=23
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: trait_impl_golden :: NotImplemented") alignas(8) [[clang::trivial_abi]]
 NotImplemented final {
@@ -88,8 +79,6 @@ NotImplemented final {
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=24
     ::rs::alloc::string::String foo;
   };
 
@@ -103,8 +92,6 @@ template <>
 struct rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=18
   static ::std::int32_t do_something(::trait_impl::MyStruct const& self);
 };
 

@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // never_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN
@@ -25,8 +24,6 @@
 
 namespace never {
 
-// Generated from:
-// cc_bindings_from_rs/test/never/never.rs;l=18
 struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
     [[clang::trivial_abi]] NeverStruct final {
  public:
@@ -45,18 +42,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/never/never.rs;l=25
   [[noreturn]] static void associated_fn_never_return();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/never/never.rs;l=29
   [[noreturn]] void method_never_return() const;
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/never/never.rs;l=21
     ::std::int32_t _non_zst_field;
   };
 
@@ -64,12 +55,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/never/never.rs;l=13
 extern "C" [[noreturn]] void extern_never_return();
 
-// Generated from:
-// cc_bindings_from_rs/test/never/never.rs;l=8
 [[noreturn]] void never_return();
 
 static_assert(

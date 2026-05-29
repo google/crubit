@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // option_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_OPTION_GOLDEN
@@ -43,8 +42,6 @@ struct HasOptions;
 // Type bindings for option_golden::BridgedType suppressed due to being mapped
 // to an existing C++ type (int)
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=139
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
@@ -66,8 +63,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=140
     ::std::uint8_t val;
   };
 
@@ -75,8 +70,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=154
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
@@ -96,8 +89,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=155
     ::std::uint8_t val;
   };
 
@@ -105,8 +96,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=88
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
@@ -126,18 +115,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=93
   static ::option::HasDefault new_(rs_std::StrRef s);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=97
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=89
     ::rs::alloc::string::String foo;
   };
 
@@ -145,8 +128,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=111
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
@@ -168,23 +149,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=116
   static ::option::HasNoDefault new_(rs_std::StrRef s);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=119
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=112
     ::rs::alloc::string::String foo;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=113
     ::std::uint32_t a;
   };
 
@@ -195,92 +168,50 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=7
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
     [[clang::trivial_abi]] LessThan20U8 final {
  public:
   // `option_golden::LessThan20U8` doesn't implement the `Default` trait
   LessThan20U8() = delete;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=8
   static constexpr LessThan20U8 MakeN0();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=9
   static constexpr LessThan20U8 MakeN1();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=10
   static constexpr LessThan20U8 MakeN2();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=11
   static constexpr LessThan20U8 MakeN3();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=12
   static constexpr LessThan20U8 MakeN4();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=13
   static constexpr LessThan20U8 MakeN5();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=14
   static constexpr LessThan20U8 MakeN6();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=15
   static constexpr LessThan20U8 MakeN7();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=16
   static constexpr LessThan20U8 MakeN8();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=17
   static constexpr LessThan20U8 MakeN9();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=18
   static constexpr LessThan20U8 MakeN10();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=19
   static constexpr LessThan20U8 MakeN11();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=20
   static constexpr LessThan20U8 MakeN12();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=21
   static constexpr LessThan20U8 MakeN13();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=22
   static constexpr LessThan20U8 MakeN14();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=23
   static constexpr LessThan20U8 MakeN15();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=24
   static constexpr LessThan20U8 MakeN16();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=25
   static constexpr LessThan20U8 MakeN17();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=26
   static constexpr LessThan20U8 MakeN18();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=27
   static constexpr LessThan20U8 MakeN19();
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -296,12 +227,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=31
   static ::std::optional<::option::LessThan20U8> new_(::std::uint8_t value);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=40
   ::std::uint8_t value() const;
 
  private:
@@ -322,8 +249,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
 // at cc_bindings_from_rs/test/enums/option.rs;l=172:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=180
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
     [[clang::trivial_abi]] OptZst final {
  public:
@@ -352,8 +277,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=188
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptionWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 OptionWithSizeTypes final {
@@ -452,8 +375,6 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace option {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=144
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCloneNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCloneNoDefault final {
@@ -476,13 +397,9 @@ OptCloneNoDefault final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=148
   static ::option::OptCloneNoDefault new_(::std::uint8_t x);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=145
     rs_std::Option<::option::CloneNoDefault> val;
   };
 
@@ -537,8 +454,6 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace option {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=159
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCopyNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCopyNoDefault final {
@@ -559,13 +474,9 @@ OptCopyNoDefault final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=164
   static ::option::OptCopyNoDefault new_(::std::uint8_t x);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=160
     rs_std::Option<::option::CopyNoDefault> val;
   };
 
@@ -618,8 +529,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace option {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=102
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptDefaultWithDrop") alignas(8) [[clang::trivial_abi]]
 OptDefaultWithDrop final {
@@ -642,13 +551,9 @@ OptDefaultWithDrop final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=106
   static ::option::OptDefaultWithDrop new_(rs_std::StrRef s);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=103
     rs_std::Option<::option::HasDefault> opt;
   };
 
@@ -656,8 +561,6 @@ OptDefaultWithDrop final {
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=184
 ::std::optional<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x);
 
@@ -703,8 +606,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace option {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=124
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptNoDefaultWithDrop") alignas(8)
     [[clang::trivial_abi]] OptNoDefaultWithDrop final {
@@ -728,18 +629,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=129
   static ::option::OptNoDefaultWithDrop new_(rs_std::StrRef s);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=133
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=125
     rs_std::Option<::option::HasNoDefault> val;
   };
 
@@ -925,8 +820,6 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace option {
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=45
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
     [[clang::trivial_abi]] HasOptions final {
  public:
@@ -945,37 +838,23 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=52
   static ::option::HasOptions new_(::std::uint8_t value);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=60
   static ::option::HasOptions with_option(
       ::std::optional<::std::uint8_t> value);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=65
   static ::option::HasOptions from_ref(
       rs_std::Option<::std::uint8_t> const& value);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=72
   static ::option::HasOptions with_none();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=48
     rs_std::Option<::std::uint8_t> direct;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=46
     rs_std::Option<::option::LessThan20U8> niche;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=47
     rs_std::Option<rs_std::Option<::option::LessThan20U8>> nested;
   };
 
@@ -983,8 +862,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/enums/option.rs;l=77
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
     [[clang::trivial_abi]] HasHasOptions final {
  public:
@@ -1003,13 +880,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/enums/option.rs;l=82
   static ::option::HasHasOptions new_(::std::uint8_t value);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/enums/option.rs;l=78
     rs_std::Option<::option::HasOptions> me;
   };
 

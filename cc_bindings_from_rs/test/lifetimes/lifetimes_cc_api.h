@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // lifetimes_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN
@@ -29,8 +28,6 @@
 
 namespace lifetimes {
 
-// Generated from:
-// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetime") alignas(8)
     [[clang::trivial_abi]] StructWithLifetime final {
@@ -52,53 +49,31 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=32
   static ::lifetimes::StructWithLifetime from_ref(
       ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=36
   ::std::int32_t const& $a into_ref() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=40
   ::std::int32_t value() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=44
   ::std::int32_t const& $(__anon1)
       borrow_from_self() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=50
   static ::lifetimes::StructWithLifetime make_static_42();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=54
   static ::lifetimes::StructWithLifetime from_static_ref(
       ::std::int32_t const* $static crubit_nonnull field_with_lifetime);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=58
   static ::lifetimes::StructWithLifetime from_static_ref_where_bound(
       ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=65
   ::std::int32_t const& $static borrow_from_static_self() const& $static;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=19
   explicit operator ::std::int32_t const& $a();
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=25
   explicit operator ::std::int32_t();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=10
     ::std::int32_t const* crubit_nonnull field_with_lifetime;
   };
 
@@ -106,8 +81,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=72
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
     [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
@@ -135,18 +108,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=78
   static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=74
     ::rs::alloc::string::String field_with_drop_glue;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=73
     ::std::int32_t const* crubit_nonnull field_with_lifetime;
   };
 
@@ -154,8 +121,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=70
 void function_with_trivial_unnamed_lifetime_param(
     ::std::int32_t const& __param_0);
 

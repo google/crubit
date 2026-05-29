@@ -70,7 +70,6 @@ use rustc_span::symbol::{sym, Symbol};
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::{self, Display, Formatter};
-use std::iter::once;
 use std::path::PathBuf;
 use std::rc::Rc;
 
@@ -261,6 +260,7 @@ pub fn new_database<'db>(
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
     no_thunk_name_mangling: bool,
+    is_golden_test: bool,
     h_out_include_guard: IncludeGuard,
     ignore_symbols_from_files: Rc<HashSet<PathBuf>>,
 ) -> BindingsGenerator<'db> {
@@ -279,6 +279,7 @@ pub fn new_database<'db>(
         errors,
         fatal_errors,
         no_thunk_name_mangling,
+        is_golden_test,
         h_out_include_guard,
         ignore_symbols_from_files,
         specializations,
@@ -319,24 +320,29 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
     let top_comment = {
         let source_crate_num = db.source_crate_num();
         let crate_name = tcx.crate_name(source_crate_num);
-        let crubit_features = {
+        let mut txt = format!(
+            "Automatically @generated C++ bindings for the following Rust crate:\n\
+             {crate_name}"
+        );
+        if !db.is_golden_test() {
+            use std::fmt::Write as _;
+
+            txt.push_str("\nFeatures: ");
             let mut crubit_features: Vec<&str> = db
                 .crate_features(source_crate_num)
                 .into_iter()
                 .map(|feature| feature.short_name())
                 .collect();
             crubit_features.sort();
-            if crubit_features.is_empty() {
-                "<none>".to_string()
+            if let [first, rest @ ..] = crubit_features.as_slice() {
+                txt.push_str(first);
+                for feature in rest {
+                    write!(&mut txt, ", {feature}").unwrap();
+                }
             } else {
-                crubit_features.join(", ")
+                txt.push_str("<none>");
             }
-        };
-        let txt = format!(
-            "Automatically @generated C++ bindings for the following Rust crate:\n\
-             {crate_name}\n\
-             Features: {crubit_features}"
-        );
+        }
         quote! { __COMMENT__ #txt __NEWLINE__ }
     };
 
@@ -1664,18 +1670,22 @@ fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
         .peekable();
+
+    let include_source_loc = !db.is_golden_test() || db.kythe_annotations();
     let leading_newline = if docs.peek().is_none() { "" } else { "\n" };
+
     let doc_comment = docs
-        .chain(once(format!(
-            "{}Generated from: {}",
-            leading_newline,
-            generate_source_location(db, def_id)
-        )))
+        .chain(include_source_loc.then(|| {
+            format!("{leading_newline}Generated from: {}", generate_source_location(db, def_id))
+        }))
         .join("\n");
+
     if db.kythe_annotations() {
         generate_kythe_doc_comment(db, def_id, doc_comment)
-    } else {
+    } else if !doc_comment.is_empty() {
         quote! { __COMMENT__ #doc_comment}
+    } else {
+        quote! {}
     }
 }
 

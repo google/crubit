@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // tuple_structs_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_TUPLE_STRUCTS_TUPLE_STRUCTS_GOLDEN
@@ -30,8 +29,6 @@
 
 namespace tuple_structs {
 
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=174
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: CloneNoDefault") alignas(8)
     [[clang::trivial_abi]] CloneNoDefault final {
@@ -63,9 +60,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=152
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: CopyNoDefault") alignas(4)
     [[clang::trivial_abi]] CopyNoDefault final {
@@ -87,14 +81,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=157
   static ::tuple_structs::CopyNoDefault create(::std::int32_t value);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=153
     ::std::int32_t value;
   };
 
@@ -103,9 +92,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=195
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DefaultAndCloneNoUnpin") alignas(4)
     [[clang::trivial_abi]] DefaultAndCloneNoUnpin final {
@@ -130,8 +116,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=196
     ::std::int32_t value;
   };
   // Skipped bindings for field `_marker`: ZST fields are not supported
@@ -140,8 +124,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=166
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DefaultNoCopyNoClone") alignas(4)
     [[clang::trivial_abi]] DefaultNoCopyNoClone final {
@@ -163,8 +145,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=167
     ::std::int32_t value;
   };
 
@@ -172,8 +152,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=126
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DontMoveMe") alignas(8) [[clang::trivial_abi]]
 DontMoveMe final {
@@ -206,9 +184,6 @@ DontMoveMe final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=24
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructOnePrivateArg") alignas(4)
     [[clang::trivial_abi]] TupleStructOnePrivateArg final {
@@ -233,21 +208,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=28
   static ::tuple_structs::TupleStructOnePrivateArg create(::std::int32_t arg);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=33
   ::std::int32_t get_arg() const;
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=24
     ::std::int32_t __field0;
   };
 
@@ -256,9 +223,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=8
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructOnePublicArg") alignas(4)
     [[clang::trivial_abi]] TupleStructOnePublicArg final {
@@ -286,20 +250,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=12
   static ::tuple_structs::TupleStructOnePublicArg create(::std::int32_t arg);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=17
   ::std::int32_t get_arg() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=8
     ::std::int32_t __field0;
   };
 
@@ -308,9 +264,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=82
 struct
     CRUBIT_INTERNAL_RUST_TYPE(
         ":: tuple_structs_golden :: "
@@ -341,28 +294,18 @@ struct
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=86
   static ::tuple_structs::TupleStructOnePublicArgOnePrivateArg create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=91
   ::std::int32_t get_second_arg() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=82
     ::std::int32_t __field0;
   };
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=82
     ::std::int32_t __field1;
   };
 
@@ -371,9 +314,6 @@ struct
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=61
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructTwoPrivateArgs") alignas(4)
     [[clang::trivial_abi]] TupleStructTwoPrivateArgs final {
@@ -398,33 +338,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=65
   static ::tuple_structs::TupleStructTwoPrivateArgs create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=70
   ::std::int32_t get_first_arg() const;
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=75
   ::std::int32_t get_second_arg() const;
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=61
     ::std::int32_t __field0;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=61
     ::std::int32_t __field1;
   };
 
@@ -433,9 +360,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=40
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructTwoPublicArgs") alignas(4)
     [[clang::trivial_abi]] TupleStructTwoPublicArgs final {
@@ -464,32 +388,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=44
   static ::tuple_structs::TupleStructTwoPublicArgs create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=49
   ::std::int32_t get_first_arg() const;
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=54
   ::std::int32_t get_second_arg() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=40
     ::std::int32_t __field0;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=40
     ::std::int32_t __field1;
   };
 
@@ -498,9 +409,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=179
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCloneNoDefault") alignas(8)
     [[clang::trivial_abi]] TupleStructWithCloneNoDefault final {
@@ -529,22 +437,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=183
   static ::tuple_structs::TupleStructWithCloneNoDefault create(
       ::std::int32_t value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=188
   ::std::int32_t const& $(__anon1)
       get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=179
     ::tuple_structs::CloneNoDefault __field0;
   };
 
@@ -553,9 +453,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=131
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCppImmovableType") alignas(8)
     [[clang::trivial_abi]] TupleStructWithCppImmovableType final {
@@ -585,33 +482,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=135
   static ::tuple_structs::TupleStructWithCppImmovableType create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=140
   ::std::int32_t get_first_arg() const;
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=145
   ::std::int32_t const& $(__anon1)
       get_second_arg() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=131
     ::tuple_structs::DontMoveMe __field1;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=131
     ::std::int32_t __field0;
   };
 
@@ -623,9 +507,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=201
 struct
     CRUBIT_INTERNAL_RUST_TYPE(
         ":: tuple_structs_golden :: "
@@ -656,20 +537,12 @@ struct
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=204
   static ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin create();
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=209
   ::std::int32_t get_arg() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=201
     ::tuple_structs::DefaultAndCloneNoUnpin __field0;
   };
 
@@ -678,9 +551,6 @@ struct
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=171
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone") alignas(4)
     [[clang::trivial_abi]] TupleStructWithDefaultNoCopyNoClone final {
@@ -713,8 +583,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=171
     ::tuple_structs::DefaultNoCopyNoClone __field0;
   };
 
@@ -723,9 +591,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=163
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithNoDefault") alignas(4)
     [[clang::trivial_abi]] TupleStructWithNoDefault final {
@@ -752,8 +617,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=163
     ::tuple_structs::CopyNoDefault __field0;
   };
 
@@ -762,9 +625,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=115
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithNonExhaustiveCtor") alignas(4)
     [[clang::trivial_abi]] TupleStructWithNonExhaustiveCtor final {
@@ -791,20 +651,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=119
   static ::tuple_structs::TupleStructWithNonExhaustiveCtor create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=115
     ::std::int32_t __field0;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=115
     ::std::int32_t __field1;
   };
 
@@ -845,9 +698,6 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace tuple_structs {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=98
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithTupleFieldType") alignas(4)
     [[clang::trivial_abi]] TupleStructWithTupleFieldType final {
@@ -877,21 +727,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=102
   static ::tuple_structs::TupleStructWithTupleFieldType create(
       ::std::tuple<::std::int32_t, ::std::int32_t> __param_0);
 
   // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=107
   ::std::tuple<::std::int32_t, ::std::int32_t> get_arg() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=98
     rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0;
   };
 

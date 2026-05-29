@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // type_aliases_rust_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
@@ -32,28 +28,20 @@
 
 namespace type_aliases_rust::test_deprecated_type_alias {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=16
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_deprecated_type_alias :: TypeAlias")
     [[deprecated("Use `OtherTypeAlias` instead")]] = ::std::int32_t;
-}  // namespace type_aliases_rust::test_deprecated_type_alias
+}
 
 namespace type_aliases_rust::test_type_aliases {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=7
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias") =
     ::std::int32_t;
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=6
 using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias2") =
     ::std::int32_t;
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=9
 ::std::int32_t func_using_alias();
 
 }  // namespace type_aliases_rust::test_type_aliases
@@ -104,18 +92,12 @@ struct alignas(4)
 
 namespace type_aliases_rust::test_generics_matching {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=22
 using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_generics_matching :: "
     "SpecializedAlias") = rs_std::Result<::std::int32_t, ::std::int32_t>;
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=24
 rs_std::Result<::std::int32_t, ::std::int32_t> returns_matching_alias();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=32
 rs_std::Result<::std::int32_t, ::std::int32_t> returns_specialized();
 
 }  // namespace type_aliases_rust::test_generics_matching
@@ -166,11 +148,9 @@ struct alignas(4)
 
 namespace type_aliases_rust::test_generics_matching {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/type_aliases.rs;l=28
 rs_std::Result<::std::uint32_t, ::std::int8_t> returns_flipped_alias();
 
-}  // namespace type_aliases_rust::test_generics_matching
+}
 
 namespace type_aliases_rust::test_generics_matching {
 

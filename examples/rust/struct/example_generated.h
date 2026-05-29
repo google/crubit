@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE_GOLDEN
@@ -25,8 +24,6 @@
 
 namespace example_crate {
 
-// Generated from:
-// examples/rust/struct/example.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
     [[clang::trivial_abi]] Struct final {
  public:
@@ -48,8 +45,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // examples/rust/struct/example.rs;l=7
     ::std::int32_t a;
   };
 

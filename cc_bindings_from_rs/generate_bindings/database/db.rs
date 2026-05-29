@@ -114,6 +114,9 @@ memoized::query_group! {
       fn no_thunk_name_mangling(&self) -> bool;
 
       #[input]
+      fn is_golden_test(&self) -> bool;
+
+      #[input]
       fn h_out_include_guard(&self) -> IncludeGuard;
 
       #[input]

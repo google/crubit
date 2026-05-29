@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // unions_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN
@@ -27,8 +26,6 @@
 
 namespace unions::repr_c {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=11
 union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
     [[clang::trivial_abi]] U final {
  public:
@@ -46,27 +43,19 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=12
   ::std::uint32_t x;
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=13
   ::std::uint32_t y;
 
  private:
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=16
 ::unions::repr_c::U create();
 
 }  // namespace unions::repr_c
 
 namespace unions::repr_c_clone {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=77
 union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_c_clone :: U") alignas(4) [[clang::trivial_abi]]
 U final {
@@ -88,24 +77,18 @@ U final {
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=78
   ::std::uint32_t x;
 
  private:
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=87
 ::unions::repr_c_clone::U create();
 
 }  // namespace unions::repr_c_clone
 
 namespace unions::repr_c_drop {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=122
 union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
     8) [[clang::trivial_abi]] U final {
  public:
@@ -124,8 +107,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=123
   ::std::int32_t* x;
 
  private:
@@ -136,8 +117,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
 
 namespace unions::repr_c_packed {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=51
 union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_c_packed :: U") alignas(1) [[clang::trivial_abi]]
 __attribute__((packed)) U final {
@@ -156,27 +135,19 @@ __attribute__((packed)) U final {
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=52
   ::std::uint32_t x;
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=53
   ::std::uint32_t y;
 
  private:
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=56
 ::unions::repr_c_packed::U create();
 
 }  // namespace unions::repr_c_packed
 
 namespace unions::repr_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=23
 union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
     [[clang::trivial_abi]] U final {
  public:
@@ -195,29 +166,17 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=33
   void set_x(::std::uint32_t x);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=36
   ::std::uint32_t get_x() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=39
   void set_y(::std::uint32_t y);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=42
   ::std::uint32_t get_y() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=24
   struct {
     ::std::uint32_t value;
   } x;
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=25
   struct {
     ::std::uint32_t value;
   } y;
@@ -226,16 +185,12 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=28
 ::unions::repr_rust::U create();
 
 }  // namespace unions::repr_rust
 
 namespace unions::repr_rust_clone {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=94
 union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_rust_clone :: U") alignas(4)
     [[clang::trivial_abi]] U final {
@@ -258,16 +213,10 @@ union CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=109
   void set_x(::std::uint32_t x);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=112
   ::std::uint32_t get_x() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=95
   struct {
     ::std::uint32_t value;
   } x;
@@ -276,16 +225,12 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=104
 ::unions::repr_rust_clone::U create();
 
 }  // namespace unions::repr_rust_clone
 
 namespace unions::repr_rust_drop {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=141
 union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_rust_drop :: U") alignas(8) [[clang::trivial_abi]]
 U final {
@@ -306,16 +251,10 @@ U final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=158
   void set_x(::std::int32_t* x);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=161
   ::std::int32_t* get_x() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=142
   struct {
     ::std::int32_t* value;
   } x;
@@ -328,8 +267,6 @@ U final {
 
 namespace unions::repr_rust_packed {
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=64
 union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_rust_packed :: U") alignas(1)
     [[clang::trivial_abi]] __attribute__((packed)) U final {
@@ -348,13 +285,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=65
   struct {
     ::std::uint32_t value;
   } x;
-  // Generated from:
-  // cc_bindings_from_rs/test/unions/unions.rs;l=66
   struct {
     ::std::uint32_t value;
   } y;
@@ -363,8 +296,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/unions/unions.rs;l=69
 ::unions::repr_rust_packed::U create();
 
 }  // namespace unions::repr_rust_packed

@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // move_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN
@@ -28,8 +27,6 @@
 
 namespace move {
 
-// Generated from:
-// cc_bindings_from_rs/test/move_semantics/move.rs;l=30
 struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
     [[clang::trivial_abi]] Copyable final {
  public:
@@ -49,21 +46,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/move_semantics/move.rs;l=35
   static ::move::Copyable from_byte(::std::uint8_t byte);
 
   //  Typically, `self`-by-value methods turn into `&&`-qualified methods in
   //  C++. However, for `Copy` types, there's no need to consume the argument,
   //  as it will be copied regardless.
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/move_semantics/move.rs;l=42
   ::std::uint8_t consume_self() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/move_semantics/move.rs;l=31
     ::std::uint8_t field;
   };
 
@@ -71,8 +61,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/move_semantics/move.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
     [[clang::trivial_abi]] Foo final {
  public:
@@ -92,16 +80,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/move_semantics/move.rs;l=14
   static ::move::Foo from_byte(::std::uint8_t byte);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/move_semantics/move.rs;l=18
   ::std::uint8_t read_byte() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/move_semantics/move.rs;l=22
   ::std::uint8_t into_byte() &&;
 
  private:
@@ -113,8 +95,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/move_semantics/move.rs;l=27
 void consume_foo(::move::Foo _foo);
 
 static_assert(

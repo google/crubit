@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // non_trivially_destructible_rust_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN
@@ -29,8 +25,6 @@
 
 namespace non_trivially_destructible_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: non_trivially_destructible_rust_golden :: "
     "NonTriviallyDestructable") alignas(4) [[clang::trivial_abi]]
@@ -58,8 +52,6 @@ NonTriviallyDestructable final {
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=7
     ::std::int32_t field;
   };
 
@@ -67,12 +59,8 @@ NonTriviallyDestructable final {
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=18
 ::non_trivially_destructible_rust::NonTriviallyDestructable return_by_value();
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=16
 void take_by_value(
     ::non_trivially_destructible_rust::NonTriviallyDestructable _x);
 

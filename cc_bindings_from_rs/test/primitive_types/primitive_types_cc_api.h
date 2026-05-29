@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // primitive_types_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN
@@ -33,20 +29,14 @@
 
 namespace primitive_types::argument_types {
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=60
 void c_char_mut_ptr_arg(decltype(char(0))* __param_0);
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=59
 void c_char_ptr_arg(decltype(char(0)) const* __param_0);
 
 }  // namespace primitive_types::argument_types
 
 namespace primitive_types::field_types {
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=169
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: primitive_types_golden :: field_types :: Types") alignas(8)
     [[clang::trivial_abi]] Types final {
@@ -68,148 +58,90 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=200
     crubit::type_identity_t<void(::std::int8_t)>* i8_func;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=201
     crubit::type_identity_t<void(decltype(char(0)))>* c_char_func;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=170
     void* c_void_mut_ptr;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=171
     const void* c_void_const_ptr;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=180
     ::std::int64_t c_long;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=181
     ::std::uint64_t c_ulong;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=182
     long long c_longlong;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=183
     unsigned long long c_ulonglong;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=185
     double c_double;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=193
     ::std::int64_t i64;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=194
     ::std::uint64_t u64;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=195
     ::std::intptr_t isize;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=196
     ::std::uintptr_t usize;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=198
     double f64;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=178
     ::std::int32_t c_int;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=179
     ::std::uint32_t c_uint;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=184
     float c_float;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=191
     ::std::int32_t i32;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=192
     ::std::uint32_t u32;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=197
     float f32;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=176
     ::std::int16_t c_short;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=177
     ::std::uint16_t c_ushort;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=189
     ::std::int16_t i16;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=190
     ::std::uint16_t u16;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=173
     decltype(char(0)) c_char;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=174
     ::std::int8_t c_schar;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=175
     ::std::uint8_t c_uchar;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=187
     ::std::int8_t i8;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=188
     ::std::uint8_t u8;
   };
 
@@ -224,140 +156,74 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace primitive_types::return_types {
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=74
 decltype(char(0)) c_char();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=80
 decltype(char(0)) const* c_char_const_ptr();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=162
 crubit::type_identity_t<void(decltype(char(0)))>& c_char_func();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=77
 decltype(char(0))* c_char_mut_ptr();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=117
 double c_double();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=114
 float c_float();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=96
 ::std::int32_t c_int();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=102
 ::std::int64_t c_long();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=108
 long long c_longlong();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=84
 ::std::int8_t c_schar();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=90
 ::std::int16_t c_short();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=87
 ::std::uint8_t c_uchar();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=99
 ::std::uint32_t c_uint();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=105
 ::std::uint64_t c_ulong();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=111
 unsigned long long c_ulonglong();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=93
 ::std::uint16_t c_ushort();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=66
 void c_void();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=70
 const void* c_void_const_ptr();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=67
 void* c_void_mut_ptr();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=151
 float f32();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=154
 double f64();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=127
 ::std::int16_t i16();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=133
 ::std::int32_t i32();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=139
 ::std::int64_t i64();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=121
 ::std::int8_t i8();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=158
 crubit::type_identity_t<void(::std::int8_t)>& i8_func();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=145
 ::std::intptr_t isize();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=130
 ::std::uint16_t u16();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=136
 ::std::uint32_t u32();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=142
 ::std::uint64_t u64();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=124
 ::std::uint8_t u8();
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=148
 ::std::uintptr_t usize();
 
 }  // namespace primitive_types::return_types
 
 namespace primitive_types::test_c_void_ptr {
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: primitive_types_golden :: test_c_void_ptr :: "
     "StructWithCVoidPointerMember") alignas(8) [[clang::trivial_abi]]
@@ -383,13 +249,9 @@ StructWithCVoidPointerMember final {
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=10
     const void* ptr_const;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=11
     void* ptr_mut;
   };
 
@@ -397,16 +259,10 @@ StructWithCVoidPointerMember final {
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=23
 const void* identity_const_c_void_ptr(const void* ptr);
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=26
 void* identity_mut_c_void_ptr(void* ptr);
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=15
 ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember
 new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut);
 
@@ -414,21 +270,13 @@ new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut);
 
 namespace primitive_types::test_maybe_uninit {
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=44
 ::std::int32_t const* maybe_uninit_ptr(::std::int32_t const* maybe_uninit);
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=48
 ::std::int32_t* maybe_uninit_ptr_mut(::std::int32_t* maybe_uninit);
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=34
 ::std::int32_t const& $static
 maybe_uninit_ref(::std::int32_t const* $static maybe_uninit);
 
-// Generated from:
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=38
 ::std::int32_t& $static
 maybe_uninit_ref_mut(::std::int32_t* $static maybe_uninit);
 

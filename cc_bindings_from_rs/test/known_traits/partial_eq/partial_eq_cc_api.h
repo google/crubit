@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // partial_eq_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_PARTIAL_EQ_PARTIAL_EQ_GOLDEN
@@ -26,8 +25,6 @@
 
 namespace partial_eq::basic_test {
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: partial_eq_golden :: basic_test :: MyStruct") alignas(8)
     [[clang::trivial_abi]] MyStruct final {
@@ -49,18 +46,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=12
   static ::partial_eq::basic_test::MyStruct new_(::std::uintptr_t val);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=18
   bool operator==(::partial_eq::basic_test::MyStruct const& other) const;
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=9
     ::std::uintptr_t __field0;
   };
 
@@ -72,8 +63,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace partial_eq::usize_rhs {
 
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=25
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: partial_eq_golden :: usize_rhs :: MyStruct") alignas(8)
     [[clang::trivial_abi]] MyStruct final {
@@ -95,18 +84,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=28
   static ::partial_eq::usize_rhs::MyStruct new_(::std::uintptr_t val);
 
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=34
   bool operator==(::std::uintptr_t const& other) const;
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=25
     ::std::uintptr_t __field0;
   };
 

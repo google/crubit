@@ -37,7 +37,7 @@ use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, IntTy, Ty, TyCtxt, TyKind, TypeFlags, UintTy};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
-use rustc_span::symbol::{sym, Symbol};
+use rustc_span::symbol::sym;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;

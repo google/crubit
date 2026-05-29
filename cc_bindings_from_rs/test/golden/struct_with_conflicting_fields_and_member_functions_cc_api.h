@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // struct_with_conflicting_fields_and_member_functions_rust_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
@@ -28,8 +24,6 @@
 
 namespace struct_with_conflicting_fields_and_member_functions_rust {
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: struct_with_conflicting_fields_and_member_functions_rust_golden :: "
     "X") alignas(4) [[clang::trivial_abi]] X final {
@@ -51,29 +45,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=13
   ::std::int32_t a() const;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=16
   ::std::int32_t b() const;
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=7
     ::std::int32_t a_;
   };
 
  private:
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=8
     ::std::int32_t b_;
   };
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=9
     ::std::int32_t c;
   };
 

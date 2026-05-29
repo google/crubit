@@ -113,6 +113,7 @@ fn bindings_db_for_tests_with_features(
         /* errors = */ Rc::new(IgnoreErrors),
         /* fatal_errors= */ Rc::new(FatalErrors::new()),
         /* no_thunk_name_mangling= */ true,
+        /* is_golden_test= */ false,
         /* include_guard */ IncludeGuard::PragmaOnce,
         /* ignore_symbols_from_files */ HashSet::default().into(),
     )

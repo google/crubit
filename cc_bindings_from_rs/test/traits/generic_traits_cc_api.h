@@ -4,10 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // generic_traits_golden
-// Features: assume_lifetimes, assume_this_lifetimes, callables,
-// check_default_initialized, experimental, layout_compat_tuple,
-// leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_GENERIC_TRAITS_GOLDEN
@@ -30,8 +26,6 @@
 
 namespace generic_traits {
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=37
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generic_traits_golden :: AnotherStruct") alignas(4)
     [[clang::trivial_abi]] AnotherStruct final {
@@ -52,8 +46,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/traits/generic_traits.rs;l=38
     ::std::int32_t y;
   };
 
@@ -61,8 +53,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generic_traits_golden :: StructGeneric") alignas(4)
     [[clang::trivial_abi]] StructGeneric final {
@@ -83,13 +73,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/generic_traits.rs;l=14
   static ::generic_traits::StructGeneric new_(::std::int32_t x);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/traits/generic_traits.rs;l=10
     ::std::int32_t x;
   };
 
@@ -107,8 +93,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=49:
 // Trait is not yet supported
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=5
 template <typename T0>
 struct CRUBIT_INTERNAL_RUST_TYPE(":: generic_traits_golden :: TraitWithGeneric")
     TraitWithGeneric {
@@ -116,8 +100,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: generic_traits_golden :: TraitWithGeneric")
   using impl = rs_std::impl<T, TraitWithGeneric<T0>>;
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=26
 template <typename T0, typename T1>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generic_traits_golden :: TraitWithTwoGenerics") TraitWithTwoGenerics {
@@ -138,8 +120,6 @@ struct rs_std::impl<::generic_traits::StructGeneric,
                     ::generic_traits::TraitWithGeneric<::std::int32_t>> {
   static constexpr bool kIsImplemented = true;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/generic_traits.rs;l=21
   static ::std::int32_t foo(::generic_traits::StructGeneric const& self,
                             ::std::int32_t t);
 };
@@ -150,8 +130,6 @@ struct rs_std::impl<
     ::generic_traits::TraitWithTwoGenerics<::std::int32_t, ::std::int32_t>> {
   static constexpr bool kIsImplemented = true;
 
-  // Generated from:
-  // cc_bindings_from_rs/test/traits/generic_traits.rs;l=32
   static ::std::int32_t bar(::generic_traits::StructGeneric const& self,
                             ::std::int32_t t, ::std::int32_t u);
 };

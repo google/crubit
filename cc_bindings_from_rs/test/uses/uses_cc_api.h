@@ -4,7 +4,6 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // uses_golden
-// Features: callables, supported, types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN
@@ -29,9 +28,6 @@
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=21
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") alignas(4) [[clang::trivial_abi]]
 AliasOfExportedStruct final {
@@ -52,13 +48,9 @@ AliasOfExportedStruct final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  // Generated from:
-  // cc_bindings_from_rs/test/uses/uses.rs;l=26
   static ::uses::AliasOfExportedStruct create(::std::int32_t field);
 
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=22
     ::std::int32_t field;
   };
 
@@ -71,9 +63,6 @@ AliasOfExportedStruct final {
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=63
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
@@ -92,8 +81,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=64
     ::std::int32_t field;
   };
 
@@ -105,8 +92,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
 
 namespace uses {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=74
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
     [[clang::trivial_abi]] OtherPublicName final {
  public:
@@ -129,8 +114,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=74
     ::std::int32_t __field0;
   };
 
@@ -143,9 +126,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
 namespace uses::a::c {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=109
 ::std::int32_t private_middle_path();
 
 }  // namespace uses::a::c
@@ -153,9 +133,6 @@ namespace uses::a::c {
 namespace uses::doc_hidden_test::visible {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=90
 ::std::int32_t private_fn();
 
 }  // namespace uses::doc_hidden_test::visible
@@ -163,41 +140,28 @@ namespace uses::doc_hidden_test::visible {
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=14
 ::std::int32_t f();
 
 }  // namespace uses
 
 namespace uses {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=75
 void other_public_name();
 
-}  // namespace uses
+}
 
 namespace uses {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=31
 ::std::int32_t private_fn();
 
-}  // namespace uses
+}
 
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=53
 ::extern_crate::X return_x();
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=58
 ::extern_crate::Y return_y();
 
 }  // namespace uses
@@ -205,9 +169,6 @@ namespace uses {
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=21
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
 static_assert(
@@ -240,15 +201,9 @@ inline void AliasOfExportedStruct::__crubit_field_offset_assertions() {
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=63
 using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
     ::uses::Original;
 // CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=63
 using Alias2 CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
     ::uses::Original;
 static_assert(
@@ -267,8 +222,6 @@ inline void Original::__crubit_field_offset_assertions() {
 
 namespace uses {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=74
 using PublicName CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: OtherPublicName") = ::uses::OtherPublicName;
 static_assert(
@@ -288,11 +241,7 @@ inline void OtherPublicName::__crubit_field_offset_assertions() {
 
 namespace uses {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/extern_crate.rs;l=6
 using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
-// Generated from:
-// cc_bindings_from_rs/test/uses/extern_crate.rs;l=6
 using XFromExternCrate CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") =
     ::extern_crate::X;
 }  // namespace uses
