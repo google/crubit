@@ -1482,14 +1482,18 @@ pub(crate) fn generate_fields<'tcx>(
                             let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
                             let size = get_layout(tcx, ty).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
-                                if is_bridged_type(db, ty)
-                                    .is_ok_and(|bridged_type| bridged_type.is_some())
-                                    && !ty
-                                        .ty_adt_def()
-                                        .and_then(|adt_def| BridgedBuiltin::new(db, adt_def))
-                                        .is_some_and(|builtin| {
-                                            matches!(builtin, BridgedBuiltin::Option)
-                                        })
+                                if is_bridged_type(db, ty).is_ok_and(|bridged_type| {
+                                    // Pointer-like transmute types are layout-compatible, not
+                                    // bridged by-value.
+                                    bridged_type.is_some_and(|bridged_type| {
+                                        !bridged_type.is_layout_compatible()
+                                    })
+                                }) && !ty
+                                    .ty_adt_def()
+                                    .and_then(|adt_def| BridgedBuiltin::new(db, adt_def))
+                                    .is_some_and(|builtin| {
+                                        matches!(builtin, BridgedBuiltin::Option)
+                                    })
                                 {
                                     bail!(
                                         "Field is a bridged type and might not be layout-compatible

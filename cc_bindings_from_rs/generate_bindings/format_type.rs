@@ -137,6 +137,57 @@ fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
 }
 
+fn format_legacy_bridged_type_with_placeholders<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    cpp_type_str: &str,
+    adt: ty::AdtDef<'tcx>,
+    substs: &'tcx ty::List<ty::GenericArg<'tcx>>,
+    prereqs: &mut CcPrerequisites<'tcx>,
+) -> Result<TokenStream> {
+    let tcx = db.tcx();
+    let generics = tcx.generics_of(adt.did());
+    let mut result_str = cpp_type_str.to_string();
+
+    // Validate that all `{...}` placeholders match a generic parameter name.
+    let mut start_idx = 0;
+    while let Some(start) = cpp_type_str[start_idx..].find('{') {
+        let absolute_start = start_idx + start;
+        let Some(end) = cpp_type_str[absolute_start..].find('}') else {
+            break;
+        };
+        let placeholder_name = &cpp_type_str[absolute_start + 1..absolute_start + end];
+        if !generics.own_params.iter().any(|p| p.name.as_str() == placeholder_name) {
+            db.fatal_errors().report(&format!(
+                "`cpp_type` `{cpp_type_str}` is missing a generic parameter for `{{{placeholder_name}}}`",
+            ));
+            return Ok(quote! {});
+        }
+        start_idx = absolute_start + end + 1;
+    }
+
+    for (param, subst) in generics.own_params.iter().zip(substs.iter()) {
+        let ty::GenericArgKind::Type(ty) = subst.kind() else {
+            continue;
+        };
+        let name = param.name.as_str();
+        let placeholder = format!("{{{name}}}");
+        if !result_str.contains(&placeholder) {
+            continue;
+        }
+        let snippet = format_ty_for_cc(db, ty, TypeLocation::NestedBridgeable)?;
+        let tokens = snippet.into_tokens(prereqs);
+        result_str = result_str.replace(&placeholder, &tokens.to_string());
+    }
+
+    Ok(result_str.parse::<TokenStream>().unwrap_or_else(|err| {
+        db.fatal_errors().report(&format!(
+            "Failed to parse `cpp_type` `{}` after placeholder expansion: {err}",
+            result_str
+        ));
+        quote! {}
+    }))
+}
+
 /// Implementation of `BindingsGenerator::format_ty_for_cc`.
 pub fn format_ty_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -159,6 +210,23 @@ pub fn format_ty_for_cc<'tcx>(
     }
     fn keyword<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
         CcSnippet::new(tokens)
+    }
+
+    let needle_ty = tcx.erase_and_anonymize_regions(ty);
+    if let Some(specialization) = db.specializations().iter().find(|s| s.ty == needle_ty) {
+        let tokens =
+            specialization.cpp_type.as_ref().parse::<TokenStream>().unwrap_or_else(|err| {
+                db.fatal_errors().report(&format!(
+                    "Failed to parse `cpp_type` attribute `{}`: {err}",
+                    specialization.cpp_type
+                ));
+                quote! {}
+            });
+        let mut prereqs = CcPrerequisites::default();
+        if let Some(include_path) = &specialization.include_path {
+            prereqs.includes.insert(CcInclude::from_path(include_path.as_ref()));
+        }
+        return Ok(CcSnippet { tokens, prereqs });
     }
 
     Ok(match *ty.kind() {
@@ -328,12 +396,40 @@ pub fn format_ty_for_cc<'tcx>(
                 return Ok(CcSnippet { tokens, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 ensure!(
-                    location.is_bridgeable(),
+                    location.is_bridgeable() || bridged_type.is_layout_compatible(),
                     "Bridged types must appear in a bridgeable type location"
                 );
                 match bridged_type {
-                    BridgedType::Legacy { include_path, .. } => {
+                    BridgedType::Legacy { include_path, cpp_type, .. } => {
                         prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
+
+                        let cpp_type_str = match &cpp_type {
+                            CcType::Other(symbol) => symbol.as_str(),
+                            CcType::Pointer { cpp_type, .. } => cpp_type.as_str(),
+                        };
+
+                        let tokens = if cpp_type_str.contains('{') {
+                            format_legacy_bridged_type_with_placeholders(
+                                db,
+                                cpp_type_str,
+                                adt,
+                                substs,
+                                &mut prereqs,
+                            )?
+                        } else {
+                            match cpp_type_str.parse::<TokenStream>() {
+                                Ok(tokens) => tokens,
+                                Err(err) => {
+                                    db.fatal_errors().report(&format!(
+                                        "Failed to parse `cpp_type` `{}`: {err}",
+                                        cpp_type_str
+                                    ));
+                                    quote! {}
+                                }
+                            }
+                        };
+
+                        return Ok(CcSnippet { tokens, prereqs });
                     }
                     BridgedType::Composable(mut composable) => {
                         // The existance of crubit_abi_type implies that the type can fully
@@ -917,6 +1013,18 @@ pub enum BridgedType<'tcx> {
     Composable(Box<BridgedTypeComposable<'tcx>>),
 }
 
+impl BridgedType<'_> {
+    pub fn is_layout_compatible(&self) -> bool {
+        match self {
+            BridgedType::Legacy { conversion_info, .. } => match conversion_info {
+                BridgedTypeConversionInfo::PointerLikeTransmute { .. } => true,
+                BridgedTypeConversionInfo::ExternCFuncConverters { .. } => false,
+            },
+            BridgedType::Composable(_) => false,
+        }
+    }
+}
+
 pub struct BridgedTypeComposable<'tcx> {
     pub cpp_type: FullyQualifiedPath,
     pub prereqs: CcPrerequisites<'tcx>,
@@ -926,7 +1034,9 @@ pub struct BridgedTypeComposable<'tcx> {
 /// A description of what method is used to convert between values of the Rust and C++ types.
 pub enum BridgedTypeConversionInfo {
     /// The types are representation-equivalent and can be transmuted using simple pointer casts.
-    PointerLikeTransmute,
+    PointerLikeTransmute {
+        is_pointer: bool,
+    },
     ExternCFuncConverters {
         cpp_to_rust_converter: Symbol,
         rust_to_cpp_converter: Symbol,
@@ -1216,16 +1326,19 @@ fn is_manually_annotated_bridged_adt<'tcx>(
                 panic!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}: {err}")
             });
 
-            let Some(cv) = code_gen_utils::is_cpp_pointer_type(ts) else {
-                return Ok(None);
+            let cpp_type_cc = match code_gen_utils::is_cpp_pointer_type(ts) {
+                Some(cv) => {
+                    ensure_ty_is_pointer_like(db, ty)?;
+                    CcType::Pointer { cpp_type, cv }
+                }
+                None => CcType::Other(cpp_type),
             };
 
-            ensure_ty_is_pointer_like(db, ty)?;
-
+            let is_pointer = matches!(cpp_type_cc, CcType::Pointer { .. });
             Ok(Some(BridgedType::Legacy {
-                cpp_type: CcType::Pointer { cpp_type, cv },
+                cpp_type: cpp_type_cc,
                 include_path,
-                conversion_info: BridgedTypeConversionInfo::PointerLikeTransmute,
+                conversion_info: BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer },
             }))
         }
         BridgingAttrs::ExternCFuncConverters {
@@ -1279,7 +1392,9 @@ pub fn is_bridged_type<'tcx>(
 
     match *ty.kind() {
         ty::TyKind::Ref(_, referent, _) => {
-            if is_bridged_type(db, referent)?.is_some() {
+            if let Some(bridged) = is_bridged_type(db, referent)?
+                && !bridged.is_layout_compatible()
+            {
                 if let ty::TyKind::Adt(adt, _) = referent.kind() {
                     if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
                         return Ok(None);
@@ -1293,7 +1408,9 @@ pub fn is_bridged_type<'tcx>(
             Ok(None)
         }
         ty::TyKind::RawPtr(pointee, _) => {
-            if is_bridged_type(db, pointee)?.is_some() {
+            if let Some(bridged) = is_bridged_type(db, pointee)?
+                && !bridged.is_layout_compatible()
+            {
                 bail!(
                     "Can't format pointer type `{ty}` because the pointee is a bridged type. \
                         Passing bridged types by pointer is not supported."
@@ -1332,10 +1449,13 @@ pub fn is_bridged_type<'tcx>(
             // need to be bridged e.g. Box<BridgedType> cannot be formated at
             // the moment. If we encounter a type like this we return an error.
             for subst in substs {
-                if let Some(ty) = subst.as_type() {
-                    if is_bridged_type(db, ty)?.is_some() {
-                        bail!("Can't format ADT as it has a generic type `{ty}` that is a bridged type");
-                    }
+                if let Some(ty) = subst.as_type()
+                    && let Some(bridged) = is_bridged_type(db, ty)?
+                    && !bridged.is_layout_compatible()
+                {
+                    bail!(
+                        "Can't format ADT as it has a generic type `{ty}` that is a bridged type"
+                    );
                 }
             }
             Ok(None)

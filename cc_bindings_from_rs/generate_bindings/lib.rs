@@ -26,10 +26,9 @@ mod generate_template_specialization;
 mod get_generic_args;
 
 use crate::format_type::{
-    crubit_abi_type_from_ty, ensure_ty_is_pointer_like, format_cc_ident, format_cc_ident_symbol,
-    format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
-    format_top_level_ns_for_crate, is_bridged_type, BridgedBuiltin, BridgedType,
-    BridgedTypeConversionInfo,
+    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol, format_param_types_for_cc,
+    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
+    is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
@@ -569,7 +568,9 @@ fn public_paths_by_def_id(
                     });
                 // If our generics do not match for our type alias, do not consider them a public
                 // path for their underlying type.
-                if generics_match {
+                if generics_match
+                    || crubit_attr::get_attrs(tcx, def_id).unwrap().specializes_cpp_type
+                {
                     type_alias_def_id = Some(def_id);
                     def_id = def.did();
                 }

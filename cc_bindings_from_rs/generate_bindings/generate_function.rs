@@ -15,8 +15,7 @@ use crate::{
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{
-    escape_non_identifier_chars, expect_format_cc_ident, format_cc_type_name, make_rs_ident,
-    CcInclude,
+    escape_non_identifier_chars, expect_format_cc_ident, make_rs_ident, CcInclude,
 };
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
@@ -296,8 +295,10 @@ fn cc_return_value_from_c_abi<'tcx>(
     // places.
     if let Some(bridged_type) = is_bridged_type(db, ty)? {
         match bridged_type {
-            BridgedType::Legacy { cpp_type, .. } => {
-                let cpp_type = format_cc_type_name(cpp_type.as_ref())?;
+            BridgedType::Legacy { .. } => {
+                let cpp_type = db
+                    .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
+                    .into_tokens(prereqs);
                 // Below, we use a union to allocate uninitialized memory that fits cpp_type.
                 // The union prevents the type from being default constructed. It's
                 // the responsibility of the thunk to properly initialize the

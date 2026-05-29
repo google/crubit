@@ -427,7 +427,9 @@ pub struct ExternCDecl {
 
 impl Ord for ExternCDecl {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.symbol.cmp(&other.symbol)
+        // Use lexicographical ordering of the function names, so that it is consistent across
+        // compilations. Symbol will change between compilations.
+        self.symbol.as_str().cmp(other.symbol.as_str())
     }
 }
 

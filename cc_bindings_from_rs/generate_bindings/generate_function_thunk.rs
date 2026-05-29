@@ -4,10 +4,9 @@
 
 use crate::generate_function::fn_arg_idents;
 use crate::{
-    does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
-    format_param_types_for_cc, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, BridgedBuiltin, BridgedType,
-    BridgedTypeConversionInfo, RsSnippet, TypeLocation,
+    does_type_implement_trait, format_cc_ident, format_param_types_for_cc, is_bridged_type,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedBuiltin,
+    BridgedType, BridgedTypeConversionInfo, RsSnippet, TypeLocation,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -214,9 +213,17 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
     match bridged_type {
         BridgedType::Legacy { conversion_info, .. } => {
             let convert = match conversion_info {
-                BridgedTypeConversionInfo::PointerLikeTransmute => quote! {
-                    #temp_name.write(::core::mem::transmute(#local_name));
-                },
+                BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer } => {
+                    if *is_pointer {
+                        quote! {
+                            #temp_name.write(::core::mem::transmute(#local_name));
+                        }
+                    } else {
+                        quote! {
+                            #temp_name.write((#local_name as *const #rs_type).read());
+                        }
+                    }
+                }
                 BridgedTypeConversionInfo::ExternCFuncConverters {
                     cpp_to_rust_converter, ..
                 } => {
@@ -408,10 +415,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     Ok(if let Some(bridged_type) = is_bridged_type(db, rs_type)? {
         match bridged_type {
             BridgedType::Legacy { conversion_info, .. } => match conversion_info {
-                BridgedTypeConversionInfo::PointerLikeTransmute => {
-                    ensure_ty_is_pointer_like(db, rs_type)?;
-                    write_directly()?
-                }
+                BridgedTypeConversionInfo::PointerLikeTransmute { .. } => write_directly()?,
                 BridgedTypeConversionInfo::ExternCFuncConverters {
                     rust_to_cpp_converter, ..
                 } => {

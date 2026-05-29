@@ -38,7 +38,7 @@ namespace option {
 struct HasOptions;
 
 // Error generating bindings for struct `option_golden::BridgedType` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=197:
+// cc_bindings_from_rs/test/enums/option.rs;l=196:
 // Type bindings for option_golden::BridgedType suppressed due to being mapped
 // to an existing C++ type (int)
 
@@ -319,7 +319,7 @@ OptionWithSizeTypes final {
 
 // Error generating bindings for function `option_golden::take_option_bridged`
 // defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=199:
+// cc_bindings_from_rs/test/enums/option.rs;l=198:
 // Error handling parameter #0 of type
 // `std::option::Option<option_golden::BridgedType>`: Failed to format type for
 // the definition of `option_golden::BridgedType`: Error formatting the

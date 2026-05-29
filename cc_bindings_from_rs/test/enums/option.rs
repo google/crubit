@@ -192,7 +192,6 @@ pub struct OptionWithSizeTypes {
 }
 
 #[doc = "CRUBIT_ANNOTATE: cpp_type=int"]
-#[doc = "CRUBIT_ANNOTATE: include_path=unused_include.h"]
 #[repr(transparent)]
 pub struct BridgedType(i32);
 
