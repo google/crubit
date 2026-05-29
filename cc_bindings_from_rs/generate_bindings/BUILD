@@ -18,6 +18,7 @@ package(
 rust_library(
     name = "generate_bindings",
     srcs = [
+        "avoid_colliding_types.rs",
         "format_type.rs",
         "generate_function.rs",
         "generate_function_thunk.rs",
@@ -66,6 +67,16 @@ crubit_rust_test(
         "//common:token_stream_matchers",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
+    ],
+)
+
+crubit_rust_test(
+    name = "avoid_colliding_types_test",
+    srcs = ["avoid_colliding_types_test.rs"],
+    rustc_flags = ["-Zallow-features=rustc_private"],
+    deps = [
+        ":generate_bindings",
+        "//cc_bindings_from_rs:run_compiler_test_support",
     ],
 )
 

@@ -18,6 +18,7 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
+pub mod avoid_colliding_types;
 pub mod format_type;
 pub mod generate_function;
 mod generate_function_thunk;

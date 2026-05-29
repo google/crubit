@@ -7,6 +7,7 @@ extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
 
+use crate::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
 use crate::format_cc_ident;
 use crate::format_type::CcParamTy;
 use crate::generate_doc_comment;
@@ -35,7 +36,7 @@ use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-use rustc_middle::ty::{self, AssocKind, IntTy, Ty, TyCtxt, TyKind, TypeFlags, UintTy};
+use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::sym;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -598,112 +599,59 @@ fn generate_trait_operator_impls<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
 
-    struct TraitImpl<'tcx> {
-        ty: Ty<'tcx>,
-        impl_id: DefId,
-        snippets: ApiSnippets<'tcx>,
-    }
-    struct TraitImpls<'tcx> {
-        has_usize_impl: bool,
-        has_isize_impl: bool,
-        impls: Vec<Result<TraitImpl<'tcx>, (arc_anyhow::Error, DefId)>>,
-    }
-    impl<'tcx> TraitImpls<'tcx> {
-        fn avoid_colliding_overloads<'a>(
-            self,
-            db: &'a BindingsGenerator<'tcx>,
-            trait_name: &str,
-        ) -> Vec<ApiSnippets<'tcx>> {
-            self.impls
-                .into_iter()
-                .map(move |res| match res {
-                    Ok(TraitImpl { ty, impl_id, snippets }) => {
-                        // One of these two pairings could overlap based on platform. Technically
-                        // more if we support 16-bit/8-bit platforms. But Index<usize> is so common,
-                        // it's worth providing that one over the others.
-                        if matches!(ty.kind(), TyKind::Int(IntTy::I64) | TyKind::Int(IntTy::I32))
-                            && self.has_isize_impl
-                        {
-                            let err = anyhow!(
-                                "{trait_name} implementation for `{ty}` is not supported when \
-                                 `{trait_name}<isize>` is implemented as it may overlap."
-                            );
-                            return generate_unsupported_def(db, impl_id, err).into_main_api();
-                        }
-                        if matches!(
-                            ty.kind(),
-                            TyKind::Uint(UintTy::U64) | TyKind::Uint(UintTy::U32)
-                        ) && self.has_usize_impl
-                        {
-                            let err = anyhow!(
-                                "{trait_name} implementation for `{ty}` is not supported when \
-                                 `{trait_name}<usize>` is implemented as it may overlap."
-                            );
-                            return generate_unsupported_def(db, impl_id, err).into_main_api();
-                        }
-                        snippets
-                    }
-                    Err((e, impl_id)) => generate_unsupported_def(db, impl_id, e).into_main_api(),
-                })
-                .collect_vec()
-        }
-    }
-
     let query_trait_impls = |trait_def_id: DefId,
                              method_name: &str,
                              operator_name: &'static str|
      -> Vec<ApiSnippets<'_>> {
         let trait_name = tcx.item_name(trait_def_id).to_string();
-        let mut has_usize_impl = false;
-        let mut has_isize_impl = false;
 
-        let impls = tcx
-            .non_blanket_impls_for_ty(trait_def_id, core.self_ty)
+        tcx.non_blanket_impls_for_ty(trait_def_id, core.self_ty)
             .map(|impl_id| {
                 let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
                 // Index 0 of our trait ref is the self type, so index 1 is the real type arg
                 // (e.g. `T` in `Index<T>` or in `IndexMut<T>`).
                 let trait_args = trait_ref.args;
                 let trait_arg_ty = trait_args.type_at(1);
-                if trait_arg_ty.flags().intersects(has_type_or_const_vars()) {
-                    let err = anyhow!(
-                        "{trait_name} impl has uninstantiated generic parameters, \
-                               which is not yet supported {trait_arg_ty}"
-                    );
-                    return Err((err, impl_id));
-                }
-
-                if trait_arg_ty.is_usize() {
-                    has_usize_impl = true;
-                } else if matches!(trait_arg_ty.kind(), TyKind::Int(IntTy::Isize)) {
-                    has_isize_impl = true;
-                }
-
-                let impl_assoc_fn = tcx
-                    .associated_items(impl_id)
-                    .in_definition_order()
-                    .find(|item| {
-                        item.name().as_str() == method_name
-                            && matches!(item.kind, AssocKind::Fn { .. })
-                    })
-                    .unwrap_or_else(|| {
-                        panic!("Caller should ensure {trait_name} has method {method_name}");
-                    });
-
-                let snippets = db
-                    .generate_function(
-                        impl_assoc_fn.def_id,
-                        Some(operator_name),
-                        StaticMethodMode::Infer,
-                    )
-                    .map_err(|e| (e, impl_id))?;
-
-                Ok(TraitImpl { ty: trait_arg_ty, impl_id, snippets })
+                (impl_id, trait_arg_ty)
             })
-            .collect();
+            .avoid_colliding_types(tcx, |(_impl_id, trait_arg_ty)| *trait_arg_ty)
+            .into_iter()
+            .map(|res| {
+                res.map_err(|TypeCollisionRisk { item: (impl_id, _), key_type, preferred_type }| {
+                    let err = anyhow!(
+                        "{trait_name} implementation for `{key_type}` is not supported when \
+                         `{trait_name}<{preferred_type}>` is implemented as it may overlap."
+                    );
+                    (err, impl_id)
+                })
+                .and_then(|(impl_id, trait_arg_ty)| {
+                    if trait_arg_ty.flags().intersects(has_type_or_const_vars()) {
+                        let err = anyhow!(
+                            "{trait_name} impl has uninstantiated generic parameters, \
+                                   which is not yet supported {trait_arg_ty}"
+                        );
+                        return Err((err, impl_id));
+                    }
 
-        TraitImpls { has_usize_impl, has_isize_impl, impls }
-            .avoid_colliding_overloads(db, &trait_name)
+                    let assoc_fn_id = tcx
+                        .associated_items(impl_id)
+                        .in_definition_order()
+                        .find(|item| {
+                            item.name().as_str() == method_name
+                                && matches!(item.kind, AssocKind::Fn { .. })
+                        })
+                        .unwrap_or_else(|| {
+                            panic!("Caller should ensure {trait_name} has method {method_name}");
+                        })
+                        .def_id;
+                    db.generate_function(assoc_fn_id, Some(operator_name), StaticMethodMode::Infer)
+                        .map_err(|e| (e, assoc_fn_id))
+                })
+                .unwrap_or_else(|(err, def_id)| {
+                    generate_unsupported_def(db, def_id, err).into_main_api()
+                })
+            })
+            .collect()
     };
 
     [

@@ -179,9 +179,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
                                 crubit_nonnull _index CRUBIT_LIFETIME_BOUND)
       const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  // Error generating bindings for implementation `<rs_index_golden::Map as
-  // std::ops::IndexMut<(usize, usize)>>` defined at
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=121:
+  // Error generating bindings for associated function `<rs_index_golden::Map as
+  // std::ops::IndexMut<(usize, usize)>>::index_mut` defined at
+  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=122:
   // Error formatting function return type `&'__anon1 mut str`: Mutable
   // references to `str` are not yet supported.
 

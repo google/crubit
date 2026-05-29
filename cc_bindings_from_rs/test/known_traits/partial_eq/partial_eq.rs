@@ -36,3 +36,27 @@ pub mod usize_rhs {
         }
     }
 }
+
+/// Regression test for b/516804442.  The main verification is whether the generated bindings
+/// compile without any errors.
+pub mod tuple_collision {
+    #[allow(dead_code)]
+    pub struct MyStruct(usize);
+
+    impl MyStruct {
+        pub fn new(val: usize) -> Self {
+            Self(val)
+        }
+    }
+
+    impl PartialEq<(u64, bool)> for MyStruct {
+        fn eq(&self, _other: &(u64, bool)) -> bool {
+            true
+        }
+    }
+    impl PartialEq<(usize, bool)> for MyStruct {
+        fn eq(&self, _other: &(usize, bool)) -> bool {
+            true
+        }
+    }
+}
