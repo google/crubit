@@ -557,6 +557,7 @@ cc_library(
     hdrs = ["src_code_gen.h"],
     deps = [
         ":cc_ir",
+        ":ir_cc_proto",
         ":src_code_gen_ffi",
         "//rs_bindings_from_cc/generate_bindings:cc_api_ffi",  # buildcleaner: keep
         "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",

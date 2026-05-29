@@ -7,7 +7,7 @@
 // Features: assume_lifetimes, assume_this_lifetimes, callables,
 // check_default_initialized, experimental, layout_compat_tuple,
 // leading_colons_for_cpp_type, supported, template_instantiation, types,
-// unsafe_view, wrapper
+// unsafe_view, use_protobuf_ir, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTION_POINTERS_FUNCTION_POINTERS_GOLDEN

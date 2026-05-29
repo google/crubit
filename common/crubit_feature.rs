@@ -42,6 +42,9 @@ flagset::flags! {
         /// Mark C++ types with `[[gsl::Pointer]]` as unsafe.
         UnsafeView,
 
+        /// Generate bindings using the protobuf IR.
+        UseProtobufIR,
+
         /// C++ default constructors are checked to fully initialize all public fields.
         CheckDefaultInitialized,
 
@@ -72,6 +75,7 @@ impl CrubitFeature {
             Self::AssumeThisLifetimes => "assume_this_lifetimes",
             Self::NoAssumeLifetimes => "no_assume_lifetimes",
             Self::Callables => "callables",
+            Self::UseProtobufIR => "use_protobuf_ir",
             Self::UnsafeView => "unsafe_view",
             Self::CheckDefaultInitialized => "check_default_initialized",
             Self::LeadingColonsForCppType => "leading_colons_for_cpp_type",
@@ -93,6 +97,7 @@ impl CrubitFeature {
             Self::AssumeThisLifetimes => "//features:assume_this_lifetimes",
             Self::NoAssumeLifetimes => "//features:no_assume_lifetimes",
             Self::Callables => "//features:callables",
+            Self::UseProtobufIR => "//features:use_protobuf_ir",
             Self::UnsafeView => "//features:unsafe_view",
             Self::CheckDefaultInitialized => {
                 "//features:check_default_initialized"
@@ -120,6 +125,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"assume_this_lifetimes" => CrubitFeature::AssumeThisLifetimes.into(),
         b"no_assume_lifetimes" => CrubitFeature::NoAssumeLifetimes.into(),
         b"callables" => CrubitFeature::Callables.into(),
+        b"use_protobuf_ir" => CrubitFeature::UseProtobufIR.into(),
         b"unsafe_view" => CrubitFeature::UnsafeView.into(),
         b"check_default_initialized" => CrubitFeature::CheckDefaultInitialized.into(),
         b"leading_colons_for_cpp_type" => CrubitFeature::LeadingColonsForCppType.into(),
@@ -240,6 +246,7 @@ mod tests {
                 | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
@@ -276,6 +283,7 @@ mod tests {
                 | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
@@ -297,6 +305,7 @@ mod tests {
                 | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
@@ -319,6 +328,7 @@ mod tests {
                 | CrubitFeature::AssumeThisLifetimes
                 | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
+                | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation

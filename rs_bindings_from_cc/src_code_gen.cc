@@ -5,12 +5,14 @@
 #include "rs_bindings_from_cc/src_code_gen.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/generate_bindings/generate_bindings.pb.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir.pb.h"
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
 #include "llvm/Support/FormatVariadic.h"
 
@@ -18,15 +20,18 @@ namespace crubit {
 
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest;
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
+using rs_bindings_from_cc::ir_proto::flat::IRProto;
 
 absl::StatusOr<Bindings> GenerateBindings(
-    const IR& ir, absl::string_view crubit_support_path_format,
+    const IR& ir, IRProto&& ir_proto,
+    absl::string_view crubit_support_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
     bool is_golden_test, bool kythe_annotations,
     absl::string_view kythe_default_corpus) {
   GenerateBindingsRequest request;
   request.set_json(llvm::formatv("{0}", ir.ToJson()));
+  *request.mutable_ir_proto() = std::move(ir_proto);
   request.set_crubit_support_path_format(crubit_support_path_format);
   request.set_clang_format_exe_path(clang_format_exe_path);
   request.set_rustfmt_exe_path(rustfmt_exe_path);
