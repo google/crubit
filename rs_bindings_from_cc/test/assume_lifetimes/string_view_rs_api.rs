@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:string_view
-// Features: assume_lifetimes, callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/string_view.h;l=12
 #[inline(always)]
 pub fn string_view_sink<'s>(mut s: ::cc_std::std::string_view<'s>) {
     unsafe {
@@ -24,7 +22,6 @@ pub fn string_view_sink<'s>(mut s: ::cc_std::std::string_view<'s>) {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/string_view.h;l=13
 #[inline(always)]
 pub fn string_view_return<'s>(
     mut s: ::cc_std::std::string_view<'s>,
@@ -37,7 +34,6 @@ pub fn string_view_return<'s>(
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/string_view.h;l=14
 #[inline(always)]
 pub fn ambiguous_string_view_return<'a, 'b>(
     mut a: ::cc_std::std::string_view<'a>,
@@ -51,7 +47,6 @@ pub fn ambiguous_string_view_return<'a, 'b>(
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/string_view.h;l=16
 #[inline(always)]
 pub fn explicit_lifetime_string_view<'a>(mut x: ::cc_std::std::string_view<'a>) {
     unsafe {
@@ -59,7 +54,6 @@ pub fn explicit_lifetime_string_view<'a>(mut x: ::cc_std::std::string_view<'a>) 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/string_view.h;l=17
 #[inline(always)]
 pub fn unambiguous_string_view_return_annotated<'a>(
     mut x: ::cc_std::std::string_view<'a>,

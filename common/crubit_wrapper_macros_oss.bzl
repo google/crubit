@@ -21,9 +21,24 @@ def crubit_rust_binary(**kwargs):
 crubit_cc_test = cc_test
 crubit_sh_test = sh_test
 crubit_cc_binary = cc_binary
+
+def _crubit_flavor_transition_impl(_settings, _attr):
+    return {}
+
 crubit_flavor_transition = transition(
-    implementation = lambda _settings, _attr: {},
+    implementation = _crubit_flavor_transition_impl,
     inputs = [],
     outputs = [],
+)
+
+def _crubit_golden_flavor_transition_impl(settings, attr):
+    flags = _crubit_flavor_transition_impl(settings, attr)
+    flags["//common/bazel_support:is_golden_test"] = True
+    return flags
+
+crubit_golden_flavor_transition = transition(
+    implementation = _crubit_golden_flavor_transition_impl,
+    inputs = [],
+    outputs = ["//common/bazel_support:is_golden_test"],
 )
 crubit_make_analysis_test = analysistest.make

@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:rust_name
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -18,13 +17,11 @@
 
 pub mod crubit {
     pub mod test {
-        /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=13
         #[inline(always)]
         pub fn free_fn_new_name() {
             unsafe { crate::detail::__rust_thunk___ZN6crubit4test13FreeFnOldNameEv() }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=15
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName
@@ -38,7 +35,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=15
         impl Default for StructNewName {
             #[inline(always)]
             fn default() -> Self {
@@ -52,7 +48,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=17
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct
@@ -67,8 +62,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
         impl SomeStruct {
-            /// Generated from: support/annotations_internal.h;l=16
-            /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub fn ConstructorNewName(
                 a: ::ffi_11::c_int,
@@ -81,16 +74,12 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: support/annotations_internal.h;l=16
-            /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const Self) {
                 unsafe { self::some_struct::MethodNewName(__this) }
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=18
         impl Default for SomeStruct {
             #[inline(always)]
             fn default() -> Self {
@@ -105,8 +94,6 @@ pub mod crubit {
         }
 
         pub mod some_struct {
-            /// Generated from: support/annotations_internal.h;l=16
-            /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub(crate) fn ConstructorNewName(
                 __this: ::ffi_11::c_int,
@@ -128,9 +115,6 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: support/annotations_internal.h;l=16
-            /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub(crate) unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
                 unsafe {

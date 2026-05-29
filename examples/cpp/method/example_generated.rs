@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/method:example_lib
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -17,7 +16,6 @@
 #![deny(warnings)]
 
 pub mod foo {
-    /// Generated from: examples/cpp/method/example.h;l=12
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Bar
@@ -35,15 +33,12 @@ pub mod foo {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `__this`: raw pointer
-        ///
-        /// Generated from: examples/cpp/method/example.h;l=14
         #[inline(always)]
         pub unsafe fn MyMethod(__this: *mut Self) {
             unsafe { self::bar::MyMethod(__this) }
         }
     }
 
-    /// Generated from: examples/cpp/method/example.h;l=12
     impl Default for Bar {
         #[inline(always)]
         fn default() -> Self {
@@ -60,8 +55,6 @@ pub mod foo {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `__this`: raw pointer
-        ///
-        /// Generated from: examples/cpp/method/example.h;l=14
         #[inline(always)]
         pub(crate) unsafe fn MyMethod(__this: *mut crate::foo::Bar) {
             unsafe { crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this) }

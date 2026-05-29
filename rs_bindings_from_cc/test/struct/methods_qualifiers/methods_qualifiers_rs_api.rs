@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/methods_qualifiers:methods_qualifiers
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=10
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: UnpinStructWithRefQualifiedMethods
@@ -34,39 +32,32 @@ forward_declare::unsafe_define!(
     crate::UnpinStructWithRefQualifiedMethods
 );
 impl UnpinStructWithRefQualifiedMethods {
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=12
     #[inline(always)]
     pub fn increment_i<'__this>(&'__this mut self) {
         unsafe { self::unpin_struct_with_ref_qualified_methods::increment_i(self) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=13
     #[inline(always)]
     pub fn unqualified_get_i<'__this>(&'__this mut self) -> ::ffi_11::c_int {
         unsafe { self::unpin_struct_with_ref_qualified_methods::unqualified_get_i(self) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=14
     #[inline(always)]
     pub fn const_qualified_get_i<'__this>(&'__this self) -> ::ffi_11::c_int {
         unsafe { self::unpin_struct_with_ref_qualified_methods::const_qualified_get_i(self) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=15
     #[inline(always)]
     pub fn lvalue_ref_qualified_get_i<'__this>(&'__this mut self) -> ::ffi_11::c_int {
         unsafe { self::unpin_struct_with_ref_qualified_methods::lvalue_ref_qualified_get_i(self) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=16
     #[inline(always)]
     pub fn const_lvalue_ref_qualified_get_i<'__this>(&'__this self) -> ::ffi_11::c_int {
         unsafe {
             self::unpin_struct_with_ref_qualified_methods::const_lvalue_ref_qualified_get_i(self)
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=17
     #[inline(always)]
     pub fn rvalue_ref_qualified_get_i<'__this>(&'__this mut self) -> ::ffi_11::c_int {
         unsafe { self::unpin_struct_with_ref_qualified_methods::rvalue_ref_qualified_get_i(self) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=18
     #[inline(always)]
     pub fn const_rvalue_ref_qualified_get_i<'__this>(&'__this self) -> ::ffi_11::c_int {
         unsafe {
@@ -75,7 +66,6 @@ impl UnpinStructWithRefQualifiedMethods {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=10
 impl Default for UnpinStructWithRefQualifiedMethods {
     #[inline(always)]
     fn default() -> Self {
@@ -90,7 +80,6 @@ impl Default for UnpinStructWithRefQualifiedMethods {
 }
 
 pub mod unpin_struct_with_ref_qualified_methods {
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=12
     #[inline(always)]
     pub(crate) fn increment_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
@@ -101,7 +90,6 @@ pub mod unpin_struct_with_ref_qualified_methods {
             )
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=13
     #[inline(always)]
     pub(crate) fn unqualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
@@ -110,7 +98,6 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZN34UnpinStructWithRefQualifiedMethods17unqualified_get_iEv(__this)
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=14
     #[inline(always)]
     pub(crate) fn const_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,
@@ -119,7 +106,6 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNK34UnpinStructWithRefQualifiedMethods21const_qualified_get_iEv(__this)
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=15
     #[inline(always)]
     pub(crate) fn lvalue_ref_qualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
@@ -128,7 +114,6 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNR34UnpinStructWithRefQualifiedMethods26lvalue_ref_qualified_get_iEv(__this)
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=16
     #[inline(always)]
     pub(crate) fn const_lvalue_ref_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,
@@ -137,7 +122,6 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNKR34UnpinStructWithRefQualifiedMethods32const_lvalue_ref_qualified_get_iEv(__this)
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=17
     #[inline(always)]
     pub(crate) fn rvalue_ref_qualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
@@ -146,7 +130,6 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNO34UnpinStructWithRefQualifiedMethods26rvalue_ref_qualified_get_iEv(__this)
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/methods_qualifiers/methods_qualifiers.h;l=18
     #[inline(always)]
     pub(crate) fn const_rvalue_ref_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,

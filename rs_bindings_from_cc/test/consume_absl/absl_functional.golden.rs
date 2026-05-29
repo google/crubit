@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/consume_absl:absl_functional
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -18,13 +17,10 @@
 
 extern crate alloc;
 
-// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=10
 // error: class `MyOption` could not be bound
 //   Class templates are not yet supported
 
 /// Calls the invocable and returns void.
-///
-/// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=21
 #[inline(always)]
 pub fn CallVoidVoid(
     f: ::alloc::boxed::Box<
@@ -37,8 +33,6 @@ pub fn CallVoidVoid(
 }
 
 /// Returns an invocable that returns 42.
-///
-/// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=24
 #[inline(always)]
 pub fn ReturnIntMapper() -> ::alloc::boxed::Box<
     dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
@@ -53,8 +47,6 @@ pub fn ReturnIntMapper() -> ::alloc::boxed::Box<
 
 /// Returns an AnyInvocable that takes a MyOption<int> and returns a
 /// MyOption<int>.
-///
-/// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=28
 #[inline(always)]
 pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
     dyn ::core::ops::Fn(crate::MyOption<::ffi_11::c_int>) -> crate::MyOption<::ffi_11::c_int>
@@ -70,11 +62,9 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
 // error: struct `Incomplete` could not be bound
 //   incomplete type
 
-// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=34
 // error: function `ReturnIncompleteMapper` could not be bound
 //   Return type is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
 
-// Generated from: rs_bindings_from_cc/test/consume_absl/absl_functional.h;l=36
 // error: function `CallIncompleteMapper` could not be bound
 //   Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
 
@@ -159,25 +149,21 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
 // error: class `std::fpos<__mbstate_t>` could not be bound
 //   incomplete type
 
-// Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
 // error: class `absl::internal_any_invocable::CoreImpl<false, MyOption<int>, MyOption<int>>` could not be bound
 //   Crubit is not enabled on defining target:
 //     third_party/absl/functional/internal/any_invocable.h
 //   template instantiation is not yet supported
 
-// Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
 // error: class `absl::internal_any_invocable::CoreImpl<false, int, int>` could not be bound
 //   Crubit is not enabled on defining target:
 //     third_party/absl/functional/internal/any_invocable.h
 //   template instantiation is not yet supported
 
-// Generated from: third_party/absl/functional/internal/any_invocable.h;l=413
 // error: class `absl::internal_any_invocable::CoreImpl<false, void>` could not be bound
 //   Crubit is not enabled on defining target:
 //     third_party/absl/functional/internal/any_invocable.h
 //   template instantiation is not yet supported
 
-// Generated from: third_party/absl/functional/any_invocable.h;l=173
 // error: class `absl::AnyInvocable` could not be bound
 //   Return type of callable is incomplete: struct Incomplete
 

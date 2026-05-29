@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/enum:example_lib
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: examples/cpp/enum/example.h;l=8
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=Color

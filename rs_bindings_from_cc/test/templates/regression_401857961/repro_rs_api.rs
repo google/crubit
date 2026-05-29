@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -17,7 +16,6 @@
 #![deny(warnings)]
 
 pub mod repro {
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=10
     // error: class `repro::optional` could not be bound
     //   Class templates are not yet supported
 
@@ -26,8 +24,6 @@ pub mod repro {
     /// To call a function that accepts this type, you must uphold these requirements:
     /// * Document why the following public unsafe fields of this type cannot be misused by callee:
     ///   * `nanos`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
-    ///
-    /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=repro :: Interval
@@ -43,7 +39,6 @@ pub mod repro {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     impl Default for Interval {
         #[inline(always)]
         fn default() -> Self {
@@ -55,11 +50,9 @@ pub mod repro {
         }
     }
 
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=19
     // error: class `repro::Nullable` could not be bound
     //   Class templates are not yet supported
 
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=24
     // error: function `repro::crash` could not be bound
     //   Unsupported parameter type `repro::Nullable<repro::Interval> __param_0`:
     //     template instantiation is not yet supported
@@ -69,11 +62,9 @@ pub mod repro {
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_REGRESSION_401857961_REPRO_H_
 
-// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=11
 // error: struct `repro::optional<repro::Interval>` could not be bound
 //   template instantiation is not yet supported
 
-// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=20
 // error: struct `repro::Nullable<repro::Interval>` could not be bound
 //   template instantiation is not yet supported
 

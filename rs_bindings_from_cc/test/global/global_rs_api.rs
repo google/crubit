@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/global:global
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -24,7 +23,6 @@ unsafe extern "C" {
     pub static kExternConstInt: ::ffi_11::c_int;
 }
 
-// Generated from: rs_bindings_from_cc/test/global/global.h;l=10
 // error: global variable `thread_local_int` could not be bound
 //   thread_local variables are not supported
 
@@ -40,37 +38,30 @@ pub const inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(5);
 
 // namespace foo
 
-// Generated from: rs_bindings_from_cc/test/global/global.h;l=31
 // error: global variable `templated_variable` could not be bound
 //   templated variables are not supported
 
 /// instantiate templated_variable<int>
-///
-/// Generated from: rs_bindings_from_cc/test/global/global.h;l=34
 #[inline(always)]
 pub fn Unused(arg: ::ffi_11::c_int) {
     unsafe { crate::detail::__rust_thunk___Z6Unusedi(arg) }
 }
 
-/// Generated from: rs_bindings_from_cc/test/global/global.h;l=36
 #[inline(always)]
 pub fn GetIntVal() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z9GetIntValv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/global/global.h;l=37
 #[inline(always)]
 pub fn GetNamespacedIntVal() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z19GetNamespacedIntValv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/global/global.h;l=38
 #[inline(always)]
 pub fn GetCNamespacedIntVal() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z20GetCNamespacedIntValv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/global/global.h;l=39
 #[inline(always)]
 pub fn GetInlineIntVal() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z15GetInlineIntValv() }
@@ -97,7 +88,6 @@ pub mod foo {
     pub const kAnonEnumNamespacedConst: ::ffi_11::c_uint = ::ffi_11::new_c_uint(456);
 }
 
-/// Generated from: rs_bindings_from_cc/test/global/global.h;l=45
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum
@@ -111,7 +101,6 @@ unsafe impl ::cxx::ExternType for StructWithAnonEnum {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/global/global.h;l=45
 impl Default for StructWithAnonEnum {
     #[inline(always)]
     fn default() -> Self {

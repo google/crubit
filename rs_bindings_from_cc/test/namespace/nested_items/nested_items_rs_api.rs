@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/namespace/nested_items:nested_items
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -17,7 +16,6 @@
 #![deny(warnings)]
 
 pub mod same {
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=11
     #[inline(always)]
     pub fn AFunction() -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN4same9AFunctionEv() }
@@ -26,7 +24,6 @@ pub mod same {
 
 // namespace same
 
-/// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=14
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Same
@@ -44,15 +41,12 @@ impl Same {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=25
     #[inline(always)]
     pub unsafe fn Method(__this: *mut Self) -> ::ffi_11::c_int {
         unsafe { self::same_items::Method(__this) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=14
 impl Default for Same {
     #[inline(always)]
     fn default() -> Self {
@@ -69,13 +63,10 @@ pub mod same_items {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=25
     #[inline(always)]
     pub(crate) unsafe fn Method(__this: *mut crate::Same) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN4Same6MethodEv(__this) }
     }
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=16
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=Same :: NestedItem
@@ -93,15 +84,12 @@ pub mod same_items {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `__this`: raw pointer
-        ///
-        /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=17
         #[inline(always)]
         pub unsafe fn NestedItemFunction(__this: *mut Self) -> ::ffi_11::c_int {
             unsafe { self::nested_item::NestedItemFunction(__this) }
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=16
     impl Default for NestedItem {
         #[inline(always)]
         fn default() -> Self {
@@ -118,8 +106,6 @@ pub mod same_items {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `__this`: raw pointer
-        ///
-        /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=17
         #[inline(always)]
         pub(crate) unsafe fn NestedItemFunction(
             __this: *mut crate::same_items::NestedItem,
@@ -130,7 +116,6 @@ pub mod same_items {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=20
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
     ///CRUBIT_ANNOTATE: cpp_type=Same :: NestedEnum
@@ -152,7 +137,6 @@ pub mod same_items {
 }
 
 pub mod foo {
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=29
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo
@@ -166,7 +150,6 @@ pub mod foo {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=29
     impl Default for Foo {
         #[inline(always)]
         fn default() -> Self {
@@ -179,7 +162,6 @@ pub mod foo {
     }
 
     pub mod foo {
-        /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=30
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo
@@ -193,14 +175,12 @@ pub mod foo {
             type Kind = ::cxx::kind::Trivial;
         }
         impl foo {
-            /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=32
             #[inline(always)]
             pub fn BFunction() -> ::ffi_11::c_int {
                 unsafe { self::foo_items::BFunction() }
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=30
         impl Default for foo {
             #[inline(always)]
             fn default() -> Self {
@@ -213,12 +193,10 @@ pub mod foo {
         }
 
         pub mod foo_items {
-            /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=32
             #[inline(always)]
             pub(crate) fn BFunction() -> ::ffi_11::c_int {
                 unsafe { crate::detail::__rust_thunk___ZN3foo3Foo3foo9BFunctionEv() }
             }
-            /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=31
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C)]
             ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo :: Item
@@ -232,7 +210,6 @@ pub mod foo {
                 type Kind = ::cxx::kind::Trivial;
             }
 
-            /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=31
             impl Default for Item {
                 #[inline(always)]
                 fn default() -> Self {
@@ -251,7 +228,6 @@ pub mod foo {
 
 // namespace foo
 
-/// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=37
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=OuterCpp
@@ -265,7 +241,6 @@ unsafe impl ::cxx::ExternType for OuterRustName {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=37
 impl Default for OuterRustName {
     #[inline(always)]
     fn default() -> Self {
@@ -278,7 +253,6 @@ impl Default for OuterRustName {
 }
 
 pub mod outer_rust_name {
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=38
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=OuterCpp :: Inner
@@ -292,7 +266,6 @@ pub mod outer_rust_name {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    /// Generated from: rs_bindings_from_cc/test/namespace/nested_items/nested_items.h;l=38
     impl Default for Inner {
         #[inline(always)]
         fn default() -> Self {

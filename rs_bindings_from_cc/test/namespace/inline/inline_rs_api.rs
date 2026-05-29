@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/namespace/inline:inline
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -23,7 +22,6 @@ pub mod foo {
     // but without `inline namespace /*...*/`, just with `namespace inline1`.
 
     pub mod inline1 {
-        /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=foo :: inline1 :: MyStruct
@@ -37,7 +35,6 @@ pub mod foo {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
         impl Default for MyStruct {
             #[inline(always)]
             fn default() -> Self {
@@ -55,8 +52,6 @@ pub mod foo {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `s`: raw pointer
-        ///
-        /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=15
         #[inline(always)]
         pub unsafe fn GetStructValue1(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
             unsafe {
@@ -68,8 +63,6 @@ pub mod foo {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `s`: raw pointer
-        ///
-        /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=17
         #[inline(always)]
         pub unsafe fn GetStructValue2(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
             unsafe {
@@ -81,8 +74,6 @@ pub mod foo {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `s`: raw pointer
-        ///
-        /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=26
         #[inline(always)]
         pub unsafe fn GetStructValue3(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
             unsafe {
@@ -94,8 +85,6 @@ pub mod foo {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `s`: raw pointer
-        ///
-        /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=27
         #[inline(always)]
         pub unsafe fn GetStructValue4(s: *const crate::foo::inline1::MyStruct) -> ::ffi_11::c_int {
             unsafe {

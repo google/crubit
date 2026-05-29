@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/function:example_lib
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -17,7 +16,6 @@
 #![deny(warnings)]
 
 pub mod gshoe {
-    /// Generated from: examples/cpp/function/example.h;l=12
     #[inline(always)]
     pub fn add_two_integers(x: i32, y: i32) -> i32 {
         unsafe { crate::detail::__rust_thunk___ZN5gshoe16add_two_integersEii(x, y) }

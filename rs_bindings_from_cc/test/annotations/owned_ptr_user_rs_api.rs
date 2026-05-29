@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:owned_ptr_user
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -18,20 +17,16 @@
 
 /// An example of a C++ file that defines functions that create a
 /// CRUBIT_OWNED_PTR type as well as consume it.
-///
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=14
 #[inline(always)]
 pub fn MakeOwnedThing(value: ::ffi_11::c_int) -> ::owned_ptr::OwnedThing {
     unsafe { ::core::mem::transmute(crate::detail::__rust_thunk___Z14MakeOwnedThingi(value)) }
 }
 
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=16
 #[inline(always)]
 pub fn MakeCustomOwnedThing(value: ::ffi_11::c_int) -> ::owned_ptr::CustomOwnedThing {
     unsafe { ::core::mem::transmute(crate::detail::__rust_thunk___Z20MakeCustomOwnedThingi(value)) }
 }
 
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=18
 #[inline(always)]
 pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
     unsafe { crate::detail::__rust_thunk___Z9MakeThingi(value) }
@@ -41,8 +36,6 @@ pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `thingptr`: raw pointer
-///
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=20
 #[inline(always)]
 pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int {
     unsafe {
@@ -54,8 +47,6 @@ pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `thingptr`: raw pointer
-///
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=22
 #[inline(always)]
 pub unsafe fn GetThingValue(thingptr: *mut ::owned_ptr::RawThing) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z13GetThingValueP5Thing(thingptr) }

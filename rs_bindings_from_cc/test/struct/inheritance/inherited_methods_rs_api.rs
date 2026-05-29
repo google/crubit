@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/inheritance:inherited_methods
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: Nonmovable
@@ -31,7 +29,6 @@ unsafe impl ::cxx::ExternType for Nonmovable {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: Nonmovable"), crate::Nonmovable);
 
-/// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=11
 impl ::ctor::CtorNew<()> for Nonmovable {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -48,7 +45,6 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=16
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: Base
@@ -63,12 +59,10 @@ unsafe impl ::cxx::ExternType for Base {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: Base"), crate::Base);
 impl Base {
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
         unsafe { self::base::has_bindings(self) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
     pub fn no_bindings<'__this>(&'__this self, __param_0: ::ctor::Ctor![crate::Nonmovable])
     where
@@ -78,7 +72,6 @@ impl Base {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=16
 impl Default for Base {
     #[inline(always)]
     fn default() -> Self {
@@ -96,12 +89,10 @@ impl Default for Base {
 pub trait BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable {}
 
 pub mod base {
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub(crate) fn has_bindings<'__this>(__this: &'__this crate::Base) -> bool {
         unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(__this) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
     pub(crate) fn no_bindings<'__this>(
         __this: &'__this crate::Base,
@@ -115,7 +106,6 @@ pub mod base {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=22
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: Derived
@@ -130,12 +120,10 @@ unsafe impl ::cxx::ExternType for Derived {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: Derived"), crate::Derived);
 impl Derived {
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
         unsafe { self::derived::has_bindings(oops::Upcast::<_>::upcast(self)) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
     pub fn no_bindings<'__this>(&'__this self, __param_0: ::ctor::Ctor![crate::Nonmovable])
     where
@@ -145,7 +133,6 @@ impl Derived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=22
 impl Default for Derived {
     #[inline(always)]
     fn default() -> Self {
@@ -169,12 +156,10 @@ unsafe impl oops::Inherits<crate::Base> for crate::Derived {
 }
 
 pub mod derived {
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
     #[inline(always)]
     pub(crate) fn has_bindings<'__this>(__this: &'__this crate::Base) -> bool {
         unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(__this) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
     pub(crate) fn no_bindings<'__this>(
         __this: &'__this crate::Base,

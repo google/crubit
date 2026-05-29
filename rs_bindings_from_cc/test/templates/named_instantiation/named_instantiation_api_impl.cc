@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/named_instantiation:named_instantiation
-// Features: callables, supported, template_instantiation, types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"

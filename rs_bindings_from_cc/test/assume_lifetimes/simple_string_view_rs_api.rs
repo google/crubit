@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:simple_string_view
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: SV
@@ -32,7 +30,6 @@ unsafe impl<'a> ::cxx::ExternType for SV<'a> {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: SV"), crate::SV<'_>);
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=10
 impl<'a> Default for SV<'a> {
     #[inline(always)]
     fn default() -> Self {
@@ -45,8 +42,6 @@ impl<'a> Default for SV<'a> {
 }
 
 /// TODO(zarko): We should mark 'unknowns (or equivalent) as unsafe.
-///
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=13
 #[inline(always)]
 pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
     unsafe {
@@ -63,8 +58,6 @@ pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `s`: type SV has 1 lifetime parameter, but 0 were provided; callers must ensure that arguments have the appropriate lifetime
-///
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=14
 #[inline(always)]
 pub unsafe fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> {
     unsafe {
@@ -81,8 +74,6 @@ pub unsafe fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> 
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `s`: type SV has 1 lifetime parameter, but 0 were provided; callers must ensure that arguments have the appropriate lifetime
-///
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=15
 #[inline(always)]
 pub unsafe fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'static> {
     unsafe {
@@ -95,7 +86,6 @@ pub unsafe fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'s
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/simple_string_view.h;l=16
 #[inline(always)]
 pub fn sv_make_raw() -> crate::SV<'static> {
     unsafe {

@@ -7,7 +7,7 @@
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
-    "crubit_flavor_transition",
+    "crubit_golden_flavor_transition",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
@@ -34,7 +34,7 @@ _generate_bindings = rule(
         "cc_library": attr.label(
             providers = [CcInfo],
             aspects = [rust_bindings_from_cc_aspect],
-            cfg = crubit_flavor_transition,
+            cfg = crubit_golden_flavor_transition,
         ),
         # Synthetic dependency to ensure even a coarse `bazel query` analysis finds a transitive
         # dependency from Crubit tool sources to golden test bindings.

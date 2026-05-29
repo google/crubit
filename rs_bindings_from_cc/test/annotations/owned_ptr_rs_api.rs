@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:owned_ptr
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -21,8 +20,6 @@
 /// The CRUBIT_OWNED_PTR_TYPE annotation is used to specify the Rust type that
 /// will be used to represent the C++ struct when it is used in a position
 /// annotated with CRUBIT_OWNED_PTR.
-///
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=17
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Thing
@@ -41,8 +38,6 @@ impl RawThing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///
-    /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
     #[inline(always)]
     pub unsafe fn Close(__this: *mut Self) {
         unsafe { self::raw_thing::Close(__this) }
@@ -67,7 +62,6 @@ impl Drop for OwnedThing {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=18
 impl From<i32> for RawThing {
     #[inline(always)]
     fn from(args: i32) -> Self {
@@ -93,8 +87,6 @@ pub mod raw_thing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///
-    /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
     #[inline(always)]
     pub(crate) unsafe fn Close(__this: *mut crate::RawThing) {
         unsafe { crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this) }
@@ -102,8 +94,6 @@ pub mod raw_thing {
 }
 
 /// A struct that specifies a custom drop method name.
-///
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=25
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CustomThing
@@ -122,8 +112,6 @@ impl CustomRawThing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///
-    /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=30
     #[inline(always)]
     pub unsafe fn CustomDropImpl(__this: *mut Self) {
         unsafe { self::custom_raw_thing::CustomDropImpl(__this) }
@@ -148,7 +136,6 @@ impl Drop for CustomOwnedThing {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=27
 impl From<i32> for CustomRawThing {
     #[inline(always)]
     fn from(args: i32) -> Self {
@@ -174,8 +161,6 @@ pub mod custom_raw_thing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///
-    /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=30
     #[inline(always)]
     pub(crate) unsafe fn CustomDropImpl(__this: *mut crate::CustomRawThing) {
         unsafe { crate::detail::__rust_thunk___ZN11CustomThing14CustomDropImplEv(__this) }

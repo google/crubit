@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/references:references
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/references/references.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithPtrConstructor
@@ -30,7 +28,6 @@ unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/references/references.h;l=10
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
     #[inline(always)]
     unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
@@ -54,7 +51,6 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/references/references.h;l=13
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithNonNullPtrConstructor
@@ -68,7 +64,6 @@ unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/references/references.h;l=15
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor {
     #[inline(always)]
     unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
@@ -92,7 +87,6 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstruct
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/references/references.h;l=18
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithReferenceConstructor
@@ -106,7 +100,6 @@ unsafe impl ::cxx::ExternType for TypeWithReferenceConstructor {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/references/references.h;l=20
 impl From<&mut ::ffi_11::c_int> for TypeWithReferenceConstructor {
     #[inline(always)]
     fn from(args: &mut ::ffi_11::c_int) -> Self {

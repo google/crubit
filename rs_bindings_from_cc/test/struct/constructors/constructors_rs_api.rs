@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/constructors:constructors
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -20,8 +19,6 @@
 /// generating bindings for constructors, even though the presence of a
 /// user-defined copy constructor technically means that the struct below
 /// is non-trivial.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=12
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithUserProvidedConstructors
 pub struct StructWithUserProvidedConstructors {
@@ -39,7 +36,6 @@ forward_declare::unsafe_define!(
     crate::StructWithUserProvidedConstructors
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=12
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithUserProvidedConstructors {
     #[inline(always)]
     fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
@@ -52,8 +48,6 @@ impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithUserProvide
 }
 
 /// `impl Default for StructWithUserProvidedConstructors { /*...*/ }`.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=14
 impl Default for StructWithUserProvidedConstructors {
     #[inline(always)]
     fn default() -> Self {
@@ -68,8 +62,6 @@ impl Default for StructWithUserProvidedConstructors {
 }
 
 /// `impl Clone for StructWithUserProvidedConstructors { /*...*/ }`.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=17
 impl Clone for StructWithUserProvidedConstructors {
     #[inline(always)]
     fn clone<'__param_0>(&'__param_0 self) -> Self {
@@ -88,7 +80,6 @@ impl Clone for StructWithUserProvidedConstructors {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=22
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitConversionConstructor
@@ -108,8 +99,6 @@ forward_declare::unsafe_define!(
 );
 
 /// Testing `impl From<int> for /*...*/` when the constructor is `explicit`.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=24
 impl From<::ffi_11::c_int> for StructWithExplicitConversionConstructor {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
@@ -133,7 +122,6 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=29
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithMultipleConstructors
@@ -152,7 +140,6 @@ forward_declare::unsafe_define!(
     crate::StructWithMultipleConstructors
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=30
 impl From<::ffi_11::c_int> for StructWithMultipleConstructors {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
@@ -176,7 +163,6 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithMultipleConstructors {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=31
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMultipleConstructors {
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
@@ -201,7 +187,6 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMultipleC
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=32
 impl From<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)> for StructWithMultipleConstructors {
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
@@ -229,7 +214,6 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=38
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionConstructor
@@ -249,8 +233,6 @@ forward_declare::unsafe_define!(
 );
 
 /// Testing `impl From<int> for /*...*/` when the constructor is *not* `explicit`.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=41
 impl From<::ffi_11::c_int> for StructWithImplicitConversionConstructor {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
@@ -274,7 +256,6 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=46
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: OtherSimpleStruct
@@ -292,7 +273,6 @@ forward_declare::unsafe_define!(
     crate::OtherSimpleStruct
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=46
 impl Default for OtherSimpleStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -304,7 +284,6 @@ impl Default for OtherSimpleStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=50
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionFromReference
@@ -324,8 +303,6 @@ forward_declare::unsafe_define!(
 );
 
 /// Testing `impl<'b> From<&'b OtherSimpleStruct> for /*...*/`.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=53
 impl<'other> From<&'other crate::OtherSimpleStruct> for StructWithImplicitConversionFromReference {
     #[inline(always)]
     fn from(args: &'other crate::OtherSimpleStruct) -> Self {
@@ -350,8 +327,6 @@ impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
 
 /// Inline-defined constructors test that thunks are properly implemented by
 /// `generate_rs_api_impl`.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=61
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithInlineConstructors
 pub struct StructWithInlineConstructors {
@@ -369,7 +344,6 @@ forward_declare::unsafe_define!(
     crate::StructWithInlineConstructors
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=61
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithInlineConstructors {
     #[inline(always)]
     fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
@@ -379,7 +353,6 @@ impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithInlineConst
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=62
 impl Default for StructWithInlineConstructors {
     #[inline(always)]
     fn default() -> Self {
@@ -393,7 +366,6 @@ impl Default for StructWithInlineConstructors {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=63
 impl Clone for StructWithInlineConstructors {
     #[inline(always)]
     fn clone<'other>(&'other self) -> Self {
@@ -412,7 +384,6 @@ impl Clone for StructWithInlineConstructors {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=66
 impl From<::ffi_11::c_int> for StructWithInlineConstructors {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
@@ -436,7 +407,6 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=70
 #[::ctor::recursively_pinned]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithDeletedConstructors
@@ -455,7 +425,6 @@ forward_declare::unsafe_define!(
     crate::StructWithDeletedConstructors
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=70
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstructors {
     #[inline(always)]
     fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
@@ -465,7 +434,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstruct
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=78
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithPrivateConstructors
@@ -486,7 +454,6 @@ forward_declare::unsafe_define!(
     crate::StructWithPrivateConstructors
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=78
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstructors {
     #[inline(always)]
     fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
@@ -496,7 +463,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstruct
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=87
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitlyDefaultedConstructors
@@ -516,7 +482,6 @@ forward_declare::unsafe_define!(
     crate::StructWithExplicitlyDefaultedConstructors
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=88
 impl Default for StructWithExplicitlyDefaultedConstructors {
     #[inline(always)]
     fn default() -> Self {
@@ -532,8 +497,6 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 
 /// TODO(lukasza): Add StructWithImplicitlyDefaultedConstructor test (or is
 ///                that just testing the compiler and therefore not useful?).
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=99
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: NonTrivialStructWithConstructors
@@ -552,7 +515,6 @@ forward_declare::unsafe_define!(
     crate::NonTrivialStructWithConstructors
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=99
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivialStructWithConstructors {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
     type Error = ::ctor::Infallible;
@@ -579,7 +541,6 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NonTrivialStructWithCo
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=99
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NonTrivialStructWithConstructors {
     #[inline(always)]
     fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
@@ -591,7 +552,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NonTrivialStructWithConstr
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=100
 impl ::ctor::CtorNew<()> for NonTrivialStructWithConstructors {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -608,7 +568,6 @@ impl ::ctor::CtorNew<()> for NonTrivialStructWithConstructors {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=101
 impl ::ctor::CtorNew<::ffi_11::c_int> for NonTrivialStructWithConstructors {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -636,8 +595,6 @@ impl ::ctor::CtorNew<(::ffi_11::c_int,)> for NonTrivialStructWithConstructors {
 }
 
 /// Presence of a user-defined destructor makes this struct non-trivial.
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=104
 impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
     #[inline(always)]
     unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -650,8 +607,6 @@ impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `ptr_field`: raw pointer
-///
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=109
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithUnsafeConstructor
@@ -670,7 +625,6 @@ forward_declare::unsafe_define!(
     crate::StructWithUnsafeConstructor
 );
 
-/// Generated from: rs_bindings_from_cc/test/struct/constructors/constructors.h;l=110
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
     #[inline(always)]
     unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {

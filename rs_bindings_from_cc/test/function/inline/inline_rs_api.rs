@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/inline:inline
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=8
 #[inline(always)]
 pub fn hello_world_inline() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z18hello_world_inlinev() }
@@ -24,8 +22,6 @@ pub fn hello_world_inline() -> ::ffi_11::c_int {
 
 /// This testcase helps verify that thunks correctly work with const-ref
 /// parameters. Using an 'inline' method forces generation of a C++ thunk.
-///
-/// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
@@ -39,7 +35,6 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -55,8 +50,6 @@ impl Default for SomeStruct {
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `s`: raw pointer
-///
-/// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=15
 #[inline(always)]
 pub unsafe fn take_struct_by_const_ptr(s: *const crate::SomeStruct) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(s) }
@@ -65,8 +58,6 @@ pub unsafe fn take_struct_by_const_ptr(s: *const crate::SomeStruct) -> ::ffi_11:
 /// This testcase helps verify that thunks correctly work with primitive types
 /// that have multi-word type names (e.g. `unsigned int`). Using an 'inline'
 /// method forces generation of a C++ thunk.
-///
-/// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=22
 #[inline(always)]
 pub fn double_unsigned_int(i: ::ffi_11::c_uint) -> ::ffi_11::c_uint {
     unsafe { crate::detail::__rust_thunk___Z19double_unsigned_intj(i) }
@@ -75,7 +66,6 @@ pub fn double_unsigned_int(i: ::ffi_11::c_uint) -> ::ffi_11::c_uint {
 // namespace namespaced
 
 pub mod namespaced {
-    /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=28
     #[inline(always)]
     pub fn forward_declared_doubler(x: ::ffi_11::c_int) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN10namespaced24forward_declared_doublerEi(x) }

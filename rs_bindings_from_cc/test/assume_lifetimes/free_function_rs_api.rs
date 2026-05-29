@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:free_function
-// Features: assume_lifetimes, callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -16,13 +15,11 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/free_function.h;l=8
 #[inline(always)]
 pub fn increment_int_ref<'a>(a: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::ffi_11::c_int> {
     unsafe { crate::detail::__rust_thunk___Z17increment_int_refRi(a) }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/free_function.h;l=10
 #[inline(always)]
 pub fn bad_lifetime_name<'r#type>(r#type: &'r#type mut ::ffi_11::c_int) {
     unsafe { crate::detail::__rust_thunk___Z17bad_lifetime_nameRi(r#type) }

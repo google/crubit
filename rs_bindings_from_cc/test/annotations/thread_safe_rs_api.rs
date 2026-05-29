@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:thread_safe
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -19,8 +18,6 @@
 pub mod crubit {
     pub mod test {
         /// A simple thread-safe struct.
-        ///
-        /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=13
         #[::ctor::recursively_pinned]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeStruct
@@ -34,7 +31,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Opaque;
         }
         impl ThreadSafeStruct {
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=19
             #[inline(always)]
             pub fn ConstGet(&self) -> ::ffi_11::c_int {
                 unsafe { self::thread_safe_struct::ConstGet(self) }
@@ -42,15 +38,12 @@ pub mod crubit {
             /// A non-const method for testing the generation behavior.
             /// The implementation doesn't actually do anything non-const, but it doesn't
             /// matter for what we are testing, here.
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=23
             #[inline(always)]
             pub fn NonConstGet(&self) -> ::ffi_11::c_int {
                 unsafe { self::thread_safe_struct::NonConstGet(self) }
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=15
         impl ::ctor::CtorNew<()> for ThreadSafeStruct {
             type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
@@ -68,7 +61,6 @@ pub mod crubit {
         }
 
         pub mod thread_safe_struct {
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=19
             #[inline(always)]
             pub(crate) fn ConstGet(
                 __this: &crate::crubit::test::ThreadSafeStruct,
@@ -82,8 +74,6 @@ pub mod crubit {
             /// A non-const method for testing the generation behavior.
             /// The implementation doesn't actually do anything non-const, but it doesn't
             /// matter for what we are testing, here.
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=23
             #[inline(always)]
             pub(crate) fn NonConstGet(
                 __this: &crate::crubit::test::ThreadSafeStruct,
@@ -97,8 +87,6 @@ pub mod crubit {
         }
 
         /// A regular (non-thread-safe) struct for comparison.
-        ///
-        /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=30
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: RegularStruct
@@ -119,8 +107,6 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=32
             #[inline(always)]
             pub unsafe fn ConstGet(__this: *const Self) -> ::ffi_11::c_int {
                 unsafe { self::regular_struct::ConstGet(__this) }
@@ -129,15 +115,12 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=33
             #[inline(always)]
             pub unsafe fn NonConstGet(__this: *mut Self) -> ::ffi_11::c_int {
                 unsafe { self::regular_struct::NonConstGet(__this) }
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=30
         impl Default for RegularStruct {
             #[inline(always)]
             fn default() -> Self {
@@ -156,8 +139,6 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=32
             #[inline(always)]
             pub(crate) unsafe fn ConstGet(
                 __this: *const crate::crubit::test::RegularStruct,
@@ -170,8 +151,6 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/thread_safe.h;l=33
             #[inline(always)]
             pub(crate) unsafe fn NonConstGet(
                 __this: *mut crate::crubit::test::RegularStruct,

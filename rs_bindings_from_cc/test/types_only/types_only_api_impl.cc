@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/types_only:types_only
-// Features: types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"

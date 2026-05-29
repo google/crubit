@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/type_alias:type_alias
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,17 +15,13 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=10
 // error: class `MyTemplate` could not be bound
 //   Class templates are not yet supported
 
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=25
 pub type MyTypeAlias = crate::__CcTemplateInst10MyTemplateIiE;
 
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=26
 pub type OtherTypeAliasInSameTarget = crate::__CcTemplateInst10MyTemplateIiE;
 
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=11
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=:: MyTemplate < int >
@@ -43,19 +38,16 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIiE
 );
 impl __CcTemplateInst10MyTemplateIiE {
-    /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
     #[inline(always)]
     pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
         unsafe { self::cc_template_inst10_my_template_ii_e::Create(value) }
     }
-    /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
     pub fn value<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe { self::cc_template_inst10_my_template_ii_e::value(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=11
 impl Default for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     fn default() -> Self {
@@ -68,7 +60,6 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
 }
 
 pub mod cc_template_inst10_my_template_ii_e {
-    /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
     #[inline(always)]
     pub(crate) fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
         unsafe {
@@ -78,7 +69,6 @@ pub mod cc_template_inst10_my_template_ii_e {
             __crubit_return.assume_init()
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
     pub(crate) fn value<'__this>(
         __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,

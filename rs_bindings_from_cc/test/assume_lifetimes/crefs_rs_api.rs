@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:crefs
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -16,13 +15,11 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/crefs.h;l=8
 #[inline(always)]
 pub fn id_cmut<'x>(x: &'x mut ::ffi_11::c_int) -> ::cref::CMut<'x, ::ffi_11::c_int> {
     unsafe { crate::detail::__rust_thunk___Z7id_cmutRi(x) }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/crefs.h;l=9
 #[inline(always)]
 pub fn id_cref<'x>(x: &'x ::ffi_11::c_int) -> ::cref::CRef<'x, ::ffi_11::c_int> {
     unsafe { crate::detail::__rust_thunk___Z7id_crefRKi(x) }

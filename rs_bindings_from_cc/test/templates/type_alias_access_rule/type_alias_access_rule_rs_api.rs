@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/type_alias_access_rule:type_alias_access_rule
-// Features: assume_lifetimes, assume_this_lifetimes, callables, check_default_initialized, experimental, layout_compat_tuple, leading_colons_for_cpp_type, supported, template_instantiation, types, unsafe_view, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=10
 // error: class `A` could not be bound
 //   Class templates are not yet supported
 
@@ -25,8 +23,6 @@
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `a_`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
-///
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: B
@@ -43,7 +39,6 @@ unsafe impl ::cxx::ExternType for B {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: B"), crate::B);
 
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
 impl Default for B {
     #[inline(always)]
     fn default() -> Self {
@@ -55,7 +50,6 @@ impl Default for B {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=10
 // error: class `A` could not be bound
 //   Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
 

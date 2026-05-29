@@ -10,6 +10,7 @@ more context.
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(
     "//features:crubit_feature_hint.bzl",
     "find_crubit_features",
@@ -352,6 +353,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_rs_srcs = collections.uniq(extra_rs_srcs + _get_additional_rust_srcs(ctx))
     extra_deps = collections.uniq(extra_deps + _get_additional_rust_deps(ctx))
 
+    extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx)
+    if ctx.attr._is_golden_test[BuildSettingInfo].value:
+        extra_rs_bindings_from_cc_cli_flags.append("--is_golden_test=True")
+
     binding_infos = [
         dep[RustBindingsFromCcInfo]
         for dep in all_deps
@@ -388,7 +393,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             ],
         ),
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
-        extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx),
+        extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
         should_generate_bindings = (
             has_public_headers or extra_rs_srcs
         ) and not _is_cc_proto_library(target),

@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:struct_with_lifetimebound
-// Features: assume_lifetimes, callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PlainStruct
@@ -30,7 +28,6 @@ unsafe impl ::cxx::ExternType for PlainStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=8
 impl Default for PlainStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -42,7 +39,6 @@ impl Default for PlainStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=10
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundMemberFunction
@@ -56,14 +52,12 @@ unsafe impl ::cxx::ExternType for StructWithLifetimeboundMemberFunction {
     type Kind = ::cxx::kind::Trivial;
 }
 impl StructWithLifetimeboundMemberFunction {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=11
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
         unsafe { self::struct_with_lifetimebound_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=10
 impl Default for StructWithLifetimeboundMemberFunction {
     #[inline(always)]
     fn default() -> Self {
@@ -78,7 +72,6 @@ impl Default for StructWithLifetimeboundMemberFunction {
 }
 
 pub mod struct_with_lifetimebound_member_function {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=11
     #[inline(always)]
     pub(crate) fn f<'__this>(
         __this: &'__this crate::StructWithLifetimeboundMemberFunction,
@@ -94,7 +87,6 @@ pub mod struct_with_lifetimebound_member_function {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=14
 #[derive(Clone, Copy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefMemberFunction
@@ -111,14 +103,12 @@ unsafe impl<'__implicit> ::cxx::ExternType
     type Kind = ::cxx::kind::Trivial;
 }
 impl<'__implicit> StructWithLifetimeboundRefMemberFunction<'__implicit> {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=15
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe { self::struct_with_lifetimebound_ref_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=14
 impl<'__implicit> Default for StructWithLifetimeboundRefMemberFunction<'__implicit> {
     #[inline(always)]
     fn default() -> Self {
@@ -133,7 +123,6 @@ impl<'__implicit> Default for StructWithLifetimeboundRefMemberFunction<'__implic
 }
 
 pub mod struct_with_lifetimebound_ref_member_function {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=15
     #[inline(always)]
     pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::StructWithLifetimeboundRefMemberFunction<'__implicit>,
@@ -144,7 +133,6 @@ pub mod struct_with_lifetimebound_ref_member_function {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=18
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundMemberFunction
@@ -158,14 +146,12 @@ unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundMemberFunction {
     type Kind = ::cxx::kind::Opaque;
 }
 impl DropClassWithLifetimeboundMemberFunction {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=20
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
         unsafe { self::drop_class_with_lifetimebound_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=18
 impl ::ctor::CtorNew<()> for DropClassWithLifetimeboundMemberFunction {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -182,7 +168,6 @@ impl ::ctor::CtorNew<()> for DropClassWithLifetimeboundMemberFunction {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=18
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropClassWithLifetimeboundMemberFunction {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
     type Error = ::ctor::Infallible;
@@ -209,7 +194,6 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropClassWithLifetimeb
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=18
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropClassWithLifetimeboundMemberFunction {
     #[inline(always)]
     fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
@@ -221,7 +205,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropClassWithLifetimebound
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=21
 impl ::ctor::PinnedDrop for DropClassWithLifetimeboundMemberFunction {
     #[inline(always)]
     unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -232,7 +215,6 @@ impl ::ctor::PinnedDrop for DropClassWithLifetimeboundMemberFunction {
 }
 
 pub mod drop_class_with_lifetimebound_member_function {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=20
     #[inline(always)]
     pub(crate) fn f<'__this>(
         __this: &'__this crate::DropClassWithLifetimeboundMemberFunction,
@@ -248,7 +230,6 @@ pub mod drop_class_with_lifetimebound_member_function {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=24
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundRefMemberFunction
@@ -265,14 +246,12 @@ unsafe impl<'__implicit> ::cxx::ExternType
     type Kind = ::cxx::kind::Opaque;
 }
 impl<'__implicit> DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=26
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe { self::drop_class_with_lifetimebound_ref_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=24
 impl<'__implicit> ::ctor::CtorNew<()> for DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__implicit>;
     type Error = ::ctor::Infallible;
@@ -289,7 +268,6 @@ impl<'__implicit> ::ctor::CtorNew<()> for DropClassWithLifetimeboundRefMemberFun
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=24
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::CtorNew<&'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>>
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
@@ -327,7 +305,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=24
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::Assign<&'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>>
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
@@ -345,7 +322,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=27
 impl<'__implicit> ::ctor::PinnedDrop for DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     #[inline(always)]
     unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
@@ -356,7 +332,6 @@ impl<'__implicit> ::ctor::PinnedDrop for DropClassWithLifetimeboundRefMemberFunc
 }
 
 pub mod drop_class_with_lifetimebound_ref_member_function {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=26
     #[inline(always)]
     pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
@@ -369,7 +344,6 @@ pub mod drop_class_with_lifetimebound_ref_member_function {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=30
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundCtor
@@ -383,7 +357,6 @@ unsafe impl ::cxx::ExternType for StructWithLifetimeboundCtor {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=31
 impl From<crate::PlainStruct> for StructWithLifetimeboundCtor {
     #[inline(always)]
     fn from(args: crate::PlainStruct) -> Self {
@@ -407,7 +380,6 @@ impl ::ctor::CtorNew<crate::PlainStruct> for StructWithLifetimeboundCtor {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=35
 #[derive(Clone, Copy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefCtor
@@ -422,7 +394,6 @@ unsafe impl<'__implicit> ::cxx::ExternType for StructWithLifetimeboundRefCtor<'_
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=36
 impl<'__implicit> From<&'__implicit crate::PlainStruct>
     for StructWithLifetimeboundRefCtor<'__implicit>
 {
@@ -452,7 +423,6 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=40
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundCtor
@@ -466,7 +436,6 @@ unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundCtor {
     type Kind = ::cxx::kind::Opaque;
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=40
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimeboundCtor {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
     type Error = ::ctor::Infallible;
@@ -493,7 +462,6 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithLifetime
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=40
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithLifetimeboundCtor {
     #[inline(always)]
     fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
@@ -505,7 +473,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithLifetimeboun
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=41
 impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithLifetimeboundCtor {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -532,7 +499,6 @@ impl ::ctor::CtorNew<(crate::PlainStruct,)> for DropStructWithLifetimeboundCtor 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=43
 impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
     #[inline(always)]
     unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -540,7 +506,6 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=46
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundRefCtor
@@ -555,7 +520,6 @@ unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithLifetimeboundRefCto
     type Kind = ::cxx::kind::Opaque;
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=46
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::CtorNew<&'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>>
     for DropStructWithLifetimeboundRefCtor<'__implicit>
@@ -596,7 +560,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=46
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::Assign<&'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>>
     for DropStructWithLifetimeboundRefCtor<'__implicit>
@@ -614,7 +577,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=47
 impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     for DropStructWithLifetimeboundRefCtor<'__implicit>
 {
@@ -646,7 +608,6 @@ impl<'__implicit> ::ctor::CtorNew<(&'__implicit crate::PlainStruct,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=49
 impl<'__implicit> ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor<'__implicit> {
     #[inline(always)]
     unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
@@ -654,7 +615,6 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor<'__i
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=52
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndRefMemberFunction
@@ -671,14 +631,12 @@ unsafe impl<'__implicit> ::cxx::ExternType
     type Kind = ::cxx::kind::Opaque;
 }
 impl<'__implicit> DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=56
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe { self::drop_struct_with_ref_ctor_and_ref_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=52
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::CtorNew<&'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>>
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
@@ -719,7 +677,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=52
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::Assign<&'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>>
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
@@ -737,7 +694,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=53
 impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
 {
@@ -769,7 +725,6 @@ impl<'__implicit> ::ctor::CtorNew<(&'__implicit crate::PlainStruct,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=57
 impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     #[inline(always)]
     unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
@@ -780,7 +735,6 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndRefMemberFuncti
 }
 
 pub mod drop_struct_with_ref_ctor_and_ref_member_function {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=56
     #[inline(always)]
     pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
@@ -791,7 +745,6 @@ pub mod drop_struct_with_ref_ctor_and_ref_member_function {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=60
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndMemberFunction
@@ -805,14 +758,12 @@ unsafe impl ::cxx::ExternType for DropStructWithCtorAndMemberFunction {
     type Kind = ::cxx::kind::Opaque;
 }
 impl DropStructWithCtorAndMemberFunction {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=63
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
         unsafe { self::drop_struct_with_ctor_and_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=60
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndMemberFunction {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
     type Error = ::ctor::Infallible;
@@ -839,7 +790,6 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithCtorAndM
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=60
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithCtorAndMemberFunction {
     #[inline(always)]
     fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
@@ -851,7 +801,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithCtorAndMembe
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=61
 impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithCtorAndMemberFunction {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -875,7 +824,6 @@ impl ::ctor::CtorNew<(crate::PlainStruct,)> for DropStructWithCtorAndMemberFunct
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=64
 impl ::ctor::PinnedDrop for DropStructWithCtorAndMemberFunction {
     #[inline(always)]
     unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -884,7 +832,6 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndMemberFunction {
 }
 
 pub mod drop_struct_with_ctor_and_member_function {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=63
     #[inline(always)]
     pub(crate) fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndMemberFunction,
@@ -900,7 +847,6 @@ pub mod drop_struct_with_ctor_and_member_function {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=67
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndRefMemberFunction
@@ -914,14 +860,12 @@ unsafe impl ::cxx::ExternType for DropStructWithCtorAndRefMemberFunction {
     type Kind = ::cxx::kind::Opaque;
 }
 impl DropStructWithCtorAndRefMemberFunction {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=70
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::PlainStruct> {
         unsafe { self::drop_struct_with_ctor_and_ref_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=67
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndRefMemberFunction {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
     type Error = ::ctor::Infallible;
@@ -948,7 +892,6 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithCtorAndR
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=67
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithCtorAndRefMemberFunction {
     #[inline(always)]
     fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
@@ -960,7 +903,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithCtorAndRefMe
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=68
 impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithCtorAndRefMemberFunction {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -984,7 +926,6 @@ impl ::ctor::CtorNew<(crate::PlainStruct,)> for DropStructWithCtorAndRefMemberFu
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=71
 impl ::ctor::PinnedDrop for DropStructWithCtorAndRefMemberFunction {
     #[inline(always)]
     unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -995,7 +936,6 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndRefMemberFunction {
 }
 
 pub mod drop_struct_with_ctor_and_ref_member_function {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=70
     #[inline(always)]
     pub(crate) fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndRefMemberFunction,
@@ -1006,7 +946,6 @@ pub mod drop_struct_with_ctor_and_ref_member_function {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=74
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndMemberFunction
@@ -1022,15 +961,12 @@ unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithRefCtorAndMemberFun
 }
 impl<'__implicit> DropStructWithRefCtorAndMemberFunction<'__implicit> {
     /// This is a degenerate case, since `PlainStruct` binds no lifetimes.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=78
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
         unsafe { self::drop_struct_with_ref_ctor_and_member_function::f(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=74
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::CtorNew<&'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>>
     for DropStructWithRefCtorAndMemberFunction<'__implicit>
@@ -1071,7 +1007,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=74
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::Assign<&'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>>
     for DropStructWithRefCtorAndMemberFunction<'__implicit>
@@ -1089,7 +1024,6 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=75
 impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     for DropStructWithRefCtorAndMemberFunction<'__implicit>
 {
@@ -1121,7 +1055,6 @@ impl<'__implicit> ::ctor::CtorNew<(&'__implicit crate::PlainStruct,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=79
 impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndMemberFunction<'__implicit> {
     #[inline(always)]
     unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
@@ -1133,8 +1066,6 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndMemberFunction<
 
 pub mod drop_struct_with_ref_ctor_and_member_function {
     /// This is a degenerate case, since `PlainStruct` binds no lifetimes.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=78
     #[inline(always)]
     pub(crate) fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,
@@ -1150,7 +1081,6 @@ pub mod drop_struct_with_ref_ctor_and_member_function {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h;l=83
 // error: struct `Impossible` could not be bound
 //   Cycle detected: decl_lifetime_arity
 

@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/fallback_types:wrapper_library
-// Features: callables, supported, types, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/fallback_types/wrapper_library.h;l=10
 #[inline(always)]
 pub(crate) fn GetGlobalUnsupportedType(
 ) -> *mut ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()> {
@@ -27,8 +25,6 @@ pub(crate) fn GetGlobalUnsupportedType(
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `x`: raw pointer
-///
-/// Generated from: rs_bindings_from_cc/test/wrapper/fallback_types/wrapper_library.h;l=15
 #[inline(always)]
 pub(crate) unsafe fn SetValue(
     x: *mut ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()>,
@@ -41,8 +37,6 @@ pub(crate) unsafe fn SetValue(
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `x`: raw pointer
-///
-/// Generated from: rs_bindings_from_cc/test/wrapper/fallback_types/wrapper_library.h;l=17
 #[inline(always)]
 pub(crate) unsafe fn GetValue(
     x: *const ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()>,

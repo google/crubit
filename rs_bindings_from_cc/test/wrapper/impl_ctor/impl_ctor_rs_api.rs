@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/impl_ctor:impl_ctor
-// Features: callables, supported, types, wrapper
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=8
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
@@ -32,7 +30,6 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
 impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -59,7 +56,6 @@ impl ::ctor::CtorNew<(::ffi_11::c_int,)> for Nontrivial {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=11
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
     type Error = ::ctor::Infallible;
@@ -86,7 +82,6 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=12
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Nontrivial {
     #[inline(always)]
     fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: ::ctor::RvalueReference<'_, Self>) {
@@ -96,7 +91,6 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Nontrivial {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=13
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -104,7 +98,6 @@ impl ::ctor::PinnedDrop for Nontrivial {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=16
 #[inline(always)]
 pub fn Create() -> ::ctor::Ctor![crate::Nontrivial] {
     unsafe {
@@ -114,7 +107,6 @@ pub fn Create() -> ::ctor::Ctor![crate::Nontrivial] {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=18
 #[inline(always)]
 pub fn Read(nontrivial: ::ctor::Ctor![crate::Nontrivial]) -> ::ffi_11::c_int {
     unsafe {

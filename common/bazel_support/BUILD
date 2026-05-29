@@ -1,6 +1,7 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@bazel_skylib//rules:common_settings.bzl",
+    "bool_flag",
     "string_list_flag",
 )
 load("//cc_bindings_from_rs/bazel_support:toolchain.bzl", "cc_bindings_from_rs_toolchain")
@@ -21,6 +22,12 @@ bzl_library(
 # =====
 #
 # The following flags can be used by either direction of interop to control behavior of the tool.
+
+bool_flag(
+    name = "is_golden_test",
+    build_setting_default = False,
+    visibility = ["//:__subpackages__"],
+)
 
 string_list_flag(
     name = "globally_enabled_features",

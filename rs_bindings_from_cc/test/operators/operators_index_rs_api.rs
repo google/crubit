@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/operators:operators_index
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -18,7 +17,6 @@
 
 pub mod crubit {
     pub mod test {
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=10
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemUnpin
@@ -32,7 +30,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=10
         impl Default for ItemUnpin {
             #[inline(always)]
             fn default() -> Self {
@@ -46,7 +43,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=14
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemNonUnpin
@@ -60,7 +56,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Opaque;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=14
         impl ::ctor::CtorNew<()> for ItemNonUnpin {
             type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
@@ -77,7 +72,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=14
         impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for ItemNonUnpin {
             type CtorType =
                 impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
@@ -106,7 +100,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=14
         impl ::ctor::Assign<&Self> for ItemNonUnpin {
             #[inline(always)]
             fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
@@ -118,7 +111,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=17
         impl ::ctor::PinnedDrop for ItemNonUnpin {
             #[inline(always)]
             unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -126,7 +118,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=20
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemUnpin
@@ -143,7 +134,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=22
         impl Default for ContainerUnpinItemUnpin {
             #[inline(always)]
             fn default() -> Self {
@@ -157,7 +147,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=23
         impl ::operator::CcIndex<::ffi_11::c_uint> for ContainerUnpinItemUnpin {
             type Output<'ctnr> = &'ctnr crate::crubit::test::ItemUnpin;
             #[inline(always)]
@@ -177,7 +166,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=26
         impl ::operator::CcIndexMut<::ffi_11::c_uint> for ContainerUnpinItemUnpin {
             type Output<'ctnr> = &'ctnr mut crate::crubit::test::ItemUnpin;
             #[inline(always)]
@@ -206,8 +194,6 @@ pub mod crubit {
         /// * Document why the following public unsafe fields of this type cannot be misused by callee:
         ///   * `items_storage_`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'crubit::test::ItemNonUnpin[10]': Unsupported clang::Type class 'ConstantArray'
         ///   * `items_`: raw pointer
-        ///
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=32
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C, align(8))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemNonUnpin
@@ -225,7 +211,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Opaque;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=32
         impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for ContainerUnpinItemNonUnpin {
             type CtorType =
                 impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
@@ -251,7 +236,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=32
         impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
             for ContainerUnpinItemNonUnpin
         {
@@ -281,7 +265,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=32
         impl ::ctor::PinnedDrop for ContainerUnpinItemNonUnpin {
             #[inline(always)]
             unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -293,7 +276,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=32
         impl ::ctor::Assign<&Self> for ContainerUnpinItemNonUnpin {
             #[inline(always)]
             fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
@@ -303,7 +285,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=32
         impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for ContainerUnpinItemNonUnpin {
             #[inline(always)]
             fn assign(
@@ -318,7 +299,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=34
         impl ::ctor::CtorNew<()> for ContainerUnpinItemNonUnpin {
             type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
@@ -333,7 +313,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=35
         impl ::ctor::UnsafeCtorNew<*mut crate::crubit::test::ItemNonUnpin> for ContainerUnpinItemNonUnpin {
             type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
@@ -361,7 +340,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=37
         impl ::operator::CcIndex<::ffi_11::c_uint> for ContainerUnpinItemNonUnpin {
             type Output<'ctnr> = &'ctnr crate::crubit::test::ItemNonUnpin;
             #[inline(always)]
@@ -383,7 +361,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=40
         impl ::operator::CcIndexMut<::ffi_11::c_uint> for ContainerUnpinItemNonUnpin {
             type Output<'ctnr> = ::core::pin::Pin<&'ctnr mut crate::crubit::test::ItemNonUnpin>;
             #[inline(always)]
@@ -399,7 +376,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=47
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemUnpin
@@ -416,7 +392,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Opaque;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=47
         impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for ContainerNonUnpinItemUnpin {
             type CtorType =
                 impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
@@ -442,7 +417,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=47
         impl ::ctor::Assign<&Self> for ContainerNonUnpinItemUnpin {
             #[inline(always)]
             fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
@@ -452,7 +426,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=49
         impl ::ctor::CtorNew<()> for ContainerNonUnpinItemUnpin {
             type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
@@ -467,7 +440,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=51
         impl ::ctor::PinnedDrop for ContainerNonUnpinItemUnpin {
             #[inline(always)]
             unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -479,7 +451,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=53
         impl ::operator::CcIndex<::ffi_11::c_uint> for ContainerNonUnpinItemUnpin {
             type Output<'ctnr> = &'ctnr crate::crubit::test::ItemUnpin;
             #[inline(always)]
@@ -501,7 +472,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=56
         impl ::operator::CcIndexMut<::ffi_11::c_uint> for ContainerNonUnpinItemUnpin {
             type Output<'ctnr> = &'ctnr mut crate::crubit::test::ItemUnpin;
             #[inline(always)]
@@ -525,7 +495,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=62
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemNonUnpin
@@ -542,7 +511,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Opaque;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=62
         impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for ContainerNonUnpinItemNonUnpin {
             type CtorType =
                 impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
@@ -568,7 +536,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=62
         impl ::ctor::Assign<&Self> for ContainerNonUnpinItemNonUnpin {
             #[inline(always)]
             fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
@@ -578,7 +545,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=64
         impl ::ctor::CtorNew<()> for ContainerNonUnpinItemNonUnpin {
             type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
@@ -593,7 +559,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=66
         impl ::ctor::PinnedDrop for ContainerNonUnpinItemNonUnpin {
             #[inline(always)]
             unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -605,7 +570,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=68
         impl ::operator::CcIndex<::ffi_11::c_uint> for ContainerNonUnpinItemNonUnpin {
             type Output<'ctnr> = &'ctnr crate::crubit::test::ItemNonUnpin;
             #[inline(always)]
@@ -627,7 +591,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=71
         impl ::operator::CcIndexMut<::ffi_11::c_uint> for ContainerNonUnpinItemNonUnpin {
             type Output<'ctnr> = ::core::pin::Pin<&'ctnr mut crate::crubit::test::ItemNonUnpin>;
             #[inline(always)]
@@ -643,7 +606,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=77
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerValue
@@ -657,7 +619,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=77
         impl Default for ContainerValue {
             #[inline(always)]
             fn default() -> Self {
@@ -671,13 +632,10 @@ pub mod crubit {
             }
         }
 
-        // Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=80
         // error: function `crubit::test::ContainerValue::operator[]` could not be bound
         //   operator[] should return a reference, found int
 
         /// R-value qualified overloads are not supported.
-        ///
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=84
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerRvalue
@@ -691,7 +649,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=84
         impl Default for ContainerRvalue {
             #[inline(always)]
             fn default() -> Self {
@@ -705,7 +662,6 @@ pub mod crubit {
             }
         }
 
-        // Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=86
         // error: function `crubit::test::ContainerRvalue::operator[]` could not be bound
         //   R-value qualified operator[] is not supported
 
@@ -713,8 +669,6 @@ pub mod crubit {
         /// - non-const references returned from const indexing, or
         /// - const references returned from non-const indexing
         /// are invalid overload signatures and should not generate bindings.
-        ///
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=93
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerMutRefFromConst
@@ -728,7 +682,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=93
         impl Default for ContainerMutRefFromConst {
             #[inline(always)]
             fn default() -> Self {
@@ -742,14 +695,12 @@ pub mod crubit {
             }
         }
 
-        // Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=95
         // error: function `crubit::test::ContainerMutRefFromConst::operator[]` could not be bound
         //   operator[] must either:
         //   (a) be a const method that returns a const reference, or,
         //   (b) be a non-const method that returns a non-const reference.
         //   Instead found a method: (which is const?)=true, and (whose return value is const?)=false
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=98
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerConstRefFromMut
@@ -763,7 +714,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=98
         impl Default for ContainerConstRefFromMut {
             #[inline(always)]
             fn default() -> Self {
@@ -777,7 +727,6 @@ pub mod crubit {
             }
         }
 
-        // Generated from: rs_bindings_from_cc/test/operators/operators_index.h;l=100
         // error: function `crubit::test::ContainerConstRefFromMut::operator[]` could not be bound
         //   operator[] must either:
         //   (a) be a const method that returns a const reference, or,

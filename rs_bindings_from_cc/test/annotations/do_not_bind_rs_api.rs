@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:do_not_bind
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -18,7 +17,6 @@
 
 pub mod crubit {
     pub mod test {
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToBoundOverload
@@ -32,7 +30,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
         impl Default for ArgumentToBoundOverload {
             #[inline(always)]
             fn default() -> Self {
@@ -46,7 +43,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToUnboundOverload
@@ -60,7 +56,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
         impl Default for ArgumentToUnboundOverload {
             #[inline(always)]
             fn default() -> Self {
@@ -74,7 +69,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=16
         #[inline(always)]
         pub fn DoNotBindFn(mut __param_0: crate::crubit::test::ArgumentToBoundOverload) {
             unsafe {
@@ -82,11 +76,9 @@ pub mod crubit {
             }
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
         // error: function `crubit::test::FunctionWithDoNotBindArgument` could not be bound
         //   Parameter #0 is not supported: Unsupported type 'crubit::test::DoNotBindStruct': No generated bindings found for 'DoNotBindStruct'
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor
@@ -100,7 +92,6 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=31
         impl From<crate::crubit::test::ArgumentToBoundOverload> for StructWithDoNotBindConstructor {
             #[inline(always)]
             fn from(args: crate::crubit::test::ArgumentToBoundOverload) -> Self {
@@ -123,7 +114,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod
@@ -141,8 +131,6 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
             #[inline(always)]
             pub unsafe fn DoNotBindMethod(
                 __this: *mut Self,
@@ -152,7 +140,6 @@ pub mod crubit {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         impl Default for StructWithDoNotBindMethod {
             #[inline(always)]
             fn default() -> Self {
@@ -171,8 +158,6 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///
-            /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
             #[inline(always)]
             pub(crate) unsafe fn DoNotBindMethod(
                 __this: *mut crate::crubit::test::StructWithDoNotBindMethod,

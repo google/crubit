@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/types_only:types_only
-// Features: types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -16,13 +15,11 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=13
 #[inline(always)]
 pub fn MustBindFn() {
     unsafe { crate::detail::__rust_thunk___Z10MustBindFnv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=15
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Copyable
@@ -36,7 +33,6 @@ unsafe impl ::cxx::ExternType for Copyable {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=15
 impl Default for Copyable {
     #[inline(always)]
     fn default() -> Self {
@@ -48,7 +44,6 @@ impl Default for Copyable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=21
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Cloneable
@@ -65,7 +60,6 @@ unsafe impl ::cxx::ExternType for Cloneable {
     type Kind = ::cxx::kind::Opaque;
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=23
 impl ::ctor::CtorNew<::ffi_11::c_int> for Cloneable {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -92,7 +86,6 @@ impl ::ctor::CtorNew<(::ffi_11::c_int,)> for Cloneable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=24
 impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for Cloneable {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
     type Error = ::ctor::Infallible;
@@ -119,7 +112,6 @@ impl<'__unelided> ::ctor::CtorNew<(&'__unelided Self,)> for Cloneable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=25
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Cloneable {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
     type Error = ::ctor::Infallible;
@@ -146,7 +138,6 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=26
 impl ::ctor::Assign<&Self> for Cloneable {
     #[inline(always)]
     fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
@@ -156,7 +147,6 @@ impl ::ctor::Assign<&Self> for Cloneable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=27
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Cloneable {
     #[inline(always)]
     fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: ::ctor::RvalueReference<'_, Self>) {
@@ -166,7 +156,6 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Cloneable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=28
 impl ::ctor::PinnedDrop for Cloneable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -174,7 +163,6 @@ impl ::ctor::PinnedDrop for Cloneable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=36
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Movable
@@ -191,7 +179,6 @@ unsafe impl ::cxx::ExternType for Movable {
     type Kind = ::cxx::kind::Opaque;
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=38
 impl ::ctor::CtorNew<::ffi_11::c_int> for Movable {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -218,7 +205,6 @@ impl ::ctor::CtorNew<(::ffi_11::c_int,)> for Movable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=39
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Movable {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
     type Error = ::ctor::Infallible;
@@ -245,7 +231,6 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=40
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Movable {
     #[inline(always)]
     fn assign(self: ::core::pin::Pin<&mut Self>, other: ::ctor::RvalueReference<'_, Self>) {
@@ -255,7 +240,6 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Movable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/types_only/types_only.h;l=45
 impl ::ctor::PinnedDrop for Movable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {

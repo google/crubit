@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Uncopyable
@@ -30,7 +28,6 @@ unsafe impl ::cxx::ExternType for Uncopyable {
     type Kind = ::cxx::kind::Opaque;
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=12
 impl ::ctor::CtorNew<()> for Uncopyable {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -47,7 +44,6 @@ impl ::ctor::CtorNew<()> for Uncopyable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=17
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl
@@ -64,7 +60,6 @@ unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
     type Kind = ::cxx::kind::Opaque;
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=17
 impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -72,11 +67,9 @@ impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=17
 // error: function `UncopyableDespiteDecl::operator=` could not be bound
 //   Defaulted function relies on an invalid decl: UncopyableDespiteDecl::operator=
 
-/// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=19
 impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
     type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
@@ -93,7 +86,6 @@ impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=21
 // error: constructor `UncopyableDespiteDecl::UncopyableDespiteDecl` could not be bound
 //   Would use an unavailable copy constructor for UncopyableDespiteDecl
 

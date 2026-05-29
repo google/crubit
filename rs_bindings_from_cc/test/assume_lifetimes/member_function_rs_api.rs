@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/assume_lifetimes:member_function
-// Features: assume_lifetimes, callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=S
@@ -30,19 +28,16 @@ unsafe impl ::cxx::ExternType for S {
     type Kind = ::cxx::kind::Trivial;
 }
 impl S {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=9
     #[inline(always)]
     pub fn int_accessor<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe { self::s::int_accessor(self) }
     }
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=10
     #[inline(always)]
     pub fn me<'__this>(&'__this mut self) -> ::cref::CMut<'__this, crate::S> {
         unsafe { self::s::me(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=8
 impl Default for S {
     #[inline(always)]
     fn default() -> Self {
@@ -55,14 +50,12 @@ impl Default for S {
 }
 
 pub mod s {
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=9
     #[inline(always)]
     pub(crate) fn int_accessor<'__this>(
         __this: &'__this crate::S,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZNK1S12int_accessorEv(__this) }
     }
-    /// Generated from: rs_bindings_from_cc/test/assume_lifetimes/member_function.h;l=10
     #[inline(always)]
     pub(crate) fn me<'__this>(__this: &'__this mut crate::S) -> ::cref::CMut<'__this, crate::S> {
         unsafe { crate::detail::__rust_thunk___ZN1S2meEv(__this) }

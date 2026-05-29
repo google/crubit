@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/unsafe_attributes:example_lib
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: examples/cpp/unsafe_attributes/example.h;l=10
 #[inline(always)]
 pub fn SafeSignatureWithoutAnnotation() {
     unsafe { crate::detail::__rust_thunk___Z30SafeSignatureWithoutAnnotationv() }
@@ -25,8 +23,6 @@ pub fn SafeSignatureWithoutAnnotation() {
 /// # Safety
 ///
 /// The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.
-///
-/// Generated from: examples/cpp/unsafe_attributes/example.h;l=11
 #[inline(always)]
 pub unsafe fn SafeSignatureButAnnotatedUnsafe() {
     unsafe { crate::detail::__rust_thunk___Z31SafeSignatureButAnnotatedUnsafev() }
@@ -36,14 +32,11 @@ pub unsafe fn SafeSignatureButAnnotatedUnsafe() {
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `__param_0`: raw pointer
-///
-/// Generated from: examples/cpp/unsafe_attributes/example.h;l=13
 #[inline(always)]
 pub unsafe fn UnsafeSignatureWithoutAnnotation(__param_0: *mut ::ffi_11::c_void) {
     unsafe { crate::detail::__rust_thunk___Z32UnsafeSignatureWithoutAnnotationPv(__param_0) }
 }
 
-/// Generated from: examples/cpp/unsafe_attributes/example.h;l=14
 #[inline(always)]
 pub fn UnsafeSignatureButAnnotatedSafe(__param_0: *mut ::ffi_11::c_void) {
     unsafe { crate::detail::__rust_thunk___Z31UnsafeSignatureButAnnotatedSafePv(__param_0) }
@@ -51,7 +44,6 @@ pub fn UnsafeSignatureButAnnotatedSafe(__param_0: *mut ::ffi_11::c_void) {
 
 // is_unsafe=
 
-/// Generated from: examples/cpp/unsafe_attributes/example.h;l=16
 #[inline(always)]
 pub fn SafeBasedOnBoolean() {
     unsafe { crate::detail::__rust_thunk___Z18SafeBasedOnBooleanv() }
@@ -62,8 +54,6 @@ pub fn SafeBasedOnBoolean() {
 /// # Safety
 ///
 /// The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.
-///
-/// Generated from: examples/cpp/unsafe_attributes/example.h;l=17
 #[inline(always)]
 pub unsafe fn UnsafeBasedOnBoolean() {
     unsafe { crate::detail::__rust_thunk___Z20UnsafeBasedOnBooleanv() }

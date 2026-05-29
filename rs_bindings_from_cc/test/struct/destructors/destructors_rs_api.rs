@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/destructors:destructors
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=10
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
 pub struct DestructionOrderRecorder {
@@ -32,24 +30,20 @@ unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
     type Kind = ::cxx::kind::Trivial;
 }
 impl DestructionOrderRecorder {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
     #[inline(always)]
     pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
         unsafe { self::destruction_order_recorder::RecordDestruction(int_field) }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
     #[inline(always)]
     pub fn GetDestructionRecord() -> ::ffi_11::c_int {
         unsafe { self::destruction_order_recorder::GetDestructionRecord() }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
     #[inline(always)]
     pub fn ClearDestructionRecord() {
         unsafe { self::destruction_order_recorder::ClearDestructionRecord() }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=12
 impl From<::ffi_11::c_int> for DestructionOrderRecorder {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
@@ -73,7 +67,6 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for DestructionOrderRecorder {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=16
 impl From<::ctor::RvalueReference<'_, Self>> for DestructionOrderRecorder {
     #[inline(always)]
     fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
@@ -97,7 +90,6 @@ impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for DestructionOrderReco
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=20
 impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for DestructionOrderRecorder {
     #[inline(always)]
     fn unpin_assign(&mut self, other: ::ctor::RvalueReference<'_, Self>) {
@@ -107,7 +99,6 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for DestructionOrder
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=28
 impl Drop for DestructionOrderRecorder {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
@@ -116,7 +107,6 @@ impl Drop for DestructionOrderRecorder {
 }
 
 pub mod destruction_order_recorder {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
     #[inline(always)]
     pub(crate) fn RecordDestruction(int_field: ::ffi_11::c_int) {
         unsafe {
@@ -125,14 +115,12 @@ pub mod destruction_order_recorder {
             )
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
     #[inline(always)]
     pub(crate) fn GetDestructionRecord() -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
         }
     }
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
     #[inline(always)]
     pub(crate) fn ClearDestructionRecord() {
         unsafe {
@@ -141,7 +129,6 @@ pub mod destruction_order_recorder {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
 pub struct FieldDestructionOrderTester {
@@ -163,7 +150,6 @@ unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
     type Kind = ::cxx::kind::Trivial;
 }
 impl FieldDestructionOrderTester {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=51
     #[inline(always)]
     pub fn DestructFromCpp(
         field1: ::ffi_11::c_int,
@@ -174,7 +160,6 @@ impl FieldDestructionOrderTester {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 impl From<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrderTester {
     #[inline(always)]
     fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
@@ -198,7 +183,6 @@ impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrde
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 impl Drop for FieldDestructionOrderTester {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
@@ -206,7 +190,6 @@ impl Drop for FieldDestructionOrderTester {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrderTester {
     #[inline(always)]
     fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
@@ -216,7 +199,6 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for FieldDestruction
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=44
 impl
     From<(
         crate::DestructionOrderRecorder,
@@ -266,7 +248,6 @@ impl
 }
 
 pub mod field_destruction_order_tester {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=51
     #[inline(always)]
     pub(crate) fn DestructFromCpp(
         field1: ::ffi_11::c_int,

@@ -262,6 +262,9 @@ bindings_attrs = {
     "_generate_error_report": attr.label(
         default = "@@//rs_bindings_from_cc/bazel_support:generate_error_report",
     ),
+    "_is_golden_test": attr.label(
+        default = "//common/bazel_support:is_golden_test",
+    ),
     "_globally_enabled_features": attr.label(
         default = "//common/bazel_support:globally_enabled_features",
     ),

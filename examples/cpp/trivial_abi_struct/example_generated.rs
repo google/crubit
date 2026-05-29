@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/trivial_abi_struct:example_lib
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -18,8 +17,6 @@
 
 /// Because this class has a destructor, it will not receive Rust bindings
 /// without ABSL_ATTRIBUTE_TRIVIAL_ABI.
-///
-/// Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 #[derive(Clone)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Position
@@ -34,7 +31,6 @@ unsafe impl ::cxx::ExternType for Position {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 impl Default for Position {
     #[inline(always)]
     fn default() -> Self {
@@ -46,7 +42,6 @@ impl Default for Position {
     }
 }
 
-/// Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 impl ::ctor::UnpinAssign<&Self> for Position {
     #[inline(always)]
     fn unpin_assign(&mut self, __param_0: &Self) {
@@ -56,7 +51,6 @@ impl ::ctor::UnpinAssign<&Self> for Position {
     }
 }
 
-/// Generated from: examples/cpp/trivial_abi_struct/example.h;l=16
 impl Drop for Position {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {

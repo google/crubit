@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/named_instantiation:named_instantiation
-// Features: callables, supported, template_instantiation, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -19,25 +18,20 @@
 // This file contains definitions for a very simple named implicit template
 // instantiation test.
 
-// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=11
 // error: class `Ni` could not be bound
 //   Class templates are not yet supported
 
-/// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=16
 pub type NiIF = crate::__CcTemplateInst2NiIifE;
 
 /// # Safety
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `i`: raw pointer
-///
-/// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=17
 #[inline(always)]
 pub unsafe fn SomeApi(i: *const crate::NiIF) {
     unsafe { crate::detail::__rust_thunk___Z7SomeApiRK2NiIifE(i) }
 }
 
-/// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=12
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ni < int , float >
@@ -47,7 +41,6 @@ pub struct __CcTemplateInst2NiIifE {
 impl !Send for __CcTemplateInst2NiIifE {}
 impl !Sync for __CcTemplateInst2NiIifE {}
 
-/// Generated from: rs_bindings_from_cc/test/templates/named_instantiation/named_instantiation.h;l=13
 impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2NiIifE {
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, f32)) -> Self {

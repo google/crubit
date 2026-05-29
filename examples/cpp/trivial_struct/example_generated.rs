@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/trivial_struct:example_lib
-// Features: callables, supported, types
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
@@ -16,7 +15,6 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-/// Generated from: examples/cpp/trivial_struct/example.h;l=8
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Position
@@ -31,7 +29,6 @@ unsafe impl ::cxx::ExternType for Position {
     type Kind = ::cxx::kind::Trivial;
 }
 
-/// Generated from: examples/cpp/trivial_struct/example.h;l=8
 impl Default for Position {
     #[inline(always)]
     fn default() -> Self {
