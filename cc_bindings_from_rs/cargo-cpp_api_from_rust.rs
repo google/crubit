@@ -143,14 +143,25 @@ fn build_crate_and_stream_artifacts(
 ) -> Result<HashMap<String, ArtifactInfo>> {
     let mut args = vec!["rustc".to_string(), "--message-format=json".to_string()];
     args.extend(build_args.iter().cloned());
+    // We rely on filename to extract the metadata hash cargo used for our current build.
+    // We attach that hash to the intermediate files we produce to ensure they don't clobber
+    // unrelated outputs from different build configurations (the same way cargo does). To do
+    // this, our build must emit metadata. The filepath emitted for `.rlib` is the final filepath
+    // with no metadata hash included.
+    if build_args.contains(&"--".to_string()) {
+        args.push("--emit=metadata,link".to_string());
+    } else {
+        args.extend(["--".to_string(), "--emit=metadata,link".to_string()]);
+    }
 
     let mut pkg_to_artifact = HashMap::new();
     let (command, stream) = stream_cargo_build(&args)?;
     for artifact in stream {
         let artifact = artifact.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
-        let find_metadata_file = artifact.filenames.iter().find(|filename| {
-            filename.extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib")
-        });
+        let find_metadata_file = artifact
+            .filenames
+            .iter()
+            .find(|filename| filename.extension().is_some_and(|ext| ext == "rmeta"));
         let Some(filename) = find_metadata_file else {
             continue;
         };
@@ -240,7 +251,16 @@ impl BindingGenerationContext {
             .and_then(|artifact_info| {
                 let path = &artifact_info.path;
                 let rel_path = path.strip_prefix(&target_dir).ok()?;
-                rel_path.parent().map(|p| p.to_owned())
+                rel_path.parent().and_then(|p|
+                    // Our path can be to an intermediate that already resides in the `deps`
+                    // directory. We only want the profile directory here (with an optional target
+                    // specific component). We'll reconstruct the deps path ourselves later.
+                    if p.file_name() == Some("deps") {
+                        p.parent()
+                    } else {
+                        Some(p)
+                    }
+                ).map(|p| p.to_owned())
             })
             .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
         let dirs = Directories::new(target_dir.to_owned(), profile_dir)?;
@@ -512,7 +532,20 @@ extern crate proc_macro;
         let deps_dir = &self.dirs.deps_dir;
         let profile_dir = &self.dirs.profile_dir;
         let profile_name = &self.dirs.profile_name;
-        let lib_rs_path = deps_dir.join(format!("{}_cc_api.rs", root_name));
+
+        let root_artifact = self
+            .pkg_to_artifact
+            .get(&self.root.id.repr)
+            .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
+        let hash_suffix = if root_artifact.hash.is_empty() {
+            "".to_string()
+        } else {
+            format!("-{}", root_artifact.hash)
+        };
+        let project_dir = deps_dir.join(format!("{}{}", root_name, hash_suffix));
+        fs::create_dir_all(&project_dir)?;
+
+        let lib_rs_path = project_dir.join(format!("{}_cc_api.rs", root_name));
         let root_crate_name = root_name.replace('-', "_");
         lib_rs_content.push_str(&format!("pub use r#{}::*;\n", root_crate_name));
         fs::write(&lib_rs_path, lib_rs_content)?;
@@ -566,7 +599,7 @@ bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
             }
         }
 
-        let cargo_toml_path = deps_dir.join("Cargo.toml");
+        let cargo_toml_path = project_dir.join("Cargo.toml");
         fs::write(&cargo_toml_path, cargo_toml_content)?;
 
         let mut cargo_build = vec![

@@ -250,3 +250,70 @@ fn test_subcommand_with_proc_macro() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test] // allow_core_test
+fn test_subcommand_different_build_configurations() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_project");
+
+    // First run: default build configuration (debug)
+    let mut cmd1 = setup_command(&tmp_dir, &project_dir);
+    cmd1.arg("cpp_api_from_rust");
+    let output1 = cmd1.output().expect("Failed to execute");
+    if !output1.status.success() {
+        println!("{}", String::from_utf8_lossy(&output1.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output1.stderr));
+        panic!("cargo-cpp_api_from_rust failed on first run");
+    }
+
+    // Second run: different build configuration (release)
+    let mut cmd2 = setup_command(&tmp_dir, &project_dir);
+    cmd2.arg("cpp_api_from_rust");
+    cmd2.arg("--");
+    cmd2.arg("--profile=release");
+    let output2 = cmd2.output().expect("Failed to execute");
+    if !output2.status.success() {
+        println!("{}", String::from_utf8_lossy(&output2.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output2.stderr));
+        panic!("cargo-cpp_api_from_rust failed on second run");
+    }
+
+    // Verify that the two build configurations produced two unique cargo projects
+    // with different hash suffixes.
+    let debug_deps_dir = tmp_dir.path().join("debug").join("deps");
+    let release_deps_dir = tmp_dir.path().join("release").join("deps");
+
+    let find_cargo_project = |dir: &std::path::Path| -> Result<String, Box<dyn std::error::Error>> {
+        let projects: Vec<_> = std::fs::read_dir(dir)?
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                let path = e.path();
+                path.is_dir() && e.file_name().to_string_lossy().starts_with("test_project-")
+            })
+            .map(|e| e.file_name().to_string_lossy().to_string())
+            .collect();
+        assert_eq!(
+            projects.len(),
+            1,
+            "Expected exactly 1 cargo project in {}, found {:?}",
+            dir.display(),
+            projects
+        );
+        Ok(projects[0].clone())
+    };
+
+    let project1 = find_cargo_project(&debug_deps_dir)?;
+    let project2 = find_cargo_project(&release_deps_dir)?;
+
+    let suffix1 = project1.strip_prefix("test_project-").unwrap();
+    let suffix2 = project2.strip_prefix("test_project-").unwrap();
+
+    assert_ne!(
+        suffix1, suffix2,
+        "Expected cargo projects to have different suffixes, but both were {}",
+        suffix1
+    );
+
+    Ok(())
+}
