@@ -1098,7 +1098,7 @@ pub fn generate_function<'tcx>(
                 .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
                 .expect("Generated trait method for an ADT with an invalid rust name");
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
-            let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref).expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.");
+            let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref)?;
             quote! { <#struct_name as #trait_name_with_args>::#fn_name }
         } else {
             struct_name

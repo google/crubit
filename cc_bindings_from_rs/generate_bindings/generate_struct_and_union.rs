@@ -37,7 +37,7 @@ use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, IntTy, Ty, TyCtxt, TyKind, TypeFlags, UintTy};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
-use rustc_span::symbol::sym;
+use rustc_span::symbol::{sym, Symbol};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -717,9 +717,13 @@ fn generate_trait_operator_impls<'tcx>(
             "index_mut",
             "operator[]",
         ),
-        // TODO(b/483382648): Add support for other traits / operators - e.g. `PartialEq`,
-        // `PartialOrd` (`operator<`, `operator<=`, etc., `operator<=>` seems hard), `Add`,
-        // `AddAssign`, etc.
+        query_trait_impls(
+            tcx.get_diagnostic_item(sym::PartialEq).expect("Could not find PartialEq trait"),
+            "eq",
+            "operator==",
+        ),
+        // TODO(b/483382648): Add support for other traits / operators - e.g. `PartialOrd`,
+        // (`operator<`, `operator<=`, etc., `operator<=>` seems hard), `Add`, `AddAssign`, etc.
     ]
     .into_iter()
     .flatten()

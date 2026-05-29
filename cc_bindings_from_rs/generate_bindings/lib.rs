@@ -1117,7 +1117,7 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
             // TODO(b/483382648): Generate bindings for other `std`, `core`, and `alloc` traits.
             // At least for _most_ other traits - we probably still want to exclude traits that
             // get idiomatic C++ bindings elsewhere, such as `Clone`, `Default`, `Drop`, `From`,
-            // `Index`, and `Into`.
+            // `Index`, `Into`, and `PartialEq`.
             let not_in_stdlib = {
                 let crate_name = tcx.crate_name(trait_id.krate);
                 crate_name.as_str() != "std"
