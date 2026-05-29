@@ -62,11 +62,60 @@ llvm::json::Value HeaderName::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::HeaderName HeaderName::ToFlatProto()
+    const {
+  rs_bindings_from_cc::ir_proto::flat::HeaderName proto;
+  proto.set_name(name_);
+  return proto;
+}
+
 llvm::json::Value LifetimeName::ToJson() const {
   return llvm::json::Object{
       {"name", name},
       {"id", id},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::LifetimeName LifetimeName::ToFlatProto()
+    const {
+  rs_bindings_from_cc::ir_proto::flat::LifetimeName proto;
+  proto.set_name(name);
+  proto.set_id(id.value());
+  return proto;
+}
+
+rs_bindings_from_cc::ir_proto::flat::PointerTypeKind ToFlatProto(
+    PointerTypeKind pointer_type_kind) {
+  switch (pointer_type_kind) {
+    case PointerTypeKind::kLValueRef:
+      return rs_bindings_from_cc::ir_proto::flat::L_VALUE_REF;
+    case PointerTypeKind::kRValueRef:
+      return rs_bindings_from_cc::ir_proto::flat::R_VALUE_REF;
+    case PointerTypeKind::kNullable:
+      return rs_bindings_from_cc::ir_proto::flat::NULLABLE;
+    case PointerTypeKind::kNonNull:
+      return rs_bindings_from_cc::ir_proto::flat::NON_NULL;
+    case PointerTypeKind::kOwned:
+      return rs_bindings_from_cc::ir_proto::flat::OWNED;
+  }
+}
+
+rs_bindings_from_cc::ir_proto::flat::CallingConv ToFlatProto(
+    CallingConv calling_conv) {
+  switch (calling_conv) {
+    case CallingConv::kC:
+      return rs_bindings_from_cc::ir_proto::flat::C_DECL;
+    case CallingConv::kX86FastCall:
+      return rs_bindings_from_cc::ir_proto::flat::FAST_CALL;
+    case CallingConv::kX86VectorCall:
+      return rs_bindings_from_cc::ir_proto::flat::VECTOR_CALL;
+    case CallingConv::kX864ThisCall:
+      return rs_bindings_from_cc::ir_proto::flat::THIS_CALL;
+    case CallingConv::kX86StdCall:
+      return rs_bindings_from_cc::ir_proto::flat::STD_CALL;
+    case CallingConv::kWin64:
+      return rs_bindings_from_cc::ir_proto::flat::MS_ABI;
+  }
 }
 
 llvm::json::Value CcType::ToJson() const {
@@ -165,6 +214,42 @@ llvm::json::Value CcType::ToJson() const {
       {"explicit_lifetimes", std::move(explicit_lifetimes_values)},
   };
 }
+rs_bindings_from_cc::ir_proto::flat::CcType CcType::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::CcType proto;
+  proto.set_is_const(is_const);
+  proto.set_unknown_attr(unknown_attr);
+  for (const std::string& lifetime : explicit_lifetimes) {
+    proto.add_explicit_lifetimes(lifetime);
+  }
+
+  std::visit(
+      visitor{[&](const CcType::Primitive& primitive) {
+                proto.mutable_primitive()->set_spelling(primitive.spelling);
+              },
+              [&](const CcType::PointerType& pointer) {
+                auto* p = proto.mutable_pointer();
+                p->set_kind(crubit::ToFlatProto(pointer.kind));
+                if (pointer.lifetime.has_value()) {
+                  p->set_lifetime(pointer.lifetime.value().value());
+                }
+                *p->mutable_pointee_type() =
+                    pointer.pointee_type->ToFlatProto();
+              },
+              [&](const CcType::FuncPointer& func_value) {
+                auto* f = proto.mutable_func_pointer();
+                f->set_non_null(func_value.non_null);
+                f->set_call_conv(crubit::ToFlatProto(func_value.call_conv));
+                for (const CcType& type : func_value.param_and_return_types) {
+                  *f->add_param_and_return_types() = type.ToFlatProto();
+                }
+              },
+              [&](ItemId id) { proto.set_decl(id.value()); },
+              [&](const FormattedError& error) {
+                *proto.mutable_error() = error.ToFlatProto();
+              }},
+      variant);
+  return proto;
+}
 
 namespace {
 CcType PointerOrReferenceTo(CcType pointee_type, PointerTypeKind pointer_kind,
@@ -209,11 +294,26 @@ llvm::json::Value Identifier::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::Identifier Identifier::ToFlatProto()
+    const {
+  rs_bindings_from_cc::ir_proto::flat::Identifier proto;
+  proto.set_identifier(identifier_);
+  return proto;
+}
+
 llvm::json::Value IntegerConstant::ToJson() const {
   return llvm::json::Object{
       {"is_negative", is_negative_},
       {"wrapped_value", wrapped_value_},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::IntegerConstant
+IntegerConstant::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::IntegerConstant proto;
+  proto.set_is_negative(is_negative_);
+  proto.set_wrapped_value(wrapped_value_);
+  return proto;
 }
 
 llvm::json::Value Operator::ToJson() const {
@@ -222,12 +322,28 @@ llvm::json::Value Operator::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::Operator Operator::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Operator proto;
+  proto.set_name(name_);
+  return proto;
+}
+
 static std::string SpecialNameToString(SpecialName special_name) {
   switch (special_name) {
     case SpecialName::kDestructor:
       return "Destructor";
     case SpecialName::kConstructor:
       return "Constructor";
+  }
+}
+
+rs_bindings_from_cc::ir_proto::flat::SpecialName ToFlatProto(
+    SpecialName special_name) {
+  switch (special_name) {
+    case SpecialName::kDestructor:
+      return rs_bindings_from_cc::ir_proto::flat::DESTRUCTOR;
+    case SpecialName::kConstructor:
+      return rs_bindings_from_cc::ir_proto::flat::CONSTRUCTOR;
   }
 }
 
@@ -248,6 +364,20 @@ llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier) {
   }
 }
 
+rs_bindings_from_cc::ir_proto::flat::UnqualifiedIdentifier ToFlatProto(
+    const UnqualifiedIdentifier& unqualified_identifier) {
+  rs_bindings_from_cc::ir_proto::flat::UnqualifiedIdentifier proto;
+  if (auto* id = std::get_if<Identifier>(&unqualified_identifier)) {
+    *proto.mutable_ident() = id->ToFlatProto();
+  } else if (auto* op = std::get_if<Operator>(&unqualified_identifier)) {
+    *proto.mutable_oper() = op->ToFlatProto();
+  } else {
+    SpecialName special_name = std::get<SpecialName>(unqualified_identifier);
+    proto.set_special_name(crubit::ToFlatProto(special_name));
+  }
+  return proto;
+}
+
 llvm::json::Value FuncParam::ToJson() const {
   auto object = llvm::json::Object{
       {"type", type},
@@ -261,6 +391,20 @@ llvm::json::Value FuncParam::ToJson() const {
     object.insert({"clang_lifetimebound", clang_lifetimebound});
   }
   return object;
+}
+
+rs_bindings_from_cc::ir_proto::flat::FuncParam FuncParam::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::FuncParam proto;
+  *proto.mutable_type() = type.ToFlatProto();
+  *proto.mutable_identifier() = identifier.ToFlatProto();
+  if (unknown_attr.has_value()) {
+    proto.set_unknown_attr(unknown_attr.value());
+  }
+  for (int capture : clang_lifetime_capture_by) {
+    proto.add_clang_lifetime_capture_by(capture);
+  }
+  proto.set_clang_lifetimebound(clang_lifetimebound);
+  return proto;
 }
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
@@ -302,6 +446,28 @@ llvm::json::Value InstanceMethodMetadata::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::InstanceMethodMetadata
+InstanceMethodMetadata::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::InstanceMethodMetadata proto;
+  switch (reference) {
+    case InstanceMethodMetadata::kLValue:
+      proto.set_reference(
+          rs_bindings_from_cc::ir_proto::flat::InstanceMethodMetadata::L_VALUE);
+      break;
+    case InstanceMethodMetadata::kRValue:
+      proto.set_reference(
+          rs_bindings_from_cc::ir_proto::flat::InstanceMethodMetadata::R_VALUE);
+      break;
+    case InstanceMethodMetadata::kUnqualified:
+      proto.set_reference(rs_bindings_from_cc::ir_proto::flat::
+                              InstanceMethodMetadata::UNQUALIFIED);
+      break;
+  }
+  proto.set_is_const(is_const);
+  proto.set_is_virtual(is_virtual);
+  return proto;
+}
+
 llvm::json::Value Constant::ToJson() const {
   llvm::json::Object constant{
       {"value", value.ToJson()},
@@ -330,6 +496,25 @@ llvm::json::Value Constant::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::Constant Constant::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Constant proto;
+  *proto.mutable_value() = value.ToFlatProto();
+  *proto.mutable_cc_name() = cc_name.ToFlatProto();
+  *proto.mutable_rs_name() = rs_name.ToFlatProto();
+  proto.set_unique_name(unique_name);
+  proto.set_id(id.value());
+  proto.set_owning_target(owning_target.value());
+  proto.set_source_loc(source_loc);
+  *proto.mutable_type() = type.ToFlatProto();
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  proto.set_must_bind(must_bind);
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  return proto;
+}
+
 llvm::json::Value ExistingRustType::ToJson() const {
   llvm::json::Object override{
       {"rs_name", rs_name},
@@ -350,6 +535,23 @@ llvm::json::Value ExistingRustType::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::ExistingRustType
+ExistingRustType::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::ExistingRustType proto;
+  proto.set_rs_name(rs_name);
+  proto.set_cc_name(cc_name);
+  proto.set_unique_name(unique_name);
+  for (const auto& arg : template_args)
+    *proto.add_template_args() = arg.ToFlatProto();
+  proto.set_owning_target(owning_target.value());
+  if (size_align.has_value())
+    *proto.mutable_size_align() = size_align->ToFlatProto();
+  proto.set_is_same_abi(is_same_abi);
+  proto.set_id(id.value());
+  proto.set_must_bind(must_bind);
+  return proto;
+}
+
 llvm::json::Value UseMod::ToJson() const {
   llvm::json::Object use_mod{
       {"path", path},
@@ -363,6 +565,15 @@ llvm::json::Value UseMod::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::UseMod UseMod::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::UseMod proto;
+  proto.set_path(path);
+  *proto.mutable_mod_name() = mod_name.ToFlatProto();
+  proto.set_id(id.value());
+  proto.set_must_bind(must_bind);
+  return proto;
+}
+
 static std::string SafetyAnnotationToString(
     SafetyAnnotation safety_annotation) {
   switch (safety_annotation) {
@@ -372,6 +583,21 @@ static std::string SafetyAnnotationToString(
       return "Unsafe";
     case SafetyAnnotation::kUnannotated:
       return "Unannotated";
+  }
+}
+
+rs_bindings_from_cc::ir_proto::flat::SafetyAnnotation ToFlatProto(
+    SafetyAnnotation safety_annotation) {
+  switch (safety_annotation) {
+    case SafetyAnnotation::kDisableUnsafe:
+      return rs_bindings_from_cc::ir_proto::flat::SafetyAnnotation::
+          SAFETY_ANNOTATION_DISABLE_UNSAFE;
+    case SafetyAnnotation::kUnsafe:
+      return rs_bindings_from_cc::ir_proto::flat::SafetyAnnotation::
+          SAFETY_ANNOTATION_UNSAFE;
+    case SafetyAnnotation::kUnannotated:
+      return rs_bindings_from_cc::ir_proto::flat::SafetyAnnotation::
+          SAFETY_ANNOTATION_UNANNOTATED;
   }
 }
 
@@ -415,6 +641,45 @@ llvm::json::Value Func::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::Func Func::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Func proto;
+  *proto.mutable_cc_name() = crubit::ToFlatProto(cc_name);
+  *proto.mutable_rs_name() = crubit::ToFlatProto(rs_name);
+  proto.set_unique_name(unique_name);
+  proto.set_owning_target(owning_target.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  proto.set_mangled_name(mangled_name);
+  *proto.mutable_return_type() = return_type.ToFlatProto();
+  for (const auto& p : params) *proto.add_params() = p.ToFlatProto();
+  for (const auto& l : lifetime_params)
+    *proto.add_lifetime_params() = l.ToFlatProto();
+  proto.set_is_inline(is_inline);
+  if (instance_method_metadata.has_value()) {
+    *proto.mutable_instance_method_metadata() =
+        instance_method_metadata->ToFlatProto();
+  }
+  proto.set_is_extern_c(is_extern_c);
+  proto.set_is_noreturn(is_noreturn);
+  proto.set_is_variadic(is_variadic);
+  proto.set_is_consteval(is_consteval);
+  if (nodiscard.has_value()) proto.set_nodiscard(nodiscard.value());
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  proto.set_has_c_calling_convention(has_c_calling_convention);
+  proto.set_is_member_or_descendant_of_class_template(
+      is_member_or_descendant_of_class_template);
+  proto.set_safety_annotation(crubit::ToFlatProto(safety_annotation));
+  proto.set_source_loc(source_loc);
+  proto.set_id(id.value());
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  if (adl_enclosing_record.has_value())
+    proto.set_adl_enclosing_record(adl_enclosing_record->value());
+  proto.set_must_bind(must_bind);
+  for (const auto& l : lifetime_inputs) proto.add_lifetime_inputs(l);
+  return proto;
+}
+
 static std::string AccessToString(AccessSpecifier access) {
   switch (access) {
     case kPublic:
@@ -423,6 +688,18 @@ static std::string AccessToString(AccessSpecifier access) {
       return "Protected";
     case kPrivate:
       return "Private";
+  }
+}
+
+rs_bindings_from_cc::ir_proto::flat::AccessSpecifier ToFlatProto(
+    AccessSpecifier access) {
+  switch (access) {
+    case kPublic:
+      return rs_bindings_from_cc::ir_proto::flat::PUBLIC;
+    case kProtected:
+      return rs_bindings_from_cc::ir_proto::flat::PROTECTED;
+    case kPrivate:
+      return rs_bindings_from_cc::ir_proto::flat::PRIVATE;
   }
 }
 
@@ -450,6 +727,37 @@ llvm::json::Value Field::ToJson() const {
   return field;
 }
 
+rs_bindings_from_cc::ir_proto::flat::Field Field::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Field proto;
+  if (rust_identifier.has_value()) {
+    *proto.mutable_rust_identifier() = rust_identifier->ToFlatProto();
+  }
+  if (cpp_identifier.has_value()) {
+    *proto.mutable_cpp_identifier() = cpp_identifier->ToFlatProto();
+  }
+  if (doc_comment.has_value()) {
+    proto.set_doc_comment(doc_comment.value());
+  }
+  *proto.mutable_type() = type.ToFlatProto();
+  proto.set_access(crubit::ToFlatProto(access));
+  proto.set_offset(offset);
+  proto.set_size(size);
+  if (unknown_attr.ok()) {
+    if (unknown_attr->has_value()) {
+      proto.mutable_unknown_attr()->set_ok_value(unknown_attr->value());
+    }
+  } else {
+    proto.mutable_unknown_attr()->set_err(unknown_attr.status().message());
+  }
+  proto.set_is_no_unique_address(is_no_unique_address);
+  proto.set_is_bitfield(is_bitfield);
+  proto.set_is_inheritable(is_inheritable);
+  if (deprecated.has_value()) {
+    proto.set_deprecated(deprecated.value());
+  }
+  return proto;
+}
+
 llvm::json::Value toJSON(const SpecialMemberFunc& f) {
   switch (f) {
     case SpecialMemberFunc::kTrivial:
@@ -463,11 +771,34 @@ llvm::json::Value toJSON(const SpecialMemberFunc& f) {
   }
 }
 
+rs_bindings_from_cc::ir_proto::flat::SpecialMemberFunc ToFlatProto(
+    SpecialMemberFunc f) {
+  switch (f) {
+    case SpecialMemberFunc::kTrivial:
+      return rs_bindings_from_cc::ir_proto::flat::TRIVIAL;
+    case SpecialMemberFunc::kNontrivialMembers:
+      return rs_bindings_from_cc::ir_proto::flat::NONTRIVIAL_MEMBERS;
+    case SpecialMemberFunc::kNontrivialUserDefined:
+      return rs_bindings_from_cc::ir_proto::flat::NONTRIVIAL_USER_DEFINED;
+    case SpecialMemberFunc::kUnavailable:
+      return rs_bindings_from_cc::ir_proto::flat::UNAVAILABLE;
+  }
+}
+
 llvm::json::Value BaseClass::ToJson() const {
   return llvm::json::Object{
       {"base_record_id", base_record_id},
       {"offset", offset},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::BaseClass BaseClass::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::BaseClass proto;
+  proto.set_base_record_id(base_record_id.value());
+  if (offset.has_value()) {
+    proto.set_offset(offset.value());
+  }
+  return proto;
 }
 
 static std::string RecordTypeToString(RecordType record_type) {
@@ -478,6 +809,18 @@ static std::string RecordTypeToString(RecordType record_type) {
       return "Union";
     case kClass:
       return "Class";
+  }
+}
+
+rs_bindings_from_cc::ir_proto::flat::RecordType ToFlatProto(
+    RecordType record_type) {
+  switch (record_type) {
+    case kStruct:
+      return rs_bindings_from_cc::ir_proto::flat::STRUCT;
+    case kUnion:
+      return rs_bindings_from_cc::ir_proto::flat::UNION;
+    case kClass:
+      return rs_bindings_from_cc::ir_proto::flat::CLASS;
   }
 }
 
@@ -501,11 +844,34 @@ llvm::json::Value IncompleteRecord::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::IncompleteRecord
+IncompleteRecord::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::IncompleteRecord proto;
+  *proto.mutable_cc_name() = cc_name.ToFlatProto();
+  *proto.mutable_rs_name() = rs_name.ToFlatProto();
+  proto.set_unique_name(unique_name);
+  proto.set_id(id.value());
+  proto.set_owning_target(owning_target.value());
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  proto.set_record_type(crubit::ToFlatProto(record_type));
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  proto.set_must_bind(must_bind);
+  return proto;
+}
+
 llvm::json::Value SizeAlign::ToJson() const {
   return llvm::json::Object{
       {"size", size},
       {"alignment", alignment},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::SizeAlign SizeAlign::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::SizeAlign proto;
+  proto.set_size(size);
+  proto.set_alignment(alignment);
+  return proto;
 }
 
 static llvm::json::Value toJSON(
@@ -580,6 +946,74 @@ llvm::json::Value BridgeType::ToJson() const {
       variant);
 }
 
+rs_bindings_from_cc::ir_proto::flat::BridgeType BridgeType::ToFlatProto()
+    const {
+  rs_bindings_from_cc::ir_proto::flat::BridgeType proto;
+  std::visit(
+      visitor{
+          [&](const BridgeType::Bridge& annotation) {
+            auto* b = proto.mutable_bridge();
+            b->set_rust_name(annotation.rust_name);
+            b->set_abi_rust(annotation.abi_rust);
+            b->set_abi_cpp(annotation.abi_cpp);
+            for (const auto& arg : annotation.template_args) {
+              *b->add_template_args() = arg.ToFlatProto();
+            }
+          },
+          [&](const BridgeType::StdOptional& std_optional) {
+            *proto.mutable_std_optional()->mutable_inner_type() =
+                std_optional.inner_type->ToFlatProto();
+          },
+          [&](const BridgeType::StdPair& std_pair) {
+            auto* p = proto.mutable_std_pair();
+            *p->mutable_first_type() = std_pair.first_type->ToFlatProto();
+            *p->mutable_second_type() = std_pair.second_type->ToFlatProto();
+          },
+          [&](const BridgeType::StdString& std_string) {
+            // Calling mutable_std_string instantiates the message field to
+            // signify its presence
+            proto.mutable_std_string();
+          },
+          [&](const BridgeType::ProtoMessageBridge& proto_message_bridge) {
+            proto.mutable_proto_message_bridge()->set_rust_name(
+                proto_message_bridge.rust_name);
+          },
+          [&](const BridgeType::Callable& callable) {
+            auto* c = proto.mutable_callable();
+            switch (callable.backing_type) {
+              case BridgeType::Callable::BackingType::kDynCallable:
+                c->set_backing_type(rs_bindings_from_cc::ir_proto::flat::
+                                        BridgeType::Callable::DYN_CALLABLE);
+                break;
+              case BridgeType::Callable::BackingType::kAnyInvocable:
+                c->set_backing_type(rs_bindings_from_cc::ir_proto::flat::
+                                        BridgeType::Callable::ANY_INVOCABLE);
+                break;
+            }
+            switch (callable.fn_trait) {
+              case BridgeType::Callable::FnTrait::kFn:
+                c->set_fn_trait(rs_bindings_from_cc::ir_proto::flat::
+                                    BridgeType::Callable::FN);
+                break;
+              case BridgeType::Callable::FnTrait::kFnMut:
+                c->set_fn_trait(rs_bindings_from_cc::ir_proto::flat::
+                                    BridgeType::Callable::FN_MUT);
+                break;
+              case BridgeType::Callable::FnTrait::kFnOnce:
+                c->set_fn_trait(rs_bindings_from_cc::ir_proto::flat::
+                                    BridgeType::Callable::FN_ONCE);
+                break;
+            }
+            *c->mutable_return_type() = callable.return_type->ToFlatProto();
+            for (const auto& param : callable.param_types) {
+              *c->add_param_types() = param.ToFlatProto();
+            }
+          },
+      },
+      variant);
+  return proto;
+}
+
 llvm::json::Value TemplateArg::ToJson() const {
   return std::visit(
       visitor{[&](const CcType& type) {
@@ -592,6 +1026,19 @@ llvm::json::Value TemplateArg::ToJson() const {
                 return llvm::json::Object{{"Int", int_value}};
               }},
       variant);
+}
+
+rs_bindings_from_cc::ir_proto::flat::TemplateArg TemplateArg::ToFlatProto()
+    const {
+  rs_bindings_from_cc::ir_proto::flat::TemplateArg proto;
+  std::visit(
+      visitor{[&](const CcType& type) {
+                *proto.mutable_type() = type.ToFlatProto();
+              },
+              [&](bool bool_value) { proto.set_bool_value(bool_value); },
+              [&](int64_t int_value) { proto.set_int_value(int_value); }},
+      variant);
+  return proto;
 }
 
 llvm::json::Value TemplateSpecialization::ToJson() const {
@@ -637,6 +1084,36 @@ llvm::json::Value TemplateSpecialization::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::TemplateSpecialization
+TemplateSpecialization::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::TemplateSpecialization proto;
+  proto.set_defining_target(defining_target.value());
+  std::visit(
+      visitor{
+          [&](const StdStringView&) { proto.mutable_std_string_view(); },
+          [&](const StdWStringView&) { proto.mutable_std_w_string_view(); },
+          [&](const StdVector& std_vector) {
+            *proto.mutable_std_vector()->mutable_element_type() =
+                std_vector.element_type.ToFlatProto();
+          },
+          [&](const StdUniquePtr& std_unique_ptr) {
+            *proto.mutable_std_unique_ptr()->mutable_element_type() =
+                std_unique_ptr.element_type.ToFlatProto();
+          },
+          [&](const AbslSpan& absl_span) {
+            *proto.mutable_absl_span()->mutable_element_type() =
+                absl_span.element_type.ToFlatProto();
+          },
+          [&](const C9Co& c9_co) {
+            *proto.mutable_c9_co()->mutable_element_type() =
+                c9_co.element_type.ToFlatProto();
+          },
+          [&](const NonSpecial&) { proto.mutable_non_special(); },
+      },
+      kind);
+  return proto;
+}
+
 TraitImplPolarity* absl_nullable TraitDerives::Polarity(
     absl::string_view trait) {
   // <internal link> start
@@ -658,6 +1135,18 @@ static std::string TraitImplPolarityToString(TraitImplPolarity polarity) {
   }
 }
 
+rs_bindings_from_cc::ir_proto::flat::TraitImplPolarity ToFlatProto(
+    TraitImplPolarity polarity) {
+  switch (polarity) {
+    case TraitImplPolarity::kNegative:
+      return rs_bindings_from_cc::ir_proto::flat::NEGATIVE;
+    case TraitImplPolarity::kNone:
+      return rs_bindings_from_cc::ir_proto::flat::NONE;
+    case TraitImplPolarity::kPositive:
+      return rs_bindings_from_cc::ir_proto::flat::POSITIVE;
+  }
+}
+
 llvm::json::Value TraitDerives::ToJson() const {
   return llvm::json::Object{
       // <internal link> start
@@ -671,11 +1160,31 @@ llvm::json::Value TraitDerives::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::TraitDerives TraitDerives::ToFlatProto()
+    const {
+  rs_bindings_from_cc::ir_proto::flat::TraitDerives proto;
+  proto.set_clone(crubit::ToFlatProto(clone));
+  proto.set_copy(crubit::ToFlatProto(copy));
+  proto.set_debug(crubit::ToFlatProto(debug));
+  proto.set_send(send);
+  proto.set_sync(sync);
+  proto.mutable_custom()->Add(custom.begin(), custom.end());
+  return proto;
+}
+
 llvm::json::Value OwnedPtrConfig::ToJson() const {
   return llvm::json::Object{
       {"owned_ptr_type", owned_ptr_type},
       {"drop_impl", drop_impl},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::OwnedPtrConfig
+OwnedPtrConfig::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::OwnedPtrConfig proto;
+  proto.set_owned_ptr_type(owned_ptr_type);
+  proto.set_drop_impl(drop_impl);
+  return proto;
 }
 
 llvm::json::Value Record::ToJson() const {
@@ -740,6 +1249,59 @@ llvm::json::Value Record::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::Record Record::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Record proto;
+  *proto.mutable_rs_name() = rs_name.ToFlatProto();
+  *proto.mutable_cc_name() = cc_name.ToFlatProto();
+  proto.set_unique_name(unique_name);
+  proto.set_mangled_cc_name(mangled_cc_name);
+  proto.set_id(id.value());
+  proto.set_owning_target(owning_target.value());
+  if (template_specialization.has_value())
+    *proto.mutable_template_specialization() =
+        template_specialization->ToFlatProto();
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  if (bridge_type.has_value())
+    *proto.mutable_bridge_type() = bridge_type->ToFlatProto();
+  if (owned_ptr_config.has_value())
+    *proto.mutable_owned_ptr_config() = owned_ptr_config->ToFlatProto();
+  proto.set_source_loc(source_loc);
+  for (const auto& b : unambiguous_public_bases)
+    *proto.add_unambiguous_public_bases() = b.ToFlatProto();
+  for (const auto& f : fields) *proto.add_fields() = f.ToFlatProto();
+  for (const auto& l : lifetime_params)
+    *proto.add_lifetime_params() = l.ToFlatProto();
+  *proto.mutable_size_align() = size_align.ToFlatProto();
+  *proto.mutable_trait_derives() = trait_derives.ToFlatProto();
+  proto.set_is_derived_class(is_derived_class);
+  proto.set_override_alignment(override_alignment);
+  proto.set_safety_annotation(crubit::ToFlatProto(safety_annotation));
+  proto.set_copy_constructor(crubit::ToFlatProto(copy_constructor));
+  proto.set_move_constructor(crubit::ToFlatProto(move_constructor));
+  proto.set_destructor(crubit::ToFlatProto(destructor));
+  proto.set_is_trivial_abi(is_trivial_abi);
+  proto.set_is_inheritable(is_inheritable);
+  proto.set_is_abstract(is_abstract);
+  if (nodiscard.has_value()) proto.set_nodiscard(nodiscard.value());
+  proto.set_record_type(crubit::ToFlatProto(record_type));
+  proto.set_is_aggregate(is_aggregate);
+  proto.set_is_canonical_alias(is_canonical_alias);
+  for (const auto& child : child_item_ids)
+    proto.add_child_item_ids(child.value());
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  proto.set_must_bind(must_bind);
+  proto.set_overloads_operator_delete(overloads_operator_delete);
+  proto.set_detected_formatter(detected_formatter);
+  proto.set_is_thread_safe(is_thread_safe);
+  for (const auto& l : lifetime_inputs) proto.add_lifetime_inputs(l);
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  proto.set_is_explicit_class_template_instantiation_definition(
+      is_explicit_class_template_instantiation_definition);
+  return proto;
+}
+
 llvm::json::Value Enumerator::ToJson() const {
   auto enumerator = llvm::json::Object{
       {"identifier", identifier},
@@ -753,6 +1315,17 @@ llvm::json::Value Enumerator::ToJson() const {
     enumerator.insert({"doc_comment", doc_comment.value()});
   }
   return enumerator;
+}
+
+rs_bindings_from_cc::ir_proto::flat::Enumerator Enumerator::ToFlatProto()
+    const {
+  rs_bindings_from_cc::ir_proto::flat::Enumerator proto;
+  *proto.mutable_identifier() = identifier.ToFlatProto();
+  *proto.mutable_value() = value.ToFlatProto();
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  return proto;
 }
 
 llvm::json::Value Enum::ToJson() const {
@@ -788,6 +1361,31 @@ llvm::json::Value Enum::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::Enum Enum::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Enum proto;
+  *proto.mutable_cc_name() = cc_name.ToFlatProto();
+  *proto.mutable_rs_name() = rs_name.ToFlatProto();
+  proto.set_unique_name(unique_name);
+  proto.set_id(id.value());
+  proto.set_owning_target(owning_target.value());
+  proto.set_source_loc(source_loc);
+  *proto.mutable_underlying_type() = underlying_type.ToFlatProto();
+  if (enumerators.has_value()) {
+    for (const auto& e : enumerators.value()) {
+      *proto.add_enumerators() = e.ToFlatProto();
+    }
+  }
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  proto.set_must_bind(must_bind);
+  proto.set_detected_formatter(detected_formatter);
+  if (nodiscard.has_value()) proto.set_nodiscard(nodiscard.value());
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  return proto;
+}
+
 llvm::json::Value GlobalVar::ToJson() const {
   llvm::json::Object var{
       {"cc_name", cc_name},
@@ -816,6 +1414,25 @@ llvm::json::Value GlobalVar::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::GlobalVar GlobalVar::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::GlobalVar proto;
+  *proto.mutable_cc_name() = cc_name.ToFlatProto();
+  *proto.mutable_rs_name() = rs_name.ToFlatProto();
+  proto.set_unique_name(unique_name);
+  proto.set_id(id.value());
+  proto.set_owning_target(owning_target.value());
+  proto.set_source_loc(source_loc);
+  if (mangled_name.has_value()) proto.set_mangled_name(mangled_name.value());
+  *proto.mutable_type() = type.ToFlatProto();
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  proto.set_must_bind(must_bind);
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  return proto;
+}
+
 llvm::json::Value TypeAlias::ToJson() const {
   llvm::json::Object type_alias{{"cc_name", cc_name},
                                 {"rs_name", rs_name},
@@ -838,6 +1455,24 @@ llvm::json::Value TypeAlias::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::TypeAlias TypeAlias::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::TypeAlias proto;
+  *proto.mutable_cc_name() = cc_name.ToFlatProto();
+  *proto.mutable_rs_name() = rs_name.ToFlatProto();
+  proto.set_unique_name(unique_name);
+  proto.set_id(id.value());
+  proto.set_owning_target(owning_target.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  *proto.mutable_underlying_type() = underlying_type.ToFlatProto();
+  proto.set_source_loc(source_loc);
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  proto.set_must_bind(must_bind);
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  return proto;
+}
+
 FormattedError FormattedError::FromStatus(absl::Status status) {
   std::optional<absl::Cord> fmt_cord =
       status.GetPayload(FormattedError::kFmtPayloadTypeUrl);
@@ -856,6 +1491,14 @@ llvm::json::Value FormattedError::ToJson() const {
       {"fmt", fmt_},
       {"message", message_},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::FormattedError
+FormattedError::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::FormattedError proto;
+  proto.set_fmt(fmt_);
+  proto.set_message(message_);
+  return proto;
 }
 
 static std::string UnsupportedItemKindToString(UnsupportedItem::Kind kind) {
@@ -890,6 +1533,15 @@ llvm::json::Value UnsupportedItem::Path::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::Path
+UnsupportedItem::Path::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::Path proto;
+  *proto.mutable_ident() = crubit::ToFlatProto(ident);
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  return proto;
+}
+
 llvm::json::Value UnsupportedItem::ToJson() const {
   std::vector<llvm::json::Value> json_errors;
   json_errors.reserve(errors.size());
@@ -916,6 +1568,61 @@ llvm::json::Value UnsupportedItem::ToJson() const {
   };
 }
 
+rs_bindings_from_cc::ir_proto::flat::UnsupportedItem
+UnsupportedItem::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::UnsupportedItem proto;
+  proto.set_name(name);
+  if (!unique_name.empty()) proto.set_unique_name(unique_name);
+  switch (kind) {
+    case UnsupportedItem::Kind::kFunc:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::FUNC);
+      break;
+    case UnsupportedItem::Kind::kGlobalVar:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::GLOBAL_VAR);
+      break;
+    case UnsupportedItem::Kind::kStruct:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::STRUCT);
+      break;
+    case UnsupportedItem::Kind::kUnion:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::UNION);
+      break;
+    case UnsupportedItem::Kind::kClass:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::CLASS);
+      break;
+    case UnsupportedItem::Kind::kEnum:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::ENUM);
+      break;
+    case UnsupportedItem::Kind::kTypeAlias:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::TYPE_ALIAS);
+      break;
+    case UnsupportedItem::Kind::kNamespace:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::NAMESPACE);
+      break;
+    case UnsupportedItem::Kind::kConstructor:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::CONSTRUCTOR);
+      break;
+    case UnsupportedItem::Kind::kOther:
+      proto.set_kind(
+          rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::OTHER);
+      break;
+  }
+  if (path.has_value()) *proto.mutable_path() = path->ToFlatProto();
+  for (const auto& error : errors) *proto.add_errors() = error.ToFlatProto();
+  proto.set_source_loc(source_loc);
+  proto.set_id(id.value());
+  proto.set_must_bind(must_bind);
+  return proto;
+}
+
 llvm::json::Value Comment::ToJson() const {
   llvm::json::Object comment{
       {"text", text},
@@ -926,6 +1633,14 @@ llvm::json::Value Comment::ToJson() const {
   return llvm::json::Object{
       {"Comment", std::move(comment)},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::Comment Comment::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Comment proto;
+  proto.set_text(text);
+  proto.set_id(id.value());
+  proto.set_must_bind(must_bind);
+  return proto;
 }
 
 llvm::json::Value Namespace::ToJson() const {
@@ -960,6 +1675,26 @@ llvm::json::Value Namespace::ToJson() const {
   return llvm::json::Object{
       {"Namespace", std::move(ns)},
   };
+}
+
+rs_bindings_from_cc::ir_proto::flat::Namespace Namespace::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::Namespace proto;
+  *proto.mutable_cc_name() = cc_name.ToFlatProto();
+  *proto.mutable_rs_name() = rs_name.ToFlatProto();
+  proto.set_unique_name(unique_name);
+  proto.set_id(id.value());
+  proto.set_canonical_namespace_id(canonical_namespace_id.value());
+  if (unknown_attr.has_value()) proto.set_unknown_attr(unknown_attr.value());
+  proto.set_owning_target(owning_target.value());
+  for (const auto& child : child_item_ids)
+    proto.add_child_item_ids(child.value());
+  if (enclosing_item_id.has_value())
+    proto.set_enclosing_item_id(enclosing_item_id->value());
+  proto.set_is_inline(is_inline);
+  proto.set_must_bind(must_bind);
+  if (deprecated.has_value()) proto.set_deprecated(deprecated.value());
+  if (doc_comment.has_value()) proto.set_doc_comment(doc_comment.value());
+  return proto;
 }
 
 llvm::json::Value IR::ToJson() const {
@@ -1003,6 +1738,58 @@ llvm::json::Value IR::ToJson() const {
     result["crate_root_path"] = crate_root_path;
   }
   return std::move(result);
+}
+
+rs_bindings_from_cc::ir_proto::flat::Item ToFlatProto(const IR::Item& item) {
+  rs_bindings_from_cc::ir_proto::flat::Item proto;
+  std::visit(
+      visitor{
+          [&](const Func& i) { *proto.mutable_func() = i.ToFlatProto(); },
+          [&](const Record& i) { *proto.mutable_record() = i.ToFlatProto(); },
+          [&](const IncompleteRecord& i) {
+            *proto.mutable_incomplete_record() = i.ToFlatProto();
+          },
+          [&](const Enum& i) { *proto.mutable_enum_decl() = i.ToFlatProto(); },
+          [&](const Constant& i) {
+            *proto.mutable_constant() = i.ToFlatProto();
+          },
+          [&](const TypeAlias& i) {
+            *proto.mutable_type_alias() = i.ToFlatProto();
+          },
+          [&](const GlobalVar& i) {
+            *proto.mutable_global_var() = i.ToFlatProto();
+          },
+          [&](const UnsupportedItem& i) {
+            *proto.mutable_unsupported_item() = i.ToFlatProto();
+          },
+          [&](const Comment& i) { *proto.mutable_comment() = i.ToFlatProto(); },
+          [&](const Namespace& i) {
+            *proto.mutable_namespace_decl() = i.ToFlatProto();
+          },
+          [&](const UseMod& i) { *proto.mutable_use_mod() = i.ToFlatProto(); },
+          [&](const ExistingRustType& i) {
+            *proto.mutable_existing_rust_type() = i.ToFlatProto();
+          }},
+      item);
+  return proto;
+}
+
+rs_bindings_from_cc::ir_proto::flat::IRProto IR::ToFlatProto() const {
+  rs_bindings_from_cc::ir_proto::flat::IRProto proto;
+  for (const auto& h : public_headers)
+    *proto.add_public_headers() = h.ToFlatProto();
+  proto.set_current_target(current_target.value());
+  for (const auto& item : items) *proto.add_items() = crubit::ToFlatProto(item);
+  for (const auto& [target, item_ids] : top_level_item_ids) {
+    auto& list = (*proto.mutable_top_level_item_ids())[target.value()];
+    for (const auto& id : item_ids) list.add_item_ids(id.value());
+  }
+  if (!crate_root_path.empty()) proto.set_crate_root_path(crate_root_path);
+  for (const auto& [target, features] : crubit_features) {
+    auto& set = (*proto.mutable_crubit_features())[target.value()];
+    for (const auto& f : features) set.add_features(f);
+  }
+  return proto;
 }
 
 std::string ItemToString(const IR::Item& item) {

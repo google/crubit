@@ -123,8 +123,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     use_protobuf_ir = it->second.contains("use_protobuf_ir");
   }
 
-  // TODO(rrijadi): Populate with `ir.ToProto()` once implemented.
-  rs_bindings_from_cc::ir_proto::flat::IRProto ir_proto;
+  rs_bindings_from_cc::ir_proto::flat::IRProto ir_proto = ir.ToFlatProto();
 
   CRUBIT_ASSIGN_OR_RETURN(
       Bindings bindings,

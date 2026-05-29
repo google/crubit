@@ -147,6 +147,55 @@ pub fn ir_from_cc_dependency(
     Ok(ir)
 }
 
+pub fn ir_proto_from_cc(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+) -> Result<ir_rust_proto::IRProto> {
+    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, false)
+}
+
+pub fn ir_proto_from_cc_dependency(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+    dependency_header_source: &str,
+    extra_feature: Option<&str>,
+    kythe_annotations: bool,
+) -> Result<ir_rust_proto::IRProto> {
+    const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
+
+    unsafe extern "C" {
+        fn proto_from_cc_dependency(
+            target_triple: FfiU8Slice,
+            header_source: FfiU8Slice,
+            dependency_header_source: FfiU8Slice,
+            extra_feature: FfiU8Slice,
+            kythe_annotations: bool,
+        ) -> FfiU8SliceBox;
+    }
+
+    let header_source_with_include =
+        format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
+    let header_source_with_include_u8 = header_source_with_include.as_bytes();
+    let dependency_header_source_u8 = dependency_header_source.as_bytes();
+    let proto_bytes = unsafe {
+        proto_from_cc_dependency(
+            FfiU8Slice::from_slice(platform.target_triple().as_ref()),
+            FfiU8Slice::from_slice(header_source_with_include_u8),
+            FfiU8Slice::from_slice(dependency_header_source_u8),
+            extra_feature
+                .map(|s| FfiU8Slice::from_slice(s.as_bytes()))
+                .unwrap_or(FfiU8Slice::from_slice(&[])),
+            kythe_annotations,
+        )
+        .into_boxed_slice()
+    };
+
+    use protobuf::Parse;
+    // We expect the BUILD rule using ir_testing to depend on ir_rust_proto
+    let proto = ir_rust_proto::IRProto::parse(&proto_bytes)?;
+    Ok(proto)
+}
+
 /// Creates an identifier
 pub fn ir_id(name: &str) -> Identifier {
     Identifier { identifier: name.into() }
