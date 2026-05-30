@@ -111,9 +111,6 @@ memoized::query_group! {
       fn fatal_errors(&self) -> Rc<dyn ReportFatalError>;
 
       #[input]
-      fn no_thunk_name_mangling(&self) -> bool;
-
-      #[input]
       fn is_golden_test(&self) -> bool;
 
       #[input]

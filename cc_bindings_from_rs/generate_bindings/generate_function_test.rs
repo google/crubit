@@ -668,8 +668,6 @@ fn test_format_item_fn_with_doc_comment_with_unmangled_name() {
             " Outer block doc that spans lines.",
             "         ",
             "Doc comment via doc attribute.",
-            "",
-            "Generated from: <crubit_unittests.rs>;l=7",
         ]
         .join("\n");
         assert_cc_matches!(
@@ -695,13 +693,7 @@ fn test_format_item_fn_with_inner_doc_comment_with_unmangled_name() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         assert!(main_api.prereqs.is_empty());
-        let doc_comments = [
-            " Outer doc comment.",
-            " Inner doc comment.",
-            "",
-            "Generated from: <crubit_unittests.rs>;l=4",
-        ]
-        .join("\n");
+        let doc_comments = [" Outer doc comment.", " Inner doc comment."].join("\n");
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -750,8 +742,7 @@ fn test_format_item_fn_with_doc_comment_with_mangled_name() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         assert!(main_api.prereqs.is_empty());
-        let comment = " Doc comment of a function with mangled name.\n\n\
-                       Generated from: <crubit_unittests.rs>;l=3";
+        let comment = " Doc comment of a function with mangled name.";
         assert_cc_matches!(
             main_api.tokens,
             quote! {

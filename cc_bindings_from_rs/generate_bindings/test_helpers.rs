@@ -112,8 +112,7 @@ fn bindings_db_for_tests_with_features(
         /* crate_renames= */ HashMap::default().into(),
         /* errors = */ Rc::new(IgnoreErrors),
         /* fatal_errors= */ Rc::new(FatalErrors::new()),
-        /* no_thunk_name_mangling= */ true,
-        /* is_golden_test= */ false,
+        /* is_golden_test= */ true,
         /* include_guard */ IncludeGuard::PragmaOnce,
         /* ignore_symbols_from_files */ HashSet::default().into(),
     )

@@ -121,13 +121,10 @@ pub struct Cmdline {
     #[clap(long, value_parser, value_name = "FILE")]
     pub error_report_out: Option<PathBuf>,
 
-    /// This is for golden tests only. Using this in production may cause
-    /// undefined behavior.
-    #[clap(long, value_parser, value_name = "BOOL")]
-    pub no_thunk_name_mangling: bool,
-
     /// If true, unnecessary information (such as source locations) is
     /// omitted from the generated bindings to reduce noise in golden tests.
+    /// Additionally, thunk names are not mangled. Using this in production
+    /// may cause undefined behavior.
     #[clap(long, value_parser, value_name = "BOOL", default_value_t = false)]
     pub is_golden_test: bool,
 

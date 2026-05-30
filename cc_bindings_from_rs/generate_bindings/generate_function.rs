@@ -78,7 +78,7 @@ fn thunk_name(
     needs_thunk: bool,
 ) -> String {
     let tcx = db.tcx();
-    let symbol_name = if db.no_thunk_name_mangling() {
+    let symbol_name = if db.is_golden_test() {
         if let Some(export_name) = export_name {
             export_name.to_string()
         } else {
@@ -115,7 +115,7 @@ fn thunk_name(
         let instance = ty::Instance::expect_resolve(tcx, typing_env, def_id, args, span);
         tcx.symbol_name(instance).name.to_string()
     };
-    let target_path_mangled_hash = if db.no_thunk_name_mangling() {
+    let target_path_mangled_hash = if db.is_golden_test() {
         "".to_string()
     } else {
         format!("{:x}_", tcx.stable_crate_id(db.source_crate_num()))

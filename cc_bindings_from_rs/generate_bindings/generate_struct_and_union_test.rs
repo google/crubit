@@ -382,8 +382,7 @@ fn test_format_item_struct_fields_with_doc_comments() {
     test_format_item(test_src, "SomeStruct", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let comment_for_successful_field = " Documentation of `successful_field`.\n\n\
-              Generated from: <crubit_unittests.rs>;l=4";
+        let comment_for_successful_field = " Documentation of `successful_field`.";
         let comment_for_unsupported_field = "Field type has been replaced with a blob of bytes: \
              Generic types are not supported yet (b/259749095)";
         assert_cc_matches!(
@@ -479,8 +478,7 @@ fn test_format_item_doc_comments_union() {
     test_format_item(test_src, "SomeUnionWithDocs", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let comment = " Doc for some union.\n\n\
-                       Generated from: <crubit_unittests.rs>;l=3";
+        let comment = " Doc for some union.";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -505,8 +503,7 @@ fn test_format_item_doc_comments_enum() {
     test_format_item(test_src, "SomeEnumWithDocs", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let comment = " Doc for some enum. \n\n\
-                        Generated from: <crubit_unittests.rs>;l=3";
+        let comment = " Doc for some enum. ";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -533,8 +530,7 @@ fn test_format_item_doc_comments_struct() {
     test_format_item(test_src, "SomeStructWithDocs", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let comment = "Doc for some struct.\n\n\
-                       Generated from: <crubit_unittests.rs>;l=4";
+        let comment = "Doc for some struct.";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -559,8 +555,7 @@ fn test_format_item_doc_comments_tuple_struct() {
     test_format_item(test_src, "SomeTupleStructWithDocs", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let comment = " Doc for some tuple struct.\n\n\
-                       Generated from: <crubit_unittests.rs>;l=5";
+        let comment = " Doc for some tuple struct.";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -628,7 +623,7 @@ fn test_cpp_enum_fails_for_rust_union() {
             result.unwrap().unwrap().main_api.tokens,
             quote! {
                 ...
-                __COMMENT__ "CRUBIT_ANNOTATE: cpp_enum=enum class\n\nGenerated from: <crubit_unittests.rs>;l=6"
+                __COMMENT__ "CRUBIT_ANNOTATE: cpp_enum=enum class"
                 union CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Color") Color : ::std::int32_t {};
                 ...
             }

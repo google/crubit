@@ -458,8 +458,7 @@ fn test_generated_bindings_top_level_items() {
         let bindings = bindings.unwrap();
         let expected_comment_txt =
             "Automatically @generated C++ bindings for the following Rust crate:\n\
-             rust_out\n\
-             Features: experimental, supported";
+             rust_out";
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
@@ -1392,8 +1391,7 @@ fn test_format_item_source_loc_macro_rules() {
     test_format_item(test_src, "SomeTupleStructMacroForTesingSourceLoc", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let source_loc_comment = " Some doc on SomeTupleStructMacroForTesingSourceLoc.\n\n\
-                                  Generated from: <crubit_unittests.rs>;l=7";
+        let source_loc_comment = " Some doc on SomeTupleStructMacroForTesingSourceLoc.";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -1417,11 +1415,9 @@ fn test_format_item_source_loc_with_no_doc_comment() {
     test_format_item(test_src, "SomeTupleStructWithNoDocComment", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let comment = "Generated from: <crubit_unittests.rs>;l=4";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                __COMMENT__ #comment
                 struct ... SomeTupleStructWithNoDocComment final {
                     ...
                 }
@@ -1481,7 +1477,6 @@ fn test_generate_bindings_use_list_items() {
                 ...
                 namespace rust_out::test_mod {
 
-                __COMMENT__ "Generated from: <crubit_unittests.rs>;l=3"
                 using X CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") =
                     ::rust_out::X;
 
@@ -1491,7 +1486,6 @@ fn test_generate_bindings_use_list_items() {
 
                 namespace rust_out::test_mod {
 
-                __COMMENT__ "Generated from: <crubit_unittests.rs>;l=6"
                 using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") =
                     ::rust_out::Y;
 

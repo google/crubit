@@ -735,7 +735,7 @@ pub fn generate_trait_thunks<'tcx>(
         };
 
         let thunk_name = {
-            if db.no_thunk_name_mangling() {
+            if db.is_golden_test() {
                 let print_types = type_args.iter().map(|ty| format!("{}", ty)).collect_vec();
                 let method_name = if print_types.is_empty() {
                     escape_non_identifier_chars(method.name().as_str())

@@ -83,15 +83,8 @@ def golden_test(
 
     bindings_name = basename + ".generated_bindings"
 
-    # Disable thunk name mangling to avoid breaking tests.
-    no_mangle_cli_flag = "no_thunk_name_mangling_" + rust_library
-    cc_bindings_from_rust_cli_flag(
-        name = no_mangle_cli_flag,
-        flags = "--no-thunk-name-mangling",
-    )
-
     # Turn on annotations if necessary.
-    # TODO(jeanpierreda): Move this (and the above cc_bindings_from_rust_cli_flag) out to a separate
+    # TODO(jeanpierreda): Move this out to a separate
     # target.
     kythe_annotations_flag = []
     if kythe_annotations:
@@ -119,7 +112,7 @@ def golden_test(
         args["aspect_hints"] = list(args["aspect_hints"])
     else:
         args["aspect_hints"] = []
-    args["aspect_hints"] += [":" + no_mangle_cli_flag, ":" + top_level_namespace]
+    args["aspect_hints"].append(":" + top_level_namespace)
     args["aspect_hints"] += kythe_annotations_flag
     rust_library_rule(
         **args
