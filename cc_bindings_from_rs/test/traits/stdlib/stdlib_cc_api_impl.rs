@@ -94,17 +94,11 @@ const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::RefIterator, inde
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static mut ::stdlib_golden::MyStruct,
-    __ret_ptr: *mut core::ffi::c_uchar,
+    __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
         let __rs_return_value = <::stdlib_golden::MyStruct as ::core::iter::Iterator>::next(__self);
-        unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
-                __ret_ptr as *mut core::ffi::c_uchar,
-                __rs_return_value,
-            );
-        }
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -121,36 +115,22 @@ unsafe extern "C" fn __crubit_thunk_ToString_uto_ustring_ustdlib_ugolden_x000000
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aNonCloneableIterator(
     __self: &'static mut ::stdlib_golden::NonCloneableIterator,
-    __ret_ptr: *mut core::ffi::c_uchar,
+    __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
         let __rs_return_value =
             <::stdlib_golden::NonCloneableIterator as ::core::iter::Iterator>::next(__self);
-        unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
-                    ::stdlib_golden::NonCloneableValue,
-                >()),
-                __ret_ptr as *mut core::ffi::c_uchar,
-                __rs_return_value,
-            );
-        }
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e(
     __self: &'static mut ::stdlib_golden::RefIterator<'static>,
-    __ret_ptr: *mut core::ffi::c_uchar,
+    __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
         let __rs_return_value =
             <::stdlib_golden::RefIterator as ::core::iter::Iterator>::next(__self);
-        unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static i32>()),
-                __ret_ptr as *mut core::ffi::c_uchar,
-                __rs_return_value,
-            );
-        }
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

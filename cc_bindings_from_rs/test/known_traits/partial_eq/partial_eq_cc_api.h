@@ -140,11 +140,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x00000028u64_x0000002c_x00000020bool_x00000029
+#define _CRUBIT_BINDINGS_FOR__x00000028u64_x0000002c_x00000020bool_x00000029
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "(usize , bool ,)") rs_std::Tuple<::std::uint64_t, bool> {
+    "(u64 , bool ,)") rs_std::Tuple<::std::uint64_t, bool> {
  public:
   // Default::default
   Tuple();
@@ -308,16 +308,16 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 }
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x00000028u64_x0000002c_x00000020bool_x00000029
+#define _CRUBIT_BINDINGS_FOR_IMPL__x00000028u64_x0000002c_x00000020bool_x00000029
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
+__crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020bool_x00000029(
     rs_std::Tuple<::std::uint64_t, bool>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uint64_t, bool>::Tuple() {
   __crubit_internal::
-      __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
+      __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020bool_x00000029(
           this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<

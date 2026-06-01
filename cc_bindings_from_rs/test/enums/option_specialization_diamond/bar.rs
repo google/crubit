@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+pub use foo::SomeStruct as BarStruct;
+
 pub struct Bar {
     pub bar: Option<i32>,
 }
@@ -10,4 +12,8 @@ impl Bar {
     pub fn new(i: i32) -> Self {
         Self { bar: Some(i) }
     }
+}
+
+pub fn bar_opt() -> Option<BarStruct> {
+    Some(BarStruct { val: 84 })
 }
