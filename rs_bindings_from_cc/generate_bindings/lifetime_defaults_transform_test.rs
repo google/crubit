@@ -1397,3 +1397,35 @@ fn test_lifetimebound_cycle() -> Result<()> {
     assert_that!(error_message, contains_substring("Cycle detected: decl_lifetime_arity"));
     Ok(())
 }
+
+#[gtest]
+fn test_static_lifetime_is_not_abstracted() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+        int& $static f(int& $static a) { return a; }
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform_ir(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["static"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["static"], }, ...
+                        identifier: "a", ...
+                    }
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
+    Ok(())
+}

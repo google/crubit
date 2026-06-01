@@ -17,11 +17,13 @@ crubit_test_cc_library(
 crubit_test_cc_library(
     name = "types_lifetimes",
     hdrs = ["types_lifetimes.h"],
+    aspect_hints = ["//features:assume_lifetimes"],
 )
 
 crubit_test_cc_library(
     name = "types_nolifetimes",
     hdrs = ["types_nolifetimes.h"],
+    aspect_hints = ["//features:no_assume_lifetimes"],
 )
 
 crubit_test_cc_library(

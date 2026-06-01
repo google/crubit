@@ -199,7 +199,11 @@ pub fn format_generic_params<'a, T: ToTokens>(
     lifetimes: impl IntoIterator<Item = &'a Lifetime>,
     types: impl IntoIterator<Item = T>,
 ) -> TokenStream {
-    let mut lifetimes = lifetimes.into_iter().filter(|lifetime| &*lifetime.0 != "_").peekable();
+    // It is never valid to capture 'static as a lifetime parameter.
+    let mut lifetimes = lifetimes
+        .into_iter()
+        .filter(|lifetime| &*lifetime.0 != "_" && &*lifetime.0 != "static")
+        .peekable();
     let mut types = types.into_iter().peekable();
     if types.peek().is_none() {
         if lifetimes.peek().is_none() {
