@@ -26,7 +26,7 @@
 #include <utility>
 
 namespace into {
-
+struct ConvertRef;
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
     [[clang::trivial_abi]] Convert final {
@@ -55,6 +55,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   explicit operator rs_std::StrRef();
 
   explicit operator ::std::int16_t();
+
+  explicit Convert(::into::ConvertRef value);
 
   union {
     ::std::int32_t __field0;
@@ -203,6 +205,16 @@ extern "C" ::std::int16_t __crubit_thunk_into_ui16(::into::Convert*);
 inline Convert::operator ::std::int16_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui16(&self);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_into_into_ugolden_x0000003a_x0000003aConvertRef_x0000003c_x00000027_u_x0000003e(
+    ::into::ConvertRef*, ::into::Convert* __ret_ptr);
+}
+inline Convert::Convert(::into::ConvertRef value) {
+  __crubit_internal::
+      __crubit_thunk_into_into_ugolden_x0000003a_x0000003aConvertRef_x0000003c_x00000027_u_x0000003e(
+          &value, this);
 }
 inline void Convert::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Convert, __field0));

@@ -14,7 +14,8 @@ TEST(FromTest, FromImplsBecomeConversionOperators) {
   from::Opaque opaque(123);
   EXPECT_EQ(static_cast<int32_t>(opaque), 123);
   EXPECT_EQ(static_cast<int64_t>(opaque), 123);
-  EXPECT_EQ(static_cast<from::OpaqueRef>(opaque).get_arg(), "Opaque");
+  EXPECT_EQ(static_cast<from::OpaqueRef>(std::move(opaque)).get_arg(),
+            "Opaque");
 
   from::OpaqueRef opaque_ref = from::OpaqueRef::create(rs_std::StrRef("hello"));
   EXPECT_EQ(static_cast<rs_std::StrRef>(opaque_ref), "hello");

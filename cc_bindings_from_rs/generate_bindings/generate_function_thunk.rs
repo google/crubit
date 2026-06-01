@@ -812,7 +812,7 @@ pub fn generate_trait_thunks<'tcx>(
             db,
             &sig_mid,
             &thunk_name_cc_ident,
-            /*has_self_param=*/ true,
+            /*has_self_param=*/ method.is_method(),
             is_constructor,
         )?);
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);

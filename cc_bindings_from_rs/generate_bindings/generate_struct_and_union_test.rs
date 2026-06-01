@@ -1105,3 +1105,191 @@ fn test_deprecated_attr_for_impl_block() {
         )
     })
 }
+
+#[test]
+fn test_constructor_from_impl() {
+    let test_src = r#"
+        pub struct Foo {
+            pub x: i32,
+        }
+        impl From<i32> for Foo {
+            fn from(x: i32) -> Self {
+                Foo { x }
+            }
+        }
+    "#;
+    test_format_item(test_src, "Foo", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                struct ... Foo final {
+                    ...
+                    explicit Foo ( ::std::int32_t value ) ;
+                    ...
+                };
+            }
+        );
+
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                ...
+                inline Foo :: Foo ( ::std::int32_t value ) {
+                    ...
+                    __crubit_internal :: ... ( ... , this ) ;
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_constructor_from_impl_repr_transparent() {
+    let test_src = r#"
+        #[repr(transparent)]
+        pub struct Foo {
+            pub x: i32,
+        }
+        impl From<i32> for Foo {
+            fn from(x: i32) -> Self {
+                Foo { x }
+            }
+        }
+    "#;
+    test_format_item(test_src, "Foo", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                struct ... Foo final {
+                    ...
+                    explicit Foo ( ::std::int32_t value ) ;
+                    ...
+                };
+            }
+        );
+
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                ...
+                inline Foo :: Foo ( ::std::int32_t value ) {
+                    ...
+                    *this = __crubit_internal :: ... ( ... ) ;
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_constructor_into_impl_repr_transparent() {
+    let test_src = r#"
+        #[repr(transparent)]
+        pub struct Foo {
+            pub x: i32,
+        }
+        impl Into<Foo> for i32 {
+            fn into(self) -> Foo {
+                Foo { x: self }
+            }
+        }
+    "#;
+    test_format_item(test_src, "Foo", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                struct ... Foo final {
+                    ...
+                    explicit Foo ( ::std::int32_t value ) ;
+                    ...
+                };
+            }
+        );
+
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                ...
+                inline Foo :: Foo ( ::std::int32_t value ) {
+                    ...
+                    *this = __crubit_internal :: ... ( ... ) ;
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_constructor_into_impl_non_transparent() {
+    let test_src = r#"
+        pub struct Foo {
+            pub x: i32,
+            pub y: i32,
+        }
+        impl Into<Foo> for i32 {
+            fn into(self) -> Foo {
+                Foo { x: self, y: 0 }
+            }
+        }
+    "#;
+    test_format_item(test_src, "Foo", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                struct ... Foo final {
+                    ...
+                    explicit Foo ( ::std::int32_t value ) ;
+                    ...
+                };
+            }
+        );
+
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                ...
+                inline Foo :: Foo ( ::std::int32_t value ) {
+                    ...
+                    __crubit_internal :: ... ( ... , this ) ;
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_constructor_from_ref_self_ignored() {
+    let test_src = r#"
+        pub struct Foo {
+            pub x: i32,
+        }
+        impl<'a> From<&'a Foo> for Foo {
+            fn from(other: &'a Foo) -> Self {
+                Foo { x: other.x }
+            }
+        }
+    "#;
+    // To ensure that we don't create new constructor for same types
+    test_format_item(test_src, "Foo", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        let main_api_str = main_api.tokens.to_string();
+        assert!(!main_api_str.contains("explicit Foo"));
+    });
+}

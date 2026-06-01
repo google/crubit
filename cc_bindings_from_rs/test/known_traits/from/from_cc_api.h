@@ -127,6 +127,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
 
   explicit operator rs_std::StrRef();
 
+  explicit OpaqueRef(::from::Opaque value);
+
  private:
   union {
     rs_std::StrRef __field0;
@@ -255,6 +257,14 @@ inline OpaqueRef::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(&self);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aOpaque(
+    ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
+}
+inline OpaqueRef::OpaqueRef(::from::Opaque value) {
+  __crubit_internal::
+      __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aOpaque(&value, this);
 }
 inline void OpaqueRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OpaqueRef, __field0));

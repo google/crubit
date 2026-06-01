@@ -49,6 +49,19 @@ unsafe extern "C" fn __crubit_thunk_into_ui16(
         <::into_golden::Convert as ::core::convert::Into<i16>>::into(__self)
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_into_ugolden_x0000003a_x0000003aConvertRef_x0000003c_x00000027_u_x0000003e(
+    __self: &'static mut ::core::mem::MaybeUninit<::into_golden::ConvertRef<'static>>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __self = __self.assume_init_read();
+        let __rs_return_value = <::into_golden::ConvertRef<'static> as ::core::convert::Into<
+            ::into_golden::Convert,
+        >>::into(__self);
+        (__ret_ptr as *mut ::into_golden::Convert).write(__rs_return_value);
+    }
+}
 const _: () = assert!(::core::mem::offset_of!(::into_golden::Convert, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::into_golden::ConvertModule>() == 4);
 const _: () = assert!(::std::mem::align_of::<::into_golden::ConvertModule>() == 4);

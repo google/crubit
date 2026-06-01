@@ -35,7 +35,7 @@ use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, scalar_value_to_string,
+    generate_adt_core, into_trait_impls_by_destination, scalar_value_to_string,
 };
 use crate::generate_template_specialization::collect_trait_impls;
 use arc_anyhow::{Context, Error, Result};
@@ -306,6 +306,7 @@ pub fn new_database<'db>(
         generate_adt_core,
         crubit_abi_type_from_ty,
         from_trait_impls_by_argument,
+        into_trait_impls_by_destination,
         get_generic_args::get_generic_args,
         renamed_crate_original_name,
         generate_template_specialization::parse_rs_std_template_specialization,

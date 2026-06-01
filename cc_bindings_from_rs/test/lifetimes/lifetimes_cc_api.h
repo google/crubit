@@ -73,6 +73,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   explicit operator ::std::int32_t();
 
+  explicit StructWithLifetime(::std::int32_t const* $a crubit_nonnull value);
+
   union {
     ::std::int32_t const* crubit_nonnull field_with_lifetime;
   };
@@ -248,6 +250,16 @@ extern "C" ::std::int32_t __crubit_thunk_into_ui32(
 inline StructWithLifetime::operator ::std::int32_t() {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_u_x00000026_x00000027a_x00000020i32(
+    ::std::int32_t const* $a crubit_nonnull,
+    ::lifetimes::StructWithLifetime* __ret_ptr);
+}
+inline StructWithLifetime::StructWithLifetime(
+    ::std::int32_t const* $a crubit_nonnull value) {
+  __crubit_internal::__crubit_thunk_from_u_x00000026_x00000027a_x00000020i32(
+      value, this);
 }
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithLifetime, field_with_lifetime));

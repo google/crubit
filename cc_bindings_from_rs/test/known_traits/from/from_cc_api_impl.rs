@@ -108,3 +108,15 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
         <::from_golden::OpaqueRef as ::core::convert::Into<&'static str>>::into(__self)
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aOpaque(
+    value: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let value = value.assume_init_read();
+        let __rs_return_value =
+            <::from_golden::OpaqueRef as ::core::convert::From<::from_golden::Opaque>>::from(value);
+        (__ret_ptr as *mut ::from_golden::OpaqueRef<'static>).write(__rs_return_value);
+    }
+}

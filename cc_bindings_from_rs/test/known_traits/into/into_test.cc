@@ -22,7 +22,7 @@ TEST(IntoTest, ConvertRefConversionOperators) {
   into::ConvertRef convert_ref =
       into::ConvertRef::create(rs_std::StrRef("Hello, World!"));
   EXPECT_EQ(static_cast<rs_std::StrRef>(convert_ref), "Hello, World!");
-  EXPECT_EQ(static_cast<into::Convert>(convert_ref).__field0, 42);
+  EXPECT_EQ(static_cast<into::Convert>(std::move(convert_ref)).__field0, 42);
 }
 
 }  // namespace

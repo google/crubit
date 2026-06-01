@@ -54,6 +54,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
 
   static ::stdlib::MyStruct new_(::std::int32_t x);
 
+  explicit MyStruct(::std::int32_t value);
+
   union {
     ::std::int32_t x;
   };
@@ -145,6 +147,13 @@ inline ::stdlib::MyStruct MyStruct::new_(::std::int32_t x) {
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_ui32(::std::int32_t,
+                                         ::stdlib::MyStruct* __ret_ptr);
+}
+inline MyStruct::MyStruct(::std::int32_t value) {
+  __crubit_internal::__crubit_thunk_from_ui32(value, this);
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
