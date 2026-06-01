@@ -1080,8 +1080,12 @@ fn specialize_result<'tcx>(
                 // Our tag is implicitly ok when it is not the err discriminant value.
                 (quote! {}, quote! { __storage })
             } else {
+                #[rustversion::before(2026-05-31)]
                 let ok_relative_idx =
                     ok_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
+                #[rustversion::since(2026-05-31)]
+                let ok_relative_idx =
+                    ok_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let ok_relative_val =
                     literal_of_tag_ty(tcx, *niche_start + ok_relative_idx, tag_type);
                 has_value_impl = quote! { tag() == #ok_relative_val };
@@ -1095,8 +1099,12 @@ fn specialize_result<'tcx>(
             let (write_err_to_tag, err_ptr_val) = if *untagged_variant == err_idx {
                 (quote! {}, quote! { __storage })
             } else {
+                #[rustversion::before(2026-05-31)]
                 let err_relative_idx =
                     err_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
+                #[rustversion::since(2026-05-31)]
+                let err_relative_idx =
+                    err_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let err_relative_val =
                     literal_of_tag_ty(tcx, *niche_start + err_relative_idx, tag_type);
                 has_value_impl = quote! { tag() != #err_relative_val };
@@ -1298,8 +1306,12 @@ fn specialize_option<'tcx>(
             }
         }
         rustc_abi::TagEncoding::Niche { niche_start, niche_variants, .. } => {
+            #[rustversion::before(2026-05-31)]
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
+            #[rustversion::since(2026-05-31)]
+            let none_relative_idx =
+                none_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
             let none_relative_val =
                 literal_of_tag_ty(tcx, niche_start + none_relative_idx, tag_type);
             OptionApiGenerator {
