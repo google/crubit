@@ -9,6 +9,7 @@ visibility(["//..."])
 SUPPORTED_FEATURES = [
     "supported",
     "assume_lifetimes",
+    "always_specialize_generics_in_cpp_api_from_rust",
 ]
 
 # A list of targets that should not be granted the `assume_lifetimes` feature by default.
