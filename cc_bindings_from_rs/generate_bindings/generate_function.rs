@@ -1150,11 +1150,11 @@ pub fn get_async_future_output_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     rs_return_type: Ty<'tcx>,
 ) -> Result<Ty<'tcx>> {
-    #[rustversion::stable]
+    #[rustversion::stable(1.95)]
     let ty::TyKind::Alias(_, alias_ty) = rs_return_type.kind() else {
         bail!("async functions should always return a TyKind::Alias, this should never happen.");
     };
-    #[rustversion::nightly]
+    #[rustversion::any(nightly, stable(1.96))]
     let ty::TyKind::Alias(alias_ty) = rs_return_type.kind() else {
         bail!("async functions should always return a TyKind::Alias, this should never happen.");
     };
@@ -1162,9 +1162,9 @@ pub fn get_async_future_output_ty<'tcx>(
         .lang_items()
         .future_output()
         .ok_or_else(|| anyhow!("crubit.rs-bug: Future::Output lang item not found"))?;
-    #[rustversion::stable]
+    #[rustversion::stable(1.95)]
     let alias_def_id = alias_ty.def_id;
-    #[rustversion::nightly]
+    #[rustversion::any(nightly, stable(1.96))]
     let alias_def_id = alias_ty.kind.def_id();
     tcx.explicit_item_bounds(alias_def_id)
         .iter_instantiated_copied(tcx, alias_ty.args)
