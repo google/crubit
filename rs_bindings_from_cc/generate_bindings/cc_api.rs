@@ -2,16 +2,34 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use arc_anyhow::Context;
 use database::code_snippet::Bindings;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
 use generate_bindings::generate_bindings as inner_generate_bindings;
 use generate_bindings_rust_proto::{GenerateBindingsRequest, GenerateBindingsResponse};
+use ir::deserialize_ir;
 use std::ffi::OsString;
-use std::panic::catch_unwind;
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::process;
 
 pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsResponse {
-    let json: &[u8] = request.json().as_bytes();
+    let ir = if request.has_ir_proto() {
+        // TODO(rrijadi): Implement proto to ir::IR deserialization and swap out this block.
+        // This is gated behind a feature flag in the top-level call.
+        let mut response = GenerateBindingsResponse::new();
+        response.set_fatal_errors(
+            "Deserializing IRProto to ir::IR is not implemented yet.".to_string(),
+        );
+        return response;
+    } else {
+        let json: &[u8] = request.json().as_bytes();
+        deserialize_ir(json)
+            .with_context(|| {
+                let ir_string = String::from_utf8_lossy(json);
+                format!("Failed to deserialize IR:\n{}", ir_string)
+            })
+            .unwrap()
+    };
     let crubit_support_path_format: &str =
         std::str::from_utf8(request.crubit_support_path_format().as_ref()).unwrap();
     let clang_format_exe_path: OsString =
@@ -26,7 +44,9 @@ pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsR
     let is_golden_test = request.is_golden_test();
     let kythe_annotations = request.kythe_annotations();
 
-    catch_unwind(|| {
+    // The `ir::IR` tree from the outer scope is not unwind safe. However, since we abort on
+    // panic anyways, it is safe to bypass this check.
+    catch_unwind(AssertUnwindSafe(|| {
         let mut error_report: Option<ErrorReport> = None;
         let errors: &dyn ErrorReporting = if generate_error_report {
             error_report.insert(ErrorReport::new(SourceLanguage::Cpp))
@@ -35,7 +55,7 @@ pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsR
         };
         let fatal_errors = FatalErrors::new();
         let Bindings { rs_api, rs_api_impl } = inner_generate_bindings(
-            json,
+            &ir,
             crubit_support_path_format,
             &clang_format_exe_path,
             &rustfmt_exe_path,
@@ -57,6 +77,6 @@ pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsR
         response.set_fatal_errors(fatal_errors.take_string());
 
         response
-    })
+    }))
     .unwrap_or_else(|_| process::abort())
 }

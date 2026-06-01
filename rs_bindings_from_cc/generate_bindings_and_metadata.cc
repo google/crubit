@@ -117,18 +117,9 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
 
   bool generate_error_report = !args.error_report_out.empty();
 
-  bool use_protobuf_ir = false;
-  if (auto it = args.target_to_features.find(args.current_target);
-      it != args.target_to_features.end()) {
-    use_protobuf_ir = it->second.contains("use_protobuf_ir");
-  }
-
-  // TODO(rrijadi): Populate with `ir.ToProto()` once implemented.
-  rs_bindings_from_cc::ir_proto::flat::IRProto ir_proto;
-
   CRUBIT_ASSIGN_OR_RETURN(
       Bindings bindings,
-      GenerateBindings(ir, std::move(ir_proto), args.crubit_support_path_format,
+      GenerateBindings(ir, args.crubit_support_path_format,
                        args.clang_format_exe_path, args.rustfmt_exe_path,
                        args.rustfmt_config_path, generate_error_report,
                        args.is_golden_test, args.kythe_annotations,

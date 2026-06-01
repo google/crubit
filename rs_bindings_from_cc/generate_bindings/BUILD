@@ -57,7 +57,9 @@ rust_library(
     deps = [
         ":generate_bindings",
         ":generate_bindings_rust_proto",
+        "//common:arc_anyhow",
         "//common:error_report",
+        "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
         "@protobuf//rust:protobuf",
     ],

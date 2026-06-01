@@ -42,10 +42,10 @@ use token_stream_printer::{
 
 mod generate_dyn_callable;
 
-/// Deserializes IR from `json` and generates bindings source code.
+/// Generates bindings source code from an `IR` instance.
 #[allow(clippy::too_many_arguments)]
 pub fn generate_bindings(
-    json: &[u8],
+    ir: &IR,
     crubit_support_path_format: &str,
     clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
@@ -56,11 +56,6 @@ pub fn generate_bindings(
     kythe_annotations: bool,
     kythe_default_corpus: &str,
 ) -> Result<Bindings> {
-    let ir = deserialize_ir(json).with_context(|| {
-        let ir_string = String::from_utf8_lossy(json);
-        format!("Failed to deserialize IR:\n{}", ir_string)
-    })?;
-
     let crubit_support_path_format =
         Format::parse_with_metavars(crubit_support_path_format, &["header"])?;
 

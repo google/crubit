@@ -19,6 +19,8 @@ doctest = false
 
 [dependencies]
 generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
 protobuf.workspace = true

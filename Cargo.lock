@@ -963,10 +963,12 @@ dependencies = [
 name = "rs_bindings_from_cc_cc_api"
 version = "0.0.0"
 dependencies = [
+ "arc_anyhow",
  "error_report",
  "protobuf",
  "rs_bindings_from_cc_database",
  "rs_bindings_from_cc_generate_bindings",
+ "rs_bindings_from_cc_ir",
 ]
 
 [[package]]
