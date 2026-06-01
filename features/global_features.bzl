@@ -11,6 +11,7 @@ SUPPORTED_FEATURES = [
     "assume_lifetimes",
     "async_fn_send_modulo_regions",
     "cpp_move_constructible_annotation",
+    "always_specialize_generics_in_cpp_api_from_rust",
 ]
 
 # A list of targets that should not be granted the `assume_lifetimes` feature by default.

@@ -14,8 +14,8 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
-#include "support/bridge.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 
 #include <bit>
@@ -30,7 +30,7 @@
 namespace const_field {
 
 // CRUBIT_ANNOTATE: must_bind=
-::std::optional<::struct_with_const_field>
+rs_std::Option<::struct_with_const_field>
 return_struct_with_const_field_by_value_in_option();
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -38,6 +38,68 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>
 return_struct_with_const_field_by_value_in_result();
 
 }  // namespace const_field
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < :: cc_struct :: struct_with_const_field >")
+    rs_std::Option<::struct_with_const_field>
+    : public rs_std::OptionBase<rs_std::Option<::struct_with_const_field>,
+                                ::struct_with_const_field> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Option(const Option&) = default;
+  Option& operator=(const Option&) = default;
+  Option(Option&&) = default;
+  Option& operator=(Option&&) = default;
+
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
+  using base_type =
+      rs_std::OptionBase<rs_std::Option<::struct_with_const_field>,
+                         ::struct_with_const_field>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<Option,
+                                                ::struct_with_const_field, U>)
+  Option(U&& value) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<Option,
+                                                ::struct_with_const_field, U>)
+  Option& operator=(U&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<::struct_with_const_field, Opt>)
+  Option(Opt&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<::struct_with_const_field, Opt>)
+  Option& operator=(Opt&& value) noexcept;
+  template <typename... Args>
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
+  ~Option() noexcept = default;
+
+ private:
+  friend base_type;
+  using tag_type = ::std::uint64_t;
+  static constexpr tag_type kNoneVal = 0;
+  ::struct_with_const_field* some_ptr() noexcept {
+    return reinterpret_cast<::struct_with_const_field*>(storage_ + 8);
+  }
+  ::struct_with_const_field const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::struct_with_const_field const*>(storage_ + 8);
+  }
+  void set_some_tag() noexcept { set_tag(1); }
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+
+ private:
+  unsigned char storage_[16];
+};
+#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -112,20 +174,17 @@ namespace const_field {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uoption(
-    unsigned char* __ret_ptr);
+    rs_std::Option<::struct_with_const_field>* __ret_ptr);
 }
-inline ::std::optional<::struct_with_const_field>
+inline rs_std::Option<::struct_with_const_field>
 return_struct_with_const_field_by_value_in_option() {
-  unsigned char __return_value_storage[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<struct_with_const_field>>::kSize];
+  crubit::Slot<rs_std::Option<::struct_with_const_field>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uoption(
           __return_value_storage);
-  return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<struct_with_const_field>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<struct_with_const_field>>(
-          ::crubit::TransmuteAbi<struct_with_const_field>()),
-      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -145,6 +204,81 @@ return_struct_with_const_field_by_value_in_result() {
 }
 
 }  // namespace const_field
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Option<::struct_with_const_field>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Option<::struct_with_const_field>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Option<::struct_with_const_field>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Option<::struct_with_const_field>>);
+inline rs_std::Option<::struct_with_const_field>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Option<::struct_with_const_field>>);
+inline constexpr ::std::uint64_t
+rs_std::Option<::struct_with_const_field>::tag() const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint64_t>(__bytes);
+}
+inline constexpr void rs_std::Option<::struct_with_const_field>::set_tag(
+    ::std::uint64_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+
+inline constexpr rs_std::Option<::struct_with_const_field>::Option(
+    ::std::nullopt_t) noexcept
+    : base_type(::std::nullopt) {}
+inline constexpr rs_std::Option<::struct_with_const_field>& rs_std::Option<
+    ::struct_with_const_field>::operator=(::std::nullopt_t) noexcept {
+  base_type::operator=(::std::nullopt);
+  return *this;
+}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::struct_with_const_field>, ::struct_with_const_field,
+           U>)
+inline rs_std::Option<::struct_with_const_field>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::struct_with_const_field>, ::struct_with_const_field,
+           U>)
+inline rs_std::Option<::struct_with_const_field>&
+rs_std::Option<::struct_with_const_field>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::struct_with_const_field, Opt>)
+inline rs_std::Option<::struct_with_const_field>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::struct_with_const_field, Opt>)
+inline rs_std::Option<::struct_with_const_field>&
+rs_std::Option<::struct_with_const_field>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::struct_with_const_field>::Option(
+    ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+
+#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
