@@ -240,7 +240,12 @@ pub fn format_ty_for_cc<'tcx>(
         ty::TyKind::Tuple(types) => {
             if types.is_empty() && matches!(location, TypeLocation::FnReturn { .. }) {
                 keyword(quote! { void })
-            } else if !location.is_bridgeable() {
+            } else if !location.is_bridgeable()
+                || (db
+                    .crate_features(db.source_crate_num())
+                    .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+                    && !types.is_empty())
+            {
                 let Some(rs_std) = db.parse_rs_std_template_specialization(ty) else {
                     bail!("Tuple type `{ty}` is not supported in this context");
                 };

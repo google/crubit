@@ -35,8 +35,17 @@ use std::ops::AddAssign;
 ///
 /// Tuples are passed via a pointer to an array of `void*` where
 /// each pointer points to the corresponding element of the tuple.
-fn tuple_c_abi_c_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
+fn tuple_c_abi_c_type(
+    db: &BindingsGenerator<'_>,
+    possibly_tuple_ty: ty::Ty,
+) -> Option<TokenStream> {
     let ty::TyKind::Tuple(_) = possibly_tuple_ty.kind() else { return None };
+    if db
+        .crate_features(db.source_crate_num())
+        .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+    {
+        return None;
+    }
     // Sized array types are sadly not usable by-pointer in C++.
     Some(quote! { void** })
 }
@@ -46,8 +55,17 @@ fn tuple_c_abi_c_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
 ///
 /// Tuples are passed via a pointer to an array of `*const c_void` where
 /// each pointer points to the corresponding element of the tuple.
-fn tuple_c_abi_rs_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
+fn tuple_c_abi_rs_type(
+    db: &BindingsGenerator<'_>,
+    possibly_tuple_ty: ty::Ty,
+) -> Option<TokenStream> {
     let ty::TyKind::Tuple(tuple_tys) = possibly_tuple_ty.kind() else { return None };
+    if db
+        .crate_features(db.source_crate_num())
+        .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+    {
+        return None;
+    }
     let num_elements = tuple_tys.len();
     Some(quote! { *const [*const core::ffi::c_void; #num_elements] })
 }
@@ -128,7 +146,7 @@ pub fn generate_thunk_decl<'tcx>(
                     }
                 } else if is_c_abi_compatible_by_value(tcx, ty) {
                     Ok(quote! { #cpp_type })
-                } else if let Some(tuple_abi) = tuple_c_abi_c_type(ty) {
+                } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, ty) {
                     Ok(tuple_abi)
                 } else if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
                     array_c_abi_c_type(db.tcx(), *inner_ty)
@@ -136,6 +154,8 @@ pub fn generate_thunk_decl<'tcx>(
                     db.has_move_ctor_and_assignment_operator(Some(adt_def.did()), ty).ok_or_else(|| {
                         anyhow!("Can't pass type `{ty}` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable.")
                     })?;
+                    Ok(quote! { #cpp_type* })
+                } else if let ty::TyKind::Tuple(_) = ty.kind() {
                     Ok(quote! { #cpp_type* })
                 } else {
                     bail!("Unknown type")
@@ -164,7 +184,7 @@ pub fn generate_thunk_decl<'tcx>(
         }
     } else if is_c_abi_compatible_by_value(tcx, sig_mid.output()) {
         main_api_ret_type
-    } else if let Some(tuple_abi) = tuple_c_abi_c_type(sig_mid.output()) {
+    } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, sig_mid.output()) {
         thunk_params.push(quote! { #tuple_abi __ret_ptr });
         quote! { void }
     } else if let ty::TyKind::Array(inner_ty, _) = sig_mid.output().kind() {
@@ -307,7 +327,11 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
     if is_c_abi_compatible_by_value(tcx, ty) {
         return Ok(quote! {});
     }
-    if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
+    if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
+        && !db
+            .crate_features(db.source_crate_num())
+            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+    {
         return convert_tuple_from_c_abi_to_rust(db, tuple_tys, local_name, extern_c_decls);
     }
     // Non-C-ABI-compatible-by-value types are passed by
@@ -328,7 +352,7 @@ fn c_abi_for_param_type<'tcx>(
     } else if is_c_abi_compatible_by_value(tcx, ty) {
         let rs_type = db.format_ty_for_rs(ty)?;
         Ok(quote! { #rs_type })
-    } else if let Some(tuple_abi) = tuple_c_abi_rs_type(ty) {
+    } else if let Some(tuple_abi) = tuple_c_abi_rs_type(db, ty) {
         Ok(quote! { #tuple_abi })
     } else {
         let rs_type = db.format_ty_for_rs(ty)?;
@@ -450,7 +474,11 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
         }
     } else if is_c_abi_compatible_by_value(tcx, rs_type) {
         write_directly()?
-    } else if let ty::TyKind::Tuple(tuple_tys) = rs_type.kind() {
+    } else if let ty::TyKind::Tuple(tuple_tys) = rs_type.kind()
+        && !db
+            .crate_features(db.source_crate_num())
+            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+    {
         let num_elements = tuple_tys.len();
         let rs_element_names =
             (0..num_elements).map(|i| format_ident!("{rs_value}_{i}")).collect_vec();
@@ -477,7 +505,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
         }
     } else if let ty::TyKind::Array { .. } = rs_type.kind() {
         write_directly()?
-    } else if rs_type.ty_adt_def().is_some() {
+    } else if rs_type.ty_adt_def().is_some() || matches!(rs_type.kind(), ty::TyKind::Tuple(_)) {
         write_directly()?
     } else {
         bail!("Attempted to write out unknown type from Rust to C")

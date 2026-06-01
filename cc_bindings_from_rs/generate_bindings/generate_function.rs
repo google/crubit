@@ -193,7 +193,11 @@ fn cc_param_to_c_abi<'tcx>(
         } else {
             quote! { #cc_ident }
         }
-    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
+    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
+        && !db
+            .crate_features(db.source_crate_num())
+            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+    {
         let n = tuple_tys.len();
         let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);
 
@@ -350,7 +354,11 @@ fn cc_return_value_from_c_abi<'tcx>(
             storage_name: storage_name.clone(),
             unpack_expr: quote! { *#storage_name },
         })
-    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
+    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
+        && !db
+            .crate_features(db.source_crate_num())
+            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+    {
         let n = tuple_tys.len();
         let mut storage_names = Vec::with_capacity(n);
         let mut unpack_exprs = Vec::with_capacity(n);

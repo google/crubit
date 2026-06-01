@@ -328,7 +328,7 @@ struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
 
   static ::std::int32_t no_self();
 
-  static ::std::tuple<::std::int32_t, ::std::int32_t>
+  static rs_std::Tuple<::std::int32_t, ::std::int32_t>
   take_and_return_other_types(::traits::MyStruct const& self, ::traits::Foo x);
 };
 
@@ -345,7 +345,7 @@ struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
 
   static ::std::int32_t no_self();
 
-  static ::std::tuple<::std::int32_t, ::std::int32_t>
+  static rs_std::Tuple<::std::int32_t, ::std::int32_t>
   take_and_return_other_types(::traits::MyStruct2 const& self, ::traits::Foo x);
 };
 
@@ -700,23 +700,20 @@ rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::no_self() {
 namespace traits {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
-    ::traits::MyStruct const&, ::traits::Foo*, void** __ret_ptr);
+    ::traits::MyStruct const&, ::traits::Foo*,
+    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 }  // namespace traits
-inline ::std::tuple<::std::int32_t, ::std::int32_t> rs_std::
+inline rs_std::Tuple<::std::int32_t, ::std::int32_t> rs_std::
     impl<::traits::MyStruct, ::traits::MyTrait>::take_and_return_other_types(
         ::traits::MyStruct const& self, ::traits::Foo x) {
-  ::std::int32_t __return_value_0_ret_val_holder;
-  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
-  ::std::int32_t __return_value_1_ret_val_holder;
-  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
-  void* __return_value_storage[] = {__return_value_0_storage,
-                                    __return_value_1_storage};
+  crubit::Slot<rs_std::Tuple<::std::int32_t, ::std::int32_t>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   traits::__crubit_internal::
       __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
           self, &x, __return_value_storage);
-  return ::std::make_tuple(*__return_value_0_storage,
-                           *__return_value_1_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace traits {
@@ -769,23 +766,20 @@ rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::no_self() {
 namespace traits {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
-    ::traits::MyStruct2 const&, ::traits::Foo*, void** __ret_ptr);
+    ::traits::MyStruct2 const&, ::traits::Foo*,
+    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 }  // namespace traits
-inline ::std::tuple<::std::int32_t, ::std::int32_t> rs_std::
+inline rs_std::Tuple<::std::int32_t, ::std::int32_t> rs_std::
     impl<::traits::MyStruct2, ::traits::MyTrait>::take_and_return_other_types(
         ::traits::MyStruct2 const& self, ::traits::Foo x) {
-  ::std::int32_t __return_value_0_ret_val_holder;
-  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
-  ::std::int32_t __return_value_1_ret_val_holder;
-  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
-  void* __return_value_storage[] = {__return_value_0_storage,
-                                    __return_value_1_storage};
+  crubit::Slot<rs_std::Tuple<::std::int32_t, ::std::int32_t>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   traits::__crubit_internal::
       __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
           self, &x, __return_value_storage);
-  return ::std::make_tuple(*__return_value_0_storage,
-                           *__return_value_1_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 #pragma clang diagnostic pop
