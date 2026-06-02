@@ -14,7 +14,7 @@
 namespace crubit {
 
 // This is intended to be called from Rust tests.
-extern "C" FfiU8SliceBox json_from_cc_dependency(
+extern "C" FfiU8SliceBox proto_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
     bool kythe_annotations) {
@@ -22,16 +22,12 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
       IrFromCcDependency(target_triple, header_source, dependency_header_source,
                          extra_feature, kythe_annotations);
 
-  // TODO(forster): For now it is good enough to just exit: We are just
-  // using this from tests, which are ok to just fail. Clang has already
-  // printed error messages. If we start using this for production, then we
-  // should bridge the error code into Rust.
   if (!ir.ok()) {
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",
                                            ir.status().message()));
   }
-  std::string json = llvm::formatv("{0}", ir->ToJson());
-  return AllocFfiU8SliceBox(MakeFfiU8Slice(json));
+  std::string proto = ir->ToFlatProto().SerializeAsString();
+  return AllocFfiU8SliceBox(MakeFfiU8Slice(proto));
 }
 
 }  // namespace crubit

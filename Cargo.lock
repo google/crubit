@@ -1398,6 +1398,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rs_bindings_from_cc_ir_from_cc_dependency_sys"
+version = "0.0.0"
+dependencies = [
+ "cc_ffi_types_sys",
+ "crubit_build",
+ "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_ir_from_cc_sys",
+]
+
+[[package]]
 name = "rs_bindings_from_cc_ir_from_cc_sys"
 version = "0.0.0"
 dependencies = [
@@ -1434,11 +1444,13 @@ dependencies = [
  "googletest",
  "itertools",
  "multiplatform_testing",
+ "protobuf",
  "quote",
  "rs_bindings_from_cc_ir",
  "rs_bindings_from_cc_ir_matchers",
  "rs_bindings_from_cc_ir_testing",
  "rs_bindings_from_cc_json_from_cc_sys",
+ "rs_bindings_from_cc_proto_from_cc_sys",
 ]
 
 [[package]]
@@ -1448,7 +1460,7 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_ir_from_cc_sys",
+ "rs_bindings_from_cc_ir_from_cc_dependency_sys",
 ]
 
 [[package]]
@@ -1494,6 +1506,16 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_proto_from_cc_sys"
+version = "0.0.0"
+dependencies = [
+ "cc_ffi_types_sys",
+ "crubit_build",
+ "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_ir_from_cc_dependency_sys",
 ]
 
 [[package]]

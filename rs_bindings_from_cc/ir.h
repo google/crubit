@@ -35,6 +35,7 @@
 #include "absl/strings/substitute.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
@@ -57,6 +58,7 @@ class HeaderName {
   absl::string_view IncludePath() const { return name_; }
 
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::HeaderName ToFlatProto() const;
 
   template <typename H>
   friend H AbslHashValue(H h, const HeaderName& header_name) {
@@ -101,6 +103,7 @@ CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 // A lifetime.
 struct LifetimeName {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::LifetimeName ToFlatProto() const;
 
   // Lifetime name. Unlike syn::Lifetime, this does not include the apostrophe.
   //
@@ -158,6 +161,7 @@ class FormattedError final {
   absl::string_view message() const { return message_; }
 
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::FormattedError ToFlatProto() const;
 
   // Type URL for use as an `absl::Status` payload.
   static constexpr absl::string_view kFmtPayloadTypeUrl =
@@ -179,6 +183,9 @@ class FormattedError final {
 // unsafe.
 enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
 
+rs_bindings_from_cc::ir_proto::flat::SafetyAnnotation ToFlatProto(
+    SafetyAnnotation safety_annotation);
+
 enum class PointerTypeKind {
   kRValueRef,
   kLValueRef,
@@ -186,6 +193,9 @@ enum class PointerTypeKind {
   kNonNull,
   kOwned
 };
+
+rs_bindings_from_cc::ir_proto::flat::PointerTypeKind ToFlatProto(
+    PointerTypeKind pointer_type_kind);
 
 // Calling conventions for functions that are supported by Crubit.
 //
@@ -199,8 +209,12 @@ enum class CallingConv {
   kWin64,          // __attribute__((ms_abi))
 };
 
+rs_bindings_from_cc::ir_proto::flat::CallingConv ToFlatProto(
+    CallingConv calling_conv);
+
 struct CcType {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::CcType ToFlatProto() const;
 
   struct FuncPointer {
     // When true, this is a C++ function reference that maps to a Rust function
@@ -297,6 +311,7 @@ class Identifier {
 
   absl::string_view Ident() const { return identifier_; }
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Identifier ToFlatProto() const;
 
   template <typename H>
   friend H AbslHashValue(H h, const Identifier& i) {
@@ -334,6 +349,7 @@ class IntegerConstant {
   IntegerConstant(const IntegerConstant& other) = default;
   IntegerConstant& operator=(const IntegerConstant& other) = default;
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::IntegerConstant ToFlatProto() const;
 
  private:
   explicit IntegerConstant(const llvm::APSInt& value) {
@@ -362,6 +378,7 @@ class Operator {
   absl::string_view Name() const { return name_; }
 
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Operator ToFlatProto() const;
 
  private:
   std::string name_;
@@ -381,6 +398,7 @@ inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
 //    `FuncParam{.type=Type{"i32", "int32_t"}, .identifier=Identifier("foo"))`.
 struct FuncParam {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::FuncParam ToFlatProto() const;
 
   CcType type;
   Identifier identifier;
@@ -398,6 +416,9 @@ enum SpecialName {
   kConstructor,
 };
 
+rs_bindings_from_cc::ir_proto::flat::SpecialName ToFlatProto(
+    SpecialName special_name);
+
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 
 // A generalized notion of identifier, or an "Unqualified Identifier" in C++
@@ -408,6 +429,8 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 // functions.
 using UnqualifiedIdentifier = std::variant<Identifier, Operator, SpecialName>;
 llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier);
+rs_bindings_from_cc::ir_proto::flat::UnqualifiedIdentifier ToFlatProto(
+    const UnqualifiedIdentifier& unqualified_identifier);
 
 struct TranslatedUnqualifiedIdentifier {
   UnqualifiedIdentifier cc_identifier;
@@ -432,6 +455,8 @@ struct InstanceMethodMetadata {
     kUnqualified,  // void Foo();
   };
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::InstanceMethodMetadata ToFlatProto()
+      const;
 
   ReferenceQualification reference = kUnqualified;
   bool is_const = false;
@@ -441,6 +466,7 @@ struct InstanceMethodMetadata {
 // A function involved in the bindings.
 struct Func {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Func ToFlatProto() const;
 
   UnqualifiedIdentifier cc_name;
   UnqualifiedIdentifier rs_name;
@@ -493,11 +519,15 @@ enum AccessSpecifier {
   kPrivate,
 };
 
+rs_bindings_from_cc::ir_proto::flat::AccessSpecifier ToFlatProto(
+    AccessSpecifier access);
+
 std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access);
 
 // A field (non-static member variable) of a record.
 struct Field {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Field ToFlatProto() const;
 
   // Name of the field.  This may be missing for "unnamed members" - see:
   // - https://en.cppreference.com/w/c/language/struct
@@ -545,6 +575,9 @@ enum class SpecialMemberFunc : char {
   kUnavailable,
 };
 
+rs_bindings_from_cc::ir_proto::flat::SpecialMemberFunc ToFlatProto(
+    SpecialMemberFunc f);
+
 llvm::json::Value toJSON(const SpecialMemberFunc& f);
 
 inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
@@ -554,6 +587,7 @@ inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
 // A base class subobject of a struct or class.
 struct BaseClass {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::BaseClass ToFlatProto() const;
   ItemId base_record_id;
 
   // The offset the base class subobject is located at. This is always nonempty
@@ -575,10 +609,14 @@ enum RecordType {
   kClass,
 };
 
+rs_bindings_from_cc::ir_proto::flat::RecordType ToFlatProto(
+    RecordType record_type);
+
 std::ostream& operator<<(std::ostream& o, const RecordType& record_type);
 
 struct SizeAlign {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::SizeAlign ToFlatProto() const;
 
   int64_t size;
   int64_t alignment;
@@ -586,6 +624,7 @@ struct SizeAlign {
 
 struct TemplateArg {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::TemplateArg ToFlatProto() const;
 
   using Variant = std::variant<CcType, bool, int64_t>;
 
@@ -595,6 +634,7 @@ struct TemplateArg {
 // Present on records that are bridge types.
 struct BridgeType {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::BridgeType ToFlatProto() const;
 
   // From CRUBIT_BRIDGE.
   struct Bridge {
@@ -641,6 +681,7 @@ struct BridgeType {
 // A constant value (`constexpr` or `const` with constant initializer).
 struct Constant {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Constant ToFlatProto() const;
 
   IntegerConstant value;
 
@@ -664,6 +705,8 @@ struct Constant {
 // template arguments (like [`int`, `float`] for `ns::map<int, float>`).
 struct TemplateSpecialization {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::TemplateSpecialization ToFlatProto()
+      const;
 
   struct StdStringView {};
   struct StdWStringView {};
@@ -690,9 +733,13 @@ struct TemplateSpecialization {
 
 enum class TraitImplPolarity : int8_t { kNegative, kNone, kPositive };
 
+rs_bindings_from_cc::ir_proto::flat::TraitImplPolarity ToFlatProto(
+    TraitImplPolarity trait_impl_polarity);
+
 // The set of traits to derive on the Rust type.
 struct TraitDerives {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::TraitDerives ToFlatProto() const;
 
   TraitImplPolarity* absl_nullable Polarity(absl::string_view trait);
 
@@ -708,6 +755,7 @@ struct TraitDerives {
 
 struct OwnedPtrConfig {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::OwnedPtrConfig ToFlatProto() const;
 
   std::string owned_ptr_type;
   std::string drop_impl;
@@ -716,6 +764,7 @@ struct OwnedPtrConfig {
 // A record (struct, class, union).
 struct Record {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Record ToFlatProto() const;
 
   // `rs_name` and `cc_name` are typically equal, but they may be different for
   // template instantiations (when `cc_name` is similar to `MyStruct<int>` and
@@ -834,6 +883,7 @@ struct Record {
 // A forward-declared record (e.g. `struct Foo;`)
 struct IncompleteRecord {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::IncompleteRecord ToFlatProto() const;
   Identifier cc_name;
   Identifier rs_name;
   std::string unique_name;
@@ -847,6 +897,7 @@ struct IncompleteRecord {
 
 struct Enumerator {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Enumerator ToFlatProto() const;
 
   Identifier identifier;
   IntegerConstant value;
@@ -858,6 +909,7 @@ struct Enumerator {
 
 struct Enum {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Enum ToFlatProto() const;
 
   Identifier cc_name;
   Identifier rs_name;
@@ -880,6 +932,7 @@ struct Enum {
 
 struct GlobalVar {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::GlobalVar ToFlatProto() const;
 
   Identifier cc_name;
   Identifier rs_name;
@@ -904,6 +957,7 @@ inline std::ostream& operator<<(std::ostream& o, const Record& r) {
 // A type alias (defined either using `typedef` or `using`).
 struct TypeAlias {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::TypeAlias ToFlatProto() const;
 
   Identifier cc_name;
   Identifier rs_name;
@@ -947,9 +1001,12 @@ struct UnsupportedItem {
     std::optional<ItemId> enclosing_item_id;
 
     llvm::json::Value ToJson() const;
+    rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::Path ToFlatProto()
+        const;
   };
 
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::UnsupportedItem ToFlatProto() const;
 
   // TODO(forster): We could show the original declaration in the generated
   // message (potentially also for successfully imported items).
@@ -981,6 +1038,7 @@ inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
 
 struct Comment {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Comment ToFlatProto() const;
 
   std::string text;
   ItemId id;
@@ -993,6 +1051,7 @@ inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
 
 struct Namespace {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::Namespace ToFlatProto() const;
 
   Identifier cc_name;
   Identifier rs_name;
@@ -1019,6 +1078,7 @@ inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {
 // This is used to support extra Rust source files.
 struct UseMod {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::UseMod ToFlatProto() const;
 
   std::string path;
   Identifier mod_name;
@@ -1034,6 +1094,7 @@ inline std::ostream& operator<<(std::ostream& o, const UseMod& use_mod) {
 // rust type.
 struct ExistingRustType {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::ExistingRustType ToFlatProto() const;
 
   std::string rs_name;
   std::string cc_name;
@@ -1061,6 +1122,7 @@ inline std::ostream& operator<<(std::ostream& o,
 // declarations of a single C++ library.
 struct IR {
   llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::IRProto ToFlatProto() const;
 
   template <typename T>
   std::vector<const T*> get_items_if() const {
@@ -1115,6 +1177,8 @@ struct IR {
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       crubit_features;
 };
+
+rs_bindings_from_cc::ir_proto::flat::Item ToFlatProto(const IR::Item& item);
 
 void SetMustBindItem(IR::Item& item);
 

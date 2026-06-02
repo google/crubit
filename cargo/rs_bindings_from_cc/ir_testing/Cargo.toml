@@ -20,10 +20,12 @@ doctest = false
 [dependencies]
 ir = { path = "../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 json_from_cc_sys = { path = "../../../cargo/rs_bindings_from_cc/json_from_cc_sys", package = "rs_bindings_from_cc_json_from_cc_sys"}
+proto_from_cc_sys = { path = "../../../cargo/rs_bindings_from_cc/proto_from_cc_sys", package = "rs_bindings_from_cc_proto_from_cc_sys"}
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 crubit_feature = { path = "../../../cargo/common/crubit_feature"}
 ffi_types = { path = "../../../cargo/common/ffi_types"}
 multiplatform_testing = { path = "../../../cargo/common/multiplatform_testing"}
+protobuf.workspace = true
 flagset.workspace = true
 itertools.workspace = true
 [dev-dependencies]
