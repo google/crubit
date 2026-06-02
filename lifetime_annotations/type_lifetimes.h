@@ -343,11 +343,6 @@ struct DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes> {
         DenseMapInfo<clang::QualType>().getEmptyKey());
   }
 
-  static clang::tidy::lifetimes::ValueLifetimes getTombstoneKey() {
-    return clang::tidy::lifetimes::ValueLifetimes(
-        DenseMapInfo<clang::QualType>().getTombstoneKey());
-  }
-
   static bool isEqual(const clang::tidy::lifetimes::ValueLifetimes& lhs,
                       const clang::tidy::lifetimes::ValueLifetimes& rhs);
 
@@ -361,13 +356,6 @@ struct DenseMapInfo<clang::tidy::lifetimes::ObjectLifetimes> {
     return clang::tidy::lifetimes::ObjectLifetimes(
         DenseMapInfo<clang::tidy::lifetimes::Lifetime>().getEmptyKey(),
         DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>().getEmptyKey());
-  }
-
-  static clang::tidy::lifetimes::ObjectLifetimes getTombstoneKey() {
-    return clang::tidy::lifetimes::ObjectLifetimes(
-        DenseMapInfo<clang::tidy::lifetimes::Lifetime>().getTombstoneKey(),
-        DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>()
-            .getTombstoneKey());
   }
 
   static bool isEqual(const clang::tidy::lifetimes::ObjectLifetimes& lhs,
