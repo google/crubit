@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <iostream>
 
-#include "rust_lib.h"
-#include "std.h"
+#include "crubit/rust_lib.h"
+#include "crubit/std.h"
 
 int main() {
   // Test we can successfully use a type from a Rust dependency.

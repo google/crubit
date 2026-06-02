@@ -375,7 +375,7 @@ impl BindingGenerationContext {
         let hash_suffix =
             if info.hash.is_empty() { "".to_string() } else { format!("-{}", info.hash) };
         let intermediate_h = deps_dir.join(format!("{}{}.h", info.crate_name, hash_suffix));
-        let final_h_filename = format!("{}.h", info.crate_name);
+        let final_h_filename = format!("crubit/{}.h", info.crate_name);
         let final_h = headers_dir.join(&final_h_filename);
         let intermediate_rs = deps_dir.join(format!("lib{}{}.rs", info.crate_name, hash_suffix));
         lib_rs_content
@@ -470,7 +470,7 @@ extern crate proc_macro;
         let headers_dir = &self.dirs.headers_dir;
         let profile_dir = &self.dirs.profile_dir;
 
-        fs::create_dir_all(headers_dir)?;
+        fs::create_dir_all(headers_dir.join("crubit"))?;
 
         // 1. Locate standard library crates and generate bindings for them first.
         let sysroot = self.get_sysroot()?;

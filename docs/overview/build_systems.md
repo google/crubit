@@ -121,7 +121,7 @@ target_link_libraries(main PRIVATE rust_lib)
 ```
 
 Crubit generates a C++ header for Rust library based on the library package
-name, as well. In `main.cpp`, we can import our `rust_lib.h` header:
+name, as well. In `main.cpp`, we can import our `crubit/rust_lib.h` header:
 
 ```
 {{ #include ../../examples/build_systems/cmake/main.cpp }}
