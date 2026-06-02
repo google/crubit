@@ -27,6 +27,126 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+namespace enums::qr_error {
+struct StructuredQrError;
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: qr_error :: QrError") alignas(8) [[clang::trivial_abi]]
+QrError final {
+ public:
+  // `enums_golden::qr_error::QrError` doesn't implement the `Default` trait
+  QrError() = delete;
+
+  static constexpr QrError MakeDataTooLong();
+
+  static constexpr QrError MakeInvalidVersion();
+
+  static constexpr QrError MakeUnsupportedCharacterSet();
+
+  static constexpr QrError MakeInvalidEciDesignator();
+
+  static constexpr QrError MakeInvalidCharacter();
+
+  static ::enums::qr_error::QrError MakeStructured(
+      ::enums::qr_error::StructuredQrError __param_0);
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~QrError() = default;
+  QrError(QrError&&) = default;
+  QrError& operator=(QrError&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  QrError(const QrError&) = default;
+  QrError& operator=(const QrError&) = default;
+  QrError(::crubit::UnsafeRelocateTag, QrError&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  bool is_data_too_long() const;
+
+  bool operator==(::enums::qr_error::QrError const& other) const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 24> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr QrError(PrivateBytesTag, ::std::array<unsigned char, 24> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: qr_error :: StructuredQrError") alignas(8)
+    [[clang::trivial_abi]] StructuredQrError final {
+ public:
+  // `enums_golden::qr_error::StructuredQrError` doesn't implement the `Default`
+  // trait
+  StructuredQrError() = delete;
+
+  static constexpr StructuredQrError MakeAtLeast2Pieces();
+
+  static ::enums::qr_error::StructuredQrError MakeTotalMismatch(
+      ::std::uintptr_t __param_0);
+
+  static constexpr StructuredQrError MakeMissingParts();
+
+  static constexpr StructuredQrError MakeParity();
+
+  static constexpr StructuredQrError MakeTooShort();
+
+  static constexpr StructuredQrError MakeStructuredWrongMode();
+
+  static constexpr StructuredQrError MakeStructuredWrongEnc();
+
+  static ::enums::qr_error::StructuredQrError MakeSeqGreaterThanTotal(
+      ::std::uint8_t __param_0, ::std::uint8_t __param_1);
+
+  static ::enums::qr_error::StructuredQrError MakeLengthMismatch(
+      ::std::uintptr_t __param_0, ::std::uintptr_t __param_1);
+
+  static ::enums::qr_error::StructuredQrError MakeUnsupportedVersion(
+      ::std::int16_t __param_0);
+
+  static ::enums::qr_error::StructuredQrError MakeSplitMax16(
+      ::std::uintptr_t __param_0);
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructuredQrError() = default;
+  StructuredQrError(StructuredQrError&&) = default;
+  StructuredQrError& operator=(StructuredQrError&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  StructuredQrError(const StructuredQrError&) = default;
+  StructuredQrError& operator=(const StructuredQrError&) = default;
+  StructuredQrError(::crubit::UnsafeRelocateTag, StructuredQrError&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  bool operator==(::enums::qr_error::StructuredQrError const& other) const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 24> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr StructuredQrError(PrivateBytesTag,
+                              ::std::array<unsigned char, 24> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace enums::qr_error
+
 namespace enums::repr_c {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
@@ -587,6 +707,234 @@ RustReprWithSingleTuplePayloadVariant final {
 };
 
 }  // namespace enums::repr_rust
+
+namespace enums::qr_error {
+
+static_assert(
+    sizeof(QrError) == 24,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(QrError) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline constexpr QrError QrError::MakeDataTooLong() {
+  return QrError(PrivateBytesTag{}, {11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr QrError QrError::MakeInvalidVersion() {
+  return QrError(PrivateBytesTag{}, {12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr QrError QrError::MakeUnsupportedCharacterSet() {
+  return QrError(PrivateBytesTag{}, {13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr QrError QrError::MakeInvalidEciDesignator() {
+  return QrError(PrivateBytesTag{}, {14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr QrError QrError::MakeInvalidCharacter() {
+  return QrError(PrivateBytesTag{}, {15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_Structured(
+    ::enums::qr_error::StructuredQrError*,
+    ::enums::qr_error::QrError* __ret_ptr);
+}
+inline ::enums::qr_error::QrError QrError::MakeStructured(
+    ::enums::qr_error::StructuredQrError __param_0) {
+  crubit::Slot<::enums::qr_error::QrError> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_Structured(&__param_0,
+                                               __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+static_assert(::std::is_trivially_destructible_v<QrError>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::enums::qr_error::QrError>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::enums::qr_error::QrError>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::enums::qr_error::QrError>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::enums::qr_error::QrError>);
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_udata_utoo_ulong(
+    ::enums::qr_error::QrError const&);
+}
+inline bool QrError::is_data_too_long() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_is_udata_utoo_ulong(self);
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_PartialEq_ueq(::enums::qr_error::QrError const&,
+                                             ::enums::qr_error::QrError const&);
+}
+inline bool QrError::operator==(::enums::qr_error::QrError const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_PartialEq_ueq(self, other);
+}
+inline void QrError::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(QrError, __opaque_blob_of_bytes));
+}
+static_assert(
+    sizeof(StructuredQrError) == 24,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(StructuredQrError) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline constexpr StructuredQrError StructuredQrError::MakeAtLeast2Pieces() {
+  return StructuredQrError(
+      PrivateBytesTag{},
+      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_TotalMismatch(
+    ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
+}
+inline ::enums::qr_error::StructuredQrError
+StructuredQrError::MakeTotalMismatch(::std::uintptr_t __param_0) {
+  crubit::Slot<::enums::qr_error::StructuredQrError>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_TotalMismatch(__param_0,
+                                                  __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+// `static` constructor
+inline constexpr StructuredQrError StructuredQrError::MakeMissingParts() {
+  return StructuredQrError(
+      PrivateBytesTag{},
+      {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr StructuredQrError StructuredQrError::MakeParity() {
+  return StructuredQrError(
+      PrivateBytesTag{},
+      {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr StructuredQrError StructuredQrError::MakeTooShort() {
+  return StructuredQrError(
+      PrivateBytesTag{},
+      {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr StructuredQrError
+StructuredQrError::MakeStructuredWrongMode() {
+  return StructuredQrError(
+      PrivateBytesTag{},
+      {5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+// `static` constructor
+inline constexpr StructuredQrError StructuredQrError::MakeStructuredWrongEnc() {
+  return StructuredQrError(
+      PrivateBytesTag{},
+      {6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_SeqGreaterThanTotal(
+    ::std::uint8_t, ::std::uint8_t,
+    ::enums::qr_error::StructuredQrError* __ret_ptr);
+}
+inline ::enums::qr_error::StructuredQrError
+StructuredQrError::MakeSeqGreaterThanTotal(::std::uint8_t __param_0,
+                                           ::std::uint8_t __param_1) {
+  crubit::Slot<::enums::qr_error::StructuredQrError>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_SeqGreaterThanTotal(__param_0, __param_1,
+                                                        __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_LengthMismatch(
+    ::std::uintptr_t, ::std::uintptr_t,
+    ::enums::qr_error::StructuredQrError* __ret_ptr);
+}
+inline ::enums::qr_error::StructuredQrError
+StructuredQrError::MakeLengthMismatch(::std::uintptr_t __param_0,
+                                      ::std::uintptr_t __param_1) {
+  crubit::Slot<::enums::qr_error::StructuredQrError>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_LengthMismatch(__param_0, __param_1,
+                                                   __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_UnsupportedVersion(
+    ::std::int16_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
+}
+inline ::enums::qr_error::StructuredQrError
+StructuredQrError::MakeUnsupportedVersion(::std::int16_t __param_0) {
+  crubit::Slot<::enums::qr_error::StructuredQrError>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_UnsupportedVersion(__param_0,
+                                                       __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_SplitMax16(
+    ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
+}
+inline ::enums::qr_error::StructuredQrError StructuredQrError::MakeSplitMax16(
+    ::std::uintptr_t __param_0) {
+  crubit::Slot<::enums::qr_error::StructuredQrError>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_SplitMax16(__param_0,
+                                               __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+static_assert(::std::is_trivially_destructible_v<StructuredQrError>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::enums::qr_error::StructuredQrError>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::enums::qr_error::StructuredQrError>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::enums::qr_error::StructuredQrError>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::enums::qr_error::StructuredQrError>);
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_PartialEq_ueq(
+    ::enums::qr_error::StructuredQrError const&,
+    ::enums::qr_error::StructuredQrError const&);
+}
+inline bool StructuredQrError::operator==(
+    ::enums::qr_error::StructuredQrError const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_PartialEq_ueq(self, other);
+}
+inline void StructuredQrError::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(StructuredQrError, __opaque_blob_of_bytes));
+}
+}  // namespace enums::qr_error
 
 namespace enums::repr_c {
 

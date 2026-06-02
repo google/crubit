@@ -973,13 +973,19 @@ fn specialize_result<'tcx>(
     let ok_ty_tokens = ok_ty.for_cc.into_tokens(&mut prereqs);
     let err_ty_tokens = err_ty.for_cc.into_tokens(&mut prereqs);
     let layout = rs_std.layout;
-    let (tag_encoding, tag_field, variants) = match layout.variants() {
+    #[rustversion::before(2026-05-18)]
+    let (tag_field, variants) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
             unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
-        rustc_abi::Variants::Multiple { tag_encoding, tag_field, variants, .. } => {
-            (tag_encoding, tag_field, variants)
+        rustc_abi::Variants::Multiple { tag_field, variants, .. } => (*tag_field, variants),
+    };
+    #[rustversion::since(2026-05-18)]
+    let tag_field = match layout.variants() {
+        rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
+            unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
+        rustc_abi::Variants::Multiple { tag_field, .. } => *tag_field,
     };
 
     let tag_type = enum_spec.tag_type_rs;
@@ -1029,107 +1035,71 @@ fn specialize_result<'tcx>(
         ..Default::default()
     };
 
-    let needs_drop = rs_std.self_ty_rs.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
-    let discr_for_ok = rs_std.self_ty_rs.discriminant_for_variant(tcx, ok_idx).expect(
-        "We do not support zero sized types. Before generating a specialization, we\
-            check that the type can be formatted as a C++ type. That should exclude this case \
-            from occurring",
+    let typing_env = post_analysis_typing_env(tcx, adt.did());
+    let needs_drop = rs_std.self_ty_rs.needs_drop(tcx, typing_env);
+
+    let ok_tag = tcx.tag_for_variant(
+        typing_env.as_query_input((tcx.erase_and_anonymize_regions(rs_std.self_ty_rs), ok_idx)),
     );
-    let ok_discr_val = literal_of_tag_ty(tcx, discr_for_ok.val, tag_type);
-    let discr_for_err = rs_std.self_ty_rs.discriminant_for_variant(tcx, err_idx).expect(
-        "We do not support zero sized types. Before generating a specialization, we\
-            check that the type can be formatted as a C++ type. That should exclude this case \
-            from occurring",
+    let err_tag = tcx.tag_for_variant(
+        typing_env.as_query_input((tcx.erase_and_anonymize_regions(rs_std.self_ty_rs), err_idx)),
     );
-    let err_discr_val = literal_of_tag_ty(tcx, discr_for_err.val, tag_type);
 
     #[rustversion::before(2026-05-18)]
-    let (ok_offset, err_offset) = (
-        Literal::u64_unsuffixed(variants[ok_idx].fields.offset(0).bytes()),
-        Literal::u64_unsuffixed(variants[err_idx].fields.offset(0).bytes()),
-    );
+    let (ok_offset_u64, err_offset_u64) =
+        (variants[ok_idx].fields.offset(0).bytes(), variants[err_idx].fields.offset(0).bytes());
     #[rustversion::since(2026-05-18)]
-    let (ok_offset, err_offset) = (
-        Literal::u64_unsuffixed(LayoutData::for_variant(&layout, ok_idx).fields.offset(0).bytes()),
-        Literal::u64_unsuffixed(LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes()),
+    let (ok_offset_u64, err_offset_u64) = (
+        LayoutData::for_variant(&layout, ok_idx).fields.offset(0).bytes(),
+        LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes(),
     );
 
-    let result_api = match tag_encoding {
-        rustc_abi::TagEncoding::Direct => ResultApiGenerator {
-            db,
-            ok_ty_rs: ok_ty.ty,
-            ok_ty_cpp: ok_ty_tokens.clone(),
-            err_ty_rs: err_ty.ty,
-            err_ty_cpp: err_ty_tokens.clone(),
-            needs_drop,
-            tag_method,
-            has_value_impl: quote! { tag() == #ok_discr_val },
-            write_ok_to_tag: quote! { set_tag(#ok_discr_val); },
-            write_err_to_tag: quote! { set_tag(#err_discr_val); },
-            ok_ptr_val: quote! {
-                __storage + #ok_offset
-            },
-            err_ptr_val: quote! {
-                __storage + #err_offset
-            },
-        },
-        rustc_abi::TagEncoding::Niche { niche_start, niche_variants, untagged_variant } => {
-            let mut has_value_impl = quote! {};
-            let (write_ok_to_tag, ok_ptr_val) = if *untagged_variant == ok_idx {
-                // Untagged variant is Ok, we don't need to set the tag when we write Ok.
-                // Our tag is implicitly ok when it is not the err discriminant value.
-                (quote! {}, quote! { __storage })
-            } else {
-                #[rustversion::before(2026-05-31)]
-                let ok_relative_idx =
-                    ok_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                #[rustversion::since(2026-05-31)]
-                let ok_relative_idx =
-                    ok_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
-                let ok_relative_val =
-                    literal_of_tag_ty(tcx, *niche_start + ok_relative_idx, tag_type);
-                has_value_impl = quote! { tag() == #ok_relative_val };
-                (
-                    quote! { set_tag(#ok_relative_val); },
-                    quote! {
-                        __storage + #ok_offset
-                    },
-                )
-            };
-            let (write_err_to_tag, err_ptr_val) = if *untagged_variant == err_idx {
-                (quote! {}, quote! { __storage })
-            } else {
-                #[rustversion::before(2026-05-31)]
-                let err_relative_idx =
-                    err_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                #[rustversion::since(2026-05-31)]
-                let err_relative_idx =
-                    err_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
-                let err_relative_val =
-                    literal_of_tag_ty(tcx, *niche_start + err_relative_idx, tag_type);
-                has_value_impl = quote! { tag() != #err_relative_val };
-                (
-                    quote! { set_tag(#err_relative_val); },
-                    quote! {
-                        __storage + #err_offset
-                    },
-                )
-            };
-            ResultApiGenerator {
-                db,
-                ok_ty_rs: ok_ty.ty,
-                ok_ty_cpp: ok_ty_tokens.clone(),
-                err_ty_rs: err_ty.ty,
-                err_ty_cpp: err_ty_tokens.clone(),
-                needs_drop,
-                tag_method,
-                has_value_impl,
-                write_ok_to_tag,
-                write_err_to_tag,
-                ok_ptr_val,
-                err_ptr_val,
-            }
+    let make_ptr = |offset: u64| {
+        if offset == 0 {
+            quote! { __storage }
+        } else {
+            let offset_lit = Literal::u64_unsuffixed(offset);
+            quote! { __storage + #offset_lit }
         }
+    };
+    let ok_ptr_val = make_ptr(ok_offset_u64);
+    let err_ptr_val = make_ptr(err_offset_u64);
+
+    let mut has_value_impl = quote! {};
+
+    let write_ok_to_tag = match ok_tag {
+        None => quote! {},
+        Some(tag) => {
+            let ok_tag_val = literal_of_tag_ty(tcx, tag.to_bits(tag.size()), tag_type);
+            has_value_impl = quote! { tag() == #ok_tag_val };
+            quote! { set_tag(#ok_tag_val); }
+        }
+    };
+
+    let write_err_to_tag = match err_tag {
+        None => quote! {},
+        Some(tag) => {
+            let err_tag_val = literal_of_tag_ty(tcx, tag.to_bits(tag.size()), tag_type);
+            if has_value_impl.is_empty() {
+                has_value_impl = quote! { tag() != #err_tag_val };
+            }
+            quote! { set_tag(#err_tag_val); }
+        }
+    };
+
+    let result_api = ResultApiGenerator {
+        db,
+        ok_ty_rs: ok_ty.ty,
+        ok_ty_cpp: ok_ty_tokens.clone(),
+        err_ty_rs: err_ty.ty,
+        err_ty_cpp: err_ty_tokens.clone(),
+        needs_drop,
+        tag_method,
+        has_value_impl,
+        write_ok_to_tag,
+        write_err_to_tag,
+        ok_ptr_val,
+        err_ptr_val,
     };
 
     let rs_fully_qualified_name = quote! { std::result::Result<#ok_ty_for_rs, #err_ty_for_rs> };
@@ -1215,13 +1185,19 @@ fn specialize_option<'tcx>(
     let ty_tokens = arg_ty.for_cc.into_tokens(&mut prereqs);
     let layout = rs_std.layout;
 
-    let (tag_encoding, tag_field, variants) = match layout.variants() {
+    #[rustversion::before(2026-05-18)]
+    let (tag_field, variants) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
             unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
-        rustc_abi::Variants::Multiple { tag_encoding, tag_field, variants, .. } => {
-            (tag_encoding, tag_field, variants)
+        rustc_abi::Variants::Multiple { tag_field, variants, .. } => (*tag_field, variants),
+    };
+    #[rustversion::since(2026-05-18)]
+    let tag_field = match layout.variants() {
+        rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
+            unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
+        rustc_abi::Variants::Multiple { tag_field, .. } => *tag_field,
     };
     let tag_type = enum_spec.tag_type_rs;
     let tag_type_cc: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
@@ -1270,66 +1246,52 @@ fn specialize_option<'tcx>(
         ..Default::default()
     };
 
-    let expect_msg =
-            "Please file a bug at crubit.rs-bug. We do not support zero sized types. Before generating \
-            a specialization, we check that the type can be formatted as a C++ type. That should \
-            exclude this case from occurring.";
-    let discr_for_none =
-        rs_std.self_ty_rs.discriminant_for_variant(tcx, none_idx).expect(expect_msg);
-    let none_discr_val = literal_of_tag_ty(tcx, discr_for_none.val, tag_type);
-    let option_api = match tag_encoding {
-        rustc_abi::TagEncoding::Direct => {
-            // Option::None is variant 0. Option::Some is variant 1.
-            #[rustversion::before(2026-05-18)]
-            let payload_offset =
-                Literal::u64_unsuffixed(variants[some_idx].fields.offset(0).bytes());
-            #[rustversion::since(2026-05-18)]
-            let payload_offset = Literal::u64_unsuffixed(
-                LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes(),
-            );
-            let discr_for_some =
-                rs_std.self_ty_rs.discriminant_for_variant(tcx, some_idx).expect(expect_msg);
-            let some_discr_val = literal_of_tag_ty(tcx, discr_for_some.val, tag_type);
+    let typing_env = post_analysis_typing_env(tcx, adt.did());
+    let none_tag = tcx.tag_for_variant(
+        typing_env.as_query_input((tcx.erase_and_anonymize_regions(rs_std.self_ty_rs), none_idx)),
+    );
+    let some_tag = tcx.tag_for_variant(
+        typing_env.as_query_input((tcx.erase_and_anonymize_regions(rs_std.self_ty_rs), some_idx)),
+    );
 
-            OptionApiGenerator {
-                db,
-                arg_ty_rs: arg_ty.ty,
-                arg_ty: ty_tokens.clone(),
-                needs_drop,
-                tag_method,
-                none_val: quote! { #none_discr_val },
-                write_some_to_tag: quote! { set_tag(#some_discr_val); },
-                some_ptr_val: quote! {
-                    reinterpret_cast<#ty_tokens*>(storage_ + #payload_offset)
-                },
-                tag_type_cc: tag_type_cc.clone(),
-            }
+    let none_val = match none_tag {
+        Some(tag) => literal_of_tag_ty(tcx, tag.to_bits(tag.size()), tag_type),
+        None => {
+            let tag = none_tag.expect("Option::None must be tagged");
+            literal_of_tag_ty(tcx, tag.to_bits(tag.size()), tag_type)
         }
-        rustc_abi::TagEncoding::Niche { niche_start, niche_variants, .. } => {
-            #[rustversion::before(2026-05-31)]
-            let none_relative_idx =
-                none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-            #[rustversion::since(2026-05-31)]
-            let none_relative_idx =
-                none_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
-            let none_relative_val =
-                literal_of_tag_ty(tcx, niche_start + none_relative_idx, tag_type);
-            OptionApiGenerator {
-                db,
-                arg_ty_rs: arg_ty.ty,
-                arg_ty: ty_tokens.clone(),
-                needs_drop,
-                tag_method,
-                none_val: quote! { #none_relative_val },
-                some_ptr_val: quote! {
-                    reinterpret_cast<#ty_tokens*>(storage_)
-                },
-                // With a niche, the Some variant is implicitly encoded. We don't need to write out
-                // a discriminant value. It is accomplished by writing a value to the Some payload.
-                write_some_to_tag: quote! {},
-                tag_type_cc: tag_type_cc.clone(),
-            }
+    };
+
+    let write_some_to_tag = match some_tag {
+        None => quote! {},
+        Some(tag) => {
+            let some_tag_val = literal_of_tag_ty(tcx, tag.to_bits(tag.size()), tag_type);
+            quote! { set_tag(#some_tag_val); }
         }
+    };
+
+    #[rustversion::before(2026-05-18)]
+    let payload_offset_u64 = variants[some_idx].fields.offset(0).bytes();
+    #[rustversion::since(2026-05-18)]
+    let payload_offset_u64 = LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes();
+
+    let some_ptr_val = if some_tag.is_none() || payload_offset_u64 == 0 {
+        quote! { reinterpret_cast<#ty_tokens*>(storage_) }
+    } else {
+        let payload_offset_lit = Literal::u64_unsuffixed(payload_offset_u64);
+        quote! { reinterpret_cast<#ty_tokens*>(storage_ + #payload_offset_lit) }
+    };
+
+    let option_api = OptionApiGenerator {
+        db,
+        arg_ty_rs: arg_ty.ty,
+        arg_ty: ty_tokens.clone(),
+        needs_drop,
+        tag_method,
+        none_val: quote! { #none_val },
+        write_some_to_tag,
+        some_ptr_val,
+        tag_type_cc: tag_type_cc.clone(),
     };
     let rs_fully_qualified_name = quote! { std::option::Option<#arg_ty_for_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Option<#ty_tokens> };
