@@ -1472,14 +1472,14 @@ impl RsTypeKind {
     /// Iterates over `self` and all the nested types (e.g. pointees, generic
     /// type args, etc.) in DFS order.
     pub fn dfs_iter(&self) -> impl Iterator<Item = &RsTypeKind> + '_ {
-        RsTypeKindIter::new(self)
+        RsTypeKindIter::new(self, false)
     }
 
     /// Iterates over all `LifetimeId`s in `self` and in all the nested types.
     /// Note that the results might contain duplicate LifetimeId values (e.g.
     /// if the same LifetimeId is used in two `type_args`).
     pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'_> {
-        self.dfs_iter().filter_map(Self::lifetime)
+        RsTypeKindIter::new(self, true).filter_map(Self::lifetime)
     }
 
     /// Returns the pointer or reference target.
@@ -1494,7 +1494,7 @@ impl RsTypeKind {
 
     /// Returns the reference lifetime, or None if this is not a reference.
     pub fn lifetime(&self) -> Option<Lifetime> {
-        match self.unalias() {
+        match self {
             Self::Reference { lifetime, .. } | Self::RvalueReference { lifetime, .. } => {
                 Some(lifetime.clone())
             }
@@ -1503,6 +1503,18 @@ impl RsTypeKind {
             Self::Record { lifetimes, .. } => {
                 if lifetimes.len() == 1 {
                     Some(lifetimes[0].clone())
+                } else {
+                    None
+                }
+            }
+            Self::TypeAlias { lifetimes, underlying_type, .. } => {
+                // TODO(b/517949862): this checks for a single lifetime because lifetime() can
+                // only return a single lifetime, not for any inherent property of aliases; it
+                // needs to be updated to fully support multiple lifetime parameters.
+                if lifetimes.len() == 1 {
+                    Some(lifetimes[0].clone())
+                } else if lifetimes.is_empty() {
+                    underlying_type.lifetime()
                 } else {
                     None
                 }
@@ -2083,11 +2095,13 @@ fn fully_qualify_type_impl(
 
 struct RsTypeKindIter<'ty> {
     todo: Vec<&'ty RsTypeKind>,
+    /// If true, traversal stops at type aliases and will not inspect their `underlying_type`.
+    ignore_type_alias_underlying: bool,
 }
 
 impl<'ty> RsTypeKindIter<'ty> {
-    pub fn new(ty: &'ty RsTypeKind) -> Self {
-        Self { todo: vec![ty] }
+    pub fn new(ty: &'ty RsTypeKind, ignore_type_alias_underlying: bool) -> Self {
+        Self { todo: vec![ty], ignore_type_alias_underlying }
     }
 }
 
@@ -2107,7 +2121,11 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                     RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),
                     RsTypeKind::Reference { referent, .. } => self.todo.push(referent),
                     RsTypeKind::RvalueReference { referent, .. } => self.todo.push(referent),
-                    RsTypeKind::TypeAlias { underlying_type: t, .. } => self.todo.push(t),
+                    RsTypeKind::TypeAlias { underlying_type: t, .. } => {
+                        if !self.ignore_type_alias_underlying {
+                            self.todo.push(t);
+                        }
+                    }
                     RsTypeKind::FuncPtr { return_type, param_types, .. } => {
                         self.todo.push(return_type);
                         self.todo.extend(param_types.iter().rev());
@@ -2394,6 +2412,7 @@ mod tests {
                 enclosing_item_id: None,
                 must_bind: false,
                 deprecated: None,
+                lifetime_inputs: vec![],
             }),
             underlying_type: Rc::new(make_incomplete_record()),
             crate_path: make_crate_path(),

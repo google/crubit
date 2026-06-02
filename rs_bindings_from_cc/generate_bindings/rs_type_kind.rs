@@ -6,7 +6,9 @@ use arc_anyhow::{anyhow, ensure, Error, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
 use database::rs_snippet::{Lifetime, LifetimeOptions, Mutability, RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
+use ir::GenericItem;
 use ir::{CcType, CcTypeVariant, PointerTypeKind};
+use lifetime_defaults_transform::lifetime_defaults_transform_item;
 use std::rc::Rc;
 
 fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
@@ -19,6 +21,19 @@ fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
                 false
             }
         }
+        _ => false,
+    }
+}
+
+fn item_is_or_aliases_string_view(db: &BindingsGenerator, item: &ir::Item) -> bool {
+    match item {
+        ir::Item::Record(record) => record.is_string_view(),
+        ir::Item::TypeAlias(type_alias) => match &type_alias.underlying_type.variant {
+            CcTypeVariant::Decl { id, .. } => {
+                item_is_or_aliases_string_view(db, db.find_untyped_decl(*id))
+            }
+            _ => false,
+        },
         _ => false,
     }
 }
@@ -218,22 +233,37 @@ pub fn rs_type_kind_with_lifetime_elision(
                 return Err(error);
             }
 
-            let lifetimes: Vec<Lifetime> = if lifetime_options.assume_lifetimes {
-                ty.explicit_lifetimes.iter().map(|lt| Lifetime::new(lt)).collect()
-            } else {
-                vec![]
+            let (decl_assumes_lifetimes, item) = {
+                if let Some(owning_target) = item.owning_target() {
+                    let decl_assumes_lifetimes = db
+                        .ir()
+                        .target_crubit_features(&owning_target)
+                        .contains(crubit_feature::CrubitFeature::AssumeLifetimes)
+                        && !item_is_or_aliases_string_view(db, item);
+                    (
+                        decl_assumes_lifetimes,
+                        if decl_assumes_lifetimes {
+                            lifetime_defaults_transform_item(db, item)?
+                        } else {
+                            item.clone()
+                        },
+                    )
+                } else {
+                    (false, item.clone())
+                }
             };
+
+            let lifetimes: Vec<Lifetime> =
+                if decl_assumes_lifetimes || lifetime_options.assume_lifetimes {
+                    ty.explicit_lifetimes.iter().map(|lt| Lifetime::new(lt)).collect()
+                } else {
+                    vec![]
+                };
 
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
             // course we can't call `rs_type_kind` here, and instead reuse the raw construction
             // logic.
-            RsTypeKind::from_item_raw(
-                db,
-                item.clone(),
-                &lifetime_options,
-                template_args,
-                &lifetimes,
-            )
+            RsTypeKind::from_item_raw(db, item, &lifetime_options, template_args, &lifetimes)
         }
         CcTypeVariant::Error(e) => {
             let e = error_report::FormattedError::new(

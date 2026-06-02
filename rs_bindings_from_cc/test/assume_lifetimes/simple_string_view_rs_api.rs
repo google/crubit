@@ -97,6 +97,20 @@ pub fn sv_make_raw() -> crate::SV<'static> {
     }
 }
 
+pub type SVA<'__alias0> = crate::SV<'__alias0>;
+
+#[inline(always)]
+pub fn sva_lb<'__rv>(mut s: crate::SVA<'__rv>) -> crate::SVA<'__rv> {
+    unsafe {
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SVA<'__rv>>::uninit();
+        crate::detail::__rust_thunk___Z6sva_lb2SV(
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
+            &mut s,
+        );
+        __crubit_return.assume_init()
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -115,6 +129,10 @@ mod detail {
             s: &mut crate::SV<'static>,
         );
         pub(crate) unsafe fn __rust_thunk___Z11sv_make_rawv(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___Z6sva_lb2SV<'__rv>(
+            __return: *mut ::core::ffi::c_void,
+            s: &mut crate::SVA<'__rv>,
+        );
     }
 }
 

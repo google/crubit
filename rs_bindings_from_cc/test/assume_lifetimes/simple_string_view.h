@@ -15,4 +15,7 @@ SV $unknown sv_ident_unknown(SV $unknown s);
 SV sv_ident_unknown_elided(SV $unknown s);
 SV sv_make_raw();
 
+using SVA = SV;
+SVA sva_lb(SVA s [[clang::lifetimebound]]);
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ASSUME_LIFETIMES_SIMPLE_STRING_VIEW_H_

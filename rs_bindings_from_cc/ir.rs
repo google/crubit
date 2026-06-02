@@ -1591,6 +1591,9 @@ pub struct TypeAlias {
     /// string is used.
     #[serde(default)]
     pub deprecated: Option<Rc<str>>,
+    // Lifetime variable names bound by this type alias.
+    #[serde(default)]
+    pub lifetime_inputs: Vec<Rc<str>>,
 }
 
 impl GenericItem for TypeAlias {

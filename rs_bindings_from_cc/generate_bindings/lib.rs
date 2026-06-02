@@ -4,6 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 
 use arc_anyhow::{anyhow, ensure, Context, Result};
+use code_gen_utils::make_rs_lifetime_ident;
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use cpp_type_name::format_cpp_type_with_references;
 use crubit_abi_type::{
@@ -27,6 +28,7 @@ use generate_struct_and_union::generate_incomplete_record;
 use ir::*;
 use itertools::Itertools;
 use kythe_metadata::rs_embed_provenance_map;
+use lifetime_defaults_transform::lifetime_defaults_transform_type_alias;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
@@ -113,7 +115,19 @@ pub fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<ApiSnippets> {
+fn generate_type_alias(
+    db: &BindingsGenerator,
+    raw_type_alias: Rc<TypeAlias>,
+) -> Result<ApiSnippets> {
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(&raw_type_alias.owning_target)
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    let type_alias = if assume_lifetimes {
+        &lifetime_defaults_transform_type_alias(db, raw_type_alias.as_ref())?
+    } else {
+        raw_type_alias.as_ref()
+    };
     db.errors().add_category(error_report::Category::Alias);
     // Skip the type alias if it maps to a bridge type.
     // NOTE: rs_type_kind() gives a poor error message ("no bindings for <Alias>") if the underlying
@@ -127,7 +141,7 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
     // we only do so after rs_type_kind() fails.
     let Ok(rs_type_kind) = db.rs_type_kind((&*type_alias).into()) else {
         // Return the un-hidden raw error from has_bindings().
-        let Err(e) = db.has_bindings(ir::Item::TypeAlias(type_alias)) else {
+        let Err(e) = db.has_bindings(ir::Item::TypeAlias(raw_type_alias)) else {
             unreachable!(
                 "Crubit promised to have bindings for a type alias, but didn't. This is a bug."
             )
@@ -136,8 +150,16 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
     };
 
     let underlying_type = db
-        .rs_type_kind(type_alias.underlying_type.clone())
+        .rs_type_kind_with_lifetime_elision(
+            type_alias.underlying_type.clone(),
+            LifetimeOptions { assume_lifetimes, ..Default::default() },
+        )
         .with_context(|| format!("Failed to format underlying type for {type_alias}"))?;
+    let mut lifetime_params = vec![];
+    if assume_lifetimes {
+        lifetime_params =
+            type_alias.lifetime_inputs.iter().map(|id| make_rs_lifetime_ident(id)).collect();
+    }
 
     // If this type alias refers to a record with nested types,
     // we need to also re-export the generated module.
@@ -162,6 +184,7 @@ fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Res
         underlying_type: underlying_type.to_token_stream(db),
         underlying_nested_module_path,
         deprecated_attr: type_alias.deprecated.clone().map(DeprecatedAttr),
+        lifetime_params,
     };
     Ok(ApiSnippets {
         generated_items: HashMap::from([(type_alias.id, generated_item)]),

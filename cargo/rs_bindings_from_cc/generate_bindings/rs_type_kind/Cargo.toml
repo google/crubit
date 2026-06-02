@@ -20,7 +20,9 @@ doctest = false
 [dependencies]
 cpp_type_name = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cpp_type_name", package = "rs_bindings_from_cc_cpp_type_name"}
 has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings", package = "rs_bindings_from_cc_has_bindings"}
+lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform", package = "rs_bindings_from_cc_lifetime_defaults_transform"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 error_report = { path = "../../../../cargo/common/error_report"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}

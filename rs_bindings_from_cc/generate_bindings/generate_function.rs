@@ -132,7 +132,7 @@ fn trait_name_to_token_stream(db: &BindingsGenerator, trait_name: &TraitName) ->
 /// Returns whether an argument of this type causes ADL to include the `record`.
 fn adl_expands_to(record: &Record, rs_type_kind: &RsTypeKind) -> bool {
     match rs_type_kind {
-        RsTypeKind::Record { record: nested_record, .. } => ptr::eq(record, &**nested_record),
+        RsTypeKind::Record { record: nested_record, .. } => record.id == nested_record.id,
         RsTypeKind::Reference { referent, .. } => adl_expands_to(record, referent),
         RsTypeKind::RvalueReference { referent, .. } => adl_expands_to(record, referent),
         _ => false,

@@ -9,7 +9,7 @@ use database::BindingsGenerator;
 use error_report::bail;
 use ir::{
     make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, ItemId, PointerType, PointerTypeKind,
-    Record, IR,
+    Record, TypeAlias, IR,
 };
 use memoized::memoized;
 use std::collections::{HashMap, HashSet};
@@ -129,10 +129,11 @@ fn decl_lifetime_arity_impl(
             ) => Ok(1),
             _ => record_lifetime_arity(db, rc),
         },
-        Item::TypeAlias(_ta) => {
+        Item::TypeAlias(ta) => {
             // Here and elsewhere in this function: change has_bindings.rs to check for additional
             // Item kinds when they are supported.
-            bail!("Type aliases unhandled for lifetimes: {:?}", item.cc_name_as_str())
+            // TODO(b/517949862): This needs to change once we add lifetime binders to type aliases.
+            lifetime_arity(db, &ta.underlying_type)
         }
         Item::IncompleteRecord(_) => {
             bail!("Incomplete records unhandled for lifetimes: {:?}", item.cc_name_as_str())
@@ -731,6 +732,32 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         Ok(new_record)
     }
 
+    /// Transforms a type alias to use default lifetime rules.
+    fn add_lifetime_to_type_alias(&mut self, type_alias: &TypeAlias) -> Result<TypeAlias> {
+        let mut new_type_alias = type_alias.clone();
+        self.bind_lifetime_inputs(type_alias.enclosing_item_id)?;
+        // TODO(b/517949862): Right now we don't allow users to explicitly bind lifetime parameters.
+        // If the underlying type has any explicit lifetime arguments, we preserve those; otherwise,
+        // we rebind all parameters.
+        if !type_alias.lifetime_inputs.is_empty() {
+            bail!(
+                "b/517949862: type alias {} has explicit lifetime inputs: {:#?}",
+                type_alias.cc_name,
+                type_alias.lifetime_inputs
+            );
+        }
+        if type_alias.underlying_type.explicit_lifetimes.is_empty()
+            && let Ok(lifetime_arity) = self.get_lifetime_arity(&type_alias.underlying_type)
+        {
+            for it in 0..lifetime_arity {
+                let new_name = self.bindings.push_new_binding(&Rc::from(format!("__alias{}", it)));
+                new_type_alias.lifetime_inputs.push(new_name.clone());
+                new_type_alias.underlying_type.explicit_lifetimes.push(new_name.clone());
+            }
+        }
+        Ok(new_type_alias)
+    }
+
     /// Since we keep all item ids stable, we only have to deep-clone the objects that we need to
     /// change. We may need to introduce lifetime param binders whenever we see a type (but not on
     /// decls).
@@ -738,6 +765,9 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         match item {
             Item::Func(func) => Ok(Item::Func(self.add_lifetime_to_func(func)?.into())),
             Item::Record(record) => Ok(Item::Record(self.add_lifetime_to_record(record)?.into())),
+            Item::TypeAlias(type_alias) => {
+                Ok(Item::TypeAlias(self.add_lifetime_to_type_alias(type_alias)?.into()))
+            }
             _ => Ok(item.clone()),
         }
     }
@@ -754,6 +784,19 @@ pub fn lifetime_defaults_transform_record(
     record: &Record,
 ) -> Result<Record> {
     LifetimeDefaults::new(db).add_lifetime_to_record(record)
+}
+
+/// Creates a copy of `type_alias` with default lifetimes filled in.
+pub fn lifetime_defaults_transform_type_alias(
+    db: &BindingsGenerator,
+    type_alias: &TypeAlias,
+) -> Result<TypeAlias> {
+    LifetimeDefaults::new(db).add_lifetime_to_type_alias(type_alias)
+}
+
+/// Creates a copy of `item` with default lifetimes filled in.
+pub fn lifetime_defaults_transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
+    LifetimeDefaults::new(db).add_lifetime_to_item(item)
 }
 
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;

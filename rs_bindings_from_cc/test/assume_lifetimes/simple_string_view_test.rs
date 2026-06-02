@@ -11,4 +11,7 @@ fn my_test() {
 
     let sv_raw = simple_string_view::sv_make_raw();
     let _sv_raw_id = simple_string_view::sv_ident(sv_raw);
+
+    let sv_alias = simple_string_view::SVA::default();
+    let _sv_alias_id = simple_string_view::sva_lb(sv_alias);
 }

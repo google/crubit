@@ -1530,11 +1530,13 @@ name = "rs_bindings_from_cc_rs_type_kind"
 version = "0.0.0"
 dependencies = [
  "arc_anyhow",
+ "crubit_feature",
  "error_report",
  "rs_bindings_from_cc_cpp_type_name",
  "rs_bindings_from_cc_database",
  "rs_bindings_from_cc_has_bindings",
  "rs_bindings_from_cc_ir",
+ "rs_bindings_from_cc_lifetime_defaults_transform",
 ]
 
 [[package]]

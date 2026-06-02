@@ -6,3 +6,4 @@
 
 SV sv_ident(SV s) { return s; }
 SV sv_make_raw() { return SV{}; }
+SVA sva_lb(SVA s) { return s; }

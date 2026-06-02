@@ -505,7 +505,9 @@ rust_library(
     deps = [
         ":cpp_type_name",
         ":has_bindings",
+        ":lifetime_defaults_transform",
         "//common:arc_anyhow",
+        "//common:crubit_feature",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",

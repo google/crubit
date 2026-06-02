@@ -52,4 +52,10 @@ extern "C" void __rust_thunk___Z11sv_make_rawv(struct ::SV* __return) {
 
 static_assert((struct ::SV (*)()) & ::sv_make_raw);
 
+extern "C" void __rust_thunk___Z6sva_lb2SV(::SVA* __return, ::SVA* s) {
+  new (__return) auto(::sva_lb(std::move(*s)));
+}
+
+static_assert((::SVA (*)(::SVA)) & ::sva_lb);
+
 #pragma clang diagnostic pop

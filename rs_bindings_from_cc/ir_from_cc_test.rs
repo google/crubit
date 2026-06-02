@@ -1280,6 +1280,7 @@ fn test_typedef() -> Result<()> {
             enclosing_item_id: None,
             must_bind: false,
             deprecated: None,
+            lifetime_inputs: [],
           }
         }
     );
@@ -1299,6 +1300,7 @@ fn test_typedef() -> Result<()> {
             enclosing_item_id: None,
             must_bind: false,
             deprecated: None,
+            lifetime_inputs: [],
           }
         }
     );

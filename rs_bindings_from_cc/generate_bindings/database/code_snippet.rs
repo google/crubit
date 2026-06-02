@@ -870,11 +870,18 @@ pub fn generated_items_to_tokens<'db>(
                 underlying_type,
                 underlying_nested_module_path,
                 deprecated_attr,
+                lifetime_params,
             } => {
+                let type_param_tokens = if !lifetime_params.is_empty() {
+                    quote! { < #( #lifetime_params ),* > }
+                } else {
+                    quote! {}
+                };
+
                 quote! {
                     #doc_comment
                     #deprecated_attr
-                    #visibility type #ident = #underlying_type;
+                    #visibility type #ident #type_param_tokens = #underlying_type;
                 }
                 .to_tokens(tokens);
 
@@ -947,6 +954,7 @@ pub enum GeneratedItem {
         underlying_type: TokenStream,
         underlying_nested_module_path: Option<TokenStream>,
         deprecated_attr: Option<DeprecatedAttr>,
+        lifetime_params: Vec<syn::Lifetime>,
     },
 }
 
