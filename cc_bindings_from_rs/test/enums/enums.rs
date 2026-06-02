@@ -199,3 +199,61 @@ pub mod repr_int {
         }
     }
 }
+
+/// This is a regression test for b/519192678.
+///
+/// This test mimics
+/// [the `QrError` enum](https://docs.rs/qr_code/latest/qr_code/types/enum.QrError.html)
+/// in an attempt to reproduce and prevent regressions where the `cc_bindings_from_rs`
+/// bindings for `QrError::MakeDataTooLong()` created a wrong variant of the enum
+/// (because it was not taking niche optimization into account):
+///
+/// ```
+/// inline constexpr QrError QrError::MakeDataTooLong() {
+///   return QrError(PrivateBytesTag{}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+///                                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+/// }
+/// ```
+///
+/// The object created above was interpreted on Rust side as
+/// `Structured(AtLeast2Pieces)` instead of `DataTooLong`.  The correct bindings should
+/// look like:
+///
+/// ```
+/// inline constexpr QrError QrError::MakeDataTooLong() {
+///   return QrError(PrivateBytesTag{}, {11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+///                                      0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+/// }
+/// ```
+pub mod qr_error {
+    #[derive(Debug, PartialEq, Eq, Copy, Clone)]
+    pub enum QrError {
+        DataTooLong,
+        InvalidVersion,
+        UnsupportedCharacterSet,
+        InvalidEciDesignator,
+        InvalidCharacter,
+        Structured(StructuredQrError),
+    }
+
+    impl QrError {
+        pub fn is_data_too_long(&self) -> bool {
+            matches!(self, QrError::DataTooLong)
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, Copy, Clone)]
+    pub enum StructuredQrError {
+        AtLeast2Pieces,
+        TotalMismatch(usize),
+        MissingParts,
+        Parity,
+        TooShort,
+        StructuredWrongMode,
+        StructuredWrongEnc,
+        SeqGreaterThanTotal(u8, u8),
+        LengthMismatch(usize, usize),
+        UnsupportedVersion(i16),
+        SplitMax16(usize),
+    }
+}

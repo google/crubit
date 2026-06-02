@@ -10,6 +10,7 @@
 
 namespace {
 
+using enums::qr_error::QrError;
 using enums::repr_c::MyEnum;
 using enums::repr_c_clone_active_variant::CloneActiveVariant;
 using enums::repr_c_clone_active_variant::is_a;
@@ -127,6 +128,11 @@ TEST(EnumsTest, TestRustReprEnumTuplePayloadCtor) {
 TEST(EnumsTest, TestIntReprEnumNoPayloadCtor) {
   EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload1().is_no_payload1());
   EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload2().is_no_payload2());
+}
+
+TEST(EnumsTest, TestQrError) {
+  auto e = QrError::MakeDataTooLong();
+  EXPECT_TRUE(e.is_data_too_long());
 }
 
 }  // namespace

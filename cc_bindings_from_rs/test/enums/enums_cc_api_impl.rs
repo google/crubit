@@ -11,6 +11,105 @@
 
 extern crate alloc;
 extern crate core;
+const _: () = assert!(::std::mem::size_of::<::enums_golden::qr_error::QrError>() == 24);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::qr_error::QrError>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Structured(
+    __param_0: &'static mut ::core::mem::MaybeUninit<::enums_golden::qr_error::StructuredQrError>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __param_0 = __param_0.assume_init_read();
+        let __rs_return_value = ::enums_golden::qr_error::QrError::Structured(__param_0);
+        (__ret_ptr as *mut ::enums_golden::qr_error::QrError).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_udata_utoo_ulong(
+    __self: &'static ::enums_golden::qr_error::QrError,
+) -> bool {
+    unsafe { ::enums_golden::qr_error::QrError::is_data_too_long(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+    __self: &'static ::enums_golden::qr_error::QrError,
+    other: &'static ::enums_golden::qr_error::QrError,
+) -> bool {
+    unsafe {
+        <::enums_golden::qr_error::QrError as ::core::cmp::PartialEq<
+            ::enums_golden::qr_error::QrError,
+        >>::eq(__self, other)
+    }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::qr_error::StructuredQrError>() == 24);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::qr_error::StructuredQrError>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_TotalMismatch(
+    __param_0: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::TotalMismatch(__param_0);
+        (__ret_ptr as *mut ::enums_golden::qr_error::StructuredQrError).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_SeqGreaterThanTotal(
+    __param_0: u8,
+    __param_1: u8,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::SeqGreaterThanTotal(__param_0, __param_1);
+        (__ret_ptr as *mut ::enums_golden::qr_error::StructuredQrError).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_LengthMismatch(
+    __param_0: usize,
+    __param_1: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::LengthMismatch(__param_0, __param_1);
+        (__ret_ptr as *mut ::enums_golden::qr_error::StructuredQrError).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_UnsupportedVersion(
+    __param_0: i16,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::UnsupportedVersion(__param_0);
+        (__ret_ptr as *mut ::enums_golden::qr_error::StructuredQrError).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_SplitMax16(
+    __param_0: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::enums_golden::qr_error::StructuredQrError::SplitMax16(__param_0);
+        (__ret_ptr as *mut ::enums_golden::qr_error::StructuredQrError).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+    __self: &'static ::enums_golden::qr_error::StructuredQrError,
+    other: &'static ::enums_golden::qr_error::StructuredQrError,
+) -> bool {
+    unsafe {
+        <::enums_golden::qr_error::StructuredQrError as ::core::cmp::PartialEq<
+            ::enums_golden::qr_error::StructuredQrError,
+        >>::eq(__self, other)
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_c::MyEnum>() == 40);
 const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c::MyEnum>() == 8);
 #[unsafe(no_mangle)]
