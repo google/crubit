@@ -1233,14 +1233,14 @@ fn generate_variant_ctor<'tcx>(
                 }
                 return result;
             }
-            let discr = core
-                .self_ty
-                .discriminant_for_variant(tcx, variant_index)
-                .expect("Invalid VariantIdx");
-            let (discr_size, _signed) = discr.ty.int_size_and_signed(tcx);
             let enum_kind = get_enum_kind(db, core.self_ty).expect("AtdKindEnum implied EnumKind");
             let body = match enum_kind {
                 EnumKind::ReprC => {
+                    let discr = core
+                        .self_ty
+                        .discriminant_for_variant(tcx, variant_index)
+                        .expect("Invalid VariantIdx");
+                    let (discr_size, _signed) = discr.ty.int_size_and_signed(tcx);
                     let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(discr.val, discr_size);
                     let tag_literal =
                         scalar_value_to_string(tcx, Scalar::Int(scalar_int), *discr.ty.kind())
@@ -1252,6 +1252,20 @@ fn generate_variant_ctor<'tcx>(
                     }
                 }
                 EnumKind::OpaqueBlobOfBytes => {
+                    let (tag_val, tag_size) = {
+                        let typing_env = post_analysis_typing_env(
+                            tcx,
+                            core.def_id.expect("Enums must have a DefId"),
+                        );
+                        let tag = tcx.tag_for_variant(typing_env.as_query_input((
+                            tcx.erase_and_anonymize_regions(core.self_ty),
+                            variant_index,
+                        )));
+                        match tag {
+                            Some(tag) => (tag.to_bits(tag.size()), tag.size()),
+                            None => (0, rustc_abi::Size::ZERO),
+                        }
+                    };
                     let tag_offset = {
                         let layout =
                             get_layout(tcx, core.self_ty).expect("Should verify layout earlier");
@@ -1264,11 +1278,11 @@ fn generate_variant_ctor<'tcx>(
                         layout.fields().offset(tag_field.as_usize()).bytes() as usize
                     };
                     let adt_size = core.size_in_bytes as usize;
-                    let discr_bytesize = (adt_size - tag_offset).min(discr_size.bytes() as usize);
+                    let discr_bytesize = (adt_size - tag_offset).min(tag_size.bytes() as usize);
                     let tag_bytes = match tcx.sess.target.endian {
-                        Endian::Little => &discr.val.to_le_bytes()[..discr_bytesize],
+                        Endian::Little => &tag_val.to_le_bytes()[..discr_bytesize],
                         Endian::Big => {
-                            &discr.val.to_be_bytes()[std::mem::size_of::<u128>() - discr_bytesize..]
+                            &tag_val.to_be_bytes()[std::mem::size_of::<u128>() - discr_bytesize..]
                         }
                     };
                     let bytes = {
