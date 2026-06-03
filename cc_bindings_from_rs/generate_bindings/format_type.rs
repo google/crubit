@@ -1143,8 +1143,20 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 }
             } else {
                 // if it doesn't, try seeing if it's a builtin.
-                if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
+                if let Some(bridged_builtin @ BridgedBuiltin::Option) =
+                    BridgedBuiltin::new(db, *adt)
+                {
                     return bridged_builtin.crubit_abi_type(db, substs);
+                }
+
+                if let Some(spec) = db.parse_rs_std_template_specialization(ty) {
+                    let spec = spec?;
+                    let mut prereqs = CcPrerequisites::default();
+                    let rust_type = db.format_ty_for_rs(spec.self_ty_rs)?;
+                    let cpp_type = spec.self_ty_cc.clone().into_tokens(&mut prereqs);
+                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(spec));
+                    let crubit_abi_type = CrubitAbiType::Transmute { rust_type, cpp_type };
+                    return Ok(CrubitAbiTypeWithCcPrereqs { crubit_abi_type, prereqs });
                 }
 
                 let fully_qualified_name = db

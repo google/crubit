@@ -113,6 +113,7 @@ crubit_cc_test(
     srcs = ["option_test.cc"],
     deps = [
         ":option_cc_api",
+        "//support/rs_std",
         "//testing/base/public:gunit_main",
     ],
 )

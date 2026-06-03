@@ -15,11 +15,13 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/check.h"
 #include "support/internal/memswap.h"
 #include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/option.h"
+#include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
 
 #include <array>
@@ -248,6 +250,48 @@ OptionWithSizeTypes final {
 // supported yet (b/259749095)
 
 }  // namespace option
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < i32 >") rs_std::Option<::std::int32_t> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Option(const Option&) = default;
+  Option& operator=(const Option&) = default;
+  Option(Option&&) = default;
+  Option& operator=(Option&&) = default;
+
+  Option(::crubit::UnsafeRelocateTag, Option&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  constexpr Option();
+
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+
+  Option(::std::int32_t&& value) noexcept;
+  Option& operator=(::std::int32_t&& value) noexcept;
+
+  explicit Option(::std::optional<::std::int32_t>&& value) noexcept;
+  Option& operator=(::std::optional<::std::int32_t>&& value) noexcept;
+
+  template <typename... Args>
+  Option(::std::in_place_t, Args&&... args) noexcept;
+  ~Option() noexcept = default;
+  operator ::std::optional<::std::int32_t>() && noexcept;
+  bool has_value() noexcept;
+
+ private:
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
+
+ private:
+  unsigned char storage_[8];
+};
+#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
@@ -937,6 +981,322 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
+}  // namespace option
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: result :: Result < i32 , :: alloc :: string :: String >")
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String> {
+ public:
+  // Clone::clone
+  Result(const Result&);
+
+  // Clone::clone_from
+  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>& operator=(
+      const Result&);
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  Result(::std::int32_t&& ok) noexcept;
+  Result& operator=(::std::int32_t&& ok) noexcept;
+  Result(rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept;
+  Result& operator=(
+      rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept;
+  template <typename... Args>
+  Result(::std::in_place_t, Args&&... args);
+  template <typename... Args>
+  Result(rs_std::unexpect_t, Args&&... args);
+  explicit constexpr operator bool() const noexcept;
+  constexpr bool has_value() const noexcept;
+  ::std::int32_t& value() &;
+  ::std::int32_t&& value() &&;
+  ::rs::alloc::string::String& err() &;
+  ::rs::alloc::string::String&& err() &&;
+  ~Result() noexcept;
+
+ private:
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  void check_has_ok();
+  void check_has_err();
+
+ private:
+  unsigned char __storage[24];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < :: core :: result :: Result < i32 , :: alloc :: "
+    "string :: String > >") rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> {
+ public:
+  // Clone::clone
+  Option(const Option&);
+
+  // Clone::clone_from
+  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+  operator=(const Option&);
+
+  Option(Option&&);
+  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+  operator=(Option&&);
+  Option(::crubit::UnsafeRelocateTag, Option&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  constexpr Option();
+
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+
+  Option(rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&&
+             value) noexcept;
+  Option& operator=(
+      rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&&
+          value) noexcept;
+
+  explicit Option(::std::optional<
+                  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
+                      value) noexcept;
+  Option& operator=(
+      ::std::optional<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
+          value) noexcept;
+
+  template <typename... Args>
+  Option(::std::in_place_t, Args&&... args) noexcept;
+  constexpr ~Option() noexcept;
+  operator ::std::optional<rs_std::Result<
+      ::std::int32_t, ::rs::alloc::string::String>>() && noexcept;
+  bool has_value() noexcept;
+
+ private:
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+
+ private:
+  unsigned char storage_[24];
+};
+#endif
+
+namespace option {
+
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
+return_option_result();
+
+}
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: result :: Result < :: core :: option :: Option < i32 > , :: core "
+    ":: option :: Option < i32 > >")
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Result(const Result&) = default;
+  Result& operator=(const Result&) = default;
+  Result(Result&&) = default;
+  Result& operator=(Result&&) = default;
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  Result(rs_std::Option<::std::int32_t>&& ok) noexcept;
+  Result& operator=(rs_std::Option<::std::int32_t>&& ok) noexcept;
+  Result(rs_std::unexpected<rs_std::Option<::std::int32_t>>&& err) noexcept;
+  Result& operator=(
+      rs_std::unexpected<rs_std::Option<::std::int32_t>>&& err) noexcept;
+  template <typename... Args>
+  Result(::std::in_place_t, Args&&... args);
+  template <typename... Args>
+  Result(rs_std::unexpect_t, Args&&... args);
+  explicit constexpr operator bool() const noexcept;
+  constexpr bool has_value() const noexcept;
+  rs_std::Option<::std::int32_t>& value() &;
+  rs_std::Option<::std::int32_t>&& value() &&;
+  rs_std::Option<::std::int32_t>& err() &;
+  rs_std::Option<::std::int32_t>&& err() &&;
+  ~Result() noexcept = default;
+
+ private:
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
+  void check_has_ok();
+  void check_has_err();
+
+ private:
+  unsigned char __storage[12];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: result :: Result < :: core :: option :: Option < :: core :: result "
+    ":: Result < i32 , :: alloc :: string :: String > > , :: core :: result :: "
+    "Result < :: core :: option :: Option < i32 > , :: core :: option :: "
+    "Option < i32 > > >")
+    rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                                 ::rs::alloc::string::String>>,
+                   rs_std::Result<rs_std::Option<::std::int32_t>,
+                                  rs_std::Option<::std::int32_t>>> {
+ public:
+  // Clone::clone
+  Result(const Result&);
+
+  // Clone::clone_from
+  rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                               ::rs::alloc::string::String>>,
+                 rs_std::Result<rs_std::Option<::std::int32_t>,
+                                rs_std::Option<::std::int32_t>>>&
+  operator=(const Result&);
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  Result(rs_std::Option<rs_std::Result<
+             ::std::int32_t, ::rs::alloc::string::String>>&& ok) noexcept;
+  Result& operator=(
+      rs_std::Option<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
+          ok) noexcept;
+  Result(rs_std::unexpected<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                           rs_std::Option<::std::int32_t>>>&&
+             err) noexcept;
+  Result& operator=(
+      rs_std::unexpected<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                        rs_std::Option<::std::int32_t>>>&&
+          err) noexcept;
+  template <typename... Args>
+  Result(::std::in_place_t, Args&&... args);
+  template <typename... Args>
+  Result(rs_std::unexpect_t, Args&&... args);
+  explicit constexpr operator bool() const noexcept;
+  constexpr bool has_value() const noexcept;
+  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+  value() &;
+  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
+  value() &&;
+  rs_std::Result<rs_std::Option<::std::int32_t>,
+                 rs_std::Option<::std::int32_t>>&
+  err() &;
+  rs_std::Result<rs_std::Option<::std::int32_t>,
+                 rs_std::Option<::std::int32_t>>&&
+  err() &&;
+  ~Result() noexcept;
+
+ private:
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  void check_has_ok();
+  void check_has_err();
+
+ private:
+  unsigned char __storage[24];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < :: core :: result :: Result < :: core :: option "
+    ":: Option < :: core :: result :: Result < i32 , :: alloc :: string :: "
+    "String > > , :: core :: result :: Result < :: core :: option :: Option < "
+    "i32 > , :: core :: option :: Option < i32 > > > >") rs_std::
+    Option<rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>> {
+ public:
+  // Clone::clone
+  Option(const Option&);
+
+  // Clone::clone_from
+  rs_std::Option<
+      rs_std::Result<rs_std::Option<rs_std::Result<
+                         ::std::int32_t, ::rs::alloc::string::String>>,
+                     rs_std::Result<rs_std::Option<::std::int32_t>,
+                                    rs_std::Option<::std::int32_t>>>>&
+  operator=(const Option&);
+
+  Option(Option&&);
+  rs_std::Option<
+      rs_std::Result<rs_std::Option<rs_std::Result<
+                         ::std::int32_t, ::rs::alloc::string::String>>,
+                     rs_std::Result<rs_std::Option<::std::int32_t>,
+                                    rs_std::Option<::std::int32_t>>>>&
+  operator=(Option&&);
+  Option(::crubit::UnsafeRelocateTag, Option&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  constexpr Option();
+
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+
+  Option(rs_std::Result<
+         rs_std::Option<
+             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+         rs_std::Result<rs_std::Option<::std::int32_t>,
+                        rs_std::Option<::std::int32_t>>>&& value) noexcept;
+  Option& operator=(
+      rs_std::Result<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<rs_std::Option<::std::int32_t>,
+                         rs_std::Option<::std::int32_t>>>&& value) noexcept;
+
+  explicit Option(
+      ::std::optional<rs_std::Result<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<rs_std::Option<::std::int32_t>,
+                         rs_std::Option<::std::int32_t>>>>&& value) noexcept;
+  Option& operator=(
+      ::std::optional<rs_std::Result<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<rs_std::Option<::std::int32_t>,
+                         rs_std::Option<::std::int32_t>>>>&& value) noexcept;
+
+  template <typename... Args>
+  Option(::std::in_place_t, Args&&... args) noexcept;
+  constexpr ~Option() noexcept;
+  operator ::std::optional<rs_std::Result<
+      rs_std::Option<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+      rs_std::Result<rs_std::Option<::std::int32_t>,
+                     rs_std::Option<::std::int32_t>>>>() && noexcept;
+  bool has_value() noexcept;
+
+ private:
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+
+ private:
+  unsigned char storage_[24];
+};
+#endif
+
+namespace option {
+
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>
+stress_testing_nested_types();
+
 static_assert(
     sizeof(CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
@@ -1451,6 +1811,48 @@ inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(16 == offsetof(OptionWithSizeTypes, ival));
 }
 namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uoption_uresult(
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*
+        __ret_ptr);
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
+return_option_result() {
+  crubit::Slot<rs_std::Option<
+      rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_return_uoption_uresult(
+      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_stress_utesting_unested_utypes(
+    rs_std::Option<rs_std::Result<
+        rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+        rs_std::Result<rs_std::Option<::std::int32_t>,
+                       rs_std::Option<::std::int32_t>>>>* __ret_ptr);
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>
+stress_testing_nested_types() {
+  crubit::Slot<rs_std::Option<
+      rs_std::Result<rs_std::Option<rs_std::Result<
+                         ::std::int32_t, ::rs::alloc::string::String>>,
+                     rs_std::Result<rs_std::Option<::std::int32_t>,
+                                    rs_std::Option<::std::int32_t>>>>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_stress_utesting_unested_utypes(
+      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_stringify_ulen(
     rs_std::Option<::option::HasDefault> const&,
     rs_std::Option<::std::uint32_t>* __ret_ptr);
@@ -1464,6 +1866,116 @@ inline rs_std::Option<::std::uint32_t> stringify_len(
 }
 
 }  // namespace option
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::int32_t>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::int32_t>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int32_t>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int32_t>>);
+inline constexpr rs_std::Option<::std::int32_t>::Option() { set_tag(0); }
+inline constexpr rs_std::Option<::std::int32_t>::Option(
+    ::std::nullopt_t) noexcept {
+  set_tag(0);
+}
+inline constexpr rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
+  if (tag() != 0) {
+    ::std::destroy_at(reinterpret_cast<::std::int32_t*>(storage_ + 4));
+  }
+  set_tag(0);
+  return *this;
+}
+inline rs_std::Option<::std::int32_t>::Option(::std::int32_t&& value) noexcept {
+  set_tag(1);
+  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
+                      ::std::move(value));
+}
+inline rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(::std::int32_t&& value) noexcept {
+  if (tag() != 0) {
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::int32_t*>(storage_ + 4), ::std::move(value));
+  } else {
+    set_tag(1);
+    ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
+                        ::std::move(value));
+  }
+  return *this;
+}
+inline rs_std::Option<::std::int32_t>::Option(
+    ::std::optional<::std::int32_t>&& value) noexcept {
+  if (value.has_value()) {
+    set_tag(1);
+    ::std::int32_t* some = reinterpret_cast<::std::int32_t*>(storage_ + 4);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(0);
+  }
+}
+inline rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(
+    ::std::optional<::std::int32_t>&& value) noexcept {
+  if (tag() != 0) {
+    ::std::destroy_at(reinterpret_cast<::std::int32_t*>(storage_ + 4));
+  }
+  if (value.has_value()) {
+    set_tag(1);
+    ::std::int32_t* some = reinterpret_cast<::std::int32_t*>(storage_ + 4);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(0);
+  }
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t,
+                                              Args&&... args) noexcept {
+  set_tag(1);
+  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
+                      ::std::forward<Args>(args)...);
+}
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t>>);
+inline rs_std::Option<::std::int32_t>::operator ::std::optional<
+    ::std::int32_t>() && noexcept {
+  if (tag() == 0) {
+    return ::std::nullopt;
+  } else {
+    ::std::int32_t& value = *reinterpret_cast<::std::int32_t*>(storage_ + 4);
+    ::std::optional<::std::int32_t> return_value(::std::move(value));
+    ::std::destroy_at(&value);
+    set_tag(0);
+    return return_value;
+  }
+}
+inline bool rs_std::Option<::std::int32_t>::has_value() noexcept {
+  return tag() != 0;
+}
+inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
+    const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint32_t>(__bytes);
+}
+inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
+    ::std::uint32_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
@@ -2314,6 +2826,524 @@ rs_std::Option<rs_std::Option<::option::LessThan20U8>>::set_tag(
 }
 #endif
 
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone(
+    rs_std::Option<
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> const&,
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*
+        __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone_ufrom(
+    rs_std::Option<
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&,
+    rs_std::Option<
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> const&);
+}
+inline rs_std::Option<rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>>::Option(const Option& other) {
+  __crubit_internal::__crubit_thunk_clone(other, this);
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator=(const Option& other) {
+  if (this != &other) {
+    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+  }
+  return *this;
+}
+inline rs_std::Option<rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>>::Option(Option&& other)
+    : Option() {
+  *this = ::std::move(other);
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator=(Option&& other) {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+inline constexpr rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option() {
+  set_tag(UINT64_C(18446744073709551614));
+}
+inline constexpr rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        ::std::nullopt_t) noexcept {
+  set_tag(UINT64_C(18446744073709551614));
+}
+inline constexpr rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator=(::std::nullopt_t) noexcept {
+  if (tag() != UINT64_C(18446744073709551614)) {
+    ::std::destroy_at(
+        reinterpret_cast<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+            storage_));
+  }
+  set_tag(UINT64_C(18446744073709551614));
+  return *this;
+}
+inline rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&&
+            value) noexcept {
+  ::std::construct_at(
+      reinterpret_cast<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+          storage_),
+      ::std::move(value));
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator=(rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&&
+              value) noexcept {
+  if (tag() != UINT64_C(18446744073709551614)) {
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+            storage_),
+        ::std::move(value));
+  } else {
+    ::std::construct_at(
+        reinterpret_cast<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+            storage_),
+        ::std::move(value));
+  }
+  return *this;
+}
+inline rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        ::std::optional<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
+            value) noexcept {
+  if (value.has_value()) {
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>* some =
+        reinterpret_cast<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+            storage_);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(UINT64_C(18446744073709551614));
+  }
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator=(::std::optional<rs_std::Result<
+              ::std::int32_t, ::rs::alloc::string::String>>&& value) noexcept {
+  if (tag() != UINT64_C(18446744073709551614)) {
+    ::std::destroy_at(
+        reinterpret_cast<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+            storage_));
+  }
+  if (value.has_value()) {
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>* some =
+        reinterpret_cast<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+            storage_);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(UINT64_C(18446744073709551614));
+  }
+  return *this;
+}
+template <typename... Args>
+inline rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        ::std::in_place_t, Args&&... args) noexcept {
+  ::std::construct_at(
+      reinterpret_cast<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+          storage_),
+      ::std::forward<Args>(args)...);
+}
+inline constexpr rs_std::Option<rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>>::~Option() noexcept {
+  if (tag() != UINT64_C(18446744073709551614)) {
+    ::std::destroy_at(
+        reinterpret_cast<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+            storage_));
+  }
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator ::std::optional<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>() && noexcept {
+  if (tag() == UINT64_C(18446744073709551614)) {
+    return ::std::nullopt;
+  } else {
+    struct DeferSetTagNone {
+      rs_std::Option<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>* _value;
+      DeferSetTagNone(rs_std::Option<rs_std::Result<
+                          ::std::int32_t, ::rs::alloc::string::String>>* self)
+          : _value(self) {}
+      ~DeferSetTagNone() { set_tag(UINT64_C(18446744073709551614)); }
+
+     private:
+      void set_tag(::std::uint64_t tag) { _value->set_tag(tag); }
+    } defer(this);
+    return ::std::make_optional<
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>(
+        crubit::UnsafeRelocateTag{},
+        ::std::move(
+            *reinterpret_cast<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
+                storage_)));
+  }
+}
+inline bool rs_std::Option<rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>>::has_value() noexcept {
+  return tag() != UINT64_C(18446744073709551614);
+}
+inline constexpr ::std::uint64_t rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::tag()
+    const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint64_t>(__bytes);
+}
+inline constexpr void
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+    set_tag(::std::uint64_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone(
+    rs_std::Option<
+        rs_std::Result<rs_std::Option<rs_std::Result<
+                           ::std::int32_t, ::rs::alloc::string::String>>,
+                       rs_std::Result<rs_std::Option<::std::int32_t>,
+                                      rs_std::Option<::std::int32_t>>>> const&,
+    rs_std::Option<rs_std::Result<
+        rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+        rs_std::Result<rs_std::Option<::std::int32_t>,
+                       rs_std::Option<::std::int32_t>>>>* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone_ufrom(
+    rs_std::Option<
+        rs_std::Result<rs_std::Option<rs_std::Result<
+                           ::std::int32_t, ::rs::alloc::string::String>>,
+                       rs_std::Result<rs_std::Option<::std::int32_t>,
+                                      rs_std::Option<::std::int32_t>>>>&,
+    rs_std::Option<
+        rs_std::Result<rs_std::Option<rs_std::Result<
+                           ::std::int32_t, ::rs::alloc::string::String>>,
+                       rs_std::Result<rs_std::Option<::std::int32_t>,
+                                      rs_std::Option<::std::int32_t>>>> const&);
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::Option(const Option&
+                                                                 other) {
+  __crubit_internal::__crubit_thunk_clone(other, this);
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>&
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::operator=(const Option&
+                                                                    other) {
+  if (this != &other) {
+    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+  }
+  return *this;
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::Option(Option&& other)
+    : Option() {
+  *this = ::std::move(other);
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>&
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::operator=(Option&&
+                                                                    other) {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+inline constexpr rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::Option() {
+  set_tag(UINT64_C(18446744073709551612));
+}
+inline constexpr rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+    Option(::std::nullopt_t) noexcept {
+  set_tag(UINT64_C(18446744073709551612));
+}
+inline constexpr rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>&
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+operator=(::std::nullopt_t) noexcept {
+  if (tag() != UINT64_C(18446744073709551612)) {
+    ::std::destroy_at(
+        reinterpret_cast<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>*>(storage_));
+  }
+  set_tag(UINT64_C(18446744073709551612));
+  return *this;
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+    Option(rs_std::Result<
+           rs_std::Option<
+               rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+           rs_std::Result<rs_std::Option<::std::int32_t>,
+                          rs_std::Option<::std::int32_t>>>&& value) noexcept {
+  ::std::construct_at(
+      reinterpret_cast<rs_std::Result<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<rs_std::Option<::std::int32_t>,
+                         rs_std::Option<::std::int32_t>>>*>(storage_),
+      ::std::move(value));
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>&
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+operator=(rs_std::Result<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<rs_std::Option<::std::int32_t>,
+                         rs_std::Option<::std::int32_t>>>&& value) noexcept {
+  if (tag() != UINT64_C(18446744073709551612)) {
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>*>(storage_),
+        ::std::move(value));
+  } else {
+    ::std::construct_at(
+        reinterpret_cast<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>*>(storage_),
+        ::std::move(value));
+  }
+  return *this;
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+    Option(
+        ::std::optional<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>>&& value) noexcept {
+  if (value.has_value()) {
+    rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                                 ::rs::alloc::string::String>>,
+                   rs_std::Result<rs_std::Option<::std::int32_t>,
+                                  rs_std::Option<::std::int32_t>>>* some =
+        reinterpret_cast<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>*>(storage_);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(UINT64_C(18446744073709551612));
+  }
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>&
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+operator=(
+    ::std::optional<rs_std::Result<
+        rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+        rs_std::Result<rs_std::Option<::std::int32_t>,
+                       rs_std::Option<::std::int32_t>>>>&& value) noexcept {
+  if (tag() != UINT64_C(18446744073709551612)) {
+    ::std::destroy_at(
+        reinterpret_cast<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>*>(storage_));
+  }
+  if (value.has_value()) {
+    rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                                 ::rs::alloc::string::String>>,
+                   rs_std::Result<rs_std::Option<::std::int32_t>,
+                                  rs_std::Option<::std::int32_t>>>* some =
+        reinterpret_cast<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>*>(storage_);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(UINT64_C(18446744073709551612));
+  }
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+    Option(::std::in_place_t, Args&&... args) noexcept {
+  ::std::construct_at(
+      reinterpret_cast<rs_std::Result<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<rs_std::Option<::std::int32_t>,
+                         rs_std::Option<::std::int32_t>>>*>(storage_),
+      ::std::forward<Args>(args)...);
+}
+inline constexpr rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::~Option() noexcept {
+  if (tag() != UINT64_C(18446744073709551612)) {
+    ::std::destroy_at(
+        reinterpret_cast<rs_std::Result<
+            rs_std::Option<
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+            rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>>*>(storage_));
+  }
+}
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+operator ::std::optional<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>() && noexcept {
+  if (tag() == UINT64_C(18446744073709551612)) {
+    return ::std::nullopt;
+  } else {
+    struct DeferSetTagNone {
+      rs_std::Option<rs_std::Result<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<rs_std::Option<::std::int32_t>,
+                         rs_std::Option<::std::int32_t>>>>* _value;
+      DeferSetTagNone(
+          rs_std::Option<rs_std::Result<
+              rs_std::Option<
+                  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+              rs_std::Result<rs_std::Option<::std::int32_t>,
+                             rs_std::Option<::std::int32_t>>>>* self)
+          : _value(self) {}
+      ~DeferSetTagNone() { set_tag(UINT64_C(18446744073709551612)); }
+
+     private:
+      void set_tag(::std::uint64_t tag) { _value->set_tag(tag); }
+    } defer(this);
+    return ::std::make_optional<
+        rs_std::Result<rs_std::Option<rs_std::Result<
+                           ::std::int32_t, ::rs::alloc::string::String>>,
+                       rs_std::Result<rs_std::Option<::std::int32_t>,
+                                      rs_std::Option<::std::int32_t>>>>(
+        crubit::UnsafeRelocateTag{},
+        ::std::move(
+            *reinterpret_cast<rs_std::Result<
+                rs_std::Option<rs_std::Result<::std::int32_t,
+                                              ::rs::alloc::string::String>>,
+                rs_std::Result<rs_std::Option<::std::int32_t>,
+                               rs_std::Option<::std::int32_t>>>*>(storage_)));
+  }
+}
+inline bool rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::has_value() noexcept {
+  return tag() != UINT64_C(18446744073709551612);
+}
+inline constexpr ::std::uint64_t rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::tag() const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint64_t>(__bytes);
+}
+inline constexpr void rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+    set_tag(::std::uint64_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+#endif
+
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 static_assert(
@@ -2531,6 +3561,559 @@ inline constexpr void rs_std::Option<::std::uint8_t>::set_tag(
   for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
+}
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone(
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const&,
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone_ufrom(
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&,
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const&);
+}
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
+    const Result& other) {
+  __crubit_internal::__crubit_thunk_clone(other, this);
+}
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
+    const Result& other) {
+  if (this != &other) {
+    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+  }
+  return *this;
+}
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
+    ::std::int32_t&& ok) noexcept {
+  set_tag(UINT64_C(18446744073709551615));
+  ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 8),
+                      ::std::move(ok));
+}
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
+    ::std::int32_t&& ok) noexcept {
+  if (!has_value()) {
+    ::std::destroy_at(
+        reinterpret_cast<::rs::alloc::string::String*>(__storage));
+    set_tag(UINT64_C(18446744073709551615));
+    ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 8),
+                        ::std::move(ok));
+  } else {
+    set_tag(UINT64_C(18446744073709551615));
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::int32_t*>(__storage + 8), ::std::move(ok));
+  }
+  return *this;
+}
+
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
+    rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept {
+  ::std::construct_at(reinterpret_cast<::rs::alloc::string::String*>(__storage),
+                      ::std::move(err.error()));
+}
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
+    rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept {
+  if (has_value()) {
+    ::std::destroy_at(__storage + 8);
+    ::std::construct_at(
+        reinterpret_cast<::rs::alloc::string::String*>(__storage),
+        ::std::move(err.error()));
+  } else {
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::rs::alloc::string::String*>(__storage),
+        ::std::move(err.error()));
+  }
+  return *this;
+}
+
+template <typename... Args>
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
+    std::in_place_t, Args&&... args) {
+  set_tag(UINT64_C(18446744073709551615));
+  std::construct_at(__storage + 8, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
+    rs_std::unexpect_t, Args&&... args) {
+  std::construct_at(__storage, std::forward<Args>(args)...);
+}
+inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::
+operator bool() const noexcept {
+  return has_value();
+}
+inline constexpr bool rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>::has_value() const noexcept {
+  return tag() == UINT64_C(18446744073709551615);
+}
+inline ::std::int32_t&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::value() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::int32_t*>(__storage + 8);
+}
+inline ::std::int32_t&&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::value() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::int32_t*>(__storage + 8));
+}
+inline ::rs::alloc::string::String&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::err() & {
+  check_has_err();
+  return *reinterpret_cast<::rs::alloc::string::String*>(__storage);
+}
+inline ::rs::alloc::string::String&&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::err() && {
+  check_has_err();
+  return ::std::move(
+      *reinterpret_cast<::rs::alloc::string::String*>(__storage));
+}
+inline rs_std::Result<::std::int32_t,
+                      ::rs::alloc::string::String>::~Result() noexcept {
+  if (has_value()) {
+    ::std::destroy_at(reinterpret_cast<::std::int32_t*>(__storage + 8));
+  } else {
+    ::std::destroy_at(
+        reinterpret_cast<::rs::alloc::string::String*>(__storage));
+  }
+}
+inline constexpr ::std::uint64_t rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint64_t>(__bytes);
+}
+inline constexpr void
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::set_tag(
+    ::std::uint64_t tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+inline void
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::check_has_ok() {
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
+}
+inline void
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::check_has_err() {
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
+}
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<rs_std::Result<
+        rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<rs_std::Result<
+        rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<rs_std::Result<
+        rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<rs_std::Result<
+        rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>>);
+inline rs_std::Result<rs_std::Option<::std::int32_t>,
+                      rs_std::Option<::std::int32_t>>::
+    Result(rs_std::Option<::std::int32_t>&& ok) noexcept {
+  set_tag(0);
+  ::std::construct_at(
+      reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4),
+      ::std::move(ok));
+}
+inline rs_std::Result<rs_std::Option<::std::int32_t>,
+                      rs_std::Option<::std::int32_t>>&
+rs_std::Result<rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>::
+operator=(rs_std::Option<::std::int32_t>&& ok) noexcept {
+  if (!has_value()) {
+    ::std::destroy_at(
+        reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4));
+    set_tag(0);
+    ::std::construct_at(
+        reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4),
+        ::std::move(ok));
+  } else {
+    set_tag(0);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4),
+        ::std::move(ok));
+  }
+  return *this;
+}
+
+inline rs_std::Result<rs_std::Option<::std::int32_t>,
+                      rs_std::Option<::std::int32_t>>::
+    Result(rs_std::unexpected<rs_std::Option<::std::int32_t>>&& err) noexcept {
+  set_tag(1);
+  ::std::construct_at(
+      reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4),
+      ::std::move(err.error()));
+}
+inline rs_std::Result<rs_std::Option<::std::int32_t>,
+                      rs_std::Option<::std::int32_t>>&
+rs_std::Result<rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>::
+operator=(rs_std::unexpected<rs_std::Option<::std::int32_t>>&& err) noexcept {
+  if (has_value()) {
+    ::std::destroy_at(__storage + 4);
+    set_tag(1);
+    ::std::construct_at(
+        reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4),
+        ::std::move(err.error()));
+  } else {
+    set_tag(1);
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4),
+        ::std::move(err.error()));
+  }
+  return *this;
+}
+
+template <typename... Args>
+inline rs_std::Result<rs_std::Option<::std::int32_t>,
+                      rs_std::Option<::std::int32_t>>::Result(std::in_place_t,
+                                                              Args&&... args) {
+  set_tag(0);
+  std::construct_at(__storage + 4, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline rs_std::Result<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Option<::std::int32_t>>::Result(rs_std::unexpect_t,
+                                            Args&&... args) {
+  set_tag(1);
+  std::construct_at(__storage + 4, std::forward<Args>(args)...);
+}
+inline constexpr rs_std::Result<rs_std::Option<::std::int32_t>,
+                                rs_std::Option<::std::int32_t>>::
+operator bool() const noexcept {
+  return has_value();
+}
+inline constexpr bool
+rs_std::Result<rs_std::Option<::std::int32_t>,
+               rs_std::Option<::std::int32_t>>::has_value() const noexcept {
+  return tag() == 0;
+}
+inline rs_std::Option<::std::int32_t>& rs_std::Result<
+    rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>::value() & {
+  check_has_ok();
+  return *reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4);
+}
+inline rs_std::Option<::std::int32_t>&&
+rs_std::Result<rs_std::Option<::std::int32_t>,
+               rs_std::Option<::std::int32_t>>::value() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4));
+}
+inline rs_std::Option<::std::int32_t>& rs_std::Result<
+    rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>::err() & {
+  check_has_err();
+  return *reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4);
+}
+inline rs_std::Option<::std::int32_t>&& rs_std::Result<
+    rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>::err() && {
+  check_has_err();
+  return ::std::move(
+      *reinterpret_cast<rs_std::Option<::std::int32_t>*>(__storage + 4));
+}
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Result<
+        rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>>);
+inline constexpr ::std::uint32_t
+rs_std::Result<rs_std::Option<::std::int32_t>,
+               rs_std::Option<::std::int32_t>>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint32_t>(__bytes);
+}
+inline constexpr void rs_std::Result<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Option<::std::int32_t>>::set_tag(::std::uint32_t tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+inline void rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>::check_has_ok() {
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
+}
+inline void rs_std::Result<rs_std::Option<::std::int32_t>,
+                           rs_std::Option<::std::int32_t>>::check_has_err() {
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
+}
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone(
+    rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                                 ::rs::alloc::string::String>>,
+                   rs_std::Result<rs_std::Option<::std::int32_t>,
+                                  rs_std::Option<::std::int32_t>>> const&,
+    rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                                 ::rs::alloc::string::String>>,
+                   rs_std::Result<rs_std::Option<::std::int32_t>,
+                                  rs_std::Option<::std::int32_t>>>* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone_ufrom(
+    rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                                 ::rs::alloc::string::String>>,
+                   rs_std::Result<rs_std::Option<::std::int32_t>,
+                                  rs_std::Option<::std::int32_t>>>&,
+    rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                                 ::rs::alloc::string::String>>,
+                   rs_std::Result<rs_std::Option<::std::int32_t>,
+                                  rs_std::Option<::std::int32_t>>> const&);
+}
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::Result(const Result&
+                                                                other) {
+  __crubit_internal::__crubit_thunk_clone(other, this);
+}
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::operator=(const Result&
+                                                                   other) {
+  if (this != &other) {
+    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+  }
+  return *this;
+}
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+    Result(rs_std::Option<rs_std::Result<
+               ::std::int32_t, ::rs::alloc::string::String>>&& ok) noexcept {
+  ::std::construct_at(
+      reinterpret_cast<rs_std::Option<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*>(
+          __storage),
+      ::std::move(ok));
+}
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+operator=(rs_std::Option<rs_std::Result<
+              ::std::int32_t, ::rs::alloc::string::String>>&& ok) noexcept {
+  if (!has_value()) {
+    ::std::destroy_at(
+        reinterpret_cast<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                        rs_std::Option<::std::int32_t>>*>(
+            __storage + 8));
+    ::std::construct_at(
+        reinterpret_cast<rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*>(
+            __storage),
+        ::std::move(ok));
+  } else {
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*>(
+            __storage),
+        ::std::move(ok));
+  }
+  return *this;
+}
+
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+    Result(rs_std::unexpected<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                             rs_std::Option<::std::int32_t>>>&&
+               err) noexcept {
+  set_tag(UINT64_C(18446744073709551613));
+  ::std::construct_at(
+      reinterpret_cast<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                      rs_std::Option<::std::int32_t>>*>(
+          __storage + 8),
+      ::std::move(err.error()));
+}
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+operator=(rs_std::unexpected<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                            rs_std::Option<::std::int32_t>>>&&
+              err) noexcept {
+  if (has_value()) {
+    ::std::destroy_at(__storage);
+    set_tag(UINT64_C(18446744073709551613));
+    ::std::construct_at(
+        reinterpret_cast<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                        rs_std::Option<::std::int32_t>>*>(
+            __storage + 8),
+        ::std::move(err.error()));
+  } else {
+    set_tag(UINT64_C(18446744073709551613));
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                        rs_std::Option<::std::int32_t>>*>(
+            __storage + 8),
+        ::std::move(err.error()));
+  }
+  return *this;
+}
+
+template <typename... Args>
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::Result(std::in_place_t,
+                                                            Args&&... args) {
+  std::construct_at(__storage, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::Result(rs_std::unexpect_t,
+                                                            Args&&... args) {
+  set_tag(UINT64_C(18446744073709551613));
+  std::construct_at(__storage + 8, std::forward<Args>(args)...);
+}
+inline constexpr rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+operator bool() const noexcept {
+  return has_value();
+}
+inline constexpr bool rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::has_value()
+    const noexcept {
+  return tag() != UINT64_C(18446744073709551613);
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::value() & {
+  check_has_ok();
+  return *reinterpret_cast<rs_std::Option<
+      rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*>(__storage);
+}
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::value() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<rs_std::Option<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*>(
+          __storage));
+}
+inline rs_std::Result<rs_std::Option<::std::int32_t>,
+                      rs_std::Option<::std::int32_t>>&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::err() & {
+  check_has_err();
+  return *reinterpret_cast<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                          rs_std::Option<::std::int32_t>>*>(
+      __storage + 8);
+}
+inline rs_std::Result<rs_std::Option<::std::int32_t>,
+                      rs_std::Option<::std::int32_t>>&&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::err() && {
+  check_has_err();
+  return ::std::move(
+      *reinterpret_cast<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                       rs_std::Option<::std::int32_t>>*>(
+          __storage + 8));
+}
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::~Result() noexcept {
+  if (has_value()) {
+    ::std::destroy_at(
+        reinterpret_cast<rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*>(
+            __storage));
+  } else {
+    ::std::destroy_at(
+        reinterpret_cast<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                        rs_std::Option<::std::int32_t>>*>(
+            __storage + 8));
+  }
+}
+inline constexpr ::std::uint64_t rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint64_t>(__bytes);
+}
+inline constexpr void rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::set_tag(::std::uint64_t
+                                                                 tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+inline void rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::check_has_ok() {
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
+}
+inline void rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::check_has_err() {
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
 

@@ -198,3 +198,13 @@ pub struct BridgedType(i32);
 pub fn take_option_bridged(x: Option<BridgedType>) -> i32 {
     x.map(|b| b.0).unwrap_or(-1)
 }
+
+pub fn return_option_result() -> Option<Result<i32, String>> {
+    Some(Ok(1))
+}
+
+#[allow(clippy::type_complexity)]
+pub fn stress_testing_nested_types(
+) -> Option<Result<Option<Result<i32, String>>, Result<Option<i32>, Option<i32>>>> {
+    None
+}

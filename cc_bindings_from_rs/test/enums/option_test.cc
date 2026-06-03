@@ -3,11 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "cc_bindings_from_rs/test/enums/option.h"
 
-#include <cstdint>
 #include <optional>
-#include <utility>
 
 #include "gtest/gtest.h"
+#include "support/rs_std/rs_std.h"
 
 namespace {
 
@@ -181,6 +180,19 @@ TEST(OptionTest, PassingOptionAsReferenceArgument) {
   std::optional<uint32_t> y = std::move(option::stringify_len(x));
   EXPECT_TRUE(y.has_value());
   EXPECT_EQ(y.value(), 5);
+}
+
+TEST(OptionTest, ReturnOptionResult) {
+  std::optional<rs_std::Result<int32_t, rs::std::string::String>> result =
+      option::return_option_result();
+  EXPECT_TRUE(result.has_value());
+  EXPECT_TRUE(result.value().has_value());
+  EXPECT_EQ(result.value().value(), 1);
+}
+
+TEST(OptionTest, ReturnNestedOptionResult) {
+  auto opt_result = option::stress_testing_nested_types();
+  EXPECT_FALSE(opt_result.has_value());
 }
 
 }  // namespace
