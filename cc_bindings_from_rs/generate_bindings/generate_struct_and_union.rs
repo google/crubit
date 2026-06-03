@@ -462,6 +462,36 @@ pub fn from_trait_impls_by_argument<'tcx>(
     Rc::new(map)
 }
 
+pub fn into_trait_impls_by_destination<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    crate_num: CrateNum,
+) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>> {
+    let tcx = db.tcx();
+    let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
+    let impls_iter: Box<dyn Iterator<Item = DefId>> = if crate_num == LOCAL_CRATE {
+        Box::new(tcx.local_trait_impls(into_trait).iter().map(|impl_id| impl_id.to_def_id()))
+    } else {
+        Box::new(
+            tcx.implementations_of_trait((crate_num, into_trait))
+                .iter()
+                .map(|(impl_id, _)| *impl_id),
+        )
+    };
+    let mut map: HashMap<Ty<'tcx>, Vec<DefId>> = HashMap::new();
+    for into_impl_id in impls_iter {
+        let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
+        let dest_ty = trait_ref.args.type_at(1);
+        // We want to check if our type has type variables and constant variables, and still allow
+        // region variables.
+        if dest_ty.flags().intersects(has_type_or_const_vars()) {
+            continue;
+        }
+        let dest_self_ty = erase_regions(tcx, dest_ty);
+        map.entry(dest_self_ty).or_default().push(into_impl_id);
+    }
+    Rc::new(map)
+}
+
 fn generate_into_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
