@@ -224,6 +224,7 @@ struct CcType {
     CallingConv call_conv;
     // param_and_return_types assumes the last type is the return type.
     std::vector<CcType> param_and_return_types;
+    std::vector<std::string> lifetime_inputs;
   };
 
   struct PointerType {
@@ -972,6 +973,8 @@ struct TypeAlias {
   bool must_bind = false;
   // Set if this is [[deprecated]]. If no message was given, will be "".
   std::optional<std::string> deprecated;
+  // Lifetime variable names bound by this type alias.
+  std::vector<std::string> lifetime_inputs;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
@@ -1026,6 +1029,7 @@ struct UnsupportedItem {
   std::vector<FormattedError> errors;
   std::string source_loc;
   ItemId id;
+  std::optional<BazelLabel> defining_target;
 
   // Whether the item required binding (was annotated with `CRUBIT_MUST_BIND`).
   // If this is true, binding generation will fail with a hard error.

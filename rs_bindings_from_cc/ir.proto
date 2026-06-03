@@ -59,6 +59,7 @@ message CcType {
     bool non_null = 1;
     CallingConv call_conv = 2;
     repeated CcType param_and_return_types = 3;
+    repeated string lifetime_inputs = 4;
   }
 
   oneof variant {
@@ -434,6 +435,7 @@ message TypeAlias {
   int64 enclosing_item_id = 10;
   bool must_bind = 11;
   string deprecated = 12;
+  repeated string lifetime_inputs = 13;
 }
 
 message UnsupportedItem {
@@ -464,6 +466,7 @@ message UnsupportedItem {
   string source_loc = 6;
   int64 id = 7;
   bool must_bind = 8;
+  string defining_target = 9;
 }
 
 message Comment {

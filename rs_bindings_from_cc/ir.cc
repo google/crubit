@@ -156,6 +156,11 @@ llvm::json::Value CcType::ToJson() const {
             for (const CcType& type : func_value.param_and_return_types) {
               param_and_return_type_values.push_back(type.ToJson());
             }
+            std::vector<llvm::json::Value> lifetime_inputs_values;
+            lifetime_inputs_values.reserve(func_value.lifetime_inputs.size());
+            for (const std::string& lifetime : func_value.lifetime_inputs) {
+              lifetime_inputs_values.push_back(llvm::json::Value(lifetime));
+            }
             return llvm::json::Object{
                 {"FuncPointer",
                  llvm::json::Object{
@@ -180,6 +185,7 @@ llvm::json::Value CcType::ToJson() const {
                          }(),
                      },
                      {"param_and_return_types", param_and_return_type_values},
+                     {"lifetime_inputs", std::move(lifetime_inputs_values)},
                  }},
             };
           },
@@ -240,6 +246,9 @@ flat_proto::CcType CcType::ToFlatProto() const {
                 for (const CcType& type : func_value.param_and_return_types) {
                   *f->add_param_and_return_types() = type.ToFlatProto();
                 }
+                f->mutable_lifetime_inputs()->Add(
+                    func_value.lifetime_inputs.begin(),
+                    func_value.lifetime_inputs.end());
               },
               [&](ItemId id) { proto.set_decl(id.value()); },
               [&](const FormattedError& error) {
@@ -1420,7 +1429,8 @@ llvm::json::Value TypeAlias::ToJson() const {
                                 {"underlying_type", underlying_type},
                                 {"source_loc", source_loc},
                                 {"enclosing_item_id", enclosing_item_id},
-                                {"must_bind", must_bind}};
+                                {"must_bind", must_bind},
+                                {"lifetime_inputs", lifetime_inputs}};
 
   if (deprecated.has_value()) {
     type_alias.insert({"deprecated", deprecated.value()});
@@ -1446,6 +1456,8 @@ flat_proto::TypeAlias TypeAlias::ToFlatProto() const {
     proto.set_enclosing_item_id(enclosing_item_id->value());
   proto.set_must_bind(must_bind);
   if (deprecated) proto.set_deprecated(*deprecated);
+  proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),
+                                       lifetime_inputs.end());
   return proto;
 }
 
@@ -1562,6 +1574,10 @@ llvm::json::Value UnsupportedItem::ToJson() const {
     unsupported.insert({"unique_name", unique_name});
   }
 
+  if (defining_target) {
+    unsupported.insert({"defining_target", *defining_target});
+  }
+
   return llvm::json::Object{
       {"UnsupportedItem", std::move(unsupported)},
   };
@@ -1577,6 +1593,7 @@ flat_proto::UnsupportedItem UnsupportedItem::ToFlatProto() const {
   proto.set_source_loc(source_loc);
   proto.set_id(id.value());
   proto.set_must_bind(must_bind);
+  if (defining_target) proto.set_defining_target(defining_target->value());
   return proto;
 }
 
