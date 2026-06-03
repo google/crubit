@@ -108,6 +108,19 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
         <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<i32>>::into(__self)
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_u_x00000026_x00000027a_x00000020i32(
+    value: &'static i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <::lifetimes_golden::StructWithLifetime as ::core::convert::From<
+            &'static i32,
+        >>::from(value);
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetime<'static>)
+            .write(__rs_return_value);
+    }
+}
 const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );

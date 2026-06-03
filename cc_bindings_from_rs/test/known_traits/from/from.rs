@@ -85,3 +85,98 @@ impl From<NotFfiSafe> for fn() {
         value.0
     }
 }
+
+#[must_bind]
+#[derive(Clone, Copy, Default)]
+pub struct CloneCopyType(pub i32);
+
+#[must_bind]
+#[derive(Clone, Copy)]
+pub struct CloneCopySource(pub i32);
+
+impl From<CloneCopySource> for CloneCopyType {
+    fn from(src: CloneCopySource) -> Self {
+        Self(src.0)
+    }
+}
+
+#[must_bind]
+#[derive(Clone)]
+pub struct CloneAllocType {
+    pub value: String,
+}
+
+impl CloneAllocType {
+    #[must_bind]
+    pub fn get_value(&self) -> &str {
+        &self.value
+    }
+}
+
+#[must_bind]
+#[derive(Clone)]
+pub struct CloneAllocSource {
+    pub value: String,
+}
+
+impl CloneAllocSource {
+    #[must_bind]
+    pub fn create(s: &str) -> Self {
+        Self { value: s.to_string() }
+    }
+
+    #[must_bind]
+    pub fn get_value(&self) -> &str {
+        &self.value
+    }
+}
+
+impl From<CloneAllocSource> for CloneAllocType {
+    fn from(src: CloneAllocSource) -> Self {
+        Self { value: src.value }
+    }
+}
+
+#[must_bind]
+#[derive(Default)]
+pub struct NoCloneDefaultType(pub i32);
+
+#[must_bind]
+#[derive(Default)]
+pub struct NoCloneDefaultSource(pub i32);
+
+impl From<NoCloneDefaultSource> for NoCloneDefaultType {
+    fn from(src: NoCloneDefaultSource) -> Self {
+        Self(src.0)
+    }
+}
+
+#[must_bind]
+pub struct NoCloneCopyDropType(pub i32);
+
+#[must_bind]
+pub struct NoCloneCopyDropSource(pub i32);
+
+impl From<NoCloneCopyDropSource> for NoCloneCopyDropType {
+    fn from(src: NoCloneCopyDropSource) -> Self {
+        Self(src.0)
+    }
+}
+
+#[must_bind]
+pub struct LoopA(pub i32);
+
+#[must_bind]
+pub struct LoopB(pub i32);
+
+impl From<LoopA> for LoopB {
+    fn from(src: LoopA) -> Self {
+        Self(src.0)
+    }
+}
+
+impl From<LoopB> for LoopA {
+    fn from(src: LoopB) -> Self {
+        Self(src.0)
+    }
+}

@@ -14,7 +14,7 @@ use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcConstQualifier;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
-use database::{AdtCoreBindings, BindingsGenerator};
+use database::BindingsGenerator;
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -698,20 +698,20 @@ pub fn generate_trait_thunks<'tcx>(
     trait_id: DefId,
     // We do not support other generic args, yet.
     type_args: &[Ty<'tcx>],
-    adt: &AdtCoreBindings<'tcx>,
+    self_ty: Ty<'tcx>,
+    def_id: Option<DefId>,
+    rs_fully_qualified_name: TokenStream,
     is_constructor: bool,
 ) -> Result<TraitThunks<'tcx>> {
     let tcx = db.tcx();
     assert!(tcx.is_trait(trait_id));
 
-    let self_ty = adt.self_ty;
     let is_drop_trait = Some(trait_id) == tcx.lang_items().drop_trait();
     if is_drop_trait {
         // To support "drop glue" we don't require that `self_ty` directly implements
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
-        let typing_env = adt
-            .def_id
+        let typing_env = def_id
             .map(|id| post_analysis_typing_env(tcx, id))
             .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
         assert!(self_ty.needs_drop(tcx, typing_env));
@@ -721,8 +721,7 @@ pub fn generate_trait_thunks<'tcx>(
         trait_id,
         type_args.iter().copied().map(ty::GenericArg::from),
     ) {
-        let display_name = adt
-            .def_id
+        let display_name = def_id
             .and_then(|id| db.symbol_canonical_name(id))
             .map(|canon| {
                 let parts = canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
@@ -824,13 +823,13 @@ pub fn generate_trait_thunks<'tcx>(
             db,
             &sig_mid,
             &thunk_name_cc_ident,
-            /*has_self_param=*/ true,
+            /*has_self_param=*/ method.is_method(),
             is_constructor,
         )?);
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 
         rs_thunk_impls += {
-            let struct_name = &adt.rs_fully_qualified_name;
+            let struct_name = &rs_fully_qualified_name;
             if is_drop_trait {
                 // Manually formatting (instead of depending on `generate_thunk_impl`)
                 // to avoid https://doc.rust-lang.org/error_codes/E0040.html

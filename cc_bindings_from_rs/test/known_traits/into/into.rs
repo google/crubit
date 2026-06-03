@@ -107,3 +107,104 @@ mod yet_another_module {
         }
     }
 }
+
+#[must_bind]
+#[derive(Clone, Copy, Default)]
+pub struct CloneCopyType(pub i32);
+
+#[must_bind]
+#[derive(Clone, Copy)]
+pub struct CloneCopyTarget(pub i32);
+
+impl Into<CloneCopyTarget> for CloneCopyType {
+    #[must_bind]
+    fn into(self) -> CloneCopyTarget {
+        CloneCopyTarget(self.0)
+    }
+}
+
+#[must_bind]
+#[derive(Clone)]
+pub struct CloneAllocType {
+    pub value: String,
+}
+
+impl CloneAllocType {
+    #[must_bind]
+    pub fn create(s: &str) -> Self {
+        Self { value: s.to_string() }
+    }
+
+    #[must_bind]
+    pub fn get_value(&self) -> &str {
+        &self.value
+    }
+}
+
+#[must_bind]
+#[derive(Clone)]
+pub struct CloneAllocTarget {
+    pub value: String,
+}
+
+impl CloneAllocTarget {
+    #[must_bind]
+    pub fn get_value(&self) -> &str {
+        &self.value
+    }
+}
+
+impl Into<CloneAllocTarget> for CloneAllocType {
+    #[must_bind]
+    fn into(self) -> CloneAllocTarget {
+        CloneAllocTarget { value: self.value }
+    }
+}
+
+#[must_bind]
+#[derive(Default)]
+pub struct NoCloneDefaultType(pub i32);
+
+#[must_bind]
+#[derive(Default)]
+pub struct NoCloneDefaultTarget(pub i32);
+
+impl Into<NoCloneDefaultTarget> for NoCloneDefaultType {
+    #[must_bind]
+    fn into(self) -> NoCloneDefaultTarget {
+        NoCloneDefaultTarget(self.0)
+    }
+}
+
+#[must_bind]
+pub struct NoCloneCopyDropType(pub i32);
+
+#[must_bind]
+pub struct NoCloneCopyDropTarget(pub i32);
+
+impl Into<NoCloneCopyDropTarget> for NoCloneCopyDropType {
+    #[must_bind]
+    fn into(self) -> NoCloneCopyDropTarget {
+        NoCloneCopyDropTarget(self.0)
+    }
+}
+
+#[must_bind]
+pub struct LoopA(pub i32);
+
+#[must_bind]
+pub struct LoopB(pub i32);
+
+impl Into<LoopB> for LoopA {
+    #[must_bind]
+    fn into(self) -> LoopB {
+        LoopB(self.0)
+    }
+}
+
+impl Into<LoopA> for LoopB {
+    #[must_bind]
+    fn into(self) -> LoopA {
+        LoopA(self.0)
+    }
+}

@@ -113,7 +113,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // `<generic_traits_golden::AnotherStruct as
 // generic_traits_golden::TraitWithTwoGenerics<i32, U>>` defined at
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=42:
-// The following Rust type is not supported yet: U
+// Implementation of traits must specify all types to receive bindings.
 
 template <>
 struct rs_std::impl<::generic_traits::StructGeneric,
