@@ -181,7 +181,7 @@ def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
     )
     return args
 
-def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta):
+def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -198,6 +198,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
       rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
       proto_crate_renames: Mapping of the `rust_proto_library` to the `proto_library` crate name.
       self_rmeta: The rmeta file for the current crate.
+      is_golden_test_override: Overrides value of `--is-golden-test` flag instead of checking for the transition.
 
     Returns:
       A tuple of (GeneratedBindingsInfo, features, current_config, output_depset).
@@ -260,7 +261,8 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         if self_rmeta != None:
             crubit_args.add("--extern={}={}".format(self_crate_name, self_rmeta.path))
     crubit_args.add("--enable-rmeta-interface")
-    if ctx.attr._is_golden_test[BuildSettingInfo].value:
+    is_golden_test = is_golden_test_override if is_golden_test_override != None else ctx.attr._is_golden_test[BuildSettingInfo].value
+    if is_golden_test:
         crubit_args.add("--is-golden-test")
     toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
     if toolchain == None:
@@ -763,6 +765,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         rustc_env = env,
         proto_crate_renames = {},
         self_rmeta = None,
+        is_golden_test_override = False,
     )
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.attr, bindings_info.rust_file, crate_name, [])
