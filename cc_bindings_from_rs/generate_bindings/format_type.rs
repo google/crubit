@@ -20,6 +20,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
+use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
 };
@@ -391,6 +392,9 @@ pub fn format_ty_for_cc<'tcx>(
                 let is_option_or_result = specialization.as_ref().is_ok_and(|rs_std_enum| {
                     (!location.is_bridgeable() && rs_std_enum.is_option())
                         || rs_std_enum.is_result()
+                        || db
+                            .crate_features(db.source_crate_num())
+                            .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
                 });
                 error_occurred || is_option_or_result
             }) {
@@ -1400,6 +1404,9 @@ pub fn is_bridged_type<'tcx>(
             if let Some(bridged) = is_bridged_type(db, referent)?
                 && !bridged.is_layout_compatible()
             {
+                // Bridge types behind a reference are not allowed. But Option is an exception
+                // because it can have a specialization generated (rs_std::Option<T>& is valid),
+                // so the following check allows it when detected.
                 if let ty::TyKind::Adt(adt, _) = referent.kind() {
                     if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
                         return Ok(None);
@@ -1428,7 +1435,13 @@ pub fn is_bridged_type<'tcx>(
                 return Ok(Some(bridged_type));
             }
 
-            if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
+            let always_specialize_generics = db
+                .crate_features(db.source_crate_num())
+                .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+
+            if !always_specialize_generics
+                && let Some(bridged_builtin) = BridgedBuiltin::new(db, adt)
+            {
                 if let BridgedBuiltin::Result = bridged_builtin {
                     // We can't ask for the CrubitAbiType of a Result, because it will return an Err,
                     // so we check for it here and return Ok.
@@ -1451,7 +1464,7 @@ pub fn is_bridged_type<'tcx>(
             // It's neither of the above, so check that it doesn't have any bridged substs.
 
             // The ADT does not need to be bridged, but check if it has generic types that
-            // need to be bridged e.g. Box<BridgedType> cannot be formated at
+            // need to be bridged e.g. Box<BridgedType> cannot be formatted at
             // the moment. If we encounter a type like this we return an error.
             for subst in substs {
                 if let Some(ty) = subst.as_type()

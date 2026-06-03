@@ -164,6 +164,18 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling specialization of standard library generics (like Option/Result)
+# everywhere instead of composable bridging. This flag only impacts cpp_api_from_rust users,
+# and has no impact on rust_api_from_cpp users.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "always_specialize_generics_in_cpp_api_from_rust",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["always_specialize_generics_in_cpp_api_from_rust"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

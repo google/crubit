@@ -15,7 +15,6 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
-#include "support/bridge.h"
 #include "support/internal/memswap.h"
 #include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
@@ -36,6 +35,7 @@
 
 namespace option {
 struct HasOptions;
+struct LessThan20U8;
 
 // Error generating bindings for struct `option_golden::BridgedType` defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=196:
@@ -168,83 +168,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
-    [[clang::trivial_abi]] LessThan20U8 final {
- public:
-  // `option_golden::LessThan20U8` doesn't implement the `Default` trait
-  LessThan20U8() = delete;
-
-  static constexpr LessThan20U8 MakeN0();
-
-  static constexpr LessThan20U8 MakeN1();
-
-  static constexpr LessThan20U8 MakeN2();
-
-  static constexpr LessThan20U8 MakeN3();
-
-  static constexpr LessThan20U8 MakeN4();
-
-  static constexpr LessThan20U8 MakeN5();
-
-  static constexpr LessThan20U8 MakeN6();
-
-  static constexpr LessThan20U8 MakeN7();
-
-  static constexpr LessThan20U8 MakeN8();
-
-  static constexpr LessThan20U8 MakeN9();
-
-  static constexpr LessThan20U8 MakeN10();
-
-  static constexpr LessThan20U8 MakeN11();
-
-  static constexpr LessThan20U8 MakeN12();
-
-  static constexpr LessThan20U8 MakeN13();
-
-  static constexpr LessThan20U8 MakeN14();
-
-  static constexpr LessThan20U8 MakeN15();
-
-  static constexpr LessThan20U8 MakeN16();
-
-  static constexpr LessThan20U8 MakeN17();
-
-  static constexpr LessThan20U8 MakeN18();
-
-  static constexpr LessThan20U8 MakeN19();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~LessThan20U8() = default;
-  LessThan20U8(LessThan20U8&&) = default;
-  LessThan20U8& operator=(LessThan20U8&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  LessThan20U8(const LessThan20U8&) = default;
-  LessThan20U8& operator=(const LessThan20U8&) = default;
-  LessThan20U8(::crubit::UnsafeRelocateTag, LessThan20U8&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  static ::std::optional<::option::LessThan20U8> new_(::std::uint8_t value);
-
-  ::std::uint8_t value() const;
-
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
-
- private:
-  struct PrivateBytesTag {};
-  constexpr LessThan20U8(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
 // Error generating bindings for struct `option_golden::OptUninhabited` defined
 // at cc_bindings_from_rs/test/enums/option.rs;l=172:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -321,10 +244,8 @@ OptionWithSizeTypes final {
 // defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=198:
 // Error handling parameter #0 of type
-// `std::option::Option<option_golden::BridgedType>`: Failed to format type for
-// the definition of `option_golden::BridgedType`: Error formatting the
-// fully-qualified C++ name of `BridgedType`: `int` is a C++ reserved keyword
-// and can't be used as a C++ identifier
+// `std::option::Option<option_golden::BridgedType>`: Generic types are not
+// supported yet (b/259749095)
 
 }  // namespace option
 
@@ -561,9 +482,6 @@ OptDefaultWithDrop final {
   static void __crubit_field_offset_assertions();
 };
 
-::std::optional<::std::uint32_t> stringify_len(
-    rs_std::Option<::option::HasDefault> const& x);
-
 }  // namespace option
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
@@ -729,6 +647,87 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
+namespace option {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
+    [[clang::trivial_abi]] LessThan20U8 final {
+ public:
+  // `option_golden::LessThan20U8` doesn't implement the `Default` trait
+  LessThan20U8() = delete;
+
+  static constexpr LessThan20U8 MakeN0();
+
+  static constexpr LessThan20U8 MakeN1();
+
+  static constexpr LessThan20U8 MakeN2();
+
+  static constexpr LessThan20U8 MakeN3();
+
+  static constexpr LessThan20U8 MakeN4();
+
+  static constexpr LessThan20U8 MakeN5();
+
+  static constexpr LessThan20U8 MakeN6();
+
+  static constexpr LessThan20U8 MakeN7();
+
+  static constexpr LessThan20U8 MakeN8();
+
+  static constexpr LessThan20U8 MakeN9();
+
+  static constexpr LessThan20U8 MakeN10();
+
+  static constexpr LessThan20U8 MakeN11();
+
+  static constexpr LessThan20U8 MakeN12();
+
+  static constexpr LessThan20U8 MakeN13();
+
+  static constexpr LessThan20U8 MakeN14();
+
+  static constexpr LessThan20U8 MakeN15();
+
+  static constexpr LessThan20U8 MakeN16();
+
+  static constexpr LessThan20U8 MakeN17();
+
+  static constexpr LessThan20U8 MakeN18();
+
+  static constexpr LessThan20U8 MakeN19();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~LessThan20U8() = default;
+  LessThan20U8(LessThan20U8&&) = default;
+  LessThan20U8& operator=(LessThan20U8&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  LessThan20U8(const LessThan20U8&) = default;
+  LessThan20U8& operator=(const LessThan20U8&) = default;
+  LessThan20U8(::crubit::UnsafeRelocateTag, LessThan20U8&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  static rs_std::Option<::option::LessThan20U8> new_(::std::uint8_t value);
+
+  ::std::uint8_t value() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr LessThan20U8(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace option
+
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
 template <>
@@ -775,6 +774,55 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   unsigned char storage_[1];
 };
 #endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < u32 >") rs_std::Option<::std::uint32_t> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Option(const Option&) = default;
+  Option& operator=(const Option&) = default;
+  Option(Option&&) = default;
+  Option& operator=(Option&&) = default;
+
+  Option(::crubit::UnsafeRelocateTag, Option&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  constexpr Option();
+
+  constexpr explicit Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+
+  Option(::std::uint32_t&& value) noexcept;
+  Option& operator=(::std::uint32_t&& value) noexcept;
+
+  explicit Option(::std::optional<::std::uint32_t>&& value) noexcept;
+  Option& operator=(::std::optional<::std::uint32_t>&& value) noexcept;
+
+  template <typename... Args>
+  Option(::std::in_place_t, Args&&... args) noexcept;
+  ~Option() noexcept = default;
+  operator ::std::optional<::std::uint32_t>() && noexcept;
+  bool has_value() noexcept;
+
+ private:
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
+
+ private:
+  unsigned char storage_[8];
+};
+#endif
+
+namespace option {
+
+rs_std::Option<::std::uint32_t> stringify_len(
+    rs_std::Option<::option::HasDefault> const& x);
+
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -840,8 +888,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
 
   static ::option::HasOptions new_(::std::uint8_t value);
 
-  static ::option::HasOptions with_option(
-      ::std::optional<::std::uint8_t> value);
+  static ::option::HasOptions with_option(rs_std::Option<::std::uint8_t> value);
 
   static ::option::HasOptions from_ref(
       rs_std::Option<::std::uint8_t> const& value);
@@ -1066,21 +1113,14 @@ inline ::option::HasOptions HasOptions::new_(::std::uint8_t value) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_with_uoption(unsigned char*,
+extern "C" void __crubit_thunk_with_uoption(rs_std::Option<::std::uint8_t>*,
                                             ::option::HasOptions* __ret_ptr);
 }
 inline ::option::HasOptions HasOptions::with_option(
-    ::std::optional<::std::uint8_t> value) {
-  unsigned char value_buffer
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint8_t>>::kSize];
-  ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint8_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint8_t>>(
-          ::crubit::TransmuteAbi<::std::uint8_t>()),
-      value_buffer, value);
+    rs_std::Option<::std::uint8_t> value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_with_uoption(value_buffer,
+  __crubit_internal::__crubit_thunk_with_uoption(&value,
                                                  __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
@@ -1223,18 +1263,16 @@ static_assert(::std::is_trivially_move_assignable_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_constructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::LessThan20U8>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint8_t, unsigned char* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint8_t, rs_std::Option<::option::LessThan20U8>* __ret_ptr);
 }
-inline ::std::optional<::option::LessThan20U8> LessThan20U8::new_(
+inline rs_std::Option<::option::LessThan20U8> LessThan20U8::new_(
     ::std::uint8_t value) {
-  unsigned char __return_value_storage[::crubit::OptionAbi<
-      ::crubit::TransmuteAbi<::option::LessThan20U8>>::kSize];
+  crubit::Slot<rs_std::Option<::option::LessThan20U8>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
-  return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::option::LessThan20U8>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::option::LessThan20U8>>(
-          ::crubit::TransmuteAbi<::option::LessThan20U8>()),
-      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -1414,18 +1452,15 @@ inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_stringify_ulen(
-    rs_std::Option<::option::HasDefault> const&, unsigned char* __ret_ptr);
+    rs_std::Option<::option::HasDefault> const&,
+    rs_std::Option<::std::uint32_t>* __ret_ptr);
 }
-inline ::std::optional<::std::uint32_t> stringify_len(
+inline rs_std::Option<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x) {
-  unsigned char __return_value_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint32_t>>::kSize];
+  crubit::Slot<rs_std::Option<::std::uint32_t>> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_stringify_ulen(x, __return_value_storage);
-  return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::uint32_t>>(
-          ::crubit::TransmuteAbi<::std::uint32_t>()),
-      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace option
@@ -2274,6 +2309,117 @@ rs_std::Option<rs_std::Option<::option::LessThan20U8>>::set_tag(
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
   for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::uint32_t>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::uint32_t>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::uint32_t>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::uint32_t>>);
+inline constexpr rs_std::Option<::std::uint32_t>::Option() { set_tag(0); }
+inline constexpr rs_std::Option<::std::uint32_t>::Option(
+    ::std::nullopt_t) noexcept {
+  set_tag(0);
+}
+inline constexpr rs_std::Option<::std::uint32_t>&
+rs_std::Option<::std::uint32_t>::operator=(::std::nullopt_t) noexcept {
+  if (tag() != 0) {
+    ::std::destroy_at(reinterpret_cast<::std::uint32_t*>(storage_ + 4));
+  }
+  set_tag(0);
+  return *this;
+}
+inline rs_std::Option<::std::uint32_t>::Option(
+    ::std::uint32_t&& value) noexcept {
+  set_tag(1);
+  ::std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 4),
+                      ::std::move(value));
+}
+inline rs_std::Option<::std::uint32_t>&
+rs_std::Option<::std::uint32_t>::operator=(::std::uint32_t&& value) noexcept {
+  if (tag() != 0) {
+    ::crubit::MoveAssignOrDestroyAndConstruct(
+        reinterpret_cast<::std::uint32_t*>(storage_ + 4), ::std::move(value));
+  } else {
+    set_tag(1);
+    ::std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 4),
+                        ::std::move(value));
+  }
+  return *this;
+}
+inline rs_std::Option<::std::uint32_t>::Option(
+    ::std::optional<::std::uint32_t>&& value) noexcept {
+  if (value.has_value()) {
+    set_tag(1);
+    ::std::uint32_t* some = reinterpret_cast<::std::uint32_t*>(storage_ + 4);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(0);
+  }
+}
+inline rs_std::Option<::std::uint32_t>&
+rs_std::Option<::std::uint32_t>::operator=(
+    ::std::optional<::std::uint32_t>&& value) noexcept {
+  if (tag() != 0) {
+    ::std::destroy_at(reinterpret_cast<::std::uint32_t*>(storage_ + 4));
+  }
+  if (value.has_value()) {
+    set_tag(1);
+    ::std::uint32_t* some = reinterpret_cast<::std::uint32_t*>(storage_ + 4);
+    *some = ::std::move(value.value());
+    ::std::construct_at(&value, ::std::nullopt);
+  } else {
+    set_tag(0);
+  }
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::std::uint32_t>::Option(::std::in_place_t,
+                                               Args&&... args) noexcept {
+  set_tag(1);
+  ::std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 4),
+                      ::std::forward<Args>(args)...);
+}
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Option<::std::uint32_t>>);
+inline rs_std::Option<::std::uint32_t>::operator ::std::optional<
+    ::std::uint32_t>() && noexcept {
+  if (tag() == 0) {
+    return ::std::nullopt;
+  } else {
+    ::std::uint32_t& value = *reinterpret_cast<::std::uint32_t*>(storage_ + 4);
+    ::std::optional<::std::uint32_t> return_value(::std::move(value));
+    ::std::destroy_at(&value);
+    set_tag(0);
+    return return_value;
+  }
+}
+inline bool rs_std::Option<::std::uint32_t>::has_value() noexcept {
+  return tag() != 0;
+}
+inline constexpr ::std::uint32_t rs_std::Option<::std::uint32_t>::tag()
+    const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint32_t>(__bytes);
+}
+inline constexpr void rs_std::Option<::std::uint32_t>::set_tag(
+    ::std::uint32_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
 }

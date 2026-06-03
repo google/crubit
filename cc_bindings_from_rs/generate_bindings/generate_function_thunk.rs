@@ -151,7 +151,19 @@ pub fn generate_thunk_decl<'tcx>(
                 } else if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
                     array_c_abi_c_type(db.tcx(), *inner_ty)
                 } else if let Some(adt_def) = ty.ty_adt_def() {
-                    db.has_move_ctor_and_assignment_operator(Some(adt_def.did()), ty).ok_or_else(|| {
+                    // If the type is a standard template specialization (like Option or Result)
+                    // from the external `core` library, passing the generic `Option` DefId causes
+                    // the compiler to try to analyze the layout of `Option<T>`, which fails because `T`
+                    // does not have a fixed layout. Passing `None` forces the query to fall back to
+                    // a fully monomorphized typing environment to layout the concrete type (e.g., `Option<i32>`).
+                    let always_specialize_generics = db.crate_features(db.source_crate_num())
+                        .contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+                    let def_id = if always_specialize_generics && db.parse_rs_std_template_specialization(ty).is_some() {
+                        None
+                    } else {
+                        Some(adt_def.did())
+                    };
+                    db.has_move_ctor_and_assignment_operator(def_id, ty).ok_or_else(|| {
                         anyhow!("Can't pass type `{ty}` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable.")
                     })?;
                     Ok(quote! { #cpp_type* })

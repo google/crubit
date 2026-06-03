@@ -386,13 +386,19 @@ fn cc_return_value_from_c_abi<'tcx>(
             unpack_expr: quote! { ::std::make_tuple(#(#unpack_exprs),*) },
         })
     } else {
-        if recursive {
-            if let Some(adt_def) = ty.ty_adt_def() {
-                let core = db.generate_adt_core(adt_def.did())?;
-                // Note: the error here is an ApiSnippets which is not propagated.
-                db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
-                    anyhow!("Can't return type `{ty}` by value inside a compound data type without a move constructor")
-                })?;
+        if recursive && let Some(adt_def) = ty.ty_adt_def() {
+            let always_specialize_generics = db
+                .crate_features(db.source_crate_num())
+                .contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+            let def_id = if always_specialize_generics
+                && db.parse_rs_std_template_specialization(ty).is_some()
+            {
+                None
+            } else {
+                Some(adt_def.did())
+            };
+            if db.has_move_ctor_and_assignment_operator(def_id, ty).is_none() {
+                bail!("Can't return type `{ty}` by value inside a compound data type without a move constructor");
             }
         }
         let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));

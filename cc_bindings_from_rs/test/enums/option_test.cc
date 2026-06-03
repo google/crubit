@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "cc_bindings_from_rs/test/enums/option.h"
 
+#include <cstdint>
 #include <optional>
+#include <utility>
 
 #include "gtest/gtest.h"
 
@@ -62,10 +64,11 @@ TEST(OptionTest, MoveIntoOptionalSetsOptionToNone) {
 
 TEST(OptionTest, ConstructFromOption) {
   std::optional<uint8_t> some_u8 = std::make_optional(uint8_t{42});
-  option::HasOptions has_options = option::HasOptions::with_option(some_u8);
+  option::HasOptions has_options = option::HasOptions::with_option(
+      rs_std::Option<uint8_t>(std::move(some_u8)));
   std::optional<uint8_t> some_u8_retaken = std::move(has_options.direct);
-  EXPECT_EQ(some_u8_retaken.has_value(), some_u8.has_value());
-  EXPECT_EQ(some_u8_retaken.value(), some_u8.value());
+  EXPECT_EQ(some_u8_retaken.has_value(), true);
+  EXPECT_EQ(some_u8_retaken.value(), 42);
 }
 
 TEST(OptionTest, StructWithNicheIsConvertibleToStd) {
@@ -175,7 +178,7 @@ TEST(OptionTest, OptCloneNoDefault) {
 
 TEST(OptionTest, PassingOptionAsReferenceArgument) {
   rs_std::Option<option::HasDefault> x = option::HasDefault::new_("hello");
-  std::optional<uintptr_t> y = option::stringify_len(x);
+  std::optional<uint32_t> y = std::move(option::stringify_len(x));
   EXPECT_TRUE(y.has_value());
   EXPECT_EQ(y.value(), 5);
 }

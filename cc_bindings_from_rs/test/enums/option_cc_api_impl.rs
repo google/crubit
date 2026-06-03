@@ -109,16 +109,11 @@ unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_with_uoption(
-    value: *const core::ffi::c_uchar,
+    value: &'static mut ::core::mem::MaybeUninit<::core::option::Option<u8>>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let value = unsafe {
-            ::bridge_rust::internal::decode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<u8>()),
-                value,
-            )
-        };
+        let value = value.assume_init_read();
         let __rs_return_value = ::option_golden::HasOptions::with_option(value);
         (__ret_ptr as *mut ::option_golden::HasOptions).write(__rs_return_value);
     }
@@ -146,18 +141,11 @@ const _: () = assert!(::core::mem::offset_of!(::option_golden::HasOptions, neste
 const _: () = assert!(::std::mem::size_of::<::option_golden::LessThan20U8>() == 1);
 const _: () = assert!(::std::mem::align_of::<::option_golden::LessThan20U8>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_uchar) -> () {
+unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::LessThan20U8::new(value);
-        unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
-                    ::option_golden::LessThan20U8,
-                >()),
-                __ret_ptr as *mut core::ffi::c_uchar,
-                __rs_return_value,
-            );
-        }
+        (__ret_ptr as *mut ::core::option::Option<::option_golden::LessThan20U8>)
+            .write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -264,17 +252,11 @@ const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTyp
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_stringify_ulen(
     x: &'static ::core::option::Option<::option_golden::HasDefault>,
-    __ret_ptr: *mut core::ffi::c_uchar,
+    __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::stringify_len(x);
-        unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<u32>()),
-                __ret_ptr as *mut core::ffi::c_uchar,
-                __rs_return_value,
-            );
-        }
+        (__ret_ptr as *mut ::core::option::Option<u32>).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -287,15 +269,8 @@ unsafe extern "C" fn __crubit_thunk_clone(
             <std::option::Option<::option_golden::CloneNoDefault> as ::core::clone::Clone>::clone(
                 __self,
             );
-        unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
-                    ::option_golden::CloneNoDefault,
-                >()),
-                __ret_ptr as *mut core::ffi::c_uchar,
-                __rs_return_value,
-            );
-        }
+        (__ret_ptr as *mut ::core::option::Option<::option_golden::CloneNoDefault>)
+            .write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
