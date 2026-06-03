@@ -67,3 +67,55 @@ impl std::future::Future for MyStruct {
         todo!()
     }
 }
+
+pub struct RefIterator<'a> {
+    pub slice: &'a [i32],
+    pub index: usize,
+}
+
+impl<'a> RefIterator<'a> {
+    pub fn new(slice: &'a [i32]) -> Self {
+        RefIterator { slice, index: 0 }
+    }
+}
+
+impl<'a> Iterator for RefIterator<'a> {
+    type Item = &'a i32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.slice.len() {
+            let res = &self.slice[self.index];
+            self.index += 1;
+            Some(res)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct NonCloneableValue {
+    pub x: i32,
+}
+
+pub struct NonCloneableIterator {
+    pub x: i32,
+}
+
+impl NonCloneableIterator {
+    pub fn new(x: i32) -> Self {
+        NonCloneableIterator { x }
+    }
+}
+
+impl Iterator for NonCloneableIterator {
+    type Item = NonCloneableValue;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.x <= 0 {
+            None
+        } else {
+            self.x -= 1;
+            Some(NonCloneableValue { x: self.x })
+        }
+    }
+}

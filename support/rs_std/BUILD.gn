@@ -29,6 +29,69 @@ source_set("char") {
   ]
 }
 
+source_set("dyn_callable") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "dyn_callable.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:bridge_cpp",
+    "$crubit_absl_dep_target",
+  ]
+}
+
+source_set("iterator_adapter") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "iterator_adapter.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:traits",
+  ]
+}
+
+source_set("option") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "option.h",
+  ]
+}
+
+source_set("result") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "result.h",
+  ]
+}
+
 source_set("slice_ref") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -69,24 +132,6 @@ source_set("str_ref") {
   ]
 }
 
-source_set("dyn_callable") {
-  public_configs = [ "$crubit_src_dir:config" ]
-  if (defined(crubit_gn_configs_to_remove)) {
-    configs -= crubit_gn_configs_to_remove
-  }
-  if (defined(crubit_gn_support_configs_to_add)) {
-    configs += crubit_gn_support_configs_to_add
-  }
-
-  public = [
-    "dyn_callable.h",
-  ]
-  deps = [
-    "$crubit_src_dir/support:bridge_cpp",
-    "$crubit_absl_dep_target",
-  ]
-}
-
 source_set("traits") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -98,34 +143,6 @@ source_set("traits") {
 
   public = [
     "traits.h",
-  ]
-}
-
-source_set("option") {
-  public_configs = [ "$crubit_src_dir:config" ]
-  if (defined(crubit_gn_configs_to_remove)) {
-    configs -= crubit_gn_configs_to_remove
-  }
-  if (defined(crubit_gn_support_configs_to_add)) {
-    configs += crubit_gn_support_configs_to_add
-  }
-
-  public = [
-    "option.h",
-  ]
-}
-
-source_set("result") {
-  public_configs = [ "$crubit_src_dir:config" ]
-  if (defined(crubit_gn_configs_to_remove)) {
-    configs -= crubit_gn_configs_to_remove
-  }
-  if (defined(crubit_gn_support_configs_to_add)) {
-    configs += crubit_gn_support_configs_to_add
-  }
-
-  public = [
-    "result.h",
   ]
 }
 
@@ -146,12 +163,13 @@ source_set("tuple") {
 group("rs_std_cpp") {
   public_deps = [
     ":char",
-    ":slice_ref",
-    ":str_ref",
     ":dyn_callable",
-    ":traits",
+    ":iterator_adapter",
     ":option",
     ":result",
+    ":slice_ref",
+    ":str_ref",
+    ":traits",
     ":tuple",
   ]
 }

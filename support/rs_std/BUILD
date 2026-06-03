@@ -212,6 +212,23 @@ cc_library(
 )
 
 cc_library(
+    name = "iterator_adapter",
+    hdrs = ["iterator_adapter.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:iterator_adapter",
+        "avoid_dep",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        ":traits",
+    ],
+)
+
+cc_library(
     name = "option",
     hdrs = ["option.h"],
     aspect_hints = ["//features:experimental"],
@@ -321,13 +338,14 @@ bazel_to_builds(
     gn = "BUILD.gn",
     targets = [
         ":char",
-        ":slice_ref",
-        ":str_ref",
         ":dyn_callable",
-        ":traits",
+        ":iterator_adapter",
+        ":lossy_formatter_for_bindings",
         ":option",
         ":result",
+        ":slice_ref",
+        ":str_ref",
+        ":traits",
         ":tuple",
-        ":lossy_formatter_for_bindings",
     ],
 )

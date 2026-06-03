@@ -59,6 +59,33 @@ unsafe extern "C" fn __crubit_thunk_from_ui32(value: i32, __ret_ptr: *mut core::
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::MyStruct, x) == 0);
+const _: () = assert!(::std::mem::size_of::<::stdlib_golden::NonCloneableIterator>() == 4);
+const _: () = assert!(::std::mem::align_of::<::stdlib_golden::NonCloneableIterator>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::stdlib_golden::NonCloneableIterator::new(x);
+        (__ret_ptr as *mut ::stdlib_golden::NonCloneableIterator).write(__rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::NonCloneableIterator, x) == 0);
+const _: () = assert!(::std::mem::size_of::<::stdlib_golden::NonCloneableValue>() == 4);
+const _: () = assert!(::std::mem::align_of::<::stdlib_golden::NonCloneableValue>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::NonCloneableValue, x) == 0);
+const _: () = assert!(::std::mem::size_of::<::stdlib_golden::RefIterator>() == 24);
+const _: () = assert!(::std::mem::align_of::<::stdlib_golden::RefIterator>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(
+    slice: &'static [i32],
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::stdlib_golden::RefIterator::new(slice);
+        (__ret_ptr as *mut ::stdlib_golden::RefIterator<'static>).write(__rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::RefIterator, slice) == 0);
+const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::RefIterator, index) == 16);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Iterator_unext(
     __self: &'static mut ::stdlib_golden::MyStruct,
@@ -69,6 +96,42 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext(
         unsafe {
             ::bridge_rust::internal::encode(
                 ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                __ret_ptr as *mut core::ffi::c_uchar,
+                __rs_return_value,
+            );
+        }
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Iterator_unext(
+    __self: &'static mut ::stdlib_golden::NonCloneableIterator,
+    __ret_ptr: *mut core::ffi::c_uchar,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::stdlib_golden::NonCloneableIterator as ::core::iter::Iterator>::next(__self);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
+                    ::stdlib_golden::NonCloneableValue,
+                >()),
+                __ret_ptr as *mut core::ffi::c_uchar,
+                __rs_return_value,
+            );
+        }
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Iterator_unext(
+    __self: &'static mut ::stdlib_golden::RefIterator<'static>,
+    __ret_ptr: *mut core::ffi::c_uchar,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::stdlib_golden::RefIterator as ::core::iter::Iterator>::next(__self);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static i32>()),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );

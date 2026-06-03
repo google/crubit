@@ -18,12 +18,15 @@
 #include "support/bridge.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/rs_std/slice_ref.h"
 #include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <optional>
+#include <type_traits>
 #include <utility>
 
 #include "support/rs_std/rs_core.h"
@@ -69,6 +72,94 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
   using impl = rs_std::impl<T, MyTrait>;
 };
 
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: stdlib_golden :: NonCloneableIterator") alignas(4)
+    [[clang::trivial_abi]] NonCloneableIterator final {
+ public:
+  // `stdlib_golden::NonCloneableIterator` doesn't implement the `Default` trait
+  NonCloneableIterator() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~NonCloneableIterator() = default;
+  NonCloneableIterator(NonCloneableIterator&&) = default;
+  NonCloneableIterator& operator=(NonCloneableIterator&&) = default;
+
+  // `stdlib_golden::NonCloneableIterator` doesn't implement the `Clone` trait
+  NonCloneableIterator(const NonCloneableIterator&) = delete;
+  NonCloneableIterator& operator=(const NonCloneableIterator&) = delete;
+  NonCloneableIterator(::crubit::UnsafeRelocateTag,
+                       NonCloneableIterator&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  static ::stdlib::NonCloneableIterator new_(::std::int32_t x);
+
+  union {
+    ::std::int32_t x;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: stdlib_golden :: NonCloneableValue") alignas(4) [[clang::trivial_abi]]
+NonCloneableValue final {
+ public:
+  // `stdlib_golden::NonCloneableValue` doesn't implement the `Default` trait
+  NonCloneableValue() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~NonCloneableValue() = default;
+  NonCloneableValue(NonCloneableValue&&) = default;
+  NonCloneableValue& operator=(NonCloneableValue&&) = default;
+
+  // `stdlib_golden::NonCloneableValue` doesn't implement the `Clone` trait
+  NonCloneableValue(const NonCloneableValue&) = delete;
+  NonCloneableValue& operator=(const NonCloneableValue&) = delete;
+  NonCloneableValue(::crubit::UnsafeRelocateTag, NonCloneableValue&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  union {
+    ::std::int32_t x;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
+    [[clang::trivial_abi]] RefIterator final {
+ public:
+  // `stdlib_golden::RefIterator` doesn't implement the `Default` trait
+  RefIterator() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~RefIterator() = default;
+  RefIterator(RefIterator&&) = default;
+  RefIterator& operator=(RefIterator&&) = default;
+
+  // `stdlib_golden::RefIterator` doesn't implement the `Clone` trait
+  RefIterator(const RefIterator&) = delete;
+  RefIterator& operator=(const RefIterator&) = delete;
+  RefIterator(::crubit::UnsafeRelocateTag, RefIterator&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  static ::stdlib::RefIterator new_(
+      rs_std::SliceRef<const ::std::int32_t> slice);
+
+  union {
+    rs_std::SliceRef<const ::std::int32_t> slice;
+  };
+  union {
+    ::std::uintptr_t index;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 }  // namespace stdlib
 
 template <>
@@ -93,6 +184,29 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
       ::std::int32_t;
 
   static ::std::optional<::std::int32_t> next(::stdlib::MyStruct& self);
+};
+
+template <>
+struct rs_std::impl<::stdlib::NonCloneableIterator,
+                    ::rs::core::iter::Iterator> {
+  static constexpr bool kIsImplemented = true;
+  using Item CRUBIT_INTERNAL_RUST_TYPE(
+      "<stdlib_golden::NonCloneableIterator as :: core :: iter :: "
+      "Iterator>::Item") = ::stdlib::NonCloneableValue;
+
+  static ::std::optional<::stdlib::NonCloneableValue> next(
+      ::stdlib::NonCloneableIterator& self);
+};
+
+template <>
+struct rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator> {
+  static constexpr bool kIsImplemented = true;
+  using Item CRUBIT_INTERNAL_RUST_TYPE(
+      "<stdlib_golden::RefIterator<'a> as :: core :: iter :: Iterator>::Item") =
+      ::std::int32_t const* $a crubit_nonnull;
+
+  static ::std::optional<::std::int32_t const * $a crubit_nonnull> next(
+      ::stdlib::RefIterator& self);
 };
 
 namespace stdlib {
@@ -158,6 +272,69 @@ inline MyStruct::MyStruct(::std::int32_t value) {
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
 }
+static_assert(
+    sizeof(NonCloneableIterator) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(NonCloneableIterator) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<NonCloneableIterator>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableIterator>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableIterator>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::stdlib::NonCloneableIterator* __ret_ptr);
+}
+inline ::stdlib::NonCloneableIterator NonCloneableIterator::new_(
+    ::std::int32_t x) {
+  crubit::Slot<::stdlib::NonCloneableIterator> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void NonCloneableIterator::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(NonCloneableIterator, x));
+}
+static_assert(
+    sizeof(NonCloneableValue) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(NonCloneableValue) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<NonCloneableValue>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableValue>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableValue>);
+inline void NonCloneableValue::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(NonCloneableValue, x));
+}
+static_assert(
+    sizeof(RefIterator) == 24,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(RefIterator) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<RefIterator>);
+static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
+static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
+                                   ::stdlib::RefIterator* __ret_ptr);
+}
+inline ::stdlib::RefIterator RefIterator::new_(
+    rs_std::SliceRef<const ::std::int32_t> slice) {
+  crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(slice, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void RefIterator::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(RefIterator, slice));
+  static_assert(16 == offsetof(RefIterator, index));
+}
 }  // namespace stdlib
 
 namespace stdlib {
@@ -177,6 +354,49 @@ rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
           ::crubit::TransmuteAbi<::std::int32_t>()),
+      __return_value_storage);
+}
+
+namespace stdlib {
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_Iterator_unext(::stdlib::NonCloneableIterator&,
+                                              unsigned char* __ret_ptr);
+}
+}  // namespace stdlib
+inline ::std::optional<::stdlib::NonCloneableValue>
+rs_std::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
+    ::stdlib::NonCloneableIterator& self) {
+  unsigned char __return_value_storage[::crubit::OptionAbi<
+      ::crubit::TransmuteAbi<::stdlib::NonCloneableValue>>::kSize];
+  stdlib::__crubit_internal::__crubit_thunk_Iterator_unext(
+      self, __return_value_storage);
+  return ::crubit::internal::Decode<
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::stdlib::NonCloneableValue>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::stdlib::NonCloneableValue>>(
+          ::crubit::TransmuteAbi<::stdlib::NonCloneableValue>()),
+      __return_value_storage);
+}
+
+namespace stdlib {
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_Iterator_unext(::stdlib::RefIterator&,
+                                              unsigned char* __ret_ptr);
+}
+}  // namespace stdlib
+inline ::std::optional<::std::int32_t const * $a crubit_nonnull>
+rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator>::next(
+    ::stdlib::RefIterator& self) {
+  unsigned char
+      __return_value_storage[::crubit::OptionAbi<::crubit::TransmuteAbi<
+          ::std::int32_t const * $static crubit_nonnull>>::kSize];
+  stdlib::__crubit_internal::__crubit_thunk_Iterator_unext(
+      self, __return_value_storage);
+  return ::crubit::internal::Decode<::crubit::OptionAbi<
+      ::crubit::TransmuteAbi<::std::int32_t const * $static crubit_nonnull>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t const *
+                                                 $static crubit_nonnull>>(
+          ::crubit::TransmuteAbi<::std::int32_t const *
+                                 $static crubit_nonnull>()),
       __return_value_storage);
 }
 

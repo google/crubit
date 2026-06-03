@@ -19,6 +19,37 @@ absl::span
 crubit_support_annotations
 )
 
+add_library(crubit_support_rs_std_dyn_callable STATIC
+"dyn_callable.h"
+)
+set_target_properties(crubit_support_rs_std_dyn_callable PROPERTIES LINKER_LANGUAGE CXX)
+
+target_link_libraries(crubit_support_rs_std_dyn_callable PUBLIC
+absl::core_headers
+absl::nullability
+absl::any_invocable
+crubit_support_bridge_cpp
+)
+
+add_library(crubit_support_rs_std_iterator_adapter STATIC
+"iterator_adapter.h"
+)
+set_target_properties(crubit_support_rs_std_iterator_adapter PROPERTIES LINKER_LANGUAGE CXX)
+
+target_link_libraries(crubit_support_rs_std_iterator_adapter PUBLIC
+crubit_support_rs_std_traits
+)
+
+add_library(crubit_support_rs_std_option STATIC
+"option.h"
+)
+set_target_properties(crubit_support_rs_std_option PROPERTIES LINKER_LANGUAGE CXX)
+
+add_library(crubit_support_rs_std_result STATIC
+"result.h"
+)
+set_target_properties(crubit_support_rs_std_result PROPERTIES LINKER_LANGUAGE CXX)
+
 add_library(crubit_support_rs_std_slice_ref STATIC
 "slice_ref.h"
 )
@@ -47,32 +78,10 @@ crubit_support_internal_bindings_support
 crubit_support_rs_std_internal_is_utf8
 )
 
-add_library(crubit_support_rs_std_dyn_callable STATIC
-"dyn_callable.h"
-)
-set_target_properties(crubit_support_rs_std_dyn_callable PROPERTIES LINKER_LANGUAGE CXX)
-
-target_link_libraries(crubit_support_rs_std_dyn_callable PUBLIC
-absl::core_headers
-absl::nullability
-absl::any_invocable
-crubit_support_bridge_cpp
-)
-
 add_library(crubit_support_rs_std_traits STATIC
 "traits.h"
 )
 set_target_properties(crubit_support_rs_std_traits PROPERTIES LINKER_LANGUAGE CXX)
-
-add_library(crubit_support_rs_std_option STATIC
-"option.h"
-)
-set_target_properties(crubit_support_rs_std_option PROPERTIES LINKER_LANGUAGE CXX)
-
-add_library(crubit_support_rs_std_result STATIC
-"result.h"
-)
-set_target_properties(crubit_support_rs_std_result PROPERTIES LINKER_LANGUAGE CXX)
 
 add_library(crubit_support_rs_std_tuple STATIC
 "tuple.h"

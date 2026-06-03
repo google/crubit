@@ -39,6 +39,7 @@ crubit_cc_test(
     srcs = ["stdlib_test.cc"],
     deps = [
         ":stdlib_cc_api",
+        "//support/rs_std:iterator_adapter",
         "//support/rs_std:rs_core",
         "//testing/base/public:gunit_main",
     ],
