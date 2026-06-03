@@ -21,18 +21,16 @@ TEST(TuplesTest, ReturnUnitIsNotTuple) {
 }
 
 TEST(TuplesTest, ReturnCAbiCompatibleFiveInTuple) {
-  rs_std::Tuple<int32_t> rs_v = tuples::return_c_abi_compatible_five_in_tuple();
-  std::tuple<int32_t> v = std::move(rs_v);
+  std::tuple<int32_t> v = tuples::return_c_abi_compatible_five_in_tuple();
   EXPECT_EQ(std::get<0>(v), 5);
 }
 
 TEST(TuplesTest, ParamCAbiCompatibleFiveInTuple) {
-  tuples::param_c_abi_compatible_five_in_tuple(
-      rs_std::Tuple<int32_t>(std::make_tuple(5)));
+  tuples::param_c_abi_compatible_five_in_tuple(std::make_tuple(5));
 }
 
 TEST(TuplesTest, AdtInTuple) {
-  rs_std::Tuple<tuples::AdtHoldingFiveAndSix> v = tuples::return_adt_in_tuple();
+  std::tuple<tuples::AdtHoldingFiveAndSix> v = tuples::return_adt_in_tuple();
   tuples::param_adt_in_tuple(std::move(v));
 }
 
@@ -43,7 +41,7 @@ TEST(TuplesTest, NontrivialDropInTuple) {
   // Copying this test will result in assertion failures.
   tuples::assert_nontrivial_drop_count(0);
   {
-    rs_std::Tuple<tuples::NontrivialDrop> v =
+    std::tuple<tuples::NontrivialDrop> v =
         tuples::return_new_nontrivial_drop_in_tuple();
     tuples::assert_nontrivial_drop_count(0);
   }
@@ -66,42 +64,32 @@ TEST(TuplesTest, NontrivialDropInTuple) {
 // }
 
 TEST(TuplesTest, NestedTupleParameters) {
-  tuples::param_nested_tuples(
-      rs_std::Tuple<rs_std::Tuple<int32_t, int32_t>, int32_t>(std::make_tuple(
-          rs_std::Tuple<int32_t, int32_t>(std::make_tuple(1, 2)), 3)));
+  tuples::param_nested_tuples(std::make_tuple(std::make_tuple(1, 2), 3));
 }
 
 TEST(TuplesTest, NestedTupleReturns) {
-  rs_std::Tuple<rs_std::Tuple<int32_t, int32_t>, int32_t> rs_v =
+  std::tuple<std::tuple<int32_t, int32_t>, int32_t> v =
       tuples::return_nested_tuples();
-  std::tuple<rs_std::Tuple<int32_t, int32_t>, int32_t> v = std::move(rs_v);
-  std::tuple<int32_t, int32_t> inner = std::move(std::get<0>(v));
-  EXPECT_EQ(std::get<0>(inner), 1);
-  EXPECT_EQ(std::get<1>(inner), 2);
+  EXPECT_EQ(std::get<0>(std::get<0>(v)), 1);
+  EXPECT_EQ(std::get<1>(std::get<0>(v)), 2);
   EXPECT_EQ(std::get<1>(v), 3);
 }
 
 TEST(TuplesTest, TriplyNestedTupleParameters) {
   tuples::param_triply_nested_tuple(
-      rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<int32_t>>>(
-          std::make_tuple(rs_std::Tuple<rs_std::Tuple<int32_t>>(
-              std::make_tuple(rs_std::Tuple<int32_t>(std::make_tuple(57)))))));
+      std::make_tuple(std::make_tuple(std::make_tuple(57))));
 }
 
 TEST(TuplesTest, TriplyNestedTupleReturns) {
-  rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<int32_t>>> rs_v =
+  std::tuple<std::tuple<std::tuple<int32_t>>> v =
       tuples::return_triply_nested_tuple();
-  std::tuple<rs_std::Tuple<rs_std::Tuple<int32_t>>> v = std::move(rs_v);
-  std::tuple<rs_std::Tuple<int32_t>> inner1 = std::move(std::get<0>(v));
-  std::tuple<int32_t> inner2 = std::move(std::get<0>(inner1));
-  EXPECT_EQ(std::get<0>(inner2), 57);
+  EXPECT_EQ(std::get<0>(std::get<0>(std::get<0>(v))), 57);
 }
 
 TEST(TuplesTest, FfiAliasInTuple) {
-  rs_std::Tuple<int8_t> rs_v = tuples::return_ffi_alias_in_tuple();
-  std::tuple<int8_t> v = std::move(rs_v);
+  std::tuple<int8_t> v = tuples::return_ffi_alias_in_tuple();
   EXPECT_EQ(std::get<0>(v), 5);
-  tuples::param_ffi_alias_in_tuple(rs_std::Tuple<int8_t>(std::make_tuple(5)));
+  tuples::param_ffi_alias_in_tuple(std::make_tuple(int8_t{5}));
 }
 
 template <typename T>

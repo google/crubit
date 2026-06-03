@@ -128,6 +128,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"all" => {
             flagset::FlagSet::<CrubitFeature>::full()
                 - CrubitFeature::NoAssumeLifetimes
+                - CrubitFeature::LayoutCompatTuple
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
         }
         // `supported` automatically implies `types`.
@@ -267,7 +268,6 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
-                | CrubitFeature::LayoutCompatTuple
         );
     }
 
@@ -304,7 +304,6 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
-                | CrubitFeature::LayoutCompatTuple
         );
     }
 
@@ -326,7 +325,6 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
-                | CrubitFeature::LayoutCompatTuple
         );
     }
 
@@ -349,7 +347,6 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
-                | CrubitFeature::LayoutCompatTuple
         );
     }
 }

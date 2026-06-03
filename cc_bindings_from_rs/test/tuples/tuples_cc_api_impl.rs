@@ -255,64 +255,131 @@ unsafe extern "C" fn __crubit_thunk_assert_unontrivial_udrop_ucount(drop_count: 
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_uadt_uin_utuple(
-    adt: &'static mut ::core::mem::MaybeUninit<(::tuples_golden::AdtHoldingFiveAndSix,)>,
+    adt: *const [*const core::ffi::c_void; 1usize],
 ) -> () {
     unsafe {
-        let adt = adt.assume_init_read();
+        let adt = ({
+            let adt_0: &'static mut ::core::mem::MaybeUninit<
+                ::tuples_golden::AdtHoldingFiveAndSix,
+            > = ((*adt)[0usize]
+                as *const &'static mut ::core::mem::MaybeUninit<
+                    ::tuples_golden::AdtHoldingFiveAndSix,
+                >)
+                .read();
+            let adt_0 = adt_0.assume_init_read();
+            adt_0
+        },);
         ::tuples_golden::param_adt_in_tuple(adt)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_uc_uabi_ucompatible_ufive_uin_utuple(
-    five: &'static mut ::core::mem::MaybeUninit<(i32,)>,
+    five: *const [*const core::ffi::c_void; 1usize],
 ) -> () {
     unsafe {
-        let five = five.assume_init_read();
+        let five = ({
+            let five_0: i32 = ((*five)[0usize] as *const i32).read();
+            five_0
+        },);
         ::tuples_golden::param_c_abi_compatible_five_in_tuple(five)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_uffi_ualias_uin_utuple(
-    five: &'static mut ::core::mem::MaybeUninit<(i8,)>,
+    five: *const [*const core::ffi::c_void; 1usize],
 ) -> () {
     unsafe {
-        let five = five.assume_init_read();
+        let five = ({
+            let five_0: i8 = ((*five)[0usize] as *const i8).read();
+            five_0
+        },);
         ::tuples_golden::param_ffi_alias_in_tuple(five)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_unested_utuples(
-    v: &'static mut ::core::mem::MaybeUninit<((i32, i32), i32)>,
+    v: *const [*const core::ffi::c_void; 2usize],
 ) -> () {
     unsafe {
-        let v = v.assume_init_read();
+        let v = (
+            {
+                let v_0: *const [*const core::ffi::c_void; 2usize] =
+                    ((*v)[0usize] as *const *const [*const core::ffi::c_void; 2usize]).read();
+                let v_0 = (
+                    {
+                        let v_0_0: i32 = ((*v_0)[0usize] as *const i32).read();
+                        v_0_0
+                    },
+                    {
+                        let v_0_1: i32 = ((*v_0)[1usize] as *const i32).read();
+                        v_0_1
+                    },
+                );
+                v_0
+            },
+            {
+                let v_1: i32 = ((*v)[1usize] as *const i32).read();
+                v_1
+            },
+        );
         ::tuples_golden::param_nested_tuples(v)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_unontrivial_udrop_uin_utuple(
-    nontrivial_drop: &'static mut ::core::mem::MaybeUninit<(::tuples_golden::NontrivialDrop,)>,
+    nontrivial_drop: *const [*const core::ffi::c_void; 1usize],
 ) -> () {
     unsafe {
-        let nontrivial_drop = nontrivial_drop.assume_init_read();
+        let nontrivial_drop = ({
+            let nontrivial_drop_0: &'static mut ::core::mem::MaybeUninit<
+                ::tuples_golden::NontrivialDrop,
+            > = ((*nontrivial_drop)[0usize]
+                as *const &'static mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>)
+                .read();
+            let nontrivial_drop_0 = nontrivial_drop_0.assume_init_read();
+            nontrivial_drop_0
+        },);
         ::tuples_golden::param_nontrivial_drop_in_tuple(nontrivial_drop)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_uoption_uin_utuple(
-    opt: &'static mut ::core::mem::MaybeUninit<(::core::option::Option<i32>,)>,
+    opt: *const [*const core::ffi::c_void; 1usize],
 ) -> () {
     unsafe {
-        let opt = opt.assume_init_read();
+        let opt = ({
+            let opt_0: *const core::ffi::c_uchar =
+                ((*opt)[0usize] as *const *const core::ffi::c_uchar).read();
+            let opt_0 = unsafe {
+                ::bridge_rust::internal::decode(
+                    ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                    opt_0,
+                )
+            };
+            opt_0
+        },);
         ::tuples_golden::param_option_in_tuple(opt)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_utriply_unested_utuple(
-    v: &'static mut ::core::mem::MaybeUninit<(((i32,),),)>,
+    v: *const [*const core::ffi::c_void; 1usize],
 ) -> () {
     unsafe {
-        let v = v.assume_init_read();
+        let v = ({
+            let v_0: *const [*const core::ffi::c_void; 1usize] =
+                ((*v)[0usize] as *const *const [*const core::ffi::c_void; 1usize]).read();
+            let v_0 = ({
+                let v_0_0: *const [*const core::ffi::c_void; 1usize] =
+                    ((*v_0)[0usize] as *const *const [*const core::ffi::c_void; 1usize]).read();
+                let v_0_0 = ({
+                    let v_0_0_0: i32 = ((*v_0_0)[0usize] as *const i32).read();
+                    v_0_0_0
+                },);
+                v_0_0
+            },);
+            v_0
+        },);
         ::tuples_golden::param_triply_nested_tuple(v)
     }
 }
@@ -322,7 +389,9 @@ unsafe extern "C" fn __crubit_thunk_return_uadt_uin_utuple(
 ) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::return_adt_in_tuple();
-        (__ret_ptr as *mut (::tuples_golden::AdtHoldingFiveAndSix,)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        (__ret_ptr_0 as *mut ::tuples_golden::AdtHoldingFiveAndSix).write(__rs_return_value_0);
     }
 }
 #[unsafe(no_mangle)]
@@ -331,7 +400,9 @@ unsafe extern "C" fn __crubit_thunk_return_uc_uabi_ucompatible_ufive_uin_utuple(
 ) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::return_c_abi_compatible_five_in_tuple();
-        (__ret_ptr as *mut (i32,)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
     }
 }
 #[unsafe(no_mangle)]
@@ -340,7 +411,9 @@ unsafe extern "C" fn __crubit_thunk_return_uffi_ualias_uin_utuple(
 ) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::return_ffi_alias_in_tuple();
-        (__ret_ptr as *mut (i8,)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        (__ret_ptr_0 as *mut i8).write(__rs_return_value_0);
     }
 }
 #[unsafe(no_mangle)]
@@ -349,16 +422,14 @@ unsafe extern "C" fn __crubit_thunk_return_unested_utuples(
 ) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::return_nested_tuples();
-        (__ret_ptr as *mut ((i32, i32), i32)).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_return_unew_unon_ucpp_umovable_uin_utuple(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = ::tuples_golden::return_new_non_cpp_movable_in_tuple();
-        (__ret_ptr as *mut (::tuples_golden::NonCppMovable,)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        let (__rs_return_value_0_0, __rs_return_value_0_1) = __rs_return_value_0;
+        let [__ret_ptr_0_0, __ret_ptr_0_1] =
+            *(__ret_ptr_0 as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0_0 as *mut i32).write(__rs_return_value_0_0);
+        (__ret_ptr_0_1 as *mut i32).write(__rs_return_value_0_1);
+        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -367,7 +438,9 @@ unsafe extern "C" fn __crubit_thunk_return_unew_unontrivial_udrop_uin_utuple(
 ) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::return_new_nontrivial_drop_in_tuple();
-        (__ret_ptr as *mut (::tuples_golden::NontrivialDrop,)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        (__ret_ptr_0 as *mut ::tuples_golden::NontrivialDrop).write(__rs_return_value_0);
     }
 }
 #[unsafe(no_mangle)]
@@ -376,7 +449,15 @@ unsafe extern "C" fn __crubit_thunk_return_uoption_uin_utuple(
 ) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::return_option_in_tuple();
-        (__ret_ptr as *mut (::core::option::Option<i32>,)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                __ret_ptr_0 as *mut core::ffi::c_uchar,
+                __rs_return_value_0,
+            );
+        }
     }
 }
 #[unsafe(no_mangle)]
@@ -401,7 +482,13 @@ unsafe extern "C" fn __crubit_thunk_return_utriply_unested_utuple(
 ) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::return_triply_nested_tuple();
-        (__ret_ptr as *mut (((i32,),),)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        let (__rs_return_value_0_0,) = __rs_return_value_0;
+        let [__ret_ptr_0_0] = *(__ret_ptr_0 as *mut [*mut core::ffi::c_void; 1usize]);
+        let (__rs_return_value_0_0_0,) = __rs_return_value_0_0;
+        let [__ret_ptr_0_0_0] = *(__ret_ptr_0_0 as *mut [*mut core::ffi::c_void; 1usize]);
+        (__ret_ptr_0_0_0 as *mut i32).write(__rs_return_value_0_0_0);
     }
 }
 #[unsafe(no_mangle)]
@@ -429,71 +516,62 @@ unsafe extern "C" fn __crubit_thunk_take_utuple_uhas_udefault(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = <(((i32,),),) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (((i32,),),)).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
         let __rs_return_value = <(((u32, u32), u32), u32) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (((u32, u32), u32), u32)).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = <((i32, i32), i32) as ::core::default::Default>::default();
-        (__ret_ptr as *mut ((i32, i32), i32)).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = <((i32,),) as ::core::default::Default>::default();
-        (__ret_ptr as *mut ((i32,),)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        let (__rs_return_value_0_0, __rs_return_value_0_1) = __rs_return_value_0;
+        let [__ret_ptr_0_0, __ret_ptr_0_1] =
+            *(__ret_ptr_0 as *mut [*mut core::ffi::c_void; 2usize]);
+        let (__rs_return_value_0_0_0, __rs_return_value_0_0_1) = __rs_return_value_0_0;
+        let [__ret_ptr_0_0_0, __ret_ptr_0_0_1] =
+            *(__ret_ptr_0_0 as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0_0_0 as *mut u32).write(__rs_return_value_0_0_0);
+        (__ret_ptr_0_0_1 as *mut u32).write(__rs_return_value_0_0_1);
+        (__ret_ptr_0_1 as *mut u32).write(__rs_return_value_0_1);
+        (__ret_ptr_1 as *mut u32).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <((u32, u32), u32) as ::core::default::Default>::default();
-        (__ret_ptr as *mut ((u32, u32), u32)).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (i32, i32)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        let (__rs_return_value_0_0, __rs_return_value_0_1) = __rs_return_value_0;
+        let [__ret_ptr_0_0, __ret_ptr_0_1] =
+            *(__ret_ptr_0 as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0_0 as *mut u32).write(__rs_return_value_0_0);
+        (__ret_ptr_0_1 as *mut u32).write(__rs_return_value_0_1);
+        (__ret_ptr_1 as *mut u32).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(i32,) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (i32,)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(i8, isize) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (i8, isize)).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = <(i8,) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (i8,)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut i8).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut isize).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(isize, i8) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (isize, i8)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut isize).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut i8).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -509,12 +587,17 @@ unsafe extern "C" fn __crubit_thunk_clone(
             ::core::option::Option<i32>,
             ::core::result::Result<i32, ::alloc::string::String>,
         ) as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr
-            as *mut (
-                ::core::option::Option<i32>,
-                ::core::result::Result<i32, ::alloc::string::String>,
-            ))
-            .write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                __ret_ptr_0 as *mut core::ffi::c_uchar,
+                __rs_return_value_0,
+            );
+        }
+        (__ret_ptr_1 as *mut ::core::result::Result<i32, ::alloc::string::String>)
+            .write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -537,7 +620,15 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     unsafe {
         let __rs_return_value =
             <(::core::option::Option<i32>,) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (::core::option::Option<i32>,)).write(__rs_return_value);
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                __ret_ptr_0 as *mut core::ffi::c_uchar,
+                __rs_return_value_0,
+            );
+        }
     }
 }
 #[unsafe(no_mangle)]
@@ -548,7 +639,10 @@ unsafe extern "C" fn __crubit_thunk_clone(
     unsafe {
         let __rs_return_value =
             <(::tuples_golden::CloneNoDefault, u8) as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut (::tuples_golden::CloneNoDefault, u8)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut ::tuples_golden::CloneNoDefault).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut u8).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -565,36 +659,52 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     unsafe {
         let __rs_return_value =
             <(::tuples_golden::HasDefault, u8) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (::tuples_golden::HasDefault, u8)).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value =
-            <(::tuples_golden::NontrivialDrop,) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (::tuples_golden::NontrivialDrop,)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut ::tuples_golden::HasDefault).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut u8).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(u32, (u32, (u32, u32))) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (u32, (u32, (u32, u32)))).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut u32).write(__rs_return_value_0);
+        let (__rs_return_value_1_0, __rs_return_value_1_1) = __rs_return_value_1;
+        let [__ret_ptr_1_0, __ret_ptr_1_1] =
+            *(__ret_ptr_1 as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_1_0 as *mut u32).write(__rs_return_value_1_0);
+        let (__rs_return_value_1_1_0, __rs_return_value_1_1_1) = __rs_return_value_1_1;
+        let [__ret_ptr_1_1_0, __ret_ptr_1_1_1] =
+            *(__ret_ptr_1_1 as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_1_1_0 as *mut u32).write(__rs_return_value_1_1_0);
+        (__ret_ptr_1_1_1 as *mut u32).write(__rs_return_value_1_1_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(u32, (u32, u32)) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (u32, (u32, u32))).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut u32).write(__rs_return_value_0);
+        let (__rs_return_value_1_0, __rs_return_value_1_1) = __rs_return_value_1;
+        let [__ret_ptr_1_0, __ret_ptr_1_1] =
+            *(__ret_ptr_1 as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_1_0 as *mut u32).write(__rs_return_value_1_0);
+        (__ret_ptr_1_1 as *mut u32).write(__rs_return_value_1_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(u32, u32) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (u32, u32)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut u32).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut u32).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -605,7 +715,10 @@ unsafe extern "C" fn __crubit_thunk_clone(
     unsafe {
         let __rs_return_value =
             <(u8, ::tuples_golden::CloneNoDefault) as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut (u8, ::tuples_golden::CloneNoDefault)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut u8).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut ::tuples_golden::CloneNoDefault).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -622,21 +735,30 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     unsafe {
         let __rs_return_value =
             <(u8, ::tuples_golden::HasDefault) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (u8, ::tuples_golden::HasDefault)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut u8).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut ::tuples_golden::HasDefault).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(u8, usize) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (u8, usize)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut u8).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut usize).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(usize, u8) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (usize, u8)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut usize).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut u8).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]

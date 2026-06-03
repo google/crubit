@@ -272,78 +272,61 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
 void assert_nontrivial_drop_count(::std::uint8_t drop_count);
 
 // CRUBIT_ANNOTATE: must_bind=
-void return_unit_is_not_tuple();
+void param_adt_in_tuple(::std::tuple<::tuples::AdtHoldingFiveAndSix> adt);
 
-}  // namespace tuples
+// CRUBIT_ANNOTATE: must_bind=
+void param_c_abi_compatible_five_in_tuple(::std::tuple<::std::int32_t> five);
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-template <>
-struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
- public:
-  // Default::default
-  Tuple();
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Tuple(const Tuple&) = default;
-  Tuple& operator=(const Tuple&) = default;
-  Tuple(Tuple&&) = default;
-  Tuple& operator=(Tuple&&) = default;
-
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
-  ~Tuple() = default;
-  operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
-
- private:
-  unsigned char storage_[8];
-};
-#endif
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-template <>
-struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("((i32 , i32 ,) , i32 ,)") rs_std::Tuple<
-        rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t> {
- public:
-  // Default::default
-  Tuple();
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Tuple(const Tuple&) = default;
-  Tuple& operator=(const Tuple&) = default;
-  Tuple(Tuple&&) = default;
-  Tuple& operator=(Tuple&&) = default;
-
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                   ::std::int32_t>&& tuple) noexcept;
-  ~Tuple() = default;
-  operator std::tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                      ::std::int32_t>() && noexcept;
-
- private:
-  unsigned char storage_[12];
-};
-#endif
-
-namespace tuples {
+// CRUBIT_ANNOTATE: must_bind=
+void param_ffi_alias_in_tuple(::std::tuple<::std::int8_t> five);
 
 // CRUBIT_ANNOTATE: must_bind=
 void param_nested_tuples(
-    rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
+    ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
         v);
 
 // CRUBIT_ANNOTATE: must_bind=
-rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
+void param_nontrivial_drop_in_tuple(
+    ::std::tuple<::tuples::NontrivialDrop> nontrivial_drop);
+
+// CRUBIT_ANNOTATE: must_bind=
+void param_option_in_tuple(::std::tuple<::std::optional<::std::int32_t>> opt);
+
+// CRUBIT_ANNOTATE: must_bind=
+void param_triply_nested_tuple(
+    ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>> v);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::int8_t> return_ffi_alias_in_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
 return_nested_tuples();
+
+// Error generating bindings for function
+// `tuples_golden::return_new_non_cpp_movable_in_tuple` defined at
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=78:
+// Can't return type `tuples_golden::NonCppMovable` by value inside a compound
+// data type without a move constructor
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::tuples::NontrivialDrop> return_new_nontrivial_drop_in_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>>
+return_triply_nested_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+void return_unit_is_not_tuple();
 
 }  // namespace tuples
 
@@ -412,81 +395,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// CRUBIT_ANNOTATE: must_bind=
-void param_c_abi_compatible_five_in_tuple(rs_std::Tuple<::std::int32_t> five);
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple();
-
-}  // namespace tuples
-
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
-template <>
-struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "((i32 ,) ,)") rs_std::Tuple<rs_std::Tuple<::std::int32_t>> {
- public:
-  // Default::default
-  Tuple();
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Tuple(const Tuple&) = default;
-  Tuple& operator=(const Tuple&) = default;
-  Tuple(Tuple&&) = default;
-  Tuple& operator=(Tuple&&) = default;
-
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<rs_std::Tuple<::std::int32_t>>&& tuple) noexcept;
-  ~Tuple() = default;
-  operator std::tuple<rs_std::Tuple<::std::int32_t>>() && noexcept;
-
- private:
-  unsigned char storage_[4];
-};
-#endif
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
-template <>
-struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE("(((i32 ,) ,) ,)")
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>> {
- public:
-  // Default::default
-  Tuple();
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Tuple(const Tuple&) = default;
-  Tuple& operator=(const Tuple&) = default;
-  Tuple(Tuple&&) = default;
-  Tuple& operator=(Tuple&&) = default;
-
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>&&
-            tuple) noexcept;
-  ~Tuple() = default;
-  operator std::tuple<
-      rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>() && noexcept;
-
- private:
-  unsigned char storage_[4];
-};
-#endif
-
-namespace tuples {
-
-// CRUBIT_ANNOTATE: must_bind=
-void param_triply_nested_tuple(
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>> v);
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>
-return_triply_nested_tuple();
-
 }  // namespace tuples
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020intptr_ut_x00000020_x0000003e
@@ -516,44 +424,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   unsigned char storage_[16];
 };
 #endif
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
-template <>
-struct alignas(1)
-    CRUBIT_INTERNAL_RUST_TYPE("(i8 ,)") rs_std::Tuple<::std::int8_t> {
- public:
-  // Default::default
-  Tuple();
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Tuple(const Tuple&) = default;
-  Tuple& operator=(const Tuple&) = default;
-  Tuple(Tuple&&) = default;
-  Tuple& operator=(Tuple&&) = default;
-
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<::std::int8_t>&& tuple) noexcept;
-  ~Tuple() = default;
-  operator std::tuple<::std::int8_t>() && noexcept;
-
- private:
-  unsigned char storage_[1];
-};
-#endif
-
-namespace tuples {
-
-// CRUBIT_ANNOTATE: must_bind=
-void param_ffi_alias_in_tuple(rs_std::Tuple<::std::int8_t> five);
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Tuple<::std::int8_t> return_ffi_alias_in_tuple();
-
-}  // namespace tuples
-
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020intptr_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020intptr_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 template <>
@@ -581,46 +451,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   unsigned char storage_[16];
 };
 #endif
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020AdtHoldingFiveAndSix_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020AdtHoldingFiveAndSix_x00000020_x0000003e
-template <>
-struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("(:: tuples_golden :: AdtHoldingFiveAndSix ,)")
-        rs_std::Tuple<::tuples::AdtHoldingFiveAndSix> {
- public:
-  // `(tuples_golden::AdtHoldingFiveAndSix,)` doesn't implement the `Default`
-  // trait
-  Tuple() = delete;
-
-  // `(tuples_golden::AdtHoldingFiveAndSix,)` doesn't implement the `Clone`
-  // trait
-  Tuple(const Tuple&) = delete;
-  Tuple& operator=(const Tuple&) = delete;
-  Tuple(Tuple&&) = default;
-  Tuple& operator=(Tuple&&) = default;
-
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<::tuples::AdtHoldingFiveAndSix>&& tuple) noexcept;
-  ~Tuple() = default;
-  operator std::tuple<::tuples::AdtHoldingFiveAndSix>() && noexcept;
-
- private:
-  unsigned char storage_[8];
-};
-#endif
-
-namespace tuples {
-
-// CRUBIT_ANNOTATE: must_bind=
-void param_adt_in_tuple(rs_std::Tuple<::tuples::AdtHoldingFiveAndSix> adt);
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple();
-
-}  // namespace tuples
-
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
@@ -755,80 +585,6 @@ struct alignas(8)
   unsigned char storage_[32];
 };
 #endif
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NonCppMovable_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NonCppMovable_x00000020_x0000003e
-template <>
-struct alignas(1)
-    CRUBIT_INTERNAL_RUST_TYPE("(:: tuples_golden :: NonCppMovable ,)")
-        rs_std::Tuple<::tuples::NonCppMovable> {
- public:
-  // `(tuples_golden::NonCppMovable,)` doesn't implement the `Default` trait
-  Tuple() = delete;
-
-  // `(tuples_golden::NonCppMovable,)` doesn't implement the `Clone` trait
-  Tuple(const Tuple&) = delete;
-  Tuple& operator=(const Tuple&) = delete;
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  Tuple(Tuple&&) = delete;
-  ::rs_std::Tuple<::tuples::NonCppMovable>& operator=(Tuple&&) = delete;
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<::tuples::NonCppMovable>&& tuple) = delete;
-  ~Tuple();
-  operator std::tuple<::tuples::NonCppMovable>() && = delete;
-
- private:
-  unsigned char storage_[1];
-};
-#endif
-
-namespace tuples {
-
-rs_std::Tuple<::tuples::NonCppMovable> return_new_non_cpp_movable_in_tuple();
-
-}
-
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NontrivialDrop_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NontrivialDrop_x00000020_x0000003e
-template <>
-struct alignas(1)
-    CRUBIT_INTERNAL_RUST_TYPE("(:: tuples_golden :: NontrivialDrop ,)")
-        rs_std::Tuple<::tuples::NontrivialDrop> {
- public:
-  // Default::default
-  Tuple();
-
-  // `(tuples_golden::NontrivialDrop,)` doesn't implement the `Clone` trait
-  Tuple(const Tuple&) = delete;
-  Tuple& operator=(const Tuple&) = delete;
-  Tuple(Tuple&&);
-  ::rs_std::Tuple<::tuples::NontrivialDrop>& operator=(Tuple&&);
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  Tuple(std::tuple<::tuples::NontrivialDrop>&& tuple) noexcept;
-  ~Tuple();
-  operator std::tuple<::tuples::NontrivialDrop>() && noexcept;
-
- private:
-  unsigned char storage_[1];
-};
-#endif
-
-namespace tuples {
-
-// CRUBIT_ANNOTATE: must_bind=
-void param_nontrivial_drop_in_tuple(
-    rs_std::Tuple<::tuples::NontrivialDrop> nontrivial_drop);
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Tuple<::tuples::NontrivialDrop> return_new_nontrivial_drop_in_tuple();
-
-}  // namespace tuples
-
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 template <>
@@ -1603,12 +1359,6 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-void param_option_in_tuple(rs_std::Tuple<rs_std::Option<::std::int32_t>> opt);
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Tuple<rs_std::Option<::std::int32_t>> return_option_in_tuple();
-
-// CRUBIT_ANNOTATE: must_bind=
 ::std::optional<::std::int32_t> return_option_in_tuple_ref(
     rs_std::Tuple<rs_std::Option<::std::int32_t>> const& opt);
 
@@ -2182,165 +1932,200 @@ inline void assert_nontrivial_drop_count(::std::uint8_t drop_count) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_uadt_uin_utuple(
-    rs_std::Tuple<::tuples::AdtHoldingFiveAndSix>*);
+extern "C" void __crubit_thunk_param_uadt_uin_utuple(void**);
 }
 inline void param_adt_in_tuple(
-    rs_std::Tuple<::tuples::AdtHoldingFiveAndSix> adt) {
-  return __crubit_internal::__crubit_thunk_param_uadt_uin_utuple(&adt);
+    ::std::tuple<::tuples::AdtHoldingFiveAndSix> adt) {
+  auto&& adt_0 = ::std::get<0>(adt);
+  auto&& adt_cabi_0 = &adt_0;
+  void* adt_cabi[] = {&adt_cabi_0};
+  return __crubit_internal::__crubit_thunk_param_uadt_uin_utuple(adt_cabi);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_uc_uabi_ucompatible_ufive_uin_utuple(
-    rs_std::Tuple<::std::int32_t>*);
+    void**);
 }
 inline void param_c_abi_compatible_five_in_tuple(
-    rs_std::Tuple<::std::int32_t> five) {
+    ::std::tuple<::std::int32_t> five) {
+  auto&& five_0 = ::std::get<0>(five);
+  auto&& five_cabi_0 = five_0;
+  void* five_cabi[] = {&five_cabi_0};
   return __crubit_internal::
-      __crubit_thunk_param_uc_uabi_ucompatible_ufive_uin_utuple(&five);
+      __crubit_thunk_param_uc_uabi_ucompatible_ufive_uin_utuple(five_cabi);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_uffi_ualias_uin_utuple(
-    rs_std::Tuple<::std::int8_t>*);
+extern "C" void __crubit_thunk_param_uffi_ualias_uin_utuple(void**);
 }
-inline void param_ffi_alias_in_tuple(rs_std::Tuple<::std::int8_t> five) {
-  return __crubit_internal::__crubit_thunk_param_uffi_ualias_uin_utuple(&five);
+inline void param_ffi_alias_in_tuple(::std::tuple<::std::int8_t> five) {
+  auto&& five_0 = ::std::get<0>(five);
+  auto&& five_cabi_0 = five_0;
+  void* five_cabi[] = {&five_cabi_0};
+  return __crubit_internal::__crubit_thunk_param_uffi_ualias_uin_utuple(
+      five_cabi);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unested_utuples(
-    rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                  ::std::int32_t>*);
+extern "C" void __crubit_thunk_param_unested_utuples(void**);
 }
 inline void param_nested_tuples(
-    rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
+    ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
         v) {
-  return __crubit_internal::__crubit_thunk_param_unested_utuples(&v);
+  auto&& v_0 = ::std::get<0>(v);
+  auto&& v_0_0 = ::std::get<0>(v_0);
+  auto&& v_0_cabi_0 = v_0_0;
+  auto&& v_0_1 = ::std::get<1>(v_0);
+  auto&& v_0_cabi_1 = v_0_1;
+  void* v_0_cabi[] = {&v_0_cabi_0, &v_0_cabi_1};
+  auto* v_cabi_0 = &v_0_cabi;
+  auto&& v_1 = ::std::get<1>(v);
+  auto&& v_cabi_1 = v_1;
+  void* v_cabi[] = {&v_cabi_0, &v_cabi_1};
+  return __crubit_internal::__crubit_thunk_param_unested_utuples(v_cabi);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unontrivial_udrop_uin_utuple(
-    rs_std::Tuple<::tuples::NontrivialDrop>*);
+extern "C" void __crubit_thunk_param_unontrivial_udrop_uin_utuple(void**);
 }
 inline void param_nontrivial_drop_in_tuple(
-    rs_std::Tuple<::tuples::NontrivialDrop> nontrivial_drop) {
-  crubit::Slot nontrivial_drop_slot((::std::move(nontrivial_drop)));
+    ::std::tuple<::tuples::NontrivialDrop> nontrivial_drop) {
+  auto&& nontrivial_drop_0 = ::std::get<0>(nontrivial_drop);
+  crubit::Slot nontrivial_drop_0_slot((::std::move(nontrivial_drop_0)));
+  auto&& nontrivial_drop_cabi_0 = nontrivial_drop_0_slot.Get();
+  void* nontrivial_drop_cabi[] = {&nontrivial_drop_cabi_0};
   return __crubit_internal::__crubit_thunk_param_unontrivial_udrop_uin_utuple(
-      nontrivial_drop_slot.Get());
+      nontrivial_drop_cabi);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_uoption_uin_utuple(
-    rs_std::Tuple<rs_std::Option<::std::int32_t>>*);
+extern "C" void __crubit_thunk_param_uoption_uin_utuple(void**);
 }
 inline void param_option_in_tuple(
-    rs_std::Tuple<rs_std::Option<::std::int32_t>> opt) {
-  return __crubit_internal::__crubit_thunk_param_uoption_uin_utuple(&opt);
+    ::std::tuple<::std::optional<::std::int32_t>> opt) {
+  auto&& opt_0 = ::std::get<0>(opt);
+  unsigned char opt_0_buffer
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
+  ::crubit::internal::Encode<
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+          ::crubit::TransmuteAbi<::std::int32_t>()),
+      opt_0_buffer, opt_0);
+  auto&& opt_cabi_0 = opt_0_buffer;
+  void* opt_cabi[] = {&opt_cabi_0};
+  return __crubit_internal::__crubit_thunk_param_uoption_uin_utuple(opt_cabi);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_utriply_unested_utuple(
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>*);
+extern "C" void __crubit_thunk_param_utriply_unested_utuple(void**);
 }
 inline void param_triply_nested_tuple(
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>> v) {
-  return __crubit_internal::__crubit_thunk_param_utriply_unested_utuple(&v);
+    ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>> v) {
+  auto&& v_0 = ::std::get<0>(v);
+  auto&& v_0_0 = ::std::get<0>(v_0);
+  auto&& v_0_0_0 = ::std::get<0>(v_0_0);
+  auto&& v_0_0_cabi_0 = v_0_0_0;
+  void* v_0_0_cabi[] = {&v_0_0_cabi_0};
+  auto* v_0_cabi_0 = &v_0_0_cabi;
+  void* v_0_cabi[] = {&v_0_cabi_0};
+  auto* v_cabi_0 = &v_0_cabi;
+  void* v_cabi[] = {&v_cabi_0};
+  return __crubit_internal::__crubit_thunk_param_utriply_unested_utuple(v_cabi);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uadt_uin_utuple(
-    rs_std::Tuple<::tuples::AdtHoldingFiveAndSix>* __ret_ptr);
+extern "C" void __crubit_thunk_return_uadt_uin_utuple(void** __ret_ptr);
 }
-inline rs_std::Tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple() {
-  crubit::Slot<rs_std::Tuple<::tuples::AdtHoldingFiveAndSix>>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+inline ::std::tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple() {
+  crubit::Slot<::tuples::AdtHoldingFiveAndSix> __return_value_0_ret_val_holder;
+  auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
+  void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_uadt_uin_utuple(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::make_tuple(
+      ::std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue());
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uc_uabi_ucompatible_ufive_uin_utuple(
-    rs_std::Tuple<::std::int32_t>* __ret_ptr);
+    void** __ret_ptr);
 }
-inline rs_std::Tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple() {
-  crubit::Slot<rs_std::Tuple<::std::int32_t>> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+inline ::std::tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple() {
+  ::std::int32_t __return_value_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_uc_uabi_ucompatible_ufive_uin_utuple(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::make_tuple(*__return_value_0_storage);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uffi_ualias_uin_utuple(
-    rs_std::Tuple<::std::int8_t>* __ret_ptr);
+extern "C" void __crubit_thunk_return_uffi_ualias_uin_utuple(void** __ret_ptr);
 }
-inline rs_std::Tuple<::std::int8_t> return_ffi_alias_in_tuple() {
-  crubit::Slot<rs_std::Tuple<::std::int8_t>> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+inline ::std::tuple<::std::int8_t> return_ffi_alias_in_tuple() {
+  ::std::int8_t __return_value_0_ret_val_holder;
+  ::std::int8_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_uffi_ualias_uin_utuple(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::make_tuple(*__return_value_0_storage);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_unested_utuples(
-    rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                  ::std::int32_t>* __ret_ptr);
+extern "C" void __crubit_thunk_return_unested_utuples(void** __ret_ptr);
 }
-inline rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                     ::std::int32_t>
+inline ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>,
+                    ::std::int32_t>
 return_nested_tuples() {
-  crubit::Slot<rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                             ::std::int32_t>>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  ::std::int32_t __return_value_0_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_0_storage =
+      &__return_value_0_0_ret_val_holder;
+  ::std::int32_t __return_value_0_1_ret_val_holder;
+  ::std::int32_t* __return_value_0_1_storage =
+      &__return_value_0_1_ret_val_holder;
+  void* __return_value_0_storage[] = {__return_value_0_0_storage,
+                                      __return_value_0_1_storage};
+  ::std::int32_t __return_value_1_ret_val_holder;
+  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage,
+                                    __return_value_1_storage};
   __crubit_internal::__crubit_thunk_return_unested_utuples(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_unew_unon_ucpp_umovable_uin_utuple(
-    rs_std::Tuple<::tuples::NonCppMovable>* __ret_ptr);
-}
-inline rs_std::Tuple<::tuples::NonCppMovable>
-return_new_non_cpp_movable_in_tuple() {
-  crubit::Slot<rs_std::Tuple<::tuples::NonCppMovable>>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_return_unew_unon_ucpp_umovable_uin_utuple(
-      __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::make_tuple(::std::make_tuple(*__return_value_0_0_storage,
+                                             *__return_value_0_1_storage),
+                           *__return_value_1_storage);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unew_unontrivial_udrop_uin_utuple(
-    rs_std::Tuple<::tuples::NontrivialDrop>* __ret_ptr);
+    void** __ret_ptr);
 }
-inline rs_std::Tuple<::tuples::NontrivialDrop>
+inline ::std::tuple<::tuples::NontrivialDrop>
 return_new_nontrivial_drop_in_tuple() {
-  crubit::Slot<rs_std::Tuple<::tuples::NontrivialDrop>>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  crubit::Slot<::tuples::NontrivialDrop> __return_value_0_ret_val_holder;
+  auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
+  void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_unew_unontrivial_udrop_uin_utuple(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::make_tuple(
+      ::std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue());
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uoption_uin_utuple(
-    rs_std::Tuple<rs_std::Option<::std::int32_t>>* __ret_ptr);
+extern "C" void __crubit_thunk_return_uoption_uin_utuple(void** __ret_ptr);
 }
-inline rs_std::Tuple<rs_std::Option<::std::int32_t>> return_option_in_tuple() {
-  crubit::Slot<rs_std::Tuple<rs_std::Option<::std::int32_t>>>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+inline ::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple() {
+  unsigned char __return_value_0_storage
+      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
+  void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_uoption_uin_utuple(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::make_tuple(
+      ::crubit::internal::Decode<
+          ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
+          ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
+              ::crubit::TransmuteAbi<::std::int32_t>()),
+          __return_value_0_storage));
 }
 
 namespace __crubit_internal {
@@ -2362,17 +2147,20 @@ inline ::std::optional<::std::int32_t> return_option_in_tuple_ref(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_utriply_unested_utuple(
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>* __ret_ptr);
+extern "C" void __crubit_thunk_return_utriply_unested_utuple(void** __ret_ptr);
 }
-inline rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>
+inline ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>>
 return_triply_nested_tuple() {
-  crubit::Slot<rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  ::std::int32_t __return_value_0_0_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_0_0_storage =
+      &__return_value_0_0_0_ret_val_holder;
+  void* __return_value_0_0_storage[] = {__return_value_0_0_0_storage};
+  void* __return_value_0_storage[] = {__return_value_0_0_storage};
+  void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_utriply_unested_utuple(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::std::make_tuple(
+      ::std::make_tuple(::std::make_tuple(*__return_value_0_0_0_storage)));
 }
 
 namespace __crubit_internal {
@@ -2413,40 +2201,6 @@ inline rs_std::StrRef take_tuple_has_default(
 }
 
 }  // namespace tuples
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>* __ret_ptr);
-}
-inline ::rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
-}
-static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>>);
-static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>>);
-inline rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>::Tuple(
-    std::tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>&& tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>*>(storage_ +
-                                                                      0),
-      std::move(std::get<0>(tuple)));
-}
-inline rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>::
-operator std::tuple<
-    rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>() && noexcept {
-  return std::tuple<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>(std::move(
-      *reinterpret_cast<rs_std::Tuple<rs_std::Tuple<::std::int32_t>>*>(
-          storage_ + 0)));
-}
-
-#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
@@ -2514,85 +2268,6 @@ operator std::tuple<
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                  ::std::int32_t>* __ret_ptr);
-}
-inline ::rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                       ::std::int32_t>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
-}
-static_assert(
-    ::std::is_trivially_copy_constructible_v<::rs_std::Tuple<
-        rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>>);
-static_assert(
-    ::std::is_trivially_copy_assignable_v<::rs_std::Tuple<
-        rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>>);
-static_assert(
-    ::std::is_trivially_move_constructible_v<::rs_std::Tuple<
-        rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>>);
-static_assert(
-    ::std::is_trivially_move_assignable_v<::rs_std::Tuple<
-        rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>>);
-inline rs_std::
-    Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>::Tuple(
-        std::tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                   ::std::int32_t>&& tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<rs_std::Tuple<::std::int32_t, ::std::int32_t>*>(
-          storage_ + 0),
-      std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
-}
-inline rs_std::Tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                     ::std::int32_t>::
-operator std::tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                    ::std::int32_t>() && noexcept {
-  return std::tuple<rs_std::Tuple<::std::int32_t, ::std::int32_t>,
-                    ::std::int32_t>(
-      std::move(
-          *reinterpret_cast<rs_std::Tuple<::std::int32_t, ::std::int32_t>*>(
-              storage_ + 0)),
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 8)));
-}
-
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<rs_std::Tuple<::std::int32_t>>* __ret_ptr);
-}
-inline ::rs_std::Tuple<rs_std::Tuple<::std::int32_t>>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
-}
-static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>);
-static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<rs_std::Tuple<::std::int32_t>>>);
-inline rs_std::Tuple<rs_std::Tuple<::std::int32_t>>::Tuple(
-    std::tuple<rs_std::Tuple<::std::int32_t>>&& tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<rs_std::Tuple<::std::int32_t>*>(storage_ + 0),
-      std::move(std::get<0>(tuple)));
-}
-inline rs_std::Tuple<rs_std::Tuple<::std::int32_t>>::operator std::tuple<
-    rs_std::Tuple<::std::int32_t>>() && noexcept {
-  return std::tuple<rs_std::Tuple<::std::int32_t>>(std::move(
-      *reinterpret_cast<rs_std::Tuple<::std::int32_t>*>(storage_ + 0)));
-}
-
-#endif
-
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 namespace __crubit_internal {
@@ -2637,39 +2312,6 @@ operator std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
           *reinterpret_cast<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>*>(
               storage_ + 0)),
       std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 8)));
-}
-
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
-}
-inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
-}
-static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
-    std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
-                    std::move(std::get<1>(tuple)));
-}
-inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
-    ::std::int32_t, ::std::int32_t>() && noexcept {
-  return std::tuple<::std::int32_t, ::std::int32_t>(
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4)));
 }
 
 #endif
@@ -2733,35 +2375,6 @@ inline rs_std::Tuple<::std::int8_t, ::std::intptr_t>::operator std::tuple<
   return std::tuple<::std::int8_t, ::std::intptr_t>(
       std::move(*reinterpret_cast<::std::int8_t*>(storage_ + 0)),
       std::move(*reinterpret_cast<::std::intptr_t*>(storage_ + 8)));
-}
-
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(rs_std::Tuple<::std::int8_t>* __ret_ptr);
-}
-inline ::rs_std::Tuple<::std::int8_t>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
-}
-static_assert(
-    ::std::is_trivially_copy_constructible_v<::rs_std::Tuple<::std::int8_t>>);
-static_assert(
-    ::std::is_trivially_copy_assignable_v<::rs_std::Tuple<::std::int8_t>>);
-static_assert(
-    ::std::is_trivially_move_constructible_v<::rs_std::Tuple<::std::int8_t>>);
-static_assert(
-    ::std::is_trivially_move_assignable_v<::rs_std::Tuple<::std::int8_t>>);
-inline rs_std::Tuple<::std::int8_t>::Tuple(
-    std::tuple<::std::int8_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::int8_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-}
-inline rs_std::Tuple<::std::int8_t>::operator std::tuple<
-    ::std::int8_t>() && noexcept {
-  return std::tuple<::std::int8_t>(
-      std::move(*reinterpret_cast<::std::int8_t*>(storage_ + 0)));
 }
 
 #endif
@@ -2908,26 +2521,6 @@ inline rs_std::Tuple<rs_std::Option<::std::int32_t>>::operator std::tuple<
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020AdtHoldingFiveAndSix_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020AdtHoldingFiveAndSix_x00000020_x0000003e
-static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::tuples::AdtHoldingFiveAndSix>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::tuples::AdtHoldingFiveAndSix>>);
-inline rs_std::Tuple<::tuples::AdtHoldingFiveAndSix>::Tuple(
-    std::tuple<::tuples::AdtHoldingFiveAndSix>&& tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<::tuples::AdtHoldingFiveAndSix*>(storage_ + 0),
-      std::move(std::get<0>(tuple)));
-}
-inline rs_std::Tuple<::tuples::AdtHoldingFiveAndSix>::operator std::tuple<
-    ::tuples::AdtHoldingFiveAndSix>() && noexcept {
-  return std::tuple<::tuples::AdtHoldingFiveAndSix>(std::move(
-      *reinterpret_cast<::tuples::AdtHoldingFiveAndSix*>(storage_ + 0)));
-}
-
-#endif
-
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 namespace __crubit_internal {
@@ -3042,47 +2635,6 @@ inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::~Tuple() {
 inline rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>::~Tuple() {
   std::destroy_at(reinterpret_cast<::tuples::HasNoDefault*>(storage_ + 0));
   std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 24));
-}
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NonCppMovable_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NonCppMovable_x00000020_x0000003e
-
-inline rs_std::Tuple<::tuples::NonCppMovable>::~Tuple() {
-  std::destroy_at(reinterpret_cast<::tuples::NonCppMovable*>(storage_ + 0));
-}
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NontrivialDrop_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020NontrivialDrop_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<::tuples::NontrivialDrop>* __ret_ptr);
-}
-inline ::rs_std::Tuple<::tuples::NontrivialDrop>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
-}
-inline ::rs_std::Tuple<::tuples::NontrivialDrop>::Tuple(Tuple&& other)
-    : Tuple() {
-  *this = ::std::move(other);
-}
-inline ::rs_std::Tuple<::tuples::NontrivialDrop>& ::rs_std::Tuple<
-    ::tuples::NontrivialDrop>::operator=(Tuple&& other) {
-  crubit::MemSwap(*this, other);
-  return *this;
-}
-inline rs_std::Tuple<::tuples::NontrivialDrop>::Tuple(
-    std::tuple<::tuples::NontrivialDrop>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::tuples::NontrivialDrop*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-}
-inline rs_std::Tuple<::tuples::NontrivialDrop>::operator std::tuple<
-    ::tuples::NontrivialDrop>() && noexcept {
-  return std::tuple<::tuples::NontrivialDrop>(
-      std::move(*reinterpret_cast<::tuples::NontrivialDrop*>(storage_ + 0)));
-}
-inline rs_std::Tuple<::tuples::NontrivialDrop>::~Tuple() {
-  std::destroy_at(reinterpret_cast<::tuples::NontrivialDrop*>(storage_ + 0));
 }
 #endif
 

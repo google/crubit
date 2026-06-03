@@ -105,7 +105,10 @@ const _: () = assert!(::core::mem::offset_of!(::traits_golden::StructWithAssocia
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
-        (__ret_ptr as *mut (i32, i32)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -191,7 +194,10 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
             <::traits_golden::MyStruct as ::traits_golden::MyTrait>::take_and_return_other_types(
                 __self, x,
             );
-        (__ret_ptr as *mut (i32, i32)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
@@ -231,6 +237,9 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
             <::traits_golden::MyStruct2 as ::traits_golden::MyTrait>::take_and_return_other_types(
                 __self, x,
             );
-        (__ret_ptr as *mut (i32, i32)).write(__rs_return_value);
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
     }
 }
