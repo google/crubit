@@ -6,14 +6,14 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <span>  // NOLINT(build/c++20)
 
-#include "absl/log/absl_check.h"
-#include "absl/types/span.h"
+#include "support/internal/check.h"
 
 namespace crubit::internal {
 namespace {
 
-void SortPtrDatas(absl::Span<PtrData> unsorted) {
+void SortPtrDatas(std::span<PtrData> unsorted) {
   std::sort(
       unsorted.begin(), unsorted.end(),
       [](const PtrData& a, const PtrData& b) { return a.start < b.start; });
@@ -21,13 +21,13 @@ void SortPtrDatas(absl::Span<PtrData> unsorted) {
 
 }  // namespace
 
-void CheckNoMutableAliasingSpans(absl::Span<PtrData> mut_ptrs,
-                                 absl::Span<PtrData> const_ptrs) {
-  ABSL_CHECK(!HasMutableAliasingSpans(mut_ptrs, const_ptrs));
+void CheckNoMutableAliasingSpans(std::span<PtrData> mut_ptrs,
+                                 std::span<PtrData> const_ptrs) {
+  CRUBIT_CHECK(!HasMutableAliasingSpans(mut_ptrs, const_ptrs));
 }
 
-bool HasMutableAliasingSpans(absl::Span<PtrData> mut_ptrs,
-                             absl::Span<PtrData> const_ptrs) {
+bool HasMutableAliasingSpans(std::span<PtrData> mut_ptrs,
+                             std::span<PtrData> const_ptrs) {
   if (mut_ptrs.empty()) {
     return false;
   }

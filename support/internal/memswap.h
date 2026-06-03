@@ -7,8 +7,6 @@
 
 #include <cstring>
 
-#include "absl/base/optimization.h"
-
 namespace crubit {
 
 // Like `std::swap`, but the implementation is guaranteed to have no
@@ -21,7 +19,7 @@ namespace crubit {
 // `static_assert(absl::is_trivially_relocatable<T>::value);`.
 template <typename T>
 void MemSwap(T& a, T& b) {
-  if (ABSL_PREDICT_FALSE(&a == &b)) {
+  if (&a == &b) [[unlikely]] {
     return;
   }
 

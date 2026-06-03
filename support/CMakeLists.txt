@@ -18,11 +18,6 @@ add_library(crubit_support_annotations_internal STATIC
 )
 set_target_properties(crubit_support_annotations_internal PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(crubit_support_annotations_internal PUBLIC
-absl::core_headers
-absl::nullability
-)
-
 add_library(crubit_support_bridge_cpp STATIC
 "bridge.h"
 )

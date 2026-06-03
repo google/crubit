@@ -10,13 +10,13 @@
 #include <stdbool.h>
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string_view>
+#include <type_traits>
 
-#include "absl/base/attributes.h"
-#include "absl/base/nullability.h"
-#include "absl/strings/string_view.h"
 #include "support/annotations_internal.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/rs_std/internal/is_utf8.h"
@@ -45,13 +45,12 @@ inline void StrRefArgumentMustBeUtf8() {}
 // `StrRef` can only contain valid UTF8.
 //
 // See <internal link> for history on the design and rationale of this API.
-class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
-    StrRef final {
+class CRUBIT_INTERNAL_RUST_TYPE("&str") CRUBIT_TRIVIAL_ABI StrRef final {
  public:
   // Returns a `StrRef` containing the given `string_view`, or nullopt if the
   // `string_view` is not valid UTF8.
   constexpr static std::optional<StrRef> FromUtf8(
-      absl::string_view string_view) noexcept {
+      std::string_view string_view) noexcept {
     if (!internal::IsUtf8(string_view)) {
       return std::nullopt;
     }
@@ -64,25 +63,21 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
   // NOTE: other code relies on `StrRef` being valid UTF8, so calls to this
   // function may result in undefined behavior if `string_view` is not UTF8.
   constexpr static StrRef FromUtf8Unchecked(
-      absl::string_view string_view) noexcept {
+      std::string_view string_view) noexcept {
     return StrRef(UnsafePromiseUtf8(), string_view);
   }
 
-  // consteval implicit conversion from `const char*` so that string
-  // literals can be used as `StrRef` arguments while still requiring runtime
-  // UTF8 validation to be explicit.
+  // consteval implicit conversion from `std::string_view` compatible types.
+  template <typename StringViewLike>
+    requires(std::convertible_to<StringViewLike, std::string_view> &&
+             std::is_trivially_copyable_v<std::decay_t<StringViewLike>> &&
+             !std::is_same_v<std::decay_t<StringViewLike>, StrRef>)
   consteval StrRef(  // NOLINT(google-explicit-constructor)
                      // Style waiver for implicit conversions granted in
                      // cl/825200658.
-      const char* absl_nonnull char_ptr) noexcept
-      : StrRef(absl::string_view(char_ptr)) {}
-
-  // consteval implicit conversion from `absl::string_view`.
-  consteval StrRef(  // NOLINT(google-explicit-constructor)
-                     // Style waiver for implicit conversions granted in
-                     // cl/825200658.
-      absl::string_view string_view) noexcept
+      StringViewLike string_view_like) noexcept
       : slice_() {
+    std::string_view string_view = string_view_like;
     if (!string_view.empty()) {
       // We cannot use `static_assert` because C++ does not treat arguments
       // to `consteval` functions as constants.
@@ -95,19 +90,28 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
     }
   }
 
-  constexpr
-  operator absl::string_view()  // NOLINT(google-explicit-constructor)
-                                // Style waiver for implicit
-                                // conversions granted in cl/825200658.
+  // consteval implicit conversion from `const char*` so that string
+  // literals can be used as `StrRef` arguments while still requiring runtime
+  // UTF8 validation to be explicit.
+  consteval StrRef(  // NOLINT(google-explicit-constructor)
+                     // Style waiver for implicit conversions granted in
+                     // cl/825200658.
+      const char* crubit_nonnull char_ptr) noexcept
+      : StrRef(std::string_view(char_ptr)) {}
+
+  constexpr operator std::string_view()  // NOLINT(google-explicit-constructor)
+                                         // Style waiver for implicit
+                                         // conversions granted in cl/825200658.
       const noexcept {
-    return absl::string_view(slice_.data(), slice_.size());
+    return std::string_view(slice_.data(), slice_.size());
   }
 
-  // Creates a default `StrRef` - one that represents an empty slice.
-  // To mirror slices in Rust, the data pointer is not null.
   constexpr StrRef() noexcept = default;
   constexpr StrRef(const StrRef&) = default;
   constexpr StrRef& operator=(const StrRef&) = default;
+  constexpr StrRef(StrRef&&) noexcept = default;
+  constexpr StrRef& operator=(StrRef&&) noexcept = default;
+  ~StrRef() = default;
 
   // A mirror of Rust's `len` method.
   constexpr size_t len() const noexcept { return slice_.size(); }
@@ -116,8 +120,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
   constexpr const char* data() const noexcept { return slice_.data(); }
   constexpr size_t size() const noexcept { return slice_.size(); }
 
-  constexpr absl::string_view to_string_view() const noexcept {
-    return absl::string_view(data(), size());
+  constexpr std::string_view to_string_view() const noexcept {
+    return std::string_view(data(), size());
   }
 
   // Support automatic stringification with absl::StrCat and absl::StrFormat.
@@ -132,7 +136,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
   struct UnsafePromiseUtf8 {};
 
   // Private constructor which does not perform UTF8 validation.
-  constexpr StrRef(UnsafePromiseUtf8, absl::string_view string_view) noexcept
+  constexpr StrRef(UnsafePromiseUtf8, std::string_view string_view) noexcept
       : slice_(string_view) {}
 
   SliceRef<const char> slice_;
@@ -145,16 +149,16 @@ constexpr bool operator==(StrRef lhs, StrRef rhs) noexcept {
   return lhs.to_string_view() == rhs.to_string_view();
 }
 
-constexpr bool operator==(StrRef lhs, absl::string_view rhs) noexcept {
+constexpr bool operator==(StrRef lhs, std::string_view rhs) noexcept {
   return lhs.to_string_view() == rhs;
 }
 
-constexpr bool operator==(absl::string_view lhs, StrRef rhs) noexcept {
+constexpr bool operator==(std::string_view lhs, StrRef rhs) noexcept {
   return rhs == lhs;
 }
 
 constexpr bool operator==(StrRef lhs, const char* rhs) noexcept {
-  return lhs.to_string_view() == absl::string_view(rhs);
+  return lhs.to_string_view() == std::string_view(rhs);
 }
 
 constexpr bool operator==(const char* lhs, StrRef rhs) noexcept {
@@ -165,20 +169,20 @@ constexpr auto operator<=>(StrRef lhs, StrRef rhs) noexcept {
   return lhs.to_string_view() <=> rhs.to_string_view();
 }
 
-constexpr auto operator<=>(StrRef lhs, absl::string_view rhs) noexcept {
+constexpr auto operator<=>(StrRef lhs, std::string_view rhs) noexcept {
   return lhs.to_string_view() <=> rhs;
 }
 
-constexpr auto operator<=>(absl::string_view lhs, StrRef rhs) noexcept {
+constexpr auto operator<=>(std::string_view lhs, StrRef rhs) noexcept {
   return lhs <=> rhs.to_string_view();
 }
 
 constexpr auto operator<=>(StrRef lhs, const char* rhs) noexcept {
-  return lhs.to_string_view() <=> absl::string_view(rhs);
+  return lhs.to_string_view() <=> std::string_view(rhs);
 }
 
 constexpr auto operator<=>(const char* lhs, StrRef rhs) noexcept {
-  return absl::string_view(lhs) <=> rhs.to_string_view();
+  return std::string_view(lhs) <=> rhs.to_string_view();
 }
 
 }  // namespace rs_std

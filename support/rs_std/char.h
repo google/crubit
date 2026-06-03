@@ -11,10 +11,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>  // NOLINT(build/c++20)
 #include <type_traits>
 
-#include "absl/base/optimization.h"
-#include "absl/types/span.h"
 #include "support/annotations.h"
 #include "support/rs_std/str_ref.h"
 
@@ -111,7 +110,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
   //
   // This function mimics Rust's `char::encode_utf8`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.encode_utf8
-  StrRef encode_utf8(absl::Span<uint8_t> output_buffer) const;
+  StrRef encode_utf8(std::span<uint8_t> output_buffer) const;
 
   // Returns the number of bytes required to UTF-8-encode this `char_`.
   //
@@ -141,12 +140,12 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
   static inline constexpr bool IsValidCodePoint(uint32_t c) noexcept {
     // TODO(lukasza): Consider using slightly more efficient checks similarly
     // to how `char_try_from_u32` is implemented in Rust standard library.
-    if (ABSL_PREDICT_FALSE(c > 0x10ffff)) {
+    if (c > 0x10ffff) [[unlikely]] {
       // Value greater than Rust's `char::MAX`:
       // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
       return false;
     }
-    if (ABSL_PREDICT_FALSE(c >= 0xd800 && c <= 0xdfff)) {
+    if (c >= 0xd800 && c <= 0xdfff) [[unlikely]] {
       // Surrogate characters.
       return false;
     }
@@ -186,8 +185,8 @@ CRUBIT_DO_NOT_BIND constexpr auto operator<=>(char_ lhs, char_ rhs) noexcept {
 template <typename Sink>
 void AbslStringify(Sink& sink, const char_& c) {
   std::array<uint8_t, 4> buffer;
-  StrRef str = c.encode_utf8(absl::MakeSpan(buffer));
-  sink.Append(str.to_string_view());
+  rs_std::StrRef str_ref = c.encode_utf8(std::span<uint8_t>(buffer));
+  sink.Append(str_ref.to_string_view());
 }
 
 }  // namespace rs_std

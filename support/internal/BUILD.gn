@@ -30,9 +30,6 @@ source_set("bindings_support") {
   sources = [
     "check_no_mutable_aliasing.cc",
   ]
-  deps = [
-    "$crubit_absl_dep_target",
-  ]
 }
 
 group("internal_cpp") {

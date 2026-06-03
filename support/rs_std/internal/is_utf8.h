@@ -44,9 +44,7 @@
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_INTERNAL_IS_UTF8_H_
 
 #include <cstdint>
-
-#include "absl/base/attributes.h"
-#include "absl/strings/string_view.h"
+#include <string_view>
 
 namespace rs_std::internal {
 
@@ -59,7 +57,7 @@ constexpr bool IsAscii(char c) {
 }
 
 // Returns whether the given string is all ASCII.
-constexpr bool IsAscii(absl::string_view str) {
+constexpr bool IsAscii(std::string_view str) {
   for (const char c : str) {
     if (!IsAscii(c)) {
       return false;
@@ -99,7 +97,7 @@ static constexpr const uint8_t kFirstByteToUtf8CharSize[256] = {
 //
 // The caller must first ensure that `str`'s length matches the length
 // specified by the first byte.
-constexpr bool IsUtf8Char(absl::string_view str) {
+constexpr bool IsUtf8Char(std::string_view str) {
   // 2-byte encoding is for codepoints  \u{0080} to  \u{07ff}
   //        first  C2 80        last DF BF
   // 3-byte encoding is for codepoints  \u{0800} to  \u{ffff}
@@ -139,14 +137,14 @@ constexpr bool IsUtf8Char(absl::string_view str) {
       if (fourth < 0x80 || fourth > 0xBF) {
         return false;
       }
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     }
     case 3: {
       unsigned char third = str[2];
       if (third < 0x80 || third > 0xBF) {
         return false;
       }
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     }
     case 2: {
       unsigned char second = str[1];
@@ -184,7 +182,7 @@ constexpr bool IsUtf8Char(absl::string_view str) {
           }
         }
       }
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     }
     case 1: {
       unsigned char first = str[0];
@@ -200,7 +198,7 @@ constexpr bool IsUtf8Char(absl::string_view str) {
 }
 
 // Returns whether the given string is a valid UTF-8.
-constexpr bool IsUtf8(absl::string_view str) {
+constexpr bool IsUtf8(std::string_view str) {
   // ASCII fast-path.
   if (IsAscii(str)) {
     return true;
@@ -212,7 +210,7 @@ constexpr bool IsUtf8(absl::string_view str) {
     if (char_size > str.size()) {
       return false;
     }
-    const absl::string_view char_view = str.substr(0, char_size);
+    const std::string_view char_view = str.substr(0, char_size);
     if (!IsUtf8Char(char_view)) {
       return false;
     }

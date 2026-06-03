@@ -7,12 +7,27 @@
 #ifndef CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
 #define CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
 
-#include "absl/base/attributes.h"
-#include "absl/base/nullability.h"
+#if defined(__clang__)
+#define CRUBIT_TRIVIAL_ABI [[clang::trivial_abi]]
+#define CRUBIT_VIEW [[gsl::Pointer]]
+#if __has_cpp_attribute(clang::lifetimebound)
+#define CRUBIT_LIFETIME_BOUND [[clang::lifetimebound]]
+#elif __has_attribute(lifetimebound)
+#define CRUBIT_LIFETIME_BOUND __attribute__((lifetimebound))
+#else
+#define CRUBIT_LIFETIME_BOUND
+#endif
+#define crubit_nonnull _Nonnull
+#else
+#define CRUBIT_TRIVIAL_ABI
+#define CRUBIT_VIEW
+#define CRUBIT_LIFETIME_BOUND
+#define crubit_nonnull
+#endif
 
 // Style waiver granted in crubit.rs-style-waiver-attribute-annotate
-#if ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate) && \
-    ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate_type)
+#if defined(__clang__) && __has_cpp_attribute(clang::annotate) && \
+    __has_cpp_attribute(clang::annotate_type)
 #define CRUBIT_INTERNAL_ANNOTATE(...) [[clang::annotate(__VA_ARGS__)]]
 #define CRUBIT_INTERNAL_ANNOTATE_TYPE(...) [[clang::annotate_type(__VA_ARGS__)]]
 #else
@@ -92,8 +107,5 @@ struct Const {};
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
-#define CRUBIT_LIFETIME_BOUND ABSL_ATTRIBUTE_LIFETIME_BOUND
-
-#define crubit_nonnull absl_nonnull
 
 #endif  // CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_

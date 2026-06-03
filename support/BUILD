@@ -75,10 +75,7 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/base:nullability",
-    ],
+    deps = [],
 )
 
 cc_library(

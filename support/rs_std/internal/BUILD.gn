@@ -19,9 +19,6 @@ source_set("is_utf8") {
   public = [
     "is_utf8.h",
   ]
-  deps = [
-    "$crubit_absl_dep_target",
-  ]
 }
 
 group("internal_cpp") {
