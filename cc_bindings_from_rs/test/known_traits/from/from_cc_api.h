@@ -171,6 +171,44 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopyType") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: from_golden :: CollidingConstructor") alignas(8) [[clang::trivial_abi]]
+CollidingConstructor final {
+ public:
+  // `from_golden::CollidingConstructor` doesn't implement the `Default` trait
+  CollidingConstructor() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~CollidingConstructor() = default;
+  CollidingConstructor(CollidingConstructor&&) = default;
+  CollidingConstructor& operator=(CollidingConstructor&&) = default;
+
+  // `from_golden::CollidingConstructor` doesn't implement the `Clone` trait
+  CollidingConstructor(const CollidingConstructor&) = delete;
+  CollidingConstructor& operator=(const CollidingConstructor&) = delete;
+  CollidingConstructor(::crubit::UnsafeRelocateTag,
+                       CollidingConstructor&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // Error generating bindings for implementation
+  // `<from_golden::CollidingConstructor as std::convert::From<u64>>` defined at
+  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=190:
+  // From implementation for `u64` is not supported when `From<usize>` is
+  // implemented as it may overlap.
+
+  explicit CollidingConstructor(::std::uintptr_t value);
+
+ private:
+  union {
+    ::std::uint64_t value;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
     [[clang::trivial_abi]] LoopA final {
  public:
@@ -663,6 +701,27 @@ inline CloneCopyType::CloneCopyType(::from::CloneCopySource value) {
 }
 inline void CloneCopyType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneCopyType, __field0));
+}
+static_assert(
+    sizeof(CollidingConstructor) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(CollidingConstructor) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<CollidingConstructor>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::from::CollidingConstructor>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::from::CollidingConstructor>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_uusize(
+    ::std::uintptr_t, ::from::CollidingConstructor* __ret_ptr);
+}
+inline CollidingConstructor::CollidingConstructor(::std::uintptr_t value) {
+  __crubit_internal::__crubit_thunk_from_uusize(value, this);
+}
+inline void CollidingConstructor::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(CollidingConstructor, value));
 }
 static_assert(
     sizeof(LoopA) == 4,

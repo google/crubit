@@ -171,6 +171,46 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyType") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: into_golden :: CollidingOperators") alignas(8) [[clang::trivial_abi]]
+CollidingOperators final {
+ public:
+  // `into_golden::CollidingOperators` doesn't implement the `Default` trait
+  CollidingOperators() = delete;
+
+  // Synthesized tuple constructor
+  explicit CollidingOperators(::std::uint64_t __field0)
+      : __field0(::std::move(__field0)) {}
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~CollidingOperators() = default;
+  CollidingOperators(CollidingOperators&&) = default;
+  CollidingOperators& operator=(CollidingOperators&&) = default;
+
+  // `into_golden::CollidingOperators` doesn't implement the `Clone` trait
+  CollidingOperators(const CollidingOperators&) = delete;
+  CollidingOperators& operator=(const CollidingOperators&) = delete;
+  CollidingOperators(::crubit::UnsafeRelocateTag, CollidingOperators&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // Error generating bindings for implementation
+  // `<into_golden::CollidingOperators as std::convert::Into<u64>>` defined at
+  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=215:
+  // Conversion to `u64` is not supported when conversion to `usize` is
+  // implemented as they may overlap in C++.
+
+  explicit operator ::std::uintptr_t();
+
+  union {
+    ::std::uint64_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
     [[clang::trivial_abi]] Convert final {
  public:
@@ -692,6 +732,28 @@ inline CloneCopyType::operator ::into::CloneCopyTarget() {
 }
 inline void CloneCopyType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneCopyType, __field0));
+}
+static_assert(
+    sizeof(CollidingOperators) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(CollidingOperators) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<CollidingOperators>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::into::CollidingOperators>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::into::CollidingOperators>);
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_into_uusize(
+    ::into::CollidingOperators*);
+}
+inline CollidingOperators::operator ::std::uintptr_t() {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_into_uusize(&self);
+}
+inline void CollidingOperators::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(CollidingOperators, __field0));
 }
 static_assert(
     sizeof(Convert) == 4,

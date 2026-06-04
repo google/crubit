@@ -180,3 +180,21 @@ impl From<LoopB> for LoopA {
         Self(src.0)
     }
 }
+
+#[must_bind]
+pub struct CollidingConstructor {
+    #[allow(dead_code)]
+    value: u64,
+}
+
+impl From<u64> for CollidingConstructor {
+    fn from(value: u64) -> Self {
+        Self { value }
+    }
+}
+
+impl From<usize> for CollidingConstructor {
+    fn from(value: usize) -> Self {
+        Self { value: value as u64 }
+    }
+}

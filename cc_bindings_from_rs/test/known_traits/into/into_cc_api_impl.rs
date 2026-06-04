@@ -153,6 +153,18 @@ unsafe extern "C" fn __crubit_thunk_into_uinto_ugolden_x0000003a_x0000003aCloneC
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::into_golden::CloneCopyType, 0) == 0);
+const _: () = assert!(::std::mem::size_of::<::into_golden::CollidingOperators>() == 8);
+const _: () = assert!(::std::mem::align_of::<::into_golden::CollidingOperators>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_uusize(
+    __self: &'static mut ::core::mem::MaybeUninit<::into_golden::CollidingOperators>,
+) -> usize {
+    unsafe {
+        let __self = __self.assume_init_read();
+        <::into_golden::CollidingOperators as ::core::convert::Into<usize>>::into(__self)
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::into_golden::CollidingOperators, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::into_golden::Convert>() == 4);
 const _: () = assert!(::std::mem::align_of::<::into_golden::Convert>() == 4);
 #[unsafe(no_mangle)]

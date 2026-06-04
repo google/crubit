@@ -208,3 +208,18 @@ impl Into<LoopA> for LoopB {
         LoopA(self.0)
     }
 }
+
+#[must_bind]
+pub struct CollidingOperators(pub u64);
+
+impl Into<u64> for CollidingOperators {
+    fn into(self) -> u64 {
+        self.0
+    }
+}
+
+impl Into<usize> for CollidingOperators {
+    fn into(self) -> usize {
+        self.0 as usize
+    }
+}

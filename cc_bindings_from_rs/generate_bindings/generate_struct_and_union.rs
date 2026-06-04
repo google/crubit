@@ -551,7 +551,19 @@ fn generate_into_impls<'tcx>(
 
     from_impls
         .chain(into_impls)
-        .filter_map(|(middle_ty, cc_ty, def_id)| {
+        .avoid_colliding_types(tcx, |(middle_ty, _, _)| *middle_ty)
+        .into_iter()
+        .filter_map(|res| {
+            let (middle_ty, cc_ty, def_id) = match res {
+                Ok(item) => item,
+                Err(TypeCollisionRisk { item: (_, _, def_id), key_type, preferred_type }) => {
+                    let err = anyhow!(
+                        "Conversion to `{key_type}` is not supported when conversion to \
+                         `{preferred_type}` is implemented as they may overlap in C++."
+                    );
+                    return Some(generate_unsupported_def(db, def_id, err).into_main_api());
+                }
+            };
             let mut prereqs = CcPrerequisites::default();
             let cc_ty = cc_ty.into_tokens(&mut prereqs);
 
@@ -698,9 +710,27 @@ fn generate_constructor_impls<'tcx>(
             Some((src_ty, cc_ty, *impl_id, /*is_from=*/ false))
         });
 
+    // Avoid collisions in cases where types may map to the same underlying C++ type.
     from_impls
         .chain(into_impls)
-        .filter_map(|(src_ty, cc_ty, impl_id, is_from)| {
+        .avoid_colliding_types(tcx, |(src_ty, _, _, _)| *src_ty)
+        .into_iter()
+        .filter_map(|res| {
+            let (src_ty, cc_ty, impl_id, is_from) = match res {
+                Ok(item) => item,
+                Err(TypeCollisionRisk {
+                    item: (_, _, impl_id, is_from),
+                    key_type,
+                    preferred_type,
+                }) => {
+                    let trait_name = if is_from { "From" } else { "Into" };
+                    let err = anyhow!(
+                        "{trait_name} implementation for `{key_type}` is not supported when \
+                         `{trait_name}<{preferred_type}>` is implemented as it may overlap."
+                    );
+                    return Some(generate_unsupported_def(db, impl_id, err).into_main_api());
+                }
+            };
             let mut prereqs = CcPrerequisites::default();
             let cc_ty = cc_ty.into_tokens(&mut prereqs);
             // Generate thunk names, declarations, and implementations.

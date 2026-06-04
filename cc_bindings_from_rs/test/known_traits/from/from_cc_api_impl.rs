@@ -153,6 +153,19 @@ unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aCloneC
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::from_golden::CloneCopyType, 0) == 0);
+const _: () = assert!(::std::mem::size_of::<::from_golden::CollidingConstructor>() == 8);
+const _: () = assert!(::std::mem::align_of::<::from_golden::CollidingConstructor>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_uusize(
+    value: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::from_golden::CollidingConstructor as ::core::convert::From<usize>>::from(value);
+        (__ret_ptr as *mut ::from_golden::CollidingConstructor).write(__rs_return_value);
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::from_golden::LoopA>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::LoopA>() == 4);
 #[unsafe(no_mangle)]
