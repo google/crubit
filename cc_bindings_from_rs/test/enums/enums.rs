@@ -24,6 +24,19 @@ pub mod repr_c {
             MyEnum::A(1, 2)
         }
     }
+
+    /// This enum is **not** a "ZST" (Zero-Sized Type), because of the C representation
+    /// (even though it has only a single variant with no payload).
+    #[repr(C)]
+    pub enum ReprCWithSingleNoPayloadVariant {
+        SingleVariant,
+    }
+
+    impl ReprCWithSingleNoPayloadVariant {
+        pub fn is_single_variant(&self) -> bool {
+            matches!(self, Self::SingleVariant)
+        }
+    }
 }
 
 pub mod repr_c_drop {
@@ -148,12 +161,24 @@ pub mod repr_rust {
         }
     }
 
+    /// This enum is a "ZST" (Zero-Sized Type).
+    /// Currently ZST types get no bindings (see b/258259459).
     pub enum RustReprWithSingleNoPayloadVariant {
         SingleVariant,
     }
 
+    /// This enum is not a "ZST" (Zero-Sized Type), because of the payload.
+    /// There is no tag / discriminant field, because there is only one variant.
     pub enum RustReprWithSingleTuplePayloadVariant {
         SingleVariant(i32),
+    }
+
+    impl RustReprWithSingleTuplePayloadVariant {
+        pub fn get_single_item_from_tuple_payload(&self) -> i32 {
+            match self {
+                Self::SingleVariant(i) => *i,
+            }
+        }
     }
 
     pub enum RustReprWithNamingConflictBetweenCtorsAndMethods {
@@ -196,6 +221,19 @@ pub mod repr_int {
         }
         pub fn is_no_payload2(&self) -> bool {
             matches!(self, Self::NoPayload2)
+        }
+    }
+
+    /// This enum is **not** a "ZST" (Zero-Sized Type), because of `#[repr(u32)]`
+    /// (even though it has only a single variant with no payload).
+    #[repr(u32)]
+    pub enum IntReprWithSingleNoPayloadVariant {
+        SingleVariant,
+    }
+
+    impl IntReprWithSingleNoPayloadVariant {
+        pub fn is_single_variant(&self) -> bool {
+            matches!(self, Self::SingleVariant)
         }
     }
 }

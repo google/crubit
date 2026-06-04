@@ -1509,30 +1509,32 @@ fn generate_variant_ctor<'tcx>(
                     }
                 }
                 EnumKind::OpaqueBlobOfBytes => {
-                    let (tag_val, tag_size) = {
-                        let typing_env = post_analysis_typing_env(
-                            tcx,
-                            core.def_id.expect("Enums must have a DefId"),
-                        );
-                        let tag = tcx.tag_for_variant(typing_env.as_query_input((
-                            tcx.erase_and_anonymize_regions(core.self_ty),
-                            variant_index,
-                        )));
-                        match tag {
-                            Some(tag) => (tag.to_bits(tag.size()), tag.size()),
-                            None => (0, rustc_abi::Size::ZERO),
-                        }
-                    };
-                    let tag_offset = {
+                    let (tag_val, tag_size, tag_offset) = {
                         let layout =
                             get_layout(tcx, core.self_ty).expect("Should verify layout earlier");
-                        use rustc_abi::Variants::*;
-                        let tag_field = match layout.variants() {
-                            Empty => unreachable!("Uninhabited types should be rejected earlier"),
-                            Single { .. } => unreachable!("Single+NoPayload=ZST=rejected earlier"),
-                            Multiple { tag_field, .. } => tag_field,
-                        };
-                        layout.fields().offset(tag_field.as_usize()).bytes() as usize
+                        match layout.variants() {
+                            rustc_abi::Variants::Empty => {
+                                unreachable!("Uninhabited types should be rejected earlier")
+                            }
+                            rustc_abi::Variants::Single { .. } => (0, rustc_abi::Size::ZERO, 0),
+                            rustc_abi::Variants::Multiple { tag_field, .. } => {
+                                let typing_env = post_analysis_typing_env(
+                                    tcx,
+                                    core.def_id.expect("Enums must have a DefId"),
+                                );
+                                let tag = tcx.tag_for_variant(typing_env.as_query_input((
+                                    tcx.erase_and_anonymize_regions(core.self_ty),
+                                    variant_index,
+                                )));
+                                let (val, size) = match tag {
+                                    Some(tag) => (tag.to_bits(tag.size()), tag.size()),
+                                    None => unreachable!("Multiple variants must have a tag"),
+                                };
+                                let offset =
+                                    layout.fields().offset(tag_field.as_usize()).bytes() as usize;
+                                (val, size, offset)
+                            }
+                        }
                     };
                     let adt_size = core.size_in_bytes as usize;
                     let discr_bytesize = (adt_size - tag_offset).min(tag_size.bytes() as usize);

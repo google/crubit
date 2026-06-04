@@ -149,6 +149,16 @@ extern "C" fn __crubit_thunk_drop(
 ) {
     unsafe { __self.assume_init_drop() };
 }
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant>() == 4);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_usingle_uvariant(
+    __self: &'static ::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant::is_single_variant(__self) }
+}
 const _: () = assert!(
     ::std::mem::size_of::<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant>() == 8
 );
@@ -313,6 +323,20 @@ unsafe extern "C" fn __crubit_thunk_is_uno_upayload2(
 ) -> bool {
     unsafe { ::enums_golden::repr_int::IntReprEnumWithNoPayload::is_no_payload2(__self) }
 }
+const _: () = assert!(
+    ::std::mem::size_of::<::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant>() == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_usingle_uvariant(
+    __self: &'static ::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant,
+) -> bool {
+    unsafe {
+        ::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant::is_single_variant(__self)
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_rust::RustReprEnum>() == 12);
 const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_rust::RustReprEnum>() == 4);
 #[unsafe(no_mangle)]
@@ -406,5 +430,13 @@ unsafe extern "C" fn __crubit_thunk_SingleVariant(
             );
         (__ret_ptr as *mut ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant)
             .write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_usingle_uitem_ufrom_utuple_upayload(
+    __self: &'static ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant,
+) -> i32 {
+    unsafe {
+        ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant::get_single_item_from_tuple_payload(__self)
     }
 }

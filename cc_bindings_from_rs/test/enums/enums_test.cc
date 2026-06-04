@@ -12,6 +12,7 @@ namespace {
 
 using enums::qr_error::QrError;
 using enums::repr_c::MyEnum;
+using enums::repr_c::ReprCWithSingleNoPayloadVariant;
 using enums::repr_c_clone_active_variant::CloneActiveVariant;
 using enums::repr_c_clone_active_variant::is_a;
 using enums::repr_c_clone_active_variant::is_b;
@@ -19,7 +20,9 @@ using enums::repr_c_clone_active_variant::is_c;
 using enums::repr_c_clone_counter::CloneCount;
 using enums::repr_c_drop::DropMe;
 using enums::repr_int::IntReprEnumWithNoPayload;
+using enums::repr_int::IntReprWithSingleNoPayloadVariant;
 using enums::repr_rust::RustReprEnum;
+using enums::repr_rust::RustReprWithSingleTuplePayloadVariant;
 
 TEST(EnumsTest, TestDefault) {
   MyEnum e;
@@ -128,6 +131,22 @@ TEST(EnumsTest, TestRustReprEnumTuplePayloadCtor) {
 TEST(EnumsTest, TestIntReprEnumNoPayloadCtor) {
   EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload1().is_no_payload1());
   EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload2().is_no_payload2());
+}
+
+TEST(EnumsTest, TestIntReprWithSingleNoPayloadVariant) {
+  auto e = IntReprWithSingleNoPayloadVariant::MakeSingleVariant();
+  EXPECT_TRUE(e.is_single_variant());
+}
+
+TEST(EnumsTest, TestReprCWithSingleNoPayloadVariant) {
+  auto e = ReprCWithSingleNoPayloadVariant::MakeSingleVariant();
+  EXPECT_TRUE(e.is_single_variant());
+  EXPECT_EQ(e.tag, ReprCWithSingleNoPayloadVariant::Tag::SingleVariant);
+}
+
+TEST(EnumsTest, TestRustReprWithSingleTuplePayloadVariant) {
+  auto e = RustReprWithSingleTuplePayloadVariant::MakeSingleVariant(123);
+  EXPECT_EQ(e.get_single_item_from_tuple_payload(), 123);
 }
 
 TEST(EnumsTest, TestQrError) {
