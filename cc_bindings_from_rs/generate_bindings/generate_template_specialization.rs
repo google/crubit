@@ -1537,7 +1537,7 @@ fn generate_trait_impl_specialization<'tcx>(
         .skip(1)
         .filter_map(|arg| arg.as_type())
         .map(|arg| {
-            if arg.flags().intersects(has_type_or_const_vars()) {
+            if arg.flags().contains(has_type_or_const_vars()) {
                 return Err((impl_def_id, anyhow!("Implementation of traits must specify all types to receive bindings.")));
             }
             if arg.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {

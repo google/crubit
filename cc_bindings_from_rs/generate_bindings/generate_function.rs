@@ -148,7 +148,7 @@ fn ident_for_each(prefix: &str, n: usize) -> Vec<Ident> {
 ///
 /// Returns a `TokenStream` containing an expression that evaluates to the
 /// C-ABI-compatible version of the type.
-pub(crate) fn cc_param_to_c_abi<'tcx>(
+fn cc_param_to_c_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cc_ident: Ident,
     ty: Ty<'tcx>,

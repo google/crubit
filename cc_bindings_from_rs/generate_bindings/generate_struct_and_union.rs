@@ -12,17 +12,13 @@ use crate::format_cc_ident;
 use crate::format_type::CcParamTy;
 use crate::generate_doc_comment;
 use crate::generate_function::{
-    cc_param_to_c_abi, format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
-};
-use crate::generate_function_thunk::{
-    generate_thunk_decl, generate_thunk_impl, replace_all_regions_with_static,
+    format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
 };
 use crate::{
     generate_const, generate_deprecated_tag, generate_must_use_tag, generate_trait_thunks,
     generate_unsupported_def, get_layout, get_scalar_int_type, get_tag_size_with_padding,
     is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
 };
-
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
@@ -30,10 +26,7 @@ use database::{AdtCoreBindings, BindingsGenerator, StaticMethodMode, TypeLocatio
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions,
-    post_analysis_typing_env, try_normalize,
-};
+use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::VariantLayout;
@@ -43,7 +36,7 @@ use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv};
+use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::sym;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -457,7 +450,7 @@ pub fn from_trait_impls_by_argument<'tcx>(
         let ty = trait_ref.args.type_at(1);
         // We want to check if our type has type variables and constant variables, but not
         // region variables. Region variables are fine and we'll replace them with 'static.
-        if ty.flags().intersects(has_type_or_const_vars()) {
+        if ty.flags().contains(has_type_or_const_vars()) {
             continue;
         }
 
@@ -520,7 +513,7 @@ fn generate_into_impls<'tcx>(
 
             // If our type contains type variables or constant variables (but not region variables),
             // we can't generate an `into` impl.
-            if from_middle_ty.flags().intersects(has_type_or_const_vars()) {
+            if from_middle_ty.flags().contains(has_type_or_const_vars()) {
                 return None;
             }
             // We know that our type will always appear in FnReturn position for the `into` method.
@@ -537,11 +530,8 @@ fn generate_into_impls<'tcx>(
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
             let into_middle_ty = trait_ref.args.type_at(1);
-            if into_middle_ty.flags().intersects(has_type_or_const_vars()) {
-                return None;
-            }
 
-            // If our type isn't C++ compatible, we can't generate an `into` impl.
+            // If our type isn't Cxx compatible, we can't generate an `into` impl.
             let cc_ty = db
                 .format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn { is_constructor: false })
                 .ok()?;
@@ -565,9 +555,7 @@ fn generate_into_impls<'tcx>(
                 db,
                 into_trait,
                 &[middle_ty],
-                core.self_ty,
-                core.def_id,
-                core.rs_fully_qualified_name.clone(),
+                core,
                 /*is_constructor=*/ false,
             )
             .ok()?;
@@ -626,211 +614,6 @@ fn generate_into_impls<'tcx>(
                     #cc_thunk_decls
 
                     inline #cc_struct_name :: operator  #cc_ty ( ) {
-                        #impl_body_tokens
-                    }
-                }),
-                rs_details,
-            })
-        })
-        .collect()
-}
-
-fn generate_constructor_impls<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    core: &AdtCoreBindings<'tcx>,
-) -> ApiSnippets<'tcx> {
-    let tcx = db.tcx();
-    let cc_struct_name = &core.cc_short_name;
-
-    // We need there to be a `def_id` to generate a constructor from.
-    let def_id = core.def_id.expect("ADT must have a def_id");
-
-    // Find From impls from the selected ADT
-    let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
-    let from_impls = tcx.non_blanket_impls_for_ty(from_trait, core.self_ty).filter_map(|impl_id| {
-        let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
-        let src_ty = trait_ref.args.type_at(1);
-        if src_ty.flags().intersects(has_type_or_const_vars()) {
-            return None;
-        }
-        // Skip if source type is Self or a reference to Self (e.g. &Self)
-        let src_referent_ty = match src_ty.kind() {
-            ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
-            _ => src_ty,
-        };
-        if src_referent_ty == core.self_ty {
-            return None;
-        }
-        let cc_ty = db
-            .format_ty_for_cc(
-                src_ty,
-                TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-            )
-            .ok()?;
-
-        Some((src_ty, cc_ty, impl_id, /*is_from=*/ true))
-    });
-
-    // Find Into impls to the selected ADT
-    let into_map = db.into_trait_impls_by_destination(def_id.krate);
-    let into_impls =
-        into_map.get(&core.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(|impl_id| {
-            let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
-            let src_ty = trait_ref.args.type_at(0);
-            if src_ty.flags().intersects(has_type_or_const_vars()) {
-                return None;
-            }
-            // Skip if source type is Self or a reference to Self (e.g. &Self)
-            let src_referent_ty = match src_ty.kind() {
-                ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
-                _ => src_ty,
-            };
-            if src_referent_ty == core.self_ty {
-                return None;
-            }
-            let cc_ty = db
-                .format_ty_for_cc(
-                    src_ty,
-                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-                )
-                .ok()?;
-
-            Some((src_ty, cc_ty, *impl_id, /*is_from=*/ false))
-        });
-
-    from_impls
-        .chain(into_impls)
-        .filter_map(|(src_ty, cc_ty, impl_id, is_from)| {
-            let mut prereqs = CcPrerequisites::default();
-            let cc_ty = cc_ty.into_tokens(&mut prereqs);
-            // Generate thunk names, declarations, and implementations.
-            // `From` and `Into` are handled differently Self is different for both
-            let (thunk_name, cc_thunk_decls, rs_details) = if is_from {
-                // The ADT is the Self in the From impl case so we just use generate_trait_thunks
-                let TraitThunks {
-                    method_name_to_cc_thunk_name,
-                    cc_thunk_decls,
-                    rs_thunk_impls: rs_details,
-                } = generate_trait_thunks(
-                    db,
-                    from_trait,
-                    &[src_ty],
-                    core.self_ty,
-                    core.def_id,
-                    core.rs_fully_qualified_name.clone(),
-                    /*is_constructor=*/ true,
-                )
-                .ok()?;
-                let thunk_name = method_name_to_cc_thunk_name
-                    .into_values()
-                    .exactly_one()
-                    .expect("Expecting a single `from` method");
-                (thunk_name, cc_thunk_decls, rs_details)
-            } else {
-                // Since self is not necessarily the ADT, we need to manually construct the thunk
-                let into_trait =
-                    tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
-                let into_trait_assoc_fn = tcx
-                    .associated_items(into_trait)
-                    .in_definition_order()
-                    .find(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
-                    .expect("Into should have a method");
-
-                let trait_args = tcx.mk_args_trait(src_ty, once(core.self_ty.into()));
-                let sig = tcx.fn_sig(into_trait_assoc_fn.def_id).instantiate(tcx, trait_args);
-
-                let sig = liberate_and_deanonymize_late_bound_regions(
-                    tcx,
-                    sig,
-                    into_trait_assoc_fn.def_id,
-                );
-                let sig = try_normalize(
-                    tcx,
-                    ty::PseudoCanonicalInput {
-                        typing_env: TypingEnv::fully_monomorphized(),
-                        value: sig,
-                    },
-                )
-                .ok()?;
-
-                // Just a small unique name for the custom Into thunk
-                let thunk_name = if db.is_golden_test() {
-                    format!(
-                        "__crubit_thunk_into_{}_as_{}",
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", src_ty)),
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", core.self_ty))
-                    )
-                } else {
-                    format!(
-                        "__crubit_thunk_{:x}_into_{}_as_{}",
-                        tcx.stable_crate_id(db.source_crate_num()),
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", src_ty)),
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", core.self_ty))
-                    )
-                };
-                let thunk_name_cc_ident = format_cc_ident(db, &thunk_name).ok()?;
-                let cc_thunk_decls = generate_thunk_decl(
-                    db,
-                    &sig,
-                    &thunk_name_cc_ident,
-                    /*has_self_param=*/ true,
-                    /*is_constructor=*/ true,
-                )
-                .ok()?;
-                let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
-                let src_rs = db.format_ty_for_rs(static_src_ty).ok()?;
-                let foo_rs = &core.rs_fully_qualified_name;
-                let fully_qualified_fn_name =
-                    quote! { <#src_rs as ::core::convert::Into<#foo_rs>>::into };
-                let rs_details = generate_thunk_impl(
-                    db,
-                    into_trait_assoc_fn.def_id,
-                    &sig,
-                    &thunk_name,
-                    fully_qualified_fn_name,
-                    /*is_constructor=*/ true,
-                )
-                .ok()?;
-                (thunk_name_cc_ident, cc_thunk_decls, rs_details)
-            };
-            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-            let doc_comment = generate_doc_comment(db, impl_id);
-            let mut statements = quote! {};
-            let c_abi_expression = cc_param_to_c_abi(
-                db,
-                format_ident!("value"),
-                src_ty,
-                ty::TypingEnv::fully_monomorphized(),
-                &mut prereqs.includes,
-                &mut statements,
-            )
-            .ok()?;
-
-            let returns_by_value = is_c_abi_compatible_by_value(tcx, core.self_ty);
-            let impl_body_tokens = if returns_by_value {
-                quote! {
-                    #statements
-                    *this = __crubit_internal::#thunk_name(#c_abi_expression);
-                }
-            } else {
-                quote! {
-                    #statements
-                    __crubit_internal::#thunk_name(#c_abi_expression, this);
-                }
-            };
-            prereqs.move_defs_to_fwd_decls();
-            Some(ApiSnippets {
-                main_api: CcSnippet {
-                    tokens: quote! {
-                        __NEWLINE__ #doc_comment
-                        explicit #cc_struct_name ( #cc_ty value ) ; __NEWLINE__
-                        __NEWLINE__
-                    },
-                    prereqs,
-                },
-                cc_details: CcSnippet::new(quote! {
-                    #cc_thunk_decls
-                    inline #cc_struct_name :: #cc_struct_name ( #cc_ty value ) {
                         #impl_body_tokens
                     }
                 }),
@@ -952,16 +735,8 @@ pub fn generate_adt<'tcx>(
             method_name_to_cc_thunk_name,
             mut cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(
-            db,
-            drop_trait_id,
-            &[],
-            core.self_ty,
-            core.def_id,
-            core.rs_fully_qualified_name.clone(),
-            /*is_constructor=*/ false,
-        )
-        .expect("`generate_adt_core` should have already validated `Drop` support");
+        } = generate_trait_thunks(db, drop_trait_id, &[], &core, /*is_constructor=*/ false)
+            .expect("`generate_adt_core` should have already validated `Drop` support");
         // Don't introduce additional feature prerequisites for the `Drop` trait impl, as this
         // will cause type generation to fail based on an API that isn't even user-accessible.
         cc_thunk_decls.prereqs.required_features = flagset::FlagSet::empty();
@@ -1030,7 +805,6 @@ pub fn generate_adt<'tcx>(
     let adt_based_ctors = generate_adt_based_ctors(db, core.clone(), &mut member_function_names);
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
     let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());
-    let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref());
 
     let ApiSnippets {
         main_api: public_functions_main_api,
@@ -1046,7 +820,6 @@ pub fn generate_adt<'tcx>(
         impl_items_snippets,
         into_operator_snippets,
         trait_operator_snippets,
-        constructor_operator_snippets,
     ]
     .into_iter()
     .collect();

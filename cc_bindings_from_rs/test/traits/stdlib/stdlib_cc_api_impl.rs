@@ -50,14 +50,6 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
         (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
     }
 }
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ui32(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::stdlib_golden::MyStruct as ::core::convert::From<i32>>::from(value);
-        (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
-    }
-}
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::MyStruct, x) == 0);
 const _: () = assert!(::std::mem::size_of::<::stdlib_golden::NonCloneableIterator>() == 4);
 const _: () = assert!(::std::mem::align_of::<::stdlib_golden::NonCloneableIterator>() == 4);

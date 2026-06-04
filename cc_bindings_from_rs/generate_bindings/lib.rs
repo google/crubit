@@ -1275,15 +1275,7 @@ fn generate_default_ctor<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(
-            db,
-            trait_id,
-            &[],
-            core.self_ty,
-            core.def_id,
-            core.rs_fully_qualified_name.clone(),
-            /*is_constructor=*/ true,
-        )?;
+        } = generate_trait_thunks(db, trait_id, &[], &core, /*is_constructor=*/ true)?;
 
         let cc_struct_name = &core.cc_short_name;
         let main_api = CcSnippet::new(quote! {
@@ -1394,15 +1386,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                     method_name_to_cc_thunk_name,
                     cc_thunk_decls,
                     rs_thunk_impls: rs_details,
-                } = generate_trait_thunks(
-                    db,
-                    trait_id,
-                    &[],
-                    core.self_ty,
-                    core.def_id,
-                    core.rs_fully_qualified_name.clone(),
-                    /*is_constructor=*/ true,
-                )?;
+                } = generate_trait_thunks(db, trait_id, &[], &core, /*is_constructor=*/ true)?;
                 let main_api = CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ "Clone::clone"
                     #cc_struct_name(const #cc_struct_name&); __NEWLINE__
