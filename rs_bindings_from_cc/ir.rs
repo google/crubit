@@ -9,6 +9,7 @@
 use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_feature::CrubitFeature;
+use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
@@ -324,6 +325,18 @@ macro_rules! define_typed_tokens_enum {
                     $(
                         Self::$Variant => quote! { $($cpp_spelling)+ }.to_tokens(tokens),
                     )+
+                }
+            }
+        }
+
+        impl std::str::FromStr for $Type {
+            type Err = ::arc_anyhow::Error;
+            fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+                match s {
+                    $(
+                        stringify!($($cpp_spelling)+) => Ok($Type::$Variant),
+                    )+
+                    _ => ::arc_anyhow::bail!("Unknown {} spelling: {:?}", stringify!($Type), s),
                 }
             }
         }
@@ -1237,6 +1250,8 @@ pub struct Record {
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     #[serde(default)]
     pub is_thread_safe: bool,
+    #[serde(default)]
+    pub is_explicit_class_template_instantiation_definition: bool,
 }
 
 impl GenericItem for Record {

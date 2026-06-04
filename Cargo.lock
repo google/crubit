@@ -1392,6 +1392,7 @@ dependencies = [
  "googletest",
  "itertools",
  "proc-macro2",
+ "protobuf",
  "quote",
  "serde",
  "serde_json",

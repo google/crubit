@@ -419,7 +419,9 @@ cc_library(
 
 rust_library(
     name = "ir",
-    srcs = ["ir.rs"],
+    srcs = [
+        "ir.rs",
+    ],
     visibility = ["//:__subpackages__"],
     deps = [
         "//common:arc_anyhow",
@@ -453,9 +455,7 @@ rust_library(
     ],
     deps = [
         ":ir",
-        ":ir_rust_proto",
         ":json_from_cc",
-        ":proto_from_cc",
         "//common:arc_anyhow",
         "//common:crubit_feature",
         "//common:ffi_types",
@@ -571,22 +571,6 @@ multiplatform_rust_test(
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-    ],
-)
-
-multiplatform_rust_test(
-    name = "ir_from_cc_proto_test",
-    srcs = ["ir_from_cc_proto_test.rs"],
-    tags = [
-        "not_run:arm",
-        "not_run:mac",
-    ],
-    deps = [
-        ":ir_rust_proto",
-        ":ir_testing",
-        "//common:arc_anyhow",
-        "//common:multiplatform_testing",
-        "@crate_index//:googletest",
     ],
 )
 
