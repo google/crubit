@@ -261,6 +261,19 @@ unsafe extern "C" fn __crubit_thunk_return_uoption_uresult(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uoption_uresult_uunmovable(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::option_golden::return_option_result_unmovable();
+        (__ret_ptr
+            as *mut ::core::option::Option<
+                ::core::result::Result<::option_golden::HasNoDefault, ::alloc::string::String>,
+            >)
+            .write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_stress_utesting_unested_utypes(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -287,6 +300,19 @@ unsafe extern "C" fn __crubit_thunk_stringify_ulen(
     unsafe {
         let __rs_return_value = ::option_golden::stringify_len(x);
         (__ret_ptr as *mut ::core::option::Option<u32>).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_take_uoption_uresult_uunmovable(
+    _x: &'static mut ::core::mem::MaybeUninit<
+        ::core::option::Option<
+            ::core::result::Result<::option_golden::HasNoDefault, ::alloc::string::String>,
+        >,
+    >,
+) -> () {
+    unsafe {
+        let _x = _x.assume_init_read();
+        ::option_golden::take_option_result_unmovable(_x)
     }
 }
 #[unsafe(no_mangle)]

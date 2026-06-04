@@ -2,6 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crubit_annotate::must_bind;
+
+#[must_bind]
 #[derive(Copy, Clone)]
 #[repr(u8)]
 pub enum LessThan20U8 {
@@ -28,6 +31,7 @@ pub enum LessThan20U8 {
 }
 
 impl LessThan20U8 {
+    #[must_bind]
     pub fn new(value: u8) -> Option<Self> {
         if value > 19 {
             return None;
@@ -37,11 +41,13 @@ impl LessThan20U8 {
         Some(unsafe { std::mem::transmute(value) })
     }
 
+    #[must_bind]
     pub fn value(self) -> u8 {
         self as u8
     }
 }
 
+#[must_bind]
 pub struct HasOptions {
     pub niche: Option<LessThan20U8>,
     pub nested: Option<Option<LessThan20U8>>,
@@ -49,6 +55,7 @@ pub struct HasOptions {
 }
 
 impl HasOptions {
+    #[must_bind]
     pub fn new(value: u8) -> Self {
         HasOptions {
             niche: LessThan20U8::new(value),
@@ -57,11 +64,13 @@ impl HasOptions {
         }
     }
 
+    #[must_bind]
     pub fn with_option(value: Option<u8>) -> Self {
         let lt20 = value.and_then(LessThan20U8::new);
         HasOptions { niche: lt20, nested: Some(lt20), direct: value }
     }
 
+    #[must_bind]
     pub fn from_ref(value: &Option<u8>) -> Self {
         match value {
             Some(v) => HasOptions::new(*v),
@@ -69,98 +78,118 @@ impl HasOptions {
         }
     }
 
+    #[must_bind]
     pub fn with_none() -> Self {
         HasOptions { niche: None, nested: None, direct: None }
     }
 }
 
+#[must_bind]
 pub struct HasHasOptions {
     pub me: Option<HasOptions>,
 }
 
 impl HasHasOptions {
+    #[must_bind]
     pub fn new(value: u8) -> Self {
         HasHasOptions { me: Some(HasOptions::new(value)) }
     }
 }
 
+#[must_bind]
 #[derive(Default)]
 pub struct HasDefault {
     pub foo: String,
 }
 
 impl HasDefault {
+    #[must_bind]
     pub fn new(s: &str) -> Self {
         Self { foo: s.to_string() }
     }
 
+    #[must_bind]
     pub fn get_string_inside_option(&self) -> &str {
         &self.foo
     }
 }
 
+#[must_bind]
 pub struct OptDefaultWithDrop {
     pub opt: Option<HasDefault>,
 }
 impl OptDefaultWithDrop {
+    #[must_bind]
     pub fn new(s: &str) -> Self {
         Self { opt: Some(HasDefault { foo: s.to_string() }) }
     }
 }
 
+#[must_bind]
 pub struct HasNoDefault {
     pub foo: String,
     pub a: u32,
 }
 impl HasNoDefault {
+    #[must_bind]
     pub fn new(s: &str) -> Self {
         Self { foo: s.to_string(), a: 3033 }
     }
+    #[must_bind]
     pub fn get_string_inside_option(&self) -> &str {
         &self.foo
     }
 }
 
+#[must_bind]
 pub struct OptNoDefaultWithDrop {
     pub val: Option<HasNoDefault>,
 }
 
 impl OptNoDefaultWithDrop {
+    #[must_bind]
     pub fn new(s: &str) -> Self {
         Self { val: Some(HasNoDefault { foo: s.to_string(), a: 1045 }) }
     }
 
+    #[must_bind]
     pub fn get_string_inside_option(&self) -> &str {
         self.val.as_ref().unwrap().get_string_inside_option()
     }
 }
 
+#[must_bind]
 #[derive(Clone)]
 pub struct CloneNoDefault {
     pub val: u8,
 }
 
+#[must_bind]
 #[derive(Clone)]
 pub struct OptCloneNoDefault {
     pub val: Option<CloneNoDefault>,
 }
 impl OptCloneNoDefault {
+    #[must_bind]
     pub fn new(x: u8) -> Self {
         Self { val: Some(CloneNoDefault { val: x }) }
     }
 }
 
+#[must_bind]
 #[derive(Copy, Clone)]
 pub struct CopyNoDefault {
     pub val: u8,
 }
 
+#[must_bind]
 #[derive(Copy, Clone)]
 pub struct OptCopyNoDefault {
     pub val: Option<CopyNoDefault>,
 }
 
 impl OptCopyNoDefault {
+    #[must_bind]
     pub fn new(x: u8) -> Self {
         Self { val: Some(CopyNoDefault { val: x }) }
     }
@@ -176,15 +205,18 @@ pub struct OptUninhabited {
 // 5. Zero sized type
 pub struct Unit;
 
+#[must_bind]
 #[derive(Default)]
 pub struct OptZst {
     pub val: Option<Unit>,
 }
 
+#[must_bind]
 pub fn stringify_len(x: &Option<HasDefault>) -> Option<u32> {
     x.as_ref().map(|y| y.get_string_inside_option().len() as u32)
 }
 
+#[must_bind]
 pub struct OptionWithSizeTypes {
     // b/491106325 - We expect these not to get bindings.
     pub uval: Option<usize>,
@@ -199,12 +231,20 @@ pub fn take_option_bridged(x: Option<BridgedType>) -> i32 {
     x.map(|b| b.0).unwrap_or(-1)
 }
 
+#[must_bind]
 pub fn return_option_result() -> Option<Result<i32, String>> {
     Some(Ok(1))
 }
 
+#[must_bind]
 #[allow(clippy::type_complexity)]
 pub fn stress_testing_nested_types(
 ) -> Option<Result<Option<Result<i32, String>>, Result<Option<i32>, Option<i32>>>> {
+    None
+}
+
+pub fn take_option_result_unmovable(_x: Option<Result<HasNoDefault, String>>) {}
+
+pub fn return_option_result_unmovable() -> Option<Result<HasNoDefault, String>> {
     None
 }

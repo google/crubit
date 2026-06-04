@@ -1150,6 +1150,13 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 }
 
                 if let Some(spec) = db.parse_rs_std_template_specialization(ty) {
+                    // Specifically when embedding a template specialization within an Option, we
+                    // need it to be movable.
+                    if !db.has_move_ctor_and_assignment_operator(Some(adt.did()), ty).is_some() {
+                        bail!(
+                            "Failed to construct CrubitAbiType for {ty} because it is not movable."
+                        );
+                    }
                     let spec = spec?;
                     let mut prereqs = CcPrerequisites::default();
                     let rust_type = db.format_ty_for_rs(spec.self_ty_rs)?;
