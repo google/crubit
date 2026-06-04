@@ -15,8 +15,8 @@ crubit_test_cc_library(
     name = "impl_ctor",
     hdrs = ["impl_ctor.h"],
     aspect_hints = [
-        "//features:wrapper",
         ":impl_ctor_extra",
+        "//features:wrapper",
     ],
 )
 

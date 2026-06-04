@@ -21,8 +21,8 @@ crubit_test_cc_library(
     name = "wrapper_library",
     hdrs = ["wrapper_library.h"],
     aspect_hints = [
-        "//features:wrapper",
         ":wrapper_library_extra",
+        "//features:wrapper",
     ],
     deps = [":unsupported_library"],
 )

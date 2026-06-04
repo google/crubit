@@ -15,8 +15,8 @@ cc_library(
     srcs = ["either_internal.h"],
     hdrs = ["either.h"],
     aspect_hints = [
-        "//features:supported",
         ":additional_either_src",
+        "//features:supported",
     ],
     deps = [
         "//support:annotations",  # build_cleaner: keep

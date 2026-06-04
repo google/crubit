@@ -53,8 +53,8 @@ cc_library(
     srcs = ["composable_bridging_lib.cc"],
     hdrs = ["composable_bridging_lib.h"],
     aspect_hints = [
-        "//features:experimental",
         ":additional_composable_bridging_lib_src",
+        "//features:experimental",
     ],
     deps = [
         ":rust_library_cc",

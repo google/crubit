@@ -24,8 +24,8 @@ crubit_test_cc_library(
     srcs = ["pub_crate_types.cc"],
     hdrs = ["pub_crate_types.h"],
     aspect_hints = [
-        "//features:wrapper",
         ":pub_crate_types_extra",
+        "//features:wrapper",
     ],
     deps = [":other_pub_crate_types"],
 )

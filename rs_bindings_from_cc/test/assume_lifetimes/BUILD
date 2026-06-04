@@ -18,8 +18,8 @@ crubit_test_cc_library(
     srcs = ["free_function.cc"],
     hdrs = ["free_function.h"],
     aspect_hints = [
-        "//features:supported",
         "//features:assume_lifetimes",
+        "//features:supported",
     ],
 )
 
@@ -48,8 +48,8 @@ crubit_test_cc_library(
     srcs = ["member_function.cc"],
     hdrs = ["member_function.h"],
     aspect_hints = [
-        "//features:supported",
         "//features:assume_lifetimes",
+        "//features:supported",
     ],
 )
 
@@ -168,8 +168,8 @@ crubit_test_cc_library(
     srcs = ["string_view.cc"],
     hdrs = ["string_view.h"],
     aspect_hints = [
-        "//features:supported",
         "//features:assume_lifetimes",
+        "//features:supported",
     ],
 )
 
@@ -198,8 +198,8 @@ crubit_test_cc_library(
     srcs = ["struct_with_lifetimebound.cc"],
     hdrs = ["struct_with_lifetimebound.h"],
     aspect_hints = [
-        "//features:supported",
         "//features:assume_lifetimes",
+        "//features:supported",
     ],
 )
 
