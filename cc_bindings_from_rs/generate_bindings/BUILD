@@ -6,7 +6,6 @@ load(
 )
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
-    "LLVM_UNSTABLE_ONLY",
     "crubit_rust_test",
 )
 

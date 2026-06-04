@@ -218,7 +218,8 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
 
     crubit_args.add("--crubit-support-path-format", "\"support/{header}\"")
 
-    crubit_args.add("--clang-format-exe-path", ctx.file._clang_format)
+    if ctx.executable._clang_format:
+        crubit_args.add("--clang-format-exe-path", ctx.executable._clang_format)
     crubit_args.add("--rustfmt-exe-path", ctx.file._rustfmt)
     crubit_args.add("--rustfmt-config-path", ctx.file._rustfmt_cfg)
 
