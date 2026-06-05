@@ -12,7 +12,6 @@
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/generate_bindings/generate_bindings.pb.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/ir.pb.h"
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
 #include "llvm/Support/FormatVariadic.h"
 
@@ -20,7 +19,6 @@ namespace crubit {
 
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest;
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
-using rs_bindings_from_cc::ir_proto::flat::IRProto;
 
 absl::StatusOr<Bindings> GenerateBindings(
     const IR& ir, absl::string_view crubit_support_path_format,
@@ -37,9 +35,7 @@ absl::StatusOr<Bindings> GenerateBindings(
   }
 
   if (use_protobuf_ir) {
-    // TODO(rrijadi): Populate with `ir.ToProto()` once implemented.
-    rs_bindings_from_cc::ir_proto::flat::IRProto ir_proto;
-    *request.mutable_ir_proto() = ir_proto;
+    ir.ToFlatProto(request.mutable_ir_proto());
   } else {
     request.set_json(llvm::formatv("{0}", ir.ToJson()));
   }

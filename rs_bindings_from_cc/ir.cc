@@ -1753,27 +1753,26 @@ flat_proto::Item ToFlatProto(const IR::Item& item) {
 // This is necessary for proto generation because `RepeatedPtrField` can
 // re-allocate memory continuously for large item counts, unlike the JSON
 // exporter which organically grows `std::vector`s.
-flat_proto::IRProto IR::ToFlatProto() const {
-  flat_proto::IRProto proto;
-  proto.mutable_public_headers()->Reserve(public_headers.size());
+void IR::ToFlatProto(flat_proto::IRProto* proto) const {
+  proto->mutable_public_headers()->Reserve(public_headers.size());
   for (const auto& h : public_headers)
-    *proto.add_public_headers() = h.ToFlatProto();
-  proto.set_current_target(current_target.value());
-  proto.mutable_items()->Reserve(items.size());
-  for (const auto& item : items) *proto.add_items() = crubit::ToFlatProto(item);
+    *proto->add_public_headers() = h.ToFlatProto();
+  proto->set_current_target(current_target.value());
+  proto->mutable_items()->Reserve(items.size());
+  for (const auto& item : items)
+    *proto->add_items() = crubit::ToFlatProto(item);
   for (const auto& [target, item_ids] : top_level_item_ids) {
-    auto& list = (*proto.mutable_top_level_item_ids())[target.value()];
+    auto& list = (*proto->mutable_top_level_item_ids())[target.value()];
     list.mutable_item_ids()->Reserve(item_ids.size());
     for (const auto& id : item_ids) list.add_item_ids(id.value());
   }
-  if (!crate_root_path.empty()) proto.set_crate_root_path(crate_root_path);
+  if (!crate_root_path.empty()) proto->set_crate_root_path(crate_root_path);
   for (const auto& [target, features] : crubit_features) {
-    auto& set = (*proto.mutable_crubit_features())[target.value()];
+    auto& set = (*proto->mutable_crubit_features())[target.value()];
     std::vector<std::string> sorted_features(features.begin(), features.end());
     absl::c_sort(sorted_features);
     set.mutable_features()->Add(sorted_features.begin(), sorted_features.end());
   }
-  return proto;
 }
 
 std::string ItemToString(const IR::Item& item) {

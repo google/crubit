@@ -1126,7 +1126,7 @@ inline std::ostream& operator<<(std::ostream& o,
 // declarations of a single C++ library.
 struct IR {
   llvm::json::Value ToJson() const;
-  rs_bindings_from_cc::ir_proto::flat::IRProto ToFlatProto() const;
+  void ToFlatProto(rs_bindings_from_cc::ir_proto::flat::IRProto* proto) const;
 
   template <typename T>
   std::vector<const T*> get_items_if() const {

@@ -2,8 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <string>
-
 #include "absl/status/statusor.h"
 #include "common/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -26,8 +24,9 @@ extern "C" FfiU8SliceBox proto_from_cc_dependency(
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",
                                            ir.status().message()));
   }
-  std::string proto = ir->ToFlatProto().SerializeAsString();
-  return AllocFfiU8SliceBox(MakeFfiU8Slice(proto));
+  rs_bindings_from_cc::ir_proto::flat::IRProto ir_proto;
+  ir->ToFlatProto(&ir_proto);
+  return AllocFfiU8SliceBox(MakeFfiU8Slice(ir_proto.SerializeAsString()));
 }
 
 }  // namespace crubit
