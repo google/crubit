@@ -362,7 +362,11 @@ fn field_definition(
                     fields_that_must_be_copy.push(ty.clone());
                 }
             };
-            FieldType::Type { needs_manually_drop: wrap_in_manually_drop, ty }
+            FieldType::Type {
+                needs_manually_drop: wrap_in_manually_drop,
+                needs_cell: field.is_mutable,
+                ty,
+            }
         }
     };
 

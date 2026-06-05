@@ -179,6 +179,7 @@ message Field {
   bool is_bitfield = 10;
   bool is_inheritable = 11;
   string deprecated = 12;
+  bool is_mutable = 13;
 }
 
 enum SpecialMemberFunc {

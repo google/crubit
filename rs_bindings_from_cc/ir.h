@@ -545,6 +545,7 @@ struct Field {
   bool is_no_unique_address;  // True if the field is [[no_unique_address]].
   bool is_bitfield;           // True if the field is a bitfield.
   bool is_inheritable;        // True if the field is inheritable.
+  bool is_mutable;            // True if the field is mutable.
   // Set if this is [[deprecated]]. If no message was given, will be "".
   std::optional<std::string> deprecated;
 };

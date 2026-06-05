@@ -1387,6 +1387,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
              field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
          .is_bitfield = field_decl->isBitField(),
          .is_inheritable = is_inheritable,
+         .is_mutable = field_decl->isMutable(),
          .deprecated = std::move(deprecated)});
   }
   return fields;

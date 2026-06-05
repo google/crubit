@@ -972,6 +972,7 @@ pub struct Field {
     // TODO(kinuko): Consider removing this, it is a duplicate of the same information
     // in `Record`.
     pub is_inheritable: bool,
+    pub is_mutable: bool,
 
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
@@ -1390,6 +1391,9 @@ impl Record {
                     && self.destructor == SpecialMemberFunc::Trivial
                     && self.check_by_value().is_ok()
                     && self.trait_derives.clone != TraitImplPolarity::Negative
+                    // Mutable fields become `Cell<T>` in Rust, which prevents
+                    // the struct from deriving `Copy`.
+                    && self.fields.iter().all(|f| !f.is_mutable)
             }
         }
     }

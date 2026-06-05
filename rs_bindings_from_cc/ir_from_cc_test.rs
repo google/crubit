@@ -1934,6 +1934,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
                        is_no_unique_address: false,
                        is_bitfield: false,
                        is_inheritable: true,
+                       is_mutable: false,
                        deprecated: None,
                    }], ...
                }
@@ -1982,6 +1983,7 @@ fn test_fully_instantiated_template_in_private_field() -> Result<()> {
                     is_no_unique_address: false,
                     is_bitfield: false,
                     is_inheritable: false,
+                    is_mutable: false,
                     deprecated: None,
                 }], ...
             }
@@ -2551,6 +2553,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                   is_no_unique_address: false,
                   is_bitfield: false,
                   is_inheritable: false,
+                  is_mutable: false,
                   deprecated: None,
                }],
                ...

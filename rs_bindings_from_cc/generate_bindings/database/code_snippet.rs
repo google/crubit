@@ -1296,19 +1296,22 @@ impl ToTokens for FieldDefinition {
 #[derive(Clone, Debug)]
 pub enum FieldType {
     Erased(BitPadding),
-    Type { needs_manually_drop: bool, ty: TokenStream },
+    Type { needs_manually_drop: bool, needs_cell: bool, ty: TokenStream },
 }
 
 impl ToTokens for FieldType {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             FieldType::Erased(padding) => padding.to_tokens(tokens),
-            FieldType::Type { needs_manually_drop, ty } => {
+            FieldType::Type { needs_manually_drop, needs_cell, ty } => {
+                let mut ty = ty.clone();
                 if *needs_manually_drop {
-                    quote! { ::core::mem::ManuallyDrop<#ty> }.to_tokens(tokens)
-                } else {
-                    ty.to_tokens(tokens)
+                    ty = quote! { ::core::mem::ManuallyDrop<#ty> };
                 }
+                if *needs_cell {
+                    ty = quote! { ::core::cell::Cell<#ty> };
+                }
+                ty.to_tokens(tokens)
             }
         }
     }

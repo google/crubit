@@ -715,6 +715,7 @@ llvm::json::Value Field::ToJson() const {
       {"is_no_unique_address", is_no_unique_address},
       {"is_bitfield", is_bitfield},
       {"is_inheritable", is_inheritable},
+      {"is_mutable", is_mutable},
   };
   if (deprecated.has_value()) {
     field.insert({"deprecated", deprecated.value()});
@@ -747,6 +748,7 @@ flat_proto::Field Field::ToFlatProto() const {
   proto.set_is_no_unique_address(is_no_unique_address);
   proto.set_is_bitfield(is_bitfield);
   proto.set_is_inheritable(is_inheritable);
+  proto.set_is_mutable(is_mutable);
   if (deprecated) {
     proto.set_deprecated(*deprecated);
   }
