@@ -23,12 +23,12 @@ pub fn fwd_source() -> ::cref::CMut<'static, crate::A> {
 }
 
 #[inline(always)]
-pub fn fwd_ident<'a>(a: ::core::pin::Pin<&'a mut crate::A>) -> ::cref::CMut<'a, crate::A> {
+pub fn fwd_ident<'a>(a: ::cref::CMut<'a, crate::A>) -> ::cref::CMut<'a, crate::A> {
     unsafe { crate::detail::__rust_thunk___Z9fwd_identR1A(a) }
 }
 
 #[inline(always)]
-pub fn fwd_ident_const<'a>(a: &'a crate::A) -> ::cref::CRef<'a, crate::A> {
+pub fn fwd_ident_const<'a>(a: ::cref::CRef<'a, crate::A>) -> ::cref::CRef<'a, crate::A> {
     unsafe { crate::detail::__rust_thunk___Z15fwd_ident_constRK1A(a) }
 }
 
@@ -40,11 +40,11 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z10fwd_sourcev() -> ::cref::CMut<'static, crate::A>;
         #[link_name = "_Z9fwd_identR1A"]
         pub(crate) unsafe fn __rust_thunk___Z9fwd_identR1A<'a>(
-            a: ::core::pin::Pin<&'a mut crate::A>,
+            a: ::cref::CMut<'a, crate::A>,
         ) -> ::cref::CMut<'a, crate::A>;
         #[link_name = "_Z15fwd_ident_constRK1A"]
         pub(crate) unsafe fn __rust_thunk___Z15fwd_ident_constRK1A<'a>(
-            a: &'a crate::A,
+            a: ::cref::CRef<'a, crate::A>,
         ) -> ::cref::CRef<'a, crate::A>;
     }
 }

@@ -522,6 +522,15 @@ mod ref_transmutability {
     {
         type Name = RefName<'a, T::Name>;
     }
+
+    /// Safety: See the doc comment for the `ref_transmutability` module.
+    #[cfg(feature = "unstable")]
+    unsafe impl<'a, T: ?Sized> CppType for cref::CRef<'a, T>
+    where
+        T: CppType,
+    {
+        type Name = RefName<'a, T::Name>;
+    }
 }
 
 /// If `T` can be transmuted into `U`, then one can also transmute
@@ -577,6 +586,15 @@ mod mut_ref_transmutability {
 
     /// Safety: See the doc comment for the `mut_ref_transmutability` module.
     unsafe impl<'a, T: ?Sized> CppType for Pin<&'a mut T>
+    where
+        T: CppType,
+    {
+        type Name = MutRefName<'a, T::Name>;
+    }
+
+    /// Safety: See the doc comment for the `mut_ref_transmutability` module.
+    #[cfg(feature = "unstable")]
+    unsafe impl<'a, T: ?Sized> CppType for cref::CMut<'a, T>
     where
         T: CppType,
     {

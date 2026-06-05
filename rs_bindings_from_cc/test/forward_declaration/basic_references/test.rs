@@ -9,8 +9,6 @@ use googletest::prelude::*;
 fn test_builds() {
     use forward_declaration::*;
     let astatic: CMut<'static, A> = fwd_source();
-    // TODO(b/519307513): fwd_ident and fwd_ident_const should take CMut/CRefs directly.
-    let _astatic_out: CMut<'static, A> = fwd_ident(unsafe { CMut::unique(astatic) });
-    let _astatic_const_out: CRef<'static, A> =
-        fwd_ident_const(core::pin::Pin::get_ref(unsafe { CMut::unchanging(astatic) }));
+    let _astatic_out: CMut<'static, A> = fwd_ident(astatic);
+    let _astatic_const_out: CRef<'static, A> = fwd_ident_const(CMut::into_const(astatic));
 }

@@ -53,6 +53,7 @@ crubit_rust_test(
         ":no_definition_in_headers",
     ],
     deps = [
+        "//support:cref",
         "//support:ctor",
         "//support:forward_declare",
         "@crate_index//:googletest",

@@ -118,16 +118,19 @@ pub fn rs_type_kind_with_lifetime_elision(
                 }
             };
             Ok(match pointer.kind {
-                PointerTypeKind::LValueRef => RsTypeKind::Reference {
-                    referent: pointee,
-                    mutability,
-                    lifetime,
-                    // lifetime_defaults_transform should never give us an LValueRef without
-                    // a lifetime assignment.
-                    is_cref: lifetime_options.assume_lifetimes
-                        && lifetime_options.is_return_type
-                        && !lifetime_options.is_operator,
-                },
+                PointerTypeKind::LValueRef => {
+                    let is_cref = lifetime_options.assume_lifetimes
+                        && (!pointee.is_complete()
+                            || (lifetime_options.is_return_type && !lifetime_options.is_operator));
+                    RsTypeKind::Reference {
+                        referent: pointee,
+                        mutability,
+                        lifetime,
+                        // lifetime_defaults_transform should never give us an LValueRef without
+                        // a lifetime assignment.
+                        is_cref,
+                    }
+                }
                 PointerTypeKind::RValueRef => {
                     RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime }
                 }

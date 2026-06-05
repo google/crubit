@@ -2,11 +2,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use cref::{CMut, CRef};
 use ctor::emplace;
 use forward_declare::CppCast;
 use googletest::prelude::*;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
-use std::pin::Pin;
 
 /// Given a complete UnpinStruct, all APIs accepting a (possibly incomplete)
 /// UnpinStruct work (with an cpp_cast()).
@@ -55,13 +55,13 @@ fn test_write_complete_unpin() {
 #[gtest]
 fn test_read_incomplete_unpin() {
     let s = definition::ns::UnpinStruct { field: 42 };
-    let decl1_s: &declaration_1::ns::UnpinStruct = (&s).cpp_cast();
+    let decl1_s: CRef<'_, declaration_1::ns::UnpinStruct> = (&s).cpp_cast();
 
     // Cast from incomplete to complete:
     assert_eq!(definition::ns::ReadUnpinStruct(decl1_s.cpp_cast()), 42);
 
     // No cast necessary if it's the same forward declaration.
-    assert_eq!(declaration_1::ns::ReadUnpinStruct(&*decl1_s), 42);
+    assert_eq!(declaration_1::ns::ReadUnpinStruct(decl1_s), 42);
     // Buit a self-cast also works:
     assert_eq!(declaration_1::ns::ReadUnpinStruct(decl1_s.cpp_cast()), 42);
 
@@ -74,22 +74,22 @@ fn test_read_incomplete_unpin() {
 #[gtest]
 fn test_write_incomplete_unpin() {
     let mut s = definition::ns::UnpinStruct { field: 42 };
-    let mut decl1_s: Pin<&mut declaration_1::ns::UnpinStruct> = (&mut s).cpp_cast();
+    let decl1_s: CMut<'_, declaration_1::ns::UnpinStruct> = (&mut s).cpp_cast();
 
     // Cast from incomplete to complete:
-    definition::ns::WriteUnpinStruct(decl1_s.as_mut().cpp_cast(), 0);
-    assert_eq!(declaration_1::ns::ReadUnpinStruct(&*decl1_s), 0);
+    definition::ns::WriteUnpinStruct(decl1_s.cpp_cast(), 0);
+    assert_eq!(declaration_1::ns::ReadUnpinStruct(CMut::into_const(decl1_s)), 0);
 
     // No cast necessary if it's the same forward declaration.
-    declaration_1::ns::WriteUnpinStruct(decl1_s.as_mut(), 1);
-    assert_eq!(declaration_1::ns::ReadUnpinStruct(&*decl1_s), 1);
+    declaration_1::ns::WriteUnpinStruct(decl1_s, 1);
+    assert_eq!(declaration_1::ns::ReadUnpinStruct(CMut::into_const(decl1_s)), 1);
     // But a self-cast also works.
-    declaration_1::ns::WriteUnpinStruct(decl1_s.as_mut(), 2);
-    assert_eq!(declaration_1::ns::ReadUnpinStruct(&*decl1_s), 2);
+    declaration_1::ns::WriteUnpinStruct(decl1_s.cpp_cast(), 2);
+    assert_eq!(declaration_1::ns::ReadUnpinStruct(CMut::into_const(decl1_s)), 2);
 
     // Cast from incomplete to different-incomplete:
-    declaration_2::ns::WriteUnpinStruct(decl1_s.as_mut().cpp_cast(), 3);
-    assert_eq!(declaration_1::ns::ReadUnpinStruct(&*decl1_s), 3);
+    declaration_2::ns::WriteUnpinStruct(decl1_s.cpp_cast(), 3);
+    assert_eq!(declaration_1::ns::ReadUnpinStruct(CMut::into_const(decl1_s)), 3);
 }
 
 /// Given a complete NonunpinStruct, all APIs accepting a (possibly incomplete)
@@ -137,18 +137,18 @@ fn test_write_complete_nonunpin() {
 #[gtest]
 fn test_read_incomplete_nonunpin() {
     let s = emplace!(ctor::ctor!(definition::ns::NonunpinStruct { field: 42 }));
-    let decl1_s: Pin<&mut declaration_1::ns::NonunpinStruct> = s.cpp_cast();
+    let decl1_s: CMut<'_, declaration_1::ns::NonunpinStruct> = s.cpp_cast();
 
     // Cast from incomplete to complete:
-    assert_eq!(definition::ns::ReadNonunpinStruct(decl1_s.as_ref().cpp_cast()), 42);
+    assert_eq!(definition::ns::ReadNonunpinStruct(CMut::into_const(decl1_s).cpp_cast()), 42);
 
     // No cast necessary if it's the same forward declaration.
-    assert_eq!(declaration_1::ns::ReadNonunpinStruct(&*decl1_s), 42);
+    assert_eq!(declaration_1::ns::ReadNonunpinStruct(CMut::into_const(decl1_s)), 42);
     // Buit a self-cast also works:
-    assert_eq!(declaration_1::ns::ReadNonunpinStruct(decl1_s.as_ref().cpp_cast()), 42);
+    assert_eq!(declaration_1::ns::ReadNonunpinStruct(CMut::into_const(decl1_s).cpp_cast()), 42);
 
     // Cast from incomplete to different-incomplete:
-    assert_eq!(declaration_2::ns::ReadNonunpinStruct(decl1_s.as_ref().cpp_cast()), 42);
+    assert_eq!(declaration_2::ns::ReadNonunpinStruct(CMut::into_const(decl1_s).cpp_cast()), 42);
 }
 
 /// Given an incomplete NonunpinStruct, all APIs accepting a (possibly
@@ -156,22 +156,22 @@ fn test_read_incomplete_nonunpin() {
 #[gtest]
 fn test_write_incomplete_nonunpin() {
     let s = emplace!(ctor::ctor!(definition::ns::NonunpinStruct { field: 42 }));
-    let mut decl1_s: Pin<&mut declaration_1::ns::NonunpinStruct> = s.cpp_cast();
+    let decl1_s: CMut<'_, declaration_1::ns::NonunpinStruct> = s.cpp_cast();
 
     // Cast from incomplete to complete:
-    definition::ns::WriteNonunpinStruct(decl1_s.as_mut().cpp_cast(), 0);
-    assert_eq!(declaration_1::ns::ReadNonunpinStruct(&*decl1_s), 0);
+    definition::ns::WriteNonunpinStruct(decl1_s.cpp_cast(), 0);
+    assert_eq!(declaration_1::ns::ReadNonunpinStruct(CMut::into_const(decl1_s)), 0);
 
     // No cast necessary if it's the same forward declaration.
-    declaration_1::ns::WriteNonunpinStruct(decl1_s.as_mut(), 1);
-    assert_eq!(declaration_1::ns::ReadNonunpinStruct(&*decl1_s), 1);
+    declaration_1::ns::WriteNonunpinStruct(decl1_s, 1);
+    assert_eq!(declaration_1::ns::ReadNonunpinStruct(CMut::into_const(decl1_s)), 1);
     // But a self-cast also works.
-    declaration_1::ns::WriteNonunpinStruct(decl1_s.as_mut(), 2);
-    assert_eq!(declaration_1::ns::ReadNonunpinStruct(&*decl1_s), 2);
+    declaration_1::ns::WriteNonunpinStruct(decl1_s.cpp_cast(), 2);
+    assert_eq!(declaration_1::ns::ReadNonunpinStruct(CMut::into_const(decl1_s)), 2);
 
     // Cast from incomplete to different-incomplete:
-    declaration_2::ns::WriteNonunpinStruct(decl1_s.as_mut().cpp_cast(), 3);
-    assert_eq!(declaration_1::ns::ReadNonunpinStruct(&*decl1_s), 3);
+    declaration_2::ns::WriteNonunpinStruct(decl1_s.cpp_cast(), 3);
+    assert_eq!(declaration_1::ns::ReadNonunpinStruct(CMut::into_const(decl1_s)), 3);
 }
 
 #[gtest]

@@ -183,6 +183,9 @@ rust_library(
     visibility = [
         "//visibility:public",
     ],
+    deps = [
+        ":cref",
+    ],
 )
 
 rust_proc_macro(
