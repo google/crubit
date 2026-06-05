@@ -260,6 +260,12 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
 // error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
+// error: class `std::basic_ios<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ios<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
 // error: class `std::basic_istream<char, std::char_traits<char>>` could not be bound
 //   incomplete type
 
@@ -270,6 +276,12 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
 //   incomplete type
 
 // error: class `std::basic_iostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
 // error: class `std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>` could not be bound
@@ -294,6 +306,15 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
 //   incomplete type
 
 // error: class `std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_streambuf<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::fpos<__mbstate_t>` could not be bound
 //   incomplete type
 
 // Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
