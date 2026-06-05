@@ -37,6 +37,53 @@ pub mod repr_c {
             matches!(self, Self::SingleVariant)
         }
     }
+
+    #[repr(C)]
+    pub enum ReprCWithExtremeDiscriminants {
+        /// `MinusOne` is a regression test against bindings that used to result
+        /// in a C++ compilation error:
+        ///
+        /// ```
+        /// .../test/enums/enums.h:480:16: error: integer literal is too large
+        /// to be represented in a signed integer type, interpreting as unsigned
+        /// [-Werror,-Wimplicitly-unsigned-literal]
+        ///  480 |     MinusOne = 18446744073709551615,
+        ///      |                ^
+        /// .../test/enums/enums.h:480:16: error: enumerator value evaluates to
+        /// 18446744073709551615, which cannot be narrowed to type
+        /// '::std::int32_t' (aka 'int') [-Wc++11-narrowing]
+        /// ```
+        MinusOne = -1,
+        MinusTwo = -2,
+        /// Based on https://github.com/rust-lang/rust/issues/124403:
+        /// * Historically, Rust allowed `#[repr(C)]` enums to have
+        ///   discriminants of arbitrary size.  However, in C, the default enum
+        ///   size is typically `int` (32-bit signed). This mismatch creates
+        ///   non-portable layout differences between Rust and C/C++.
+        /// * Rust has introduced the `repr_c_enums_larger_than_int` lint (which
+        ///   is part of the `future_incompatible` lint group). It warns when a
+        ///   `#[repr(C)]` enum's discriminant does not fit into a C `int` or
+        ///   `unsigned int` (essentially limiting portably supported values to
+        ///   the signed 32-bit range: `[i32::MIN, i32::MAX]`). This warning is
+        ///   planned to become a hard compiler error in a future Rust release.
+        MinI32 = -2147483648,
+        MaxI32 = 2147483647,
+    }
+
+    impl ReprCWithExtremeDiscriminants {
+        pub fn is_minus_one(&self) -> bool {
+            matches!(self, Self::MinusOne)
+        }
+        pub fn is_minus_two(&self) -> bool {
+            matches!(self, Self::MinusTwo)
+        }
+        pub fn is_min_i32(&self) -> bool {
+            matches!(self, Self::MinI32)
+        }
+        pub fn is_max_i32(&self) -> bool {
+            matches!(self, Self::MaxI32)
+        }
+    }
 }
 
 pub mod repr_c_drop {
@@ -236,6 +283,21 @@ pub mod repr_int {
             matches!(self, Self::SingleVariant)
         }
     }
+
+    #[repr(i8)]
+    pub enum NegReprIntEnum {
+        MinusOne = -1,
+        MinusTwo = -2,
+    }
+
+    impl NegReprIntEnum {
+        pub fn is_minus_one(&self) -> bool {
+            matches!(self, Self::MinusOne)
+        }
+        pub fn is_minus_two(&self) -> bool {
+            matches!(self, Self::MinusTwo)
+        }
+    }
 }
 
 /// This is a regression test for b/519192678.
@@ -293,5 +355,35 @@ pub mod qr_error {
         LengthMismatch(usize, usize),
         UnsupportedVersion(i16),
         SplitMax16(usize),
+    }
+}
+
+pub mod repr_128 {
+    #[repr(u128)]
+    pub enum ReprU128 {
+        Zero = 0,
+        MaxU128 = u128::MAX,
+    }
+
+    impl ReprU128 {
+        pub fn is_max_u128(&self) -> bool {
+            matches!(self, Self::MaxU128)
+        }
+    }
+
+    #[repr(i128)]
+    pub enum ReprI128 {
+        Zero = 0,
+        MinI128 = i128::MIN,
+        MaxI128 = i128::MAX,
+    }
+
+    impl ReprI128 {
+        pub fn is_min_i128(&self) -> bool {
+            matches!(self, Self::MinI128)
+        }
+        pub fn is_max_i128(&self) -> bool {
+            matches!(self, Self::MaxI128)
+        }
     }
 }

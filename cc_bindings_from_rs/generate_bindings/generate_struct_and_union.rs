@@ -2221,9 +2221,19 @@ pub(crate) fn generate_fields<'tcx>(
                                 let cc_variant_name =
                                     format_cc_ident(db, variant_def.name.as_str())
                                         .unwrap_or_else(|_err| format_ident!("err_field"));
-                                let tag_value = Literal::u128_unsuffixed(
+                                let (tag_size, _signed) = tag_ty.int_size_and_signed(tcx);
+                                let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(
                                     adt_def.discriminant_for_variant(tcx, variant_index).val,
+                                    tag_size,
                                 );
+                                let tag_value = scalar_value_to_string(
+                                    tcx,
+                                    Scalar::Int(scalar_int),
+                                    *tag_ty.kind(),
+                                )
+                                .expect("tag to be a valid scalar constant")
+                                .parse::<TokenStream>()
+                                .expect("tag string to consist of valid scalar tokens");
                                 quote! {
                                     __NEWLINE__ #cc_variant_name = #tag_value,
                                 }

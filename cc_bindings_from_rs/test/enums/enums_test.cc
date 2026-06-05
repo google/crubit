@@ -11,7 +11,10 @@
 namespace {
 
 using enums::qr_error::QrError;
+using enums::repr_128::ReprI128;
+using enums::repr_128::ReprU128;
 using enums::repr_c::MyEnum;
+using enums::repr_c::ReprCWithExtremeDiscriminants;
 using enums::repr_c::ReprCWithSingleNoPayloadVariant;
 using enums::repr_c_clone_active_variant::CloneActiveVariant;
 using enums::repr_c_clone_active_variant::is_a;
@@ -21,6 +24,7 @@ using enums::repr_c_clone_counter::CloneCount;
 using enums::repr_c_drop::DropMe;
 using enums::repr_int::IntReprEnumWithNoPayload;
 using enums::repr_int::IntReprWithSingleNoPayloadVariant;
+using enums::repr_int::NegReprIntEnum;
 using enums::repr_rust::RustReprEnum;
 using enums::repr_rust::RustReprWithSingleTuplePayloadVariant;
 
@@ -152,6 +156,52 @@ TEST(EnumsTest, TestRustReprWithSingleTuplePayloadVariant) {
 TEST(EnumsTest, TestQrError) {
   auto e = QrError::MakeDataTooLong();
   EXPECT_TRUE(e.is_data_too_long());
+}
+
+TEST(EnumsTest, TestReprCWithExtremeDiscriminants) {
+  constexpr auto e_minus_one = ReprCWithExtremeDiscriminants::MakeMinusOne();
+  constexpr auto e_minus_two = ReprCWithExtremeDiscriminants::MakeMinusTwo();
+  EXPECT_TRUE(e_minus_one.is_minus_one());
+  EXPECT_FALSE(e_minus_one.is_minus_two());
+  EXPECT_EQ(e_minus_one.tag, ReprCWithExtremeDiscriminants::Tag::MinusOne);
+
+  EXPECT_TRUE(e_minus_two.is_minus_two());
+  EXPECT_FALSE(e_minus_two.is_minus_one());
+  EXPECT_EQ(e_minus_two.tag, ReprCWithExtremeDiscriminants::Tag::MinusTwo);
+
+  constexpr auto e_min = ReprCWithExtremeDiscriminants::MakeMinI32();
+  constexpr auto e_max = ReprCWithExtremeDiscriminants::MakeMaxI32();
+  EXPECT_TRUE(e_min.is_min_i32());
+  EXPECT_EQ(e_min.tag, ReprCWithExtremeDiscriminants::Tag::MinI32);
+  EXPECT_TRUE(e_max.is_max_i32());
+  EXPECT_EQ(e_max.tag, ReprCWithExtremeDiscriminants::Tag::MaxI32);
+}
+
+TEST(EnumsTest, TestNegReprIntEnum) {
+  auto e_minus_one = NegReprIntEnum::MakeMinusOne();
+  auto e_minus_two = NegReprIntEnum::MakeMinusTwo();
+  EXPECT_TRUE(e_minus_one.is_minus_one());
+  EXPECT_FALSE(e_minus_one.is_minus_two());
+
+  EXPECT_TRUE(e_minus_two.is_minus_two());
+  EXPECT_FALSE(e_minus_two.is_minus_one());
+}
+
+TEST(EnumsTest, TestReprU128) {
+  constexpr auto e_zero = ReprU128::MakeZero();
+  constexpr auto e_max = ReprU128::MakeMaxU128();
+  EXPECT_TRUE(e_max.is_max_u128());
+  EXPECT_FALSE(e_zero.is_max_u128());
+}
+
+TEST(EnumsTest, TestReprI128) {
+  constexpr auto e_zero = ReprI128::MakeZero();
+  constexpr auto e_min = ReprI128::MakeMinI128();
+  constexpr auto e_max = ReprI128::MakeMaxI128();
+  EXPECT_TRUE(e_min.is_min_i128());
+  EXPECT_TRUE(e_max.is_max_i128());
+  EXPECT_FALSE(e_zero.is_min_i128());
+  EXPECT_FALSE(e_zero.is_max_i128());
 }
 
 }  // namespace

@@ -110,6 +110,28 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
         >>::eq(__self, other)
     }
 }
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_128::ReprI128>() == 16);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_128::ReprI128>() == 16);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umin_ui128(
+    __self: &'static ::enums_golden::repr_128::ReprI128,
+) -> bool {
+    unsafe { ::enums_golden::repr_128::ReprI128::is_min_i128(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umax_ui128(
+    __self: &'static ::enums_golden::repr_128::ReprI128,
+) -> bool {
+    unsafe { ::enums_golden::repr_128::ReprI128::is_max_i128(__self) }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_128::ReprU128>() == 16);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_128::ReprU128>() == 16);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umax_uu128(
+    __self: &'static ::enums_golden::repr_128::ReprU128,
+) -> bool {
+    unsafe { ::enums_golden::repr_128::ReprU128::is_max_u128(__self) }
+}
 const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_c::MyEnum>() == 40);
 const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c::MyEnum>() == 8);
 #[unsafe(no_mangle)]
@@ -148,6 +170,34 @@ extern "C" fn __crubit_thunk_drop(
     __self: &'static mut ::core::mem::MaybeUninit<::enums_golden::repr_c::MyEnum>,
 ) {
     unsafe { __self.assume_init_drop() };
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_c::ReprCWithExtremeDiscriminants>() == 4);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_c::ReprCWithExtremeDiscriminants>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_uone(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_minus_one(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_utwo(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_minus_two(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umin_ui32(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_min_i32(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umax_ui32(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_max_i32(__self) }
 }
 const _: () =
     assert!(::std::mem::size_of::<::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant>() == 4);
@@ -336,6 +386,20 @@ unsafe extern "C" fn __crubit_thunk_is_usingle_uvariant(
     unsafe {
         ::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant::is_single_variant(__self)
     }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_int::NegReprIntEnum>() == 1);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_int::NegReprIntEnum>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_uone(
+    __self: &'static ::enums_golden::repr_int::NegReprIntEnum,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::NegReprIntEnum::is_minus_one(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_utwo(
+    __self: &'static ::enums_golden::repr_int::NegReprIntEnum,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::NegReprIntEnum::is_minus_two(__self) }
 }
 const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_rust::RustReprEnum>() == 12);
 const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_rust::RustReprEnum>() == 4);
