@@ -476,6 +476,24 @@ unsafe extern "C" fn __crubit_thunk_MakeStructPayloadVariant(
             .write(__rs_return_value);
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_uvariant_unumber(
+    __self: &'static ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+) -> i32 {
+    unsafe {
+        ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::get_variant_number(__self)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_uvalue(
+    __self: &'static ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+) -> i32 {
+    unsafe {
+        ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::get_value(
+            __self,
+        )
+    }
+}
 const _: () = assert!(
     ::std::mem::size_of::<::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant>() == 4
 );

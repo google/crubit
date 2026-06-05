@@ -959,6 +959,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
   MakeStructPayloadVariant(::std::int32_t x);
 
+  ::std::int32_t get_variant_number() const;
+
+  ::std::int32_t get_value() const;
+
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
@@ -2018,6 +2022,28 @@ RustReprWithNamingConflictBetweenCtorsAndMethods::MakeStructPayloadVariant(
   __crubit_internal::__crubit_thunk_MakeStructPayloadVariant(
       x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_get_uvariant_unumber(
+    ::enums::repr_rust::
+        RustReprWithNamingConflictBetweenCtorsAndMethods const&);
+}
+inline ::std::int32_t
+RustReprWithNamingConflictBetweenCtorsAndMethods::get_variant_number() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_get_uvariant_unumber(self);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_get_uvalue(
+    ::enums::repr_rust::
+        RustReprWithNamingConflictBetweenCtorsAndMethods const&);
+}
+inline ::std::int32_t
+RustReprWithNamingConflictBetweenCtorsAndMethods::get_value() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_get_uvalue(self);
 }
 inline void RustReprWithNamingConflictBetweenCtorsAndMethods::
     __crubit_field_offset_assertions() {

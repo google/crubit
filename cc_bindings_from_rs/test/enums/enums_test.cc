@@ -26,6 +26,7 @@ using enums::repr_int::IntReprEnumWithNoPayload;
 using enums::repr_int::IntReprWithSingleNoPayloadVariant;
 using enums::repr_int::NegReprIntEnum;
 using enums::repr_rust::RustReprEnum;
+using enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods;
 using enums::repr_rust::RustReprWithSingleTuplePayloadVariant;
 
 TEST(EnumsTest, TestDefault) {
@@ -130,6 +131,20 @@ TEST(EnumsTest, TestRustReprEnumTuplePayloadCtor) {
   RustReprEnum e1 = RustReprEnum::MakeTuplePayloadVariant(123, 456);
   ASSERT_TRUE(e1.is_tuple_payload_variant());
   EXPECT_EQ(e1.get_first_item_from_tuple_payload(), 123);
+}
+
+TEST(EnumsTest, TestRustReprWithNamingConflictBetweenCtorsAndMethods) {
+  using EnumType = RustReprWithNamingConflictBetweenCtorsAndMethods;
+  auto e1 = EnumType::MakeNoPayloadVariant();
+  EXPECT_EQ(e1.get_variant_number(), 1);
+
+  auto e2 = EnumType::MakeTuplePayloadVariant(100);
+  EXPECT_EQ(e2.get_variant_number(), 2);
+  EXPECT_EQ(e2.get_value(), 200);
+
+  auto e3 = EnumType::MakeStructPayloadVariant(200);
+  EXPECT_EQ(e3.get_variant_number(), 3);
+  EXPECT_EQ(e3.get_value(), 600);
 }
 
 TEST(EnumsTest, TestIntReprEnumNoPayloadCtor) {

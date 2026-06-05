@@ -243,10 +243,30 @@ pub mod repr_rust {
             Self::NoPayloadVariant
         }
         pub fn MakeTuplePayloadVariant(i: i32) -> Self {
-            Self::TuplePayloadVariant(i)
+            // `i * 2` to test that this implementation is used
+            // (rather than the default constructor).
+            Self::TuplePayloadVariant(i * 2)
         }
         pub fn MakeStructPayloadVariant(x: i32) -> Self {
-            Self::StructPayloadVariant { x }
+            // `x * 3` to test that this implementation is used
+            // (rather than the default constructor).
+            Self::StructPayloadVariant { x: x * 3 }
+        }
+
+        pub fn get_variant_number(&self) -> i32 {
+            match self {
+                Self::NoPayloadVariant => 1,
+                Self::TuplePayloadVariant(_) => 2,
+                Self::StructPayloadVariant { .. } => 3,
+            }
+        }
+
+        pub fn get_value(&self) -> i32 {
+            match self {
+                Self::NoPayloadVariant => 0,
+                Self::TuplePayloadVariant(i) => *i,
+                Self::StructPayloadVariant { x } => *x,
+            }
         }
     }
 }
