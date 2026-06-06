@@ -973,7 +973,7 @@ fn specialize_result<'tcx>(
     let ok_ty_tokens = ok_ty.for_cc.into_tokens(&mut prereqs);
     let err_ty_tokens = err_ty.for_cc.into_tokens(&mut prereqs);
     let layout = rs_std.layout;
-    let (tag_encoding, tag_field, variants) = match layout.variants() {
+    let (tag_encoding, tag_field, _variants) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
             unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
@@ -981,6 +981,8 @@ fn specialize_result<'tcx>(
             (tag_encoding, tag_field, variants)
         }
     };
+    #[rustversion::before(2026-05-18)]
+    let variants = _variants;
 
     let tag_type = enum_spec.tag_type_rs;
     let tag_type_cc_tokens: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
@@ -1215,7 +1217,7 @@ fn specialize_option<'tcx>(
     let ty_tokens = arg_ty.for_cc.into_tokens(&mut prereqs);
     let layout = rs_std.layout;
 
-    let (tag_encoding, tag_field, variants) = match layout.variants() {
+    let (tag_encoding, tag_field, _variants) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
             unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
@@ -1223,6 +1225,8 @@ fn specialize_option<'tcx>(
             (tag_encoding, tag_field, variants)
         }
     };
+    #[rustversion::before(2026-05-18)]
+    let variants = _variants;
     let tag_type = enum_spec.tag_type_rs;
     let tag_type_cc: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
     let arg_ty_for_rs = arg_ty.for_rs;

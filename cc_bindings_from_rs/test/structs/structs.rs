@@ -397,3 +397,23 @@ pub mod keyword_named_fields_and_methods {
         }
     }
 }
+
+pub mod display {
+    use crubit_annotate::must_bind;
+
+    #[must_bind]
+    pub struct DisplayStruct {
+        pub value: i32,
+    }
+
+    impl std::fmt::Display for DisplayStruct {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "DisplayStruct({})", self.value)
+        }
+    }
+
+    #[must_bind]
+    pub fn create(value: i32) -> DisplayStruct {
+        DisplayStruct { value }
+    }
+}

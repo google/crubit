@@ -4,7 +4,7 @@
 
 #![feature(rustc_private)]
 
-use code_gen_utils::{CcInclude, NamespaceQualifier};
+use code_gen_utils::NamespaceQualifier;
 use generate_bindings::format_namespace_bound_cc_tokens;
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::quote;

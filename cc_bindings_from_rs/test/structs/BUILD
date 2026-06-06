@@ -44,5 +44,6 @@ crubit_cc_test(
     deps = [
         ":structs_cc_api",
         "//testing/base/public:gunit_main",
+        "@abseil-cpp//absl/strings",
     ],
 )

@@ -18,13 +18,16 @@ use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, replace_all_regions_with_static,
 };
 use crate::{
-    generate_const, generate_deprecated_tag, generate_must_use_tag, generate_trait_thunks,
-    generate_unsupported_def, get_layout, get_scalar_int_type, get_tag_size_with_padding,
-    is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
+    does_type_implement_trait, generate_const, generate_deprecated_tag, generate_must_use_tag,
+    generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
+    get_tag_size_with_padding, is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef,
+    TraitThunks,
 };
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
+use code_gen_utils::{
+    escape_non_identifier_chars, expect_format_cc_type_name, make_rs_ident, CcInclude,
+};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail, ensure};
@@ -955,6 +958,93 @@ fn generate_trait_operator_impls<'tcx>(
     .collect()
 }
 
+fn generate_display_impl<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets<'tcx> {
+    let tcx = db.tcx();
+    let Some(display_trait_id) = tcx.get_diagnostic_item(sym::Display) else {
+        return ApiSnippets::default();
+    };
+
+    if !does_type_implement_trait(tcx, core.self_ty, display_trait_id, []) {
+        return ApiSnippets::default();
+    }
+
+    let crate_name = tcx.crate_name(db.source_crate_num());
+    // Omit Display implementations for the `core` crate, as formatting via
+    // `Display` delegates to `ToString` which requires `alloc::string::String`
+    // (which is not available in `core` as it doesn't support heap allocation).
+    if crate_name.as_str() == "core" {
+        return ApiSnippets::default();
+    }
+
+    let thunk_ident = format_cc_ident(
+        db,
+        &escape_non_identifier_chars(&format!(
+            "__crubit_thunk_to_string_{}",
+            core.rs_fully_qualified_name
+        )),
+    )
+    .expect("Valid thunk ident");
+    let fully_qualified_adt_name = &core.cc_fully_qualified_name;
+    let adt_cc_short_name = &core.cc_short_name;
+    let rs_fully_qualified_name = &core.rs_fully_qualified_name;
+
+    let rs_details = RsSnippet::new(quote! {
+        #[unsafe(no_mangle)]
+        pub unsafe extern "C" fn #thunk_ident(
+            self_: *const #rs_fully_qualified_name,
+            ret_ptr: *mut ::alloc::string::String,
+        ) {
+            unsafe {
+                ::core::ptr::write(
+                    ret_ptr,
+                    ::alloc::string::ToString::to_string(&*self_),
+                );
+            }
+        }
+    });
+
+    let main_api = CcSnippet::new(quote! {
+        __NEWLINE__ __COMMENT__ "AbslStringify and std::ostream support via std::fmt::Display"
+        template <typename Sink, typename Str = rs::alloc::string::String>
+        friend void AbslStringify(Sink& sink, const #adt_cc_short_name& self) {
+            crubit::Slot<Str> s;
+            #thunk_ident(&self, s.Get());
+            AbslStringify(sink, ::std::move(s).AssumeInitAndTakeValue().as_str());
+        }
+        __NEWLINE__
+        template <typename Str = rs::alloc::string::String>
+        friend ::std::ostream& operator<<(::std::ostream& os, const #adt_cc_short_name& self) {
+            crubit::Slot<Str> s;
+            #thunk_ident(&self, s.Get());
+            return os << ::std::string_view(::std::move(s).AssumeInitAndTakeValue().as_str());
+        }
+        __NEWLINE__
+    });
+
+    let cc_details = {
+        let mut prereqs = CcPrerequisites::default();
+        if let Some(includes) = db.crate_name_to_include_paths().get("alloc") {
+            prereqs.includes.extend(includes.iter().cloned());
+        }
+        prereqs.includes.insert(CcInclude::SystemHeader("string_view".into()));
+        prereqs.includes.insert(db.support_header("internal/slot.h"));
+        prereqs.includes.insert(CcInclude::SystemHeader("utility".into()));
+        prereqs.includes.insert(CcInclude::SystemHeader("ostream".into()));
+        let tokens = quote! {
+            extern "C" void #thunk_ident(
+                const #fully_qualified_adt_name* self_,
+                void* ret_ptr
+            );
+        };
+        CcSnippet { tokens, prereqs }
+    };
+
+    ApiSnippets { main_api, cc_details, rs_details }
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `generate_adt_core` returns success we have committed to emitting C++
@@ -1061,6 +1151,7 @@ pub fn generate_adt<'tcx>(
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
     let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());
     let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref());
+    let display_snippets = generate_display_impl(db, core.as_ref());
 
     let ApiSnippets {
         main_api: public_functions_main_api,
@@ -1077,6 +1168,7 @@ pub fn generate_adt<'tcx>(
         into_operator_snippets,
         trait_operator_snippets,
         constructor_operator_snippets,
+        display_snippets,
     ]
     .into_iter()
     .collect();

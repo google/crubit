@@ -4,10 +4,12 @@
 
 #include "cc_bindings_from_rs/test/structs/structs.h"
 
+#include <sstream>
 #include <type_traits>
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "absl/strings/str_cat.h"
 
 namespace crubit {
 namespace {
@@ -144,6 +146,25 @@ TEST(StructsTest, UnsupportedTypes) {
   namespace test = structs::unsupported_types;
   test::SomeStruct s;
   (void)s;
+}
+
+TEST(StructsTest, DisplayStructStringify) {
+  namespace test = structs::display;
+  test::DisplayStruct s = test::create(42);
+  EXPECT_EQ("DisplayStruct(42)", absl::StrCat(s));
+
+  std::stringstream ss;
+  ss << s;
+  EXPECT_EQ("DisplayStruct(42)", ss.str());
+}
+
+TEST(StructsTest, RustStringStringify) {
+  rs::alloc::string::String s("Hello from Rust String");
+  EXPECT_EQ("Hello from Rust String", absl::StrCat(s));
+
+  std::stringstream ss;
+  ss << s;
+  EXPECT_EQ("Hello from Rust String", ss.str());
 }
 
 }  // namespace

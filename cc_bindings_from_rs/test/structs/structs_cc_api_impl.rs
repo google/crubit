@@ -140,6 +140,26 @@ unsafe extern "C" fn __crubit_thunk_get_ux(
         ::structs_golden::default_repr::get_x(p)
     }
 }
+const _: () = assert!(::std::mem::size_of::<::structs_golden::display::DisplayStruct>() == 4);
+const _: () = assert!(::std::mem::align_of::<::structs_golden::display::DisplayStruct>() == 4);
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn _u_ucrubit_uthunk_uto_ustring_u_x0000003a_x0000003a_x00000020structs_ugolden_x00000020_x0000003a_x0000003a_x00000020display_x00000020_x0000003a_x0000003a_x00000020DisplayStruct(
+    self_: *const ::structs_golden::display::DisplayStruct,
+    ret_ptr: *mut ::alloc::string::String,
+) {
+    unsafe {
+        ::core::ptr::write(ret_ptr, ::alloc::string::ToString::to_string(&*self_));
+    }
+}
+const _: () =
+    assert!(::core::mem::offset_of!(::structs_golden::display::DisplayStruct, value) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::structs_golden::display::create(value);
+        (__ret_ptr as *mut ::structs_golden::display::DisplayStruct).write(__rs_return_value);
+    }
+}
 const _: () =
     assert!(::std::mem::size_of::<::structs_golden::interior_mutability::SomeStruct>() == 4);
 const _: () =
