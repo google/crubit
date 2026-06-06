@@ -8,15 +8,14 @@
 #include <ios>
 #include <ostream>
 #include <streambuf>
+#include <string_view>
 #include <type_traits>
 
-#include "absl/base/attributes.h"
-#include "absl/base/nullability.h"
-#include "absl/strings/has_absl_stringify.h"
-#include "absl/strings/has_ostream_operator.h"
-#include "absl/strings/string_view.h"
-
-ABSL_POINTERS_DEFAULT_NONNULL
+#if defined(__clang__)
+#define CRUBIT_LIFETIME_BOUND [[clang::lifetimebound]]
+#else
+#define CRUBIT_LIFETIME_BOUND
+#endif
 
 namespace crubit {
 // Formats to Rust via C++. Returns false if the underlying Rust formatter
@@ -44,7 +43,7 @@ namespace fmt_detail {
 template <typename LossyFormatter>
 class AbslSink {
  public:
-  explicit AbslSink(LossyFormatter* formatter ABSL_ATTRIBUTE_LIFETIME_BOUND)
+  explicit AbslSink(LossyFormatter* formatter CRUBIT_LIFETIME_BOUND)
       : formatter_(formatter) {}
   AbslSink(const AbslSink&) = delete;
   AbslSink& operator=(const AbslSink&) = delete;
@@ -58,19 +57,19 @@ class AbslSink {
     }
   }
 
-  void Append(absl::string_view v) {
+  void Append(std::string_view v) {
     if (formatter_ != nullptr &&
         formatter_->write_bytes(v.data(), v.size()) < v.size()) {
       formatter_ = nullptr;
     }
   }
 
-  friend void AbslFormatFlush(AbslSink* sink, absl::string_view v) {
+  friend void AbslFormatFlush(AbslSink* sink, std::string_view v) {
     sink->Append(v);
   }
 
  private:
-  LossyFormatter* absl_nullable formatter_;
+  LossyFormatter* formatter_;
 };
 template <typename LossyFormatter>
 explicit AbslSink(LossyFormatter*) -> AbslSink<LossyFormatter>;
@@ -79,7 +78,7 @@ explicit AbslSink(LossyFormatter*) -> AbslSink<LossyFormatter>;
 template <typename LossyFormatter>
 class Streambuf : public std::streambuf {
  public:
-  explicit Streambuf(LossyFormatter* formatter ABSL_ATTRIBUTE_LIFETIME_BOUND)
+  explicit Streambuf(LossyFormatter* formatter CRUBIT_LIFETIME_BOUND)
       : formatter_(formatter) {}
   Streambuf(const Streambuf&) = delete;
   Streambuf& operator=(const Streambuf&) = delete;
@@ -88,8 +87,7 @@ class Streambuf : public std::streambuf {
   using int_type = std::streambuf::int_type;
   using traits_type = std::streambuf::traits_type;
 
-  std::streamsize xsputn(const char* absl_nullable s,
-                         std::streamsize count) override {
+  std::streamsize xsputn(const char* s, std::streamsize count) override {
     return formatter_->write_bytes(s, count);
   }
 
@@ -108,17 +106,28 @@ class Streambuf : public std::streambuf {
 template <typename LossyFormatter>
 explicit Streambuf(LossyFormatter*) -> Streambuf<LossyFormatter>;
 
+// Concepts to detect formatting support.
+template <typename T, typename LossyFormatter>
+concept HasAbslStringify =
+    requires(AbslSink<LossyFormatter>& sink, const T& value) {
+      AbslStringify(sink, value);
+    };
+
+template <typename T>
+concept HasOstreamOperator =
+    requires(std::ostream& os, const T& value) { os << value; };
+
 }  // namespace fmt_detail
 
 template <typename T, typename LossyFormatter>
 [[nodiscard]] bool Fmt(const T& value, LossyFormatter& formatter) {
   static_assert(
       std::is_same_v<LossyFormatter, lossy_formatter::LossyFormatter>);
-  if constexpr (absl::HasAbslStringify<T>::value) {
+  if constexpr (fmt_detail::HasAbslStringify<T, LossyFormatter>) {
     fmt_detail::AbslSink sink(&formatter);
     AbslStringify(sink, value);
     return sink.ok() && formatter.flush();
-  } else if constexpr (absl::HasOstreamOperator<T>::value) {
+  } else if constexpr (fmt_detail::HasOstreamOperator<T>) {
     fmt_detail::Streambuf buf(&formatter);
     std::ostream os(&buf);
     os << value;

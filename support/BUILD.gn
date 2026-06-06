@@ -36,9 +36,6 @@ source_set("annotations_internal") {
   public = [
     "annotations_internal.h",
   ]
-  deps = [
-    "$crubit_absl_dep_target",
-  ]
 }
 
 source_set("bridge_cpp") {

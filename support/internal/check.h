@@ -4,10 +4,29 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_CHECK_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_CHECK_H_
 
-#include "absl/log/absl_check.h"
+#include <cstdio>
+#include <cstdlib>
 
-// <internal link>/216 and b/501547066 explain why we need to `#include` and use
-// `ABSL_CHECK` instead of `CHECK`.
-#define CRUBIT_CHECK(condition) ABSL_CHECK(condition)
+namespace crubit::internal {
+
+struct CheckFail {
+  CheckFail(const char* file, int line, const char* cond) {
+    std::fprintf(stderr, "%s:%d: Check failed: %s ", file, line, cond);
+  }
+  ~CheckFail() {
+    std::fprintf(stderr, "\n");
+    std::abort();
+  }
+  CheckFail& operator<<(const char* msg) {
+    std::fprintf(stderr, "%s", msg);
+    return *this;
+  }
+};
+
+}  // namespace crubit::internal
+
+#define CRUBIT_CHECK(condition)  \
+  if (!(condition)) [[unlikely]] \
+  ::crubit::internal::CheckFail(__FILE__, __LINE__, #condition)
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_CHECK_H_

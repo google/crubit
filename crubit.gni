@@ -7,7 +7,3 @@ import("//build_overrides/crubit.gni")
 if (!defined(crubit_src_dir)) {
   crubit_src_dir = "//third_party/crubit"
 }
-
-if (!defined(crubit_absl_dep_target)) {
-  crubit_absl_dep_target = "//third_party/abseil-cpp:absl"
-}

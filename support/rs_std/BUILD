@@ -33,10 +33,7 @@ cc_library(
     deps = [
         ":str_ref",
         "//support:annotations",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:span",
+        "//support/internal:bindings_support",
     ],
 )
 
@@ -92,11 +89,8 @@ cc_library(
     # have a version of Abseil that is relatively recent (although we can't rely on an exact version
     # and/or exact absl/base/options.h).
     deps = [
-        "//support:annotations_internal",
+        "//support:annotations",
         "//support/internal:bindings_support",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:span",
     ],
 )
 
@@ -135,9 +129,6 @@ cc_library(
         "//support:annotations_internal",
         "//support/internal:bindings_support",
         "//support/rs_std/internal:is_utf8",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 

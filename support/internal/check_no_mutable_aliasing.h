@@ -7,9 +7,8 @@
 
 #include <array>
 #include <cstdint>
+#include <span>  // NOLINT(build/c++20)
 #include <type_traits>
-
-#include "absl/types/span.h"
 
 namespace crubit::internal {
 
@@ -81,28 +80,26 @@ std::array<PtrData, sizeof...(Ts)> AsMutPtrDatas(Ts... ts) {
 
 // CHECKs that none of the mutable pointers alias with either each other or
 // with any of the const pointers.
-void CheckNoMutableAliasingSpans(absl::Span<PtrData> mut_ptrs,
-                                 absl::Span<PtrData> const_ptrs);
+void CheckNoMutableAliasingSpans(std::span<PtrData> mut_ptrs,
+                                 std::span<PtrData> const_ptrs);
 
 // Convenience alias to allow calls with rvalue arrays.
 template <auto M = 0, auto N = 0>
 void CheckNoMutableAliasing(std::array<PtrData, M>&& mut_ptrs,
                             std::array<PtrData, N>&& const_ptrs) {
-  CheckNoMutableAliasingSpans(absl::MakeSpan(mut_ptrs),
-                              absl::MakeSpan(const_ptrs));
+  CheckNoMutableAliasingSpans(mut_ptrs, const_ptrs);
 }
 
 // Returns `true` if any of the mutable pointers alias with either each other or
 // with any of the const pointers.
-bool HasMutableAliasingSpans(absl::Span<PtrData> mut_ptrs,
-                             absl::Span<PtrData> const_ptrs);
+bool HasMutableAliasingSpans(std::span<PtrData> mut_ptrs,
+                             std::span<PtrData> const_ptrs);
 
 // Convenience alias to allow calls with rvalue arrays.
 template <auto M = 0, auto N = 0>
 bool HasMutableAliasing(std::array<PtrData, M>&& mut_ptrs,
                         std::array<PtrData, N>&& const_ptrs) {
-  return HasMutableAliasingSpans(absl::MakeSpan(mut_ptrs),
-                                 absl::MakeSpan(const_ptrs));
+  return HasMutableAliasingSpans(mut_ptrs, const_ptrs);
 }
 
 }  // namespace crubit::internal

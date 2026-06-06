@@ -25,17 +25,7 @@ cc_library(
     ],
     # It is important to be thoughtful when adding new dependencies for
     # `bindings_support` (and possibly other targets in this BUILD file).
-    # Using mature Abseil APIs seems okay - we should be able to assume that
-    # Crubit users have a version of Abseil that is relatively recent (although
-    # we can't rely on an exact version and/or exact absl/base/options.h).
-    deps = [
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:has_ostream_operator",
-        "@abseil-cpp//absl/types:span",
-    ],
+    deps = [],
 )
 
 cc_test(

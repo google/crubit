@@ -10,13 +10,12 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <ranges>  // NOLINT(build/c++20); <internal link>
 #include <span>  // NOLINT(build/c++20); <internal link>
+#include <string_view>
 #include <type_traits>
 
-#include "absl/base/attributes.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
-#include "support/annotations_internal.h"
+#include "support/annotations.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 
 namespace rs_std {
@@ -28,8 +27,8 @@ namespace rs_std {
 // `rust_builtin_type_abi_assumptions.md` documents the ABI compatibility of
 // these types.
 template <typename T>
-class CRUBIT_INTERNAL_RUST_TYPE("&[]", T)
-    ABSL_ATTRIBUTE_TRIVIAL_ABI ABSL_ATTRIBUTE_VIEW SliceRef final {
+class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
+    SliceRef final {
  public:
   // Creates a default `SliceRef` - one that represents an empty slice.
   // To mirror slices in Rust, the data pointer is not null.
@@ -37,7 +36,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T)
 
   // Style waiver for implicit conversions granted in cl/662479273.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(absl::Span<T> span) noexcept
+  constexpr SliceRef(std::span<T> span) noexcept
       // Store a dangling pointer assuming `span` is empty-- we have to
       // initialize the union to something.
       : dangling_ptr_(alignof(T)), size_(span.size()) {
@@ -47,43 +46,73 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T)
     }
   }
 
-  // Explicit conversion from `absl::string_view` in order to avoid
-  // marking this case as `ABSL_ATTRIBUTE_LIFETIME_BOUND`.
+  // Implicit conversion from mutable SliceRef to const SliceRef.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr SliceRef(const SliceRef<std::remove_const_t<T>>& other) noexcept
+    requires(std::is_const_v<T>)
+      : SliceRef(std::span<T>(other.data(), other.size())) {}
+
+  // Explicit conversion from `std::string_view` in order to avoid
+  // marking this case as `CRUBIT_LIFETIME_BOUND`.
   //
-  // Note that `absl::Span` solves this using an `EnableIfIsView` typeclass.
+  // Note that `std::span` solves this using an `EnableIfIsView` typeclass.
   //
   // Style waiver for implicit conversions granted in cl/662479273.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(absl::string_view str) noexcept
+  constexpr SliceRef(std::string_view str) noexcept
       : dangling_ptr_(alignof(T)), size_(str.size()) {
     if (!str.empty()) {
       ptr_ = str.data();
     }
   }
 
-  // Re-use implicit conversions to `absl::Span`. Prevent a delegation circle
-  // by excluding `absl::Span<T>` as the converted type.
-  template <typename Container>
-    requires(std::convertible_to<Container &&, absl::Span<T>> &&
-             !std::is_same_v<Container, absl::Span<T>>)
+  // Implicit conversion from views.
+  template <typename View>
+  // NOLINTNEXTLINE(build/c++20)
+    requires(std::ranges::view<std::decay_t<View>> &&
+             std::convertible_to<View &&, std::span<T>> &&
+             !std::is_same_v<std::decay_t<View>, std::span<T>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(
-      Container&& container ABSL_ATTRIBUTE_LIFETIME_BOUND) noexcept
-      : SliceRef(
-            // This is using `static_cast` instead of `absl::implicit_cast` to
-            // avoid a dependency on `absl/base/casts.h`, which has a lot of
-            // transitive dependencies. Doing so is safe, because the extra
-            // guarantees are already checked by std::convertible_to.
-            static_cast<absl::Span<T>>(std::forward<Container>(container))) {}
+  constexpr SliceRef(View&& view) noexcept
+      : SliceRef(static_cast<std::span<T>>(std::forward<View>(view))) {}
 
-  // Also mirror explicit conversions from `absl::Span`.
+  // Explicit conversion from views (if only explicitly convertible to
+  // std::span).
+  template <typename View>
+  // NOLINTNEXTLINE(build/c++20)
+    requires(std::ranges::view<std::decay_t<View>> &&
+             std::constructible_from<std::span<T>, View &&> &&
+             !std::convertible_to<View &&, std::span<T>> &&
+             !std::is_same_v<std::decay_t<View>, std::span<T>>)
+  constexpr explicit SliceRef(View&& view) noexcept
+      : SliceRef(std::span<T>(std::forward<View>(view))) {}
+
+  // Implicit conversion from non-view containers (only allowed if T is const).
   template <typename Container>
-    requires(std::constructible_from<absl::Span<T>, Container &&> &&
-             !std::convertible_to<Container &&, absl::Span<T>> &&
-             !std::is_same_v<Container, absl::Span<T>>)
+  // NOLINTNEXTLINE(build/c++20)
+    requires(!std::ranges::view<std::decay_t<Container>> &&
+             std::is_const_v<T> &&
+             std::convertible_to<Container &&, std::span<T>>)
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr SliceRef(Container&& container CRUBIT_LIFETIME_BOUND) noexcept
+      : SliceRef(
+            static_cast<std::span<T>>(std::forward<Container>(container))) {}
+
+  // Explicit conversion from non-view containers.
+  //
+  // Conversion must be explicit if T is mutable or if T is only explicitly
+  // convertible to std::span.
+  template <typename Container>
+  // NOLINTNEXTLINE(build/c++20)
+    requires(!std::ranges::view<std::decay_t<Container>> &&
+             ((!std::is_const_v<T> &&
+               std::constructible_from<std::span<T>, Container &&>) ||
+              (std::is_const_v<T> &&
+               std::constructible_from<std::span<T>, Container &&> &&
+               !std::convertible_to<Container &&, std::span<T>>)))
   constexpr explicit SliceRef(
-      Container&& container ABSL_ATTRIBUTE_LIFETIME_BOUND) noexcept
-      : SliceRef(absl::Span<T>(std::forward<Container>(container))) {}
+      Container&& container CRUBIT_LIFETIME_BOUND) noexcept
+      : SliceRef(std::span<T>(std::forward<Container>(container))) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr operator std::span<T>() const noexcept {
@@ -99,8 +128,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T)
   constexpr T* data() const noexcept { return size_ > 0 ? ptr_ : nullptr; }
   constexpr size_t size() const noexcept { return size_; }
 
-  constexpr absl::Span<T> to_span() const noexcept {
-    return absl::Span<T>(data(), size());
+  CRUBIT_DO_NOT_BIND constexpr std::span<T> to_span() const noexcept {
+    return std::span<T>(data(), size());
   }
 
  private:
@@ -121,9 +150,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T)
 namespace internal {
 template <typename T>
 constexpr bool EqualImpl(SliceRef<const T> a, SliceRef<const T> b) {
-  absl::Span<const T> a_span = a.to_span();
-  absl::Span<const T> b_span = b.to_span();
-  return std::equal(a_span.begin(), a_span.end(), b_span.begin(), b_span.end());
+  if (a.size() != b.size()) return false;
+  return std::equal(a.data(), a.data() + a.size(), b.data());
 }
 }  // namespace internal
 

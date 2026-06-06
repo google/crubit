@@ -25,7 +25,7 @@ source_set("char") {
   deps = [
     "$crubit_src_dir/support/rs_std:str_ref",
     "$crubit_src_dir/support:annotations",
-    "$crubit_absl_dep_target",
+    "$crubit_src_dir/support/internal:bindings_support",
   ]
 }
 
@@ -105,9 +105,8 @@ source_set("slice_ref") {
     "slice_ref.h",
   ]
   deps = [
-    "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support:annotations",
     "$crubit_src_dir/support/internal:bindings_support",
-    "$crubit_absl_dep_target",
   ]
 }
 
@@ -128,7 +127,6 @@ source_set("str_ref") {
     "$crubit_src_dir/support:annotations_internal",
     "$crubit_src_dir/support/internal:bindings_support",
     "$crubit_src_dir/support/rs_std/internal:is_utf8",
-    "$crubit_absl_dep_target",
   ]
 }
 

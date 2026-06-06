@@ -97,9 +97,9 @@ TEST(SliceTest, Comparison) {
   static constexpr rs_std::SliceRef<const uint8_t> kSliceCopy = kSlice;
   static constexpr rs_std::SliceRef<const uint8_t> kSlice2 = kArrCopy;
 
-  EXPECT_EQ(kSlice.to_span(), kSlice.to_span());
-  EXPECT_EQ(kSlice.to_span(), kSliceCopy.to_span());
-  EXPECT_EQ(kSlice.to_span(), kSlice2.to_span());
+  EXPECT_EQ(kSlice, kSlice);
+  EXPECT_EQ(kSlice, kSliceCopy);
+  EXPECT_EQ(kSlice, kSlice2);
   static constexpr rs_std::SliceRef<const uint8_t> kSlicePrefix =
       absl::MakeSpan(kArr.data(), kArr.size() - 1);
   static constexpr rs_std::SliceRef<const uint8_t> kSliceSuffix =
@@ -107,9 +107,9 @@ TEST(SliceTest, Comparison) {
   static constexpr rs_std::SliceRef<const uint8_t> kSliceInfix =
       absl::MakeSpan(kArr.data() + 1, kArr.size() - 2);
 
-  EXPECT_NE(kSlice.to_span(), kSlicePrefix.to_span());
-  EXPECT_NE(kSlice.to_span(), kSliceSuffix.to_span());
-  EXPECT_NE(kSlice.to_span(), kSliceInfix.to_span());
+  EXPECT_NE(kSlice, kSlicePrefix);
+  EXPECT_NE(kSlice, kSliceSuffix);
+  EXPECT_NE(kSlice, kSliceInfix);
 }
 
 TEST(SliceTest, FromAndTo) {
@@ -140,7 +140,7 @@ TEST(SliceTest, Empty) {
   static constexpr rs_std::SliceRef<const uint8_t> kEmpty =
       absl::MakeSpan(kEmptyArray, 0);
   static constexpr rs_std::SliceRef<const uint8_t> kDefaultConstructed;
-  EXPECT_EQ(kEmpty.to_span(), kDefaultConstructed.to_span());
+  EXPECT_EQ(kEmpty, kDefaultConstructed);
 
   const auto fields = std::bit_cast<SliceRefFields>(kEmpty);
   EXPECT_THAT(fields.ptr, Not(IsNull()));
@@ -195,6 +195,13 @@ TEST(ImplicitConversionTest, FromConstArray) {
 //   ASSERT_EQ(slice_ref.size(), 3);
 //   EXPECT_EQ(slice_ref.to_span()[2], 3);  // BOOM
 // }
+
+TEST(ImplicitConversionTest, ToAbslSpan) {
+  static constexpr std::array<int, 2> kArray = {1, 2};
+  static constexpr rs_std::SliceRef<const int> kSlice = kArray;
+  absl::Span<const int> span = kSlice;
+  EXPECT_THAT(span, ElementsAre(1, 2));
+}
 
 void Fuzzer(std::vector<uint8_t> data) {
   const rs_std::SliceRef<const uint8_t> s = data;

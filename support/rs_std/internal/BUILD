@@ -12,10 +12,7 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/strings:string_view",
-    ],
+    deps = [],
 )
 
 cc_test(
