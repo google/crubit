@@ -1181,6 +1181,8 @@ struct IR {
 
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       crubit_features;
+
+  std::vector<std::string> reexported_namespaces;
   std::vector<std::string> unstable_rust_features;
 };
 

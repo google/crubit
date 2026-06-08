@@ -93,6 +93,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
         /* crate_root_path= */ None,
         /* crubit_features= */
         <BTreeMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
+        /* reexported_namespaces= */ vec![],
     );
     update_test_ir(&mut ir, None);
     ir

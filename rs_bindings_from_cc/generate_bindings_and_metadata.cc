@@ -103,6 +103,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
               std::move(virtual_headers_contents_for_testing),
           .headers_to_targets = args.headers_to_targets,
           .extra_rs_srcs = args.extra_rs_srcs,
+          .reexported_namespaces = args.reexported_namespaces,
           .unstable_rust_features = args.unstable_rust_features,
           .clang_args = clang_args_view,
           .extra_instantiations = requested_instantiations,

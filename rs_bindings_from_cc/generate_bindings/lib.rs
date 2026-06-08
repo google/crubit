@@ -618,6 +618,12 @@ pub fn generate_bindings_tokens(
         }
     };
 
+    let reexports = ir.reexported_namespaces().iter().map(|ns| {
+        let path = ns.split("::").map(|p| make_rs_ident(p));
+        // First `*` is the quote! repeating macro, second `*` is the Rust glob import.
+        quote! { pub use crate::#( #path )::*::*; }
+    });
+
     Ok(BindingsTokens {
         rs_api: quote! {
             #features __NEWLINE__
@@ -641,6 +647,8 @@ pub fn generate_bindings_tokens(
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
 
             #extern_crate_alloc
+
+            #( #reexports __NEWLINE__ )*
 
             #main_api
 

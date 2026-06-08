@@ -85,6 +85,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
   absl::SetFlag(&FLAGS_target, "//:t1");
   absl::SetFlag(&FLAGS_target_args, R"([{"t": "//:t1", "h": ["h1", "h2"]}])");
   absl::SetFlag(&FLAGS_extra_rs_srcs, {"extra_file.rs"});
+  absl::SetFlag(&FLAGS_reexported_namespaces, {"absl"});
   absl::SetFlag(&FLAGS_srcs_to_scan_for_instantiations,
                 {"scan_for_instantiations.rs"});
   absl::SetFlag(&FLAGS_instantiations_out, "instantiations_out");
@@ -107,6 +108,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
   EXPECT_EQ(args.current_target.value(), "//:t1");
   EXPECT_THAT(args.public_headers, ElementsAre(HeaderName("h1")));
   EXPECT_THAT(args.extra_rs_srcs, ElementsAre("extra_file.rs"));
+  EXPECT_THAT(args.reexported_namespaces, ElementsAre("absl"));
   EXPECT_THAT(args.srcs_to_scan_for_instantiations,
               ElementsAre("scan_for_instantiations.rs"));
   EXPECT_THAT(

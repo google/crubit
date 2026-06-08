@@ -545,4 +545,5 @@ message IRProto {
   string crate_root_path = 5;
   map<string, FeatureSet> crubit_features = 6;
   repeated string unstable_rust_features = 7;
+  repeated string reexported_namespaces = 8;
 }

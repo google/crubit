@@ -21,6 +21,7 @@ ABSL_DECLARE_FLAG(std::vector<std::string>, public_headers);
 ABSL_DECLARE_FLAG(std::string, target);
 ABSL_DECLARE_FLAG(std::string, target_args);
 ABSL_DECLARE_FLAG(std::vector<std::string>, extra_rs_srcs);
+ABSL_DECLARE_FLAG(std::vector<std::string>, reexported_namespaces);
 ABSL_DECLARE_FLAG(std::vector<std::string>, unstable_rust_features);
 ABSL_DECLARE_FLAG(std::vector<std::string>, srcs_to_scan_for_instantiations);
 ABSL_DECLARE_FLAG(std::string, instantiations_out);

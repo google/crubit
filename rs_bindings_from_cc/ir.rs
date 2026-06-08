@@ -91,6 +91,7 @@ pub fn make_ir_from_parts<CrubitFeatures>(
     top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
     crate_root_path: Option<Rc<str>>,
     crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
+    reexported_namespaces: Vec<Rc<str>>,
 ) -> IR
 where
     CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
@@ -107,6 +108,7 @@ where
                 (label, crubit_feature::SerializedCrubitFeatures(features.into()))
             })
             .collect(),
+        reexported_namespaces,
         unstable_rust_features: vec![],
     })
 }
@@ -2261,6 +2263,8 @@ pub struct FlatIR {
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
     #[serde(default)]
     pub unstable_rust_features: Vec<String>,
+    #[serde(default)]
+    pub reexported_namespaces: Vec<Rc<str>>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
@@ -2289,6 +2293,7 @@ impl Debug for FlatIR {
             crate_root_path,
             crubit_features,
             unstable_rust_features,
+            reexported_namespaces,
         } = self;
         f.debug_struct("FlatIR")
             .field("public_headers", public_headers)
@@ -2298,6 +2303,7 @@ impl Debug for FlatIR {
             .field("crate_root_path", crate_root_path)
             .field("crubit_features", &DebugBTreeMap(crubit_features))
             .field("unstable_rust_features", unstable_rust_features)
+            .field("reexported_namespaces", reexported_namespaces)
             .finish()
     }
 }
@@ -2347,6 +2353,10 @@ impl IR {
 
     pub fn items_mut(&mut self) -> impl Iterator<Item = &mut Item> {
         self.flat_ir.items.iter_mut()
+    }
+
+    pub fn reexported_namespaces(&self) -> &[Rc<str>] {
+        &self.flat_ir.reexported_namespaces
     }
 
     pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName> {
@@ -2556,6 +2566,7 @@ mod tests {
             crate_root_path: None,
             crubit_features: Default::default(),
             unstable_rust_features: vec![],
+            reexported_namespaces: vec![],
         };
         assert_eq!(ir.flat_ir, expected);
     }
