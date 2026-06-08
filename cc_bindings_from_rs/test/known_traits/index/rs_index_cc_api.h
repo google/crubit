@@ -266,45 +266,55 @@ inline ::rs_index::IntPair IntPair::new_(::std::int32_t x, ::std::int32_t y) {
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t const& $(__anon1)
-    __crubit_thunk_Index_uindex(::rs_index::IntPair const&, ::std::uintptr_t);
+    __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
+        ::rs_index::IntPair const&, ::std::uintptr_t);
 }
 inline ::std::int32_t const& $(__anon1) IntPair::operator[](
     ::std::uintptr_t index) const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_Index_uindex(self, index);
+  return __crubit_internal::
+      __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
+          self, index);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t const& $(__anon1)
-    __crubit_thunk_Index_uindex(::rs_index::IntPair const&,
-                                ::rs_index::CustomIndex*);
+    __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
+        ::rs_index::IntPair const&, ::rs_index::CustomIndex*);
 }
 inline ::std::int32_t const& $(__anon1) IntPair::operator[](
     ::rs_index::CustomIndex index) const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_Index_uindex(self, &index);
+  return __crubit_internal::
+      __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
+          self, &index);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t& $(__anon1)
-    __crubit_thunk_IndexMut_uindex_umut(::rs_index::IntPair&, ::std::uintptr_t);
+    __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
+        ::rs_index::IntPair&, ::std::uintptr_t);
 }
 inline ::std::int32_t& $(__anon1) IntPair::operator[](::std::uintptr_t index) &
     $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_IndexMut_uindex_umut(self, index);
+  return __crubit_internal::
+      __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
+          self, index);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t& $(__anon1)
-    __crubit_thunk_IndexMut_uindex_umut(::rs_index::IntPair&,
-                                        ::rs_index::CustomIndex*);
+    __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
+        ::rs_index::IntPair&, ::rs_index::CustomIndex*);
 }
 inline ::std::int32_t& $(__anon1) IntPair::operator[](
     ::rs_index::CustomIndex index) &
     $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_IndexMut_uindex_umut(self, &index);
+  return __crubit_internal::
+      __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
+          self, &index);
 }
 inline void IntPair::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(IntPair, x));
@@ -334,8 +344,9 @@ inline ::rs_index::Map Map::new_(::std::uintptr_t row_size,
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_Index_uindex(::rs_index::Map const&,
-                                                      void**);
+extern "C" rs_std::StrRef
+__crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
+    ::rs_index::Map const&, void**);
 }
 inline rs_std::StrRef Map::operator[](
     ::std::tuple<::std::uintptr_t, ::std::uintptr_t> index) const& $(__anon1)
@@ -346,18 +357,23 @@ inline rs_std::StrRef Map::operator[](
   auto&& index_1 = ::std::get<1>(index);
   auto&& index_cabi_1 = index_1;
   void* index_cabi[] = {&index_cabi_0, &index_cabi_1};
-  return __crubit_internal::__crubit_thunk_Index_uindex(self, index_cabi);
+  return __crubit_internal::
+      __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
+          self, index_cabi);
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_Index_uindex(
+extern "C" rs_std::StrRef
+__crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
     ::rs_index::Map const&, ::rs_index::Id const* $(__anon2) crubit_nonnull);
 }
 inline rs_std::StrRef Map::operator[](
     ::rs_index::Id const* $(__anon2) crubit_nonnull _index
         CRUBIT_LIFETIME_BOUND) const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_Index_uindex(self, _index);
+  return __crubit_internal::
+      __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+          self, _index);
 }
 inline void Map::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Map, data));

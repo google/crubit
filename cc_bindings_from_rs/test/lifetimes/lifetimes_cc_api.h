@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -25,6 +26,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace lifetimes {
 
@@ -125,6 +127,22 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 void function_with_trivial_unnamed_lifetime_param(
     ::std::int32_t const& __param_0);
+
+}  // namespace lifetimes
+
+template <>
+struct rs_std::impl<::lifetimes::StructWithLifetime, ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<lifetimes_golden::StructWithLifetime<'a> as std::fmt::Debug>::fmt`
+  // defined at
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=8:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+};
+
+namespace lifetimes {
 
 static_assert(
     sizeof(StructWithLifetime) == 8,

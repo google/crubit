@@ -1482,12 +1482,6 @@ pub(crate) fn collect_trait_impls<'a, 'tcx>(
                     {
                         return None;
                     }
-                    let crate_name = tcx.crate_name(did.krate);
-                    // TODO: b/391443811 - Add support for implementations of stdlib types once
-                    // we have headers that can be included for those types.
-                    if ["std", "core", "alloc"].contains(&crate_name.as_str()) {
-                        return None;
-                    }
                     let adt_cc_name = canonical_name.format_for_cc(db).ok()?;
                     Some((adt_cc_name, impl_def_ids))
                 }

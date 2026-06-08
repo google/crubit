@@ -21,7 +21,7 @@ unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abasic_utest_x0000003a_x0000003aMyStruct_upartial_ueq_ugolden_x0000003a_x0000003abasic_utest_x0000003a_x0000003aMyStruct(
     __self: &'static ::partial_eq_golden::basic_test::MyStruct,
     other: &'static ::partial_eq_golden::basic_test::MyStruct,
 ) -> bool {
@@ -42,7 +42,7 @@ unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
     __self: &'static ::partial_eq_golden::tuple_collision::MyStruct,
     _other: &'static (usize, bool),
 ) -> bool {
@@ -60,7 +60,7 @@ unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003ausize_urhs_x0000003a_x0000003aMyStruct_uusize(
     __self: &'static ::partial_eq_golden::usize_rhs::MyStruct,
     other: &'static usize,
 ) -> bool {

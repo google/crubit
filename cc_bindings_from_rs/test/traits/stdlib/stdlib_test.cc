@@ -15,13 +15,16 @@
 #include "gtest/gtest.h"
 #include "support/rs_std/iterator_adapter.h"
 #include "support/rs_std/rs_core.h"
+#include "support/rs_std/rs_std.h"
 
 namespace crubit {
 namespace {
 
-TEST(StdlibTraitTest, IteratorItem) {
-  using impl = rs::core::iter::Iterator::impl<stdlib::MyStruct>;
-  static_assert(std::is_same_v<impl::Item, std::int32_t>);
+TEST(StdlibTraitTest, Default) {
+  auto my_struct = stdlib::MyStruct::new_(42);
+  auto str =
+      rs::std::string::ToString::impl<stdlib::MyStruct>::to_string(my_struct);
+  EXPECT_EQ(str.as_str(), "MyStruct(42)");
 }
 
 TEST(StdlibTraitTest, IteratorNext) {

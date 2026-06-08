@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/char.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -28,6 +29,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace structs::abi_classification {
 
@@ -670,6 +672,32 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 ::std::int32_t get_value(::structs::zst_fields::ZstFields x);
 
 }  // namespace structs::zst_fields
+
+template <>
+struct rs_std::impl<::structs::display::DisplayStruct,
+                    ::rs::core::fmt::Display> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<structs_golden::display::DisplayStruct as std::fmt::Display>::fmt`
+  // defined at
+  // cc_bindings_from_rs/test/structs/structs.rs;l=410:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+};
+
+template <>
+struct rs_std::impl<::structs::interior_mutability::SomeStruct,
+                    ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<structs_golden::interior_mutability::SomeStruct as std::fmt::Debug>::fmt`
+  // defined at
+  // cc_bindings_from_rs/test/structs/structs.rs;l=358:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+};
 
 namespace structs::abi_classification {
 

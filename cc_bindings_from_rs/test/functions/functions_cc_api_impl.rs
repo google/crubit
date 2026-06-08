@@ -219,7 +219,15 @@ unsafe extern "C" fn __crubit_thunk_unsafe_uadd(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::unsafe_fn_tests::unsafe_add(x, y) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_CtorNew_uctor_unew(
+unsafe extern "C" fn __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+    __self: &'static ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct,
+) -> &'static ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct {
+    unsafe {
+        <::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct as::core::convert::AsRef<::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct>>::as_ref(__self)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
     args: ::ctor::RvalueReference<
         'static,
         ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,

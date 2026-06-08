@@ -112,7 +112,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
+unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
     __self: &'static ::traits_golden::AssociatedTypeStruct,
 ) -> i32 {
     unsafe {
@@ -120,7 +120,7 @@ unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc_utype(
+unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc_utype_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
     __self: &'static ::traits_golden::AssociatedTypeStruct,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -130,7 +130,7 @@ unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething(
+unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
     __self: &'static ::traits_golden::LifetimeStruct<'static>,
 ) -> &'static i32 {
     unsafe {
@@ -140,7 +140,7 @@ unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
+unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
     __self: &'static ::traits_golden::LifetimeStruct<'static>,
 ) -> &'static i32 {
     unsafe {
@@ -150,7 +150,7 @@ unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_DifferentTraitSameName_udo_usomething(
+unsafe extern "C" fn __crubit_thunk_DifferentTraitSameName_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::traits_golden::MyStruct,
 ) -> i32 {
     unsafe {
@@ -158,13 +158,13 @@ unsafe extern "C" fn __crubit_thunk_DifferentTraitSameName_udo_usomething(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething(
+unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::traits_golden::MyStruct,
 ) -> i32 {
     unsafe { <::traits_golden::MyStruct as ::traits_golden::MyTrait>::do_something(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself(
+unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static mut ::core::mem::MaybeUninit<::traits_golden::MyStruct>,
 ) -> i32 {
     unsafe {
@@ -173,17 +173,18 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_ureturn_uself(
+unsafe extern "C" fn __crubit_thunk_MyTrait_ureturn_uself_utraits_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::traits_golden::MyStruct,
 ) -> &'static ::traits_golden::MyStruct {
     unsafe { <::traits_golden::MyStruct as ::traits_golden::MyTrait>::return_self(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_uno_uself() -> i32 {
+unsafe extern "C" fn __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_x0000003aMyStruct(
+) -> i32 {
     unsafe { <::traits_golden::MyStruct as ::traits_golden::MyTrait>::no_self() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
+unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::traits_golden::MyStruct,
     x: &'static mut ::core::mem::MaybeUninit<::traits_golden::Foo>,
     __ret_ptr: *mut core::ffi::c_void,
@@ -201,13 +202,13 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething(
+unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruct2(
     __self: &'static ::traits_golden::MyStruct2,
 ) -> i32 {
     unsafe { <::traits_golden::MyStruct2 as ::traits_golden::MyTrait>::do_something(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself(
+unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2(
     __self: &'static mut ::core::mem::MaybeUninit<::traits_golden::MyStruct2>,
 ) -> i32 {
     unsafe {
@@ -216,17 +217,18 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_ureturn_uself(
+unsafe extern "C" fn __crubit_thunk_MyTrait_ureturn_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2(
     __self: &'static ::traits_golden::MyStruct2,
 ) -> &'static ::traits_golden::MyStruct2 {
     unsafe { <::traits_golden::MyStruct2 as ::traits_golden::MyTrait>::return_self(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_uno_uself() -> i32 {
+unsafe extern "C" fn __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2(
+) -> i32 {
     unsafe { <::traits_golden::MyStruct2 as ::traits_golden::MyTrait>::no_self() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes(
+unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003a_x0000003aMyStruct2(
     __self: &'static ::traits_golden::MyStruct2,
     x: &'static mut ::core::mem::MaybeUninit<::traits_golden::Foo>,
     __ret_ptr: *mut core::ffi::c_void,

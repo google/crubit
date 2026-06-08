@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/non_local_crate_bindings/core_proxy.h"
+#include "support/rs_std/rs_core.h"
 
 namespace {
 
-TEST(CoreBindingsTest, DurationExists) { core::time::Duration unused; }
+TEST(CoreBindingsTest, DurationExists) { rs::core::time::Duration unused; }
 
 }  // namespace

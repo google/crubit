@@ -112,28 +112,32 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 
 namespace example_crate {
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_MyTrait_uadd_uwith(
+extern "C" ::std::int32_t
+__crubit_thunk_MyTrait_uadd_uwith_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
     ::example_crate::MyStruct const&, ::std::int32_t);
 }
 }  // namespace example_crate
 inline ::std::int32_t
 rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with(
     ::example_crate::MyStruct const& self, ::std::int32_t y) {
-  return example_crate::__crubit_internal::__crubit_thunk_MyTrait_uadd_uwith(
-      self, y);
+  return example_crate::__crubit_internal::
+      __crubit_thunk_MyTrait_uadd_uwith_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
+          self, y);
 }
 
 namespace example_crate {
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_MyTrait_udescribe(
+extern "C" rs_std::StrRef
+__crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
     ::example_crate::MyStruct const&);
 }
 }  // namespace example_crate
 inline rs_std::StrRef
 rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::describe(
     ::example_crate::MyStruct const& self) {
-  return example_crate::__crubit_internal::__crubit_thunk_MyTrait_udescribe(
-      self);
+  return example_crate::__crubit_internal::
+      __crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
+          self);
 }
 
 #pragma clang diagnostic pop

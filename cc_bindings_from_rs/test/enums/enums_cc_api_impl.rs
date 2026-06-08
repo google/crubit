@@ -31,7 +31,7 @@ unsafe extern "C" fn __crubit_thunk_is_udata_utoo_ulong(
     unsafe { ::enums_golden::qr_error::QrError::is_data_too_long(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError(
     __self: &'static ::enums_golden::qr_error::QrError,
     other: &'static ::enums_golden::qr_error::QrError,
 ) -> bool {
@@ -100,7 +100,7 @@ unsafe extern "C" fn __crubit_thunk_SplitMax16(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_PartialEq_ueq(
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError(
     __self: &'static ::enums_golden::qr_error::StructuredQrError,
     other: &'static ::enums_golden::qr_error::StructuredQrError,
 ) -> bool {

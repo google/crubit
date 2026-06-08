@@ -39,12 +39,16 @@ struct rs_std::impl<::CcType, ::trait::Trait> {
 
 namespace trait {
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_Trait_uget_uvalue(::CcType const&);
+extern "C" ::std::int32_t
+__crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(
+    ::CcType const&);
 }
 }  // namespace trait
 inline ::std::int32_t rs_std::impl<::CcType, ::trait::Trait>::get_value(
     ::CcType const& self) {
-  return trait::__crubit_internal::__crubit_thunk_Trait_uget_uvalue(self);
+  return trait::__crubit_internal::
+      __crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(
+          self);
 }
 
 #pragma clang diagnostic pop

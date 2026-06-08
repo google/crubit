@@ -2010,7 +2010,7 @@ inline void param_option_in_tuple(
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
           ::crubit::TransmuteAbi<::std::int32_t>()),
-      opt_0_buffer, opt_0);
+      opt_0_buffer, ::std::move(opt_0));
   auto&& opt_cabi_0 = opt_0_buffer;
   void* opt_cabi[] = {&opt_cabi_0};
   return __crubit_internal::__crubit_thunk_param_uoption_uin_utuple(opt_cabi);

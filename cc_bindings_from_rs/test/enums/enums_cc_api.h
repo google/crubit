@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <array>
 #include <cstddef>
@@ -26,6 +27,7 @@
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
 
 namespace enums::qr_error {
 struct StructuredQrError;
@@ -1035,6 +1037,40 @@ RustReprWithSingleTuplePayloadVariant final {
 
 }  // namespace enums::repr_rust
 
+template <>
+struct rs_std::impl<::enums::qr_error::QrError, ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
+struct rs_std::impl<::enums::qr_error::QrError, ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<enums_golden::qr_error::QrError as std::fmt::Debug>::fmt` defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=349:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+};
+
+template <>
+struct rs_std::impl<::enums::qr_error::StructuredQrError, ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
+struct rs_std::impl<::enums::qr_error::StructuredQrError,
+                    ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<enums_golden::qr_error::StructuredQrError as std::fmt::Debug>::fmt`
+  // defined at
+  // cc_bindings_from_rs/test/enums/enums.rs;l=365:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+};
+
 namespace enums::qr_error {
 
 static_assert(
@@ -1106,12 +1142,15 @@ inline bool QrError::is_data_too_long() const {
 }
 
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_PartialEq_ueq(::enums::qr_error::QrError const&,
-                                             ::enums::qr_error::QrError const&);
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError(
+    ::enums::qr_error::QrError const&, ::enums::qr_error::QrError const&);
 }
 inline bool QrError::operator==(::enums::qr_error::QrError const& other) const {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_PartialEq_ueq(self, other);
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError(
+          self, other);
 }
 inline void QrError::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(QrError, __opaque_blob_of_bytes));
@@ -1249,14 +1288,17 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::enums::qr_error::StructuredQrError>);
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_PartialEq_ueq(
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError(
     ::enums::qr_error::StructuredQrError const&,
     ::enums::qr_error::StructuredQrError const&);
 }
 inline bool StructuredQrError::operator==(
     ::enums::qr_error::StructuredQrError const& other) const {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_PartialEq_ueq(self, other);
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError(
+          self, other);
 }
 inline void StructuredQrError::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructuredQrError, __opaque_blob_of_bytes));

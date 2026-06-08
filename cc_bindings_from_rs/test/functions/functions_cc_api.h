@@ -31,6 +31,7 @@
 #include <utility>
 
 #include "support/ctor.h"
+#include "support/rs_std/rs_core.h"
 
 namespace functions::fn_abi_tests {
 
@@ -305,6 +306,19 @@ namespace functions::unsafe_fn_tests {
 ::std::int32_t unsafe_add(::std::int32_t x, ::std::int32_t y);
 
 }  // namespace functions::unsafe_fn_tests
+
+template <>
+struct rs_std::impl<
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct,
+    ::rs::core::convert::AsRef<
+        ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>> {
+  static constexpr bool kIsImplemented = true;
+
+  static ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
+      __anon1)
+      as_ref(::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&
+                 self);
+};
 
 template <>
 struct rs_std::impl<
@@ -703,8 +717,28 @@ inline ::std::int32_t unsafe_add(::std::int32_t x, ::std::int32_t y) {
 
 namespace functions {
 namespace __crubit_internal {
+extern "C" ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
+    __anon1)
+    __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+        ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&);
+}
+}  // namespace functions
+inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&
+$(__anon1) rs_std::impl<
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct,
+    ::rs::core::convert::AsRef<
+        ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>>::
+    as_ref(::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&
+               self) {
+  return functions::__crubit_internal::
+      __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+          self);
+}
+
+namespace functions {
+namespace __crubit_internal {
 extern "C" ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&
-__crubit_thunk_CtorNew_uctor_unew(
+__crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
     ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&);
 }
 }  // namespace functions
@@ -715,8 +749,9 @@ rs_std::impl<
         ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&>>::
     ctor_new(
         ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& args) {
-  return functions::__crubit_internal::__crubit_thunk_CtorNew_uctor_unew(
-      ::std::move(args));
+  return functions::__crubit_internal::
+      __crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
+          ::std::move(args));
 }
 
 #pragma clang diagnostic pop

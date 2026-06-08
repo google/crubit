@@ -1121,19 +1121,68 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
             !has_const_generics
         })
         .filter(|trait_id| {
-            // TODO(b/483382648): Generate bindings for other `std`, `core`, and `alloc` traits.
-            // At least for _most_ other traits - we probably still want to exclude traits that
-            // get idiomatic C++ bindings elsewhere, such as `Clone`, `Default`, `Drop`, `From`,
-            // `Index`, `Into`, and `PartialEq`.
-            let not_in_stdlib = {
-                let crate_name = tcx.crate_name(trait_id.krate);
-                crate_name.as_str() != "std"
-                    && crate_name.as_str() != "core"
-                    && crate_name.as_str() != "alloc"
-            };
-            let is_iterator_trait = iterator_trait_id == Some(*trait_id);
-            let is_future_trait = future_trait_id == Some(*trait_id);
-            not_in_stdlib || is_iterator_trait || is_future_trait
+            let trait_def = tcx.trait_def(*trait_id);
+            // Filter out traits that don't have meaningful impls or exist to interact with the
+            // compiler in ways we don't want to reflect in FFI bindings (Sized, etc).
+            let has_meaningful_impl = !(trait_def.is_marker
+                || trait_def.is_fundamental
+                || trait_def.deny_explicit_impl
+                || trait_def.has_auto_impl);
+            // List of traits which we handle specially, usually in generate_struct_and_union, and
+            // so do not want to bind here. Doing so causes duplicate thunks to be generated.
+            let lang_items = tcx.lang_items();
+            let excluded_traits = [
+                lang_items.drop_trait(),
+                lang_items.clone_trait(),
+                lang_items.copy_trait(),
+                tcx.get_diagnostic_item(sym::Into),
+                lang_items.from_trait(),
+                tcx.get_diagnostic_item(sym::PartialEq),
+                tcx.get_diagnostic_item(sym::Default),
+                lang_items.partial_ord_trait(),
+                // std::ops traits:
+                lang_items.add_trait(),
+                lang_items.add_assign_trait(),
+                lang_items.sub_trait(),
+                lang_items.sub_assign_trait(),
+                lang_items.mul_trait(),
+                lang_items.mul_assign_trait(),
+                lang_items.div_trait(),
+                lang_items.div_assign_trait(),
+                lang_items.rem_trait(),
+                lang_items.rem_assign_trait(),
+                lang_items.neg_trait(),
+                lang_items.not_trait(),
+                lang_items.bitand_trait(),
+                lang_items.bitand_assign_trait(),
+                lang_items.bitor_trait(),
+                lang_items.bitor_assign_trait(),
+                lang_items.bitxor_trait(),
+                lang_items.bitxor_assign_trait(),
+                lang_items.shl_trait(),
+                lang_items.shl_assign_trait(),
+                lang_items.shr_trait(),
+                lang_items.shr_assign_trait(),
+                lang_items.index_trait(),
+                lang_items.index_mut_trait(),
+                lang_items.deref_trait(),
+                lang_items.deref_mut_trait(),
+                lang_items.deref_pure_trait(),
+                lang_items.fn_trait(),
+                lang_items.fn_mut_trait(),
+                lang_items.fn_once_trait(),
+                lang_items.async_fn_trait(),
+                lang_items.async_fn_mut_trait(),
+                lang_items.async_fn_once_trait(),
+                lang_items.coroutine_trait(),
+                lang_items.coerce_unsized_trait(),
+                lang_items.dispatch_from_dyn_trait(),
+                lang_items.receiver_trait(),
+                lang_items.legacy_receiver_trait(),
+                lang_items.try_trait(),
+            ];
+            let is_excluded_builtin = excluded_traits.iter().any(|id| id.eq(&Some(*trait_id)));
+            has_meaningful_impl && !is_excluded_builtin
         })
         .collect::<Vec<DefId>>()
         .into_boxed_slice();

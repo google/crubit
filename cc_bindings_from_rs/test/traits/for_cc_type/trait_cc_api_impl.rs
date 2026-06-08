@@ -12,6 +12,8 @@
 extern crate alloc;
 extern crate core;
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Trait_uget_uvalue(__self: &'static ::cc_type::CcType) -> i32 {
+unsafe extern "C" fn __crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(
+    __self: &'static ::cc_type::CcType,
+) -> i32 {
     unsafe { <::cc_type::CcType as ::trait_golden::Trait>::get_value(__self) }
 }

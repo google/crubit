@@ -25,7 +25,7 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
 }
 const _: () = assert!(::core::mem::offset_of!(::generic_traits_golden::StructGeneric, x) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_TraitWithGeneric_ufoo(
+unsafe extern "C" fn __crubit_thunk_TraitWithGeneric_ufoo_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32(
     __self: &'static ::generic_traits_golden::StructGeneric,
     t: i32,
 ) -> i32 {
@@ -34,7 +34,7 @@ unsafe extern "C" fn __crubit_thunk_TraitWithGeneric_ufoo(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_TraitWithTwoGenerics_ubar(
+unsafe extern "C" fn __crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32_ui32(
     __self: &'static ::generic_traits_golden::StructGeneric,
     t: i32,
     u: i32,

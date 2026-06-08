@@ -31,7 +31,7 @@ extern "C" fn __crubit_thunk_drop(
 }
 const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::NotImplemented, foo) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething(
+unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::trait_impl_golden::MyStruct,
 ) -> i32 {
     unsafe { <::trait_impl_golden::MyStruct as ::trait_definition::MyTrait>::do_something(__self) }

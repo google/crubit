@@ -15,8 +15,11 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/rs_std/traits.h"
 
 #include <cstdint>
+
+#include "support/rs_std/rs_core.h"
 
 namespace example_crate {
 
@@ -31,6 +34,11 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 }  // namespace example_crate
+
+template <>
+struct rs_std::impl<::example_crate::Color, ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
 
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_CPP_ENUM_EXAMPLE_CRATE_GOLDEN

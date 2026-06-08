@@ -89,12 +89,12 @@ fn thunk_name(
                 .to_string();
             tcx.trait_impl_of_assoc(def_id)
                 .map(|impl_id| {
-                    let trait_id = crate::normalize_ty(
+                    let trait_ref = crate::normalize_ty(
                         tcx,
                         tcx.param_env(impl_id),
                         tcx.impl_trait_ref(impl_id).instantiate_identity(),
-                    )
-                    .def_id;
+                    );
+                    let trait_id = trait_ref.def_id;
                     let trait_name = db
                         .symbol_unqualified_name(trait_id)
                         .map(|name| name.rs_name)
@@ -102,7 +102,13 @@ fn thunk_name(
                             panic!("Traits are assumed to always have a name {trait_id:?}")
                         })
                         .to_string();
-                    format!("{}_{}", trait_name, def_name)
+                    let trait_args =
+                        trait_ref.args.iter().map(|arg| format!("{}", arg)).collect_vec();
+                    if trait_args.is_empty() {
+                        format!("{}_{}", trait_name, def_name)
+                    } else {
+                        format!("{}_{}_{}", trait_name, def_name, trait_args.join("_"))
+                    }
                 })
                 .unwrap_or(def_name)
         }
@@ -170,6 +176,7 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                 // We're the library, and are about to send it over to Rust.
                 // We need to encode it into a buffer, then send that over.
                 includes.insert(db.support_header("bridge.h"));
+                includes.insert(code_gen_utils::CcInclude::utility());
                 let crubit_abi_type = CrubitAbiTypeToCppTokens(&composable.crubit_abi_type);
                 let crubit_abi_type_expr =
                     CrubitAbiTypeToCppExprTokens(&composable.crubit_abi_type);
@@ -179,7 +186,7 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                 // what we sent to Rust across the C ABI.
                 statements.extend(quote! {
                     unsigned char #buffer_name[#crubit_abi_type::kSize];
-                    ::crubit::internal::Encode<#crubit_abi_type>(#crubit_abi_type_expr, #buffer_name, #cc_ident);
+                    ::crubit::internal::Encode<#crubit_abi_type>(#crubit_abi_type_expr, #buffer_name, ::std::move(#cc_ident));
                 });
                 quote! { #buffer_name }
             }

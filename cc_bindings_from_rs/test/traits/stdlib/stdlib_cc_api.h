@@ -29,6 +29,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/rs_std/rs_alloc.h"
 #include "support/rs_std/rs_core.h"
 
 namespace stdlib {
@@ -171,7 +172,7 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
 
   // Error generating bindings for associated function `<stdlib_golden::MyStruct
   // as std::future::Future>::poll` defined at
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=63:
+  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=72:
   // Unsupported `self` type `std::pin::Pin<&'__anon1 mut
   // stdlib_golden::MyStruct>`
 };
@@ -184,6 +185,13 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
       ::std::int32_t;
 
   static ::std::optional<::std::int32_t> next(::stdlib::MyStruct& self);
+};
+
+template <>
+struct rs_std::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString> {
+  static constexpr bool kIsImplemented = true;
+
+  static ::rs::alloc::string::String to_string(::stdlib::MyStruct const& self);
 };
 
 template <>
@@ -339,8 +347,9 @@ inline void RefIterator::__crubit_field_offset_assertions() {
 
 namespace stdlib {
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_Iterator_unext(::stdlib::MyStruct&,
-                                              unsigned char* __ret_ptr);
+extern "C" void
+__crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+    ::stdlib::MyStruct&, unsigned char* __ret_ptr);
 }
 }  // namespace stdlib
 inline ::std::optional<::std::int32_t>
@@ -348,8 +357,9 @@ rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
     ::stdlib::MyStruct& self) {
   unsigned char __return_value_storage
       [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
-  stdlib::__crubit_internal::__crubit_thunk_Iterator_unext(
-      self, __return_value_storage);
+  stdlib::__crubit_internal::
+      __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+          self, __return_value_storage);
   return ::crubit::internal::Decode<
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
@@ -359,8 +369,27 @@ rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
 
 namespace stdlib {
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_Iterator_unext(::stdlib::NonCloneableIterator&,
-                                              unsigned char* __ret_ptr);
+extern "C" void
+__crubit_thunk_ToString_uto_ustring_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+    ::stdlib::MyStruct const&, ::rs::alloc::string::String* __ret_ptr);
+}
+}  // namespace stdlib
+inline ::rs::alloc::string::String
+rs_std::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString>::to_string(
+    ::stdlib::MyStruct const& self) {
+  crubit::Slot<::rs::alloc::string::String> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  stdlib::__crubit_internal::
+      __crubit_thunk_ToString_uto_ustring_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+          self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace stdlib {
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aNonCloneableIterator(
+    ::stdlib::NonCloneableIterator&, unsigned char* __ret_ptr);
 }
 }  // namespace stdlib
 inline ::std::optional<::stdlib::NonCloneableValue>
@@ -368,8 +397,9 @@ rs_std::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
     ::stdlib::NonCloneableIterator& self) {
   unsigned char __return_value_storage[::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::stdlib::NonCloneableValue>>::kSize];
-  stdlib::__crubit_internal::__crubit_thunk_Iterator_unext(
-      self, __return_value_storage);
+  stdlib::__crubit_internal::
+      __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aNonCloneableIterator(
+          self, __return_value_storage);
   return ::crubit::internal::Decode<
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::stdlib::NonCloneableValue>>>(
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::stdlib::NonCloneableValue>>(
@@ -379,8 +409,9 @@ rs_std::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
 
 namespace stdlib {
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_Iterator_unext(::stdlib::RefIterator&,
-                                              unsigned char* __ret_ptr);
+extern "C" void
+__crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e(
+    ::stdlib::RefIterator&, unsigned char* __ret_ptr);
 }
 }  // namespace stdlib
 inline ::std::optional<::std::int32_t const * $a crubit_nonnull>
@@ -389,8 +420,9 @@ rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator>::next(
   unsigned char
       __return_value_storage[::crubit::OptionAbi<::crubit::TransmuteAbi<
           ::std::int32_t const * $static crubit_nonnull>>::kSize];
-  stdlib::__crubit_internal::__crubit_thunk_Iterator_unext(
-      self, __return_value_storage);
+  stdlib::__crubit_internal::
+      __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e(
+          self, __return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::std::int32_t const * $static crubit_nonnull>>>(
       ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t const *

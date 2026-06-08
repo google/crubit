@@ -88,7 +88,8 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 
 namespace trait_definition {
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_MyTrait_udo_usomething(
+extern "C" ::std::int32_t
+__crubit_thunk_MyTrait_udo_usomething_utrait_udefinition_ugolden_x0000003a_x0000003aMyStruct(
     ::trait_definition::MyStruct const&);
 }
 }  // namespace trait_definition
@@ -96,7 +97,8 @@ inline ::std::int32_t
 rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait>::
     do_something(::trait_definition::MyStruct const& self) {
   return trait_definition::__crubit_internal::
-      __crubit_thunk_MyTrait_udo_usomething(self);
+      __crubit_thunk_MyTrait_udo_usomething_utrait_udefinition_ugolden_x0000003a_x0000003aMyStruct(
+          self);
 }
 
 #pragma clang diagnostic pop

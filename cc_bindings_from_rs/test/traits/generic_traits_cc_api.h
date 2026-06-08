@@ -185,7 +185,8 @@ inline void StructGeneric::__crubit_field_offset_assertions() {
 
 namespace generic_traits {
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_TraitWithGeneric_ufoo(
+extern "C" ::std::int32_t
+__crubit_thunk_TraitWithGeneric_ufoo_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32(
     ::generic_traits::StructGeneric const&, ::std::int32_t);
 }
 }  // namespace generic_traits
@@ -194,12 +195,14 @@ rs_std::impl<::generic_traits::StructGeneric,
              ::generic_traits::TraitWithGeneric<::std::int32_t>>::
     foo(::generic_traits::StructGeneric const& self, ::std::int32_t t) {
   return generic_traits::__crubit_internal::
-      __crubit_thunk_TraitWithGeneric_ufoo(self, t);
+      __crubit_thunk_TraitWithGeneric_ufoo_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32(
+          self, t);
 }
 
 namespace generic_traits {
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_TraitWithTwoGenerics_ubar(
+extern "C" ::std::int32_t
+__crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32_ui32(
     ::generic_traits::StructGeneric const&, ::std::int32_t, ::std::int32_t);
 }
 }  // namespace generic_traits
@@ -209,7 +212,8 @@ inline ::std::int32_t rs_std::impl<
     bar(::generic_traits::StructGeneric const& self, ::std::int32_t t,
         ::std::int32_t u) {
   return generic_traits::__crubit_internal::
-      __crubit_thunk_TraitWithTwoGenerics_ubar(self, t, u);
+      __crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32_ui32(
+          self, t, u);
 }
 
 #pragma clang diagnostic pop

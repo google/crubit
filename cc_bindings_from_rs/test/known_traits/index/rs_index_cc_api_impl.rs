@@ -41,14 +41,14 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, y: i32, __ret_ptr: *mut core::ff
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Index_uindex(
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
     __self: &'static ::rs_index_golden::IntPair,
     index: usize,
 ) -> &'static i32 {
     unsafe { <::rs_index_golden::IntPair as ::core::ops::Index<usize>>::index(__self, index) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Index_uindex(
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
     __self: &'static ::rs_index_golden::IntPair,
     index: &'static mut ::core::mem::MaybeUninit<::rs_index_golden::CustomIndex>,
 ) -> &'static i32 {
@@ -60,7 +60,7 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut(
+unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
     __self: &'static mut ::rs_index_golden::IntPair,
     index: usize,
 ) -> &'static mut i32 {
@@ -69,7 +69,7 @@ unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut(
+unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
     __self: &'static mut ::rs_index_golden::IntPair,
     index: &'static mut ::core::mem::MaybeUninit<::rs_index_golden::CustomIndex>,
 ) -> &'static mut i32 {
@@ -100,7 +100,7 @@ unsafe extern "C" fn __crubit_thunk_new(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Index_uindex(
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
     __self: &'static ::rs_index_golden::Map,
     index: *const [*const core::ffi::c_void; 2usize],
 ) -> &'static str {
@@ -119,7 +119,7 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Index_uindex(
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
     __self: &'static ::rs_index_golden::Map,
     _index: &'static ::rs_index_golden::Id,
 ) -> &'static str {

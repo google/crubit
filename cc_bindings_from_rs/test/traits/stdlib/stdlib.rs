@@ -26,6 +26,15 @@ impl MyStruct {
     }
 }
 
+// We specifically want to implement `ToString`  because we don't generate bindings to blanket
+// implementations.
+#[allow(clippy::to_string_trait_impl)]
+impl ToString for MyStruct {
+    fn to_string(&self) -> String {
+        format!("MyStruct({})", self.x)
+    }
+}
+
 // Implement `From` (and implicitly `Into`) to verify via goldens that they
 // don't get trait-shaped bindings (since they already get other, idiomatic C++
 // bindings).

@@ -14,7 +14,7 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::trait_definition_golden::MyStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::trait_definition_golden::MyStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething(
+unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utrait_udefinition_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::trait_definition_golden::MyStruct,
 ) -> i32 {
     unsafe {
