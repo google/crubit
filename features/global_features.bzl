@@ -9,4 +9,5 @@ visibility(["//..."])
 SUPPORTED_FEATURES = [
     "supported",
     "callables",
+    "assume_lifetimes",
 ]
