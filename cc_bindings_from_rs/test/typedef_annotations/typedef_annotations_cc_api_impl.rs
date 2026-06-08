@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// tag_decl_annotations_rust_golden
+// typedef_annotations_golden
 
 #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]
@@ -11,8 +11,3 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::tag_decl_annotations_rust_golden::SomeStruct>() == 4);
-const _: () =
-    assert!(::std::mem::align_of::<::tag_decl_annotations_rust_golden::SomeStruct>() == 4);
-const _: () =
-    assert!(::core::mem::offset_of!(::tag_decl_annotations_rust_golden::SomeStruct, f) == 0);

@@ -15,3 +15,21 @@ pub mod test_deprecated_type_alias {
     #[deprecated = "Use `OtherTypeAlias` instead"]
     pub type TypeAlias = i32;
 }
+
+pub mod test_generics_matching {
+    pub type MatchingAlias<T, E> = Result<T, E>;
+    pub type FlippedAlias<E, T> = Result<T, E>;
+    pub type SpecializedAlias = Result<i32, i32>;
+
+    pub fn returns_matching_alias() -> MatchingAlias<i32, i32> {
+        Ok(0)
+    }
+
+    pub fn returns_flipped_alias() -> FlippedAlias<i8, u32> {
+        Ok(0)
+    }
+
+    pub fn returns_specialized() -> SpecializedAlias {
+        Ok(0)
+    }
+}

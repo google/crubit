@@ -9,7 +9,6 @@
 
 #include "gtest/gtest.h"
 
-namespace crubit {
 namespace {
 
 TEST(TypeAliasesTest, SimpleTypeAlias) {
@@ -36,5 +35,20 @@ TEST(TypeAliasesTest, DeprecatedTypeAlias) {
                       type_aliases::test_deprecated_type_alias::TypeAlias>));
 }
 
+TEST(TypeAliasesTest, GenericsMatching) {
+  using namespace type_aliases::test_generics_matching;
+
+  auto r1 = returns_matching_alias();
+  EXPECT_TRUE(r1.has_value());
+  EXPECT_EQ(r1.value(), 0);
+
+  auto r2 = returns_flipped_alias();
+  EXPECT_TRUE(r2.has_value());
+  EXPECT_EQ(r2.value(), 0u);
+
+  auto r3 = returns_specialized();
+  EXPECT_TRUE(r3.has_value());
+  EXPECT_EQ(r3.value(), 0);
+}
+
 }  // namespace
-}  // namespace crubit

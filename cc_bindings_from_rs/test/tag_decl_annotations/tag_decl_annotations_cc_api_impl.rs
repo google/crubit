@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// function_annotations_rust_golden
+// tag_decl_annotations_golden
 
 #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]
@@ -11,7 +11,6 @@
 
 extern crate alloc;
 extern crate core;
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_add_utwo_uintegers(x: i32, y: i32) -> i32 {
-    unsafe { ::function_annotations_rust_golden::add_two_integers(x, y) }
-}
+const _: () = assert!(::std::mem::size_of::<::tag_decl_annotations_golden::SomeStruct>() == 4);
+const _: () = assert!(::std::mem::align_of::<::tag_decl_annotations_golden::SomeStruct>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::tag_decl_annotations_golden::SomeStruct, f) == 0);

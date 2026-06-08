@@ -1,5 +1,3 @@
-"""End-to-end tests of `cc_bindings_from_rs`, focusing on type aliases bindings."""
-
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -17,9 +15,9 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 rust_library(
-    name = "type_aliases",
+    name = "uses_reexport",
     testonly = 1,
-    srcs = ["type_aliases.rs"],
+    srcs = ["uses_reexport.rs"],
     aspect_hints = [
         "//features:supported",
     ],
@@ -29,24 +27,24 @@ rust_library(
 )
 
 cc_bindings_from_rust(
-    name = "type_aliases_cc_api",
+    name = "uses_reexport_cc_api",
     testonly = 1,
-    crate = ":type_aliases",
+    crate = ":uses_reexport",
 )
 
 golden_test(
-    name = "type_aliases_golden_test",
-    basename = "type_aliases",
-    golden_h = "type_aliases_cc_api.h",
-    golden_rs = "type_aliases_cc_api_impl.rs",
-    rust_library = "type_aliases",
+    name = "uses_reexport_golden_test",
+    basename = "uses_reexport",
+    golden_h = "uses_reexport_cc_api.h",
+    golden_rs = "uses_reexport_cc_api_impl.rs",
+    rust_library = "uses_reexport",
 )
 
 crubit_cc_test(
-    name = "type_aliases_test",
-    srcs = ["type_aliases_test.cc"],
+    name = "uses_reexport_test",
+    srcs = ["uses_reexport_test.cc"],
     deps = [
-        ":type_aliases_cc_api",
+        ":uses_reexport_cc_api",
         "//testing/base/public:gunit_main",
     ],
 )

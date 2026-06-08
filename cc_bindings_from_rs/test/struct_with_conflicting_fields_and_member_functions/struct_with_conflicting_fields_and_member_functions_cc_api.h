@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// struct_with_conflicting_fields_and_member_functions_rust_golden
+// struct_with_conflicting_fields_and_member_functions_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -22,14 +22,14 @@
 #include <cstring>
 #include <type_traits>
 
-namespace struct_with_conflicting_fields_and_member_functions_rust {
+namespace struct_with_conflicting_fields_and_member_functions {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: struct_with_conflicting_fields_and_member_functions_rust_golden :: "
+    ":: struct_with_conflicting_fields_and_member_functions_golden :: "
     "X") alignas(4) [[clang::trivial_abi]] X final {
  public:
-  // `struct_with_conflicting_fields_and_member_functions_rust_golden::X`
-  // doesn't implement the `Default` trait
+  // `struct_with_conflicting_fields_and_member_functions_golden::X` doesn't
+  // implement the `Default` trait
   X() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -37,8 +37,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   X(X&&) = default;
   X& operator=(X&&) = default;
 
-  // `struct_with_conflicting_fields_and_member_functions_rust_golden::X`
-  // doesn't implement the `Clone` trait
+  // `struct_with_conflicting_fields_and_member_functions_golden::X` doesn't
+  // implement the `Clone` trait
   X(const X&) = delete;
   X& operator=(const X&) = delete;
   X(::crubit::UnsafeRelocateTag, X&& value) {
@@ -73,12 +73,12 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<X>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::struct_with_conflicting_fields_and_member_functions_rust::X>);
+              ::struct_with_conflicting_fields_and_member_functions::X>);
 static_assert(::std::is_trivially_move_assignable_v<
-              ::struct_with_conflicting_fields_and_member_functions_rust::X>);
+              ::struct_with_conflicting_fields_and_member_functions::X>);
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_a(
-    ::struct_with_conflicting_fields_and_member_functions_rust::X const&);
+    ::struct_with_conflicting_fields_and_member_functions::X const&);
 }
 inline ::std::int32_t X::a() const {
   auto&& self = *this;
@@ -87,7 +87,7 @@ inline ::std::int32_t X::a() const {
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_b(
-    ::struct_with_conflicting_fields_and_member_functions_rust::X const&);
+    ::struct_with_conflicting_fields_and_member_functions::X const&);
 }
 inline ::std::int32_t X::b() const {
   auto&& self = *this;
@@ -98,7 +98,7 @@ inline void X::__crubit_field_offset_assertions() {
   static_assert(4 == offsetof(X, b_));
   static_assert(8 == offsetof(X, c));
 }
-}  // namespace struct_with_conflicting_fields_and_member_functions_rust
+}  // namespace struct_with_conflicting_fields_and_member_functions
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_GOLDEN

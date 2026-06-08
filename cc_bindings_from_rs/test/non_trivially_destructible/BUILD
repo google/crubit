@@ -1,5 +1,3 @@
-"""End-to-end tests of `cc_bindings_from_rs`, focusing on type aliases bindings."""
-
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -17,9 +15,9 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 rust_library(
-    name = "type_aliases",
+    name = "non_trivially_destructible",
     testonly = 1,
-    srcs = ["type_aliases.rs"],
+    srcs = ["non_trivially_destructible.rs"],
     aspect_hints = [
         "//features:supported",
     ],
@@ -29,24 +27,24 @@ rust_library(
 )
 
 cc_bindings_from_rust(
-    name = "type_aliases_cc_api",
+    name = "non_trivially_destructible_cc_api",
     testonly = 1,
-    crate = ":type_aliases",
+    crate = ":non_trivially_destructible",
 )
 
 golden_test(
-    name = "type_aliases_golden_test",
-    basename = "type_aliases",
-    golden_h = "type_aliases_cc_api.h",
-    golden_rs = "type_aliases_cc_api_impl.rs",
-    rust_library = "type_aliases",
+    name = "non_trivially_destructible_golden_test",
+    basename = "non_trivially_destructible",
+    golden_h = "non_trivially_destructible_cc_api.h",
+    golden_rs = "non_trivially_destructible_cc_api_impl.rs",
+    rust_library = "non_trivially_destructible",
 )
 
 crubit_cc_test(
-    name = "type_aliases_test",
-    srcs = ["type_aliases_test.cc"],
+    name = "non_trivially_destructible_test",
+    srcs = ["non_trivially_destructible_test.cc"],
     deps = [
-        ":type_aliases_cc_api",
+        ":non_trivially_destructible_cc_api",
         "//testing/base/public:gunit_main",
     ],
 )

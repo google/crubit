@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// non_trivially_destructible_rust_golden
+// non_trivially_destructible_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NON_TRIVIALLY_DESTRUCTIBLE_NON_TRIVIALLY_DESTRUCTIBLE_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NON_TRIVIALLY_DESTRUCTIBLE_NON_TRIVIALLY_DESTRUCTIBLE_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -23,12 +23,13 @@
 #include <cstring>
 #include <utility>
 
-namespace non_trivially_destructible_rust {
+namespace non_trivially_destructible {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: non_trivially_destructible_rust_golden :: "
-    "NonTriviallyDestructable") alignas(4) [[clang::trivial_abi]]
-NonTriviallyDestructable final {
+struct
+    CRUBIT_INTERNAL_RUST_TYPE(
+        ":: non_trivially_destructible_golden :: "
+        "NonTriviallyDestructable") alignas(4) [[clang::trivial_abi]]
+    NonTriviallyDestructable final {
  public:
   // Default::default
   NonTriviallyDestructable();
@@ -37,14 +38,14 @@ NonTriviallyDestructable final {
   ~NonTriviallyDestructable();
 
   NonTriviallyDestructable(NonTriviallyDestructable&&);
-  ::non_trivially_destructible_rust::NonTriviallyDestructable& operator=(
+  ::non_trivially_destructible::NonTriviallyDestructable& operator=(
       NonTriviallyDestructable&&);
 
   // Clone::clone
   NonTriviallyDestructable(const NonTriviallyDestructable&);
 
   // Clone::clone_from
-  ::non_trivially_destructible_rust::NonTriviallyDestructable& operator=(
+  ::non_trivially_destructible::NonTriviallyDestructable& operator=(
       const NonTriviallyDestructable&);
 
   NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
@@ -59,10 +60,9 @@ NonTriviallyDestructable final {
   static void __crubit_field_offset_assertions();
 };
 
-::non_trivially_destructible_rust::NonTriviallyDestructable return_by_value();
+::non_trivially_destructible::NonTriviallyDestructable return_by_value();
 
-void take_by_value(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable _x);
+void take_by_value(::non_trivially_destructible::NonTriviallyDestructable _x);
 
 static_assert(
     sizeof(NonTriviallyDestructable) == 4,
@@ -72,46 +72,46 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
+    ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
 }
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable::
+inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable&);
+    ::non_trivially_destructible::NonTriviallyDestructable&);
 }
 inline NonTriviallyDestructable::~NonTriviallyDestructable() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable::
+inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable(NonTriviallyDestructable&& other)
     : NonTriviallyDestructable() {
   *this = ::std::move(other);
 }
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable& ::
-non_trivially_destructible_rust::NonTriviallyDestructable::operator=(
+inline ::non_trivially_destructible::NonTriviallyDestructable& ::
+non_trivially_destructible::NonTriviallyDestructable::operator=(
     NonTriviallyDestructable&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable const&,
-    ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
+    ::non_trivially_destructible::NonTriviallyDestructable const&,
+    ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable&,
-    ::non_trivially_destructible_rust::NonTriviallyDestructable const&);
+    ::non_trivially_destructible::NonTriviallyDestructable&,
+    ::non_trivially_destructible::NonTriviallyDestructable const&);
 }
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable::
+inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable(const NonTriviallyDestructable& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable& ::
-non_trivially_destructible_rust::NonTriviallyDestructable::operator=(
+inline ::non_trivially_destructible::NonTriviallyDestructable& ::
+non_trivially_destructible::NonTriviallyDestructable::operator=(
     const NonTriviallyDestructable& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
@@ -123,11 +123,11 @@ inline void NonTriviallyDestructable::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uby_uvalue(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
+    ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
 }
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable
+inline ::non_trivially_destructible::NonTriviallyDestructable
 return_by_value() {
-  crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>
+  crubit::Slot<::non_trivially_destructible::NonTriviallyDestructable>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uby_uvalue(__return_value_storage);
@@ -136,15 +136,15 @@ return_by_value() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_take_uby_uvalue(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable*);
+    ::non_trivially_destructible::NonTriviallyDestructable*);
 }
 inline void take_by_value(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable _x) {
+    ::non_trivially_destructible::NonTriviallyDestructable _x) {
   crubit::Slot _x_slot((::std::move(_x)));
   return __crubit_internal::__crubit_thunk_take_uby_uvalue(_x_slot.Get());
 }
 
-}  // namespace non_trivially_destructible_rust
+}  // namespace non_trivially_destructible
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NON_TRIVIALLY_DESTRUCTIBLE_NON_TRIVIALLY_DESTRUCTIBLE_GOLDEN

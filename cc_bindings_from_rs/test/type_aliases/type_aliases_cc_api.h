@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// type_aliases_rust_golden
+// type_aliases_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TYPE_ALIASES_TYPE_ALIASES_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TYPE_ALIASES_TYPE_ALIASES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -26,25 +26,25 @@
 #include <type_traits>
 #include <utility>
 
-namespace type_aliases_rust::test_deprecated_type_alias {
+namespace type_aliases::test_deprecated_type_alias {
 
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
-    ":: type_aliases_rust_golden :: test_deprecated_type_alias :: TypeAlias")
+    ":: type_aliases_golden :: test_deprecated_type_alias :: TypeAlias")
     [[deprecated("Use `OtherTypeAlias` instead")]] = ::std::int32_t;
 }
 
-namespace type_aliases_rust::test_type_aliases {
+namespace type_aliases::test_type_aliases {
 
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
-    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias") =
+    ":: type_aliases_golden :: test_type_aliases :: TypeAlias") =
     ::std::int32_t;
 using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
-    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias2") =
+    ":: type_aliases_golden :: test_type_aliases :: TypeAlias2") =
     ::std::int32_t;
 
 ::std::int32_t func_using_alias();
 
-}  // namespace type_aliases_rust::test_type_aliases
+}  // namespace type_aliases::test_type_aliases
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -90,17 +90,17 @@ struct alignas(4)
 };
 #endif
 
-namespace type_aliases_rust::test_generics_matching {
+namespace type_aliases::test_generics_matching {
 
 using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
-    ":: type_aliases_rust_golden :: test_generics_matching :: "
-    "SpecializedAlias") = rs_std::Result<::std::int32_t, ::std::int32_t>;
+    ":: type_aliases_golden :: test_generics_matching :: SpecializedAlias") =
+    rs_std::Result<::std::int32_t, ::std::int32_t>;
 
 rs_std::Result<::std::int32_t, ::std::int32_t> returns_matching_alias();
 
 rs_std::Result<::std::int32_t, ::std::int32_t> returns_specialized();
 
-}  // namespace type_aliases_rust::test_generics_matching
+}  // namespace type_aliases::test_generics_matching
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
@@ -146,13 +146,13 @@ struct alignas(4)
 };
 #endif
 
-namespace type_aliases_rust::test_generics_matching {
+namespace type_aliases::test_generics_matching {
 
 rs_std::Result<::std::uint32_t, ::std::int8_t> returns_flipped_alias();
 
 }
 
-namespace type_aliases_rust::test_generics_matching {
+namespace type_aliases::test_generics_matching {
 
 // Error generating bindings for enum `std::result::Result` defined at
 // third_party/rust_toolchain/library/core/src/result.rs;l=557:
@@ -162,9 +162,9 @@ namespace type_aliases_rust::test_generics_matching {
 // third_party/rust_toolchain/library/core/src/result.rs;l=557:
 // The following Rust type is not supported yet: T
 
-}  // namespace type_aliases_rust::test_generics_matching
+}  // namespace type_aliases::test_generics_matching
 
-namespace type_aliases_rust::test_generics_matching {
+namespace type_aliases::test_generics_matching {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_returns_uflipped_ualias(
@@ -205,9 +205,9 @@ inline rs_std::Result<::std::int32_t, ::std::int32_t> returns_specialized() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace type_aliases_rust::test_generics_matching
+}  // namespace type_aliases::test_generics_matching
 
-namespace type_aliases_rust::test_type_aliases {
+namespace type_aliases::test_type_aliases {
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_func_uusing_ualias();
@@ -216,7 +216,7 @@ inline ::std::int32_t func_using_alias() {
   return __crubit_internal::__crubit_thunk_func_uusing_ualias();
 }
 
-}  // namespace type_aliases_rust::test_type_aliases
+}  // namespace type_aliases::test_type_aliases
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -459,4 +459,4 @@ inline void rs_std::Result<::std::uint32_t, ::std::int8_t>::check_has_err() {
 #endif
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TYPE_ALIASES_TYPE_ALIASES_GOLDEN
