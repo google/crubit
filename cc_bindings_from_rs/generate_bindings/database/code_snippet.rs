@@ -277,6 +277,10 @@ impl<'tcx> CcPrerequisites<'tcx> {
             .extend(std::mem::take(&mut self.template_specializations));
     }
 
+    pub fn move_only_defs_to_fwd_decls(&mut self) {
+        self.fwd_decls.extend(std::mem::take(&mut self.defs));
+    }
+
     /// Move any definitions that appear in `ty` to the forward declarations of `prereqs`.
     pub fn forward_declare_type(&mut self, ty: Ty<'tcx>) {
         let mut adts = HashSet::new();

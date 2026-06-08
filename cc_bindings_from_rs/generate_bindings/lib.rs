@@ -1279,6 +1279,7 @@ pub(crate) fn create_type_alias_with_rs_type<'tcx>(
     let cc_bindings = db.format_ty_for_cc(alias_type, TypeLocation::Other)?;
     let mut main_api_prereqs = CcPrerequisites::default();
     let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
+    main_api_prereqs.move_defs_to_fwd_decls();
 
     let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
 
@@ -2271,6 +2272,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                         .map(|(spec, main_api)| (Node::Specialization(spec.clone()), main_api)),
                 )
                 .flat_map(|(successor, main_api)| {
+                    let successor_clone = successor.clone();
                     let predecessors = main_api
                         .prereqs
                         .defs
@@ -2286,13 +2288,15 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                                 .iter()
                                 .cloned()
                                 .map(Node::Specialization),
-                        );
+                        )
+                        .filter(move |pre| pre != &successor_clone);
                     predecessors.map(move |predecessor| toposort::Dependency {
                         predecessor,
                         successor: successor.clone(),
                     })
                 })
                 .collect::<Vec<_>>();
+
             let spec_keys: HashMap<&TemplateSpecialization<'_>, NodeSortKey> =
                 specializations.keys().map(|spec| (spec, NodeSortKey::new(tcx, spec))).collect();
 
