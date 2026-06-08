@@ -100,6 +100,13 @@ def _get_additional_rust_srcs(aspect_ctx):
             )
     return collections.uniq(additional_rust_srcs)
 
+def _get_unstable_rust_features(aspect_ctx):
+    features = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            features.extend(hint[AdditionalRustSrcsProviderInfo].unstable_rust_features)
+    return collections.uniq(features)
+
 def _get_additional_rust_deps_from_provider(provider):
     """Returns `deps` and `cc_deps` associated with the `provider`.
     """
@@ -351,6 +358,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         header_includes.append(hdr.path)
 
     extra_rs_srcs = collections.uniq(extra_rs_srcs + _get_additional_rust_srcs(ctx))
+    unstable_rust_features = _get_unstable_rust_features(ctx)
     extra_deps = collections.uniq(extra_deps + _get_additional_rust_deps(ctx))
 
     extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx)
@@ -376,6 +384,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ),
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
+        unstable_rust_features = unstable_rust_features,
         deps_for_cc_file = [target[CcInfo]] + [
             d.cc_info
             for d in binding_infos

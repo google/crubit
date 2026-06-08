@@ -240,6 +240,9 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
       !status.ok()) {
     return status;
   }
+  invocation.ir_.unstable_rust_features.assign(
+      options.unstable_rust_features.begin(),
+      options.unstable_rust_features.end());
   return invocation.ir_;
 }
 

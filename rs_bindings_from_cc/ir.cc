@@ -1710,6 +1710,7 @@ llvm::json::Value IR::ToJson() const {
       {"items", std::move(json_items)},
       {"top_level_item_ids", std::move(top_level_item_ids_json)},
       {"crubit_features", std::move(features_json)},
+      {"unstable_rust_features", unstable_rust_features},
   };
   if (!crate_root_path.empty()) {
     result["crate_root_path"] = crate_root_path;
@@ -1775,6 +1776,8 @@ void IR::ToFlatProto(flat_proto::IRProto* proto) const {
     absl::c_sort(sorted_features);
     set.mutable_features()->Add(sorted_features.begin(), sorted_features.end());
   }
+  proto->mutable_unstable_rust_features()->Add(unstable_rust_features.begin(),
+                                               unstable_rust_features.end());
 }
 
 std::string ItemToString(const IR::Item& item) {

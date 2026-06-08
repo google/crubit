@@ -43,6 +43,7 @@ struct CmdlineArgs {
   absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets;
 
   std::vector<std::string> extra_rs_srcs;
+  std::vector<std::string> unstable_rust_features;
 
   std::vector<std::string> srcs_to_scan_for_instantiations;
   std::string instantiations_out;

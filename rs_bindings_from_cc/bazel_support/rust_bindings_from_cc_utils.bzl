@@ -42,8 +42,9 @@ def generate_and_compile_bindings(
         action_inputs,
         target_args,
         extra_rs_srcs,
-        deps_for_cc_file,
-        deps_for_rs_file,
+        unstable_rust_features = [],
+        deps_for_cc_file = [],
+        deps_for_rs_file = depset(),
         extra_cc_compilation_action_inputs = [],
         extra_rs_bindings_from_cc_cli_flags = [],
         should_generate_bindings = True,
@@ -61,6 +62,7 @@ def generate_and_compile_bindings(
       target_args: A depset of strings, each one representing mapping of target to
                         its per-target arguments (headers, features) in json format.
       extra_rs_srcs: list[tuple[file, str]]: Additional source file and module path pairs for the Rust crate.
+      unstable_rust_features: list[str]: List of unstable rustc features to enable via `#![feature(...)]`.
       deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.
       deps_for_rs_file: depset[DepVariantInfo]: DepVariantInfos needed by the generated Rust source file.
       extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
@@ -108,6 +110,7 @@ def generate_and_compile_bindings(
         action_inputs = action_inputs,
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
+        unstable_rust_features = unstable_rust_features,
         extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
     )
 

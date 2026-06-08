@@ -107,6 +107,7 @@ where
                 (label, crubit_feature::SerializedCrubitFeatures(features.into()))
             })
             .collect(),
+        unstable_rust_features: vec![],
     })
 }
 
@@ -2258,6 +2259,8 @@ pub struct FlatIR {
     pub crate_root_path: Option<Rc<str>>,
     #[serde(default)]
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
+    #[serde(default)]
+    pub unstable_rust_features: Vec<String>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
@@ -2285,6 +2288,7 @@ impl Debug for FlatIR {
             top_level_item_ids,
             crate_root_path,
             crubit_features,
+            unstable_rust_features,
         } = self;
         f.debug_struct("FlatIR")
             .field("public_headers", public_headers)
@@ -2293,6 +2297,7 @@ impl Debug for FlatIR {
             .field("top_level_item_ids", &DebugBTreeMap(top_level_item_ids))
             .field("crate_root_path", crate_root_path)
             .field("crubit_features", &DebugBTreeMap(crubit_features))
+            .field("unstable_rust_features", unstable_rust_features)
             .finish()
     }
 }
@@ -2314,6 +2319,10 @@ pub struct IR {
 impl IR {
     pub fn flat_ir(&self) -> &FlatIR {
         &self.flat_ir
+    }
+
+    pub fn unstable_rust_features(&self) -> &[String] {
+        &self.flat_ir.unstable_rust_features
     }
 
     pub fn item_id_to_item_idx(&self) -> &HashMap<ItemId, usize> {
@@ -2546,6 +2555,7 @@ mod tests {
             items: vec![],
             crate_root_path: None,
             crubit_features: Default::default(),
+            unstable_rust_features: vec![],
         };
         assert_eq!(ir.flat_ir, expected);
     }

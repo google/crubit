@@ -85,6 +85,10 @@ ABSL_FLAG(std::string, target_args, "",
           "]");
 ABSL_FLAG(std::vector<std::string>, extra_rs_srcs, std::vector<std::string>(),
           "Additional Rust source files to include into the crate.");
+ABSL_FLAG(
+    std::vector<std::string>, unstable_rust_features,
+    std::vector<std::string>(),
+    "Additional unstable rustc features to enable via `#![feature(...)]`.");
 ABSL_FLAG(std::vector<std::string>, srcs_to_scan_for_instantiations,
           std::vector<std::string>(),
           "[template instantiation mode only] all Rust source files of a crate "
@@ -238,6 +242,7 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .kythe_default_corpus = absl::GetFlag(FLAGS_kythe_default_corpus),
       .public_headers = PublicHeaders(),
       .extra_rs_srcs = absl::GetFlag(FLAGS_extra_rs_srcs),
+      .unstable_rust_features = absl::GetFlag(FLAGS_unstable_rust_features),
       .srcs_to_scan_for_instantiations =
           absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
       .instantiations_out = absl::GetFlag(FLAGS_instantiations_out),

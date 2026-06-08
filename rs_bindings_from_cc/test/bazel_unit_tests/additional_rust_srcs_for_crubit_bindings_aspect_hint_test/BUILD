@@ -66,3 +66,31 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "additional_rust_srcs_try_trait",
+    srcs = [
+        "try_trait_stub.rs",
+    ],
+    unstable_rust_features = ["try_trait_v2"],
+)
+
+crubit_test_cc_library(
+    name = "cc_lib_with_additional_rust_srcs_try_trait",
+    hdrs = ["empty.h"],
+    aspect_hints = [
+        ":additional_rust_srcs_try_trait",
+        "//features:supported",
+    ],
+)
+
+crubit_rust_test(
+    name = "additional_rust_srcs_try_trait_test",
+    srcs = ["try_trait_test.rs"],
+    cc_deps = [
+        ":cc_lib_with_additional_rust_srcs_try_trait",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

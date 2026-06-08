@@ -591,12 +591,19 @@ pub fn generate_bindings_tokens(
         })
     };
 
-    let features = if features.is_empty() {
+    let all_features = features.into_iter().map(|f| quote! { #f }).chain(
+        ir.unstable_rust_features().iter().map(|f| {
+            let ident = format_ident!("{}", f);
+            quote! { #ident }
+        }),
+    );
+    let all_features: Vec<_> = all_features.collect();
+
+    let features = if all_features.is_empty() {
         quote! {}
     } else {
-        let feature_iter = features.into_iter();
         quote! {
-            #![feature( #(#feature_iter),* )]  __NEWLINE__
+            #![feature( #(#all_features),* )]  __NEWLINE__
             #![allow(stable_features)]
         }
     };

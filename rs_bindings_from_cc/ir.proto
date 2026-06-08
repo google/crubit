@@ -544,4 +544,5 @@ message IRProto {
   map<string, ItemIdList> top_level_item_ids = 4;
   string crate_root_path = 5;
   map<string, FeatureSet> crubit_features = 6;
+  repeated string unstable_rust_features = 7;
 }

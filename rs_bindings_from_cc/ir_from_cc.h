@@ -39,6 +39,7 @@ struct IrFromCcOptions final {
       virtual_headers_contents_for_testing = {};
   absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets = {};
   absl::Span<const std::string> extra_rs_srcs = {};
+  absl::Span<const std::string> unstable_rust_features = {};
   absl::Span<const absl::string_view> clang_args = {};
   absl::Span<const std::string> extra_instantiations = {};
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
