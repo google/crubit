@@ -132,15 +132,11 @@ extern "C" void __crubit_thunk_clone_urequest_ustats(
 }
 inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
   auto&& self = *this;
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    ::foo_service::FooRequestStats val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<::foo_service::FooRequestStats> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_clone_urequest_ustats(
       self, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -150,8 +146,9 @@ extern "C" void __crubit_thunk_update_urequest_ustats(
 inline void FooService::update_request_stats(
     ::foo_service::FooRequestStats updated_stats) {
   auto&& self = *this;
+  crubit::Slot updated_stats_slot((::std::move(updated_stats)));
   return __crubit_internal::__crubit_thunk_update_urequest_ustats(
-      self, &updated_stats);
+      self, updated_stats_slot.Get());
 }
 
 namespace __crubit_internal {

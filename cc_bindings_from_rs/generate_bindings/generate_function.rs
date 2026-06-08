@@ -168,8 +168,15 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
             BridgedType::Legacy { cpp_type, .. } => {
                 if let CcType::Pointer { .. } = cpp_type {
                     quote! { #cc_ident }
-                } else {
+                } else if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
                     quote! { & #cc_ident }
+                } else {
+                    includes.insert(db.support_header("internal/slot.h"));
+                    let slot_name = expect_format_cc_ident(&format!("{cc_ident}_slot"));
+                    statements.extend(quote! {
+                        crubit::Slot #slot_name((::std::move(#cc_ident)));
+                    });
+                    quote! { #slot_name.Get() }
                 }
             }
             BridgedType::Composable(composable) => {
@@ -293,6 +300,7 @@ fn format_ty_for_cc_amending_prereqs<'tcx>(
 
 fn cc_return_value_from_c_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
+    post_analysis_typing_env: ty::TypingEnv<'tcx>,
     ident: Ident,
     ty: Ty<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
@@ -310,27 +318,43 @@ fn cc_return_value_from_c_abi<'tcx>(
                 let cpp_type = db
                     .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
                     .into_tokens(prereqs);
-                // Below, we use a union to allocate uninitialized memory that fits cpp_type.
-                // The union prevents the type from being default constructed. It's
-                // the responsibility of the thunk to properly initialize the
-                // memory. In the union's destructor we use std::destroy_at to call
-                // the cpp_type's destructor after the value has been moved on return.
-                let union_type = expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
-                let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-                storage_statements.extend(quote! {
-                    union #union_type {
-                        constexpr #union_type() {}
-                        ~#union_type() { ::std::destroy_at(&this->val); }
-                        #cpp_type val;
-                    } #local_name;
-                    auto* #storage_name = &#local_name.val;
-                });
-                Ok(ReturnConversion {
-                    storage_name: storage_name.clone(),
-                    unpack_expr: quote! {
-                        ::std::move(#local_name.val)
-                    },
-                })
+                if ty.needs_drop(db.tcx(), post_analysis_typing_env) {
+                    prereqs.includes.insert(db.support_header("internal/slot.h"));
+                    let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+                    storage_statements.extend(quote! {
+                        crubit::Slot<#cpp_type> #local_name;
+                        auto* #storage_name = #local_name.Get();
+                    });
+                    Ok(ReturnConversion {
+                        storage_name: storage_name.clone(),
+                        unpack_expr: quote! {
+                            ::std::move(#local_name).AssumeInitAndTakeValue()
+                        },
+                    })
+                } else {
+                    // Below, we use a union to allocate uninitialized memory that fits cpp_type.
+                    // The union prevents the type from being default constructed. It's
+                    // the responsibility of the thunk to properly initialize the
+                    // memory. In the union's destructor we use std::destroy_at to call
+                    // the cpp_type's destructor after the value has been moved on return.
+                    let union_type =
+                        expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
+                    let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+                    storage_statements.extend(quote! {
+                        union #union_type {
+                            constexpr #union_type() {}
+                            ~#union_type() { ::std::destroy_at(&this->val); }
+                            #cpp_type val;
+                        } #local_name;
+                        auto* #storage_name = &#local_name.val;
+                    });
+                    Ok(ReturnConversion {
+                        storage_name: storage_name.clone(),
+                        unpack_expr: quote! {
+                            ::std::move(#local_name.val)
+                        },
+                    })
+                }
             }
             BridgedType::Composable(composable) => {
                 // make the buffer space for it, then decode the buffer into a value
@@ -376,6 +400,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 unpack_expr: element_unpack_expr,
             } = cc_return_value_from_c_abi(
                 db,
+                post_analysis_typing_env,
                 tuple_element_ident,
                 tuple_tys[i],
                 prereqs,
@@ -695,6 +720,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     } else {
         let ReturnConversion { storage_name, unpack_expr } = cc_return_value_from_c_abi(
             db,
+            post_analysis_typing_env(tcx, def_id),
             expect_format_cc_ident("return_value"),
             rs_return_type,
             &mut prereqs,

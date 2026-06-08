@@ -12,6 +12,7 @@ crubit_test_cc_library(
     testonly = 1,
     hdrs = ["test_helpers.h"],
     aspect_hints = ["//features:experimental"],
+    visibility = ["//:__subpackages__"],
     deps = ["//support:annotations"],
 )
 
