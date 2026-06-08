@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <type_traits>
 
@@ -125,6 +126,13 @@ TEST(StrTest, StrCat) {
   static constexpr absl::string_view kStr = "12345";
   static constexpr StrRef kStrRef = "12345";
   EXPECT_EQ(absl::StrCat(kStrRef), kStr);
+}
+
+TEST(StrTest, OStream) {
+  static constexpr StrRef kStrRef = "12345";
+  std::ostringstream os;
+  os << kStrRef;
+  EXPECT_EQ(os.str(), "12345");
 }
 
 TEST(StrTest, FromUtf8OnNonUtf8ReturnsNullopt) {

@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <ostream>
 #include <string_view>
 #include <type_traits>
 
@@ -183,6 +184,10 @@ constexpr auto operator<=>(StrRef lhs, const char* rhs) noexcept {
 
 constexpr auto operator<=>(const char* lhs, StrRef rhs) noexcept {
   return std::string_view(lhs) <=> rhs.to_string_view();
+}
+
+constexpr std::ostream& operator<<(std::ostream& os, StrRef str) {
+  return os << str.to_string_view();
 }
 
 }  // namespace rs_std
