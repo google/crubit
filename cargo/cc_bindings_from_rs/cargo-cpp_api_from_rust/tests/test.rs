@@ -317,3 +317,32 @@ fn test_subcommand_different_build_configurations() -> Result<(), Box<dyn std::e
 
     Ok(())
 }
+
+#[test] // allow_core_test
+fn test_subcommand_out_dir() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_project");
+    let explicit_out_dir = tmp_dir.path().join("explicit_out_dir");
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+    cmd.arg("--out-dir");
+    cmd.arg(&explicit_out_dir);
+
+    let output = cmd.output().expect("Failed to execute");
+
+    if !output.status.success() {
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        panic!("cargo-cpp_api_from_rust failed");
+    }
+
+    let headers_dir = explicit_out_dir.join("include").join("crubit");
+    assert!(headers_dir.join("test_project.h").exists());
+
+    let debug_dir = tmp_dir.path().join("debug");
+    assert!(debug_dir.join("libtest_project.a").exists());
+
+    Ok(())
+}

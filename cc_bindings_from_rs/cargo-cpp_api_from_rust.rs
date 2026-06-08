@@ -22,7 +22,7 @@
 #![feature(rustc_private)]
 
 use arc_anyhow::{anyhow, bail, Result};
-use cargo_metadata::camino::Utf8PathBuf;
+use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
 use cargo_metadata::{Artifact, Message, Metadata, Package, PackageId, Resolve};
 use clap::Parser;
 use cmdline::Cmdline;
@@ -47,6 +47,8 @@ struct Cli {
     target_dir: Option<Utf8PathBuf>,
     #[arg(last = true)]
     build_args: Vec<String>,
+    #[arg(long, value_name = "DIRECTORY")]
+    out_dir: Option<Utf8PathBuf>,
 }
 
 struct ArtifactInfo {
@@ -93,7 +95,13 @@ fn main() -> Result<()> {
 
     let pkg_to_artifact = build_crate_and_stream_artifacts(&build_args)?;
 
-    let ctx = BindingGenerationContext::new(pkg_to_artifact, root.clone(), &metadata, target_dir)?;
+    let ctx = BindingGenerationContext::new(
+        pkg_to_artifact,
+        root.clone(),
+        &metadata,
+        target_dir,
+        cli.out_dir.as_deref(),
+    )?;
     let lib_rs_content = ctx.generate_bindings()?;
 
     ctx.compile_staticlib(lib_rs_content, &metadata)?;
@@ -204,7 +212,11 @@ struct Directories {
     host_deps_dir: Utf8PathBuf,
 }
 impl Directories {
-    fn new(target_dir: Utf8PathBuf, profile_dir: Utf8PathBuf) -> Result<Self> {
+    fn new(
+        target_dir: Utf8PathBuf,
+        profile_dir: Utf8PathBuf,
+        out_dir: Option<&Utf8Path>,
+    ) -> Result<Self> {
         let profile_name = profile_dir
             .file_name()
             .ok_or_else(|| {
@@ -213,7 +225,7 @@ impl Directories {
             .to_string();
         let profile_dir = target_dir.join(profile_dir);
         let deps_dir = profile_dir.join("deps");
-        let headers_dir = profile_dir.join("include");
+        let headers_dir = out_dir.unwrap_or(profile_dir.as_path()).join("include");
         let host_deps_dir = target_dir.join(&profile_name).join("deps");
         Ok(Directories { profile_dir, profile_name, deps_dir, headers_dir, host_deps_dir })
     }
@@ -223,7 +235,7 @@ struct CrateBindingInfo<'a> {
     pkg_id_repr: &'a str,
     crate_name: &'a str,
     rs_crate_name: &'a str,
-    artifact_path: &'a cargo_metadata::camino::Utf8Path,
+    artifact_path: &'a Utf8Path,
     hash: &'a str,
     fresh: bool,
     is_stdlib: bool,
@@ -243,6 +255,7 @@ impl BindingGenerationContext {
         root: Package,
         metadata: &Metadata,
         target_dir: &Utf8PathBuf,
+        out_dir: Option<&Utf8Path>,
     ) -> Result<Self> {
         // It's important we check the path of root (and not one of our dependencies) or else we'll get
         // the wrong path.
@@ -263,7 +276,7 @@ impl BindingGenerationContext {
                 ).map(|p| p.to_owned())
             })
             .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
-        let dirs = Directories::new(target_dir.to_owned(), profile_dir)?;
+        let dirs = Directories::new(target_dir.to_owned(), profile_dir, out_dir)?;
 
         let resolve = metadata
             .resolve
