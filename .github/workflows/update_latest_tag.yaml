@@ -1,0 +1,43 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+name: Update Latest Tag
+
+on:
+  schedule:
+    # Run daily at 03:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI for testing
+
+permissions:
+  contents: write # Required to update and push tags to the repository
+
+jobs:
+  update-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Get latest passing commit and update tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Find the latest commit SHA on main where the primary CI workflow (rust.yml) succeeded
+          LATEST_SHA=$(gh run list \
+            --branch main \
+            --workflow rust.yml \
+            --status success \
+            --limit 1 \
+            --json headSha \
+            --jq '.[0].headSha')
+
+          if [ -z "$LATEST_SHA" ]; then
+            echo "Error: No successful CI runs found for the main branch."
+            exit 1
+          fi
+
+          echo "Latest passing commit SHA: $LATEST_SHA"
+
+          # Force push the tag 'latest' to point to the passing commit SHA
+          git push --force origin "$LATEST_SHA:refs/tags/latest"
