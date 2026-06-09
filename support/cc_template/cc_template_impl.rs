@@ -72,7 +72,7 @@ fn make_syn_error<T: Into<String>>(message: T) -> syn::Error {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
     use maplit::hashmap;
     use std::path::Path;
 

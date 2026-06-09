@@ -2,7 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use googletest::prelude::*;
+use googletest::matchers::eq;
+use googletest::{expect_eq, expect_that, gtest};
 use std::sync::{Arc, Mutex};
 use uses_anyinvocable::*;
 

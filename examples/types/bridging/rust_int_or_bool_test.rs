@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use either::either::Either;
-use googletest::prelude::*;
+use googletest::matchers::pat;
+use googletest::{expect_that, gtest};
 use int_or_bool::{MakeBool, MakeInt};
 
 #[gtest]

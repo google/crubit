@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use cc_std;
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn test_string_type_as_function_arg() {

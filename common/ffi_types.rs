@@ -94,7 +94,7 @@ impl FfiU8SliceBox {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     #[gtest]
     fn test_from_into_ffi_u8_slice_box() {

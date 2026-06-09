@@ -580,7 +580,7 @@ fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     use super::Result;
     use quote::quote;

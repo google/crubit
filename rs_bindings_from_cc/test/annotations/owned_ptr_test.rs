@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn make_and_use_thing_with_owned_ptr() {

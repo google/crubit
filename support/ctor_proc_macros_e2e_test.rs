@@ -15,7 +15,7 @@
 // more_qualified_paths is used to make project_pin_type!() simpler to use.
 #![feature(negative_impls)]
 
-use googletest::prelude::*;
+use googletest::gtest;
 
 // pathological shadowed names: shadow important modules that the macros use.
 mod std {}

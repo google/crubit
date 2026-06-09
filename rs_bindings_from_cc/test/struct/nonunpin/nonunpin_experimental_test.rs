@@ -8,7 +8,7 @@ use ctor::{
     ctor, emplace, mov, Assign, ConstRvalueReference, Ctor, CtorNew, Emplace, Infallible,
     RvalueReference,
 };
-use googletest::prelude::*;
+use googletest::gtest;
 use nonunpin_experimental::Nonunpin;
 use std::pin::Pin;
 

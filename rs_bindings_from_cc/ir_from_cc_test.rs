@@ -4,7 +4,8 @@
 #![cfg(test)]
 
 use arc_anyhow::Result;
-use googletest::prelude::*;
+use googletest::matchers::{eq, field};
+use googletest::{expect_eq, expect_that, fail, gtest, OrFail};
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_testing::{

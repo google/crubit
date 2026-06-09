@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use ctor::{emplace, CtorNew as _};
-use googletest::prelude::*;
+use googletest::gtest;
 use oops::Upcast as _;
 use upcast::*;
 

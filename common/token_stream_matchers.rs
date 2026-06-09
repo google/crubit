@@ -415,7 +415,7 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use super::internal::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
     use quote::quote;
 
     macro_rules! assert_rs_cc_matches {

@@ -166,7 +166,7 @@ fn to_use_stmts(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
     use std::ops::Deref;
 
     #[gtest]

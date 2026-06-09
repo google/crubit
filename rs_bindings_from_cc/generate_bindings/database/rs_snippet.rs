@@ -2171,7 +2171,8 @@ mod tests {
     use super::*;
     use arc_anyhow::Result;
     use error_report::anyhow;
-    use googletest::prelude::*;
+    use googletest::matchers::eq;
+    use googletest::{expect_that, gtest};
     use token_stream_matchers::assert_rs_matches;
 
     fn make_existing_rust_type(name: Rc<str>, is_same_abi: bool) -> RsTypeKind {

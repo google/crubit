@@ -208,7 +208,7 @@ unsafe impl<T> Inherits<T> for T {
 #[cfg(test)]
 mod test {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     fn ptr_location<T: std::ops::Deref>(x: T) -> usize {
         &*x as *const _ as *const u8 as usize

@@ -189,7 +189,7 @@ impl<'scope, 'formatter> Debug for LossyFormatter<'scope, 'formatter> {
 mod tests {
     use super::*;
     use googletest;
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest, verify_eq, verify_false, verify_true, GoogleTestSupport};
     use std::fmt::Display;
     use std::io::Write;
 

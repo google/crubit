@@ -5,7 +5,7 @@
 #![cfg(test)]
 
 use cc_template::cc_template;
-use googletest::prelude::*;
+use googletest::gtest;
 
 /// Test the `cc_template!` macro with:
 /// * the JSON file `__cc_template_instantiations.json` (the environment

@@ -2,7 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use googletest::prelude::*;
+use googletest::matchers::eq;
+use googletest::{expect_pred, expect_that, gtest};
 use item_exists::{type_exists, value_exists};
 
 #[gtest]

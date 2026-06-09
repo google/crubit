@@ -463,7 +463,7 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest};
 
     #[gtest]
     fn zero_params_by_bridge_test() {

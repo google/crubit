@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use googletest::prelude::*;
+use googletest::gtest;
 use ir_testing::ir_proto_from_cc;
 
 fn get_ir(header: &str) -> Result<ir::IR> {

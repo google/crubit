@@ -5,7 +5,7 @@ use item_exists::{type_exists, value_exists};
 
 mod definitions {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     #[gtest]
     fn disabled_struct_has_no_bindings() {
@@ -27,7 +27,7 @@ mod definitions {
 
 mod aliases {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     /// This test will fail if aliases expose a struct whose bindings were
     /// disabled.
@@ -83,7 +83,7 @@ mod aliases {
 
 mod functions {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     #[gtest]
     fn test_functions_disabled_when_parameter_types_are() {
@@ -100,7 +100,7 @@ mod functions {
 
 mod structs {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     #[gtest]
     fn test_struct_enabled() {

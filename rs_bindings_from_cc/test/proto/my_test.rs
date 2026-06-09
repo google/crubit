@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use forward_declare::{CppCast, UnsafeCppCast};
-use googletest::prelude::*;
+use googletest::matchers::eq;
+use googletest::{expect_that, gtest};
 
 #[gtest]
 fn test_make_request() {

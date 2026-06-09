@@ -11,7 +11,7 @@
 // Allow unused imports so that we can produce pathological aliases.
 #![allow(unused_imports)]
 
-use googletest::prelude::*;
+use googletest::gtest;
 
 // pathological shadowed names: shadow important modules that the macros use.
 mod std {}

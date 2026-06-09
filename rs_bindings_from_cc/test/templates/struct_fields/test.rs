@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use cref::CRef;
-use googletest::prelude::*;
+use googletest::gtest;
 use struct_fields::*;
 
 // This tests whether Crubit supports template specialization/instantiation in a

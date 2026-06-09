@@ -15,7 +15,7 @@ pub fn add_two_and_three() -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     #[gtest]
     fn test_math() {

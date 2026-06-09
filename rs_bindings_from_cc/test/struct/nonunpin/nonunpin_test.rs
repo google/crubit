@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use ctor::{ctor, emplace, CtorNew};
-use googletest::prelude::*;
+use googletest::gtest;
 use nonunpin::{Nonmovable, Nonunpin, NonunpinStruct, ReturnsNonmovable};
 use std::pin::Pin;
 

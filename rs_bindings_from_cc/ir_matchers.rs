@@ -136,7 +136,7 @@ pub mod internal {
 
 #[cfg(test)]
 mod tests {
-    use googletest::prelude::*;
+    use googletest::gtest;
     use quote::quote;
 
     /// We aren't testing platform-specific details, just the matchers.

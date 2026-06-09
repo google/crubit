@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(allocator_api)]
 
-use googletest::prelude::*;
+use googletest::matchers::{ge, le};
+use googletest::{expect_eq, expect_that, gtest};
 use static_assertions::assert_impl_all;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -781,7 +782,7 @@ fn test_is_sync() {
 }
 
 mod layout_tests {
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest};
     use std::ptr::from_mut;
 
     /// Tests that `vector` has the same memory layout as `std::vector` in C++.
@@ -813,7 +814,7 @@ mod layout_tests {
 }
 
 mod allocation_tests {
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest};
     use std::mem::forget;
     use std::mem::MaybeUninit;
     use std::ptr::from_mut;
@@ -904,7 +905,7 @@ mod allocation_tests {
 }
 
 mod alignment_tests {
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest};
     // Tests that vector can hold a struct with correct alignment.
     #[repr(align(1024))]
     struct OveralignedStuct {
@@ -923,7 +924,7 @@ mod alignment_tests {
 }
 
 mod partial_equal_tests {
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest};
 
     #[gtest]
     fn test_vector_eq() {

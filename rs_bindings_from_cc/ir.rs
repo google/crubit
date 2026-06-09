@@ -2530,7 +2530,7 @@ pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ide
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     #[gtest]
     fn test_identifier_debug_print() {

@@ -577,7 +577,8 @@ pub fn format_cc_includes(set_of_includes: &BTreeSet<CcInclude>) -> TokenStream 
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::matchers::starts_with;
+    use googletest::{expect_that, gtest};
     use itertools::Itertools;
     use quote::{quote, ToTokens};
     use token_stream_matchers::{assert_cc_matches, assert_rs_matches};

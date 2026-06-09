@@ -5,7 +5,7 @@
 use cref::{CMut, CRef};
 use ctor::emplace;
 use forward_declare::CppCast;
-use googletest::prelude::*;
+use googletest::gtest;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
 
 /// Given a complete UnpinStruct, all APIs accepting a (possibly incomplete)

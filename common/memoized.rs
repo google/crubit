@@ -461,7 +461,7 @@ pub mod internal {
 
 #[cfg(test)]
 pub mod tests {
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest};
     use std::cell::{Cell, RefCell};
     use std::rc::Rc;
 

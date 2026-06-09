@@ -243,7 +243,7 @@ impl<'de> Deserialize<'de> for SerializedCrubitFeatures {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     #[gtest]
     fn test_serialized_crubit_feature() {

@@ -4,7 +4,7 @@
 
 use cref::CRef;
 use forward_declare::CppCast;
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn test_alias_to_template_instantiation() {

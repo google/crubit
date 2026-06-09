@@ -4,7 +4,8 @@
 
 use cc_std::std::raw_string_view;
 use cc_std::std::string_view;
-use googletest::prelude::*;
+use googletest::matchers::{contains_substring, StrMatcherConfigurator};
+use googletest::{assert_that, gtest};
 use std::sync::LazyLock;
 use string_view_cc_apis::crubit_string_view::GetDefault;
 use string_view_cc_apis::crubit_string_view::GetHelloWorld;

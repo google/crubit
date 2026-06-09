@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 use item_exists::value_exists;
 
-use googletest::prelude::*;
+use googletest::{expect_pred, gtest};
 
 #[gtest]
 fn test_disabled_header() {

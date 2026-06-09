@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use forward_declare::CppCast;
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn test_bridging() {

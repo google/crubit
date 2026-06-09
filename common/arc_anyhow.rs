@@ -278,7 +278,7 @@ macro_rules! bail {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     use super::Result as AAResult;
 

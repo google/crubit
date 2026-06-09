@@ -4,7 +4,7 @@
 
 use add::*;
 use ctor::emplace;
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn test_add_const_member_int() {

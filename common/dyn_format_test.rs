@@ -2,7 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 use dyn_format::Format;
-use googletest::prelude::*;
+use googletest::matchers::{contains_substring, displays_as, eq, err};
+use googletest::{assert_that, gtest};
 
 #[gtest]
 fn test_empty() {

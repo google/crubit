@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate_derive::*;
-use googletest::prelude::*;
+use googletest::gtest;
 
 static_assertions::assert_not_impl_all!(StructWithDerives: Clone, Copy);
 static_assertions::assert_impl_all!(StructWithDerives: std::fmt::Debug, Unpin);

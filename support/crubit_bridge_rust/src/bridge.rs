@@ -436,7 +436,8 @@ macro_rules! unstable_return {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::expect_eq;
+    use googletest::gtest;
 
     #[gtest]
     fn test_encode_decode_u8_pair() {

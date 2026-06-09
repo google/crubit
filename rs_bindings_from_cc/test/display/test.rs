@@ -6,7 +6,8 @@ use displayables::{
     CanAbslStringify, CanAbslStringifyAndOstream, CanAbslStringifyByFill, CanAbslStringifyByFormat,
     CanOstream, DisplayInRust, DisplayableEnum, TemplatedNotDisplayable, TemplatedStringView,
 };
-use googletest::prelude::*;
+use googletest::matchers::{anything, err};
+use googletest::{expect_eq, expect_that, gtest};
 use static_assertions::assert_not_impl_any;
 use std::fmt::Display;
 use std::io::Write;

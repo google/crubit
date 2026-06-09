@@ -775,7 +775,7 @@ fn recursively_pinned_impl(
 #[cfg(test)]
 mod test {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
     use token_stream_matchers::assert_rs_matches;
 
     /// Essentially a change detector, but handy for debugging.

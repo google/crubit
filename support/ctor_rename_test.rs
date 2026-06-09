@@ -7,7 +7,7 @@
 // Callers are expected to enable `negative_impls`.
 #![feature(negative_impls)]
 
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn test_derive_default_unit_struct() {

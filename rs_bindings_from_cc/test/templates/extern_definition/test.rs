@@ -4,7 +4,7 @@
 
 use actual_instantiation::*;
 use cref::CRef;
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn test_member_function_of_class_template_defined_in_cc_file() {

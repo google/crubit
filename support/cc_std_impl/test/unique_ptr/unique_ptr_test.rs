@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use googletest::prelude::*;
+use googletest::gtest;
 use std::sync::atomic::{AtomicI32, Ordering};
 
 static INSTANCE_COUNTER: AtomicI32 = AtomicI32::new(0);

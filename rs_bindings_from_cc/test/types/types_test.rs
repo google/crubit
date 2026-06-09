@@ -7,7 +7,7 @@
 use core::cell::Cell;
 use core::ffi::c_void;
 use cref::{CMut, CRef};
-use googletest::prelude::*;
+use googletest::gtest;
 
 trait ParameterIs<P> {}
 

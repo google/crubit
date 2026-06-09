@@ -522,7 +522,7 @@ impl Drop for FatalErrors {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::{expect_eq, gtest};
 
     use arc_anyhow::Result;
 

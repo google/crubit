@@ -103,7 +103,7 @@ fn embed_provenance_map(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::gtest;
 
     use anyhow::Result;
     use token_stream_printer::SubstringWithProvenance;

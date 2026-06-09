@@ -4,7 +4,7 @@
 
 use cref::CRef;
 use func_return_and_param_types::*;
-use googletest::prelude::*;
+use googletest::gtest;
 
 // This tests whether Crubit supports template specialization/instantiation in a
 // function return type, or in a function parameter type - see b/228868369.

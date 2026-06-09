@@ -4,7 +4,7 @@
 
 use error_report::{anyhow, ErrorReport, ErrorReporting, SourceLanguage};
 use errors::Errors;
-use googletest::prelude::*;
+use googletest::{expect_eq, expect_false, fail, gtest, OrFail};
 
 #[gtest]
 fn test_errors_consolidate_on_empty_list_returns_ok() -> googletest::Result<()> {

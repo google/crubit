@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use composable_bridging_lib::*;
-use googletest::prelude::*;
+use googletest::matchers::{eq, ok};
+use googletest::{assert_that, expect_eq, expect_false, expect_that, expect_true, gtest};
 
 #[gtest]
 fn test_vec3() {

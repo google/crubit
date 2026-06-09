@@ -6,7 +6,8 @@
 use arc_anyhow::Result;
 use error_report::{ErrorReport, FatalErrors, SourceLanguage};
 use generate_bindings::new_database;
-use googletest::prelude::*;
+use googletest::matchers::contains_substring;
+use googletest::{assert_that, gtest};
 use ir_matchers::assert_ir_matches;
 use ir_testing::{retrieve_record, with_full_lifetime_macros};
 use lifetime_defaults_transform::{
