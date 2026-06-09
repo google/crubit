@@ -1139,7 +1139,7 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
                 lang_items.clone_trait(),
                 lang_items.copy_trait(),
                 tcx.get_diagnostic_item(sym::Into),
-                lang_items.from_trait(),
+                tcx.get_diagnostic_item(sym::From),
                 tcx.get_diagnostic_item(sym::PartialEq),
                 tcx.get_diagnostic_item(sym::Default),
                 lang_items.partial_ord_trait(),
