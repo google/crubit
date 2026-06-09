@@ -8,6 +8,8 @@ members = [
   "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust",
   "cargo/rs_bindings_from_cc/rs_bindings_from_cc",
   "support/ffi_11",
+  "support/crubit_bridge_rust",
+  "support/crubit_annotate"
 ]
 exclude = [
   "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust/tests/test_project",

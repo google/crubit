@@ -412,6 +412,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "crubit_annotate"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "crubit_bridge_rust"
+version = "0.1.0"
+dependencies = [
+ "googletest",
+]
+
+[[package]]
 name = "crubit_build"
 version = "0.0.0"
 dependencies = [

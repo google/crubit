@@ -26,12 +26,33 @@ use core::ptr;
 /// for how it should be bridged, which is represented by a type that implements [`CrubitAbi`]:
 ///
 /// ```rust
+/// # use crubit_bridge_rust::{Encoder, Decoder, transmute_abi, CrubitAbi};
 /// pub struct OptionAbi<A>(pub A);
 ///
 /// unsafe impl<A: CrubitAbi> CrubitAbi for OptionAbi<A> {
 ///     type Value = Option<A::Value>;
 ///
 ///     // todo
+/// #    const SIZE: usize = std::mem::size_of::<bool>() + A::SIZE;
+/// #   fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+/// #       if let Some(inner) = value {
+/// #           transmute_abi().encode(true, encoder);
+/// #           self.0.encode(inner, encoder);
+/// #       } else {
+/// #           transmute_abi().encode(false, encoder);
+/// #       }
+/// #   }
+/// #   unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
+/// #       // SAFETY: the caller guarantees that the buffer contains a bool, and if the bool is true,
+/// #       // that the buffer also contains the value.
+/// #       unsafe {
+/// #           if transmute_abi().decode(decoder) {
+/// #               Some(self.0.decode(decoder))
+/// #           } else {
+/// #               None
+/// #           }
+/// #       }
+/// #   }
 /// }
 /// ```
 ///
@@ -42,10 +63,12 @@ use core::ptr;
 /// need to implement the other items in the trait:
 ///
 /// ```rust
+/// # use crubit_bridge_rust::{Encoder, Decoder, transmute_abi, CrubitAbi};
+/// # pub struct OptionAbi<A>(pub A);
 /// unsafe impl<A: CrubitAbi> CrubitAbi for OptionAbi<A> {
 ///     type Value = Option<A::Value>;
 ///
-///     const SIZE: usize = mem::size_of::<bool>() + A::SIZE;
+///     const SIZE: usize = std::mem::size_of::<bool>() + A::SIZE;
 ///
 ///     fn encode(self, value: Self::Value, encoder: &mut Encoder) {
 ///         if let Some(inner) = value {
@@ -110,12 +133,26 @@ pub unsafe trait CrubitAbi {
     /// # Examples
     ///
     /// ```rust
-    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for (A1, A2) {
+    /// # use crubit_bridge_rust::{Encoder, Decoder, CrubitAbi};
+    /// pub struct Pair<A1, A2>(A1, A2);
+    ///
+    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for Pair<A1, A2> {
     ///     fn encode(self, (a, b): Self::Value, encoder: &mut Encoder) {
-    ///         self.0.encode(a);
-    ///         self.1.encode(b);
+    ///         self.0.encode(a, encoder);
+    ///         self.1.encode(b, encoder);
     ///     }
     ///     // other items omitted...
+    /// #    type Value = (A1::Value, A2::Value);
+    /// #    const SIZE: usize = A1::SIZE + A2::SIZE;
+    /// #    unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
+    /// #        // SAFETY: The caller guarantees that the buffer contains an `A1::Value`, followed
+    /// #        // by an `A2::Value`, which is the understood ABI for a `(A1, A2)`.
+    /// #        unsafe {
+    /// #            let a = self.0.decode(decoder);
+    /// #            let b = self.1.decode(decoder);
+    /// #            (a, b)
+    /// #        }
+    /// #    }
     /// }
     /// ```
     fn encode(self, value: Self::Value, encoder: &mut Encoder);
@@ -133,17 +170,27 @@ pub unsafe trait CrubitAbi {
     /// # Examples
     ///
     /// ```rust
-    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for (A1, A2) {
+    /// # use crubit_bridge_rust::{Decoder, Encoder, CrubitAbi};
+    /// pub struct Pair<A1, A2>(A1, A2);
+    ///
+    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for Pair<A1, A2> {
     ///     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
     ///         // SAFETY: The caller guarantees that the buffer contains an `A1::Value`, followed
     ///         // by an `A2::Value`, which is the understood ABI for a `(A1, A2)`.
     ///         unsafe {
-    ///             let a = self.0.decode();
-    ///             let b = self.1.decode();
+    ///             let a = self.0.decode(decoder);
+    ///             let b = self.1.decode(decoder);
     ///             (a, b)
     ///         }
     ///     }
+    ///
     ///     // other items omitted...
+    /// #    type Value = (A1::Value, A2::Value);
+    /// #    const SIZE: usize = A1::SIZE + A2::SIZE;
+    /// #    fn encode(self, (a, b): Self::Value, encoder: &mut Encoder) {
+    /// #        self.0.encode(a, encoder);
+    /// #        self.1.encode(b, encoder);
+    /// #    }
     /// }
     /// ```
     ///

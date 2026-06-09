@@ -232,17 +232,17 @@ pub fn cpp_specialization(attribute: TokenStream, input: TokenStream) -> TokenSt
 ///     rust_to_cpp_converter="rust_string_to_cpp_string",
 /// )]
 /// pub struct CppString {
-///     ...
+///     value: String,
 /// }
 ///
 /// #[unsafe(no_mangle)]
 /// pub unsafe extern "C" fn rust_string_to_cpp_string(input: *const c_void, output: *mut c_void) {
-///     ...
+///     todo!()
 /// }
 ///
 /// #[unsafe(no_mangle)]
 /// pub unsafe extern "C" fn cpp_string_to_rust_string(input: *const c_void, output: *mut c_void) {
-///     ...
+///     todo!()
 /// }
 /// ```
 ///
@@ -277,7 +277,7 @@ pub fn cpp_bridge(attribute: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// ```
 /// #[crubit_annotate::cpp_name("Create")]
-/// pub fn new() -> i32 {...}
+/// pub fn new() -> i32 { 4 }
 /// ```
 #[proc_macro_attribute]
 pub fn cpp_name(attribute: TokenStream, input: TokenStream) -> TokenStream {

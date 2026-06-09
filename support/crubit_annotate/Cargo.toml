@@ -1,0 +1,21 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "crubit_annotate"
+version = "0.1.0"
+description = "Crubit annotations for Rust APIs."
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+proc-macro = true
+path = "src/crubit_annotate.rs"
+
+[dependencies]
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true

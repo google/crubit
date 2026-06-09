@@ -71,7 +71,7 @@ rust_static_library("bridge_rust") {
   crate_root = "bridge.rs"
   edition = "2024"
   sources = [
-    "bridge.rs",
+    "crubit_bridge_rust/src/bridge.rs",
   ]
   allow_unsafe = true
   no_clippy = true
