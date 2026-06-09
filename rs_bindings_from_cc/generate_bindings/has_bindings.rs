@@ -43,14 +43,14 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
         }
 
         if let Item::Record(parent_record) = parent {
-            if item.is_type_definition() {
+            if item.is_type_definition()
                 // If we have an ancestor that is a template specialization, we can't generate bindings.
                 // The parent check ensures that all ancestors are checked as well.
-                if parent_record.template_specialization.is_some() {
-                    return Err(NoBindingsReason::Unsupported(anyhow!(
-                        "b/485949049: type definitions nested inside templated records are not yet supported"
-                    )));
-                }
+                && parent_record.template_specialization.is_some()
+            {
+                return Err(NoBindingsReason::Unsupported(anyhow!(
+                    "b/485949049: type definitions nested inside templated records are not yet supported"
+                )));
             }
 
             if item.place_in_nested_module_if_nested_in_record() {
@@ -317,22 +317,23 @@ fn intersect_target_restrictions(
     old_restriction: &mut Option<TargetRestriction>,
     new_restriction: Option<TargetRestriction>,
 ) -> Result<()> {
-    if let (Some(old_restriction), Some(new_restriction)) = (&old_restriction, &new_restriction) {
-        let old_target = &old_restriction.target;
-        let new_target = &new_restriction.target;
-        if old_target != new_target {
-            let original_type = original_type.display(db);
-            let old_type = old_restriction.exemplar_type.display(db);
-            let new_type = new_restriction.exemplar_type.display(db);
-            // The top-line error message is built in the caller, with these as
-            // a list of causes.
-            return Err(anyhow!(
-                "`{original_type}` depends on `pub(crate)` types from other targets:\n\
-                  {old_type} is `pub(crate)` in {old_target}\n\
-                  {new_type} is `pub(crate)` in {new_target}\n\
-                  See http://crubit.rs/errors/visibility"
-            ));
-        }
+    if let Some(old_restriction) = old_restriction.as_ref()
+        && let Some(new_restriction) = new_restriction.as_ref()
+        && let old_target = &old_restriction.target
+        && let new_target = &new_restriction.target
+        && old_target != new_target
+    {
+        let original_type = original_type.display(db);
+        let old_type = old_restriction.exemplar_type.display(db);
+        let new_type = new_restriction.exemplar_type.display(db);
+        // The top-line error message is built in the caller, with these as
+        // a list of causes.
+        return Err(anyhow!(
+            "`{original_type}` depends on `pub(crate)` types from other targets:\n\
+              {old_type} is `pub(crate)` in {old_target}\n\
+              {new_type} is `pub(crate)` in {new_target}\n\
+              See http://crubit.rs/errors/visibility"
+        ));
     }
     if old_restriction.is_none() {
         *old_restriction = new_restriction;

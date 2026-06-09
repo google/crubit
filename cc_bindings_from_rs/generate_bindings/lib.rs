@@ -527,17 +527,15 @@ fn public_paths_by_def_id(
             // enclosing parent type.
             return;
         }
-        if let Some(stability) = tcx.lookup_stability(def_id) {
-            if stability.is_unstable() {
-                return;
-            }
-            // SIMD primitives often have name collisions with SIMD primitives in C++. The C++
-            // primitives are macros, so namespacing does not prevent collision. We expect people
-            // will not need bindings to these primitives, so we exclude them to prevent the
-            // collision.
-            if ["simd_arch", "simd_x86"].contains(&stability.feature.as_str()) {
-                return;
-            }
+        if let Some(stability) = tcx.lookup_stability(def_id)
+            && (stability.is_unstable()
+                // SIMD primitives often have name collisions with SIMD primitives in C++. The C++
+                // primitives are macros, so namespacing does not prevent collision. We expect people
+                // will not need bindings to these primitives, so we exclude them to prevent the
+                // collision.
+                || ["simd_arch", "simd_x86"].contains(&stability.feature.as_str()))
+        {
+            return;
         }
 
         // Map type aliases to their underlying type.

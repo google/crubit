@@ -1856,12 +1856,12 @@ pub fn generate_function(
 
     // Check to see if we can get precise location information. If it's not available, emit a stub
     // capture tag so we don't ascribe definitions to the wrong location.
-    let capture_tags = if db.kythe_annotations() {
-        if let Some((file_name, start, end)) = parse_extended_source_loc(&func.source_loc) {
-            quote! { __CAPTURE_TAG__ #file_name #start #end }
-        } else {
-            quote! { __CAPTURE_TAG__ "" "0" "0" }
-        }
+    let capture_tags = if db.kythe_annotations()
+        && let Some((file_name, start, end)) = parse_extended_source_loc(&func.source_loc)
+    {
+        quote! { __CAPTURE_TAG__ #file_name #start #end }
+    } else if db.kythe_annotations() {
+        quote! { __CAPTURE_TAG__ "" "0" "0" }
     } else {
         quote! {}
     };
