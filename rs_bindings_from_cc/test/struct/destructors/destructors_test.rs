@@ -49,3 +49,13 @@ fn test_field_destruction_order() {
         DestructionOrderRecorder::GetDestructionRecord()
     );
 }
+
+#[gtest]
+fn test_private_operator_delete() {
+    DestructionOrderRecorder::ClearDestructionRecord();
+    {
+        let tester = destructors::PrivateOperatorDelete::from(42);
+        drop(tester);
+    }
+    expect_eq!(42, DestructionOrderRecorder::GetDestructionRecord());
+}

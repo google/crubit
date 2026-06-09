@@ -91,4 +91,24 @@ __rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
 static_assert((void (*)(int, int, int)) &
               ::FieldDestructionOrderTester::DestructFromCpp);
 
+static_assert(CRUBIT_SIZEOF(class PrivateOperatorDelete) == 4);
+static_assert(alignof(class PrivateOperatorDelete) == 4);
+
+extern "C" class PrivateOperatorDelete*
+__rust_thunk___ZN21PrivateOperatorDeleteaSERKS_(
+    class PrivateOperatorDelete* __this,
+    class PrivateOperatorDelete const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" void __rust_thunk___ZN21PrivateOperatorDeleteC1Ei(
+    class PrivateOperatorDelete* __this, int int_field) {
+  crubit::construct_at(__this, int_field);
+}
+
+extern "C" void __rust_thunk___ZN21PrivateOperatorDeleteD1Ev(
+    class PrivateOperatorDelete* __this) {
+  std::destroy_at(__this);
+}
+
 #pragma clang diagnostic pop

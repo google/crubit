@@ -262,6 +262,61 @@ pub mod field_destruction_order_tester {
     }
 }
 
+#[derive(Clone)]
+#[repr(C, align(4))]
+///CRUBIT_ANNOTATE: cpp_type=PrivateOperatorDelete
+pub struct PrivateOperatorDelete {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+}
+impl !Send for PrivateOperatorDelete {}
+impl !Sync for PrivateOperatorDelete {}
+unsafe impl ::cxx::ExternType for PrivateOperatorDelete {
+    type Id = ::cxx::type_id!("PrivateOperatorDelete");
+    type Kind = ::cxx::kind::Trivial;
+}
+
+impl ::ctor::UnpinAssign<&Self> for PrivateOperatorDelete {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN21PrivateOperatorDeleteaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl From<::ffi_11::c_int> for PrivateOperatorDelete {
+    #[inline(always)]
+    fn from(args: ::ffi_11::c_int) -> Self {
+        let mut int_field = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN21PrivateOperatorDeleteC1Ei(
+                &raw mut tmp as *mut _,
+                int_field,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ffi_11::c_int> for PrivateOperatorDelete {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+        <Self as From<::ffi_11::c_int>>::from(args)
+    }
+}
+
+impl Drop for PrivateOperatorDelete {
+    #[inline(always)]
+    fn drop<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN21PrivateOperatorDeleteD1Ev(self) }
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -314,6 +369,17 @@ mod detail {
             field2: ::ffi_11::c_int,
             field3: ::ffi_11::c_int,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteaSERKS_<'__return_lifetime>(
+            __this: &mut crate::PrivateOperatorDelete,
+            __param_0: &crate::PrivateOperatorDelete,
+        ) -> &'__return_lifetime mut crate::PrivateOperatorDelete;
+        pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteC1Ei(
+            __this: *mut ::core::ffi::c_void,
+            int_field: ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteD1Ev<'a>(
+            __this: &'a mut crate::PrivateOperatorDelete,
+        );
     }
 }
 
@@ -330,4 +396,9 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::FieldDestructionOrderTester, field1_) == 0);
     assert!(::core::mem::offset_of!(crate::FieldDestructionOrderTester, field2_) == 4);
     assert!(::core::mem::offset_of!(crate::FieldDestructionOrderTester, field3_) == 8);
+    assert!(::core::mem::size_of::<crate::PrivateOperatorDelete>() == 4);
+    assert!(::core::mem::align_of::<crate::PrivateOperatorDelete>() == 4);
+    static_assertions::assert_impl_all!(crate::PrivateOperatorDelete: Clone,Drop);
+    static_assertions::assert_not_impl_any!(crate::PrivateOperatorDelete: Copy);
+    assert!(::core::mem::offset_of!(crate::PrivateOperatorDelete, int_field_) == 0);
 };

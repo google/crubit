@@ -868,6 +868,7 @@ struct Record {
   std::optional<ItemId> enclosing_item_id;
   bool must_bind = false;
   bool overloads_operator_delete = false;
+  bool has_private_or_deleted_operator_delete = false;
   bool detected_formatter = false;
 
   // Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).

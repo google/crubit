@@ -646,7 +646,10 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         api_snippets.thunks.extend(thunks);
         api_snippets.cc_details.extend(thunk_impls);
     }
-    if record.overloads_operator_delete && record.destructor != SpecialMemberFunc::Unavailable {
+    if record.overloads_operator_delete
+        && !record.has_private_or_deleted_operator_delete
+        && record.destructor != SpecialMemberFunc::Unavailable
+    {
         let (delete, thunk, thunk_impl) = cc_struct_operator_delete_impl(db, &record)?;
         api_snippets.thunks.push(thunk);
         api_snippets.cc_details.push(thunk_impl);

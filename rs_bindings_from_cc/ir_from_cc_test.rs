@@ -4887,3 +4887,24 @@ fn test_anonymous_enum_in_record() {
     assert_eq!(constant.enclosing_item_id, Some(record.id));
     assert_eq!(constant.value.wrapped_value, 1);
 }
+
+#[gtest]
+fn test_has_private_or_deleted_operator_delete() {
+    let ir = ir_from_cc(
+        "
+        struct S1 { private: void operator delete(void*); };
+        struct S2 { void operator delete(void*) = delete; };
+        struct S3 { void operator delete(void*); };
+        struct S4 : S1 {};
+        ",
+    )
+    .unwrap();
+    let s1 = retrieve_record(&ir, "S1");
+    assert!(s1.has_private_or_deleted_operator_delete);
+    let s2 = retrieve_record(&ir, "S2");
+    assert!(s2.has_private_or_deleted_operator_delete);
+    let s3 = retrieve_record(&ir, "S3");
+    assert!(!s3.has_private_or_deleted_operator_delete);
+    let s4 = retrieve_record(&ir, "S4");
+    assert!(s4.has_private_or_deleted_operator_delete);
+}

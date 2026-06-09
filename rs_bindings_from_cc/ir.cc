@@ -1213,6 +1213,8 @@ llvm::json::Value Record::ToJson() const {
       {"enclosing_item_id", enclosing_item_id},
       {"must_bind", must_bind},
       {"overloads_operator_delete", overloads_operator_delete},
+      {"has_private_or_deleted_operator_delete",
+       has_private_or_deleted_operator_delete},
       {"detected_formatter", detected_formatter},
       {"is_thread_safe", is_thread_safe},
   };
@@ -1279,6 +1281,8 @@ flat_proto::Record Record::ToFlatProto() const {
     proto.set_enclosing_item_id(enclosing_item_id->value());
   proto.set_must_bind(must_bind);
   proto.set_overloads_operator_delete(overloads_operator_delete);
+  proto.set_has_private_or_deleted_operator_delete(
+      has_private_or_deleted_operator_delete);
   proto.set_detected_formatter(detected_formatter);
   proto.set_is_thread_safe(is_thread_safe);
   proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),

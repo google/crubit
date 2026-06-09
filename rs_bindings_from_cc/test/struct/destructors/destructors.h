@@ -60,4 +60,16 @@ class [[clang::trivial_abi]] FieldDestructionOrderTester final {
   DestructionOrderRecorder field3_;
 };
 
+class [[clang::trivial_abi]] PrivateOperatorDelete final {
+ public:
+  explicit PrivateOperatorDelete(int int_field) : int_field_(int_field) {}
+  ~PrivateOperatorDelete() {
+    DestructionOrderRecorder::RecordDestruction(int_field_);
+  }
+
+ private:
+  void operator delete(void*);
+  int int_field_;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_DESTRUCTORS_FIELD_DESTRUCTION_ORDER_H_

@@ -1243,6 +1243,7 @@ pub struct Record {
     pub must_bind: bool,
     /// Whether this type has an overload of `operator delete`.
     pub overloads_operator_delete: bool,
+    pub has_private_or_deleted_operator_delete: bool,
     // Lifetime variable names bound by this record.
     #[serde(default)]
     pub lifetime_inputs: Vec<Rc<str>>,

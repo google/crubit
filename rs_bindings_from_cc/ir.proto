@@ -367,6 +367,7 @@ message Record {
   repeated string lifetime_inputs = 37;
   string deprecated = 38;
   bool is_explicit_class_template_instantiation_definition = 39;
+  bool has_private_or_deleted_operator_delete = 40;
 }
 
 message IncompleteRecord {

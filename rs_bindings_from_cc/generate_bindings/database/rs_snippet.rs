@@ -367,6 +367,9 @@ impl UniformReprTemplateType {
                 ensure!(element_type.is_destructible(),
                     "`{}` can't be used in a Rust std::unique_ptr<T> because it has a deleted or non-public destructor",
                     element_type.display(db));
+                ensure!(!element_type.has_private_or_deleted_operator_delete(),
+                    "`{}` can't be used in a Rust std::unique_ptr<T> because it has a deleted or non-public operator delete",
+                    element_type.display(db));
                 Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtr { element_type })))
             }
             Some(TemplateSpecializationKind::StdVector { raw_element_type }) => {
@@ -1635,6 +1638,14 @@ impl RsTypeKind {
             // Unlikely to come up (usually a compilation error to even consider it), but
             // we should imagine that an incomplete type _might_ implement operator delete?
             // This is going to go poorly either way.
+            RsTypeKind::IncompleteRecord { .. } => true,
+            _ => false,
+        }
+    }
+
+    pub fn has_private_or_deleted_operator_delete(&self) -> bool {
+        match self.unalias() {
+            RsTypeKind::Record { record, .. } => record.has_private_or_deleted_operator_delete,
             RsTypeKind::IncompleteRecord { .. } => true,
             _ => false,
         }

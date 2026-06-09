@@ -502,6 +502,24 @@ bool MayOverloadOperatorDelete(clang::CXXRecordDecl& record_decl) {
   return OverloadsOperatorDelete(record_decl);
 }
 
+// Returns true if the given record (or any of its bases) has a private,
+// protected, or deleted operator delete.
+bool HasPrivateOrDeletedOperatorDelete(clang::CXXRecordDecl& record_decl) {
+  for (const clang::CXXMethodDecl* method : record_decl.methods()) {
+    if (method->getOverloadedOperator() == clang::OO_Delete) {
+      return method->getAccess() == clang::AS_private ||
+             method->getAccess() == clang::AS_protected || method->isDeleted();
+    }
+  }
+  for (const clang::CXXBaseSpecifier& base : record_decl.bases()) {
+    if (HasPrivateOrDeletedOperatorDelete(
+            *base.getType()->getAsCXXRecordDecl())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Returns the name of this DeclContext if it is a top-level namespace,
 // otherwise std::nullopt.
 std::optional<llvm::StringRef> AsTopLevelNamespace(
@@ -1261,6 +1279,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .child_item_ids = std::move(item_ids),
       .enclosing_item_id = std::move(enclosing_item_id),
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
+      .has_private_or_deleted_operator_delete =
+          HasPrivateOrDeletedOperatorDelete(*record_decl),
       .detected_formatter = *detected_formatter,
       .is_thread_safe = *is_thread_safe,
       .lifetime_inputs = std::move(lifetime_inputs),
