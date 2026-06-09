@@ -60,7 +60,7 @@ use query_compiler::{
     post_analysis_typing_env, repr_attrs,
 };
 use quote::{format_ident, quote};
-use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
+use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
 use rustc_middle::metadata::{ModChild, Reexport};
 use rustc_middle::mir::ConstValue;
@@ -856,14 +856,19 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
         .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
         .expect("`layout_of` is expected to succeed for `{ty}` type")
         .layout;
-    assert_eq!(8, layout.align().abi.bytes());
-    assert_eq!(16, layout.size().bytes());
+
+    let data_layout = tcx.data_layout();
+    let ptr_size = data_layout.pointer_size().bytes();
+    let ptr_align = data_layout.pointer_align().abi.bytes();
+
+    assert_eq!(ptr_align, layout.align().abi.bytes());
+    assert_eq!(2 * ptr_size, layout.size().bytes());
     assert!(matches!(
         layout.backend_repr(),
         BackendRepr::ScalarPair(
             Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
             Scalar::Initialized {
-                value: Primitive::Int(Integer::I64, /* signedness = */ false),
+                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
                 ..
             }
         )
