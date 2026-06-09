@@ -12,6 +12,8 @@ namespace {
 
 TEST(OptionTest, OptionWithNicheIsConvertibleToStd) {
   option::HasOptions has_options = option::HasOptions::new_(1);
+  EXPECT_TRUE(has_options.niche.has_value());
+  EXPECT_EQ(has_options.niche->value(), 1);
   std::optional<option::LessThan20U8> opt_niche = std::move(has_options.niche);
   EXPECT_TRUE(opt_niche.has_value());
   EXPECT_EQ(opt_niche.value().value(), 1);
@@ -122,6 +124,17 @@ TEST(OptionTest, OptionMoveConstructAndAssignFromOption) {
   rs_std::Option<option::HasNoDefault> z;
   z = std::move(y);
   EXPECT_FALSE(z.has_value());
+}
+
+TEST(OptionTest, OptionArrowProvidesReferenceToValue) {
+  rs_std::Option<option::HasDefault> opt(
+      option::HasDefault::new_("pls move me"));
+  EXPECT_TRUE(opt.has_value());
+  EXPECT_EQ(std::move(opt->get_string_inside_option()), "pls move me");
+  std::optional<option::HasDefault> val = std::move(opt);
+  EXPECT_TRUE(val.has_value());
+  EXPECT_EQ(val->get_string_inside_option().to_string_view(), "pls move me");
+  EXPECT_FALSE(opt.has_value());
 }
 
 TEST(OptionTest, OptionHasDefaultValueAssign) {

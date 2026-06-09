@@ -225,13 +225,18 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::CloneNoDefault&& value() &&;
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
+  ::result::CloneNoDefault& operator*() &;
+  const ::result::CloneNoDefault& operator*() const&;
+  ::result::CloneNoDefault&& operator*() &&;
+  ::result::CloneNoDefault* operator->();
+  const ::result::CloneNoDefault* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
   constexpr void set_tag(::std::uint8_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[2];
@@ -269,13 +274,18 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::CopyNoDefault&& value() &&;
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
+  ::result::CopyNoDefault& operator*() &;
+  const ::result::CopyNoDefault& operator*() const&;
+  ::result::CopyNoDefault&& operator*() &&;
+  ::result::CopyNoDefault* operator->();
+  const ::result::CopyNoDefault* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
   constexpr void set_tag(::std::uint8_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[2];
@@ -322,13 +332,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::HasDefault&& value() &&;
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
+  ::result::HasDefault& operator*() &;
+  const ::result::HasDefault& operator*() const&;
+  ::result::HasDefault&& operator*() &&;
+  ::result::HasDefault* operator->();
+  const ::result::HasDefault* operator->() const;
   ~Result() noexcept;
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
   constexpr void set_tag(::std::uint64_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[24];
@@ -376,13 +391,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::HasNoDefault&& value() &&;
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
+  ::result::HasNoDefault& operator*() &;
+  const ::result::HasNoDefault& operator*() const&;
+  ::result::HasNoDefault&& operator*() &&;
+  ::result::HasNoDefault* operator->();
+  const ::result::HasNoDefault* operator->() const;
   ~Result() noexcept;
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
   constexpr void set_tag(::std::uint64_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[24];
@@ -420,13 +440,18 @@ struct alignas(4)
   ::std::uint32_t&& value() &&;
   ::std::uint32_t& err() &;
   ::std::uint32_t&& err() &&;
+  ::std::uint32_t& operator*() &;
+  const ::std::uint32_t& operator*() const&;
+  ::std::uint32_t&& operator*() &&;
+  ::std::uint32_t* operator->();
+  const ::std::uint32_t* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[8];
@@ -498,13 +523,18 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Result<::std::uint32_t, ::std::uint32_t>&& value() &&;
   ::std::uint32_t& err() &;
   ::std::uint32_t&& err() &&;
+  rs_std::Result<::std::uint32_t, ::std::uint32_t>& operator*() &;
+  const rs_std::Result<::std::uint32_t, ::std::uint32_t>& operator*() const&;
+  rs_std::Result<::std::uint32_t, ::std::uint32_t>&& operator*() &&;
+  rs_std::Result<::std::uint32_t, ::std::uint32_t>* operator->();
+  const rs_std::Result<::std::uint32_t, ::std::uint32_t>* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[8];
@@ -546,13 +576,18 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint32_t&& value() &&;
   rs_std::Result<::std::uint32_t, ::std::uint32_t>& err() &;
   rs_std::Result<::std::uint32_t, ::std::uint32_t>&& err() &&;
+  ::std::uint32_t& operator*() &;
+  const ::std::uint32_t& operator*() const&;
+  ::std::uint32_t&& operator*() &&;
+  ::std::uint32_t* operator->();
+  const ::std::uint32_t* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[8];
@@ -633,13 +668,18 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t&& value() &&;
   ::result::CloneNoDefault& err() &;
   ::result::CloneNoDefault&& err() &&;
+  ::std::uint8_t& operator*() &;
+  const ::std::uint8_t& operator*() const&;
+  ::std::uint8_t&& operator*() &&;
+  ::std::uint8_t* operator->();
+  const ::std::uint8_t* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
   constexpr void set_tag(::std::uint8_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[2];
@@ -717,13 +757,18 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t&& value() &&;
   ::result::CopyNoDefault& err() &;
   ::result::CopyNoDefault&& err() &&;
+  ::std::uint8_t& operator*() &;
+  const ::std::uint8_t& operator*() const&;
+  ::std::uint8_t&& operator*() &&;
+  ::std::uint8_t* operator->();
+  const ::std::uint8_t* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
   constexpr void set_tag(::std::uint8_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[2];
@@ -800,13 +845,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t&& value() &&;
   ::result::HasDefault& err() &;
   ::result::HasDefault&& err() &&;
+  ::std::uint8_t& operator*() &;
+  const ::std::uint8_t& operator*() const&;
+  ::std::uint8_t&& operator*() &&;
+  ::std::uint8_t* operator->();
+  const ::std::uint8_t* operator->() const;
   ~Result() noexcept;
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
   constexpr void set_tag(::std::uint64_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[24];
@@ -886,13 +936,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t&& value() &&;
   ::result::HasNoDefault& err() &;
   ::result::HasNoDefault&& err() &&;
+  ::std::uint8_t& operator*() &;
+  const ::std::uint8_t& operator*() const&;
+  ::std::uint8_t&& operator*() &&;
+  ::std::uint8_t* operator->();
+  const ::std::uint8_t* operator->() const;
   ~Result() noexcept;
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
   constexpr void set_tag(::std::uint64_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[24];
@@ -969,13 +1024,18 @@ struct alignas(1)
   ::std::uint8_t&& value() &&;
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
+  ::std::uint8_t& operator*() &;
+  const ::std::uint8_t& operator*() const&;
+  ::std::uint8_t&& operator*() &&;
+  ::std::uint8_t* operator->();
+  const ::std::uint8_t* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
   constexpr void set_tag(::std::uint8_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[2];
@@ -1445,6 +1505,32 @@ rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
 }
+inline ::result::CloneNoDefault&
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::result::CloneNoDefault*>(__storage + 1);
+}
+inline const ::result::CloneNoDefault&
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::result::CloneNoDefault*>(__storage + 1);
+}
+inline ::result::CloneNoDefault&&
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<::result::CloneNoDefault*>(__storage + 1));
+}
+inline ::result::CloneNoDefault*
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::result::CloneNoDefault*>(__storage + 1);
+}
+inline const ::result::CloneNoDefault*
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::result::CloneNoDefault*>(__storage + 1);
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>>);
 inline constexpr ::std::uint8_t rs_std::Result<
@@ -1466,11 +1552,11 @@ rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::set_tag(
 }
 
 inline void
-rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::check_has_ok() {
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
-inline void
-rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::check_has_err() {
+inline void rs_std::Result<::result::CloneNoDefault,
+                           ::std::uint8_t>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -1573,6 +1659,32 @@ rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
 }
+inline ::result::CopyNoDefault&
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::result::CopyNoDefault*>(__storage + 1);
+}
+inline const ::result::CopyNoDefault&
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::result::CopyNoDefault*>(__storage + 1);
+}
+inline ::result::CopyNoDefault&&
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<::result::CopyNoDefault*>(__storage + 1));
+}
+inline ::result::CopyNoDefault*
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::result::CopyNoDefault*>(__storage + 1);
+}
+inline const ::result::CopyNoDefault*
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::result::CopyNoDefault*>(__storage + 1);
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>>);
 inline constexpr ::std::uint8_t
@@ -1594,11 +1706,11 @@ rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::set_tag(
 }
 
 inline void
-rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::check_has_ok() {
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
-rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::check_has_err() {
+rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -1686,6 +1798,31 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 8));
 }
+inline ::result::HasDefault&
+rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::result::HasDefault*>(__storage);
+}
+inline const ::result::HasDefault&
+rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::result::HasDefault*>(__storage);
+}
+inline ::result::HasDefault&&
+rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::result::HasDefault*>(__storage));
+}
+inline ::result::HasDefault*
+rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::result::HasDefault*>(__storage);
+}
+inline const ::result::HasDefault*
+rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::result::HasDefault*>(__storage);
+}
 inline rs_std::Result<::result::HasDefault,
                       ::std::uint8_t>::~Result() noexcept {
   if (has_value()) {
@@ -1712,12 +1849,12 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::set_tag(
   }
 }
 
-inline void
-rs_std::Result<::result::HasDefault, ::std::uint8_t>::check_has_ok() {
+inline void rs_std::Result<::result::HasDefault, ::std::uint8_t>::check_has_ok()
+    const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
-rs_std::Result<::result::HasDefault, ::std::uint8_t>::check_has_err() {
+rs_std::Result<::result::HasDefault, ::std::uint8_t>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -1787,6 +1924,31 @@ rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 8));
 }
+inline ::result::HasNoDefault&
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::result::HasNoDefault*>(__storage);
+}
+inline const ::result::HasNoDefault&
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::result::HasNoDefault*>(__storage);
+}
+inline ::result::HasNoDefault&&
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::result::HasNoDefault*>(__storage));
+}
+inline ::result::HasNoDefault*
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::result::HasNoDefault*>(__storage);
+}
+inline const ::result::HasNoDefault*
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::result::HasNoDefault*>(__storage);
+}
 inline rs_std::Result<::result::HasNoDefault,
                       ::std::uint8_t>::~Result() noexcept {
   if (has_value()) {
@@ -1814,11 +1976,11 @@ rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::set_tag(
 }
 
 inline void
-rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::check_has_ok() {
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
-rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::check_has_err() {
+rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -1941,6 +2103,42 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint32_t*>(__storage + 4));
 }
+inline rs_std::Result<::std::uint32_t, ::std::uint32_t>&
+rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+               ::std::uint32_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
+      __storage);
+}
+inline const rs_std::Result<::std::uint32_t, ::std::uint32_t>&
+rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+               ::std::uint32_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<
+      const rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(__storage);
+}
+inline rs_std::Result<::std::uint32_t, ::std::uint32_t>&&
+rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+               ::std::uint32_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
+          __storage));
+}
+inline rs_std::Result<::std::uint32_t, ::std::uint32_t>*
+rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+               ::std::uint32_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
+      __storage);
+}
+inline const rs_std::Result<::std::uint32_t, ::std::uint32_t>*
+rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+               ::std::uint32_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<
+      const rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(__storage);
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Result<
         rs_std::Result<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t>>);
@@ -1964,11 +2162,11 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
 }
 
 inline void rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
-                           ::std::uint32_t>::check_has_ok() {
+                           ::std::uint32_t>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
-                           ::std::uint32_t>::check_has_err() {
+                           ::std::uint32_t>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -2097,6 +2295,36 @@ rs_std::Result<::std::uint32_t,
       *reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
           __storage));
 }
+inline ::std::uint32_t& rs_std::Result<
+    ::std::uint32_t,
+    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::uint32_t*>(__storage + 4);
+}
+inline const ::std::uint32_t& rs_std::Result<
+    ::std::uint32_t,
+    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+}
+inline ::std::uint32_t&& rs_std::Result<
+    ::std::uint32_t,
+    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::uint32_t*>(__storage + 4));
+}
+inline ::std::uint32_t*
+rs_std::Result<::std::uint32_t,
+               rs_std::Result<::std::uint32_t, ::std::uint32_t>>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::uint32_t*>(__storage + 4);
+}
+inline const ::std::uint32_t* rs_std::Result<
+    ::std::uint32_t,
+    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Result<
         ::std::uint32_t, rs_std::Result<::std::uint32_t, ::std::uint32_t>>>);
@@ -2121,12 +2349,12 @@ inline constexpr void rs_std::Result<
 
 inline void rs_std::Result<
     ::std::uint32_t,
-    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::check_has_ok() {
+    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void rs_std::Result<
     ::std::uint32_t,
-    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::check_has_err() {
+    rs_std::Result<::std::uint32_t, ::std::uint32_t>>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -2226,6 +2454,31 @@ rs_std::Result<::std::uint32_t, ::std::uint32_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint32_t*>(__storage + 4));
 }
+inline ::std::uint32_t&
+rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::uint32_t*>(__storage + 4);
+}
+inline const ::std::uint32_t&
+rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+}
+inline ::std::uint32_t&&
+rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::uint32_t*>(__storage + 4));
+}
+inline ::std::uint32_t*
+rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::uint32_t*>(__storage + 4);
+}
+inline const ::std::uint32_t*
+rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint32_t, ::std::uint32_t>>);
 inline constexpr ::std::uint32_t
@@ -2245,10 +2498,12 @@ inline constexpr void rs_std::Result<::std::uint32_t, ::std::uint32_t>::set_tag(
   }
 }
 
-inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::check_has_ok() {
+inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::check_has_ok()
+    const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
-inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::check_has_err() {
+inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::check_has_err()
+    const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -2369,6 +2624,31 @@ rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::err() && {
   return ::std::move(
       *reinterpret_cast<::result::CloneNoDefault*>(__storage + 1));
 }
+inline ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::uint8_t*>(__storage + 1);
+}
+inline const ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+}
+inline ::std::uint8_t&&
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
+}
+inline ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::uint8_t*>(__storage + 1);
+}
+inline const ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>>);
 inline constexpr ::std::uint8_t rs_std::Result<
@@ -2390,11 +2670,11 @@ rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::set_tag(
 }
 
 inline void
-rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::check_has_ok() {
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
-inline void
-rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::check_has_err() {
+inline void rs_std::Result<::std::uint8_t,
+                           ::result::CloneNoDefault>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -2497,6 +2777,31 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::err() && {
   return ::std::move(
       *reinterpret_cast<::result::CopyNoDefault*>(__storage + 1));
 }
+inline ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::uint8_t*>(__storage + 1);
+}
+inline const ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+}
+inline ::std::uint8_t&&
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
+}
+inline ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::uint8_t*>(__storage + 1);
+}
+inline const ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>>);
 inline constexpr ::std::uint8_t
@@ -2518,11 +2823,11 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::set_tag(
 }
 
 inline void
-rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::check_has_ok() {
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
-rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::check_has_err() {
+rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -2610,6 +2915,31 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::result::HasDefault*>(__storage));
 }
+inline ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::uint8_t*>(__storage + 8);
+}
+inline const ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+}
+inline ::std::uint8_t&&
+rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 8));
+}
+inline ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::uint8_t*>(__storage + 8);
+}
+inline const ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+}
 inline rs_std::Result<::std::uint8_t,
                       ::result::HasDefault>::~Result() noexcept {
   if (has_value()) {
@@ -2636,12 +2966,12 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::set_tag(
   }
 }
 
-inline void
-rs_std::Result<::std::uint8_t, ::result::HasDefault>::check_has_ok() {
+inline void rs_std::Result<::std::uint8_t, ::result::HasDefault>::check_has_ok()
+    const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
-rs_std::Result<::std::uint8_t, ::result::HasDefault>::check_has_err() {
+rs_std::Result<::std::uint8_t, ::result::HasDefault>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -2709,6 +3039,31 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::result::HasNoDefault*>(__storage));
 }
+inline ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::uint8_t*>(__storage + 8);
+}
+inline const ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+}
+inline ::std::uint8_t&&
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 8));
+}
+inline ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::uint8_t*>(__storage + 8);
+}
+inline const ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+}
 inline rs_std::Result<::std::uint8_t,
                       ::result::HasNoDefault>::~Result() noexcept {
   if (has_value()) {
@@ -2736,11 +3091,11 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::set_tag(
 }
 
 inline void
-rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::check_has_ok() {
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
 inline void
-rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::check_has_err() {
+rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif
@@ -2838,6 +3193,31 @@ rs_std::Result<::std::uint8_t, ::std::uint8_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
 }
+inline ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::uint8_t*>(__storage + 1);
+}
+inline const ::std::uint8_t&
+rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+}
+inline ::std::uint8_t&&
+rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
+}
+inline ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::uint8_t*>(__storage + 1);
+}
+inline const ::std::uint8_t*
+rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint8_t, ::std::uint8_t>>);
 inline constexpr ::std::uint8_t
@@ -2857,10 +3237,12 @@ inline constexpr void rs_std::Result<::std::uint8_t, ::std::uint8_t>::set_tag(
   }
 }
 
-inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_ok() {
+inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_ok()
+    const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
-inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_err() {
+inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_err()
+    const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif

@@ -247,6 +247,7 @@ struct OptionApiGenerator<'a, 'tcx> {
     none_val: TokenStream,
     write_some_to_tag: TokenStream,
     some_ptr_val: TokenStream,
+    some_const_ptr_val: TokenStream,
     tag_type_cc: TokenStream,
 }
 
@@ -261,6 +262,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
             none_val,
             write_some_to_tag,
             some_ptr_val,
+            some_const_ptr_val,
             tag_type_cc,
             ..
         } = self;
@@ -389,9 +391,17 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
 
                 operator ::std::optional<#arg_ty>() && noexcept;
 
-                bool has_value() noexcept;
+                bool has_value() const noexcept; __NEWLINE__
+
+                #arg_ty& operator*() &; __NEWLINE__
+                const #arg_ty& operator*() const&; __NEWLINE__
+                #arg_ty&& operator*() &&; __NEWLINE__
+
+                #arg_ty* operator->(); __NEWLINE__
+                const #arg_ty* operator->() const; __NEWLINE__
             private:
                 #tag_method_main_api
+                void check_has_value() const; __NEWLINE__
             },
             prereqs,
         };
@@ -399,6 +409,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
         // For std::move.
         prereqs.includes.insert(CcInclude::utility());
         prereqs.includes.insert(self.db.support_header("internal/move_assign.h"));
+        prereqs.includes.insert(self.db.support_header("internal/check.h"));
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
         let cc_details = CcSnippet {
             tokens: quote! {
@@ -450,8 +461,37 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                     }
                 } __NEWLINE__
 
-                inline bool rs_std::Option<#arg_ty>::has_value() noexcept {
+                inline bool rs_std::Option<#arg_ty>::has_value() const noexcept {
                     return tag() != #none_val;
+                } __NEWLINE__
+
+                inline void rs_std::Option<#arg_ty>::check_has_value() const {
+                    CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
+                } __NEWLINE__
+
+                inline #arg_ty& rs_std::Option<#arg_ty>::operator*() & {
+                    check_has_value();
+                    return *#some_ptr_val;
+                } __NEWLINE__
+
+                inline const #arg_ty& rs_std::Option<#arg_ty>::operator*() const& {
+                    check_has_value();
+                    return *#some_const_ptr_val;
+                } __NEWLINE__
+
+                inline #arg_ty&& rs_std::Option<#arg_ty>::operator*() && {
+                    check_has_value();
+                    return ::std::move(*#some_ptr_val);
+                } __NEWLINE__
+
+                inline #arg_ty* rs_std::Option<#arg_ty>::operator->() {
+                    check_has_value();
+                    return #some_ptr_val;
+                } __NEWLINE__
+
+                inline const #arg_ty* rs_std::Option<#arg_ty>::operator->() const {
+                    check_has_value();
+                    return #some_const_ptr_val;
                 } __NEWLINE__
 
                 #tag_method_cc_details
@@ -689,13 +729,20 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                 #err_ty_cpp& err() &; __NEWLINE__
                 #err_ty_cpp&& err() &&; __NEWLINE__
 
+                #ok_ty_cpp& operator*() &; __NEWLINE__
+                const #ok_ty_cpp& operator*() const&; __NEWLINE__
+                #ok_ty_cpp&& operator*() &&; __NEWLINE__
+
+                #ok_ty_cpp* operator->(); __NEWLINE__
+                const #ok_ty_cpp* operator->() const; __NEWLINE__
+
                 #drop
 
             private:
                 #tag_method_main_api
 
-                void check_has_ok();
-                void check_has_err();
+                void check_has_ok() const;
+                void check_has_err() const;
             },
             prereqs,
         };
@@ -753,15 +800,40 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                     return ::std::move(*reinterpret_cast<#err_ty_cpp*>(#err_ptr_val));
                 } __NEWLINE__
 
+                inline #ok_ty_cpp& #full_self_ty::operator*() & {
+                    check_has_ok();
+                    return *reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
+                } __NEWLINE__
+
+                inline const #ok_ty_cpp& #full_self_ty::operator*() const& {
+                    check_has_ok();
+                    return *reinterpret_cast<const #ok_ty_cpp*>(#ok_ptr_val);
+                } __NEWLINE__
+
+                inline #ok_ty_cpp&& #full_self_ty::operator*() && {
+                    check_has_ok();
+                    return ::std::move(*reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val));
+                } __NEWLINE__
+
+                inline #ok_ty_cpp* #full_self_ty::operator->() {
+                    check_has_ok();
+                    return reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
+                } __NEWLINE__
+
+                inline const #ok_ty_cpp* #full_self_ty::operator->() const {
+                    check_has_ok();
+                    return reinterpret_cast<const #ok_ty_cpp*>(#ok_ptr_val);
+                } __NEWLINE__
+
 
                 #drop_details __NEWLINE__
                 #tag_method_cc_details __NEWLINE__
 
-                inline void #full_self_ty::check_has_ok() {
+                inline void #full_self_ty::check_has_ok() const {
                     CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
                 } __NEWLINE__
 
-                inline void #full_self_ty::check_has_err() {
+                inline void #full_self_ty::check_has_err() const {
                     CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
                 } __NEWLINE__
             },
@@ -1306,6 +1378,9 @@ fn specialize_option<'tcx>(
                 some_ptr_val: quote! {
                     reinterpret_cast<#ty_tokens*>(storage_ + #payload_offset)
                 },
+                some_const_ptr_val: quote! {
+                    reinterpret_cast<const #ty_tokens*>(storage_ + #payload_offset)
+                },
                 tag_type_cc: tag_type_cc.clone(),
             }
         }
@@ -1327,6 +1402,9 @@ fn specialize_option<'tcx>(
                 none_val: quote! { #none_relative_val },
                 some_ptr_val: quote! {
                     reinterpret_cast<#ty_tokens*>(storage_)
+                },
+                some_const_ptr_val: quote! {
+                    reinterpret_cast<const #ty_tokens*>(storage_)
                 },
                 // With a niche, the Some variant is implicitly encoded. We don't need to write out
                 // a discriminant value. It is accomplished by writing a value to the Some payload.

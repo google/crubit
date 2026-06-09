@@ -1316,11 +1316,17 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
   operator ::std::optional<::std::int32_t>() && noexcept;
-  bool has_value() noexcept;
+  bool has_value() const noexcept;
+  ::std::int32_t& operator*() &;
+  const ::std::int32_t& operator*() const&;
+  ::std::int32_t&& operator*() &&;
+  ::std::int32_t* operator->();
+  const ::std::int32_t* operator->() const;
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
+  void check_has_value() const;
 
  private:
   unsigned char storage_[8];
@@ -1396,13 +1402,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::int32_t&& value() &&;
   ::rs::alloc::string::String& err() &;
   ::rs::alloc::string::String&& err() &&;
+  ::std::int32_t& operator*() &;
+  const ::std::int32_t& operator*() const&;
+  ::std::int32_t&& operator*() &&;
+  ::std::int32_t* operator->();
+  const ::std::int32_t* operator->() const;
   ~Result() noexcept;
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
   constexpr void set_tag(::std::uint64_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[24];
@@ -3068,8 +3079,33 @@ inline rs_std::Option<::std::int32_t>::operator ::std::optional<
     return return_value;
   }
 }
-inline bool rs_std::Option<::std::int32_t>::has_value() noexcept {
+inline bool rs_std::Option<::std::int32_t>::has_value() const noexcept {
   return tag() != 0;
+}
+inline void rs_std::Option<::std::int32_t>::check_has_value() const {
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
+}
+inline ::std::int32_t& rs_std::Option<::std::int32_t>::operator*() & {
+  check_has_value();
+  return *reinterpret_cast<::std::int32_t*>(storage_ + 4);
+}
+inline const ::std::int32_t& rs_std::Option<::std::int32_t>::operator*()
+    const& {
+  check_has_value();
+  return *reinterpret_cast<const ::std::int32_t*>(storage_ + 4);
+}
+inline ::std::int32_t&& rs_std::Option<::std::int32_t>::operator*() && {
+  check_has_value();
+  return ::std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4));
+}
+inline ::std::int32_t* rs_std::Option<::std::int32_t>::operator->() {
+  check_has_value();
+  return reinterpret_cast<::std::int32_t*>(storage_ + 4);
+}
+inline const ::std::int32_t* rs_std::Option<::std::int32_t>::operator->()
+    const {
+  check_has_value();
+  return reinterpret_cast<const ::std::int32_t*>(storage_ + 4);
 }
 inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
     const& noexcept {
@@ -3198,6 +3234,31 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::err() && {
   return ::std::move(
       *reinterpret_cast<::rs::alloc::string::String*>(__storage));
 }
+inline ::std::int32_t&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::std::int32_t*>(__storage + 8);
+}
+inline const ::std::int32_t& rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::std::int32_t*>(__storage + 8);
+}
+inline ::std::int32_t&&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator*() && {
+  check_has_ok();
+  return ::std::move(*reinterpret_cast<::std::int32_t*>(__storage + 8));
+}
+inline ::std::int32_t*
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::std::int32_t*>(__storage + 8);
+}
+inline const ::std::int32_t* rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::std::int32_t*>(__storage + 8);
+}
 inline rs_std::Result<::std::int32_t,
                       ::rs::alloc::string::String>::~Result() noexcept {
   if (has_value()) {
@@ -3225,12 +3286,12 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::set_tag(
   }
 }
 
-inline void
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::check_has_ok() {
+inline void rs_std::Result<::std::int32_t,
+                           ::rs::alloc::string::String>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
-inline void
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::check_has_err() {
+inline void rs_std::Result<::std::int32_t,
+                           ::rs::alloc::string::String>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif

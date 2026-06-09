@@ -68,13 +68,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::struct_with_const_field&& value() &&;
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
+  ::struct_with_const_field& operator*() &;
+  const ::struct_with_const_field& operator*() const&;
+  ::struct_with_const_field&& operator*() &&;
+  ::struct_with_const_field* operator->();
+  const ::struct_with_const_field* operator->() const;
   ~Result() noexcept = default;
 
  private:
   constexpr ::std::uint8_t tag() const& noexcept;
   constexpr void set_tag(::std::uint8_t tag) noexcept;
-  void check_has_ok();
-  void check_has_err();
+  void check_has_ok() const;
+  void check_has_err() const;
 
  private:
   unsigned char __storage[16];
@@ -223,6 +228,32 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
 }
+inline ::struct_with_const_field&
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<::struct_with_const_field*>(__storage + 8);
+}
+inline const ::struct_with_const_field&
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() const& {
+  check_has_ok();
+  return *reinterpret_cast<const ::struct_with_const_field*>(__storage + 8);
+}
+inline ::struct_with_const_field&&
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<::struct_with_const_field*>(__storage + 8));
+}
+inline ::struct_with_const_field*
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<::struct_with_const_field*>(__storage + 8);
+}
+inline const ::struct_with_const_field*
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator->() const {
+  check_has_ok();
+  return reinterpret_cast<const ::struct_with_const_field*>(__storage + 8);
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
 inline constexpr ::std::uint8_t rs_std::Result<
@@ -243,12 +274,12 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>::set_tag(
   }
 }
 
-inline void
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::check_has_ok() {
+inline void rs_std::Result<::struct_with_const_field,
+                           ::std::uint8_t>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
-inline void
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::check_has_err() {
+inline void rs_std::Result<::struct_with_const_field,
+                           ::std::uint8_t>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif

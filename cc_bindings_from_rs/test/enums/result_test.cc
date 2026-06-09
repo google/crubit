@@ -87,6 +87,12 @@ TEST(ResultTest, ConstructAndPassResultHasDefault) {
   EXPECT_EQ(result::take_result_has_default(&res), "a number");
 }
 
+TEST(ResultTest, ConstructAndAccessResultHasDefault) {
+  rs_std::Result<result::HasDefault, std::uint8_t> res(
+      result::HasDefault::new_("accessible value"));
+  EXPECT_EQ(res->val(), "accessible value");
+}
+
 TEST(ResultTest, ConstructAndPassResultByValue) {
   rs_std::Result<std::uint8_t, std::uint8_t> res(123);
   EXPECT_EQ(result::take_result_by_value(res), 123);
