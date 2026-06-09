@@ -44,6 +44,7 @@ serde = { version = "1", features = [ "derive", "rc" ] }
 serde_json = "1"
 static_assertions = "1"
 syn = { version = "2", features = [ "extra-traits" ] }
+ra_ap_rustc_lexer = "0.165.0"
 tempfile = "3"
 tracing = "0.1"
 unicode-ident = "1"
