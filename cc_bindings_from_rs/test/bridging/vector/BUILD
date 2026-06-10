@@ -14,16 +14,17 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "test_helpers",
     testonly = 1,
+    srcs = ["test_helpers.cc"],
     hdrs = ["test_helpers.h"],
     aspect_hints = ["//features:experimental"],
     deps = ["//support:annotations"],
 )
 
 rust_library(
-    name = "virtual_unique_ptr",
+    name = "vector",
     testonly = 1,
     srcs = [
-        "virtual_unique_ptr.rs",
+        "vector.rs",
     ],
     cc_deps = [
         ":test_helpers",
@@ -32,17 +33,17 @@ rust_library(
 )
 
 cc_bindings_from_rust(
-    name = "virtual_unique_ptr_cc_api",
+    name = "vector_cc_api",
     testonly = 1,
-    crate = ":virtual_unique_ptr",
+    crate = ":vector",
 )
 
 crubit_cc_test(
-    name = "virtual_unique_ptr_test",
-    srcs = ["virtual_unique_ptr_test.cc"],
+    name = "vector_test",
+    srcs = ["vector_test.cc"],
     deps = [
         ":test_helpers",
-        ":virtual_unique_ptr_cc_api",
+        ":vector_cc_api",
         "//testing/base/public:gunit_main",
     ],
 )

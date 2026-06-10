@@ -18,6 +18,10 @@ pub use operator::Delete;
 /// Note that `unique_ptr` has "shallow" semantics: having a `&unique_ptr<T>` means that the
 /// `unique_ptr` will not be mutated, but does not guarantee that the underlying `T` will not be
 /// mutated. Therefore, to get access to `T`, you must have exclusive access to the `unique_ptr`.
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "::std::unique_ptr<{T}>",
+    include_path = "<memory>"
+)]
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct unique_ptr<T: Sized> {

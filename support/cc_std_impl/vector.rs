@@ -40,6 +40,10 @@ unsafe extern "C" {
 /// 1. This layout was found empirically on Linux with modern g++ and libc++. If
 /// for some version of libc++ it is different, we will need to update it with
 /// conditional compilation.
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "::std::vector<{T}>",
+    include_path = "<vector>"
+)]
 #[cfg(not(feature = "len_capacity_encoding"))]
 #[repr(C)]
 pub struct vector<T> {
@@ -50,6 +54,10 @@ pub struct vector<T> {
 }
 
 /// 2. This layout is experimental.
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "::std::vector<{T}>",
+    include_path = "<vector>"
+)]
 #[cfg(feature = "len_capacity_encoding")]
 #[repr(C)]
 pub struct vector<T> {
