@@ -69,10 +69,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
   ::struct_with_const_field& operator*() &;
-  const ::struct_with_const_field& operator*() const&;
+  ::struct_with_const_field const& operator*() const&;
   ::struct_with_const_field&& operator*() &&;
   ::struct_with_const_field* operator->();
-  const ::struct_with_const_field* operator->() const;
+  ::struct_with_const_field const* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -233,10 +233,10 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::struct_with_const_field*>(__storage + 8);
 }
-inline const ::struct_with_const_field&
+inline ::struct_with_const_field const&
 rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::struct_with_const_field*>(__storage + 8);
+  return *reinterpret_cast<::struct_with_const_field const*>(__storage + 8);
 }
 inline ::struct_with_const_field&&
 rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() && {
@@ -249,10 +249,10 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::struct_with_const_field*>(__storage + 8);
 }
-inline const ::struct_with_const_field*
+inline ::struct_with_const_field const*
 rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::struct_with_const_field*>(__storage + 8);
+  return reinterpret_cast<::struct_with_const_field const*>(__storage + 8);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);

@@ -394,11 +394,11 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                 bool has_value() const noexcept; __NEWLINE__
 
                 #arg_ty& operator*() &; __NEWLINE__
-                const #arg_ty& operator*() const&; __NEWLINE__
+                #arg_ty const& operator*() const&; __NEWLINE__
                 #arg_ty&& operator*() &&; __NEWLINE__
 
                 #arg_ty* operator->(); __NEWLINE__
-                const #arg_ty* operator->() const; __NEWLINE__
+                #arg_ty const* operator->() const; __NEWLINE__
             private:
                 #tag_method_main_api
                 void check_has_value() const; __NEWLINE__
@@ -474,7 +474,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                     return *#some_ptr_val;
                 } __NEWLINE__
 
-                inline const #arg_ty& rs_std::Option<#arg_ty>::operator*() const& {
+                inline #arg_ty const& rs_std::Option<#arg_ty>::operator*() const& {
                     check_has_value();
                     return *#some_const_ptr_val;
                 } __NEWLINE__
@@ -489,7 +489,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                     return #some_ptr_val;
                 } __NEWLINE__
 
-                inline const #arg_ty* rs_std::Option<#arg_ty>::operator->() const {
+                inline #arg_ty const* rs_std::Option<#arg_ty>::operator->() const {
                     check_has_value();
                     return #some_const_ptr_val;
                 } __NEWLINE__
@@ -730,11 +730,11 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                 #err_ty_cpp&& err() &&; __NEWLINE__
 
                 #ok_ty_cpp& operator*() &; __NEWLINE__
-                const #ok_ty_cpp& operator*() const&; __NEWLINE__
+                #ok_ty_cpp const& operator*() const&; __NEWLINE__
                 #ok_ty_cpp&& operator*() &&; __NEWLINE__
 
                 #ok_ty_cpp* operator->(); __NEWLINE__
-                const #ok_ty_cpp* operator->() const; __NEWLINE__
+                #ok_ty_cpp const* operator->() const; __NEWLINE__
 
                 #drop
 
@@ -805,9 +805,9 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                     return *reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
                 } __NEWLINE__
 
-                inline const #ok_ty_cpp& #full_self_ty::operator*() const& {
+                inline #ok_ty_cpp const& #full_self_ty::operator*() const& {
                     check_has_ok();
-                    return *reinterpret_cast<const #ok_ty_cpp*>(#ok_ptr_val);
+                    return *reinterpret_cast<#ok_ty_cpp const*>(#ok_ptr_val);
                 } __NEWLINE__
 
                 inline #ok_ty_cpp&& #full_self_ty::operator*() && {
@@ -820,9 +820,9 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
                     return reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
                 } __NEWLINE__
 
-                inline const #ok_ty_cpp* #full_self_ty::operator->() const {
+                inline #ok_ty_cpp const* #full_self_ty::operator->() const {
                     check_has_ok();
-                    return reinterpret_cast<const #ok_ty_cpp*>(#ok_ptr_val);
+                    return reinterpret_cast<#ok_ty_cpp const*>(#ok_ptr_val);
                 } __NEWLINE__
 
 
@@ -1379,7 +1379,7 @@ fn specialize_option<'tcx>(
                     reinterpret_cast<#ty_tokens*>(storage_ + #payload_offset)
                 },
                 some_const_ptr_val: quote! {
-                    reinterpret_cast<const #ty_tokens*>(storage_ + #payload_offset)
+                    reinterpret_cast<#ty_tokens const*>(storage_ + #payload_offset)
                 },
                 tag_type_cc: tag_type_cc.clone(),
             }
@@ -1404,7 +1404,7 @@ fn specialize_option<'tcx>(
                     reinterpret_cast<#ty_tokens*>(storage_)
                 },
                 some_const_ptr_val: quote! {
-                    reinterpret_cast<const #ty_tokens*>(storage_)
+                    reinterpret_cast<#ty_tokens const*>(storage_)
                 },
                 // With a niche, the Some variant is implicitly encoded. We don't need to write out
                 // a discriminant value. It is accomplished by writing a value to the Some payload.
