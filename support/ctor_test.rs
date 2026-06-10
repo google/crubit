@@ -696,3 +696,15 @@ fn test_ctor_macro_generic_tuple_struct() {
     let my_struct = emplace!(ctor!(MyStruct::<u32>(42)));
     assert_eq!(my_struct.0, 42);
 }
+
+// Test workaround for b/491021357
+#[gtest]
+fn test_self_ctor_workaround() {
+    struct HasDyn {
+        field: Box<dyn std::any::Any>,
+    }
+    let x = HasDyn { field: Box::new(42) };
+    // We wrap it in RustMoveCtor to construct it.
+    let constructed = ctor::construct(ctor::RustMoveCtor::new(x));
+    assert_eq!(*constructed.field.downcast_ref::<i32>().unwrap(), 42);
+}

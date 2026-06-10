@@ -700,6 +700,29 @@ impl<T> Emplace<T> for Arc<T> {
 /// Do not use this trait as a trait bound. Instead, use `Ctor`. `SelfCtor` is a workaround to
 /// implement specialization of `Ctor`, and will go away if we ever get a useful form of
 /// specialization.
+///
+/// # Why is `SelfCtor` not implemented for my type?
+///
+/// `SelfCtor` is an auto trait, which means it is automatically implemented for a type if
+/// it is implemented for all of its fields.
+///
+/// However, trait objects (`dyn Trait`) do not implement auto traits unless they are
+/// explicitly listed in the trait bounds (e.g. `dyn Trait + SelfCtor`). Since `SelfCtor` is
+/// a custom auto trait, it cannot be listed in trait bounds in general.
+///
+/// Consequently, any type containing a trait object (such as `Box<dyn Trait>`, `Rc<dyn Trait>`,
+/// or a struct containing these) will also fail to implement `SelfCtor`.
+///
+/// If you encounter a compile error about `SelfCtor` not being implemented for a type `T`,
+/// and you are trying to use a value of type `T` as a `Ctor` (for example, in a `ctor!` macro),
+/// you can work around this by wrapping the value in `RustMoveCtor::new(value)`. This will
+/// wrap the value in a constructor that constructs the type via a Rust move.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` cannot be used as a direct initializer in `ctor!`",
+    label = "does not implement `SelfCtor` (often due to containing `dyn Trait`)",
+    note = "Types containing trait objects (like `dyn Trait`) do not implement `SelfCtor` by default.",
+    note = "To use this value in `ctor!`, wrap it in `RustMoveCtor::new(value)`."
+)]
 pub auto trait SelfCtor {}
 
 #[must_use = must_use_ctor!()]
