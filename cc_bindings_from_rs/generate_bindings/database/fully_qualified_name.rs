@@ -166,10 +166,38 @@ pub struct ExportedPath {
 }
 
 // Checks for a list of known clang builtin macros and renames their namespaces to avoid
-// collisions. Generating a namespace with the same name as a macro causes the namespace to
-// expand during preprocessing, producing an ill-formed program.
+// collisions in C++ preprocessing. Generating a namespace with the same name as a macro causes
+// illegal expansion during preprocessing.
 pub fn rename_clang_builtin_macros(ns: Rc<str>) -> Rc<str> {
     if matches!(ns.as_ref(), "unix" | "linux" | "WIN32" | "WINNT" | "WIN64" | "spirv" | "sun") {
+        return Rc::from(format!("rs_{}", ns.as_ref()));
+    }
+    ns
+}
+
+// Checks for a list of global C standard library functions, renaming their namespaces
+// when they appear at the top level to avoid scope conflicts in C++ ([basic.scope.scope]).
+pub fn rename_c_stdlib_functions(ns: Rc<str>) -> Rc<str> {
+    if matches!(
+        ns.as_ref(),
+        // C standard library global functions
+        "remove" | "rename" | "free" | "exit" | "abort" | "signal" | "system" |
+        // Memory & String utilities
+        "malloc" | "calloc" | "realloc" | "memcpy" | "memmove" | "memset" |
+        "strcpy" | "strncpy" | "strcat" | "strncat" | "strcmp" | "strncmp" |
+        "strlen" | "strchr" | "strrchr" | "strstr" | "strtok" | "strerror" |
+        // Math & Utility
+        "abs" | "labs" | "llabs" | "div" | "ldiv" | "lldiv" | "rand" | "srand" |
+        "bsearch" | "qsort" | "getenv" | "sin" | "cos" | "tan" | "asin" | "acos" |
+        "atan" | "atan2" | "sinh" | "cosh" | "tanh" | "exp" | "log" | "log10" |
+        "pow" | "sqrt" | "ceil" | "floor" | "fabs" | "frexp" | "ldexp" | "modf" |
+        // Time & Date
+        "clock" | "difftime" | "mktime" | "time" | "asctime" | "ctime" |
+        "gmtime" | "localtime" | "strftime" |
+        // I/O
+        "printf" | "scanf" | "puts" | "fopen" | "fclose" | "fread" | "fwrite" |
+        "fseek" | "ftell" | "rewind" | "perror" | "tmpfile" | "tmpnam"
+    ) {
         return Rc::from(format!("rs_{}", ns.as_ref()));
     }
     ns

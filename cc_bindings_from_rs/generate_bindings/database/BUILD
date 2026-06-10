@@ -2,6 +2,10 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_test",
+)
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -38,5 +42,14 @@ rust_library(
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
+    ],
+)
+
+crubit_rust_test(
+    name = "fully_qualified_name_test",
+    srcs = ["fully_qualified_name_test.rs"],
+    rustc_flags = ["-Zallow-features=rustc_private"],
+    deps = [
+        ":database",
     ],
 )

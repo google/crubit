@@ -25,7 +25,9 @@ use database::code_snippet::{
     CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
 };
 use database::BindingsGenerator;
-use database::{FineGrainedFeature, TypeLocation};
+use database::{
+    rename_c_stdlib_functions, rename_clang_builtin_macros, FineGrainedFeature, TypeLocation,
+};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use query_compiler::is_c_abi_compatible_by_value;
@@ -44,9 +46,19 @@ pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum
     let crate_needle_name =
         if krate == db.source_crate_num() { "self" } else { crate_name.as_str() };
     if let Some(namespaces) = db.crate_name_to_namespace().get(crate_needle_name) {
-        namespaces.split("::").map(Symbol::intern).collect()
+        namespaces
+            .split("::")
+            .enumerate()
+            .map(|(i, s)| {
+                let s = rename_clang_builtin_macros(Rc::from(s));
+                let s = if i == 0 { rename_c_stdlib_functions(s) } else { s };
+                Symbol::intern(s.as_ref())
+            })
+            .collect()
     } else {
-        Rc::from([crate_name])
+        let renamed = rename_clang_builtin_macros(Rc::from(crate_name.as_str()));
+        let renamed = rename_c_stdlib_functions(renamed);
+        Rc::from([Symbol::intern(renamed.as_ref())])
     }
 }
 

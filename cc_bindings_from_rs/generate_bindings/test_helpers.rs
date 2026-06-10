@@ -58,8 +58,9 @@ where
     let features = features.into();
     run_compiler_for_testing(source, |tcx| {
         let local_def_id = find_def_id_by_name(tcx, name);
-        let result = bindings_db_for_tests_with_features(tcx, features, with_kythe_annotations)
-            .generate_item(local_def_id.to_def_id());
+        let result =
+            bindings_db_for_tests_with_features(tcx, features, with_kythe_annotations, None)
+                .generate_item(local_def_id.to_def_id());
 
         // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
         // To print causes as well [...], use the alternate selector “{:#}”.
@@ -69,11 +70,12 @@ where
     })
 }
 
-fn bindings_db_for_tests_with_features(
-    tcx: TyCtxt,
+fn bindings_db_for_tests_with_features<'tcx>(
+    tcx: TyCtxt<'tcx>,
     features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     with_kythe_annotations: bool,
-) -> BindingsGenerator {
+    self_namespace: Option<&str>,
+) -> BindingsGenerator<'tcx> {
     const KNOWN_CRATE_NAMES: &[&str] = &["alloc", "core", "std"];
     let crate_name_to_include_paths = KNOWN_CRATE_NAMES
         .iter()
@@ -92,10 +94,13 @@ fn bindings_db_for_tests_with_features(
         .chain(std::iter::once("self"))
         .map(|name| (Rc::from(name), features))
         .collect();
-    let crate_name_to_namespace = KNOWN_CRATE_NAMES
+    let mut crate_name_to_namespace: HashMap<Rc<str>, Rc<str>> = KNOWN_CRATE_NAMES
         .iter()
         .map(|&name| (Rc::from(name), Rc::from(format!("rs::{name}").as_str())))
         .collect();
+    if let Some(ns) = self_namespace {
+        crate_name_to_namespace.insert(Rc::from("self"), Rc::from(ns));
+    }
     new_database(
         tcx,
         /* source_crate_name= */ None,
@@ -118,11 +123,24 @@ fn bindings_db_for_tests_with_features(
     )
 }
 
-pub fn bindings_db_for_tests(tcx: TyCtxt) -> BindingsGenerator {
+pub fn bindings_db_for_tests<'tcx>(tcx: TyCtxt<'tcx>) -> BindingsGenerator<'tcx> {
     bindings_db_for_tests_with_features(
         tcx,
         crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
         /* with_kythe_annotations= */ false,
+        None,
+    )
+}
+
+pub fn bindings_db_for_tests_with_namespace<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    namespace: &str,
+) -> BindingsGenerator<'tcx> {
+    bindings_db_for_tests_with_features(
+        tcx,
+        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        /* with_kythe_annotations= */ false,
+        Some(namespace),
     )
 }
 
@@ -137,5 +155,19 @@ where
 {
     run_compiler_for_testing(source, |tcx| {
         test_function(generate_bindings(&bindings_db_for_tests(tcx)))
+    })
+}
+
+pub fn test_generated_bindings_with_namespace<F, T>(
+    source: &str,
+    namespace: &str,
+    test_function: F,
+) -> T
+where
+    F: FnOnce(Result<BindingsTokens>) -> T + Send,
+    T: Send,
+{
+    run_compiler_for_testing(source, |tcx| {
+        test_function(generate_bindings(&bindings_db_for_tests_with_namespace(tcx, namespace)))
     })
 }
