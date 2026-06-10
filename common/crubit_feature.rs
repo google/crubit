@@ -36,9 +36,6 @@ flagset::flags! {
         /// Disable AssumeLifetimes (useful for :experimental).
         NoAssumeLifetimes,
 
-        /// Enable experimental support for `rs_std::DynCallable` and `absl::AnyInvocable`.
-        Callables,
-
         /// Mark C++ types with `[[gsl::Pointer]]` as unsafe.
         UnsafeView,
 
@@ -78,7 +75,6 @@ impl CrubitFeature {
             Self::AssumeLifetimes => "assume_lifetimes",
             Self::AssumeThisLifetimes => "assume_this_lifetimes",
             Self::NoAssumeLifetimes => "no_assume_lifetimes",
-            Self::Callables => "callables",
             Self::UseProtobufIR => "use_protobuf_ir",
             Self::UnsafeView => "unsafe_view",
             Self::CheckDefaultInitialized => "check_default_initialized",
@@ -103,7 +99,6 @@ impl CrubitFeature {
             Self::AssumeLifetimes => "//features:assume_lifetimes",
             Self::AssumeThisLifetimes => "//features:assume_this_lifetimes",
             Self::NoAssumeLifetimes => "//features:no_assume_lifetimes",
-            Self::Callables => "//features:callables",
             Self::UseProtobufIR => "//features:use_protobuf_ir",
             Self::UnsafeView => "//features:unsafe_view",
             Self::CheckDefaultInitialized => {
@@ -139,7 +134,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         b"assume_this_lifetimes" => CrubitFeature::AssumeThisLifetimes.into(),
         b"no_assume_lifetimes" => CrubitFeature::NoAssumeLifetimes.into(),
-        b"callables" => CrubitFeature::Callables.into(),
         b"use_protobuf_ir" => CrubitFeature::UseProtobufIR.into(),
         b"unsafe_view" => CrubitFeature::UnsafeView.into(),
         b"check_default_initialized" => CrubitFeature::CheckDefaultInitialized.into(),
@@ -262,7 +256,6 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
                 | CrubitFeature::AssumeThisLifetimes
-                | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized
@@ -298,7 +291,6 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
                 | CrubitFeature::AssumeThisLifetimes
-                | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized
@@ -319,7 +311,6 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
                 | CrubitFeature::AssumeThisLifetimes
-                | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized
@@ -341,7 +332,6 @@ mod tests {
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeThisLifetimes
-                | CrubitFeature::Callables
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::UseProtobufIR
                 | CrubitFeature::CheckDefaultInitialized

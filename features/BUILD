@@ -97,13 +97,6 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-crubit_feature_hint(
-    name = "callables",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["callables"],
-    visibility = ["//visibility:public"],
-)
-
 # A feature set enabling bindings generation via Protobuf IR rather than JSON IR.
 #
 # See crubit.rs-features#other

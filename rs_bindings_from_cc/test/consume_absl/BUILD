@@ -18,7 +18,7 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "absl_functional",
     hdrs = ["absl_functional.h"],
-    aspect_hints = ["//features:callables"],
+    aspect_hints = ["//features:supported"],
     deps = [
         "@abseil-cpp//absl/functional:any_invocable",
     ],
@@ -39,7 +39,6 @@ crubit_test_cc_library(
         "//features:supported",
         # Required to support incomplete types.
         "//features:wrapper",
-        "//features:callables",
     ],
     deps = [
         "@abseil-cpp//absl/functional:any_invocable",
