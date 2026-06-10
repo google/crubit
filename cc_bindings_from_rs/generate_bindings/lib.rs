@@ -1105,9 +1105,6 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
 // Implementation of `BindingsGenerator::supported_traits`.
 fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
     let tcx = db.tcx();
-    let iterator_trait_id = tcx.get_diagnostic_item(sym::Iterator);
-    let future_trait_id = tcx.lang_items().future_trait();
-
     let traits = tcx
         .visible_traits()
         .filter(|trait_id| {
