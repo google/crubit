@@ -356,6 +356,39 @@ mod long_integers {
     }
 }
 
+/// 32-bit platforms - ILP32.
+///
+/// There are some architectures with 32-bit pointers, where `long` is not
+/// 32-bits (e.g. TI C6000 with a 40-bits `long`), but AFAIK Rust doesn't
+/// support those.  In particular, `std::ffi::c_long` is always `i32` on
+/// non-64-bit platforms - see:
+/// https://github.com/rust-lang/rust/blob/beae781308e9ddef13074a03faf57ca2fac59a5b/library/core/src/ffi/primitives.rs#L138-L154
+#[cfg(target_pointer_width = "32")]
+mod long_integers {
+    use super::*;
+    new_integer! {
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+      pub struct c_long(i32);
+      pub const fn new_c_long;
+    }
+    new_integer! {
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+      pub struct c_ulong(u32);
+      pub const fn new_c_ulong;
+    }
+
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+    pub type c_longlong = i64;
+    pub const fn new_c_longlong(value: i64) -> c_longlong {
+        value
+    }
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+    pub type c_ulonglong = u64;
+    pub const fn new_c_ulonglong(value: u64) -> c_ulonglong {
+        value
+    }
+}
+
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(long(0))")]
 pub type c_long = long_integers::c_long;
 pub use long_integers::new_c_long;
