@@ -1,0 +1,26 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated BUILD.gn.
+
+import("../../crubit.gni")
+import("//build/rust/rust_static_library.gni")
+
+rust_static_library("ffi_11") {
+  crate_name = "ffi_11"
+  crate_root = "src/lib.rs"
+  edition = "2024"
+  sources = [
+    "src/lib.rs",
+    "src/newtype.rs",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+group("ffi_11_rust") {
+  public_deps = [
+    ":ffi_11",
+  ]
+}
