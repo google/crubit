@@ -211,7 +211,8 @@ static_assert(::std::is_trivially_destructible_v<Foo>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::Foo>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::uses_reexport::Foo* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::uses_reexport::Foo* crubit_nonnull __ret_ptr);
 }
 inline ::uses_reexport::Foo Foo::create() {
   crubit::Slot<::uses_reexport::Foo> __return_value_ret_val_holder;
@@ -221,7 +222,8 @@ inline ::uses_reexport::Foo Foo::create() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_bar(::uses_reexport::Bar* __ret_ptr);
+extern "C" void __crubit_thunk_bar(
+    ::uses_reexport::Bar* crubit_nonnull __ret_ptr);
 }
 inline ::uses_reexport::Bar Foo::bar() {
   crubit::Slot<::uses_reexport::Bar> __return_value_ret_val_holder;

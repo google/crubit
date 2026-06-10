@@ -85,6 +85,7 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
     pointee: Ty<'tcx>,
     mutability: Mutability,
     pointer_sigil: TokenStream,
+    is_reference: bool,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let const_qualifier = match mutability {
@@ -92,7 +93,14 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
         Mutability::Not => quote! { const },
     };
     if pointee.is_c_void(tcx) {
-        return Ok(CcSnippet { tokens: quote! { #const_qualifier void* }, ..Default::default() });
+        let mut prereqs = CcPrerequisites::default();
+        let tokens = if is_reference {
+            prereqs.includes.insert(db.support_header("annotations_internal.h"));
+            quote! { #const_qualifier void* crubit_nonnull }
+        } else {
+            quote! { #const_qualifier void #pointer_sigil }
+        };
+        return Ok(CcSnippet { tokens, prereqs });
     }
     let CcSnippet { tokens, mut prereqs } = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
     prereqs.move_defs_to_fwd_decls();
@@ -135,6 +143,7 @@ fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     referent_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
     pointer_sigil: TokenStream,
+    is_reference: bool,
 ) -> Option<CcSnippet<'tcx>> {
     let ty::TyKind::Adt(adt, substs) = referent_ty.kind() else {
         return None;
@@ -147,7 +156,8 @@ fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     }
 
     let referent = substs[0].expect_ty();
-    format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
+    format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil, is_reference)
+        .ok()
 }
 
 fn format_legacy_bridged_type_with_placeholders<'tcx>(
@@ -380,6 +390,7 @@ pub fn format_ty_for_cc<'tcx>(
                     referent,
                     Mutability::Mut,
                     quote! { && },
+                    /*is_reference=*/ true,
                 );
             }
             let def_id = adt.did();
@@ -504,17 +515,25 @@ pub fn format_ty_for_cc<'tcx>(
                 check_slice_layout(db.tcx(), ty);
                 return format_slice_ref_for_cc(db, *slice_ty, mutbl);
             }
-            // Early return in case we handle a transparent pointer type.
-            if let Some(snippet) =
-                format_transparent_pointee_or_reference_for_cc(db, pointee_ty, mutbl, quote! { * })
-            {
-                return Ok(snippet);
-            }
-
-            format_pointer_or_reference_ty_for_cc(db, pointee_ty, mutbl, quote! { * })
+            let sigil = quote! { * crubit_nullability_unknown };
+            let mut snippet = if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
+                db,
+                pointee_ty,
+                mutbl,
+                sigil.clone(),
+                /*is_reference=*/ false,
+            ) {
+                snippet
+            } else {
+                format_pointer_or_reference_ty_for_cc(
+                    db, pointee_ty, mutbl, sigil, /*is_reference=*/ false,
+                )
                 .with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
                 })?
+            };
+            snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
+            snippet
         }
 
         ty::TyKind::Ref(region, referent, mutability) => {
@@ -559,17 +578,21 @@ pub fn format_ty_for_cc<'tcx>(
                 referent,
                 mutability,
                 ptr_or_ref_prefix.clone(),
+                /*is_reference=*/ true,
             ) {
                 snippet.prereqs += prereqs;
                 return Ok(snippet);
             }
 
-            let tokens =
-                format_pointer_or_reference_ty_for_cc(db, referent, mutability, ptr_or_ref_prefix)
-                    .with_context(|| {
-                        format!("Failed to format the referent of the reference type `{ty}`")
-                    })?
-                    .into_tokens(&mut prereqs);
+            let tokens = format_pointer_or_reference_ty_for_cc(
+                db,
+                referent,
+                mutability,
+                ptr_or_ref_prefix,
+                /*is_reference=*/ true,
+            )
+            .with_context(|| format!("Failed to format the referent of the reference type `{ty}`"))?
+            .into_tokens(&mut prereqs);
             CcSnippet { tokens, prereqs }
         }
         ty::TyKind::FnPtr(sig_tys, fn_header) => {

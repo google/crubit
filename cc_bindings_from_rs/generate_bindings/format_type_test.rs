@@ -171,8 +171,8 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
         case!(rs: "SomeEnum", cc: "::rust_out::SomeEnum", includes: [], prereq_def: "SomeEnum"),
         case!(rs: "SomeUnion", cc: "::rust_out::SomeUnion", includes: [], prereq_def: "SomeUnion"),
-        case!(rs: "*const i32", cc: "::std :: int32_t const *", includes: ["<cstdint>"]),
-        case!(rs: "*mut i32", cc: "::std :: int32_t *", includes: ["<cstdint>"]),
+        case!(rs: "*const i32", cc: "::std :: int32_t const * crubit_nullability_unknown", includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]),
+        case!(rs: "*mut i32", cc: "::std :: int32_t * crubit_nullability_unknown", includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]),
         case!(
             rs: "&'static i32",
             cc: "::std :: int32_t const * $static crubit_nonnull",
@@ -219,20 +219,20 @@ fn test_format_ty_for_cc_successes() {
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
         case!(
             rs: "*mut SomeStruct",
-            cc: "::rust_out::SomeStruct*",
-            includes: [],
+            cc: "::rust_out::SomeStruct * crubit_nullability_unknown",
+            includes: ["<crubit/support/for/tests/annotations_internal.h>"],
             prereq_fwd_decl: "SomeStruct"
         ),
         // Testing propagation of deeper/nested `fwd_decls`:
         case!(
             rs: "*mut *mut SomeStruct",
-            cc: ":: rust_out :: SomeStruct * *",
-            includes: [],
+            cc: ":: rust_out :: SomeStruct * crubit_nullability_unknown * crubit_nullability_unknown",
+            includes: ["<crubit/support/for/tests/annotations_internal.h>"],
             prereq_fwd_decl: "SomeStruct"
         ),
         // Testing propagation of `const` / `mut` qualifiers:
-        case!(rs: "*mut *const f32", cc: "float const * *"),
-        case!(rs: "*const *mut f32", cc: "float * const *"),
+        case!(rs: "*mut *const f32", cc: "float const * crubit_nullability_unknown * crubit_nullability_unknown", includes: ["<crubit/support/for/tests/annotations_internal.h>"]),
+        case!(rs: "*const *mut f32", cc: "float * crubit_nullability_unknown const * crubit_nullability_unknown", includes: ["<crubit/support/for/tests/annotations_internal.h>"]),
         // Rust function pointers are non-nullable, so when function pointers are used as a
         // parameter type (i.e. in `TypeLocation::FnParam`) then we can translate to
         // generate a C++ function *reference*, rather than a C++ function *pointer*.
@@ -252,16 +252,16 @@ fn test_format_ty_for_cc_successes() {
         // function *reference*.
         case!(
             rs: "*const extern \"C\" fn (f32, f32) -> f32",
-            cc: "crubit :: type_identity_t < float (float , float) > * const *",
-            includes: ["<crubit/support/for/tests/internal/cxx20_backports.h>"]
+            cc: "crubit :: type_identity_t < float (float , float) > * const * crubit_nullability_unknown",
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/internal/cxx20_backports.h>"]
         ),
         // Extra parens/sugar are expected to be ignored:
         case!(rs: "(bool)", cc: "bool"),
         // References to MaybeUninit:
         case!(
             rs: "*const std::mem::MaybeUninit<i32>",
-            cc: "::std :: int32_t const *",
-            includes: ["<cstdint>"]
+            cc: "::std :: int32_t const * crubit_nullability_unknown",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
         ),
         case!(
             rs: "&mut std::mem::MaybeUninit<i32>",
@@ -286,13 +286,13 @@ fn test_format_ty_for_cc_successes() {
         // TyKind::Array
         case!(
             rs: "*mut [i32; 42]",
-            cc: "::std::array < ::std::int32_t, 42> *",
-            includes: ["<array>", "<cstdint>"]
+            cc: "::std::array < ::std::int32_t, 42> * crubit_nullability_unknown",
+            includes: ["<array>", "<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
         ),
         case!(
             rs: "*const [i32; 42]",
-            cc: "::std::array < ::std::int32_t, 42> const *",
-            includes: ["<array>", "<cstdint>"]
+            cc: "::std::array < ::std::int32_t, 42> const * crubit_nullability_unknown",
+            includes: ["<array>", "<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
         ),
         case!(
             rs: "[i32; 42]",

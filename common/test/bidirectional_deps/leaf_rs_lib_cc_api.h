@@ -148,7 +148,8 @@ static_assert(
     alignof(LeafRsType) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::leaf_rs_lib::LeafRsType* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::leaf_rs_lib::LeafRsType* crubit_nonnull __ret_ptr);
 }
 inline ::leaf_rs_lib::LeafRsType::LeafRsType() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -179,8 +180,8 @@ inline ::std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_wrap(::std::uint8_t,
-                                    ::leaf_rs_lib::LeafRsType* __ret_ptr);
+extern "C" void __crubit_thunk_wrap(
+    ::std::uint8_t, ::leaf_rs_lib::LeafRsType* crubit_nonnull __ret_ptr);
 }
 inline ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x) {
   crubit::Slot<::leaf_rs_lib::LeafRsType> __return_value_ret_val_holder;
@@ -190,8 +191,8 @@ inline ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_wrap_uenum(::std::uint8_t,
-                                          ::leaf_rs_lib::LeafRsEnum* __ret_ptr);
+extern "C" void __crubit_thunk_wrap_uenum(
+    ::std::uint8_t, ::leaf_rs_lib::LeafRsEnum* crubit_nonnull __ret_ptr);
 }
 inline ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x) {
   crubit::Slot<::leaf_rs_lib::LeafRsEnum> __return_value_ret_val_holder;

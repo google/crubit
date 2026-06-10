@@ -128,8 +128,9 @@ function_with_array_tuple_id(::std::tuple<::std::array<::std::int32_t, 2>,
                                  array_tup);
 
 // CRUBIT_ANNOTATE: must_bind=
-::std::array<::std::int32_t, 2> const* function_with_const_array_ptr_id(
-    ::std::array<::std::int32_t, 2> const* array_ptr);
+::std::array<::std::int32_t, 2> const* crubit_nullability_unknown
+function_with_const_array_ptr_id(::std::array<::std::int32_t, 2> const*
+                                     crubit_nullability_unknown array_ptr);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::array<::std::int32_t, 0> function_with_empty_array(
@@ -148,9 +149,10 @@ function_with_has_drop_and_default_array_id(
 ::std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only();
 
 // CRUBIT_ANNOTATE: must_bind=
-::std::array<::std::int32_t, 3> const*
+::std::array<::std::int32_t, 3> const* crubit_nullability_unknown
 function_with_mut_array_named_size_ptr_id(
-    ::std::array<::std::int32_t, 3> const* array_ptr);
+    ::std::array<::std::int32_t, 3> const* crubit_nullability_unknown
+        array_ptr);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::array<::std::array<::std::int32_t, 2>, 2> function_with_nested_arrays(
@@ -216,7 +218,8 @@ static_assert(
     alignof(ArrayStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::arrays::ArrayStruct* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::arrays::ArrayStruct* crubit_nonnull __ret_ptr);
 }
 inline ::arrays::ArrayStruct::ArrayStruct() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -241,7 +244,7 @@ extern "C" void __crubit_thunk_drop(::arrays::HasDrop&);
 inline HasDrop::~HasDrop() { __crubit_internal::__crubit_thunk_drop(*this); }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
-                                   ::arrays::HasDrop* __ret_ptr);
+                                   ::arrays::HasDrop* crubit_nonnull __ret_ptr);
 }
 inline ::arrays::HasDrop HasDrop::new_(::std::int32_t x) {
   crubit::Slot<::arrays::HasDrop> __return_value_ret_val_holder;
@@ -259,7 +262,8 @@ static_assert(
     alignof(HasDropAndDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::arrays::HasDropAndDefault* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::arrays::HasDropAndDefault* crubit_nonnull __ret_ptr);
 }
 inline ::arrays::HasDropAndDefault::HasDropAndDefault() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -283,8 +287,8 @@ inline void HasDropAndDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasDropAndDefault, x));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_function_uwith_uarray_uid(void*,
-                                                         void* __ret_ptr);
+extern "C" void __crubit_thunk_function_uwith_uarray_uid(
+    void*, void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<::std::int32_t, 2> function_with_array_id(
     ::std::array<::std::int32_t, 2> array) {
@@ -297,7 +301,7 @@ inline ::std::array<::std::int32_t, 2> function_with_array_id(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_ustruct_uid(
-    ::arrays::ArrayStruct*, ::arrays::ArrayStruct* __ret_ptr);
+    ::arrays::ArrayStruct*, ::arrays::ArrayStruct* crubit_nonnull __ret_ptr);
 }
 inline ::arrays::ArrayStruct function_with_array_struct_id(
     ::arrays::ArrayStruct array_struct) {
@@ -310,7 +314,7 @@ inline ::arrays::ArrayStruct function_with_array_struct_id(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_utuple_uid(
-    void**, void** __ret_ptr);
+    void**, void** crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::array<::std::int32_t, 2>,
                     ::std::array<::std::int32_t, 2>>
@@ -336,19 +340,20 @@ function_with_array_tuple_id(::std::tuple<::std::array<::std::int32_t, 2>,
 }
 
 namespace __crubit_internal {
-extern "C" ::std::array<::std::int32_t, 2> const*
+extern "C" ::std::array<::std::int32_t, 2> const* crubit_nullability_unknown
 __crubit_thunk_function_uwith_uconst_uarray_uptr_uid(
-    ::std::array<::std::int32_t, 2> const*);
+    ::std::array<::std::int32_t, 2> const* crubit_nullability_unknown);
 }
-inline ::std::array<::std::int32_t, 2> const* function_with_const_array_ptr_id(
-    ::std::array<::std::int32_t, 2> const* array_ptr) {
+inline ::std::array<::std::int32_t, 2> const* crubit_nullability_unknown
+function_with_const_array_ptr_id(::std::array<::std::int32_t, 2> const*
+                                     crubit_nullability_unknown array_ptr) {
   return __crubit_internal::
       __crubit_thunk_function_uwith_uconst_uarray_uptr_uid(array_ptr);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_function_uwith_uempty_uarray(void*,
-                                                            void* __ret_ptr);
+extern "C" void __crubit_thunk_function_uwith_uempty_uarray(
+    void*, void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<::std::int32_t, 0> function_with_empty_array(
     ::std::array<::std::int32_t, 0> array) {
@@ -362,7 +367,7 @@ inline ::std::array<::std::int32_t, 0> function_with_empty_array(
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarray_uid(
-    void*, void* __ret_ptr);
+    void*, void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<::arrays::HasDropAndDefault, 2>
 function_with_has_drop_and_default_array_id(
@@ -379,7 +384,7 @@ function_with_has_drop_and_default_array_id(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uhas_udrop_uarray_uid(
-    void*, void* __ret_ptr);
+    void*, void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
     ::std::array<::arrays::HasDrop, 2> array) {
@@ -394,7 +399,7 @@ inline ::std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uhas_udrop_uret_uonly(
-    void* __ret_ptr);
+    void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only() {
   crubit::Slot<::std::array<::arrays::HasDrop, 2>>
@@ -406,21 +411,22 @@ inline ::std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only() {
 }
 
 namespace __crubit_internal {
-extern "C" ::std::array<::std::int32_t, 3> const*
+extern "C" ::std::array<::std::int32_t, 3> const* crubit_nullability_unknown
 __crubit_thunk_function_uwith_umut_uarray_unamed_usize_uptr_uid(
-    ::std::array<::std::int32_t, 3> const*);
+    ::std::array<::std::int32_t, 3> const* crubit_nullability_unknown);
 }
-inline ::std::array<::std::int32_t, 3> const*
+inline ::std::array<::std::int32_t, 3> const* crubit_nullability_unknown
 function_with_mut_array_named_size_ptr_id(
-    ::std::array<::std::int32_t, 3> const* array_ptr) {
+    ::std::array<::std::int32_t, 3> const* crubit_nullability_unknown
+        array_ptr) {
   return __crubit_internal::
       __crubit_thunk_function_uwith_umut_uarray_unamed_usize_uptr_uid(
           array_ptr);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_function_uwith_unested_uarrays(void*,
-                                                              void* __ret_ptr);
+extern "C" void __crubit_thunk_function_uwith_unested_uarrays(
+    void*, void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<::std::array<::std::int32_t, 2>, 2>
 function_with_nested_arrays(
@@ -435,7 +441,7 @@ function_with_nested_arrays(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
-    void*, void* __ret_ptr);
+    void*, void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2>
 function_with_nested_drop_default_arrays(
@@ -452,7 +458,7 @@ function_with_nested_drop_default_arrays(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_utuple_uarray_uid(
-    void*, void* __ret_ptr);
+    void*, void* crubit_nonnull __ret_ptr);
 }
 inline ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2>
 function_with_tuple_array_id(
@@ -471,7 +477,7 @@ function_with_tuple_array_id(
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
+    rs_std::Tuple<::std::int32_t, ::std::int32_t>* crubit_nonnull __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
   __crubit_internal::__crubit_thunk_default(this);

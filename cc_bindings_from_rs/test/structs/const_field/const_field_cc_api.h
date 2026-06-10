@@ -14,6 +14,7 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#include "support/annotations_internal.h"
 #include "support/bridge.h"
 #include "support/internal/check.h"
 #include "support/internal/move_assign.h"
@@ -95,7 +96,7 @@ return_struct_with_const_field_by_value_in_result();
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uoption(
-    unsigned char* __ret_ptr);
+    unsigned char* crubit_nonnull __ret_ptr);
 }
 inline ::std::optional<::struct_with_const_field>
 return_struct_with_const_field_by_value_in_option() {
@@ -114,7 +115,8 @@ return_struct_with_const_field_by_value_in_option() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uresult(
-    rs_std::Result<::struct_with_const_field, ::std::uint8_t>* __ret_ptr);
+    rs_std::Result<::struct_with_const_field, ::std::uint8_t>* crubit_nonnull
+        __ret_ptr);
 }
 inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>
 return_struct_with_const_field_by_value_in_result() {

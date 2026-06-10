@@ -256,7 +256,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::rs_default::derived_impl::SomeStruct* __ret_ptr);
+    ::rs_default::derived_impl::SomeStruct* crubit_nonnull __ret_ptr);
 }
 inline ::rs_default::derived_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -289,7 +289,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::rs_default::explicit_impl::SomeStruct* __ret_ptr);
+    ::rs_default::explicit_impl::SomeStruct* crubit_nonnull __ret_ptr);
 }
 inline ::rs_default::explicit_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -323,7 +323,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
     StructWithFieldWithNoDefault() {

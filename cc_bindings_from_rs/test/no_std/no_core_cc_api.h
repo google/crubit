@@ -72,7 +72,7 @@ extern "C" void __crubit_thunk_drop(::no_core::Test&);
 }
 inline Test::~Test() { __crubit_internal::__crubit_thunk_drop(*this); }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::no_core::Test* __ret_ptr);
+extern "C" void __crubit_thunk_new(::no_core::Test* crubit_nonnull __ret_ptr);
 }
 inline ::no_core::Test Test::new_() {
   crubit::Slot<::no_core::Test> __return_value_ret_val_holder;

@@ -107,8 +107,8 @@ static_assert(::std::is_trivially_destructible_v<MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::trait_impl::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::trait_impl::MyStruct>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::int32_t,
-                                   ::trait_impl::MyStruct* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::int32_t, ::trait_impl::MyStruct* crubit_nonnull __ret_ptr);
 }
 inline ::trait_impl::MyStruct MyStruct::new_(::std::int32_t x) {
   crubit::Slot<::trait_impl::MyStruct> __return_value_ret_val_holder;

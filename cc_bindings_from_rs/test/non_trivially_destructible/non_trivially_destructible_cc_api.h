@@ -72,7 +72,8 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
+    ::non_trivially_destructible::NonTriviallyDestructable* crubit_nonnull
+        __ret_ptr);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable() {
@@ -99,7 +100,8 @@ non_trivially_destructible::NonTriviallyDestructable::operator=(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::non_trivially_destructible::NonTriviallyDestructable const&,
-    ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
+    ::non_trivially_destructible::NonTriviallyDestructable* crubit_nonnull
+        __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -123,7 +125,8 @@ inline void NonTriviallyDestructable::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uby_uvalue(
-    ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
+    ::non_trivially_destructible::NonTriviallyDestructable* crubit_nonnull
+        __ret_ptr);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable
 return_by_value() {

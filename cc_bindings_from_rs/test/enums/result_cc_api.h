@@ -91,7 +91,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
 };
 
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: FreeFunc") =
-    crubit::type_identity_t<void(void*, void*)>*;
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
@@ -192,7 +193,8 @@ ResultWithSizeTypes final {
   static void __crubit_field_offset_assertions();
 };
 
-using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: Voidpf") = void*;
+using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: Voidpf") =
+    void* crubit_nullability_unknown;
 }  // namespace result
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -1055,15 +1057,17 @@ rs_std::Result<::std::uint8_t, ::std::uint8_t> return_result_by_value();
 
 }  // namespace result
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < unsafe extern \"C\" fn (* mut :: core :: ffi :: "
     "c_void , * mut :: core :: ffi :: c_void) , unsafe extern \"C\" fn (* mut "
-    ":: core :: ffi :: c_void , * mut :: core :: ffi :: c_void) >")
-    rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                   crubit::type_identity_t<void(void*, void*)>*> {
+    ":: core :: ffi :: c_void , * mut :: core :: ffi :: c_void) >") rs_std::
+    Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                        void* crubit_nullability_unknown)>*,
+           crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                        void* crubit_nullability_unknown)>*> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -1087,15 +1091,33 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Result(rs_std::unexpect_t, Args&&... args);
   explicit constexpr operator bool() const noexcept;
   constexpr bool has_value() const noexcept;
-  crubit::type_identity_t<void(void*, void*)>*& value() &;
-  crubit::type_identity_t<void(void*, void*)>*&& value() &&;
-  crubit::type_identity_t<void(void*, void*)>*& err() &;
-  crubit::type_identity_t<void(void*, void*)>*&& err() &&;
-  crubit::type_identity_t<void(void*, void*)>*& operator*() &;
-  crubit::type_identity_t<void(void*, void*)>* const& operator*() const&;
-  crubit::type_identity_t<void(void*, void*)>*&& operator*() &&;
-  crubit::type_identity_t<void(void*, void*)>** operator->();
-  crubit::type_identity_t<void(void*, void*)>* const* operator->() const;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&
+  value() &;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&&
+  value() &&;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&
+  err() &;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&&
+  err() &&;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&
+  operator*() &;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>* const&
+  operator*() const&;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&&
+  operator*() &&;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>**
+  operator->();
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>* const*
+  operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -1129,8 +1151,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                   crubit::type_identity_t<void(void*, void*)>*>
+    rs_std::Result<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*,
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>
         zfree;
   };
 
@@ -1150,7 +1175,8 @@ static_assert(
 static_assert(::std::is_trivially_move_assignable_v<::result::CloneNoDefault>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::result::CloneNoDefault const&,
-                                     ::result::CloneNoDefault* __ret_ptr);
+                                     ::result::CloneNoDefault* crubit_nonnull
+                                         __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(::result::CloneNoDefault&,
@@ -1181,8 +1207,8 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::result::CloneNoDefaultResult>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint8_t,
-                                   ::result::CloneNoDefaultResult* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint8_t, ::result::CloneNoDefaultResult* crubit_nonnull __ret_ptr);
 }
 inline ::result::CloneNoDefaultResult CloneNoDefaultResult::new_(
     ::std::uint8_t val) {
@@ -1223,8 +1249,8 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::result::CopyNoDefaultResult>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint8_t,
-                                   ::result::CopyNoDefaultResult* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint8_t, ::result::CopyNoDefaultResult* crubit_nonnull __ret_ptr);
 }
 inline ::result::CopyNoDefaultResult CopyNoDefaultResult::new_(
     ::std::uint8_t val) {
@@ -1247,8 +1273,8 @@ static_assert(::std::is_trivially_destructible_v<GetsResult>);
 static_assert(::std::is_trivially_move_constructible_v<::result::GetsResult>);
 static_assert(::std::is_trivially_move_assignable_v<::result::GetsResult>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint32_t,
-                                   ::result::GetsResult* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint32_t, ::result::GetsResult* crubit_nonnull __ret_ptr);
 }
 inline ::result::GetsResult GetsResult::new_(::std::uint32_t val) {
   crubit::Slot<::result::GetsResult> __return_value_ret_val_holder;
@@ -1266,7 +1292,8 @@ static_assert(
     alignof(HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::result::HasDefault* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::result::HasDefault* crubit_nonnull __ret_ptr);
 }
 inline ::result::HasDefault::HasDefault() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -1286,8 +1313,8 @@ inline ::result::HasDefault& ::result::HasDefault::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
-                                   ::result::HasDefault* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::StrRef, ::result::HasDefault* crubit_nonnull __ret_ptr);
 }
 inline ::result::HasDefault HasDefault::new_(rs_std::StrRef val) {
   crubit::Slot<::result::HasDefault> __return_value_ret_val_holder;
@@ -1320,8 +1347,8 @@ inline HasDefaultResult::~HasDefaultResult() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
-                                   ::result::HasDefaultResult* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::StrRef, ::result::HasDefaultResult* crubit_nonnull __ret_ptr);
 }
 inline ::result::HasDefaultResult HasDefaultResult::new_(rs_std::StrRef val) {
   crubit::Slot<::result::HasDefaultResult> __return_value_ret_val_holder;
@@ -1369,8 +1396,8 @@ inline HasNoDefaultResult::~HasNoDefaultResult() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
-                                   ::result::HasNoDefaultResult* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::StrRef, ::result::HasNoDefaultResult* crubit_nonnull __ret_ptr);
 }
 inline ::result::HasNoDefaultResult HasNoDefaultResult::new_(
     rs_std::StrRef val) {
@@ -1393,8 +1420,8 @@ static_assert(::std::is_trivially_destructible_v<NestedResult>);
 static_assert(::std::is_trivially_move_constructible_v<::result::NestedResult>);
 static_assert(::std::is_trivially_move_assignable_v<::result::NestedResult>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint32_t,
-                                   ::result::NestedResult* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint32_t, ::result::NestedResult* crubit_nonnull __ret_ptr);
 }
 inline ::result::NestedResult NestedResult::new_(::std::uint32_t val) {
   crubit::Slot<::result::NestedResult> __return_value_ret_val_holder;
@@ -1437,7 +1464,7 @@ inline void ZStream::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uresult_uby_uvalue(
-    rs_std::Result<::std::uint8_t, ::std::uint8_t>* __ret_ptr);
+    rs_std::Result<::std::uint8_t, ::std::uint8_t>* crubit_nonnull __ret_ptr);
 }
 inline rs_std::Result<::std::uint8_t, ::std::uint8_t> return_result_by_value() {
   crubit::Slot<rs_std::Result<::std::uint8_t, ::std::uint8_t>>
@@ -1495,7 +1522,8 @@ inline rs_std::StrRef take_result_has_default(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     rs_std::Result<::result::CloneNoDefault, ::std::uint8_t> const&,
-    rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>* __ret_ptr);
+    rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>* crubit_nonnull
+        __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -2614,7 +2642,8 @@ inline void rs_std::Result<::std::uint32_t, ::std::uint32_t>::check_has_err()
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     rs_std::Result<::std::uint8_t, ::result::CloneNoDefault> const&,
-    rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>* __ret_ptr);
+    rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>* crubit_nonnull
+        __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -3348,119 +3377,191 @@ inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_err()
 }
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-static_assert(::std::is_trivially_copy_constructible_v<
-              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                             crubit::type_identity_t<void(void*, void*)>*>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                             crubit::type_identity_t<void(void*, void*)>*>>);
-static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                             crubit::type_identity_t<void(void*, void*)>*>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                             crubit::type_identity_t<void(void*, void*)>*>>);
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<rs_std::Result<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*,
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<rs_std::Result<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*,
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<rs_std::Result<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*,
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<rs_std::Result<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*,
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
 
 template <typename... Args>
 inline rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::Result(std::in_place_t,
-                                                          Args&&... args) {
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*,
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::
+    Result(std::in_place_t, Args&&... args) {
   set_tag(0);
   std::construct_at(__storage + 8, std::forward<Args>(args)...);
 }
 template <typename... Args>
 inline rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::Result(rs_std::unexpect_t,
-                                                          Args&&... args) {
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*,
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::
+    Result(rs_std::unexpect_t, Args&&... args) {
   set_tag(1);
   std::construct_at(__storage + 8, std::forward<Args>(args)...);
 }
-inline constexpr rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                                crubit::type_identity_t<void(void*, void*)>*>::
+inline constexpr rs_std::Result<
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*,
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::
 operator bool() const noexcept {
   return has_value();
 }
 inline constexpr bool rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::has_value() const noexcept {
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*,
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::
+    has_value() const noexcept {
   return tag() == 0;
 }
-inline crubit::type_identity_t<void(void*, void*)>*&
-rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-               crubit::type_identity_t<void(void*, void*)>*>::value() & {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<
+                   void(void* crubit_nullability_unknown,
+                        void* crubit_nullability_unknown)>*>::value() & {
   check_has_ok();
-  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+  return *reinterpret_cast<crubit::type_identity_t<void(
+      void* crubit_nullability_unknown, void* crubit_nullability_unknown)>**>(
       __storage + 8);
 }
-inline crubit::type_identity_t<void(void*, void*)>*&&
-rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-               crubit::type_identity_t<void(void*, void*)>*>::value() && {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&&
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<
+                   void(void* crubit_nullability_unknown,
+                        void* crubit_nullability_unknown)>*>::value() && {
   check_has_ok();
-  return ::std::move(
-      *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-          __storage + 8));
+  return ::std::move(*reinterpret_cast<crubit::type_identity_t<void(
+                         void* crubit_nullability_unknown,
+                         void* crubit_nullability_unknown)>**>(__storage + 8));
 }
-inline crubit::type_identity_t<void(void*, void*)>*&
-rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-               crubit::type_identity_t<void(void*, void*)>*>::err() & {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&
+rs_std::Result<
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*,
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::err() & {
   check_has_err();
-  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+  return *reinterpret_cast<crubit::type_identity_t<void(
+      void* crubit_nullability_unknown, void* crubit_nullability_unknown)>**>(
       __storage + 8);
 }
-inline crubit::type_identity_t<void(void*, void*)>*&&
-rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-               crubit::type_identity_t<void(void*, void*)>*>::err() && {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&&
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<
+                   void(void* crubit_nullability_unknown,
+                        void* crubit_nullability_unknown)>*>::err() && {
   check_has_err();
-  return ::std::move(
-      *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-          __storage + 8));
+  return ::std::move(*reinterpret_cast<crubit::type_identity_t<void(
+                         void* crubit_nullability_unknown,
+                         void* crubit_nullability_unknown)>**>(__storage + 8));
 }
-inline crubit::type_identity_t<void(void*, void*)>*&
-rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-               crubit::type_identity_t<void(void*, void*)>*>::operator*() & {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<
+                   void(void* crubit_nullability_unknown,
+                        void* crubit_nullability_unknown)>*>::operator*() & {
   check_has_ok();
-  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+  return *reinterpret_cast<crubit::type_identity_t<void(
+      void* crubit_nullability_unknown, void* crubit_nullability_unknown)>**>(
       __storage + 8);
 }
-inline crubit::type_identity_t<void(void*, void*)>* const& rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::operator*() const& {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>* const&
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<void(
+                   void* crubit_nullability_unknown,
+                   void* crubit_nullability_unknown)>*>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>* const*>(
+  return *reinterpret_cast<
+      crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                   void* crubit_nullability_unknown)>* const*>(
       __storage + 8);
 }
-inline crubit::type_identity_t<void(void*, void*)>*&&
-rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-               crubit::type_identity_t<void(void*, void*)>*>::operator*() && {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&&
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<
+                   void(void* crubit_nullability_unknown,
+                        void* crubit_nullability_unknown)>*>::operator*() && {
   check_has_ok();
-  return ::std::move(
-      *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-          __storage + 8));
+  return ::std::move(*reinterpret_cast<crubit::type_identity_t<void(
+                         void* crubit_nullability_unknown,
+                         void* crubit_nullability_unknown)>**>(__storage + 8));
 }
-inline crubit::type_identity_t<void(void*, void*)>**
-rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-               crubit::type_identity_t<void(void*, void*)>*>::operator->() {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>**
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<
+                   void(void* crubit_nullability_unknown,
+                        void* crubit_nullability_unknown)>*>::operator->() {
   check_has_ok();
-  return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+  return reinterpret_cast<crubit::type_identity_t<void(
+      void* crubit_nullability_unknown, void* crubit_nullability_unknown)>**>(
       __storage + 8);
 }
-inline crubit::type_identity_t<void(void*, void*)>* const* rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::operator->() const {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>* const*
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<void(
+                   void* crubit_nullability_unknown,
+                   void* crubit_nullability_unknown)>*>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>* const*>(
+  return reinterpret_cast<
+      crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                   void* crubit_nullability_unknown)>* const*>(
       __storage + 8);
 }
-static_assert(::std::is_trivially_destructible_v<
-              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
-                             crubit::type_identity_t<void(void*, void*)>*>>);
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Result<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*,
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
 inline constexpr ::std::uint64_t rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::tag() const& noexcept {
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*,
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::tag()
+    const& noexcept {
   std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = __storage[0 + i];
@@ -3468,9 +3569,11 @@ inline constexpr ::std::uint64_t rs_std::Result<
   return std::bit_cast<::std::uint64_t>(__bytes);
 }
 inline constexpr void rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::set_tag(::std::uint64_t
-                                                               tag) noexcept {
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*,
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::
+    set_tag(::std::uint64_t tag) noexcept {
   auto __bytes =
       std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
   for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
@@ -3478,14 +3581,20 @@ inline constexpr void rs_std::Result<
   }
 }
 
-inline void rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::check_has_ok() const {
+inline void
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<void(
+                   void* crubit_nullability_unknown,
+                   void* crubit_nullability_unknown)>*>::check_has_ok() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
 }
-inline void rs_std::Result<
-    crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::check_has_err() const {
+inline void
+rs_std::Result<crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                            void* crubit_nullability_unknown)>*,
+               crubit::type_identity_t<void(
+                   void* crubit_nullability_unknown,
+                   void* crubit_nullability_unknown)>*>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif

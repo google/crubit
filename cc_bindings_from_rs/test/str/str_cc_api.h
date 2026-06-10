@@ -56,7 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
 
   ::std::uintptr_t get_str_len() const;
 
-  ::std::uint8_t const* get_str_data() const;
+  ::std::uint8_t const* crubit_nullability_unknown get_str_data() const;
 
   union {
     rs_std::StrRef str_field;
@@ -68,7 +68,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
 
 rs_std::StrRef foo_as_str();
 
-::std::uint8_t const* get_str_data(rs_std::StrRef s);
+::std::uint8_t const* crubit_nullability_unknown get_str_data(rs_std::StrRef s);
 
 ::std::uintptr_t get_str_len(rs_std::StrRef s);
 
@@ -82,7 +82,8 @@ static_assert(
     alignof(TypeWithStr) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::str::TypeWithStr* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::str::TypeWithStr* crubit_nonnull __ret_ptr);
 }
 inline ::str::TypeWithStr::TypeWithStr() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -93,8 +94,8 @@ static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef,
-                                      ::str::TypeWithStr* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    rs_std::StrRef, ::str::TypeWithStr* crubit_nonnull __ret_ptr);
 }
 inline ::str::TypeWithStr TypeWithStr::create(rs_std::StrRef s) {
   crubit::Slot<::str::TypeWithStr> __return_value_ret_val_holder;
@@ -113,10 +114,11 @@ inline ::std::uintptr_t TypeWithStr::get_str_len() const {
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(
-    ::str::TypeWithStr const&);
+extern "C" ::std::uint8_t const* crubit_nullability_unknown
+__crubit_thunk_get_ustr_udata(::str::TypeWithStr const&);
 }
-inline ::std::uint8_t const* TypeWithStr::get_str_data() const {
+inline ::std::uint8_t const* crubit_nullability_unknown
+TypeWithStr::get_str_data() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_udata(self);
 }
@@ -131,9 +133,11 @@ inline rs_std::StrRef foo_as_str() {
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(rs_std::StrRef);
+extern "C" ::std::uint8_t const* crubit_nullability_unknown
+    __crubit_thunk_get_ustr_udata(rs_std::StrRef);
 }
-inline ::std::uint8_t const* get_str_data(rs_std::StrRef s) {
+inline ::std::uint8_t const* crubit_nullability_unknown
+get_str_data(rs_std::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_udata(s);
 }
 

@@ -126,7 +126,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::aliasing_references::NonFreezeType* __ret_ptr);
+    ::aliasing_references::NonFreezeType* crubit_nonnull __ret_ptr);
 }
 inline ::aliasing_references::NonFreezeType::NonFreezeType() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -167,7 +167,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::aliasing_references::SomeStruct* __ret_ptr);
+    ::aliasing_references::SomeStruct* crubit_nonnull __ret_ptr);
 }
 inline ::aliasing_references::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);

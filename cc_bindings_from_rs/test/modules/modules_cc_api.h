@@ -150,7 +150,8 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::modules::impl_in_separate_private_module::Foo>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    ::std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);
+    ::std::int32_t,
+    ::modules::impl_in_separate_private_module::Foo* crubit_nonnull __ret_ptr);
 }
 inline ::modules::impl_in_separate_private_module::Foo Foo::create(
     ::std::int32_t i) {

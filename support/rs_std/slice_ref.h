@@ -125,7 +125,9 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   constexpr SliceRef& operator=(SliceRef&&) noexcept = default;
   ~SliceRef() = default;
 
-  constexpr T* data() const noexcept { return size_ > 0 ? ptr_ : nullptr; }
+  constexpr T* crubit_nullability_unknown data() const noexcept {
+    return size_ > 0 ? ptr_ : nullptr;
+  }
   constexpr size_t size() const noexcept { return size_; }
 
   CRUBIT_DO_NOT_BIND constexpr std::span<T> to_span() const noexcept {
@@ -141,7 +143,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // `dangling_ptr_` is never read from in C++, and `ptr_` must only ever be
   // read from when `size_ > 0`.
   union {
-    T* ptr_;
+    T* crubit_nonnull ptr_;
     uintptr_t dangling_ptr_;
   };
   size_t size_;

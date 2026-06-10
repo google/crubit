@@ -181,30 +181,36 @@ pub fn generate_thunk_decl<'tcx>(
     // We should centralize this logic so that the order exists in a singular location used by both
     // places.
     let thunk_ret_type = if is_constructor && is_bridged_layout_compat_type(db, sig_mid.output()) {
-        thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+        prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        thunk_params.push(quote! { #main_api_ret_type* crubit_nonnull __ret_ptr });
         quote! { void }
     } else if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
         match briging {
             BridgedType::Legacy { .. } => {
-                thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+                prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                thunk_params.push(quote! { #main_api_ret_type* crubit_nonnull __ret_ptr });
                 quote! { void }
             }
             BridgedType::Composable(_) => {
-                thunk_params.push(quote! { unsigned char * __ret_ptr });
+                prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                thunk_params.push(quote! { unsigned char * crubit_nonnull __ret_ptr });
                 quote! { void }
             }
         }
     } else if is_c_abi_compatible_by_value(tcx, sig_mid.output()) {
         main_api_ret_type
     } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, sig_mid.output()) {
-        thunk_params.push(quote! { #tuple_abi __ret_ptr });
+        prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        thunk_params.push(quote! { #tuple_abi crubit_nonnull __ret_ptr });
         quote! { void }
     } else if let ty::TyKind::Array(inner_ty, _) = sig_mid.output().kind() {
         let c_type = array_c_abi_c_type(db.tcx(), *inner_ty)?;
-        thunk_params.push(quote! { #c_type __ret_ptr });
+        prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        thunk_params.push(quote! { #c_type crubit_nonnull __ret_ptr });
         quote! { void }
     } else {
-        thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+        prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        thunk_params.push(quote! { #main_api_ret_type* crubit_nonnull __ret_ptr });
         quote! { void }
     };
 

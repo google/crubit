@@ -74,8 +74,8 @@ inline NoStdStruct::~NoStdStruct() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::int32_t, float,
-                                   ::no_std::NoStdStruct* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::int32_t, float, ::no_std::NoStdStruct* crubit_nonnull __ret_ptr);
 }
 inline ::no_std::NoStdStruct NoStdStruct::new_(::std::int32_t x, float y) {
   crubit::Slot<::no_std::NoStdStruct> __return_value_ret_val_holder;

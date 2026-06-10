@@ -189,7 +189,8 @@ static_assert(
     ::std::is_trivially_move_assignable_v<::partial_eq::basic_test::MyStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
-    ::std::uintptr_t, ::partial_eq::basic_test::MyStruct* __ret_ptr);
+    ::std::uintptr_t,
+    ::partial_eq::basic_test::MyStruct* crubit_nonnull __ret_ptr);
 }
 inline ::partial_eq::basic_test::MyStruct MyStruct::new_(::std::uintptr_t val) {
   crubit::Slot<::partial_eq::basic_test::MyStruct>
@@ -232,7 +233,8 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::partial_eq::tuple_collision::MyStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
-    ::std::uintptr_t, ::partial_eq::tuple_collision::MyStruct* __ret_ptr);
+    ::std::uintptr_t,
+    ::partial_eq::tuple_collision::MyStruct* crubit_nonnull __ret_ptr);
 }
 inline ::partial_eq::tuple_collision::MyStruct MyStruct::new_(
     ::std::uintptr_t val) {
@@ -276,7 +278,8 @@ static_assert(
     ::std::is_trivially_move_assignable_v<::partial_eq::usize_rhs::MyStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
-    ::std::uintptr_t, ::partial_eq::usize_rhs::MyStruct* __ret_ptr);
+    ::std::uintptr_t,
+    ::partial_eq::usize_rhs::MyStruct* crubit_nonnull __ret_ptr);
 }
 inline ::partial_eq::usize_rhs::MyStruct MyStruct::new_(::std::uintptr_t val) {
   crubit::Slot<::partial_eq::usize_rhs::MyStruct> __return_value_ret_val_holder;
@@ -305,7 +308,7 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<::std::uintptr_t, bool>* __ret_ptr);
+    rs_std::Tuple<::std::uintptr_t, bool>* crubit_nonnull __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uintptr_t, bool>::Tuple() {
   __crubit_internal::__crubit_thunk_default(this);

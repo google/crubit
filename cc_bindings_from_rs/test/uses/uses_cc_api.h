@@ -183,8 +183,8 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::uses::AliasOfExportedStruct>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::std::int32_t,
-                                      ::uses::AliasOfExportedStruct* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::std::int32_t, ::uses::AliasOfExportedStruct* crubit_nonnull __ret_ptr);
 }
 inline ::uses::AliasOfExportedStruct AliasOfExportedStruct::create(
     ::std::int32_t field) {
@@ -310,7 +310,8 @@ inline ::std::int32_t private_fn() {
 namespace uses {
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_ux(::extern_crate::X* __ret_ptr);
+extern "C" void __crubit_thunk_return_ux(
+    ::extern_crate::X* crubit_nonnull __ret_ptr);
 }
 inline ::extern_crate::X return_x() {
   crubit::Slot<::extern_crate::X> __return_value_ret_val_holder;
@@ -320,7 +321,8 @@ inline ::extern_crate::X return_x() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uy(::extern_crate::Y* __ret_ptr);
+extern "C" void __crubit_thunk_return_uy(
+    ::extern_crate::Y* crubit_nonnull __ret_ptr);
 }
 inline ::extern_crate::Y return_y() {
   crubit::Slot<::extern_crate::Y> __return_value_ret_val_holder;

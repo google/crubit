@@ -68,7 +68,8 @@ static_assert(::std::is_trivially_destructible_v<Original>);
 static_assert(::std::is_trivially_move_constructible_v<::must_bind::Original>);
 static_assert(::std::is_trivially_move_assignable_v<::must_bind::Original>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::must_bind::Original* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::must_bind::Original* crubit_nonnull __ret_ptr);
 }
 inline ::must_bind::Original Original::new_() {
   crubit::Slot<::must_bind::Original> __return_value_ret_val_holder;

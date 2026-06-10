@@ -162,8 +162,8 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::generic_traits::StructGeneric>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::int32_t,
-                                   ::generic_traits::StructGeneric* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::int32_t, ::generic_traits::StructGeneric* crubit_nonnull __ret_ptr);
 }
 inline ::generic_traits::StructGeneric StructGeneric::new_(::std::int32_t x) {
   crubit::Slot<::generic_traits::StructGeneric> __return_value_ret_val_holder;
