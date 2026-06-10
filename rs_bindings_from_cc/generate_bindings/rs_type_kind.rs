@@ -209,10 +209,13 @@ pub fn rs_type_kind_with_lifetime_elision(
                         no_bindings_reason,
                         NoBindingsReason::MissingRequiredFeatures { .. }
                     ) {
-                        if let Ok(ty) = db.rs_type_kind_with_lifetime_elision(
-                            alias.underlying_type.clone(),
-                            lifetime_options,
-                        ) {
+                        let mut underlying_type = alias.underlying_type.clone();
+                        if underlying_type.explicit_lifetimes.is_empty() {
+                            underlying_type.explicit_lifetimes = ty.explicit_lifetimes.clone();
+                        }
+                        if let Ok(ty) =
+                            db.rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
+                        {
                             return Ok(ty);
                         } else {
                             // TODO(b/481368622): this fails if we fall through to comprehensive fallbacks.

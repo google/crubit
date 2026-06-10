@@ -841,7 +841,9 @@ impl RsTypeKind {
                 RsTypeKind::new_record(db, record, options, template_args, lifetimes)
             }
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
-            Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias, lifetimes),
+            Item::TypeAlias(type_alias) => {
+                RsTypeKind::new_type_alias(db, type_alias, options, lifetimes)
+            }
             Item::ExistingRustType(existing_rust_type) => {
                 RsTypeKind::new_existing_rust_type(db, existing_rust_type)
             }
@@ -852,10 +854,17 @@ impl RsTypeKind {
     fn new_type_alias(
         db: &BindingsGenerator,
         type_alias: Rc<TypeAlias>,
+        options: &LifetimeOptions,
         lifetimes: &[Lifetime],
     ) -> Result<Self> {
         let ir = db.ir();
-        let underlying_type = db.rs_type_kind(type_alias.underlying_type.clone())?;
+        let mut underlying_cc_type = type_alias.underlying_type.clone();
+        if underlying_cc_type.explicit_lifetimes.is_empty() {
+            underlying_cc_type.explicit_lifetimes =
+                lifetimes.iter().map(|lt| lt.0.clone()).collect();
+        }
+        let underlying_type =
+            db.rs_type_kind_with_lifetime_elision(underlying_cc_type, *options)?;
         // Note: we don't need to call `.unalias()` for these checks, because we already checked
         // this, recursively.
 
