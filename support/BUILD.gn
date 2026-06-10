@@ -68,7 +68,7 @@ source_set("lifetime_annotations") {
 
 rust_static_library("bridge_rust") {
   crate_name = "bridge_rust"
-  crate_root = "bridge.rs"
+  crate_root = "crubit_bridge_rust/src/bridge.rs"
   edition = "2024"
   sources = [
     "crubit_bridge_rust/src/bridge.rs",
