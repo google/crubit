@@ -82,7 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: DifferentTraitSameName")
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
-    8) [[clang::trivial_abi]] LifetimeStruct final {
+    8) [[clang::trivial_abi]] CRUBIT_LIFETIME_PARAMS("a") LifetimeStruct final {
  public:
   // `traits_golden::LifetimeStruct` doesn't implement the `Default` trait
   LifetimeStruct() = delete;

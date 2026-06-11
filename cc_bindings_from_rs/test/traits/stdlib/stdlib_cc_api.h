@@ -130,7 +130,7 @@ NonCloneableValue final {
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
-    [[clang::trivial_abi]] RefIterator final {
+    [[clang::trivial_abi]] CRUBIT_LIFETIME_PARAMS("a") RefIterator final {
  public:
   // `stdlib_golden::RefIterator` doesn't implement the `Default` trait
   RefIterator() = delete;
@@ -147,7 +147,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  static ::stdlib::RefIterator new_(
+  static ::stdlib::RefIterator [[clang::annotate_type("lifetime", "a")]] new_(
       rs_std::SliceRef<const ::std::int32_t> slice);
 
   union {
@@ -329,11 +329,14 @@ static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
-                                   ::stdlib::RefIterator* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::SliceRef<const ::std::int32_t>,
+    ::stdlib::RefIterator [[clang::annotate_type("lifetime", "a")]] *
+        __ret_ptr);
 }
-inline ::stdlib::RefIterator RefIterator::new_(
-    rs_std::SliceRef<const ::std::int32_t> slice) {
+inline ::stdlib::RefIterator
+    [[clang::annotate_type("lifetime", "a")]] RefIterator::new_(
+        rs_std::SliceRef<const ::std::int32_t> slice) {
   crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(slice, __return_value_storage);

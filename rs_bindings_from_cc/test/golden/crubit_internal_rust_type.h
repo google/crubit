@@ -111,4 +111,38 @@ struct [[clang::annotate("crubit_internal_rust_type", "MyRustContainerVoid",
 
 void AcceptSpecialized(MyContainer<int> a, MyContainer<void> b);
 
+struct [[clang::annotate(
+    "crubit_internal_rust_type",
+    "::dyn_future::DynFuture")]] [[clang::annotate("lifetime_params", "a")]]
+MyDynFuture final {
+  void* ptr;
+};
+
+MyDynFuture [[clang::annotate_type("lifetime", "a")]] RunFuture(
+    MyDynFuture [[clang::annotate_type("lifetime", "a")]] in);
+
+MyDynFuture
+    [[clang::annotate_type("lifetime", "a")]] CreateFutureFromExplicitRef(
+        int& [[clang::annotate_type("lifetime", "a")]] value);
+
+MyDynFuture CreateFutureFromElidedRef(int& value);
+
+struct [[clang::annotate(
+    "crubit_internal_rust_type",
+    "MyRustTypeWithTwoLifetimes")]] [[clang::annotate("lifetime_params", "a",
+                                                      "b")]]
+ExistingRustTypeWithTwoLifetimes final {
+  void* ptr1;
+  void* ptr2;
+};
+
+ExistingRustTypeWithTwoLifetimes [[clang::annotate_type(
+    "lifetime", "a",
+    "b")]] MultipleLifetimesFunctionExplicit(int& [[clang::
+                                                        annotate_type(
+                                                            "lifetime",
+                                                            "a")]] value1,
+                                             int& [[clang::annotate_type(
+                                                 "lifetime", "b")]] value2);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CRUBIT_INTERNAL_RS_TYPE_H_

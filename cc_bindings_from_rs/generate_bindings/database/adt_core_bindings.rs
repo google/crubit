@@ -48,6 +48,7 @@ pub struct AdtCoreBindings<'tcx> {
     /// `::some_crate::some_module::SomeStruct`.
     pub rs_fully_qualified_name: TokenStream,
     pub cc_fully_qualified_name: TokenStream,
+    pub lifetime_params: Vec<String>,
 
     pub self_ty: Ty<'tcx>,
     pub alignment_in_bytes: u64,

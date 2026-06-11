@@ -107,5 +107,7 @@ struct Const {};
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
+#define CRUBIT_LIFETIME_PARAMS(...) \
+  CRUBIT_INTERNAL_ANNOTATE("lifetime_params", __VA_ARGS__)
 
 #endif  // CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
