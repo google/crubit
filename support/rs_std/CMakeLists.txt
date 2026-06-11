@@ -42,6 +42,10 @@ add_library(crubit_support_rs_std_option STATIC
 )
 set_target_properties(crubit_support_rs_std_option PROPERTIES LINKER_LANGUAGE CXX)
 
+target_link_libraries(crubit_support_rs_std_option PUBLIC
+crubit_support_internal_bindings_support
+)
+
 add_library(crubit_support_rs_std_result STATIC
 "result.h"
 )
