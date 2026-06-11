@@ -38,7 +38,6 @@
 
 namespace option {
 struct HasOptions;
-struct LessThan20U8;
 
 // Error generating bindings for struct `option_golden::BridgedType` defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=228:
@@ -181,6 +180,86 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
+    [[clang::trivial_abi]] LessThan20U8 final {
+ public:
+  // `option_golden::LessThan20U8` doesn't implement the `Default` trait
+  LessThan20U8() = delete;
+
+  static constexpr LessThan20U8 MakeN0();
+
+  static constexpr LessThan20U8 MakeN1();
+
+  static constexpr LessThan20U8 MakeN2();
+
+  static constexpr LessThan20U8 MakeN3();
+
+  static constexpr LessThan20U8 MakeN4();
+
+  static constexpr LessThan20U8 MakeN5();
+
+  static constexpr LessThan20U8 MakeN6();
+
+  static constexpr LessThan20U8 MakeN7();
+
+  static constexpr LessThan20U8 MakeN8();
+
+  static constexpr LessThan20U8 MakeN9();
+
+  static constexpr LessThan20U8 MakeN10();
+
+  static constexpr LessThan20U8 MakeN11();
+
+  static constexpr LessThan20U8 MakeN12();
+
+  static constexpr LessThan20U8 MakeN13();
+
+  static constexpr LessThan20U8 MakeN14();
+
+  static constexpr LessThan20U8 MakeN15();
+
+  static constexpr LessThan20U8 MakeN16();
+
+  static constexpr LessThan20U8 MakeN17();
+
+  static constexpr LessThan20U8 MakeN18();
+
+  static constexpr LessThan20U8 MakeN19();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~LessThan20U8() = default;
+  LessThan20U8(LessThan20U8&&) = default;
+  LessThan20U8& operator=(LessThan20U8&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  LessThan20U8(const LessThan20U8&) = default;
+  LessThan20U8& operator=(const LessThan20U8&) = default;
+  LessThan20U8(::crubit::UnsafeRelocateTag, LessThan20U8&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static rs_std::Option<::option::LessThan20U8> new_(::std::uint8_t value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  ::std::uint8_t value() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr LessThan20U8(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 // Error generating bindings for struct `option_golden::OptUninhabited` defined
 // at cc_bindings_from_rs/test/enums/option.rs;l=201:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -257,12 +336,40 @@ OptionWithSizeTypes final {
 
 using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: Voidpf") = void*;
 
+// CRUBIT_ANNOTATE: must_bind=
+rs_std::Option<::std::int32_t const*> pass_option_ptr(
+    rs_std::Option<::std::int32_t const*> x);
+
+// CRUBIT_ANNOTATE: must_bind=
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
+return_option_result();
+
+rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
+return_option_result_unmovable();
+
+// CRUBIT_ANNOTATE: must_bind=
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>
+stress_testing_nested_types();
+
+// CRUBIT_ANNOTATE: must_bind=
+rs_std::Option<::std::uint32_t> stringify_len(
+    rs_std::Option<::option::HasDefault> const& x);
+
 // Error generating bindings for function `option_golden::take_option_bridged`
 // defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=230:
 // Error handling parameter #0 of type
 // `std::option::Option<option_golden::BridgedType>`: Generic types are not
 // supported yet (b/259749095)
+
+void take_option_result_unmovable(
+    rs_std::Option<
+        rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
+        _x);
 
 }  // namespace option
 
@@ -311,14 +418,6 @@ struct alignas(8)
   unsigned char storage_[16];
 };
 #endif
-
-namespace option {
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Option<::std::int32_t const*> pass_option_ptr(
-    rs_std::Option<::std::int32_t const*> x);
-
-}  // namespace option
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -762,6 +861,40 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
+namespace option {
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
+    [[clang::trivial_abi]] HasHasOptions final {
+ public:
+  // `option_golden::HasHasOptions` doesn't implement the `Default` trait
+  HasHasOptions() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~HasHasOptions() = default;
+  HasHasOptions(HasHasOptions&&) = default;
+  HasHasOptions& operator=(HasHasOptions&&) = default;
+
+  // `option_golden::HasHasOptions` doesn't implement the `Clone` trait
+  HasHasOptions(const HasHasOptions&) = delete;
+  HasHasOptions& operator=(const HasHasOptions&) = delete;
+  HasHasOptions(::crubit::UnsafeRelocateTag, HasHasOptions&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::option::HasHasOptions new_(::std::uint8_t value);
+
+  union {
+    rs_std::Option<::option::HasOptions> me;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace option
+
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
 template <>
@@ -810,90 +943,6 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   unsigned char storage_[1];
 };
 #endif
-
-namespace option {
-
-// CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
-    [[clang::trivial_abi]] LessThan20U8 final {
- public:
-  // `option_golden::LessThan20U8` doesn't implement the `Default` trait
-  LessThan20U8() = delete;
-
-  static constexpr LessThan20U8 MakeN0();
-
-  static constexpr LessThan20U8 MakeN1();
-
-  static constexpr LessThan20U8 MakeN2();
-
-  static constexpr LessThan20U8 MakeN3();
-
-  static constexpr LessThan20U8 MakeN4();
-
-  static constexpr LessThan20U8 MakeN5();
-
-  static constexpr LessThan20U8 MakeN6();
-
-  static constexpr LessThan20U8 MakeN7();
-
-  static constexpr LessThan20U8 MakeN8();
-
-  static constexpr LessThan20U8 MakeN9();
-
-  static constexpr LessThan20U8 MakeN10();
-
-  static constexpr LessThan20U8 MakeN11();
-
-  static constexpr LessThan20U8 MakeN12();
-
-  static constexpr LessThan20U8 MakeN13();
-
-  static constexpr LessThan20U8 MakeN14();
-
-  static constexpr LessThan20U8 MakeN15();
-
-  static constexpr LessThan20U8 MakeN16();
-
-  static constexpr LessThan20U8 MakeN17();
-
-  static constexpr LessThan20U8 MakeN18();
-
-  static constexpr LessThan20U8 MakeN19();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~LessThan20U8() = default;
-  LessThan20U8(LessThan20U8&&) = default;
-  LessThan20U8& operator=(LessThan20U8&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  LessThan20U8(const LessThan20U8&) = default;
-  LessThan20U8& operator=(const LessThan20U8&) = default;
-  LessThan20U8(::crubit::UnsafeRelocateTag, LessThan20U8&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  // CRUBIT_ANNOTATE: must_bind=
-  static rs_std::Option<::option::LessThan20U8> new_(::std::uint8_t value);
-
-  // CRUBIT_ANNOTATE: must_bind=
-  ::std::uint8_t value() const;
-
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
-
- private:
-  struct PrivateBytesTag {};
-  constexpr LessThan20U8(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-}  // namespace option
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
@@ -996,14 +1045,6 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-namespace option {
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Option<::std::uint32_t> stringify_len(
-    rs_std::Option<::option::HasDefault> const& x);
-
-}  // namespace option
-
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
@@ -1094,36 +1135,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   };
   union {
     rs_std::Option<rs_std::Option<::option::LessThan20U8>> nested;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-// CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
-    [[clang::trivial_abi]] HasHasOptions final {
- public:
-  // `option_golden::HasHasOptions` doesn't implement the `Default` trait
-  HasHasOptions() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~HasHasOptions() = default;
-  HasHasOptions(HasHasOptions&&) = default;
-  HasHasOptions& operator=(HasHasOptions&&) = default;
-
-  // `option_golden::HasHasOptions` doesn't implement the `Clone` trait
-  HasHasOptions(const HasHasOptions&) = delete;
-  HasHasOptions& operator=(const HasHasOptions&) = delete;
-  HasHasOptions(::crubit::UnsafeRelocateTag, HasHasOptions&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  // CRUBIT_ANNOTATE: must_bind=
-  static ::option::HasHasOptions new_(::std::uint8_t value);
-
-  union {
-    rs_std::Option<::option::HasOptions> me;
   };
 
  private:
@@ -1327,14 +1338,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-namespace option {
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
-return_option_result();
-
-}  // namespace option
-
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
@@ -1447,19 +1450,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   unsigned char storage_[32];
 };
 #endif
-
-namespace option {
-
-rs_std::Option<
-    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
-return_option_result_unmovable();
-
-void take_option_result_unmovable(
-    rs_std::Option<
-        rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
-        _x);
-
-}  // namespace option
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
@@ -1703,13 +1693,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #endif
 
 namespace option {
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Option<rs_std::Result<
-    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
-    rs_std::Result<rs_std::Option<::std::int32_t>,
-                   rs_std::Option<::std::int32_t>>>>
-stress_testing_nested_types();
 
 static_assert(
     sizeof(CloneNoDefault) == 1,
@@ -2461,6 +2444,7 @@ inline constexpr void rs_std::Option<::std::int32_t const*>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -2596,6 +2580,7 @@ inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
@@ -2769,6 +2754,7 @@ inline constexpr void rs_std::Option<::option::CloneNoDefault>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000003e
@@ -2922,6 +2908,7 @@ inline constexpr void rs_std::Option<::option::CopyNoDefault>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
@@ -3070,6 +3057,7 @@ inline constexpr void rs_std::Option<::option::HasDefault>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
@@ -3203,6 +3191,7 @@ inline constexpr void rs_std::Option<::option::HasNoDefault>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasOptions_x00000020_x0000003e
@@ -3341,6 +3330,7 @@ inline constexpr void rs_std::Option<::option::HasOptions>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
@@ -3487,6 +3477,7 @@ inline constexpr void rs_std::Option<::option::LessThan20U8>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
@@ -3648,6 +3639,7 @@ rs_std::Option<rs_std::Option<::option::LessThan20U8>>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
@@ -3895,6 +3887,7 @@ rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
@@ -4096,6 +4089,7 @@ inline constexpr void rs_std::Option<
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
@@ -4494,6 +4488,7 @@ inline constexpr void rs_std::Option<rs_std::Result<
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
@@ -4630,6 +4625,7 @@ inline constexpr void rs_std::Option<::std::uint32_t>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -4764,6 +4760,7 @@ inline constexpr void rs_std::Option<::std::uint8_t>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
@@ -4909,6 +4906,7 @@ rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
@@ -5079,6 +5077,7 @@ inline void rs_std::Result<::std::int32_t,
                            ::rs::alloc::string::String>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
@@ -5214,6 +5213,7 @@ inline void rs_std::Result<::option::HasNoDefault,
                            ::rs::alloc::string::String>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
@@ -5397,6 +5397,7 @@ inline void rs_std::Result<rs_std::Option<::std::int32_t>,
     const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
@@ -5710,6 +5711,7 @@ inline void rs_std::Result<
                    rs_std::Option<::std::int32_t>>>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #pragma clang diagnostic pop

@@ -24,7 +24,7 @@ use query_compiler::{get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::LayoutData;
-use rustc_abi::VariantIdx;
+use rustc_abi::{Layout, VariantIdx};
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
@@ -126,6 +126,7 @@ fn parse_adt_template_specialization<'tcx>(
                 let self_ty_cc = {
                     let mut prereqs = CcPrerequisites::default();
                     let some_ty_cc = some_ty.for_cc.clone().into_tokens(&mut prereqs);
+                    prereqs.forward_declare_type(substs.type_at(0));
                     CcSnippet { tokens: quote! { rs_std::Option<#some_ty_cc> }, prereqs }
                 };
                 Ok(RsStdTemplateSpecialization {
@@ -180,6 +181,8 @@ fn parse_adt_template_specialization<'tcx>(
                     let mut prereqs = CcPrerequisites::default();
                     let ok_ty_cc = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
                     let err_ty_cc = err_ty.for_cc.clone().into_tokens(&mut prereqs);
+                    prereqs.forward_declare_type(substs.type_at(0));
+                    prereqs.forward_declare_type(substs.type_at(1));
                     CcSnippet {
                         tokens: quote! { rs_std::Result<#ok_ty_cc, #err_ty_cc> },
                         prereqs,
@@ -194,6 +197,26 @@ fn parse_adt_template_specialization<'tcx>(
                         tag_type_cc: tag_type_cc.clone(),
                         kind: EnumSpecializationKind::Result { ok_ty, err_ty },
                     }),
+                })
+            }
+            BridgedBuiltin::Vec => {
+                let inner_ty = FormattedTy::try_from_ty(
+                    substs.type_at(0),
+                    TypeLocation::Other,
+                    db,
+                )?;
+                let layout = get_layout(tcx, self_ty)?;
+                let self_ty_cc = {
+                    let mut prereqs = CcPrerequisites::default();
+                    let inner_ty_cc = inner_ty.for_cc.clone().into_tokens(&mut prereqs);
+                    prereqs.forward_declare_type(substs.type_at(0));
+                    CcSnippet { tokens: quote! { rs_std::Vec<#inner_ty_cc> }, prereqs }
+                };
+                Ok(RsStdTemplateSpecialization {
+                    layout,
+                    self_ty_rs: self_ty,
+                    self_ty_cc,
+                    args: RsStdSpecializationArgs::Vec(inner_ty),
                 })
             }
         }
@@ -225,6 +248,9 @@ fn parse_tuple_template_specialization<'tcx>(
             .iter()
             .map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs))
             .collect::<Vec<_>>();
+        for ty in types.iter() {
+            prereqs.forward_declare_type(ty);
+        }
         CcSnippet { tokens: quote! { rs_std::Tuple<#(#element_tys_cc),*> }, prereqs }
     };
     Some(Ok(RsStdTemplateSpecialization {
@@ -949,8 +975,12 @@ fn specialize_tuple<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let layout = rs_std.layout;
     let mut prereqs = CcPrerequisites::default();
-    let element_cc_tys =
-        element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect_vec();
+    let element_cc_tys = element_tys
+        .iter()
+        .map(|ty| {
+            db.format_ty_for_cc(ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs)
+        })
+        .collect_vec();
 
     let tuple_api = TupleApiGenerator {
         db,
@@ -1022,8 +1052,276 @@ fn specialize_tuple<'tcx>(
     let cc_details_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
         __HASH_TOKEN__ define #guard_name __NEWLINE__
-        #cc_details_tokens
+        #cc_details_tokens __NEWLINE__
         __HASH_TOKEN__ endif __NEWLINE__
+    };
+
+    ApiSnippets {
+        main_api: CcSnippet { tokens: main_api_tokens, prereqs },
+        cc_details: CcSnippet::new(cc_details_tokens),
+        rs_details,
+    }
+}
+
+fn find_pointer_field_offset<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<u64> {
+    find_pointer_field_offset_impl(tcx, ty, 0)
+}
+
+fn find_pointer_field_offset_impl<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    ty: Ty<'tcx>,
+    current_offset: u64,
+) -> Option<u64> {
+    let kind = ty.kind();
+
+    if matches!(kind, ty::TyKind::RawPtr(_, _)) {
+        return Some(current_offset);
+    }
+
+    if let ty::TyKind::Pat(underlying_ty, _) = kind {
+        return find_pointer_field_offset_impl(tcx, *underlying_ty, current_offset);
+    }
+
+    if let ty::TyKind::Adt(adt_def, args) = kind {
+        if adt_def.is_enum() {
+            return None;
+        }
+
+        let layout = get_layout(tcx, ty).ok()?;
+        let variant = adt_def.non_enum_variant();
+
+        for (i, field) in variant.fields.iter().enumerate() {
+            let field_offset = layout.fields().offset(i).bytes();
+            let field_ty = field.ty(tcx, args);
+            let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+
+            if let Some(offset) =
+                find_pointer_field_offset_impl(tcx, field_ty, current_offset + field_offset)
+            {
+                return Some(offset);
+            }
+        }
+    }
+
+    None
+}
+
+/// Computes the offsets of the pointer and length fields of `Vec`.
+///
+/// At the top level of `Vec<T>`, the layout consists of:
+/// - `len: usize` (primitive)
+/// - `buf: RawVec<T>` (ADT struct)
+///
+/// Because `capacity` is nested inside `buf` (at a deeper level), `len` is the
+/// only top-level field of type `usize`. This function exploits this structure:
+/// 1. It finds `len` by looking only at the top-level fields of `Vec` for a
+///    `usize` type.
+/// 2. It finds the data pointer by recursively searching the other top-level
+///    ADT fields for a raw pointer type.
+///
+/// This allows us to find the offsets without relying on the names of `buf`,
+/// `len`, `inner`, `ptr`, or `cap`.
+struct VecLayoutOffsets {
+    ptr_offset: u64,
+    len_offset: u64,
+}
+
+fn compute_vec_layout_offsets<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    self_ty: Ty<'tcx>,
+    layout: Layout<'tcx>,
+) -> VecLayoutOffsets {
+    let (adt_def, adt_generic_args) = match self_ty.kind() {
+        ty::TyKind::Adt(adt_def, args) => (adt_def, args),
+        _ => panic!("Expected Adt type"),
+    };
+    let variant = adt_def.non_enum_variant();
+
+    let mut len_offset_val = None;
+    let mut ptr_offset_val = None;
+
+    for (i, field) in variant.fields.iter().enumerate() {
+        let field_ty = field.ty(tcx, adt_generic_args);
+        let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+        let field_offset = layout.fields().offset(i).bytes();
+
+        if matches!(field_ty.kind(), ty::TyKind::Uint(ty::UintTy::Usize)) {
+            len_offset_val = Some(field_offset);
+        } else if let Some(nested_ptr_offset) = find_pointer_field_offset(tcx, field_ty) {
+            ptr_offset_val = Some(field_offset + nested_ptr_offset);
+        }
+    }
+
+    let len_offset = len_offset_val.expect("Failed to find len field in Vec");
+    let ptr_offset = ptr_offset_val.expect("Failed to find ptr field in Vec");
+
+    VecLayoutOffsets { ptr_offset, len_offset }
+}
+
+fn specialize_vec<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    rs_std: &RsStdTemplateSpecialization<'tcx>,
+    inner_ty: FormattedTy<'tcx>,
+) -> ApiSnippets<'tcx> {
+    let tcx = db.tcx();
+    let layout = rs_std.layout;
+    let mut prereqs = CcPrerequisites::default();
+    let inner_ty_cc =
+        db.format_ty_for_cc(inner_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
+    let inner_ty_rs = &inner_ty.for_rs;
+
+    let rs_fully_qualified_name = quote! { ::alloc::vec::Vec<#inner_ty_rs> };
+    let cc_fully_qualified_name = quote! { rs_std::Vec<#inner_ty_cc> };
+
+    let adt_def = rs_std.self_ty_rs.ty_adt_def().expect("Vec should be an ADT");
+    let def_id = Some(adt_def.did());
+
+    let core = Rc::new(database::AdtCoreBindings {
+        def_id,
+        keyword: quote! { struct },
+        cc_short_name: format_ident!("Vec"),
+        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
+        cc_fully_qualified_name: cc_fully_qualified_name.clone(),
+        self_ty: rs_std.self_ty_rs,
+        alignment_in_bytes: layout.align().abi.bytes(),
+        size_in_bytes: layout.size().bytes(),
+    });
+
+    let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
+    let copy_ctor_and_assignment_snippets =
+        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+    let move_ctor_and_assignment_snippets = db
+        .generate_move_ctor_and_assignment_operator(core.clone())
+        .unwrap_or_else(|err| err.explicitly_deleted);
+    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
+
+    let target_path_mangled_hash = if db.is_golden_test() {
+        "".to_string()
+    } else {
+        format!("{:x}_", tcx.stable_crate_id(db.source_crate_num()))
+    };
+
+    let qualified_name = cc_fully_qualified_name.to_string();
+    let name = escape_non_identifier_chars(&qualified_name);
+    let drop_thunk_name = format_ident!("__crubit_drop_{}{}", target_path_mangled_hash, name);
+
+    let rs_drop = quote! {
+        #[unsafe(no_mangle)]
+        unsafe extern "C" fn #drop_thunk_name(vec: *mut #rs_fully_qualified_name) {
+            // SAFETY: The caller guarantees `vec` is a valid pointer to an initialized Vec.
+            unsafe { ::core::ptr::drop_in_place(vec) };
+        }
+    };
+
+    let drop_decl = quote! {
+        ~Vec() noexcept;
+    };
+    let drop_impl = quote! {
+        extern "C" void #drop_thunk_name(void* vec) noexcept;
+        inline rs_std::Vec<#inner_ty_cc>::~Vec() noexcept {
+            #drop_thunk_name(this);
+        }
+    };
+
+    let offsets = compute_vec_layout_offsets(tcx, rs_std.self_ty_rs, layout);
+
+    let ptr_offset = Literal::u64_unsuffixed(offsets.ptr_offset);
+    let len_offset = Literal::u64_unsuffixed(offsets.len_offset);
+
+    prereqs.includes.insert(CcInclude::bit());
+    prereqs.includes.insert(CcInclude::cstddef());
+    prereqs.includes.insert(CcInclude::cstdint());
+    prereqs.includes.insert(db.support_header("internal/check.h"));
+
+    let accessors_decl = quote! {
+        #inner_ty_cc* data() noexcept;
+        const #inner_ty_cc* data() const noexcept;
+        std::size_t size() const noexcept;
+        #inner_ty_cc& operator[](std::size_t index) noexcept;
+        const #inner_ty_cc& operator[](std::size_t index) const noexcept;
+        #inner_ty_cc* begin() noexcept;
+        const #inner_ty_cc* begin() const noexcept;
+        #inner_ty_cc* end() noexcept;
+        const #inner_ty_cc* end() const noexcept;
+    };
+
+    let full_self_ty = quote! { rs_std::Vec<#inner_ty_cc> };
+    let accessors_impl = quote! {
+        inline #inner_ty_cc* #full_self_ty::data() noexcept {
+            return std::bit_cast<#inner_ty_cc*>(
+                *reinterpret_cast<const std::uintptr_t*>(&storage_[#ptr_offset]));
+        }
+        inline const #inner_ty_cc* #full_self_ty::data() const noexcept {
+            return std::bit_cast<#inner_ty_cc*>(
+                *reinterpret_cast<const std::uintptr_t*>(&storage_[#ptr_offset]));
+        }
+        inline std::size_t #full_self_ty::size() const noexcept {
+            return std::bit_cast<std::size_t>(
+                *reinterpret_cast<const std::size_t*>(&storage_[#len_offset]));
+        }
+        inline #inner_ty_cc& #full_self_ty::operator[](std::size_t index) noexcept {
+            CRUBIT_CHECK(index < size());
+            return data()[index];
+        }
+        inline const #inner_ty_cc& #full_self_ty::operator[](std::size_t index) const noexcept {
+            CRUBIT_CHECK(index < size());
+            return data()[index];
+        }
+        inline #inner_ty_cc* #full_self_ty::begin() noexcept { return data(); }
+        inline const #inner_ty_cc* #full_self_ty::begin() const noexcept { return data(); }
+        inline #inner_ty_cc* #full_self_ty::end() noexcept { return data() + size(); }
+        inline const #inner_ty_cc* #full_self_ty::end() const noexcept { return data() + size(); }
+    };
+
+    let ApiSnippets { main_api, cc_details, rs_details } = [
+        default_ctor_snippets,
+        copy_ctor_and_assignment_snippets,
+        move_ctor_and_assignment_snippets,
+        relocating_ctor_snippets,
+    ]
+    .into_iter()
+    .collect();
+
+    let mut rs_details = rs_details;
+    rs_details.tokens.extend(rs_drop);
+
+    let main_api_tokens = main_api.into_tokens(&mut prereqs);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+    let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let internal_rust_type_string = rs_fully_qualified_name.to_string();
+
+    let main_api_tokens = quote! {
+        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
+        __HASH_TOKEN__ define #guard_name __NEWLINE__
+        template<> __NEWLINE__
+        struct alignas(#align_literal)
+        CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
+        rs_std::Vec<#inner_ty_cc> { __NEWLINE__
+        public:
+            #main_api_tokens __NEWLINE__
+            #drop_decl __NEWLINE__
+            #accessors_decl __NEWLINE__
+
+        private:
+            unsigned char storage_[#size_literal];
+            __NEWLINE__
+        }; __NEWLINE__
+
+        __HASH_TOKEN__ endif __NEWLINE__
+        __NEWLINE__
+    };
+
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
+    let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
+    let cc_details_tokens = quote! {
+        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
+        __HASH_TOKEN__ define #guard_name __NEWLINE__
+        #cc_details_tokens __NEWLINE__
+        #drop_impl __NEWLINE__
+        #accessors_impl __NEWLINE__
+        __HASH_TOKEN__ endif __NEWLINE__
+        __NEWLINE__
     };
 
     ApiSnippets {
@@ -1042,19 +1340,17 @@ fn specialize_result<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ok_ty_tokens = ok_ty.for_cc.into_tokens(&mut prereqs);
-    let err_ty_tokens = err_ty.for_cc.into_tokens(&mut prereqs);
+    let ok_ty_tokens =
+        db.format_ty_for_cc(ok_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
+    let err_ty_tokens =
+        db.format_ty_for_cc(err_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
     let layout = rs_std.layout;
-    let (tag_encoding, tag_field, _variants) = match layout.variants() {
+    let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
             unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
-        rustc_abi::Variants::Multiple { tag_encoding, tag_field, variants, .. } => {
-            (tag_encoding, tag_field, variants)
-        }
+        rustc_abi::Variants::Multiple { tag_encoding, tag_field, .. } => (tag_encoding, tag_field),
     };
-    #[rustversion::before(2026-05-18)]
-    let variants = _variants;
 
     let tag_type = enum_spec.tag_type_rs;
     let tag_type_cc_tokens: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
@@ -1117,12 +1413,6 @@ fn specialize_result<'tcx>(
     );
     let err_discr_val = literal_of_tag_ty(tcx, discr_for_err.val, tag_type);
 
-    #[rustversion::before(2026-05-18)]
-    let (ok_offset, err_offset) = (
-        Literal::u64_unsuffixed(variants[ok_idx].fields.offset(0).bytes()),
-        Literal::u64_unsuffixed(variants[err_idx].fields.offset(0).bytes()),
-    );
-    #[rustversion::since(2026-05-18)]
     let (ok_offset, err_offset) = (
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, ok_idx).fields.offset(0).bytes()),
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes()),
@@ -1266,7 +1556,7 @@ fn specialize_result<'tcx>(
     let cc_details_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
         __HASH_TOKEN__ define #guard_name __NEWLINE__
-        #cc_details_tokens
+        #cc_details_tokens __NEWLINE__
         __HASH_TOKEN__ endif __NEWLINE__
         __NEWLINE__
     };
@@ -1286,19 +1576,16 @@ fn specialize_option<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ty_tokens = arg_ty.for_cc.into_tokens(&mut prereqs);
+    let ty_tokens =
+        db.format_ty_for_cc(arg_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
     let layout = rs_std.layout;
 
-    let (tag_encoding, tag_field, _variants) = match layout.variants() {
+    let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
             unreachable!("This should have been checked in parse_rs_std_template_specialization")
         }
-        rustc_abi::Variants::Multiple { tag_encoding, tag_field, variants, .. } => {
-            (tag_encoding, tag_field, variants)
-        }
+        rustc_abi::Variants::Multiple { tag_encoding, tag_field, .. } => (tag_encoding, tag_field),
     };
-    #[rustversion::before(2026-05-18)]
-    let variants = _variants;
     let tag_type = enum_spec.tag_type_rs;
     let tag_type_cc: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
     let arg_ty_for_rs = arg_ty.for_rs;
@@ -1356,10 +1643,6 @@ fn specialize_option<'tcx>(
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
-            #[rustversion::before(2026-05-18)]
-            let payload_offset =
-                Literal::u64_unsuffixed(variants[some_idx].fields.offset(0).bytes());
-            #[rustversion::since(2026-05-18)]
             let payload_offset = Literal::u64_unsuffixed(
                 LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes(),
             );
@@ -1477,7 +1760,7 @@ fn specialize_option<'tcx>(
     let cc_details_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
         __HASH_TOKEN__ define #guard_name __NEWLINE__
-        #cc_details_tokens
+        #cc_details_tokens __NEWLINE__
         __HASH_TOKEN__ endif __NEWLINE__
         __NEWLINE__
     };
@@ -1517,6 +1800,12 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for RsStdTemplateSpecialization<'tcx>
                 for element_ty in element_tys {
                     snippets.main_api.prereqs.forward_declare_type(element_ty.ty);
                 }
+                snippets
+            }
+            RsStdSpecializationArgs::Vec(inner_ty) => {
+                let inner_ty_ty = inner_ty.ty;
+                let mut snippets = specialize_vec(db, &self, inner_ty.clone());
+                snippets.main_api.prereqs.forward_declare_type(inner_ty_ty);
                 snippets
             }
         }

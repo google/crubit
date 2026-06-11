@@ -158,6 +158,20 @@ source_set("tuple") {
   ]
 }
 
+source_set("vec") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "vec.h",
+  ]
+}
+
 group("rs_std_cpp") {
   public_deps = [
     ":char",
@@ -169,6 +183,7 @@ group("rs_std_cpp") {
     ":str_ref",
     ":traits",
     ":tuple",
+    ":vec",
   ]
 }
 

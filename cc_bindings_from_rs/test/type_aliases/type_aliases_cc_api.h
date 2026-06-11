@@ -33,6 +33,20 @@ using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     [[deprecated("Use `OtherTypeAlias` instead")]] = ::std::int32_t;
 }
 
+namespace type_aliases::test_generics_matching {
+
+using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_generics_matching :: SpecializedAlias") =
+    rs_std::Result<::std::int32_t, ::std::int32_t>;
+
+rs_std::Result<::std::uint32_t, ::std::int8_t> returns_flipped_alias();
+
+rs_std::Result<::std::int32_t, ::std::int32_t> returns_matching_alias();
+
+rs_std::Result<::std::int32_t, ::std::int32_t> returns_specialized();
+
+}  // namespace type_aliases::test_generics_matching
+
 namespace type_aliases::test_type_aliases {
 
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
@@ -95,18 +109,6 @@ struct alignas(4)
 };
 #endif
 
-namespace type_aliases::test_generics_matching {
-
-using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
-    ":: type_aliases_golden :: test_generics_matching :: SpecializedAlias") =
-    rs_std::Result<::std::int32_t, ::std::int32_t>;
-
-rs_std::Result<::std::int32_t, ::std::int32_t> returns_matching_alias();
-
-rs_std::Result<::std::int32_t, ::std::int32_t> returns_specialized();
-
-}  // namespace type_aliases::test_generics_matching
-
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 template <>
@@ -155,12 +157,6 @@ struct alignas(4)
   unsigned char __storage[8];
 };
 #endif
-
-namespace type_aliases::test_generics_matching {
-
-rs_std::Result<::std::uint32_t, ::std::int8_t> returns_flipped_alias();
-
-}
 
 namespace type_aliases::test_generics_matching {
 
@@ -373,6 +369,7 @@ inline void rs_std::Result<::std::int32_t, ::std::int32_t>::check_has_err()
     const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
@@ -520,6 +517,7 @@ inline void rs_std::Result<::std::uint32_t, ::std::int8_t>::check_has_err()
     const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #pragma clang diagnostic pop

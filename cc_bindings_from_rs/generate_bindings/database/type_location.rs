@@ -44,8 +44,11 @@ pub enum TypeLocation {
     /// itself is in a function parameter or return value.
     NestedBridgeable,
 
-    /// Other location (e.g. pointee type, field type, etc.).
+    /// Other location (e.g. pointee type, etc.).
     Other,
+
+    /// The type of a field of a struct or union.
+    Field,
 }
 
 impl TypeLocation {
@@ -57,6 +60,7 @@ impl TypeLocation {
             TypeLocation::Const => true,
             TypeLocation::NestedBridgeable => true,
             TypeLocation::Other => false,
+            TypeLocation::Field => false,
         }
     }
 }

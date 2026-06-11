@@ -79,3 +79,8 @@ add_library(crubit_support_rs_std_tuple STATIC
 )
 set_target_properties(crubit_support_rs_std_tuple PROPERTIES LINKER_LANGUAGE CXX)
 
+add_library(crubit_support_rs_std_vec STATIC
+"vec.h"
+)
+set_target_properties(crubit_support_rs_std_vec PROPERTIES LINKER_LANGUAGE CXX)
+

@@ -250,6 +250,21 @@ cc_library(
 )
 
 cc_library(
+    name = "vec",
+    hdrs = ["vec.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:vec",
+        "avoid_dep",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [],
+)
+
+cc_library(
     name = "tuple",
     hdrs = ["tuple.h"],
     aspect_hints = ["//features:experimental"],
@@ -338,5 +353,6 @@ bazel_to_builds(
         ":str_ref",
         ":traits",
         ":tuple",
+        ":vec",
     ],
 )

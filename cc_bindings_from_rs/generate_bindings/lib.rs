@@ -2029,7 +2029,13 @@ fn generate_specializations_fixpoint<'tcx>(
             seen.insert(spec.clone());
 
             // Collect specializations required by the main_api.
-            for new_spec in snippets.main_api.prereqs.template_specializations.iter() {
+            for new_spec in snippets
+                .main_api
+                .prereqs
+                .template_specializations
+                .iter()
+                .chain(snippets.main_api.prereqs.lazy_template_specializations.iter())
+            {
                 if !seen.contains(new_spec) {
                     next_worklist.push(new_spec.clone());
                 }
@@ -2037,7 +2043,10 @@ fn generate_specializations_fixpoint<'tcx>(
 
             impls_cc_details.push(snippets.cc_details.into_tokens(cc_details_prereqs));
             // Collect any transitive specializations discovered in cc_details.
-            for new_spec in std::mem::take(&mut cc_details_prereqs.template_specializations) {
+            let transitive_specs = std::mem::take(&mut cc_details_prereqs.template_specializations)
+                .into_iter()
+                .chain(std::mem::take(&mut cc_details_prereqs.lazy_template_specializations));
+            for new_spec in transitive_specs {
                 if !seen.contains(&new_spec) {
                     next_worklist.push(new_spec);
                 }
@@ -2212,8 +2221,17 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
 
     let worklist: Vec<_> = std::mem::take(&mut cc_details_prereqs.template_specializations)
         .into_iter()
+        .chain(std::mem::take(&mut cc_details_prereqs.lazy_template_specializations))
         .chain(
-            main_apis.values().flat_map(|api| api.prereqs.template_specializations.iter()).cloned(),
+            main_apis
+                .values()
+                .flat_map(|api| {
+                    api.prereqs
+                        .template_specializations
+                        .iter()
+                        .chain(api.prereqs.lazy_template_specializations.iter())
+                })
+                .cloned(),
         )
         .chain(collect_trait_impls(db))
         .collect();

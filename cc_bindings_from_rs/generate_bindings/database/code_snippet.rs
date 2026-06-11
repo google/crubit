@@ -74,8 +74,11 @@ pub struct CcPrerequisites<'tcx> {
     /// Set of Crubit feature flags required for the CcSnippet to be valid.
     pub required_features: flagset::FlagSet<FineGrainedFeature>,
 
-    // Set of template specializations our snippet requires.
+    // Set of template specializations our snippet requires to be complete.
     pub template_specializations: HashSet<TemplateSpecialization<'tcx>>,
+
+    // Set of template specializations our snippet requires to be generated, but not necessarily complete.
+    pub lazy_template_specializations: HashSet<TemplateSpecialization<'tcx>>,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
@@ -129,6 +132,9 @@ impl<'tcx> RsStdTemplateSpecialization<'tcx> {
             })
         )
     }
+    pub fn is_vec(&self) -> bool {
+        matches!(self.args, RsStdSpecializationArgs::Vec(_))
+    }
 
     pub fn support_header(&self, db: &BindingsGenerator<'tcx>) -> CcInclude {
         match &self.args {
@@ -137,6 +143,7 @@ impl<'tcx> RsStdTemplateSpecialization<'tcx> {
                 EnumSpecializationKind::Result { .. } => db.support_header("rs_std/result.h"),
             },
             RsStdSpecializationArgs::Tuple(_) => db.support_header("rs_std/tuple.h"),
+            RsStdSpecializationArgs::Vec(_) => db.support_header("rs_std/vec.h"),
         }
     }
 }
@@ -160,6 +167,7 @@ impl Hash for RsStdTemplateSpecialization<'_> {
 pub enum RsStdSpecializationArgs<'tcx> {
     Enum(RsStdEnumSpecialization<'tcx>),
     Tuple(Vec<FormattedTy<'tcx>>),
+    Vec(FormattedTy<'tcx>),
 }
 
 #[derive(Clone, Debug)]
@@ -241,12 +249,20 @@ impl Hash for FormattedTy<'_> {
 
 impl<'tcx> CcPrerequisites<'tcx> {
     pub fn is_empty(&self) -> bool {
-        let Self { includes, defs, fwd_decls, required_features, template_specializations } = self;
+        let Self {
+            includes,
+            defs,
+            fwd_decls,
+            required_features,
+            template_specializations,
+            lazy_template_specializations,
+        } = self;
         includes.is_empty()
             && defs.is_empty()
             && fwd_decls.is_empty()
             && required_features.is_empty()
             && template_specializations.is_empty()
+            && lazy_template_specializations.is_empty()
     }
 
     /// Weakens all dependencies to only require a forward declaration. Example
@@ -256,7 +272,9 @@ impl<'tcx> CcPrerequisites<'tcx> {
     /// - Computing prerequisites of function declarations (parameter types and
     ///   return type can just be forward-declared).
     pub fn move_defs_to_fwd_decls(&mut self) {
-        self.fwd_decls.extend(std::mem::take(&mut self.defs))
+        self.fwd_decls.extend(std::mem::take(&mut self.defs));
+        self.lazy_template_specializations
+            .extend(std::mem::take(&mut self.template_specializations));
     }
 
     /// Move any definitions that appear in `ty` to the forward declarations of `prereqs`.
@@ -304,8 +322,14 @@ impl<'tcx> CcPrerequisites<'tcx> {
 impl<'tcx> AddAssign for CcPrerequisites<'tcx> {
     #[allow(clippy::suspicious_op_assign_impl)]
     fn add_assign(&mut self, rhs: Self) {
-        let Self { mut includes, defs, fwd_decls, required_features, template_specializations } =
-            rhs;
+        let Self {
+            mut includes,
+            defs,
+            fwd_decls,
+            required_features,
+            template_specializations,
+            lazy_template_specializations,
+        } = rhs;
 
         // `BTreeSet::append` is used because it _seems_ to be more efficient than
         // calling `extend`.  This is because `extend` takes an iterator
@@ -320,6 +344,7 @@ impl<'tcx> AddAssign for CcPrerequisites<'tcx> {
         self.fwd_decls.extend(fwd_decls);
         self.required_features |= required_features;
         self.template_specializations.extend(template_specializations);
+        self.lazy_template_specializations.extend(lazy_template_specializations);
     }
 }
 

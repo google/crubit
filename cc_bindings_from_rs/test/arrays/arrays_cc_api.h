@@ -173,6 +173,10 @@ function_with_nested_drop_default_arrays(
 // b/260128806 - nested array [[arrays_golden::HasDrop; 2]; 2] is not supported
 // because it contains a type that implements Drop but not Default
 
+::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2>
+function_with_tuple_array_id(
+    ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2> tup_array);
+
 }  // namespace arrays
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -204,10 +208,6 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #endif
 
 namespace arrays {
-
-::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2>
-function_with_tuple_array_id(
-    ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2> tup_array);
 
 static_assert(
     sizeof(ArrayStruct) == 8,

@@ -63,6 +63,51 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace partial_eq::basic_test
 
+namespace partial_eq::tuple_collision {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: partial_eq_golden :: tuple_collision :: MyStruct") alignas(8)
+    [[clang::trivial_abi]] MyStruct final {
+ public:
+  // `partial_eq_golden::tuple_collision::MyStruct` doesn't implement the
+  // `Default` trait
+  MyStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~MyStruct() = default;
+  MyStruct(MyStruct&&) = default;
+  MyStruct& operator=(MyStruct&&) = default;
+
+  // `partial_eq_golden::tuple_collision::MyStruct` doesn't implement the
+  // `Clone` trait
+  MyStruct(const MyStruct&) = delete;
+  MyStruct& operator=(const MyStruct&) = delete;
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  static ::partial_eq::tuple_collision::MyStruct new_(::std::uintptr_t val);
+
+  // Error generating bindings for implementation
+  // `<partial_eq_golden::tuple_collision::MyStruct as std::cmp::PartialEq<(u64,
+  // bool)>>` defined at
+  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=52:
+  // PartialEq implementation for `(u64, bool)` is not supported when
+  // `PartialEq<(usize, bool)>` is implemented as it may overlap.
+
+  bool operator==(rs_std::Tuple<::std::uintptr_t, bool> const& _other) const;
+
+ private:
+  union {
+    ::std::uintptr_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace partial_eq::tuple_collision
+
 namespace partial_eq::usize_rhs {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -128,51 +173,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   unsigned char storage_[16];
 };
 #endif
-
-namespace partial_eq::tuple_collision {
-
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: partial_eq_golden :: tuple_collision :: MyStruct") alignas(8)
-    [[clang::trivial_abi]] MyStruct final {
- public:
-  // `partial_eq_golden::tuple_collision::MyStruct` doesn't implement the
-  // `Default` trait
-  MyStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MyStruct() = default;
-  MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
-
-  // `partial_eq_golden::tuple_collision::MyStruct` doesn't implement the
-  // `Clone` trait
-  MyStruct(const MyStruct&) = delete;
-  MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-
-  static ::partial_eq::tuple_collision::MyStruct new_(::std::uintptr_t val);
-
-  // Error generating bindings for implementation
-  // `<partial_eq_golden::tuple_collision::MyStruct as std::cmp::PartialEq<(u64,
-  // bool)>>` defined at
-  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=52:
-  // PartialEq implementation for `(u64, bool)` is not supported when
-  // `PartialEq<(usize, bool)>` is implemented as it may overlap.
-
-  bool operator==(rs_std::Tuple<::std::uintptr_t, bool> const& _other) const;
-
- private:
-  union {
-    ::std::uintptr_t __field0;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-}  // namespace partial_eq::tuple_collision
 
 namespace partial_eq::basic_test {
 

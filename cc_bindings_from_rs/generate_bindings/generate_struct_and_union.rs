@@ -101,7 +101,7 @@ pub(crate) fn cpp_enum_cpp_underlying_type<'tcx>(
     def_id: DefId,
 ) -> Result<CcSnippet<'tcx>> {
     let field_type = cpp_enum_rust_underlying_type(db.tcx(), def_id)?;
-    db.format_ty_for_cc(field_type, TypeLocation::Other)
+    db.format_ty_for_cc(field_type, TypeLocation::Field)
 }
 
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
@@ -650,6 +650,27 @@ fn generate_into_impls<'tcx>(
         .collect()
 }
 
+fn is_newtype_relationship<'tcx>(tcx: TyCtxt<'tcx>, tgt_ty: Ty<'tcx>, src_ty: Ty<'tcx>) -> bool {
+    if let TyKind::Adt(adt_def, substs) = tgt_ty.kind()
+        && adt_def.is_struct()
+        && let variants = adt_def.variants()
+        && variants.len() == 1
+        && let variant = &variants[VariantIdx::from_usize(0)]
+        && variant.ctor_kind() == Some(rustc_hir::def::CtorKind::Fn)
+        && variant.fields.len() == 1
+        && let field = &variant.fields[FieldIdx::from_usize(0)]
+        && crate::field_def_is_pub_and_stable(tcx, field).is_ok()
+    {
+        let field_ty = field.ty(tcx, substs);
+        let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+        let static_field_ty = replace_all_regions_with_static(tcx, field_ty);
+        let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
+        static_field_ty == static_src_ty
+    } else {
+        false
+    }
+}
+
 fn generate_constructor_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -666,6 +687,13 @@ fn generate_constructor_impls<'tcx>(
         let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
         let src_ty = trait_ref.args.type_at(1);
         if src_ty.flags().intersects(has_type_or_const_vars()) {
+            return None;
+        }
+        // Skip generating a constructor for the `From` impl if the target type is a
+        // newtype with a public field of the same type. In this case, we already
+        // synthesize a tuple constructor with the same signature, and generating
+        // another one would cause duplicate definition conflicts in C++.
+        if is_newtype_relationship(tcx, core.self_ty, src_ty) {
             return None;
         }
         // Skip if source type is Self or a reference to Self (e.g. &Self)
@@ -1847,7 +1875,7 @@ pub(crate) fn generate_fields<'tcx>(
                                 Ok(FieldTypeInfo {
                                     size,
                                     cpp_type: db
-                                        .format_ty_for_cc(ty, TypeLocation::Other)?
+                                        .format_ty_for_cc(ty, TypeLocation::Field)?
                                         .resolve_feature_requirements(
                                             db.crate_features(db.source_crate_num()),
                                         )?,

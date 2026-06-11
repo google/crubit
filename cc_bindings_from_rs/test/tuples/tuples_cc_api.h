@@ -322,11 +322,28 @@ return_nested_tuples();
 ::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
+::std::optional<::std::int32_t> return_option_in_tuple_ref(
+    rs_std::Tuple<rs_std::Option<::std::int32_t>> const& opt);
+
+// CRUBIT_ANNOTATE: must_bind=
 ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>>
 return_triply_nested_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
 void return_unit_is_not_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::uint8_t take_tuple_clone_no_default_2(
+    rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault> const& r);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::uint8_t take_tuple_copy_no_default_1(
+    rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t> const& r);
+
+// CRUBIT_ANNOTATE: must_bind=
+rs_std::StrRef take_tuple_has_default(
+    rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t> const* $(__anon1)
+        crubit_nonnull r CRUBIT_LIFETIME_BOUND);
 
 }  // namespace tuples
 
@@ -510,15 +527,6 @@ struct alignas(1)
   unsigned char storage_[2];
 };
 #endif
-
-namespace tuples {
-
-// CRUBIT_ANNOTATE: must_bind=
-::std::uint8_t take_tuple_copy_no_default_1(
-    rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t> const& r);
-
-}  // namespace tuples
-
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
@@ -545,16 +553,6 @@ struct alignas(8)
   unsigned char storage_[32];
 };
 #endif
-
-namespace tuples {
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::StrRef take_tuple_has_default(
-    rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t> const* $(__anon1)
-        crubit_nonnull r CRUBIT_LIFETIME_BOUND);
-
-}  // namespace tuples
-
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
@@ -979,10 +977,6 @@ CloneNoDefaultTuple final {
   static void __crubit_field_offset_assertions();
 };
 
-// CRUBIT_ANNOTATE: must_bind=
-::std::uint8_t take_tuple_clone_no_default_2(
-    rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault> const& r);
-
 }  // namespace tuples
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000003e
@@ -1361,15 +1355,6 @@ struct alignas(4)
   unsigned char storage_[8];
 };
 #endif
-
-namespace tuples {
-
-// CRUBIT_ANNOTATE: must_bind=
-::std::optional<::std::int32_t> return_option_in_tuple_ref(
-    rs_std::Tuple<rs_std::Option<::std::int32_t>> const& opt);
-
-}  // namespace tuples
-
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
@@ -2499,6 +2484,7 @@ inline rs_std::Tuple<
                   rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
       storage_ + 8));
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
@@ -2638,6 +2624,7 @@ inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::~Tuple() {
   std::destroy_at(reinterpret_cast<::tuples::HasDefault*>(storage_ + 0));
   std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 24));
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -2647,6 +2634,7 @@ inline rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>::~Tuple() {
   std::destroy_at(reinterpret_cast<::tuples::HasNoDefault*>(storage_ + 0));
   std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 24));
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
@@ -2914,6 +2902,7 @@ inline rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::~Tuple() {
   std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0));
   std::destroy_at(reinterpret_cast<::tuples::HasDefault*>(storage_ + 8));
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
@@ -2923,6 +2912,7 @@ inline rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>::~Tuple() {
   std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0));
   std::destroy_at(reinterpret_cast<::tuples::HasNoDefault*>(storage_ + 8));
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000003e
@@ -3124,6 +3114,7 @@ inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
     storage_[0 + i] = __bytes[i];
   }
 }
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
@@ -3294,6 +3285,7 @@ inline void rs_std::Result<::std::int32_t,
                            ::rs::alloc::string::String>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #pragma clang diagnostic pop

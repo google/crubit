@@ -35,6 +35,10 @@ namespace const_field {
 ::std::optional<::struct_with_const_field>
 return_struct_with_const_field_by_value_in_option();
 
+// CRUBIT_ANNOTATE: must_bind=
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>
+return_struct_with_const_field_by_value_in_result();
+
 }  // namespace const_field
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -87,10 +91,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #endif
 
 namespace const_field {
-
-// CRUBIT_ANNOTATE: must_bind=
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>
-return_struct_with_const_field_by_value_in_result();
 
 namespace __crubit_internal {
 extern "C" void
@@ -282,6 +282,7 @@ inline void rs_std::Result<::struct_with_const_field,
                            ::std::uint8_t>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
+
 #endif
 
 #pragma clang diagnostic pop
