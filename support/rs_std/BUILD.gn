@@ -47,6 +47,23 @@ source_set("dyn_callable") {
   ]
 }
 
+source_set("dyn_erased_future_cc") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "dyn_erased_future.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:waker",
+  ]
+}
+
 source_set("iterator_adapter") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -162,6 +179,7 @@ group("rs_std_cpp") {
   public_deps = [
     ":char",
     ":dyn_callable",
+    ":dyn_erased_future_cc",
     ":iterator_adapter",
     ":option",
     ":result",
