@@ -43,6 +43,9 @@ jobs:
   test_cmake:
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [cmake, cmake_demo]
 
     steps:
     - uses: actions/checkout@v6
@@ -55,12 +58,13 @@ jobs:
       uses: actions/cache@v5
       with:
         path: ~/.cache/ccache
-        key: ${{ runner.os }}-ccache-${{ github.sha }}
+        key: ${{ runner.os }}-ccache-${{ matrix.project }}-${{ github.sha }}
         restore-keys: |
+          ${{ runner.os }}-ccache-${{ matrix.project }}-
           ${{ runner.os }}-ccache-
     - name: Test CMake project
       run: |
-        cd examples/build_systems/cmake
+        cd examples/build_systems/${{ matrix.project }}
         cmake -B build -S . -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build build --parallel
         cd build

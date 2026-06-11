@@ -14,6 +14,7 @@ members = [
 exclude = [
   "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust/tests/test_project",
   "examples/build_systems/cmake/rust_lib",
+  "examples/build_systems/cmake_demo/rust_lib",
 ]
 resolver = "2"
 
