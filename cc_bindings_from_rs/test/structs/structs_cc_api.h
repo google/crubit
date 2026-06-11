@@ -373,10 +373,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    float const** mut_const_ptr;
+    float const * crubit_nullability_unknown *
+        crubit_nullability_unknown mut_const_ptr;
   };
   union {
-    float* const* const_mut_ptr;
+    float* crubit_nullability_unknown const* crubit_nullability_unknown
+        const_mut_ptr;
   };
 
  private:
@@ -714,7 +716,8 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::structs::abi_classification::StructFloat>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    float, ::structs::abi_classification::StructFloat* __ret_ptr);
+    float,
+    ::structs::abi_classification::StructFloat* crubit_nonnull __ret_ptr);
 }
 inline ::structs::abi_classification::StructFloat StructFloat::create(float f) {
   crubit::Slot<::structs::abi_classification::StructFloat>
@@ -728,7 +731,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_multiply(
     ::structs::abi_classification::StructFloat*,
     ::structs::abi_classification::StructFloat*,
-    ::structs::abi_classification::StructFloat* __ret_ptr);
+    ::structs::abi_classification::StructFloat* crubit_nonnull __ret_ptr);
 }
 inline ::structs::abi_classification::StructFloat StructFloat::multiply(
     ::structs::abi_classification::StructFloat x,
@@ -765,7 +768,8 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::structs::abi_classification::StructInteger>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    ::std::int32_t, ::structs::abi_classification::StructInteger* __ret_ptr);
+    ::std::int32_t,
+    ::structs::abi_classification::StructInteger* crubit_nonnull __ret_ptr);
 }
 inline ::structs::abi_classification::StructInteger StructInteger::create(
     ::std::int32_t i) {
@@ -780,7 +784,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_multiply(
     ::structs::abi_classification::StructInteger*,
     ::structs::abi_classification::StructInteger*,
-    ::structs::abi_classification::StructInteger* __ret_ptr);
+    ::structs::abi_classification::StructInteger* crubit_nonnull __ret_ptr);
 }
 inline ::structs::abi_classification::StructInteger StructInteger::multiply(
     ::structs::abi_classification::StructInteger x,
@@ -816,7 +820,8 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::structs::abi_classification::StructMemory>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    ::std::int32_t, ::structs::abi_classification::StructMemory* __ret_ptr);
+    ::std::int32_t,
+    ::structs::abi_classification::StructMemory* crubit_nonnull __ret_ptr);
 }
 inline ::structs::abi_classification::StructMemory StructMemory::create(
     ::std::int32_t i) {
@@ -831,7 +836,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_multiply(
     ::structs::abi_classification::StructMemory*,
     ::structs::abi_classification::StructMemory*,
-    ::structs::abi_classification::StructMemory* __ret_ptr);
+    ::structs::abi_classification::StructMemory* crubit_nonnull __ret_ptr);
 }
 inline ::structs::abi_classification::StructMemory StructMemory::multiply(
     ::structs::abi_classification::StructMemory x,
@@ -876,7 +881,8 @@ inline void Point::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    ::std::int32_t, ::std::int32_t, ::structs::default_repr::Point* __ret_ptr);
+    ::std::int32_t, ::std::int32_t,
+    ::structs::default_repr::Point* crubit_nonnull __ret_ptr);
 }
 inline ::structs::default_repr::Point create(::std::int32_t x,
                                              ::std::int32_t y) {
@@ -917,7 +923,8 @@ inline void DisplayStruct::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    ::std::int32_t, ::structs::display::DisplayStruct* __ret_ptr);
+    ::std::int32_t,
+    ::structs::display::DisplayStruct* crubit_nonnull __ret_ptr);
 }
 inline ::structs::display::DisplayStruct create(::std::int32_t value) {
   crubit::Slot<::structs::display::DisplayStruct> __return_value_ret_val_holder;
@@ -938,7 +945,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::structs::interior_mutability::SomeStruct* __ret_ptr);
+    ::structs::interior_mutability::SomeStruct* crubit_nonnull __ret_ptr);
 }
 inline ::structs::interior_mutability::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -989,7 +996,8 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct* __ret_ptr);
+    ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct* crubit_nonnull
+        __ret_ptr);
 }
 inline ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct::
     SomeStruct() {
@@ -1025,7 +1033,7 @@ inline void Point::__crubit_field_offset_assertions() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
-    ::structs::non_cpp_movable::Point* __ret_ptr);
+    ::structs::non_cpp_movable::Point* crubit_nonnull __ret_ptr);
 }
 inline ::structs::non_cpp_movable::Point create(::std::int32_t x,
                                                 ::std::int32_t y) {
@@ -1063,7 +1071,8 @@ inline void Point::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::std::int32_t, ::std::int32_t,
-                                      ::structs::repr_c::Point* __ret_ptr);
+                                      ::structs::repr_c::Point* crubit_nonnull
+                                          __ret_ptr);
 }
 inline ::structs::repr_c::Point create(::std::int32_t x, ::std::int32_t y) {
   crubit::Slot<::structs::repr_c::Point> __return_value_ret_val_holder;
@@ -1104,7 +1113,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_no_umangle_ucreate(
     float,
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat
 no_mangle_create(float f) {
@@ -1131,7 +1140,7 @@ extern "C" void __crubit_thunk_no_umangle_umultiply(
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat*,
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat*,
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat
 no_mangle_multiply(
@@ -1164,7 +1173,8 @@ static_assert(::std::is_trivially_move_assignable_v<
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&,
-    ::structs::struct_by_float_passing_with_no_thunk::StructFloat* __ret_ptr);
+    ::structs::struct_by_float_passing_with_no_thunk::StructFloat*
+        crubit_nonnull __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -1190,8 +1200,8 @@ inline void StructFloat::__crubit_field_offset_assertions() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_struct_uby_ufloat_upassing_uwith_uno_uthunk_u_uthunkless_ucreate(
-    float,
-    ::structs::struct_by_float_passing_with_no_thunk::StructFloat* __ret_ptr);
+    float, ::structs::struct_by_float_passing_with_no_thunk::StructFloat*
+               crubit_nonnull __ret_ptr);
 }
 inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat
 thunkless_create(float f) {
@@ -1221,7 +1231,8 @@ extern "C" void
 __crubit_thunk_struct_uby_ufloat_upassing_uwith_uno_uthunk_u_uthunkless_umultiply(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat*,
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat*,
-    ::structs::struct_by_float_passing_with_no_thunk::StructFloat* __ret_ptr);
+    ::structs::struct_by_float_passing_with_no_thunk::StructFloat*
+        crubit_nonnull __ret_ptr);
 }
 inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat
 thunkless_multiply(
@@ -1248,7 +1259,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::structs::unsupported_types::SomeStruct* __ret_ptr);
+    ::structs::unsupported_types::SomeStruct* crubit_nonnull __ret_ptr);
 }
 inline ::structs::unsupported_types::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -1260,7 +1271,8 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::structs::unsupported_types::SomeStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    rs_std::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);
+    rs_std::char_,
+    ::structs::unsupported_types::SomeStruct* crubit_nonnull __ret_ptr);
 }
 inline ::structs::unsupported_types::SomeStruct SomeStruct::create(
     rs_std::char_ x) {
@@ -1293,7 +1305,7 @@ inline void ZstFields::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    ::std::int32_t, ::structs::zst_fields::ZstFields* __ret_ptr);
+    ::std::int32_t, ::structs::zst_fields::ZstFields* crubit_nonnull __ret_ptr);
 }
 inline ::structs::zst_fields::ZstFields create(::std::int32_t value) {
   crubit::Slot<::structs::zst_fields::ZstFields> __return_value_ret_val_holder;

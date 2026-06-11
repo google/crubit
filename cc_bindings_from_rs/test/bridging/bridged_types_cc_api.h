@@ -14,6 +14,8 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#include "support/annotations_internal.h"
+
 #include "cpp_ns/cpp_type.h"
 
 namespace bridged_types::test_format_bridged_func_arg_by_pointer {
@@ -102,7 +104,7 @@ namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upointer(
-    CppType** __ret_ptr);
+    CppType** crubit_nonnull __ret_ptr);
 }
 inline CppType* test_format_bridged_return_type_by_pointer() {
   union __return_value_crubit_return_union {
@@ -123,7 +125,7 @@ namespace bridged_types::test_format_bridged_return_type_by_value {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_uvalue(
-    cpp_ns::CppType* __ret_ptr);
+    cpp_ns::CppType* crubit_nonnull __ret_ptr);
 }
 inline cpp_ns::CppType test_format_bridged_return_type_by_value() {
   union __return_value_crubit_return_union {

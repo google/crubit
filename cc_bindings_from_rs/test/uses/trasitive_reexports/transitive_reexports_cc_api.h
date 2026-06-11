@@ -50,7 +50,7 @@ namespace transitive_reexports {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_direct_uto_utransitive(
-    ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
+    ::direct::Direct const&, ::direct::Transitive* crubit_nonnull __ret_ptr);
 }
 inline ::direct::Transitive direct_to_transitive(
     ::direct::Direct const& direct) {
@@ -63,7 +63,8 @@ inline ::direct::Transitive direct_to_transitive(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_direct_uto_utransitive_uglob_ua(
-    ::direct::Direct const&, ::direct::TransitiveGlobA* __ret_ptr);
+    ::direct::Direct const&,
+    ::direct::TransitiveGlobA* crubit_nonnull __ret_ptr);
 }
 inline ::direct::TransitiveGlobA direct_to_transitive_glob_a(
     ::direct::Direct const& direct) {
@@ -76,7 +77,7 @@ inline ::direct::TransitiveGlobA direct_to_transitive_glob_a(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_direct_uto_utransitive_uprivate_utype_ualias(
-    ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
+    ::direct::Direct const&, ::direct::Transitive* crubit_nonnull __ret_ptr);
 }
 inline ::direct::Transitive direct_to_transitive_private_type_alias(
     ::direct::Direct const& direct) {
@@ -90,7 +91,7 @@ inline ::direct::Transitive direct_to_transitive_private_type_alias(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_direct_uto_utransitive_uuse_ualias(
-    ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
+    ::direct::Direct const&, ::direct::Transitive* crubit_nonnull __ret_ptr);
 }
 inline ::direct::Transitive direct_to_transitive_use_alias(
     ::direct::Direct const& direct) {
@@ -103,7 +104,7 @@ inline ::direct::Transitive direct_to_transitive_use_alias(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_direct_uto_utransittive_utype_ualias(
-    ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
+    ::direct::Direct const&, ::direct::Transitive* crubit_nonnull __ret_ptr);
 }
 inline ::direct::Transitive direct_to_transittive_type_alias(
     ::direct::Direct const& direct) {

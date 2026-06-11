@@ -67,7 +67,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::example_crate::ReprRustUnion* __ret_ptr);
+    ::example_crate::ReprRustUnion* crubit_nonnull __ret_ptr);
 }
 inline ::example_crate::ReprRustUnion::ReprRustUnion() {
   __crubit_internal::__crubit_thunk_default(this);

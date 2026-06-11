@@ -14,6 +14,8 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#include "support/annotations_internal.h"
+
 #include "cpp_ns/cpp_type.h"
 
 namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
@@ -61,7 +63,7 @@ namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike(
-    CppType** __ret_ptr);
+    CppType** crubit_nonnull __ret_ptr);
 }
 inline CppType* test_format_return_type_pointer_like() {
   union __return_value_crubit_return_union {

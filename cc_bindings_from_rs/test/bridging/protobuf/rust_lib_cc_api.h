@@ -77,7 +77,8 @@ static_assert(
     alignof(FooService) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::rust_lib::FooService* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::rust_lib::FooService* crubit_nonnull __ret_ptr);
 }
 inline ::rust_lib::FooService::FooService() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -110,7 +111,7 @@ inline bool FooService::handle_request(const ::foo_service::FooRequest* req,
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_request_ustats(
     ::rust_lib::FooService const&,
-    const ::foo_service::FooRequestStats** __ret_ptr);
+    const ::foo_service::FooRequestStats** crubit_nonnull __ret_ptr);
 }
 inline const ::foo_service::FooRequestStats* FooService::request_stats()
     const& $(__anon1) CRUBIT_LIFETIME_BOUND {
@@ -128,7 +129,8 @@ inline const ::foo_service::FooRequestStats* FooService::request_stats()
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_urequest_ustats(
-    ::rust_lib::FooService const&, ::foo_service::FooRequestStats* __ret_ptr);
+    ::rust_lib::FooService const&,
+    ::foo_service::FooRequestStats* crubit_nonnull __ret_ptr);
 }
 inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
   auto&& self = *this;

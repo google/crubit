@@ -595,7 +595,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
   struct alignas(0) __crubit_A_struct {
    public:
-    ::std::int32_t* p;
+    ::std::int32_t* crubit_nullability_unknown p;
   };
 
   enum class Tag : ::std::int8_t {
@@ -665,7 +665,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   struct alignas(0) __crubit_C_struct {
    public:
-    ::std::int32_t* p;
+    ::std::int32_t* crubit_nullability_unknown p;
   };
 
   enum class Tag : ::std::uint32_t {
@@ -1113,7 +1113,7 @@ inline constexpr QrError QrError::MakeInvalidCharacter() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_Structured(
     ::enums::qr_error::StructuredQrError*,
-    ::enums::qr_error::QrError* __ret_ptr);
+    ::enums::qr_error::QrError* crubit_nonnull __ret_ptr);
 }
 inline ::enums::qr_error::QrError QrError::MakeStructured(
     ::enums::qr_error::StructuredQrError __param_0) {
@@ -1171,7 +1171,8 @@ inline constexpr StructuredQrError StructuredQrError::MakeAtLeast2Pieces() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_TotalMismatch(
-    ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
+    ::std::uintptr_t,
+    ::enums::qr_error::StructuredQrError* crubit_nonnull __ret_ptr);
 }
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeTotalMismatch(::std::uintptr_t __param_0) {
@@ -1222,7 +1223,7 @@ inline constexpr StructuredQrError StructuredQrError::MakeStructuredWrongEnc() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_SeqGreaterThanTotal(
     ::std::uint8_t, ::std::uint8_t,
-    ::enums::qr_error::StructuredQrError* __ret_ptr);
+    ::enums::qr_error::StructuredQrError* crubit_nonnull __ret_ptr);
 }
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeSeqGreaterThanTotal(::std::uint8_t __param_0,
@@ -1238,7 +1239,7 @@ StructuredQrError::MakeSeqGreaterThanTotal(::std::uint8_t __param_0,
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_LengthMismatch(
     ::std::uintptr_t, ::std::uintptr_t,
-    ::enums::qr_error::StructuredQrError* __ret_ptr);
+    ::enums::qr_error::StructuredQrError* crubit_nonnull __ret_ptr);
 }
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeLengthMismatch(::std::uintptr_t __param_0,
@@ -1253,7 +1254,8 @@ StructuredQrError::MakeLengthMismatch(::std::uintptr_t __param_0,
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_UnsupportedVersion(
-    ::std::int16_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
+    ::std::int16_t,
+    ::enums::qr_error::StructuredQrError* crubit_nonnull __ret_ptr);
 }
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeUnsupportedVersion(::std::int16_t __param_0) {
@@ -1267,7 +1269,8 @@ StructuredQrError::MakeUnsupportedVersion(::std::int16_t __param_0) {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_SplitMax16(
-    ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
+    ::std::uintptr_t,
+    ::enums::qr_error::StructuredQrError* crubit_nonnull __ret_ptr);
 }
 inline ::enums::qr_error::StructuredQrError StructuredQrError::MakeSplitMax16(
     ::std::uintptr_t __param_0) {
@@ -1401,14 +1404,16 @@ static_assert(
     alignof(MyEnum) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::enums::repr_c::MyEnum* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::enums::repr_c::MyEnum* crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_c::MyEnum::MyEnum() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_E(::rs::alloc::string::String*, ::std::int32_t,
-                                 ::enums::repr_c::MyEnum* __ret_ptr);
+                                 ::enums::repr_c::MyEnum* crubit_nonnull
+                                     __ret_ptr);
 }
 inline ::enums::repr_c::MyEnum MyEnum::MakeE(
     ::rs::alloc::string::String __param_0, ::std::int32_t __param_1) {
@@ -1422,7 +1427,8 @@ inline ::enums::repr_c::MyEnum MyEnum::MakeE(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_A(::std::int32_t, ::std::int64_t,
-                                 ::enums::repr_c::MyEnum* __ret_ptr);
+                                 ::enums::repr_c::MyEnum* crubit_nonnull
+                                     __ret_ptr);
 }
 inline ::enums::repr_c::MyEnum MyEnum::MakeA(::std::int32_t __param_0,
                                              ::std::int64_t __param_1) {
@@ -1588,7 +1594,8 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
+    ::enums::repr_c_clone_active_variant::CloneActiveVariant* crubit_nonnull
+        __ret_ptr);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
     CloneActiveVariant() {
@@ -1597,7 +1604,8 @@ inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_A(
     ::std::int32_t,
-    ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
+    ::enums::repr_c_clone_active_variant::CloneActiveVariant* crubit_nonnull
+        __ret_ptr);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant
 CloneActiveVariant::MakeA(::std::int32_t __param_0) {
@@ -1611,7 +1619,8 @@ CloneActiveVariant::MakeA(::std::int32_t __param_0) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_B(
     ::std::int32_t,
-    ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
+    ::enums::repr_c_clone_active_variant::CloneActiveVariant* crubit_nonnull
+        __ret_ptr);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant
 CloneActiveVariant::MakeB(::std::int32_t __param_0) {
@@ -1625,7 +1634,8 @@ CloneActiveVariant::MakeB(::std::int32_t __param_0) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_C(
     ::std::int32_t,
-    ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
+    ::enums::repr_c_clone_active_variant::CloneActiveVariant* crubit_nonnull
+        __ret_ptr);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant
 CloneActiveVariant::MakeC(::std::int32_t __param_0) {
@@ -1643,7 +1653,8 @@ static_assert(::std::is_trivially_move_assignable_v<
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&,
-    ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
+    ::enums::repr_c_clone_active_variant::CloneActiveVariant* crubit_nonnull
+        __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -1709,7 +1720,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    ::enums::repr_c_clone_counter::CloneCount* __ret_ptr);
+    ::enums::repr_c_clone_counter::CloneCount* crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_c_clone_counter::CloneCount::CloneCount() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -1722,7 +1733,7 @@ static_assert(::std::is_trivially_move_assignable_v<
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     ::enums::repr_c_clone_counter::CloneCount const&,
-    ::enums::repr_c_clone_counter::CloneCount* __ret_ptr);
+    ::enums::repr_c_clone_counter::CloneCount* crubit_nonnull __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -1755,14 +1766,15 @@ static_assert(
     alignof(DropMe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::enums::repr_c_drop::DropMe* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::enums::repr_c_drop::DropMe* crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_c_drop::DropMe::DropMe() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_A(::std::int32_t,
-                                 ::enums::repr_c_drop::DropMe* __ret_ptr);
+extern "C" void __crubit_thunk_A(
+    ::std::int32_t, ::enums::repr_c_drop::DropMe* crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_c_drop::DropMe DropMe::MakeA(::std::int32_t __param_0) {
   crubit::Slot<::enums::repr_c_drop::DropMe> __return_value_ret_val_holder;
@@ -1772,8 +1784,8 @@ inline ::enums::repr_c_drop::DropMe DropMe::MakeA(::std::int32_t __param_0) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_B(::std::int64_t,
-                                 ::enums::repr_c_drop::DropMe* __ret_ptr);
+extern "C" void __crubit_thunk_B(
+    ::std::int64_t, ::enums::repr_c_drop::DropMe* crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_c_drop::DropMe DropMe::MakeB(::std::int64_t __param_0) {
   crubit::Slot<::enums::repr_c_drop::DropMe> __return_value_ret_val_holder;
@@ -1955,7 +1967,7 @@ inline constexpr RustReprEnum RustReprEnum::MakeVariant3() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_TuplePayloadVariant(
     ::std::int32_t, ::std::int32_t,
-    ::enums::repr_rust::RustReprEnum* __ret_ptr);
+    ::enums::repr_rust::RustReprEnum* crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_rust::RustReprEnum RustReprEnum::MakeTuplePayloadVariant(
     ::std::int32_t __param_0, ::std::int32_t __param_1) {
@@ -2017,7 +2029,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_MakeNoPayloadVariant(
     ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
 RustReprWithNamingConflictBetweenCtorsAndMethods::MakeNoPayloadVariant() {
@@ -2034,7 +2046,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_MakeTuplePayloadVariant(
     ::std::int32_t,
     ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
 RustReprWithNamingConflictBetweenCtorsAndMethods::MakeTuplePayloadVariant(
@@ -2052,7 +2064,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_MakeStructPayloadVariant(
     ::std::int32_t,
     ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
 RustReprWithNamingConflictBetweenCtorsAndMethods::MakeStructPayloadVariant(
@@ -2102,7 +2114,8 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_SingleVariant(
     ::std::int32_t,
-    ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant* __ret_ptr);
+    ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant* crubit_nonnull
+        __ret_ptr);
 }
 inline ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant
 RustReprWithSingleTuplePayloadVariant::MakeSingleVariant(

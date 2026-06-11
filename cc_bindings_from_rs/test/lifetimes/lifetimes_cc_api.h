@@ -162,7 +162,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
     ::std::int32_t const* $a crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime* crubit_nonnull __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
     ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
@@ -203,7 +203,7 @@ inline ::std::int32_t const& $(__anon1) StructWithLifetime::borrow_from_self()
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime* crubit_nonnull __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::make_static_42() {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
@@ -215,7 +215,7 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::make_static_42() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref(
     ::std::int32_t const* $static crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime* crubit_nonnull __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
     ::std::int32_t const* $static crubit_nonnull field_with_lifetime) {
@@ -229,7 +229,7 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref_uwhere_ubound(
     ::std::int32_t const* $a crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime* crubit_nonnull __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime
 StructWithLifetime::from_static_ref_where_bound(
@@ -272,7 +272,7 @@ inline StructWithLifetime::operator ::std::int32_t() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_u_x00000026_x00000027a_x00000020i32(
     ::std::int32_t const* $a crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime* crubit_nonnull __ret_ptr);
 }
 inline StructWithLifetime::StructWithLifetime(
     ::std::int32_t const* $a crubit_nonnull value) {
@@ -297,7 +297,7 @@ inline StructWithLifetimeAndDropGlue::~StructWithLifetimeAndDropGlue() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
-    ::lifetimes::StructWithLifetimeAndDropGlue* __ret_ptr);
+    ::lifetimes::StructWithLifetimeAndDropGlue* crubit_nonnull __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetimeAndDropGlue
 StructWithLifetimeAndDropGlue::make_static_42() {

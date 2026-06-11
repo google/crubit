@@ -29,9 +29,11 @@
 
 namespace primitive_types::argument_types {
 
-void c_char_mut_ptr_arg(decltype(char(0))* __param_0);
+void c_char_mut_ptr_arg(
+    decltype(char(0))* crubit_nullability_unknown __param_0);
 
-void c_char_ptr_arg(decltype(char(0)) const* __param_0);
+void c_char_ptr_arg(decltype(char(0))
+                        const* crubit_nullability_unknown __param_0);
 
 }  // namespace primitive_types::argument_types
 
@@ -64,10 +66,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     crubit::type_identity_t<void(decltype(char(0)))>* c_char_func;
   };
   union {
-    void* c_void_mut_ptr;
+    void* crubit_nullability_unknown c_void_mut_ptr;
   };
   union {
-    const void* c_void_const_ptr;
+    const void* crubit_nullability_unknown c_void_const_ptr;
   };
   union {
     ::std::int64_t c_long;
@@ -158,11 +160,11 @@ namespace primitive_types::return_types {
 
 decltype(char(0)) c_char();
 
-decltype(char(0)) const* c_char_const_ptr();
+decltype(char(0)) const* crubit_nullability_unknown c_char_const_ptr();
 
 crubit::type_identity_t<void(decltype(char(0)))>& c_char_func();
 
-decltype(char(0))* c_char_mut_ptr();
+decltype(char(0))* crubit_nullability_unknown c_char_mut_ptr();
 
 double c_double();
 
@@ -190,9 +192,9 @@ unsigned long long c_ulonglong();
 
 void c_void();
 
-const void* c_void_const_ptr();
+const void* crubit_nullability_unknown c_void_const_ptr();
 
-void* c_void_mut_ptr();
+void* crubit_nullability_unknown c_void_mut_ptr();
 
 float f32();
 
@@ -249,30 +251,36 @@ StructWithCVoidPointerMember final {
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    const void* ptr_const;
+    const void* crubit_nullability_unknown ptr_const;
   };
   union {
-    void* ptr_mut;
+    void* crubit_nullability_unknown ptr_mut;
   };
 
  private:
   static void __crubit_field_offset_assertions();
 };
 
-const void* identity_const_c_void_ptr(const void* ptr);
+const void* crubit_nullability_unknown
+identity_const_c_void_ptr(const void* crubit_nullability_unknown ptr);
 
-void* identity_mut_c_void_ptr(void* ptr);
+void* crubit_nullability_unknown
+identity_mut_c_void_ptr(void* crubit_nullability_unknown ptr);
 
 ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember
-new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut);
+new_struct_with_c_void_pointer_member(const void* crubit_nullability_unknown
+                                          ptr_const,
+                                      void* crubit_nullability_unknown ptr_mut);
 
 }  // namespace primitive_types::test_c_void_ptr
 
 namespace primitive_types::test_maybe_uninit {
 
-::std::int32_t const* maybe_uninit_ptr(::std::int32_t const* maybe_uninit);
+::std::int32_t const* crubit_nullability_unknown
+maybe_uninit_ptr(::std::int32_t const* crubit_nullability_unknown maybe_uninit);
 
-::std::int32_t* maybe_uninit_ptr_mut(::std::int32_t* maybe_uninit);
+::std::int32_t* crubit_nullability_unknown
+maybe_uninit_ptr_mut(::std::int32_t* crubit_nullability_unknown maybe_uninit);
 
 ::std::int32_t const& $static
 maybe_uninit_ref(::std::int32_t const* $static maybe_uninit);
@@ -285,16 +293,20 @@ maybe_uninit_ref_mut(::std::int32_t* $static maybe_uninit);
 namespace primitive_types::argument_types {
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar_umut_uptr_uarg(decltype(char(0))*);
+extern "C" void __crubit_thunk_c_uchar_umut_uptr_uarg(
+    decltype(char(0))* crubit_nullability_unknown);
 }
-inline void c_char_mut_ptr_arg(decltype(char(0))* __param_0) {
+inline void c_char_mut_ptr_arg(
+    decltype(char(0))* crubit_nullability_unknown __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_umut_uptr_uarg(__param_0);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar_uptr_uarg(decltype(char(0)) const*);
+extern "C" void __crubit_thunk_c_uchar_uptr_uarg(
+    decltype(char(0)) const* crubit_nullability_unknown);
 }
-inline void c_char_ptr_arg(decltype(char(0)) const* __param_0) {
+inline void c_char_ptr_arg(decltype(char(0))
+                               const* crubit_nullability_unknown __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_uptr_uarg(__param_0);
 }
 
@@ -356,9 +368,10 @@ inline decltype(char(0)) c_char() {
 }
 
 namespace __crubit_internal {
-extern "C" decltype(char(0)) const* __crubit_thunk_c_uchar_uconst_uptr();
+extern "C" decltype(char(0)) const* crubit_nullability_unknown
+__crubit_thunk_c_uchar_uconst_uptr();
 }
-inline decltype(char(0)) const* c_char_const_ptr() {
+inline decltype(char(0)) const* crubit_nullability_unknown c_char_const_ptr() {
   return __crubit_internal::__crubit_thunk_c_uchar_uconst_uptr();
 }
 
@@ -371,9 +384,10 @@ inline crubit::type_identity_t<void(decltype(char(0)))>& c_char_func() {
 }
 
 namespace __crubit_internal {
-extern "C" decltype(char(0))* __crubit_thunk_c_uchar_umut_uptr();
+extern "C" decltype(char(0))* crubit_nullability_unknown
+__crubit_thunk_c_uchar_umut_uptr();
 }
-inline decltype(char(0))* c_char_mut_ptr() {
+inline decltype(char(0))* crubit_nullability_unknown c_char_mut_ptr() {
   return __crubit_internal::__crubit_thunk_c_uchar_umut_uptr();
 }
 
@@ -465,16 +479,17 @@ extern "C" void __crubit_thunk_c_uvoid();
 inline void c_void() { return __crubit_internal::__crubit_thunk_c_uvoid(); }
 
 namespace __crubit_internal {
-extern "C" const void* __crubit_thunk_c_uvoid_uconst_uptr();
+extern "C" const void* crubit_nullability_unknown
+__crubit_thunk_c_uvoid_uconst_uptr();
 }
-inline const void* c_void_const_ptr() {
+inline const void* crubit_nullability_unknown c_void_const_ptr() {
   return __crubit_internal::__crubit_thunk_c_uvoid_uconst_uptr();
 }
 
 namespace __crubit_internal {
-extern "C" void* __crubit_thunk_c_uvoid_umut_uptr();
+extern "C" void* crubit_nullability_unknown __crubit_thunk_c_uvoid_umut_uptr();
 }
-inline void* c_void_mut_ptr() {
+inline void* crubit_nullability_unknown c_void_mut_ptr() {
   return __crubit_internal::__crubit_thunk_c_uvoid_umut_uptr();
 }
 
@@ -572,28 +587,34 @@ inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(StructWithCVoidPointerMember, ptr_mut));
 }
 namespace __crubit_internal {
-extern "C" const void* __crubit_thunk_identity_uconst_uc_uvoid_uptr(
-    const void*);
+extern "C" const void* crubit_nullability_unknown
+__crubit_thunk_identity_uconst_uc_uvoid_uptr(
+    const void* crubit_nullability_unknown);
 }
-inline const void* identity_const_c_void_ptr(const void* ptr) {
+inline const void* crubit_nullability_unknown
+identity_const_c_void_ptr(const void* crubit_nullability_unknown ptr) {
   return __crubit_internal::__crubit_thunk_identity_uconst_uc_uvoid_uptr(ptr);
 }
 
 namespace __crubit_internal {
-extern "C" void* __crubit_thunk_identity_umut_uc_uvoid_uptr(void*);
+extern "C" void* crubit_nullability_unknown
+__crubit_thunk_identity_umut_uc_uvoid_uptr(void* crubit_nullability_unknown);
 }
-inline void* identity_mut_c_void_ptr(void* ptr) {
+inline void* crubit_nullability_unknown
+identity_mut_c_void_ptr(void* crubit_nullability_unknown ptr) {
   return __crubit_internal::__crubit_thunk_identity_umut_uc_uvoid_uptr(ptr);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new_ustruct_uwith_uc_uvoid_upointer_umember(
-    const void*, void*,
+    const void* crubit_nullability_unknown, void* crubit_nullability_unknown,
     ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember
-new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut) {
+new_struct_with_c_void_pointer_member(
+    const void* crubit_nullability_unknown ptr_const,
+    void* crubit_nullability_unknown ptr_mut) {
   crubit::Slot<::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -607,19 +628,22 @@ new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut) {
 namespace primitive_types::test_maybe_uninit {
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t const* __crubit_thunk_maybe_uuninit_uptr(
-    ::std::int32_t const*);
+extern "C" ::std::int32_t const* crubit_nullability_unknown
+__crubit_thunk_maybe_uuninit_uptr(
+    ::std::int32_t const* crubit_nullability_unknown);
 }
-inline ::std::int32_t const* maybe_uninit_ptr(
-    ::std::int32_t const* maybe_uninit) {
+inline ::std::int32_t const* crubit_nullability_unknown maybe_uninit_ptr(
+    ::std::int32_t const* crubit_nullability_unknown maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uptr(maybe_uninit);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t* __crubit_thunk_maybe_uuninit_uptr_umut(
-    ::std::int32_t*);
+extern "C" ::std::int32_t* crubit_nullability_unknown
+__crubit_thunk_maybe_uuninit_uptr_umut(
+    ::std::int32_t* crubit_nullability_unknown);
 }
-inline ::std::int32_t* maybe_uninit_ptr_mut(::std::int32_t* maybe_uninit) {
+inline ::std::int32_t* crubit_nullability_unknown
+maybe_uninit_ptr_mut(::std::int32_t* crubit_nullability_unknown maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uptr_umut(
       maybe_uninit);
 }

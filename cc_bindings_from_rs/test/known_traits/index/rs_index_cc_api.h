@@ -211,8 +211,8 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::rs_index::CustomIndex>);
 static_assert(::std::is_trivially_copy_assignable_v<::rs_index::CustomIndex>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uintptr_t,
-                                   ::rs_index::CustomIndex* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uintptr_t, ::rs_index::CustomIndex* crubit_nonnull __ret_ptr);
 }
 inline ::rs_index::CustomIndex CustomIndex::new_(::std::uintptr_t index) {
   crubit::Slot<::rs_index::CustomIndex> __return_value_ret_val_holder;
@@ -233,7 +233,8 @@ static_assert(::std::is_trivially_destructible_v<Id>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_index::Id>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::Id>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::int32_t, ::rs_index::Id* __ret_ptr);
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::rs_index::Id* crubit_nonnull __ret_ptr);
 }
 inline ::rs_index::Id Id::new_(::std::int32_t id) {
   crubit::Slot<::rs_index::Id> __return_value_ret_val_holder;
@@ -255,7 +256,8 @@ static_assert(::std::is_trivially_move_constructible_v<::rs_index::IntPair>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::IntPair>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::std::int32_t,
-                                   ::rs_index::IntPair* __ret_ptr);
+                                   ::rs_index::IntPair* crubit_nonnull
+                                       __ret_ptr);
 }
 inline ::rs_index::IntPair IntPair::new_(::std::int32_t x, ::std::int32_t y) {
   crubit::Slot<::rs_index::IntPair> __return_value_ret_val_holder;
@@ -332,7 +334,7 @@ extern "C" void __crubit_thunk_drop(::rs_index::Map&);
 inline Map::~Map() { __crubit_internal::__crubit_thunk_drop(*this); }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uintptr_t, ::std::uintptr_t,
-                                   ::rs_index::Map* __ret_ptr);
+                                   ::rs_index::Map* crubit_nonnull __ret_ptr);
 }
 inline ::rs_index::Map Map::new_(::std::uintptr_t row_size,
                                  ::std::uintptr_t col_size) {

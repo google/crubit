@@ -107,7 +107,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   U(::crubit::UnsafeRelocateTag, U&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  ::std::int32_t* x;
+  ::std::int32_t* crubit_nullability_unknown x;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -251,12 +251,12 @@ U final {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  void set_x(::std::int32_t* x);
+  void set_x(::std::int32_t* crubit_nullability_unknown x);
 
-  ::std::int32_t* get_x() const;
+  ::std::int32_t* crubit_nullability_unknown get_x() const;
 
   struct {
-    ::std::int32_t* value;
+    ::std::int32_t* crubit_nullability_unknown value;
   } x;
 
  private:
@@ -316,7 +316,8 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::unions::repr_c::U* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::unions::repr_c::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_c::U create() {
   crubit::Slot<::unions::repr_c::U> __return_value_ret_val_holder;
@@ -341,7 +342,8 @@ static_assert(
 static_assert(::std::is_trivially_move_assignable_v<::unions::repr_c_clone::U>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::unions::repr_c_clone::U const&,
-                                     ::unions::repr_c_clone::U* __ret_ptr);
+                                     ::unions::repr_c_clone::U* crubit_nonnull
+                                         __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(::unions::repr_c_clone::U&,
@@ -361,7 +363,8 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::unions::repr_c_clone::U* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::unions::repr_c_clone::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_c_clone::U create() {
   crubit::Slot<::unions::repr_c_clone::U> __return_value_ret_val_holder;
@@ -381,7 +384,8 @@ static_assert(
     alignof(U) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::unions::repr_c_drop::U* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::unions::repr_c_drop::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_c_drop::U::U() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -421,7 +425,8 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::unions::repr_c_packed::U* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::unions::repr_c_packed::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_c_packed::U create() {
   crubit::Slot<::unions::repr_c_packed::U> __return_value_ret_val_holder;
@@ -479,7 +484,8 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::unions::repr_rust::U* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::unions::repr_rust::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_rust::U create() {
   crubit::Slot<::unions::repr_rust::U> __return_value_ret_val_holder;
@@ -504,8 +510,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::unions::repr_rust_clone::U>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(::unions::repr_rust_clone::U const&,
-                                     ::unions::repr_rust_clone::U* __ret_ptr);
+extern "C" void __crubit_thunk_clone(
+    ::unions::repr_rust_clone::U const&,
+    ::unions::repr_rust_clone::U* crubit_nonnull __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(::unions::repr_rust_clone::U&,
@@ -542,7 +549,8 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::unions::repr_rust_clone::U* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::unions::repr_rust_clone::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_rust_clone::U create() {
   crubit::Slot<::unions::repr_rust_clone::U> __return_value_ret_val_holder;
@@ -562,7 +570,8 @@ static_assert(
     alignof(U) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::unions::repr_rust_drop::U* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::unions::repr_rust_drop::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_rust_drop::U::U() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -580,19 +589,19 @@ inline ::unions::repr_rust_drop::U& ::unions::repr_rust_drop::U::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_set_ux(::unions::repr_rust_drop::U&,
-                                      ::std::int32_t*);
+extern "C" void __crubit_thunk_set_ux(
+    ::unions::repr_rust_drop::U&, ::std::int32_t* crubit_nullability_unknown);
 }
-inline void U::set_x(::std::int32_t* x) {
+inline void U::set_x(::std::int32_t* crubit_nullability_unknown x) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ux(self, x);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t* __crubit_thunk_get_ux(
-    ::unions::repr_rust_drop::U const&);
+extern "C" ::std::int32_t* crubit_nullability_unknown
+__crubit_thunk_get_ux(::unions::repr_rust_drop::U const&);
 }
-inline ::std::int32_t* U::get_x() const {
+inline ::std::int32_t* crubit_nullability_unknown U::get_x() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ux(self);
 }
@@ -619,7 +628,8 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::unions::repr_rust_packed::U* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    ::unions::repr_rust_packed::U* crubit_nonnull __ret_ptr);
 }
 inline ::unions::repr_rust_packed::U create() {
   crubit::Slot<::unions::repr_rust_packed::U> __return_value_ret_val_holder;

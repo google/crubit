@@ -102,7 +102,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
 };
 
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: FreeFunc") =
-    crubit::type_identity_t<void(void*, void*)>*;
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*;
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
@@ -255,7 +256,8 @@ OptionWithSizeTypes final {
 // cc_bindings_from_rs/test/enums/option.rs;l=206:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: Voidpf") = void*;
+using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: Voidpf") =
+    void* crubit_nullability_unknown;
 
 // Error generating bindings for function `option_golden::take_option_bridged`
 // defined at
@@ -266,12 +268,12 @@ using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: Voidpf") = void*;
 
 }  // namespace option
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000003e
 template <>
 struct alignas(8)
     CRUBIT_INTERNAL_RUST_TYPE("std :: option :: Option < * const i32 >")
-        rs_std::Option<::std::int32_t const*> {
+        rs_std::Option<::std::int32_t const * crubit_nullability_unknown> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -288,19 +290,23 @@ struct alignas(8)
   constexpr explicit Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
 
-  explicit Option(::std::optional<::std::int32_t const*>&& value) noexcept;
-  Option& operator=(::std::optional<::std::int32_t const*>&& value) noexcept;
+  explicit Option(::std::optional<::std::int32_t const *
+                                  crubit_nullability_unknown>&& value) noexcept;
+  Option& operator=(
+      ::std::optional<::std::int32_t const * crubit_nullability_unknown>&&
+          value) noexcept;
 
   template <typename... Args>
   Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator ::std::optional<::std::int32_t const*>() && noexcept;
+  operator ::std::optional<::std::int32_t const *
+                           crubit_nullability_unknown>() && noexcept;
   bool has_value() const noexcept;
-  ::std::int32_t const*& operator*() &;
-  ::std::int32_t const* const& operator*() const&;
-  ::std::int32_t const*&& operator*() &&;
-  ::std::int32_t const** operator->();
-  ::std::int32_t const* const* operator->() const;
+  ::std::int32_t const * crubit_nullability_unknown & operator*() &;
+  ::std::int32_t const* crubit_nullability_unknown const& operator*() const&;
+  ::std::int32_t const * crubit_nullability_unknown && operator*() &&;
+  ::std::int32_t const * crubit_nullability_unknown * operator->();
+  ::std::int32_t const* crubit_nullability_unknown const* operator->() const;
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
@@ -315,8 +321,9 @@ struct alignas(8)
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-rs_std::Option<::std::int32_t const*> pass_option_ptr(
-    rs_std::Option<::std::int32_t const*> x);
+rs_std::Option<::std::int32_t const * crubit_nullability_unknown>
+pass_option_ptr(
+    rs_std::Option<::std::int32_t const * crubit_nullability_unknown> x);
 
 }  // namespace option
 
@@ -1132,13 +1139,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
 
 }  // namespace option
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: option :: Option < unsafe extern \"C\" fn (* mut :: core :: ffi :: "
     "c_void , * mut :: core :: ffi :: c_void) >")
-    rs_std::Option<crubit::type_identity_t<void(void*, void*)>*> {
+    rs_std::Option<crubit::type_identity_t<void(
+        void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -1155,24 +1163,35 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr explicit Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
 
-  explicit Option(
-      ::std::optional<crubit::type_identity_t<void(void*, void*)>*>&&
-          value) noexcept;
-  Option& operator=(
-      ::std::optional<crubit::type_identity_t<void(void*, void*)>*>&&
-          value) noexcept;
+  explicit Option(::std::optional<crubit::type_identity_t<void(
+                      void* crubit_nullability_unknown,
+                      void* crubit_nullability_unknown)>*>&& value) noexcept;
+  Option& operator=(::std::optional<crubit::type_identity_t<void(
+                        void* crubit_nullability_unknown,
+                        void* crubit_nullability_unknown)>*>&& value) noexcept;
 
   template <typename... Args>
   Option(::std::in_place_t, Args&&... args) noexcept;
   ~Option() noexcept = default;
-  operator ::std::optional<
-      crubit::type_identity_t<void(void*, void*)>*>() && noexcept;
+  operator ::std::optional<crubit::type_identity_t<
+      void(void* crubit_nullability_unknown,
+           void* crubit_nullability_unknown)>*>() && noexcept;
   bool has_value() const noexcept;
-  crubit::type_identity_t<void(void*, void*)>*& operator*() &;
-  crubit::type_identity_t<void(void*, void*)>* const& operator*() const&;
-  crubit::type_identity_t<void(void*, void*)>*&& operator*() &&;
-  crubit::type_identity_t<void(void*, void*)>** operator->();
-  crubit::type_identity_t<void(void*, void*)>* const* operator->() const;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&
+  operator*() &;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>* const&
+  operator*() const&;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>*&&
+  operator*() &&;
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>**
+  operator->();
+  crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                               void* crubit_nullability_unknown)>* const*
+  operator->() const;
 
  private:
   constexpr ::std::uint64_t tag() const& noexcept;
@@ -1204,7 +1223,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
   union {
-    rs_std::Option<crubit::type_identity_t<void(void*, void*)>*> zfree;
+    rs_std::Option<crubit::type_identity_t<void(
+        void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>
+        zfree;
   };
 
  private:
@@ -1723,7 +1744,8 @@ static_assert(
 static_assert(::std::is_trivially_move_assignable_v<::option::CloneNoDefault>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::option::CloneNoDefault const&,
-                                     ::option::CloneNoDefault* __ret_ptr);
+                                     ::option::CloneNoDefault* crubit_nonnull
+                                         __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(::option::CloneNoDefault&,
@@ -1765,7 +1787,8 @@ static_assert(
     alignof(HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::option::HasDefault* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::option::HasDefault* crubit_nonnull __ret_ptr);
 }
 inline ::option::HasDefault::HasDefault() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -1785,8 +1808,8 @@ inline ::option::HasDefault& ::option::HasDefault::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
-                                   ::option::HasDefault* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::StrRef, ::option::HasDefault* crubit_nonnull __ret_ptr);
 }
 inline ::option::HasDefault HasDefault::new_(rs_std::StrRef s) {
   crubit::Slot<::option::HasDefault> __return_value_ret_val_holder;
@@ -1818,8 +1841,8 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::option::HasHasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasHasOptions>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint8_t,
-                                   ::option::HasHasOptions* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint8_t, ::option::HasHasOptions* crubit_nonnull __ret_ptr);
 }
 inline ::option::HasHasOptions HasHasOptions::new_(::std::uint8_t value) {
   crubit::Slot<::option::HasHasOptions> __return_value_ret_val_holder;
@@ -1843,8 +1866,8 @@ inline HasNoDefault::~HasNoDefault() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
-                                   ::option::HasNoDefault* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::StrRef, ::option::HasNoDefault* crubit_nonnull __ret_ptr);
 }
 inline ::option::HasNoDefault HasNoDefault::new_(rs_std::StrRef s) {
   crubit::Slot<::option::HasNoDefault> __return_value_ret_val_holder;
@@ -1876,8 +1899,8 @@ static_assert(::std::is_trivially_destructible_v<HasOptions>);
 static_assert(::std::is_trivially_move_constructible_v<::option::HasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasOptions>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint8_t,
-                                   ::option::HasOptions* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint8_t, ::option::HasOptions* crubit_nonnull __ret_ptr);
 }
 inline ::option::HasOptions HasOptions::new_(::std::uint8_t value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
@@ -1888,7 +1911,8 @@ inline ::option::HasOptions HasOptions::new_(::std::uint8_t value) {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_uoption(rs_std::Option<::std::uint8_t>*,
-                                            ::option::HasOptions* __ret_ptr);
+                                            ::option::HasOptions* crubit_nonnull
+                                                __ret_ptr);
 }
 inline ::option::HasOptions HasOptions::with_option(
     rs_std::Option<::std::uint8_t> value) {
@@ -1901,7 +1925,8 @@ inline ::option::HasOptions HasOptions::with_option(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(rs_std::Option<::std::uint8_t> const&,
-                                         ::option::HasOptions* __ret_ptr);
+                                         ::option::HasOptions* crubit_nonnull
+                                             __ret_ptr);
 }
 inline ::option::HasOptions HasOptions::from_ref(
     rs_std::Option<::std::uint8_t> const& value) {
@@ -1912,7 +1937,8 @@ inline ::option::HasOptions HasOptions::from_ref(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_with_unone(::option::HasOptions* __ret_ptr);
+extern "C" void __crubit_thunk_with_unone(
+    ::option::HasOptions* crubit_nonnull __ret_ptr);
 }
 inline ::option::HasOptions HasOptions::with_none() {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
@@ -2038,7 +2064,8 @@ static_assert(::std::is_trivially_copy_constructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::LessThan20U8>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
-    ::std::uint8_t, rs_std::Option<::option::LessThan20U8>* __ret_ptr);
+    ::std::uint8_t,
+    rs_std::Option<::option::LessThan20U8>* crubit_nonnull __ret_ptr);
 }
 inline rs_std::Option<::option::LessThan20U8> LessThan20U8::new_(
     ::std::uint8_t value) {
@@ -2072,7 +2099,8 @@ static_assert(
     ::std::is_trivially_move_assignable_v<::option::OptCloneNoDefault>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(::option::OptCloneNoDefault const&,
-                                     ::option::OptCloneNoDefault* __ret_ptr);
+                                     ::option::OptCloneNoDefault* crubit_nonnull
+                                         __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(::option::OptCloneNoDefault&,
@@ -2090,8 +2118,8 @@ inline ::option::OptCloneNoDefault& ::option::OptCloneNoDefault::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint8_t,
-                                   ::option::OptCloneNoDefault* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint8_t, ::option::OptCloneNoDefault* crubit_nonnull __ret_ptr);
 }
 inline ::option::OptCloneNoDefault OptCloneNoDefault::new_(::std::uint8_t x) {
   crubit::Slot<::option::OptCloneNoDefault> __return_value_ret_val_holder;
@@ -2118,8 +2146,8 @@ static_assert(
 static_assert(
     ::std::is_trivially_copy_assignable_v<::option::OptCopyNoDefault>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::uint8_t,
-                                   ::option::OptCopyNoDefault* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::uint8_t, ::option::OptCopyNoDefault* crubit_nonnull __ret_ptr);
 }
 inline ::option::OptCopyNoDefault OptCopyNoDefault::new_(::std::uint8_t x) {
   crubit::Slot<::option::OptCopyNoDefault> __return_value_ret_val_holder;
@@ -2143,8 +2171,8 @@ inline OptDefaultWithDrop::~OptDefaultWithDrop() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
-                                   ::option::OptDefaultWithDrop* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::StrRef, ::option::OptDefaultWithDrop* crubit_nonnull __ret_ptr);
 }
 inline ::option::OptDefaultWithDrop OptDefaultWithDrop::new_(rs_std::StrRef s) {
   crubit::Slot<::option::OptDefaultWithDrop> __return_value_ret_val_holder;
@@ -2168,8 +2196,8 @@ inline OptNoDefaultWithDrop::~OptNoDefaultWithDrop() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
-                                   ::option::OptNoDefaultWithDrop* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    rs_std::StrRef, ::option::OptNoDefaultWithDrop* crubit_nonnull __ret_ptr);
 }
 inline ::option::OptNoDefaultWithDrop OptNoDefaultWithDrop::new_(
     rs_std::StrRef s) {
@@ -2198,7 +2226,8 @@ static_assert(
     alignof(OptZst) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::option::OptZst* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::option::OptZst* crubit_nonnull __ret_ptr);
 }
 inline ::option::OptZst::OptZst() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -2238,12 +2267,15 @@ inline void ZStream::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_pass_uoption_uptr(
-    rs_std::Option<::std::int32_t const*>*,
-    rs_std::Option<::std::int32_t const*>* __ret_ptr);
+    rs_std::Option<::std::int32_t const * crubit_nullability_unknown>*,
+    rs_std::Option<::std::int32_t const * crubit_nullability_unknown>*
+        crubit_nonnull __ret_ptr);
 }
-inline rs_std::Option<::std::int32_t const*> pass_option_ptr(
-    rs_std::Option<::std::int32_t const*> x) {
-  crubit::Slot<rs_std::Option<::std::int32_t const*>>
+inline rs_std::Option<::std::int32_t const * crubit_nullability_unknown>
+pass_option_ptr(
+    rs_std::Option<::std::int32_t const * crubit_nullability_unknown> x) {
+  crubit::Slot<
+      rs_std::Option<::std::int32_t const * crubit_nullability_unknown>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_pass_uoption_uptr(&x,
@@ -2254,7 +2286,7 @@ inline rs_std::Option<::std::int32_t const*> pass_option_ptr(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uoption_uresult(
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 inline rs_std::Option<
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
@@ -2270,8 +2302,9 @@ return_option_result() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uoption_uresult_uunmovable(
-    rs_std::Option<rs_std::Result<::option::HasNoDefault,
-                                  ::rs::alloc::string::String>>* __ret_ptr);
+    rs_std::Option<
+        rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>*
+        crubit_nonnull __ret_ptr);
 }
 inline rs_std::Option<
     rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
@@ -2291,7 +2324,8 @@ extern "C" void __crubit_thunk_stress_utesting_unested_utypes(
         rs_std::Option<
             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
         rs_std::Result<rs_std::Option<::std::int32_t>,
-                       rs_std::Option<::std::int32_t>>>>* __ret_ptr);
+                       rs_std::Option<::std::int32_t>>>>* crubit_nonnull
+        __ret_ptr);
 }
 inline rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
@@ -2313,7 +2347,7 @@ stress_testing_nested_types() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_stringify_ulen(
     rs_std::Option<::option::HasDefault> const&,
-    rs_std::Option<::std::uint32_t>* __ret_ptr);
+    rs_std::Option<::std::uint32_t>* crubit_nonnull __ret_ptr);
 }
 inline rs_std::Option<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x) {
@@ -2339,51 +2373,69 @@ inline void take_option_result_unmovable(
 
 }  // namespace option
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
-static_assert(::std::is_trivially_copy_constructible_v<
-              rs_std::Option<::std::int32_t const*>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              rs_std::Option<::std::int32_t const*>>);
-static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Option<::std::int32_t const*>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Option<::std::int32_t const*>>);
-inline constexpr rs_std::Option<::std::int32_t const*>::Option() { set_tag(0); }
-inline constexpr rs_std::Option<::std::int32_t const*>::Option(
-    ::std::nullopt_t) noexcept {
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<
+        rs_std::Option<::std::int32_t const * crubit_nullability_unknown>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<
+        rs_std::Option<::std::int32_t const * crubit_nullability_unknown>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<
+        rs_std::Option<::std::int32_t const * crubit_nullability_unknown>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<
+        rs_std::Option<::std::int32_t const * crubit_nullability_unknown>>);
+inline constexpr rs_std::Option<::std::int32_t const *
+                                crubit_nullability_unknown>::Option() {
   set_tag(0);
 }
-inline constexpr rs_std::Option<::std::int32_t const*>&
-rs_std::Option<::std::int32_t const*>::operator=(::std::nullopt_t) noexcept {
+inline constexpr rs_std::Option<
+    ::std::int32_t const *
+    crubit_nullability_unknown>::Option(::std::nullopt_t) noexcept {
+  set_tag(0);
+}
+inline constexpr rs_std::Option<::std::int32_t const *
+                                crubit_nullability_unknown>&
+rs_std::Option<::std::int32_t const * crubit_nullability_unknown>::operator=(
+    ::std::nullopt_t) noexcept {
   if (tag() != 0) {
-    ::std::destroy_at(reinterpret_cast<::std::int32_t const**>(storage_ + 8));
+    ::std::destroy_at(
+        reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+            storage_ + 8));
   }
   set_tag(0);
   return *this;
 }
-inline rs_std::Option<::std::int32_t const*>::Option(
-    ::std::optional<::std::int32_t const*>&& value) noexcept {
+inline rs_std::Option<::std::int32_t const * crubit_nullability_unknown>::
+    Option(::std::optional<::std::int32_t const * crubit_nullability_unknown>&&
+               value) noexcept {
   if (value.has_value()) {
     set_tag(1);
-    ::std::int32_t const** some =
-        reinterpret_cast<::std::int32_t const**>(storage_ + 8);
+    ::std::int32_t const* crubit_nullability_unknown* some =
+        reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+            storage_ + 8);
     *some = value.value();
     ::std::construct_at(&value, ::std::nullopt);
   } else {
     set_tag(0);
   }
 }
-inline rs_std::Option<::std::int32_t const*>&
-rs_std::Option<::std::int32_t const*>::operator=(
-    ::std::optional<::std::int32_t const*>&& value) noexcept {
+inline rs_std::Option<::std::int32_t const * crubit_nullability_unknown>&
+rs_std::Option<::std::int32_t const * crubit_nullability_unknown>::operator=(
+    ::std::optional<::std::int32_t const * crubit_nullability_unknown>&&
+        value) noexcept {
   if (tag() != 0) {
-    ::std::destroy_at(reinterpret_cast<::std::int32_t const**>(storage_ + 8));
+    ::std::destroy_at(
+        reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+            storage_ + 8));
   }
   if (value.has_value()) {
     set_tag(1);
-    ::std::int32_t const** some =
-        reinterpret_cast<::std::int32_t const**>(storage_ + 8);
+    ::std::int32_t const* crubit_nullability_unknown* some =
+        reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+            storage_ + 8);
     *some = value.value();
     ::std::construct_at(&value, ::std::nullopt);
   } else {
@@ -2392,67 +2444,87 @@ rs_std::Option<::std::int32_t const*>::operator=(
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::int32_t const*>::Option(::std::in_place_t,
-                                                     Args&&... args) noexcept {
+inline rs_std::Option<::std::int32_t const * crubit_nullability_unknown>::
+    Option(::std::in_place_t, Args&&... args) noexcept {
   set_tag(1);
-  ::std::construct_at(reinterpret_cast<::std::int32_t const**>(storage_ + 8),
-                      ::std::forward<Args>(args)...);
+  ::std::construct_at(
+      reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+          storage_ + 8),
+      ::std::forward<Args>(args)...);
 }
 static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t const*>>);
-inline rs_std::Option<::std::int32_t const*>::operator ::std::optional<
-    ::std::int32_t const*>() && noexcept {
+    ::std::is_trivially_destructible_v<
+        rs_std::Option<::std::int32_t const * crubit_nullability_unknown>>);
+inline rs_std::Option<::std::int32_t const * crubit_nullability_unknown>::
+operator ::std::optional<::std::int32_t const *
+                         crubit_nullability_unknown>() && noexcept {
   if (tag() == 0) {
     return ::std::nullopt;
   } else {
-    ::std::int32_t const*& value =
-        *reinterpret_cast<::std::int32_t const**>(storage_ + 8);
-    ::std::optional<::std::int32_t const*> return_value(::std::move(value));
+    ::std::int32_t const* crubit_nullability_unknown& value =
+        *reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+            storage_ + 8);
+    ::std::optional<::std::int32_t const * crubit_nullability_unknown>
+        return_value(::std::move(value));
     ::std::destroy_at(&value);
     set_tag(0);
     return return_value;
   }
 }
-inline bool rs_std::Option<::std::int32_t const*>::has_value() const noexcept {
+inline bool
+rs_std::Option<::std::int32_t const * crubit_nullability_unknown>::has_value()
+    const noexcept {
   return tag() != 0;
 }
-inline void rs_std::Option<::std::int32_t const*>::check_has_value() const {
+inline void rs_std::Option<::std::int32_t const *
+                           crubit_nullability_unknown>::check_has_value()
+    const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
 }
-inline ::std::int32_t const*&
-rs_std::Option<::std::int32_t const*>::operator*() & {
+inline ::std::int32_t const * crubit_nullability_unknown &
+    rs_std::Option<::std::int32_t const *
+                   crubit_nullability_unknown>::operator*() & {
   check_has_value();
-  return *reinterpret_cast<::std::int32_t const**>(storage_ + 8);
+  return *reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+      storage_ + 8);
 }
-inline ::std::int32_t const* const&
-rs_std::Option<::std::int32_t const*>::operator*() const& {
+inline ::std::int32_t const* crubit_nullability_unknown const& rs_std::Option<
+    ::std::int32_t const * crubit_nullability_unknown>::operator*() const& {
   check_has_value();
-  return *reinterpret_cast<::std::int32_t const* const*>(storage_ + 8);
+  return *reinterpret_cast<::std::int32_t const *
+                           crubit_nullability_unknown const*>(storage_ + 8);
 }
-inline ::std::int32_t const*&&
-rs_std::Option<::std::int32_t const*>::operator*() && {
+inline ::std::int32_t const * crubit_nullability_unknown &&
+    rs_std::Option<::std::int32_t const *
+                   crubit_nullability_unknown>::operator*() && {
   check_has_value();
-  return ::std::move(*reinterpret_cast<::std::int32_t const**>(storage_ + 8));
+  return ::std::move(
+      *reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+          storage_ + 8));
 }
-inline ::std::int32_t const**
-rs_std::Option<::std::int32_t const*>::operator->() {
+inline ::std::int32_t const * crubit_nullability_unknown *
+    rs_std::Option<::std::int32_t const *
+                   crubit_nullability_unknown>::operator->() {
   check_has_value();
-  return reinterpret_cast<::std::int32_t const**>(storage_ + 8);
+  return reinterpret_cast<::std::int32_t const * crubit_nullability_unknown*>(
+      storage_ + 8);
 }
-inline ::std::int32_t const* const*
-rs_std::Option<::std::int32_t const*>::operator->() const {
+inline ::std::int32_t const* crubit_nullability_unknown const* rs_std::Option<
+    ::std::int32_t const * crubit_nullability_unknown>::operator->() const {
   check_has_value();
-  return reinterpret_cast<::std::int32_t const* const*>(storage_ + 8);
+  return reinterpret_cast<::std::int32_t const *
+                          crubit_nullability_unknown const*>(storage_ + 8);
 }
-inline constexpr ::std::uint64_t rs_std::Option<::std::int32_t const*>::tag()
-    const& noexcept {
+inline constexpr ::std::uint64_t rs_std::Option<
+    ::std::int32_t const * crubit_nullability_unknown>::tag() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::std::int32_t const*>::set_tag(
+inline constexpr void
+rs_std::Option<::std::int32_t const * crubit_nullability_unknown>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
@@ -2603,7 +2675,7 @@ inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     rs_std::Option<::option::CloneNoDefault> const&,
-    rs_std::Option<::option::CloneNoDefault>* __ret_ptr);
+    rs_std::Option<::option::CloneNoDefault>* crubit_nonnull __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -3657,7 +3729,7 @@ extern "C" void __crubit_thunk_clone(
     rs_std::Option<
         rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> const&,
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*
-        __ret_ptr);
+        crubit_nonnull __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -4111,7 +4183,8 @@ extern "C" void __crubit_thunk_clone(
         rs_std::Option<
             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
         rs_std::Result<rs_std::Option<::std::int32_t>,
-                       rs_std::Option<::std::int32_t>>>>* __ret_ptr);
+                       rs_std::Option<::std::int32_t>>>>* crubit_nonnull
+        __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -4766,41 +4839,58 @@ inline constexpr void rs_std::Option<::std::uint8_t>::set_tag(
 }
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-static_assert(::std::is_trivially_copy_constructible_v<
-              rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
-static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
-inline constexpr rs_std::Option<
-    crubit::type_identity_t<void(void*, void*)>*>::Option() {
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullability_uunknown_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<rs_std::Option<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<rs_std::Option<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+inline constexpr rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::Option() {
   set_tag(0);
 }
-inline constexpr rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::
+inline constexpr rs_std::Option<crubit::type_identity_t<void(
+    void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>::
     Option(::std::nullopt_t) noexcept {
   set_tag(0);
 }
-inline constexpr rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>&
-rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
-    ::std::nullopt_t) noexcept {
+inline constexpr rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>&
+rs_std::Option<crubit::type_identity_t<void(
+    void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>::
+operator=(::std::nullopt_t) noexcept {
   if (tag() != 0) {
-    ::std::destroy_at(
-        reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-            storage_));
+    ::std::destroy_at(reinterpret_cast<crubit::type_identity_t<void(
+                          void* crubit_nullability_unknown,
+                          void* crubit_nullability_unknown)>**>(storage_));
   }
   set_tag(0);
   return *this;
 }
-inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
-    ::std::optional<crubit::type_identity_t<void(void*, void*)>*>&&
-        value) noexcept {
+inline rs_std::Option<crubit::type_identity_t<void(
+    void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>::
+    Option(::std::optional<crubit::type_identity_t<
+               void(void* crubit_nullability_unknown,
+                    void* crubit_nullability_unknown)>*>&& value) noexcept {
   if (value.has_value()) {
-    crubit::type_identity_t<void(void*, void*)>** some =
-        reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>** some =
+        reinterpret_cast<
+            crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                         void* crubit_nullability_unknown)>**>(
             storage_);
     *some = value.value();
     ::std::construct_at(&value, ::std::nullopt);
@@ -4808,18 +4898,25 @@ inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
     set_tag(0);
   }
 }
-inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>&
-rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
-    ::std::optional<crubit::type_identity_t<void(void*, void*)>*>&&
+inline rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>&
+rs_std::Option<crubit::type_identity_t<void(
+    void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>::
+operator=(
+    ::std::optional<crubit::type_identity_t<void(
+        void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>&&
         value) noexcept {
   if (tag() != 0) {
-    ::std::destroy_at(
-        reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-            storage_));
+    ::std::destroy_at(reinterpret_cast<crubit::type_identity_t<void(
+                          void* crubit_nullability_unknown,
+                          void* crubit_nullability_unknown)>**>(storage_));
   }
   if (value.has_value()) {
-    crubit::type_identity_t<void(void*, void*)>** some =
-        reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>** some =
+        reinterpret_cast<
+            crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                         void* crubit_nullability_unknown)>**>(
             storage_);
     *some = value.value();
     ::std::construct_at(&value, ::std::nullopt);
@@ -4829,79 +4926,117 @@ rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
-    ::std::in_place_t, Args&&... args) noexcept {
+inline rs_std::Option<crubit::type_identity_t<void(
+    void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>::
+    Option(::std::in_place_t, Args&&... args) noexcept {
   ::std::construct_at(
-      reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(storage_),
+      reinterpret_cast<
+          crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                       void* crubit_nullability_unknown)>**>(
+          storage_),
       ::std::forward<Args>(args)...);
 }
-static_assert(::std::is_trivially_destructible_v<
-              rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
-inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator ::
-    std::optional<crubit::type_identity_t<void(void*, void*)>*>() && noexcept {
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Option<
+        crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                     void* crubit_nullability_unknown)>*>>);
+inline rs_std::Option<crubit::type_identity_t<void(
+    void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>::
+operator ::std::optional<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>() && noexcept {
   if (tag() == 0) {
     return ::std::nullopt;
   } else {
-    crubit::type_identity_t<void(void*, void*)>*& value =
-        *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*& value =
+        *reinterpret_cast<
+            crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                         void* crubit_nullability_unknown)>**>(
             storage_);
-    ::std::optional<crubit::type_identity_t<void(void*, void*)>*> return_value(
-        ::std::move(value));
+    ::std::optional<crubit::type_identity_t<void(
+        void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>
+        return_value(::std::move(value));
     ::std::destroy_at(&value);
     set_tag(0);
     return return_value;
   }
 }
-inline bool rs_std::Option<
-    crubit::type_identity_t<void(void*, void*)>*>::has_value() const noexcept {
+inline bool rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::has_value() const noexcept {
   return tag() != 0;
 }
-inline void rs_std::Option<
-    crubit::type_identity_t<void(void*, void*)>*>::check_has_value() const {
+inline void rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::check_has_value() const {
   CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
 }
-inline crubit::type_identity_t<void(void*, void*)>*&
-rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator*() & {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&
+rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::operator*() & {
   check_has_value();
-  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+  return *reinterpret_cast<crubit::type_identity_t<void(
+      void* crubit_nullability_unknown, void* crubit_nullability_unknown)>**>(
       storage_);
 }
-inline crubit::type_identity_t<void(void*, void*)>* const& rs_std::Option<
-    crubit::type_identity_t<void(void*, void*)>*>::operator*() const& {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>* const&
+rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::operator*() const& {
   check_has_value();
-  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>* const*>(
+  return *reinterpret_cast<
+      crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                   void* crubit_nullability_unknown)>* const*>(
       storage_);
 }
-inline crubit::type_identity_t<void(void*, void*)>*&&
-rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator*() && {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>*&&
+rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::operator*() && {
   check_has_value();
-  return ::std::move(
-      *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-          storage_));
+  return ::std::move(*reinterpret_cast<crubit::type_identity_t<void(
+                         void* crubit_nullability_unknown,
+                         void* crubit_nullability_unknown)>**>(storage_));
 }
-inline crubit::type_identity_t<void(void*, void*)>**
-rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator->() {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>**
+rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::operator->() {
   check_has_value();
-  return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+  return reinterpret_cast<crubit::type_identity_t<void(
+      void* crubit_nullability_unknown, void* crubit_nullability_unknown)>**>(
       storage_);
 }
-inline crubit::type_identity_t<void(void*, void*)>* const* rs_std::Option<
-    crubit::type_identity_t<void(void*, void*)>*>::operator->() const {
+inline crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                    void* crubit_nullability_unknown)>* const*
+rs_std::Option<crubit::type_identity_t<
+    void(void* crubit_nullability_unknown,
+         void* crubit_nullability_unknown)>*>::operator->() const {
   check_has_value();
-  return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>* const*>(
+  return reinterpret_cast<
+      crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                   void* crubit_nullability_unknown)>* const*>(
       storage_);
 }
 inline constexpr ::std::uint64_t rs_std::Option<
-    crubit::type_identity_t<void(void*, void*)>*>::tag() const& noexcept {
+    crubit::type_identity_t<void(void* crubit_nullability_unknown,
+                                 void* crubit_nullability_unknown)>*>::tag()
+    const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void
-rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::set_tag(
-    ::std::uint64_t tag) noexcept {
+inline constexpr void rs_std::Option<crubit::type_identity_t<void(
+    void* crubit_nullability_unknown, void* crubit_nullability_unknown)>*>::
+    set_tag(::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
           tag);
@@ -4916,7 +5051,8 @@ rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::set_tag(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const&,
-    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>* __ret_ptr);
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>* crubit_nonnull
+        __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
@@ -5410,7 +5546,8 @@ extern "C" void __crubit_thunk_clone(
     rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
                                                  ::rs::alloc::string::String>>,
                    rs_std::Result<rs_std::Option<::std::int32_t>,
-                                  rs_std::Option<::std::int32_t>>>* __ret_ptr);
+                                  rs_std::Option<::std::int32_t>>>*
+        crubit_nonnull __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(

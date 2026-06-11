@@ -66,7 +66,8 @@ static_assert(
     alignof(NeverStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::never::NeverStruct* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::never::NeverStruct* crubit_nonnull __ret_ptr);
 }
 inline ::never::NeverStruct::NeverStruct() {
   __crubit_internal::__crubit_thunk_default(this);

@@ -83,8 +83,8 @@ inline constexpr Color Color::MakeTransparent() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_Grayscale(::std::uint8_t,
-                                         ::example_crate::Color* __ret_ptr);
+extern "C" void __crubit_thunk_Grayscale(
+    ::std::uint8_t, ::example_crate::Color* crubit_nonnull __ret_ptr);
 }
 inline ::example_crate::Color Color::MakeGrayscale(::std::uint8_t __param_0) {
   crubit::Slot<::example_crate::Color> __return_value_ret_val_holder;
@@ -95,9 +95,9 @@ inline ::example_crate::Color Color::MakeGrayscale(::std::uint8_t __param_0) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_Rgb(::std::uint8_t, ::std::uint8_t,
-                                   ::std::uint8_t,
-                                   ::example_crate::Color* __ret_ptr);
+extern "C" void __crubit_thunk_Rgb(
+    ::std::uint8_t, ::std::uint8_t, ::std::uint8_t,
+    ::example_crate::Color* crubit_nonnull __ret_ptr);
 }
 inline ::example_crate::Color Color::MakeRgb(::std::uint8_t __param_0,
                                              ::std::uint8_t __param_1,

@@ -174,11 +174,11 @@ fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
                     // below also matters.
                     struct S;
                     ...
-                    void F(::rust_out::S const* __param_0);
+                    void F(::rust_out::S const* crubit_nullability_unknown __param_0);
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S final { ... }
                     ...
-                    inline void F(::rust_out::S const* __param_0) { ... }
+                    inline void F(::rust_out::S const* crubit_nullability_unknown __param_0) { ... }
                     ...
                 }  // namespace rust_out
             }
@@ -335,7 +335,7 @@ fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition(
             bindings.cc_api,
             quote! {
                 static ::rust_out::S create(); ...
-                union { ... ::rust_out::S const* field; }; ...
+                union { ... ::rust_out::S const* crubit_nullability_unknown field; }; ...
             }
         );
     });
@@ -1292,7 +1292,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
                 }
                 ...
                 namespace __crubit_internal {  // `pass_by_value` thunk decl
-                extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
+                extern "C" void ...(::rust_out::TypeUnderTest* crubit_nonnull __ret_ptr);
                 }
                 inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
                     crubit::Slot<::rust_out::TypeUnderTest> __return_value_ret_val_holder;

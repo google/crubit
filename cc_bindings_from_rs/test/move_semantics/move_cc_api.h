@@ -104,7 +104,8 @@ static_assert(
     alignof(Copyable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::move::Copyable* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::move::Copyable* crubit_nonnull __ret_ptr);
 }
 inline ::move::Copyable::Copyable() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -115,8 +116,8 @@ static_assert(::std::is_trivially_move_assignable_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_constructible_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_assignable_v<::move::Copyable>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
-                                          ::move::Copyable* __ret_ptr);
+extern "C" void __crubit_thunk_from_ubyte(
+    ::std::uint8_t, ::move::Copyable* crubit_nonnull __ret_ptr);
 }
 inline ::move::Copyable Copyable::from_byte(::std::uint8_t byte) {
   crubit::Slot<::move::Copyable> __return_value_ret_val_holder;
@@ -142,7 +143,7 @@ static_assert(
     alignof(Foo) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::move::Foo* __ret_ptr);
+extern "C" void __crubit_thunk_default(::move::Foo* crubit_nonnull __ret_ptr);
 }
 inline ::move::Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
 namespace __crubit_internal {
@@ -155,8 +156,8 @@ inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
-                                          ::move::Foo* __ret_ptr);
+extern "C" void __crubit_thunk_from_ubyte(
+    ::std::uint8_t, ::move::Foo* crubit_nonnull __ret_ptr);
 }
 inline ::move::Foo Foo::from_byte(::std::uint8_t byte) {
   crubit::Slot<::move::Foo> __return_value_ret_val_holder;

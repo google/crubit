@@ -83,7 +83,8 @@ static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::example_crate::MyStruct* __ret_ptr);
+extern "C" void __crubit_thunk_default(
+    ::example_crate::MyStruct* crubit_nonnull __ret_ptr);
 }
 inline ::example_crate::MyStruct::MyStruct() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -96,8 +97,8 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::example_crate::MyStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::example_crate::MyStruct>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(::std::int32_t,
-                                   ::example_crate::MyStruct* __ret_ptr);
+extern "C" void __crubit_thunk_new(
+    ::std::int32_t, ::example_crate::MyStruct* crubit_nonnull __ret_ptr);
 }
 inline ::example_crate::MyStruct MyStruct::new_(::std::int32_t x) {
   crubit::Slot<::example_crate::MyStruct> __return_value_ret_val_holder;

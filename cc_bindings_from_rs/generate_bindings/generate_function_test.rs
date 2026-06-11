@@ -1182,7 +1182,7 @@ fn test_format_item_fn_rust_abi_returning_struct_by_value() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" void ...(::std::int32_t, ::rust_out::S* __ret_ptr);
+                    extern "C" void ...(::std::int32_t, ::rust_out::S* crubit_nonnull __ret_ptr);
                 }
                 ...
                 inline ::rust_out::S create(::std::int32_t i) {
