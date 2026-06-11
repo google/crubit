@@ -9,6 +9,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(crubit LANGUAGES CXX)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wno-nullability-completeness)
+endif()
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -39,3 +43,6 @@ add_library(crubit_support INTERFACE)
 set_target_properties(crubit_support PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(crubit_support INTERFACE ${ALL_TARGETS})
 target_include_directories(crubit_support INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_options(crubit_support INTERFACE
+  $<$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>:-Wno-nullability-completeness>
+)

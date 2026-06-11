@@ -12,6 +12,10 @@ project(example_project
   VERSION 0.1.0
   LANGUAGES CXX)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wno-nullability-completeness)
+endif()
+
 include(FetchContent)
 include(CTest)
 
