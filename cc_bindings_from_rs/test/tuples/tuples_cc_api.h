@@ -1318,10 +1318,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   operator ::std::optional<::std::int32_t>() && noexcept;
   bool has_value() const noexcept;
   ::std::int32_t& operator*() &;
-  std::add_const_t<::std::int32_t>& operator*() const&;
+  ::std::int32_t const& operator*() const&;
   ::std::int32_t&& operator*() &&;
   ::std::int32_t* operator->();
-  std::add_const_t<::std::int32_t>* operator->() const;
+  ::std::int32_t const* operator->() const;
 
  private:
   constexpr ::std::uint32_t tag() const& noexcept;
@@ -1403,10 +1403,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::rs::alloc::string::String& err() &;
   ::rs::alloc::string::String&& err() &&;
   ::std::int32_t& operator*() &;
-  std::add_const_t<::std::int32_t>& operator*() const&;
+  ::std::int32_t const& operator*() const&;
   ::std::int32_t&& operator*() &&;
   ::std::int32_t* operator->();
-  std::add_const_t<::std::int32_t>* operator->() const;
+  ::std::int32_t const* operator->() const;
   ~Result() noexcept;
 
  private:
@@ -3089,10 +3089,10 @@ inline ::std::int32_t& rs_std::Option<::std::int32_t>::operator*() & {
   check_has_value();
   return *reinterpret_cast<::std::int32_t*>(storage_ + 4);
 }
-inline std::add_const_t<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator*() const& {
+inline ::std::int32_t const& rs_std::Option<::std::int32_t>::operator*()
+    const& {
   check_has_value();
-  return *reinterpret_cast<std::add_const_t<::std::int32_t>*>(storage_ + 4);
+  return *reinterpret_cast<::std::int32_t const*>(storage_ + 4);
 }
 inline ::std::int32_t&& rs_std::Option<::std::int32_t>::operator*() && {
   check_has_value();
@@ -3102,10 +3102,10 @@ inline ::std::int32_t* rs_std::Option<::std::int32_t>::operator->() {
   check_has_value();
   return reinterpret_cast<::std::int32_t*>(storage_ + 4);
 }
-inline std::add_const_t<::std::int32_t>*
-rs_std::Option<::std::int32_t>::operator->() const {
+inline ::std::int32_t const* rs_std::Option<::std::int32_t>::operator->()
+    const {
   check_has_value();
-  return reinterpret_cast<std::add_const_t<::std::int32_t>*>(storage_ + 4);
+  return reinterpret_cast<::std::int32_t const*>(storage_ + 4);
 }
 inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
     const& noexcept {
@@ -3239,10 +3239,10 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::int32_t*>(__storage + 8);
 }
-inline std::add_const_t<::std::int32_t>& rs_std::Result<
+inline ::std::int32_t const& rs_std::Result<
     ::std::int32_t, ::rs::alloc::string::String>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<std::add_const_t<::std::int32_t>*>(__storage + 8);
+  return *reinterpret_cast<::std::int32_t const*>(__storage + 8);
 }
 inline ::std::int32_t&&
 rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator*() && {
@@ -3254,10 +3254,10 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::int32_t*>(__storage + 8);
 }
-inline std::add_const_t<::std::int32_t>* rs_std::Result<
+inline ::std::int32_t const* rs_std::Result<
     ::std::int32_t, ::rs::alloc::string::String>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<std::add_const_t<::std::int32_t>*>(__storage + 8);
+  return reinterpret_cast<::std::int32_t const*>(__storage + 8);
 }
 inline rs_std::Result<::std::int32_t,
                       ::rs::alloc::string::String>::~Result() noexcept {

@@ -78,10 +78,10 @@ struct alignas(4)
   ::std::int32_t& err() &;
   ::std::int32_t&& err() &&;
   ::std::int32_t& operator*() &;
-  std::add_const_t<::std::int32_t>& operator*() const&;
+  ::std::int32_t const& operator*() const&;
   ::std::int32_t&& operator*() &&;
   ::std::int32_t* operator->();
-  std::add_const_t<::std::int32_t>* operator->() const;
+  ::std::int32_t const* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -139,10 +139,10 @@ struct alignas(4)
   ::std::int8_t& err() &;
   ::std::int8_t&& err() &&;
   ::std::uint32_t& operator*() &;
-  std::add_const_t<::std::uint32_t>& operator*() const&;
+  ::std::uint32_t const& operator*() const&;
   ::std::uint32_t&& operator*() &&;
   ::std::uint32_t* operator->();
-  std::add_const_t<::std::uint32_t>* operator->() const;
+  ::std::uint32_t const* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -326,10 +326,10 @@ rs_std::Result<::std::int32_t, ::std::int32_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::int32_t*>(__storage + 4);
 }
-inline std::add_const_t<::std::int32_t>&
+inline ::std::int32_t const&
 rs_std::Result<::std::int32_t, ::std::int32_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<std::add_const_t<::std::int32_t>*>(__storage + 4);
+  return *reinterpret_cast<::std::int32_t const*>(__storage + 4);
 }
 inline ::std::int32_t&&
 rs_std::Result<::std::int32_t, ::std::int32_t>::operator*() && {
@@ -341,10 +341,10 @@ rs_std::Result<::std::int32_t, ::std::int32_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::int32_t*>(__storage + 4);
 }
-inline std::add_const_t<::std::int32_t>*
+inline ::std::int32_t const*
 rs_std::Result<::std::int32_t, ::std::int32_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<std::add_const_t<::std::int32_t>*>(__storage + 4);
+  return reinterpret_cast<::std::int32_t const*>(__storage + 4);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::int32_t, ::std::int32_t>>);
@@ -473,10 +473,10 @@ rs_std::Result<::std::uint32_t, ::std::int8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::uint32_t*>(__storage + 4);
 }
-inline std::add_const_t<::std::uint32_t>&
+inline ::std::uint32_t const&
 rs_std::Result<::std::uint32_t, ::std::int8_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<std::add_const_t<::std::uint32_t>*>(__storage + 4);
+  return *reinterpret_cast<::std::uint32_t const*>(__storage + 4);
 }
 inline ::std::uint32_t&&
 rs_std::Result<::std::uint32_t, ::std::int8_t>::operator*() && {
@@ -488,10 +488,10 @@ rs_std::Result<::std::uint32_t, ::std::int8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::uint32_t*>(__storage + 4);
 }
-inline std::add_const_t<::std::uint32_t>*
+inline ::std::uint32_t const*
 rs_std::Result<::std::uint32_t, ::std::int8_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<std::add_const_t<::std::uint32_t>*>(__storage + 4);
+  return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint32_t, ::std::int8_t>>);
