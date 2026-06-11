@@ -269,7 +269,6 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
         let has_move_ctor = is_cpp_movable(db, arg_ty_rs);
         let has_relocating_ctor = has_relocating_ctor(db, arg_ty_rs);
         let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(CcInclude::type_traits());
         if has_relocating_ctor {
             prereqs.includes.insert(self.db.support_header("internal/slot.h"));
         }
@@ -411,7 +410,6 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
         prereqs.includes.insert(CcInclude::utility());
         prereqs.includes.insert(self.db.support_header("internal/move_assign.h"));
         prereqs.includes.insert(self.db.support_header("internal/check.h"));
-        prereqs.includes.insert(CcInclude::type_traits());
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
         let cc_details = CcSnippet {
             tokens: quote! {
@@ -705,7 +703,6 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
             ..
         } = self;
         let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(CcInclude::type_traits());
         let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
 
         let move_construct_ok = move_constructor_ok.main_api.into_tokens(&mut prereqs);
@@ -755,7 +752,6 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
         prereqs.includes.insert(CcInclude::utility());
         prereqs.includes.insert(db.support_header("internal/check.h"));
         prereqs.includes.insert(db.support_header("internal/move_assign.h"));
-        prereqs.includes.insert(CcInclude::type_traits());
         let move_construct_ok_details = move_constructor_ok.cc_details.into_tokens(&mut prereqs);
         let move_construct_err_details = move_constructor_err.cc_details.into_tokens(&mut prereqs);
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
