@@ -176,6 +176,9 @@ const _: () =
     assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_ok) == 32);
 const _: () =
     assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_err) == 48);
+const _: () = assert!(::std::mem::size_of::<::result_golden::ZStream>() == 16);
+const _: () = assert!(::std::mem::align_of::<::result_golden::ZStream>() == 8);
+const _: () = assert!(::core::mem::offset_of!(::result_golden::ZStream, zfree) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uresult_uby_uvalue(
     __ret_ptr: *mut core::ffi::c_void,

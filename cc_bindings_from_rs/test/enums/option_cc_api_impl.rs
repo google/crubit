@@ -249,6 +249,20 @@ const _: () = assert!(::std::mem::size_of::<::option_golden::OptionWithSizeTypes
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptionWithSizeTypes>() == 8);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, uval) == 0);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, ival) == 16);
+const _: () = assert!(::std::mem::size_of::<::option_golden::ZStream>() == 8);
+const _: () = assert!(::std::mem::align_of::<::option_golden::ZStream>() == 8);
+const _: () = assert!(::core::mem::offset_of!(::option_golden::ZStream, zfree) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_pass_uoption_uptr(
+    x: &'static mut ::core::mem::MaybeUninit<::core::option::Option<*const i32>>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let x = x.assume_init_read();
+        let __rs_return_value = ::option_golden::pass_option_ptr(x);
+        (__ret_ptr as *mut ::core::option::Option<*const i32>).write(__rs_return_value);
+    }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uoption_uresult(
     __ret_ptr: *mut core::ffi::c_void,

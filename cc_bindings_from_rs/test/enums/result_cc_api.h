@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/check.h"
+#include "support/internal/cxx20_backports.h"
 #include "support/internal/memswap.h"
 #include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
@@ -89,6 +90,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
+using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: FreeFunc") =
+    crubit::type_identity_t<void(void*, void*)>*;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
@@ -189,6 +192,7 @@ ResultWithSizeTypes final {
   static void __crubit_field_offset_assertions();
 };
 
+using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: Voidpf") = void*;
 }  // namespace result
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -226,10 +230,10 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
   ::result::CloneNoDefault& operator*() &;
-  const ::result::CloneNoDefault& operator*() const&;
+  std::add_const_t<::result::CloneNoDefault>& operator*() const&;
   ::result::CloneNoDefault&& operator*() &&;
   ::result::CloneNoDefault* operator->();
-  const ::result::CloneNoDefault* operator->() const;
+  std::add_const_t<::result::CloneNoDefault>* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -275,10 +279,10 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
   ::result::CopyNoDefault& operator*() &;
-  const ::result::CopyNoDefault& operator*() const&;
+  std::add_const_t<::result::CopyNoDefault>& operator*() const&;
   ::result::CopyNoDefault&& operator*() &&;
   ::result::CopyNoDefault* operator->();
-  const ::result::CopyNoDefault* operator->() const;
+  std::add_const_t<::result::CopyNoDefault>* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -333,10 +337,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
   ::result::HasDefault& operator*() &;
-  const ::result::HasDefault& operator*() const&;
+  std::add_const_t<::result::HasDefault>& operator*() const&;
   ::result::HasDefault&& operator*() &&;
   ::result::HasDefault* operator->();
-  const ::result::HasDefault* operator->() const;
+  std::add_const_t<::result::HasDefault>* operator->() const;
   ~Result() noexcept;
 
  private:
@@ -392,10 +396,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
   ::result::HasNoDefault& operator*() &;
-  const ::result::HasNoDefault& operator*() const&;
+  std::add_const_t<::result::HasNoDefault>& operator*() const&;
   ::result::HasNoDefault&& operator*() &&;
   ::result::HasNoDefault* operator->();
-  const ::result::HasNoDefault* operator->() const;
+  std::add_const_t<::result::HasNoDefault>* operator->() const;
   ~Result() noexcept;
 
  private:
@@ -441,10 +445,10 @@ struct alignas(4)
   ::std::uint32_t& err() &;
   ::std::uint32_t&& err() &&;
   ::std::uint32_t& operator*() &;
-  const ::std::uint32_t& operator*() const&;
+  std::add_const_t<::std::uint32_t>& operator*() const&;
   ::std::uint32_t&& operator*() &&;
   ::std::uint32_t* operator->();
-  const ::std::uint32_t* operator->() const;
+  std::add_const_t<::std::uint32_t>* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -524,10 +528,12 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   ::std::uint32_t& err() &;
   ::std::uint32_t&& err() &&;
   rs_std::Result<::std::uint32_t, ::std::uint32_t>& operator*() &;
-  const rs_std::Result<::std::uint32_t, ::std::uint32_t>& operator*() const&;
+  std::add_const_t<rs_std::Result<::std::uint32_t, ::std::uint32_t>>&
+  operator*() const&;
   rs_std::Result<::std::uint32_t, ::std::uint32_t>&& operator*() &&;
   rs_std::Result<::std::uint32_t, ::std::uint32_t>* operator->();
-  const rs_std::Result<::std::uint32_t, ::std::uint32_t>* operator->() const;
+  std::add_const_t<rs_std::Result<::std::uint32_t, ::std::uint32_t>>*
+  operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -577,10 +583,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Result<::std::uint32_t, ::std::uint32_t>& err() &;
   rs_std::Result<::std::uint32_t, ::std::uint32_t>&& err() &&;
   ::std::uint32_t& operator*() &;
-  const ::std::uint32_t& operator*() const&;
+  std::add_const_t<::std::uint32_t>& operator*() const&;
   ::std::uint32_t&& operator*() &&;
   ::std::uint32_t* operator->();
-  const ::std::uint32_t* operator->() const;
+  std::add_const_t<::std::uint32_t>* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -669,10 +675,10 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::CloneNoDefault& err() &;
   ::result::CloneNoDefault&& err() &&;
   ::std::uint8_t& operator*() &;
-  const ::std::uint8_t& operator*() const&;
+  std::add_const_t<::std::uint8_t>& operator*() const&;
   ::std::uint8_t&& operator*() &&;
   ::std::uint8_t* operator->();
-  const ::std::uint8_t* operator->() const;
+  std::add_const_t<::std::uint8_t>* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -758,10 +764,10 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::CopyNoDefault& err() &;
   ::result::CopyNoDefault&& err() &&;
   ::std::uint8_t& operator*() &;
-  const ::std::uint8_t& operator*() const&;
+  std::add_const_t<::std::uint8_t>& operator*() const&;
   ::std::uint8_t&& operator*() &&;
   ::std::uint8_t* operator->();
-  const ::std::uint8_t* operator->() const;
+  std::add_const_t<::std::uint8_t>* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -846,10 +852,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::HasDefault& err() &;
   ::result::HasDefault&& err() &&;
   ::std::uint8_t& operator*() &;
-  const ::std::uint8_t& operator*() const&;
+  std::add_const_t<::std::uint8_t>& operator*() const&;
   ::std::uint8_t&& operator*() &&;
   ::std::uint8_t* operator->();
-  const ::std::uint8_t* operator->() const;
+  std::add_const_t<::std::uint8_t>* operator->() const;
   ~Result() noexcept;
 
  private:
@@ -937,10 +943,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::HasNoDefault& err() &;
   ::result::HasNoDefault&& err() &&;
   ::std::uint8_t& operator*() &;
-  const ::std::uint8_t& operator*() const&;
+  std::add_const_t<::std::uint8_t>& operator*() const&;
   ::std::uint8_t&& operator*() &&;
   ::std::uint8_t* operator->();
-  const ::std::uint8_t* operator->() const;
+  std::add_const_t<::std::uint8_t>* operator->() const;
   ~Result() noexcept;
 
  private:
@@ -1025,10 +1031,10 @@ struct alignas(1)
   ::std::uint8_t& err() &;
   ::std::uint8_t&& err() &&;
   ::std::uint8_t& operator*() &;
-  const ::std::uint8_t& operator*() const&;
+  std::add_const_t<::std::uint8_t>& operator*() const&;
   ::std::uint8_t&& operator*() &&;
   ::std::uint8_t* operator->();
-  const ::std::uint8_t* operator->() const;
+  std::add_const_t<::std::uint8_t>* operator->() const;
   ~Result() noexcept = default;
 
  private:
@@ -1048,6 +1054,93 @@ rs_std::Result<::std::uint8_t, ::std::uint8_t> return_result_by_value();
 
 ::std::uint8_t take_result_by_value(
     rs_std::Result<::std::uint8_t, ::std::uint8_t> r);
+
+}  // namespace result
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: result :: Result < unsafe extern \"C\" fn (* mut :: core :: ffi :: "
+    "c_void , * mut :: core :: ffi :: c_void) , unsafe extern \"C\" fn (* mut "
+    ":: core :: ffi :: c_void , * mut :: core :: ffi :: c_void) >")
+    rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                   crubit::type_identity_t<void(void*, void*)>*> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Result(const Result&) = default;
+  Result& operator=(const Result&) = default;
+  Result(Result&&) = default;
+  Result& operator=(Result&&) = default;
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }  // Move constructor is not available for the Ok variant because unsafe
+     // extern "C" fn(*mut std::ffi::c_void, *mut std::ffi::c_void) does not
+     // have a move constructor
+
+  // Move constructor not available for Err variant because unsafe extern "C"
+  // fn(*mut std::ffi::c_void, *mut std::ffi::c_void) has not move constructor
+
+  template <typename... Args>
+  Result(::std::in_place_t, Args&&... args);
+  template <typename... Args>
+  Result(rs_std::unexpect_t, Args&&... args);
+  explicit constexpr operator bool() const noexcept;
+  constexpr bool has_value() const noexcept;
+  crubit::type_identity_t<void(void*, void*)>*& value() &;
+  crubit::type_identity_t<void(void*, void*)>*&& value() &&;
+  crubit::type_identity_t<void(void*, void*)>*& err() &;
+  crubit::type_identity_t<void(void*, void*)>*&& err() &&;
+  crubit::type_identity_t<void(void*, void*)>*& operator*() &;
+  std::add_const_t<crubit::type_identity_t<void(void*, void*)>*>& operator*()
+      const&;
+  crubit::type_identity_t<void(void*, void*)>*&& operator*() &&;
+  crubit::type_identity_t<void(void*, void*)>** operator->();
+  std::add_const_t<crubit::type_identity_t<void(void*, void*)>*>* operator->()
+      const;
+  ~Result() noexcept = default;
+
+ private:
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  void check_has_ok() const;
+  void check_has_err() const;
+
+ private:
+  unsigned char __storage[16];
+};
+#endif
+
+namespace result {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(8)
+    [[clang::trivial_abi]] ZStream final {
+ public:
+  // `result_golden::ZStream` doesn't implement the `Default` trait
+  ZStream() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~ZStream() = default;
+  ZStream(ZStream&&) = default;
+  ZStream& operator=(ZStream&&) = default;
+
+  // `result_golden::ZStream` doesn't implement the `Clone` trait
+  ZStream(const ZStream&) = delete;
+  ZStream& operator=(const ZStream&) = delete;
+  ZStream(::crubit::UnsafeRelocateTag, ZStream&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  union {
+    rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                   crubit::type_identity_t<void(void*, void*)>*>
+        zfree;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
 
 static_assert(
     sizeof(CloneNoDefault) == 1,
@@ -1334,6 +1427,18 @@ inline void ResultWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(32 == offsetof(ResultWithSizeTypes, ival_in_ok));
   static_assert(48 == offsetof(ResultWithSizeTypes, ival_in_err));
 }
+static_assert(
+    sizeof(ZStream) == 16,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(ZStream) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<ZStream>);
+static_assert(::std::is_trivially_move_constructible_v<::result::ZStream>);
+static_assert(::std::is_trivially_move_assignable_v<::result::ZStream>);
+inline void ZStream::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(ZStream, zfree));
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uresult_uby_uvalue(
     rs_std::Result<::std::uint8_t, ::std::uint8_t>* __ret_ptr);
@@ -1510,10 +1615,11 @@ rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::result::CloneNoDefault*>(__storage + 1);
 }
-inline const ::result::CloneNoDefault&
+inline std::add_const_t<::result::CloneNoDefault>&
 rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::result::CloneNoDefault*>(__storage + 1);
+  return *reinterpret_cast<std::add_const_t<::result::CloneNoDefault>*>(
+      __storage + 1);
 }
 inline ::result::CloneNoDefault&&
 rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator*() && {
@@ -1526,10 +1632,11 @@ rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::result::CloneNoDefault*>(__storage + 1);
 }
-inline const ::result::CloneNoDefault*
+inline std::add_const_t<::result::CloneNoDefault>*
 rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::result::CloneNoDefault*>(__storage + 1);
+  return reinterpret_cast<std::add_const_t<::result::CloneNoDefault>*>(
+      __storage + 1);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>>);
@@ -1664,10 +1771,11 @@ rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::result::CopyNoDefault*>(__storage + 1);
 }
-inline const ::result::CopyNoDefault&
+inline std::add_const_t<::result::CopyNoDefault>&
 rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::result::CopyNoDefault*>(__storage + 1);
+  return *reinterpret_cast<std::add_const_t<::result::CopyNoDefault>*>(
+      __storage + 1);
 }
 inline ::result::CopyNoDefault&&
 rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator*() && {
@@ -1680,10 +1788,11 @@ rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::result::CopyNoDefault*>(__storage + 1);
 }
-inline const ::result::CopyNoDefault*
+inline std::add_const_t<::result::CopyNoDefault>*
 rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::result::CopyNoDefault*>(__storage + 1);
+  return reinterpret_cast<std::add_const_t<::result::CopyNoDefault>*>(
+      __storage + 1);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>>);
@@ -1803,10 +1912,10 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::result::HasDefault*>(__storage);
 }
-inline const ::result::HasDefault&
+inline std::add_const_t<::result::HasDefault>&
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::result::HasDefault*>(__storage);
+  return *reinterpret_cast<std::add_const_t<::result::HasDefault>*>(__storage);
 }
 inline ::result::HasDefault&&
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator*() && {
@@ -1818,10 +1927,10 @@ rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::result::HasDefault*>(__storage);
 }
-inline const ::result::HasDefault*
+inline std::add_const_t<::result::HasDefault>*
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::result::HasDefault*>(__storage);
+  return reinterpret_cast<std::add_const_t<::result::HasDefault>*>(__storage);
 }
 inline rs_std::Result<::result::HasDefault,
                       ::std::uint8_t>::~Result() noexcept {
@@ -1929,10 +2038,11 @@ rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::result::HasNoDefault*>(__storage);
 }
-inline const ::result::HasNoDefault&
+inline std::add_const_t<::result::HasNoDefault>&
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::result::HasNoDefault*>(__storage);
+  return *reinterpret_cast<std::add_const_t<::result::HasNoDefault>*>(
+      __storage);
 }
 inline ::result::HasNoDefault&&
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator*() && {
@@ -1944,10 +2054,10 @@ rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::result::HasNoDefault*>(__storage);
 }
-inline const ::result::HasNoDefault*
+inline std::add_const_t<::result::HasNoDefault>*
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::result::HasNoDefault*>(__storage);
+  return reinterpret_cast<std::add_const_t<::result::HasNoDefault>*>(__storage);
 }
 inline rs_std::Result<::result::HasNoDefault,
                       ::std::uint8_t>::~Result() noexcept {
@@ -2110,12 +2220,13 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
   return *reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
       __storage);
 }
-inline const rs_std::Result<::std::uint32_t, ::std::uint32_t>&
+inline std::add_const_t<rs_std::Result<::std::uint32_t, ::std::uint32_t>>&
 rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                ::std::uint32_t>::operator*() const& {
   check_has_ok();
   return *reinterpret_cast<
-      const rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(__storage);
+      std::add_const_t<rs_std::Result<::std::uint32_t, ::std::uint32_t>>*>(
+      __storage);
 }
 inline rs_std::Result<::std::uint32_t, ::std::uint32_t>&&
 rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
@@ -2132,12 +2243,13 @@ rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
   return reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
       __storage);
 }
-inline const rs_std::Result<::std::uint32_t, ::std::uint32_t>*
+inline std::add_const_t<rs_std::Result<::std::uint32_t, ::std::uint32_t>>*
 rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                ::std::uint32_t>::operator->() const {
   check_has_ok();
   return reinterpret_cast<
-      const rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(__storage);
+      std::add_const_t<rs_std::Result<::std::uint32_t, ::std::uint32_t>>*>(
+      __storage);
 }
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Result<
@@ -2301,11 +2413,11 @@ inline ::std::uint32_t& rs_std::Result<
   check_has_ok();
   return *reinterpret_cast<::std::uint32_t*>(__storage + 4);
 }
-inline const ::std::uint32_t& rs_std::Result<
+inline std::add_const_t<::std::uint32_t>& rs_std::Result<
     ::std::uint32_t,
     rs_std::Result<::std::uint32_t, ::std::uint32_t>>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+  return *reinterpret_cast<std::add_const_t<::std::uint32_t>*>(__storage + 4);
 }
 inline ::std::uint32_t&& rs_std::Result<
     ::std::uint32_t,
@@ -2319,11 +2431,11 @@ rs_std::Result<::std::uint32_t,
   check_has_ok();
   return reinterpret_cast<::std::uint32_t*>(__storage + 4);
 }
-inline const ::std::uint32_t* rs_std::Result<
+inline std::add_const_t<::std::uint32_t>* rs_std::Result<
     ::std::uint32_t,
     rs_std::Result<::std::uint32_t, ::std::uint32_t>>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+  return reinterpret_cast<std::add_const_t<::std::uint32_t>*>(__storage + 4);
 }
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Result<
@@ -2459,10 +2571,10 @@ rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::uint32_t*>(__storage + 4);
 }
-inline const ::std::uint32_t&
+inline std::add_const_t<::std::uint32_t>&
 rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+  return *reinterpret_cast<std::add_const_t<::std::uint32_t>*>(__storage + 4);
 }
 inline ::std::uint32_t&&
 rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator*() && {
@@ -2474,10 +2586,10 @@ rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::uint32_t*>(__storage + 4);
 }
-inline const ::std::uint32_t*
+inline std::add_const_t<::std::uint32_t>*
 rs_std::Result<::std::uint32_t, ::std::uint32_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::std::uint32_t*>(__storage + 4);
+  return reinterpret_cast<std::add_const_t<::std::uint32_t>*>(__storage + 4);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint32_t, ::std::uint32_t>>);
@@ -2629,10 +2741,10 @@ rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::uint8_t*>(__storage + 1);
 }
-inline const ::std::uint8_t&
+inline std::add_const_t<::std::uint8_t>&
 rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+  return *reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 1);
 }
 inline ::std::uint8_t&&
 rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator*() && {
@@ -2644,10 +2756,10 @@ rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::uint8_t*>(__storage + 1);
 }
-inline const ::std::uint8_t*
+inline std::add_const_t<::std::uint8_t>*
 rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+  return reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 1);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>>);
@@ -2782,10 +2894,10 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::uint8_t*>(__storage + 1);
 }
-inline const ::std::uint8_t&
+inline std::add_const_t<::std::uint8_t>&
 rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+  return *reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 1);
 }
 inline ::std::uint8_t&&
 rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator*() && {
@@ -2797,10 +2909,10 @@ rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::uint8_t*>(__storage + 1);
 }
-inline const ::std::uint8_t*
+inline std::add_const_t<::std::uint8_t>*
 rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+  return reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 1);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>>);
@@ -2920,10 +3032,10 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::uint8_t*>(__storage + 8);
 }
-inline const ::std::uint8_t&
+inline std::add_const_t<::std::uint8_t>&
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+  return *reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 8);
 }
 inline ::std::uint8_t&&
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator*() && {
@@ -2935,10 +3047,10 @@ rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::uint8_t*>(__storage + 8);
 }
-inline const ::std::uint8_t*
+inline std::add_const_t<::std::uint8_t>*
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+  return reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 8);
 }
 inline rs_std::Result<::std::uint8_t,
                       ::result::HasDefault>::~Result() noexcept {
@@ -3044,10 +3156,10 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::uint8_t*>(__storage + 8);
 }
-inline const ::std::uint8_t&
+inline std::add_const_t<::std::uint8_t>&
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+  return *reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 8);
 }
 inline ::std::uint8_t&&
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator*() && {
@@ -3059,10 +3171,10 @@ rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::uint8_t*>(__storage + 8);
 }
-inline const ::std::uint8_t*
+inline std::add_const_t<::std::uint8_t>*
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::std::uint8_t*>(__storage + 8);
+  return reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 8);
 }
 inline rs_std::Result<::std::uint8_t,
                       ::result::HasNoDefault>::~Result() noexcept {
@@ -3198,10 +3310,10 @@ rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::std::uint8_t*>(__storage + 1);
 }
-inline const ::std::uint8_t&
+inline std::add_const_t<::std::uint8_t>&
 rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator*() const& {
   check_has_ok();
-  return *reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+  return *reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 1);
 }
 inline ::std::uint8_t&&
 rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator*() && {
@@ -3213,10 +3325,10 @@ rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::std::uint8_t*>(__storage + 1);
 }
-inline const ::std::uint8_t*
+inline std::add_const_t<::std::uint8_t>*
 rs_std::Result<::std::uint8_t, ::std::uint8_t>::operator->() const {
   check_has_ok();
-  return reinterpret_cast<const ::std::uint8_t*>(__storage + 1);
+  return reinterpret_cast<std::add_const_t<::std::uint8_t>*>(__storage + 1);
 }
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint8_t, ::std::uint8_t>>);
@@ -3243,6 +3355,152 @@ inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_ok()
 }
 inline void rs_std::Result<::std::uint8_t, ::std::uint8_t>::check_has_err()
     const {
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
+}
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                             crubit::type_identity_t<void(void*, void*)>*>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                             crubit::type_identity_t<void(void*, void*)>*>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                             crubit::type_identity_t<void(void*, void*)>*>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                             crubit::type_identity_t<void(void*, void*)>*>>);
+
+template <typename... Args>
+inline rs_std::Result<
+    crubit::type_identity_t<void(void*, void*)>*,
+    crubit::type_identity_t<void(void*, void*)>*>::Result(std::in_place_t,
+                                                          Args&&... args) {
+  set_tag(0);
+  std::construct_at(__storage + 8, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline rs_std::Result<
+    crubit::type_identity_t<void(void*, void*)>*,
+    crubit::type_identity_t<void(void*, void*)>*>::Result(rs_std::unexpect_t,
+                                                          Args&&... args) {
+  set_tag(1);
+  std::construct_at(__storage + 8, std::forward<Args>(args)...);
+}
+inline constexpr rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                                crubit::type_identity_t<void(void*, void*)>*>::
+operator bool() const noexcept {
+  return has_value();
+}
+inline constexpr bool rs_std::Result<
+    crubit::type_identity_t<void(void*, void*)>*,
+    crubit::type_identity_t<void(void*, void*)>*>::has_value() const noexcept {
+  return tag() == 0;
+}
+inline crubit::type_identity_t<void(void*, void*)>*&
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::value() & {
+  check_has_ok();
+  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+      __storage + 8);
+}
+inline crubit::type_identity_t<void(void*, void*)>*&&
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::value() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+          __storage + 8));
+}
+inline crubit::type_identity_t<void(void*, void*)>*&
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::err() & {
+  check_has_err();
+  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+      __storage + 8);
+}
+inline crubit::type_identity_t<void(void*, void*)>*&&
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::err() && {
+  check_has_err();
+  return ::std::move(
+      *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+          __storage + 8));
+}
+inline crubit::type_identity_t<void(void*, void*)>*&
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::operator*() & {
+  check_has_ok();
+  return *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+      __storage + 8);
+}
+inline std::add_const_t<crubit::type_identity_t<void(void*, void*)>*>&
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::operator*()
+    const& {
+  check_has_ok();
+  return *reinterpret_cast<
+      std::add_const_t<crubit::type_identity_t<void(void*, void*)>*>*>(
+      __storage + 8);
+}
+inline crubit::type_identity_t<void(void*, void*)>*&&
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::operator*() && {
+  check_has_ok();
+  return ::std::move(
+      *reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+          __storage + 8));
+}
+inline crubit::type_identity_t<void(void*, void*)>**
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::operator->() {
+  check_has_ok();
+  return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
+      __storage + 8);
+}
+inline std::add_const_t<crubit::type_identity_t<void(void*, void*)>*>*
+rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+               crubit::type_identity_t<void(void*, void*)>*>::operator->()
+    const {
+  check_has_ok();
+  return reinterpret_cast<
+      std::add_const_t<crubit::type_identity_t<void(void*, void*)>*>*>(
+      __storage + 8);
+}
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                             crubit::type_identity_t<void(void*, void*)>*>>);
+inline constexpr ::std::uint64_t rs_std::Result<
+    crubit::type_identity_t<void(void*, void*)>*,
+    crubit::type_identity_t<void(void*, void*)>*>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint64_t>(__bytes);
+}
+inline constexpr void rs_std::Result<
+    crubit::type_identity_t<void(void*, void*)>*,
+    crubit::type_identity_t<void(void*, void*)>*>::set_tag(::std::uint64_t
+                                                               tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+inline void rs_std::Result<
+    crubit::type_identity_t<void(void*, void*)>*,
+    crubit::type_identity_t<void(void*, void*)>*>::check_has_ok() const {
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
+}
+inline void rs_std::Result<
+    crubit::type_identity_t<void(void*, void*)>*,
+    crubit::type_identity_t<void(void*, void*)>*>::check_has_err() const {
   CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 #endif

@@ -139,3 +139,12 @@ pub struct ResultWithSizeTypes {
     pub ival_in_ok: Result<isize, i8>,
     pub ival_in_err: Result<i8, isize>,
 }
+
+// Replicate failure around pointer types from zlib_rs.
+pub type Voidpf = *mut std::ffi::c_void;
+pub type FreeFunc = unsafe extern "C" fn(Voidpf, Voidpf);
+
+// We just need to confirm the bindings received compile.
+pub struct ZStream {
+    pub zfree: Result<FreeFunc, FreeFunc>,
+}

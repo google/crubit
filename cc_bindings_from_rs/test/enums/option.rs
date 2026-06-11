@@ -248,3 +248,17 @@ pub fn take_option_result_unmovable(_x: Option<Result<HasNoDefault, String>>) {}
 pub fn return_option_result_unmovable() -> Option<Result<HasNoDefault, String>> {
     None
 }
+
+#[must_bind]
+pub fn pass_option_ptr(x: Option<*const i32>) -> Option<*const i32> {
+    x
+}
+
+// Replicate failure around pointer types from zlib_rs.
+pub type Voidpf = *mut std::ffi::c_void;
+pub type FreeFunc = unsafe extern "C" fn(Voidpf, Voidpf);
+
+// We just need to confirm the bindings received compile.
+pub struct ZStream {
+    pub zfree: Option<FreeFunc>,
+}
