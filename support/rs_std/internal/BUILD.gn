@@ -5,6 +5,7 @@
 # Automatically @generated BUILD.gn.
 
 import("../../../crubit.gni")
+import("//build/rust/rust_macro.gni")
 import("//build/rust/rust_static_library.gni")
 
 source_set("is_utf8") {

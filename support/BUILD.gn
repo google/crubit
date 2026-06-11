@@ -5,6 +5,7 @@
 # Automatically @generated BUILD.gn.
 
 import("../crubit.gni")
+import("//build/rust/rust_macro.gni")
 import("//build/rust/rust_static_library.gni")
 
 source_set("annotations") {
@@ -67,11 +68,175 @@ source_set("lifetime_annotations") {
 }
 
 rust_static_library("bridge_rust") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
   crate_name = "bridge_rust"
   crate_root = "crubit_bridge_rust/src/bridge.rs"
   edition = "2024"
   sources = [
     "crubit_bridge_rust/src/bridge.rs",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("cref") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "cref"
+  crate_root = "cref.rs"
+  edition = "2024"
+  sources = [
+    "cref.rs",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("ctor") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "ctor"
+  crate_root = "ctor.rs"
+  edition = "2024"
+  sources = [
+    "ctor.rs",
+  ]
+  deps = [
+    "$crubit_src_dir/support:ctor_proc_macros",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_macro("ctor_proc_macros") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "ctor_proc_macros"
+  crate_root = "ctor_proc_macros.rs"
+  edition = "2024"
+  sources = [
+    "ctor_proc_macros.rs",
+  ]
+  deps = [
+    "//third_party/rust/proc_macro2/v1:lib",
+    "//third_party/rust/quote/v1:lib",
+    "//third_party/rust/syn/v2:lib",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_macro("crubit_annotate") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "crubit_annotate"
+  crate_root = "crubit_annotate/src/crubit_annotate.rs"
+  edition = "2024"
+  sources = [
+    "crubit_annotate/src/crubit_annotate.rs",
+  ]
+  deps = [
+    "//third_party/rust/proc_macro2/v1:lib",
+    "//third_party/rust/quote/v1:lib",
+    "//third_party/rust/syn/v2:lib",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("forward_declare") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "forward_declare"
+  crate_root = "forward_declare.rs"
+  edition = "2024"
+  sources = [
+    "forward_declare.rs",
+  ]
+  deps = [
+    "$crubit_src_dir/support:cref",
+    "$crubit_src_dir/support:forward_declare_proc_macros",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_macro("forward_declare_proc_macros") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "forward_declare_proc_macros"
+  crate_root = "forward_declare_proc_macros.rs"
+  edition = "2024"
+  sources = [
+    "forward_declare_proc_macros.rs",
+  ]
+  deps = [
+    "//third_party/rust/proc_macro2/v1:lib",
+    "//third_party/rust/quote/v1:lib",
+    "//third_party/rust/syn/v2:lib",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("oops") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "oops"
+  crate_root = "oops.rs"
+  edition = "2024"
+  sources = [
+    "oops.rs",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("operator") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "operator"
+  crate_root = "operator.rs"
+  edition = "2024"
+  sources = [
+    "operator.rs",
   ]
   allow_unsafe = true
   no_clippy = true
@@ -89,5 +254,13 @@ group("support_cpp") {
 group("support_rust") {
   public_deps = [
     ":bridge_rust",
+    ":cref",
+    ":ctor",
+    ":ctor_proc_macros",
+    ":crubit_annotate",
+    ":forward_declare",
+    ":forward_declare_proc_macros",
+    ":oops",
+    ":operator",
   ]
 }

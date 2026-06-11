@@ -5,9 +5,16 @@
 # Automatically @generated BUILD.gn.
 
 import("../../crubit.gni")
+import("//build/rust/rust_macro.gni")
 import("//build/rust/rust_static_library.gni")
 
 rust_static_library("ffi_11") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
   crate_name = "ffi_11"
   crate_root = "src/lib.rs"
   edition = "2024"

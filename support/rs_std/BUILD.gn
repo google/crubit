@@ -5,6 +5,7 @@
 # Automatically @generated BUILD.gn.
 
 import("../../crubit.gni")
+import("//build/rust/rust_macro.gni")
 import("//build/rust/rust_static_library.gni")
 
 source_set("char") {
@@ -172,6 +173,47 @@ source_set("vec") {
   ]
 }
 
+rust_static_library("dyn_callable_rs") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "dyn_callable_rs"
+  crate_root = "dyn_callable.rs"
+  edition = "2024"
+  sources = [
+    "dyn_callable.rs",
+  ]
+  deps = [
+    "$crubit_src_dir/support:bridge_rust",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("lossy_formatter") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "lossy_formatter"
+  crate_root = "lossy_formatter.rs"
+  edition = "2024"
+  sources = [
+    "lossy_formatter.rs",
+  ]
+  deps = [
+    "$crubit_src_dir/support/ffi_11:ffi_11",
+    "$crubit_src_dir/support:crubit_annotate",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
 group("rs_std_cpp") {
   public_deps = [
     ":char",
@@ -187,3 +229,9 @@ group("rs_std_cpp") {
   ]
 }
 
+group("rs_std_rust") {
+  public_deps = [
+    ":dyn_callable_rs",
+    ":lossy_formatter",
+  ]
+}

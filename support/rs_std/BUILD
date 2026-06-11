@@ -345,7 +345,9 @@ bazel_to_builds(
     targets = [
         ":char",
         ":dyn_callable",
+        ":dyn_callable_rs",
         ":iterator_adapter",
+        ":lossy_formatter",
         ":lossy_formatter_for_bindings",
         ":option",
         ":result",
