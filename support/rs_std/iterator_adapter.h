@@ -50,19 +50,23 @@ struct IteratorEnd {
 //   functionality conditonally - if `TAdaptedIterator` is `Clone` (which
 //   presumably would ensure that `next()` doesn't affect the other copy?).
 template <typename TAdaptedIterator>
-  requires(rs_std::where_v<TAdaptedIterator, rs::core::iter::Iterator> &&
-           std::movable<TAdaptedIterator> &&
-           std::movable<typename rs_std::impl<TAdaptedIterator,
-                                              rs::core::iter::Iterator>::Item>)
+  requires(rs_std::where_v<TAdaptedIterator, rs::core::iter::Iterator>)
+
 class IteratorAdapter {
  private:
   using impl = rs_std::impl<TAdaptedIterator, rs::core::iter::Iterator>;
+  static constexpr bool kIsPointerItem = std::is_pointer_v<typename impl::Item>;
 
  public:
-  using value_type = impl::Item;
+  using value_type =
+      std::conditional_t<kIsPointerItem,
+                         std::remove_pointer_t<typename impl::Item>,
+                         typename impl::Item>;
   using difference_type = std::ptrdiff_t;
   using pointer = void;
-  using reference = const value_type&;
+  using reference = std::conditional_t<kIsPointerItem,
+                                       std::add_lvalue_reference_t<value_type>,
+                                       const value_type&>;
   using iterator_category = std::input_iterator_tag;
   using iterator_concept = std::input_iterator_tag;
 
@@ -110,9 +114,19 @@ class IteratorAdapter {
   //   a `const value_type&` and not `value_type&` (the former cannot be moved
   //   out of).  `iter_move` has to move out of `current_item_`, so we mark
   //   `current_item_` as `mutable` to reconcile all of these requirements.
-  const value_type& operator*() const { return current_item_.value(); }
+  reference operator*() const {
+    if constexpr (kIsPointerItem) {
+      return *current_item_.value();
+    } else {
+      return current_item_.value();
+    }
+  }
   friend value_type&& iter_move(const IteratorAdapter& self) noexcept {
-    return std::move(*self.current_item_);
+    if constexpr (kIsPointerItem) {
+      return std::move(*self.current_item_.value());
+    } else {
+      return std::move(*self.current_item_);
+    }
   }
   IteratorAdapter& operator++() {
     next();
@@ -127,12 +141,27 @@ class IteratorAdapter {
   TAdaptedIterator source_;
 
   // `mutable` to support `iter_move` taking a `const IteratorAdapter&`.
-  mutable std::optional<value_type> current_item_;
+  mutable std::optional<typename impl::Item> current_item_;
 };
 
 template <typename TAdaptedIterator>
 IteratorAdapter(TAdaptedIterator) -> IteratorAdapter<TAdaptedIterator>;
 
 }  // namespace rs
+
+namespace rs_std {
+// Mirrors `impl<I: Iterator + ?Sized> Iterator for &mut I` from the Rust
+// standard library, which is needed because we don't automatically generate
+// bindings for blanket impls today.
+template <typename T>
+  requires(rs_std::where_v<T, rs::core::iter::Iterator>)
+struct impl<T*, ::rs::core::iter::Iterator> {
+  static constexpr bool kIsImplemented = true;
+  using Item = typename rs_std::impl<T, ::rs::core::iter::Iterator>::Item;
+  static inline std::optional<Item> next(T* self) {
+    return rs_std::impl<T, ::rs::core::iter::Iterator>::next(*self);
+  }
+};
+}  // namespace rs_std
 
 #endif  // CRUBIT_SUPPORT_RS_STD_ITERATOR_ADAPTER_H_

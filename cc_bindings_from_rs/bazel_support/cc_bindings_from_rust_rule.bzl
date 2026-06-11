@@ -558,6 +558,7 @@ private_common_attrs = {
             "//support/public:result",
             "//support/public:tuple",
             "//support/public:vec",
+            "//support/public:iterator_adapter",
         ],
     ),
     "_process_wrapper": attr.label(

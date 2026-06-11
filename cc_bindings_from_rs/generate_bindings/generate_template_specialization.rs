@@ -1929,7 +1929,15 @@ fn generate_trait_impl_specialization<'tcx>(
 
     prereqs.depend_on_def(db, trait_def_id).map_err(|err| (impl_def_id, err))?;
     if let Some(adt) = trait_ref.self_ty().ty_adt_def() {
-        prereqs.depend_on_def(db, adt.did()).map_err(|err| (impl_def_id, err))?;
+        let def_id = adt.did();
+        let canonical_name = db.symbol_canonical_name(def_id).expect(
+            "Self type should have a canonical name if we are generating a specialization for it",
+        );
+        if canonical_name.krate_num == db.source_crate_num() {
+            prereqs.fwd_decls.insert(def_id);
+        } else {
+            prereqs.depend_on_def(db, def_id).map_err(|err| (impl_def_id, err))?;
+        }
     }
 
     let mut member_function_names = HashSet::new();
