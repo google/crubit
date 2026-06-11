@@ -285,7 +285,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
-    [[clang::trivial_abi]] ConvertRef final {
+    [[clang::trivial_abi]] CRUBIT_LIFETIME_PARAMS("a") ConvertRef final {
  public:
   // `into_golden::ConvertRef` doesn't implement the `Default` trait
   ConvertRef() = delete;
@@ -303,7 +303,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::into::ConvertRef create(rs_std::StrRef s);
+  static ::into::ConvertRef
+      [[clang::annotate_type("lifetime", "a")]] create(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
   ::into::Convert transmigrate() &&;
@@ -843,10 +844,13 @@ static_assert(::std::is_trivially_destructible_v<ConvertRef>);
 static_assert(::std::is_trivially_move_constructible_v<::into::ConvertRef>);
 static_assert(::std::is_trivially_move_assignable_v<::into::ConvertRef>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef,
-                                      ::into::ConvertRef* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    rs_std::StrRef,
+    ::into::ConvertRef [[clang::annotate_type("lifetime", "a")]] * __ret_ptr);
 }
-inline ::into::ConvertRef ConvertRef::create(rs_std::StrRef s) {
+inline ::into::ConvertRef
+    [[clang::annotate_type("lifetime",
+                           "a")]] ConvertRef::create(rs_std::StrRef s) {
   crubit::Slot<::into::ConvertRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
@@ -854,8 +858,9 @@ inline ::into::ConvertRef ConvertRef::create(rs_std::StrRef s) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_transmigrate(::into::ConvertRef*,
-                                            ::into::Convert* __ret_ptr);
+extern "C" void __crubit_thunk_transmigrate(
+    ::into::ConvertRef [[clang::annotate_type("lifetime", "a")]]*,
+    ::into::Convert* __ret_ptr);
 }
 inline ::into::Convert ConvertRef::transmigrate() && {
   auto&& self = *this;

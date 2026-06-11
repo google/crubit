@@ -129,6 +129,68 @@ pub fn AcceptSpecialized(
     }
 }
 
+// Type bindings for MyDynFuture suppressed due to being mapped to an existing Rust type (::dyn_future::DynFuture<'_>)
+
+#[inline(always)]
+pub fn RunFuture<'a>(mut r#in: ::dyn_future::DynFuture<'a>) -> ::dyn_future::DynFuture<'a> {
+    unsafe {
+        let mut __crubit_return = ::core::mem::MaybeUninit::<::dyn_future::DynFuture<'a>>::uninit();
+        crate::detail::__rust_thunk___Z9RunFuture11MyDynFuture(
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
+            &mut r#in,
+        );
+        __crubit_return.assume_init()
+    }
+}
+
+#[inline(always)]
+pub fn CreateFutureFromExplicitRef<'a>(
+    value: &'a mut ::ffi_11::c_int,
+) -> ::dyn_future::DynFuture<'a> {
+    unsafe {
+        let mut __crubit_return = ::core::mem::MaybeUninit::<::dyn_future::DynFuture<'a>>::uninit();
+        crate::detail::__rust_thunk___Z27CreateFutureFromExplicitRefRi(
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
+            value,
+        );
+        __crubit_return.assume_init()
+    }
+}
+
+#[inline(always)]
+pub fn CreateFutureFromElidedRef<'value>(
+    value: &'value mut ::ffi_11::c_int,
+) -> ::dyn_future::DynFuture<'value> {
+    unsafe {
+        let mut __crubit_return =
+            ::core::mem::MaybeUninit::<::dyn_future::DynFuture<'value>>::uninit();
+        crate::detail::__rust_thunk___Z25CreateFutureFromElidedRefRi(
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
+            value,
+        );
+        __crubit_return.assume_init()
+    }
+}
+
+// Type bindings for ExistingRustTypeWithTwoLifetimes suppressed due to being mapped to an existing Rust type (crate::MyRustTypeWithTwoLifetimes<'_,'_>)
+
+#[inline(always)]
+pub fn MultipleLifetimesFunctionExplicit<'a, 'b>(
+    value1: &'a mut ::ffi_11::c_int,
+    value2: &'b mut ::ffi_11::c_int,
+) -> crate::MyRustTypeWithTwoLifetimes<'a, 'b> {
+    unsafe {
+        let mut __crubit_return =
+            ::core::mem::MaybeUninit::<crate::MyRustTypeWithTwoLifetimes<'a, 'b>>::uninit();
+        crate::detail::__rust_thunk___Z33MultipleLifetimesFunctionExplicitRiS_(
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
+            value1,
+            value2,
+        );
+        __crubit_return.assume_init()
+    }
+}
+
 // Type bindings for Ptr<int> suppressed due to being mapped to an existing Rust type (crate::RustPtr<::ffi_11::c_int>)
 
 // Type bindings for CppTypeWithTemplateArgs<int, float, true> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithReorderedGenerics<::ffi_11::c_int,f32,true>)
@@ -164,6 +226,23 @@ mod detail {
             a: &mut crate::MyRustContainer<::ffi_11::c_int>,
             b: &mut crate::MyRustContainerVoid,
         );
+        pub(crate) unsafe fn __rust_thunk___Z9RunFuture11MyDynFuture<'a>(
+            __return: *mut ::core::ffi::c_void,
+            r#in: &mut ::dyn_future::DynFuture<'a>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z27CreateFutureFromExplicitRefRi<'a>(
+            __return: *mut ::core::ffi::c_void,
+            value: &'a mut ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z25CreateFutureFromElidedRefRi<'value>(
+            __return: *mut ::core::ffi::c_void,
+            value: &'value mut ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z33MultipleLifetimesFunctionExplicitRiS_<'a, 'b>(
+            __return: *mut ::core::ffi::c_void,
+            value1: &'a mut ::ffi_11::c_int,
+            value2: &'b mut ::ffi_11::c_int,
+        );
     }
 }
 
@@ -185,6 +264,10 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_enum) == 2);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_alias) == 3);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, error) == 4);
+    assert!(::core::mem::size_of::<::dyn_future::DynFuture<'_>>() == 8);
+    assert!(::core::mem::align_of::<::dyn_future::DynFuture<'_>>() == 8);
+    assert!(::core::mem::size_of::<crate::MyRustTypeWithTwoLifetimes<'_, '_>>() == 16);
+    assert!(::core::mem::align_of::<crate::MyRustTypeWithTwoLifetimes<'_, '_>>() == 8);
     assert!(::core::mem::size_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
     assert!(::core::mem::align_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
     assert!(

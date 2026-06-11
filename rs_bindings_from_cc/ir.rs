@@ -1948,6 +1948,8 @@ pub struct ExistingRustType {
     pub is_same_abi: bool,
     pub id: ItemId,
     pub must_bind: bool,
+    #[serde(default)]
+    pub lifetime_inputs: Vec<Rc<str>>,
 }
 
 impl GenericItem for ExistingRustType {

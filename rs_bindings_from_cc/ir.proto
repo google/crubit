@@ -510,6 +510,7 @@ message ExistingRustType {
   bool is_same_abi = 7;
   int64 id = 8;
   bool must_bind = 9;
+  repeated string lifetime_inputs = 10;
 }
 
 message Item {

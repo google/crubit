@@ -472,7 +472,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 
   explicit operator ::std::int16_t();
 
-  explicit operator ::from::OpaqueRef();
+  explicit operator ::from::OpaqueRef
+      [[clang::annotate_type("lifetime", "static")]] ();
 
   union {
     ::std::int32_t __field0;
@@ -484,7 +485,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
-    [[clang::trivial_abi]] OpaqueRef final {
+    [[clang::trivial_abi]] CRUBIT_LIFETIME_PARAMS("a") OpaqueRef final {
  public:
   // `from_golden::OpaqueRef` doesn't implement the `Default` trait
   OpaqueRef() = delete;
@@ -502,7 +503,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::from::OpaqueRef create(rs_std::StrRef s);
+  static ::from::OpaqueRef
+      [[clang::annotate_type("lifetime", "a")]] create(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef get_arg() const;
@@ -975,9 +977,12 @@ inline Opaque::operator ::std::int16_t() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
-    ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
+    ::from::Opaque*, ::from::OpaqueRef
+                         [[clang::annotate_type("lifetime", "static")]] *
+                         __ret_ptr);
 }
-inline Opaque::operator ::from::OpaqueRef() {
+inline Opaque::operator ::from::OpaqueRef
+    [[clang::annotate_type("lifetime", "static")]] () {
   auto&& self = *this;
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -999,10 +1004,13 @@ static_assert(::std::is_trivially_destructible_v<OpaqueRef>);
 static_assert(::std::is_trivially_move_constructible_v<::from::OpaqueRef>);
 static_assert(::std::is_trivially_move_assignable_v<::from::OpaqueRef>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef,
-                                      ::from::OpaqueRef* __ret_ptr);
+extern "C" void __crubit_thunk_create(
+    rs_std::StrRef,
+    ::from::OpaqueRef [[clang::annotate_type("lifetime", "a")]] * __ret_ptr);
 }
-inline ::from::OpaqueRef OpaqueRef::create(rs_std::StrRef s) {
+inline ::from::OpaqueRef
+    [[clang::annotate_type("lifetime",
+                           "a")]] OpaqueRef::create(rs_std::StrRef s) {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);

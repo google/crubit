@@ -72,4 +72,33 @@ extern "C" void __rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(
 static_assert((void (*)(MyContainer<int>, MyContainer<void>)) &
               ::AcceptSpecialized);
 
+extern "C" void __rust_thunk___Z9RunFuture11MyDynFuture(MyDynFuture* __return,
+                                                        MyDynFuture* in) {
+  new (__return) auto(RunFuture(std::move(*in)));
+}
+
+static_assert((MyDynFuture (*)(MyDynFuture)) & ::RunFuture);
+
+extern "C" void __rust_thunk___Z27CreateFutureFromExplicitRefRi(
+    MyDynFuture* __return, int* value) {
+  new (__return) auto(CreateFutureFromExplicitRef(*value));
+}
+
+static_assert((MyDynFuture (*)(int&)) & ::CreateFutureFromExplicitRef);
+
+extern "C" void __rust_thunk___Z25CreateFutureFromElidedRefRi(
+    MyDynFuture* __return, int* value) {
+  new (__return) auto(CreateFutureFromElidedRef(*value));
+}
+
+static_assert((MyDynFuture (*)(int&)) & ::CreateFutureFromElidedRef);
+
+extern "C" void __rust_thunk___Z33MultipleLifetimesFunctionExplicitRiS_(
+    ExistingRustTypeWithTwoLifetimes* __return, int* value1, int* value2) {
+  new (__return) auto(MultipleLifetimesFunctionExplicit(*value1, *value2));
+}
+
+static_assert((ExistingRustTypeWithTwoLifetimes (*)(int&, int&)) &
+              ::MultipleLifetimesFunctionExplicit);
+
 #pragma clang diagnostic pop
