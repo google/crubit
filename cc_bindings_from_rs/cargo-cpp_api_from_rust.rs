@@ -559,8 +559,6 @@ extern crate proc_macro;
         fs::create_dir_all(&project_dir)?;
 
         let lib_rs_path = project_dir.join(format!("{}_cc_api.rs", root_name));
-        let root_crate_name = root_name.replace('-', "_");
-        lib_rs_content.push_str(&format!("pub use r#{}::*;\n", root_crate_name));
         fs::write(&lib_rs_path, lib_rs_content)?;
 
         let static_lib_path = profile_dir.join(format!("lib{}.a", root_name));
