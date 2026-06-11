@@ -605,9 +605,61 @@ mod mut_ref_transmutability {
 /// Converts from `Self` to `T`, where `Self` *is* `T` in C++.
 ///
 /// For example, if two different C++ headers forward declare the same type, then
-/// these declarations will become distinct types in Rust, but can be `CppCast` to
-/// one another, and can both be `CppCast` to (and from) the complete type in the
+/// these declarations will become distinct types in Rust, but can be `CppCoerce`d to
+/// one another, and can both be `CppCoerce`d to (and from) the complete type in the
 /// header that defines the type.
+pub trait CppCoerce<T> {
+    /// Converts `self` to a `T`.
+    fn cpp_coerce(self) -> T;
+}
+
+impl<T, U> CppCoerce<U> for T
+where
+    T: CppType,
+    U: CppType<Name = T::Name>,
+{
+    fn cpp_coerce(self) -> U {
+        assert_eq!(std::mem::size_of::<T>(), std::mem::size_of::<U>());
+        let x = std::mem::ManuallyDrop::new(self);
+        unsafe { std::mem::transmute_copy(&*x) }
+    }
+}
+
+impl<'a, T: ?Sized, U: ?Sized> CppCoerce<Vec<&'a U>> for Vec<&'a T>
+where
+    T: CppType,
+    U: CppType<Name = T::Name>,
+{
+    fn cpp_coerce(self) -> Vec<&'a U> {
+        let (p, len, capacity) = self.into_raw_parts();
+        unsafe { Vec::from_raw_parts(p as *mut &'a U, len, capacity) }
+    }
+}
+
+/// Like `CppCoerce<T>`, but allows for lifetime transmutes.
+///
+/// `UnsafeCppCoerce` can be used to change from, for example, a C++ type that has no lifetime
+/// information, to an idiomatic Rust type that does contain lifetime information.
+///
+/// # Safety
+///
+/// `UnsafeCppCoerce` is unsafe, because it allows to change from a C++
+/// type with unclear lifetime provenance into a Rust type.
+/// TODO(jeanpierreda): create more & blanket impls for this.
+pub unsafe trait UnsafeCppCoerce<'a, T>
+where
+    Self: 'a,
+    T: 'a + Sized,
+{
+    /// Converts `self` to a `T`.
+    ///
+    /// # Safety
+    ///
+    /// `self` must be alive for at least 'a.
+    unsafe fn unsafe_cpp_coerce(self) -> T;
+}
+
+/// DEPRECATED: Use `CppCoerce` instead.
 pub trait CppCast<T> {
     /// Converts `self` to a `T`.
     fn cpp_cast(self) -> T;
@@ -615,37 +667,14 @@ pub trait CppCast<T> {
 
 impl<T, U> CppCast<U> for T
 where
-    T: CppType,
-    U: CppType<Name = T::Name>,
+    T: CppCoerce<U>,
 {
     fn cpp_cast(self) -> U {
-        assert_eq!(std::mem::size_of::<T>(), std::mem::size_of::<U>());
-        let x = std::mem::ManuallyDrop::new(self);
-        unsafe { std::mem::transmute_copy(&*x) }
+        self.cpp_coerce()
     }
 }
 
-impl<'a, T: ?Sized, U: ?Sized> CppCast<Vec<&'a U>> for Vec<&'a T>
-where
-    T: CppType,
-    U: CppType<Name = T::Name>,
-{
-    fn cpp_cast(self) -> Vec<&'a U> {
-        let (p, len, capacity) = self.into_raw_parts();
-        unsafe { Vec::from_raw_parts(p as *mut &'a U, len, capacity) }
-    }
-}
-
-/// Like `CppCast<T>`, but allows for lifetime transmutes.
-///
-/// `UnsafeCppCast` can be used to cast from, for example, a C++ type that has no lifetime
-/// information, to an idiomatic Rust type that does contain lifetime information.
-///
-/// # Safety
-///
-/// `UnsafeCppCast` is unsafe, because it allows to cast from a C++
-/// type with unclear lifetime provenance into a Rust type.
-/// TODO(jeanpierreda): create more & blanket impls for this.
+/// DEPRECATED: Use `UnsafeCppCoerce` instead.
 pub unsafe trait UnsafeCppCast<'a, T>
 where
     Self: 'a,
@@ -657,4 +686,15 @@ where
     ///
     /// `self` must be alive for at least 'a.
     unsafe fn unsafe_cpp_cast(self) -> T;
+}
+
+unsafe impl<'a, T, U> UnsafeCppCast<'a, U> for T
+where
+    Self: 'a,
+    U: 'a + Sized,
+    T: UnsafeCppCoerce<'a, U>,
+{
+    unsafe fn unsafe_cpp_cast(self) -> U {
+        unsafe { self.unsafe_cpp_coerce() }
+    }
 }

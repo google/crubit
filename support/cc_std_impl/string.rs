@@ -234,18 +234,18 @@ type StringSymbol = forward_declare::symbol!(
     "std :: basic_string < char , std :: char_traits < char >, std :: allocator < char >>"
 );
 
-impl<'a, Crate> forward_declare::CppCast<*const forward_declare::Incomplete<StringSymbol, Crate>>
+impl<'a, Crate> forward_declare::CppCoerce<*const forward_declare::Incomplete<StringSymbol, Crate>>
     for &'a string_wrapper
 {
-    fn cpp_cast(self) -> *const forward_declare::Incomplete<StringSymbol, Crate> {
+    fn cpp_coerce(self) -> *const forward_declare::Incomplete<StringSymbol, Crate> {
         self.owned_cpp_string.as_ptr() as *const _ as *const _
     }
 }
 
-impl<'a, Crate> forward_declare::CppCast<*mut forward_declare::Incomplete<StringSymbol, Crate>>
+impl<'a, Crate> forward_declare::CppCoerce<*mut forward_declare::Incomplete<StringSymbol, Crate>>
     for &'a mut string_wrapper
 {
-    fn cpp_cast(self) -> *mut forward_declare::Incomplete<StringSymbol, Crate> {
+    fn cpp_coerce(self) -> *mut forward_declare::Incomplete<StringSymbol, Crate> {
         self.owned_cpp_string.as_ptr() as *mut _
     }
 }
