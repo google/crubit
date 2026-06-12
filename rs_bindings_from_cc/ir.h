@@ -46,6 +46,8 @@
 
 namespace crubit {
 
+struct Item;
+
 namespace internal {
 inline constexpr int kJsonIndent = 2;
 }  // namespace internal
@@ -881,6 +883,9 @@ struct Record {
 
   // Set if this is [[deprecated]]. If no message was given, will be "".
   std::optional<std::string> deprecated;
+
+  // TODO(b/523265360): Remove child_item_ids.
+  std::vector<std::shared_ptr<Item>> children;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -1073,6 +1078,9 @@ struct Namespace {
   // Set if this is [[deprecated]]. If no message was given, will be "".
   std::optional<std::string> deprecated;
   std::optional<std::string> doc_comment;
+
+  // TODO(b/523265360): Remove child_item_ids.
+  std::vector<std::shared_ptr<Item>> children;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {
@@ -1124,6 +1132,19 @@ inline std::ostream& operator<<(std::ostream& o,
   return o << std::string(llvm::formatv("{0:2}", existing_rust_type.ToJson()));
 }
 
+struct Item
+    : public std::variant<Func, Record, IncompleteRecord, Enum, Constant,
+                          TypeAlias, GlobalVar, UnsupportedItem, Comment,
+                          Namespace, UseMod, ExistingRustType> {
+  using Base = std::variant<Func, Record, IncompleteRecord, Enum, Constant,
+                            TypeAlias, GlobalVar, UnsupportedItem, Comment,
+                            Namespace, UseMod, ExistingRustType>;
+  using Base::Base;
+
+  const Base& as_variant() const { return *this; }
+  Base& as_variant() { return *this; }
+};
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
@@ -1161,11 +1182,13 @@ struct IR {
 
   BazelLabel current_target;
 
-  using Item = std::variant<Func, Record, IncompleteRecord, Enum, Constant,
-                            TypeAlias, GlobalVar, UnsupportedItem, Comment,
-                            Namespace, UseMod, ExistingRustType>;
+  using Item = ::crubit::Item;
   std::vector<Item> items;
   absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids;
+  absl::flat_hash_map<BazelLabel, std::vector<std::shared_ptr<Item>>>
+      top_level_items;
+
+  void BuildTree();
   // Empty string signals that the bindings should be generated in the crate
   // root. This is the default state.
   //

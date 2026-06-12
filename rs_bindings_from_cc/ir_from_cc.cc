@@ -240,6 +240,7 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
       !status.ok()) {
     return status;
   }
+  invocation.ir_.BuildTree();
   invocation.ir_.reexported_namespaces =
       std::vector<std::string>(options.reexported_namespaces.begin(),
                                options.reexported_namespaces.end());
