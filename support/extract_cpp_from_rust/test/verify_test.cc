@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "gtest/gtest.h"
-#include "support/extract_cpp_from_rust/test/test_extracted.h"
+#include "support/extract_cpp_from_rust/test/test_extracted_cc.h"
 
 namespace {
 
@@ -22,6 +22,10 @@ TEST(GlobalCppExtractionTest, HandlesStringsWithBraces) {
 
 TEST(GlobalCppExtractionTest, HandlesCharWithBraces) {
   EXPECT_EQ(my_test_namespace::GetCharWithBrace(), '{');
+}
+
+TEST(GlobalCppExtractionTest, CanUseCcDeps) {
+  EXPECT_EQ(RetrieveStringView(), "Hello absl!");
 }
 
 }  // namespace

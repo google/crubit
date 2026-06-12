@@ -1,7 +1,6 @@
-load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_library")
-load("//support/extract_cpp_from_rust:extract_cpp.bzl", "extract_cpp")
+load("//support/extract_cpp_from_rust:cc_library_extracted_from_rust.bzl", "cc_library_extracted_from_rust")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -10,15 +9,12 @@ rust_library(
     srcs = ["test_source.rs"],
 )
 
-extract_cpp(
-    name = "test_extracted",
-    srcs = ["test_source.rs"],
-    out = "test_extracted.h",
-)
-
-cc_library(
+cc_library_extracted_from_rust(
     name = "test_extracted_cc",
-    hdrs = [":test_extracted"],
+    srcs = ["test_source.rs"],
+    deps = [
+        "@abseil-cpp//absl/strings:string_view",
+    ],
 )
 
 cc_test(

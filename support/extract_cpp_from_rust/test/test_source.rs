@@ -41,3 +41,11 @@ global_cpp! {
         }
     }
 }
+
+global_cpp! {
+    #include "third_party/absl/strings/string_view.h"
+
+    absl::string_view RetrieveStringView() {
+        return "Hello absl!";
+    }
+}
