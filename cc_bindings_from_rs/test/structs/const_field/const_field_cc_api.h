@@ -36,17 +36,17 @@ namespace const_field {
 return_struct_with_const_field_by_value_in_option();
 
 // CRUBIT_ANNOTATE: must_bind=
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>
+rs::Result<::struct_with_const_field, ::std::uint8_t>
 return_struct_with_const_field_by_value_in_result();
 
 }  // namespace const_field
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < :: cc_struct :: struct_with_const_field , u8 >")
-    rs_std::Result<::struct_with_const_field, ::std::uint8_t> {
+    rs::Result<::struct_with_const_field, ::std::uint8_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -60,12 +60,12 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   }
   Result(::struct_with_const_field&& ok) noexcept;
   Result& operator=(::struct_with_const_field&& ok) noexcept;
-  Result(rs_std::unexpected<::std::uint8_t>&& err) noexcept;
-  Result& operator=(rs_std::unexpected<::std::uint8_t>&& err) noexcept;
+  Result(rs::unexpected<::std::uint8_t>&& err) noexcept;
+  Result& operator=(rs::unexpected<::std::uint8_t>&& err) noexcept;
   template <typename... Args>
   Result(::std::in_place_t, Args&&... args);
   template <typename... Args>
-  Result(rs_std::unexpect_t, Args&&... args);
+  Result(rs::unexpect_t, Args&&... args);
   explicit constexpr operator bool() const noexcept;
   constexpr bool has_value() const noexcept;
   ::struct_with_const_field& value() &;
@@ -114,11 +114,11 @@ return_struct_with_const_field_by_value_in_option() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uresult(
-    rs_std::Result<::struct_with_const_field, ::std::uint8_t>* __ret_ptr);
+    rs::Result<::struct_with_const_field, ::std::uint8_t>* __ret_ptr);
 }
-inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>
+inline rs::Result<::struct_with_const_field, ::std::uint8_t>
 return_struct_with_const_field_by_value_in_result() {
-  crubit::Slot<rs_std::Result<::struct_with_const_field, ::std::uint8_t>>
+  crubit::Slot<rs::Result<::struct_with_const_field, ::std::uint8_t>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
@@ -129,25 +129,25 @@ return_struct_with_const_field_by_value_in_result() {
 
 }  // namespace const_field
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 static_assert(::std::is_trivially_copy_constructible_v<
-              rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
+              rs::Result<::struct_with_const_field, ::std::uint8_t>>);
 static_assert(::std::is_trivially_copy_assignable_v<
-              rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
+              rs::Result<::struct_with_const_field, ::std::uint8_t>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
+              rs::Result<::struct_with_const_field, ::std::uint8_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
-inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>::Result(
+              rs::Result<::struct_with_const_field, ::std::uint8_t>>);
+inline rs::Result<::struct_with_const_field, ::std::uint8_t>::Result(
     ::struct_with_const_field&& ok) noexcept {
   set_tag(0);
   ::std::construct_at(
       reinterpret_cast<::struct_with_const_field*>(__storage + 8),
       ::std::move(ok));
 }
-inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
+inline rs::Result<::struct_with_const_field, ::std::uint8_t>&
+rs::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
     ::struct_with_const_field&& ok) noexcept {
   if (!has_value()) {
     ::std::destroy_at(reinterpret_cast<::std::uint8_t*>(__storage + 1));
@@ -164,15 +164,15 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
   return *this;
 }
 
-inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>::Result(
-    rs_std::unexpected<::std::uint8_t>&& err) noexcept {
+inline rs::Result<::struct_with_const_field, ::std::uint8_t>::Result(
+    rs::unexpected<::std::uint8_t>&& err) noexcept {
   set_tag(1);
   ::std::construct_at(reinterpret_cast<::std::uint8_t*>(__storage + 1),
                       ::std::move(err.error()));
 }
-inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
-    rs_std::unexpected<::std::uint8_t>&& err) noexcept {
+inline rs::Result<::struct_with_const_field, ::std::uint8_t>&
+rs::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
+    rs::unexpected<::std::uint8_t>&& err) noexcept {
   if (has_value()) {
     ::std::destroy_at(__storage + 8);
     set_tag(1);
@@ -188,99 +188,99 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
 }
 
 template <typename... Args>
-inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>::Result(
-    std::in_place_t, Args&&... args) {
+inline rs::Result<::struct_with_const_field, ::std::uint8_t>::Result(
+    ::std::in_place_t, Args&&... args) {
   set_tag(0);
-  std::construct_at(__storage + 8, std::forward<Args>(args)...);
+  ::std::construct_at(__storage + 8, ::std::forward<Args>(args)...);
 }
 template <typename... Args>
-inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>::Result(
-    rs_std::unexpect_t, Args&&... args) {
+inline rs::Result<::struct_with_const_field, ::std::uint8_t>::Result(
+    rs::unexpect_t, Args&&... args) {
   set_tag(1);
-  std::construct_at(__storage + 1, std::forward<Args>(args)...);
+  ::std::construct_at(__storage + 1, ::std::forward<Args>(args)...);
 }
-inline constexpr rs_std::Result<::struct_with_const_field, ::std::uint8_t>::
+inline constexpr rs::Result<::struct_with_const_field, ::std::uint8_t>::
 operator bool() const noexcept {
   return has_value();
 }
-inline constexpr bool rs_std::Result<
-    ::struct_with_const_field, ::std::uint8_t>::has_value() const noexcept {
+inline constexpr bool rs::Result<::struct_with_const_field,
+                                 ::std::uint8_t>::has_value() const noexcept {
   return tag() == 0;
 }
 inline ::struct_with_const_field&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::value() & {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::value() & {
   check_has_ok();
   return *reinterpret_cast<::struct_with_const_field*>(__storage + 8);
 }
 inline ::struct_with_const_field&&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::value() && {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::value() && {
   check_has_ok();
   return ::std::move(
       *reinterpret_cast<::struct_with_const_field*>(__storage + 8));
 }
 inline ::std::uint8_t&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::err() & {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::err() & {
   check_has_err();
   return *reinterpret_cast<::std::uint8_t*>(__storage + 1);
 }
 inline ::std::uint8_t&&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::err() && {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::err() && {
   check_has_err();
   return ::std::move(*reinterpret_cast<::std::uint8_t*>(__storage + 1));
 }
 inline ::struct_with_const_field&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() & {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::operator*() & {
   check_has_ok();
   return *reinterpret_cast<::struct_with_const_field*>(__storage + 8);
 }
 inline ::struct_with_const_field const&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() const& {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::operator*() const& {
   check_has_ok();
   return *reinterpret_cast<::struct_with_const_field const*>(__storage + 8);
 }
 inline ::struct_with_const_field&&
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator*() && {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::operator*() && {
   check_has_ok();
   return ::std::move(
       *reinterpret_cast<::struct_with_const_field*>(__storage + 8));
 }
 inline ::struct_with_const_field*
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator->() {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::operator->() {
   check_has_ok();
   return reinterpret_cast<::struct_with_const_field*>(__storage + 8);
 }
 inline ::struct_with_const_field const*
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator->() const {
+rs::Result<::struct_with_const_field, ::std::uint8_t>::operator->() const {
   check_has_ok();
   return reinterpret_cast<::struct_with_const_field const*>(__storage + 8);
 }
 static_assert(::std::is_trivially_destructible_v<
-              rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
-inline constexpr ::std::uint8_t rs_std::Result<
-    ::struct_with_const_field, ::std::uint8_t>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+              rs::Result<::struct_with_const_field, ::std::uint8_t>>);
+inline constexpr ::std::uint8_t
+rs::Result<::struct_with_const_field, ::std::uint8_t>::tag() const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __bytes[i] = __storage[0 + i];
   }
-  return std::bit_cast<::std::uint8_t>(__bytes);
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
 }
 inline constexpr void
-rs_std::Result<::struct_with_const_field, ::std::uint8_t>::set_tag(
+rs::Result<::struct_with_const_field, ::std::uint8_t>::set_tag(
     ::std::uint8_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
 }
 
-inline void rs_std::Result<::struct_with_const_field,
-                           ::std::uint8_t>::check_has_ok() const {
-  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
+inline void
+rs::Result<::struct_with_const_field, ::std::uint8_t>::check_has_ok() const {
+  CRUBIT_CHECK(has_value()) << "Bad value access on rs::Result";
 }
-inline void rs_std::Result<::struct_with_const_field,
-                           ::std::uint8_t>::check_has_err() const {
-  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
+inline void
+rs::Result<::struct_with_const_field, ::std::uint8_t>::check_has_err() const {
+  CRUBIT_CHECK(!has_value()) << "Bad error access on rs::Result";
 }
 
 #endif

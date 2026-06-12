@@ -28,17 +28,17 @@
 
 namespace vec {
 
-rs_std::Vec<::std::int32_t> return_vec();
+rs::Vec<::std::int32_t> return_vec();
 
-::std::int32_t take_vec(rs_std::Vec<::std::int32_t> v);
+::std::int32_t take_vec(rs::Vec<::std::int32_t> v);
 
 }  // namespace vec
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    ":: alloc :: vec :: Vec < i32 >") rs_std::Vec<::std::int32_t> {
+    ":: alloc :: vec :: Vec < i32 >") rs::Vec<::std::int32_t> {
  public:
   // Default::default
   Vec();
@@ -47,19 +47,19 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Vec(const Vec&);
 
   // Clone::clone_from
-  rs_std::Vec<::std::int32_t>& operator=(const Vec&);
+  rs::Vec<::std::int32_t>& operator=(const Vec&);
 
   Vec(Vec&&);
-  rs_std::Vec<::std::int32_t>& operator=(Vec&&);
+  rs::Vec<::std::int32_t>& operator=(Vec&&);
   Vec(::crubit::UnsafeRelocateTag, Vec&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
   ~Vec() noexcept;
   ::std::int32_t* data() noexcept;
   const ::std::int32_t* data() const noexcept;
-  std::size_t size() const noexcept;
-  ::std::int32_t& operator[](std::size_t index) noexcept;
-  const ::std::int32_t& operator[](std::size_t index) const noexcept;
+  ::std::size_t size() const noexcept;
+  ::std::int32_t& operator[](::std::size_t index) noexcept;
+  const ::std::int32_t& operator[](::std::size_t index) const noexcept;
   ::std::int32_t* begin() noexcept;
   const ::std::int32_t* begin() const noexcept;
   ::std::int32_t* end() noexcept;
@@ -96,7 +96,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: StructWithVec") alignas(8)
   static ::vec::StructWithVec new_(::std::int32_t val);
 
   union {
-    rs_std::Vec<::std::int32_t> v;
+    rs::Vec<::std::int32_t> v;
   };
 
  private:
@@ -129,102 +129,98 @@ inline void StructWithVec::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithVec, v));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uvec(
-    rs_std::Vec<::std::int32_t>* __ret_ptr);
+extern "C" void __crubit_thunk_return_uvec(rs::Vec<::std::int32_t>* __ret_ptr);
 }
-inline rs_std::Vec<::std::int32_t> return_vec() {
-  crubit::Slot<rs_std::Vec<::std::int32_t>> __return_value_ret_val_holder;
+inline rs::Vec<::std::int32_t> return_vec() {
+  crubit::Slot<rs::Vec<::std::int32_t>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uvec(__return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_take_uvec(
-    rs_std::Vec<::std::int32_t>*);
+extern "C" ::std::int32_t __crubit_thunk_take_uvec(rs::Vec<::std::int32_t>*);
 }
-inline ::std::int32_t take_vec(rs_std::Vec<::std::int32_t> v) {
+inline ::std::int32_t take_vec(rs::Vec<::std::int32_t> v) {
   crubit::Slot v_slot((::std::move(v)));
   return __crubit_internal::__crubit_thunk_take_uvec(v_slot.Get());
 }
 
 }  // namespace vec
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(rs_std::Vec<::std::int32_t>* __ret_ptr);
+extern "C" void __crubit_thunk_default(rs::Vec<::std::int32_t>* __ret_ptr);
 }
-inline rs_std::Vec<::std::int32_t>::Vec() {
+inline rs::Vec<::std::int32_t>::Vec() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(rs_std::Vec<::std::int32_t> const&,
-                                     rs_std::Vec<::std::int32_t>* __ret_ptr);
+extern "C" void __crubit_thunk_clone(rs::Vec<::std::int32_t> const&,
+                                     rs::Vec<::std::int32_t>* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(rs_std::Vec<::std::int32_t>&,
-                                           rs_std::Vec<::std::int32_t> const&);
+extern "C" void __crubit_thunk_clone_ufrom(rs::Vec<::std::int32_t>&,
+                                           rs::Vec<::std::int32_t> const&);
 }
-inline rs_std::Vec<::std::int32_t>::Vec(const Vec& other) {
+inline rs::Vec<::std::int32_t>::Vec(const Vec& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
-inline rs_std::Vec<::std::int32_t>& rs_std::Vec<::std::int32_t>::operator=(
+inline rs::Vec<::std::int32_t>& rs::Vec<::std::int32_t>::operator=(
     const Vec& other) {
   if (this != &other) {
     __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }
   return *this;
 }
-inline rs_std::Vec<::std::int32_t>::Vec(Vec&& other) : Vec() {
+inline rs::Vec<::std::int32_t>::Vec(Vec&& other) : Vec() {
   *this = ::std::move(other);
 }
-inline rs_std::Vec<::std::int32_t>& rs_std::Vec<::std::int32_t>::operator=(
+inline rs::Vec<::std::int32_t>& rs::Vec<::std::int32_t>::operator=(
     Vec&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
 extern "C" void
-__crubit_drop_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e(
+__crubit_drop_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e(
     void* vec) noexcept;
-inline rs_std::Vec<::std::int32_t>::~Vec() noexcept {
-  __crubit_drop_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e(
+inline rs::Vec<::std::int32_t>::~Vec() noexcept {
+  __crubit_drop_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e(
       this);
 }
-inline ::std::int32_t* rs_std::Vec<::std::int32_t>::data() noexcept {
-  return std::bit_cast<::std::int32_t*>(
-      *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
+inline ::std::int32_t* rs::Vec<::std::int32_t>::data() noexcept {
+  return ::std::bit_cast<::std::int32_t*>(
+      *reinterpret_cast<const ::std::uintptr_t*>(&storage_[8]));
 }
-inline const ::std::int32_t* rs_std::Vec<::std::int32_t>::data()
-    const noexcept {
-  return std::bit_cast<::std::int32_t*>(
-      *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
+inline const ::std::int32_t* rs::Vec<::std::int32_t>::data() const noexcept {
+  return ::std::bit_cast<::std::int32_t*>(
+      *reinterpret_cast<const ::std::uintptr_t*>(&storage_[8]));
 }
-inline std::size_t rs_std::Vec<::std::int32_t>::size() const noexcept {
-  return std::bit_cast<std::size_t>(
-      *reinterpret_cast<const std::size_t*>(&storage_[16]));
+inline ::std::size_t rs::Vec<::std::int32_t>::size() const noexcept {
+  return ::std::bit_cast<::std::size_t>(
+      *reinterpret_cast<const ::std::size_t*>(&storage_[16]));
 }
-inline ::std::int32_t& rs_std::Vec<::std::int32_t>::operator[](
-    std::size_t index) noexcept {
+inline ::std::int32_t& rs::Vec<::std::int32_t>::operator[](
+    ::std::size_t index) noexcept {
   CRUBIT_CHECK(index < size());
   return data()[index];
 }
-inline const ::std::int32_t& rs_std::Vec<::std::int32_t>::operator[](
-    std::size_t index) const noexcept {
+inline const ::std::int32_t& rs::Vec<::std::int32_t>::operator[](
+    ::std::size_t index) const noexcept {
   CRUBIT_CHECK(index < size());
   return data()[index];
 }
-inline ::std::int32_t* rs_std::Vec<::std::int32_t>::begin() noexcept {
+inline ::std::int32_t* rs::Vec<::std::int32_t>::begin() noexcept {
   return data();
 }
-inline const ::std::int32_t* rs_std::Vec<::std::int32_t>::begin()
-    const noexcept {
+inline const ::std::int32_t* rs::Vec<::std::int32_t>::begin() const noexcept {
   return data();
 }
-inline ::std::int32_t* rs_std::Vec<::std::int32_t>::end() noexcept {
+inline ::std::int32_t* rs::Vec<::std::int32_t>::end() noexcept {
   return data() + size();
 }
-inline const ::std::int32_t* rs_std::Vec<::std::int32_t>::end() const noexcept {
+inline const ::std::int32_t* rs::Vec<::std::int32_t>::end() const noexcept {
   return data() + size();
 }
 #endif

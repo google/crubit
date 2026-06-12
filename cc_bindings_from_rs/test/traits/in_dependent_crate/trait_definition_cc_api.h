@@ -56,13 +56,13 @@ MyStruct final {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_definition_golden :: MyTrait")
     MyTrait {
   template <typename T>
-  using impl = rs_std::impl<T, MyTrait>;
+  using impl = rs::impl<T, MyTrait>;
 };
 
 }  // namespace trait_definition
 
 template <>
-struct rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
+struct rs::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::trait_definition::MyStruct const& self);

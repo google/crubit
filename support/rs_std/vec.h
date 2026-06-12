@@ -7,7 +7,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_VEC_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_VEC_H_
 
-namespace rs_std {
+namespace rs {
 
 template <typename T>
 struct Vec final {
@@ -15,6 +15,11 @@ struct Vec final {
                 "This type should only be used via a generated specialization");
 };
 
+}  // namespace rs
+
+namespace rs_std {
+template <typename T>
+using Vec [[deprecated("Use rs::Vec instead")]] = rs::Vec<T>;
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_VEC_H_

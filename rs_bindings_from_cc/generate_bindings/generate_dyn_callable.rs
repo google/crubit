@@ -84,7 +84,7 @@ pub fn callable_crubit_abi_type(
     };
     let cpp_type_tokens = match &callable.backing_type {
         BackingType::DynCallable => quote! {
-            ::rs_std::internal_dyn_callable::DynCallableAbi<#cpp_fn_sig>
+            ::rs::internal_dyn_callable::DynCallableAbi<#cpp_fn_sig>
         },
         BackingType::AnyInvocable { .. } => quote! {
             ::crubit::AnyInvocableAbi<#cpp_fn_sig>

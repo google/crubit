@@ -1232,7 +1232,7 @@ fn generate_trait<'tcx>(
             #template_prefix
             struct #(#attributes)* #trait_name {
                 template <typename T>
-                using impl = rs_std::impl<T, #trait_name_with_args>;
+                using impl = rs::impl<T, #trait_name_with_args>;
             };
             __NEWLINE__
         },

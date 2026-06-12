@@ -56,10 +56,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::from::CloneAllocSource create(rs_std::StrRef s);
+  static ::from::CloneAllocSource create(rs::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
-  rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   explicit operator ::from::CloneAllocType();
 
@@ -92,7 +92,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   explicit CloneAllocType(::from::CloneAllocSource value);
 
@@ -468,7 +468,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 
   explicit operator ::std::int64_t();
 
-  explicit operator rs_std::StrRef();
+  explicit operator rs::StrRef();
 
   explicit operator ::std::int16_t();
 
@@ -502,18 +502,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::from::OpaqueRef create(rs_std::StrRef s);
+  static ::from::OpaqueRef create(rs::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
-  rs_std::StrRef get_arg() const;
+  rs::StrRef get_arg() const;
 
-  explicit operator rs_std::StrRef();
+  explicit operator rs::StrRef();
 
   explicit OpaqueRef(::from::Opaque value);
 
  private:
   union {
-    rs_std::StrRef __field0;
+    rs::StrRef __field0;
   };
 
  private:
@@ -552,10 +552,10 @@ inline ::from::CloneAllocSource& ::from::CloneAllocSource::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef,
+extern "C" void __crubit_thunk_create(rs::StrRef,
                                       ::from::CloneAllocSource* __ret_ptr);
 }
-inline ::from::CloneAllocSource CloneAllocSource::create(rs_std::StrRef s) {
+inline ::from::CloneAllocSource CloneAllocSource::create(rs::StrRef s) {
   crubit::Slot<::from::CloneAllocSource> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
@@ -563,10 +563,10 @@ inline ::from::CloneAllocSource CloneAllocSource::create(rs_std::StrRef s) {
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_get_uvalue(
+extern "C" rs::StrRef __crubit_thunk_get_uvalue(
     ::from::CloneAllocSource const&);
 }
-inline rs_std::StrRef CloneAllocSource::get_value() const& $(__anon1)
+inline rs::StrRef CloneAllocSource::get_value() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
@@ -620,10 +620,9 @@ inline ::from::CloneAllocType& ::from::CloneAllocType::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_get_uvalue(
-    ::from::CloneAllocType const&);
+extern "C" rs::StrRef __crubit_thunk_get_uvalue(::from::CloneAllocType const&);
 }
-inline rs_std::StrRef CloneAllocType::get_value() const& $(__anon1)
+inline rs::StrRef CloneAllocType::get_value() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
@@ -957,10 +956,10 @@ inline Opaque::operator ::std::int64_t() {
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }
 namespace __crubit_internal {
-extern "C" rs_std::StrRef
+extern "C" rs::StrRef
 __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(::from::Opaque*);
 }
-inline Opaque::operator rs_std::StrRef() {
+inline Opaque::operator rs::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(&self);
@@ -999,10 +998,9 @@ static_assert(::std::is_trivially_destructible_v<OpaqueRef>);
 static_assert(::std::is_trivially_move_constructible_v<::from::OpaqueRef>);
 static_assert(::std::is_trivially_move_assignable_v<::from::OpaqueRef>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef,
-                                      ::from::OpaqueRef* __ret_ptr);
+extern "C" void __crubit_thunk_create(rs::StrRef, ::from::OpaqueRef* __ret_ptr);
 }
-inline ::from::OpaqueRef OpaqueRef::create(rs_std::StrRef s) {
+inline ::from::OpaqueRef OpaqueRef::create(rs::StrRef s) {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
@@ -1010,17 +1008,17 @@ inline ::from::OpaqueRef OpaqueRef::create(rs_std::StrRef s) {
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_get_uarg(::from::OpaqueRef const&);
+extern "C" rs::StrRef __crubit_thunk_get_uarg(::from::OpaqueRef const&);
 }
-inline rs_std::StrRef OpaqueRef::get_arg() const {
+inline rs::StrRef OpaqueRef::get_arg() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uarg(self);
 }
 namespace __crubit_internal {
-extern "C" rs_std::StrRef
-__crubit_thunk_into_u_x00000026_x00000027a_x00000020str(::from::OpaqueRef*);
+extern "C" rs::StrRef __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
+    ::from::OpaqueRef*);
 }
-inline OpaqueRef::operator rs_std::StrRef() {
+inline OpaqueRef::operator rs::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(&self);

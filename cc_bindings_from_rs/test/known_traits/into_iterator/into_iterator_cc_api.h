@@ -162,7 +162,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   union {
-    rs_std::SliceRef<const ::std::int32_t> data;
+    rs::SliceRef<const ::std::int32_t> data;
   };
 
  private:
@@ -192,7 +192,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   union {
-    rs_std::SliceRef<::std::int32_t> data;
+    rs::SliceRef<::std::int32_t> data;
   };
 
  private:
@@ -268,8 +268,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace into_iterator_rust
 
 template <>
-struct rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
-                    ::rs::core::iter::IntoIterator> {
+struct rs::impl<::into_iterator_rust::ContainerWithInherentBegin,
+                ::rs::core::iter::IntoIterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::ContainerWithInherentBegin as :: core :: "
@@ -283,8 +283,8 @@ struct rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
-                    ::rs::core::iter::IntoIterator> {
+struct rs::impl<::into_iterator_rust::ContainerWithRefIntoIter,
+                ::rs::core::iter::IntoIterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::ContainerWithRefIntoIter<'a> as :: core :: "
@@ -299,8 +299,8 @@ struct rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainer,
-                    ::rs::core::iter::IntoIterator> {
+struct rs::impl<::into_iterator_rust::MyContainer,
+                ::rs::core::iter::IntoIterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainer as :: core :: iter :: "
@@ -314,8 +314,8 @@ struct rs_std::impl<::into_iterator_rust::MyContainer,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainerIntoIter,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyContainerIntoIter,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIntoIter as :: core :: iter :: "
@@ -326,8 +326,8 @@ struct rs_std::impl<::into_iterator_rust::MyContainerIntoIter,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainerIter,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyContainerIter,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIter<'a> as :: core :: iter :: "
@@ -338,8 +338,8 @@ struct rs_std::impl<::into_iterator_rust::MyContainerIter,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainerIterMut,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyContainerIterMut,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIterMut<'a> as :: core :: iter "
@@ -388,8 +388,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace into_iterator_rust
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyIterator,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyIterator, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyIterator as :: core :: iter :: "
@@ -400,8 +399,8 @@ struct rs_std::impl<::into_iterator_rust::MyIterator,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::SimpleIntoIter,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::SimpleIntoIter,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::SimpleIntoIter as :: core :: iter :: "

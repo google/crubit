@@ -95,7 +95,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // PartialEq implementation for `(u64, bool)` is not supported when
   // `PartialEq<(usize, bool)>` is implemented as it may overlap.
 
-  bool operator==(rs_std::Tuple<::std::uintptr_t, bool> const& _other) const;
+  bool operator==(rs::Tuple<::std::uintptr_t, bool> const& _other) const;
 
  private:
   union {
@@ -146,11 +146,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "(usize , bool ,)") rs_std::Tuple<::std::uintptr_t, bool> {
+    "(usize , bool ,)") rs::Tuple<::std::uintptr_t, bool> {
  public:
   // Default::default
   Tuple();
@@ -165,9 +165,9 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  Tuple(std::tuple<::std::uintptr_t, bool>&& tuple) noexcept;
+  Tuple(::std::tuple<::std::uintptr_t, bool>&& tuple) noexcept;
   ~Tuple() = default;
-  operator std::tuple<::std::uintptr_t, bool>() && noexcept;
+  operator ::std::tuple<::std::uintptr_t, bool>() && noexcept;
 
  private:
   unsigned char storage_[16];
@@ -247,10 +247,10 @@ namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
     ::partial_eq::tuple_collision::MyStruct const&,
-    rs_std::Tuple<::std::uintptr_t, bool> const&);
+    rs::Tuple<::std::uintptr_t, bool> const&);
 }
 inline bool MyStruct::operator==(
-    rs_std::Tuple<::std::uintptr_t, bool> const& _other) const {
+    rs::Tuple<::std::uintptr_t, bool> const& _other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
@@ -301,35 +301,35 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 }
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<::std::uintptr_t, bool>* __ret_ptr);
+    rs::Tuple<::std::uintptr_t, bool>* __ret_ptr);
 }
-inline ::rs_std::Tuple<::std::uintptr_t, bool>::Tuple() {
+inline ::rs::Tuple<::std::uintptr_t, bool>::Tuple() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<::std::uintptr_t, bool>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<::std::uintptr_t, bool>>);
+              ::rs::Tuple<::std::uintptr_t, bool>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::rs::Tuple<::std::uintptr_t, bool>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::std::uintptr_t, bool>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::std::uintptr_t, bool>>);
-inline rs_std::Tuple<::std::uintptr_t, bool>::Tuple(
-    std::tuple<::std::uintptr_t, bool>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uintptr_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<bool*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+              ::rs::Tuple<::std::uintptr_t, bool>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::rs::Tuple<::std::uintptr_t, bool>>);
+inline rs::Tuple<::std::uintptr_t, bool>::Tuple(
+    ::std::tuple<::std::uintptr_t, bool>&& tuple) noexcept {
+  ::std::construct_at(reinterpret_cast<::std::uintptr_t*>(storage_ + 0),
+                      ::std::move(::std::get<0>(tuple)));
+  ::std::construct_at(reinterpret_cast<bool*>(storage_ + 8),
+                      ::std::move(::std::get<1>(tuple)));
 }
-inline rs_std::Tuple<::std::uintptr_t, bool>::operator std::tuple<
+inline rs::Tuple<::std::uintptr_t, bool>::operator ::std::tuple<
     ::std::uintptr_t, bool>() && noexcept {
-  return std::tuple<::std::uintptr_t, bool>(
-      std::move(*reinterpret_cast<::std::uintptr_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<bool*>(storage_ + 8)));
+  return ::std::tuple<::std::uintptr_t, bool>(
+      ::std::move(*reinterpret_cast<::std::uintptr_t*>(storage_ + 0)),
+      ::std::move(*reinterpret_cast<bool*>(storage_ + 8)));
 }
 
 #endif

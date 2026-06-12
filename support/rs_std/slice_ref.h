@@ -18,9 +18,9 @@
 #include "support/annotations.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 
-namespace rs_std {
+namespace rs {
 
-// `rs_std::SliceRef` is a C++ representation of a pointer or reference to a
+// `rs::SliceRef` is a C++ representation of a pointer or reference to a
 // Rust slice. `SliceRef<int const>` is like a `&[c_int]` or `*const [c_int]`,
 // while `SliceRef<int>` is like a `&mut [c_int]` or `*mut [c_int]`. `SliceRef`
 // is trivially destructible, copyable, and moveable.
@@ -36,7 +36,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
 
   // Style waiver for implicit conversions granted in cl/662479273.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(std::span<T> span) noexcept
+  constexpr SliceRef(::std::span<T> span) noexcept
       // Store a dangling pointer assuming `span` is empty-- we have to
       // initialize the union to something.
       : dangling_ptr_(alignof(T)), size_(span.size()) {
@@ -48,18 +48,18 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
 
   // Implicit conversion from mutable SliceRef to const SliceRef.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(const SliceRef<std::remove_const_t<T>>& other) noexcept
-    requires(std::is_const_v<T>)
-      : SliceRef(std::span<T>(other.data(), other.size())) {}
+  constexpr SliceRef(const SliceRef<::std::remove_const_t<T>>& other) noexcept
+    requires(::std::is_const_v<T>)
+      : SliceRef(::std::span<T>(other.data(), other.size())) {}
 
-  // Explicit conversion from `std::string_view` in order to avoid
+  // Explicit conversion from `::std::string_view` in order to avoid
   // marking this case as `CRUBIT_LIFETIME_BOUND`.
   //
-  // Note that `std::span` solves this using an `EnableIfIsView` typeclass.
+  // Note that `::std::span` solves this using an `EnableIfIsView` typeclass.
   //
   // Style waiver for implicit conversions granted in cl/662479273.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(std::string_view str) noexcept
+  constexpr SliceRef(::std::string_view str) noexcept
       : dangling_ptr_(alignof(T)), size_(str.size()) {
     if (!str.empty()) {
       ptr_ = str.data();
@@ -69,54 +69,55 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // Implicit conversion from views.
   template <typename View>
   // NOLINTNEXTLINE(build/c++20)
-    requires(std::ranges::view<std::decay_t<View>> &&
-             std::convertible_to<View &&, std::span<T>> &&
-             !std::is_same_v<std::decay_t<View>, std::span<T>>)
+    requires(::std::ranges::view<::std::decay_t<View>> &&
+             ::std::convertible_to<View &&, ::std::span<T>> &&
+             !::std::is_same_v<::std::decay_t<View>, ::std::span<T>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(View&& view) noexcept
-      : SliceRef(static_cast<std::span<T>>(std::forward<View>(view))) {}
+      : SliceRef(static_cast<::std::span<T>>(::std::forward<View>(view))) {}
 
   // Explicit conversion from views (if only explicitly convertible to
-  // std::span).
+  // ::std::span).
   template <typename View>
   // NOLINTNEXTLINE(build/c++20)
-    requires(std::ranges::view<std::decay_t<View>> &&
-             std::constructible_from<std::span<T>, View &&> &&
-             !std::convertible_to<View &&, std::span<T>> &&
-             !std::is_same_v<std::decay_t<View>, std::span<T>>)
+    requires(::std::ranges::view<::std::decay_t<View>> &&
+             ::std::constructible_from<::std::span<T>, View &&> &&
+             !::std::convertible_to<View &&, ::std::span<T>> &&
+             !::std::is_same_v<::std::decay_t<View>, ::std::span<T>>)
   constexpr explicit SliceRef(View&& view) noexcept
-      : SliceRef(std::span<T>(std::forward<View>(view))) {}
+      : SliceRef(::std::span<T>(::std::forward<View>(view))) {}
 
   // Implicit conversion from non-view containers (only allowed if T is const).
   template <typename Container>
   // NOLINTNEXTLINE(build/c++20)
-    requires(!std::ranges::view<std::decay_t<Container>> &&
-             std::is_const_v<T> &&
-             std::convertible_to<Container &&, std::span<T>>)
+    requires(!::std::ranges::view<::std::decay_t<Container>> &&
+             ::std::is_const_v<T> &&
+             ::std::convertible_to<Container &&, ::std::span<T>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(Container&& container CRUBIT_LIFETIME_BOUND) noexcept
       : SliceRef(
-            static_cast<std::span<T>>(std::forward<Container>(container))) {}
+            static_cast<::std::span<T>>(::std::forward<Container>(container))) {
+  }
 
   // Explicit conversion from non-view containers.
   //
   // Conversion must be explicit if T is mutable or if T is only explicitly
-  // convertible to std::span.
+  // convertible to ::std::span.
   template <typename Container>
   // NOLINTNEXTLINE(build/c++20)
-    requires(!std::ranges::view<std::decay_t<Container>> &&
-             ((!std::is_const_v<T> &&
-               std::constructible_from<std::span<T>, Container &&>) ||
-              (std::is_const_v<T> &&
-               std::constructible_from<std::span<T>, Container &&> &&
-               !std::convertible_to<Container &&, std::span<T>>)))
+    requires(!::std::ranges::view<::std::decay_t<Container>> &&
+             ((!::std::is_const_v<T> &&
+               ::std::constructible_from<::std::span<T>, Container &&>) ||
+              (::std::is_const_v<T> &&
+               ::std::constructible_from<::std::span<T>, Container &&> &&
+               !::std::convertible_to<Container &&, ::std::span<T>>)))
   constexpr explicit SliceRef(
       Container&& container CRUBIT_LIFETIME_BOUND) noexcept
-      : SliceRef(std::span<T>(std::forward<Container>(container))) {}
+      : SliceRef(::std::span<T>(::std::forward<Container>(container))) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr operator std::span<T>() const noexcept {
-    return std::span<T>(size_ > 0 ? ptr_ : nullptr, size_);
+  constexpr operator ::std::span<T>() const noexcept {
+    return ::std::span<T>(size_ > 0 ? ptr_ : nullptr, size_);
   }
 
   constexpr SliceRef(const SliceRef&) = default;
@@ -128,8 +129,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   constexpr T* data() const noexcept { return size_ > 0 ? ptr_ : nullptr; }
   constexpr size_t size() const noexcept { return size_; }
 
-  CRUBIT_DO_NOT_BIND constexpr std::span<T> to_span() const noexcept {
-    return std::span<T>(data(), size());
+  CRUBIT_DO_NOT_BIND constexpr ::std::span<T> to_span() const noexcept {
+    return ::std::span<T>(data(), size());
   }
 
  private:
@@ -151,7 +152,7 @@ namespace internal {
 template <typename T>
 constexpr bool EqualImpl(SliceRef<const T> a, SliceRef<const T> b) {
   if (a.size() != b.size()) return false;
-  return std::equal(a.data(), a.data() + a.size(), b.data());
+  return ::std::equal(a.data(), a.data() + a.size(), b.data());
 }
 }  // namespace internal
 
@@ -168,12 +169,12 @@ constexpr bool operator==(SliceRef<T> a, SliceRef<const T> b) {
   return internal::EqualImpl(a, b);
 }
 template <typename T, typename U>
-  requires(std::convertible_to<U, SliceRef<const T>>)
+  requires(::std::convertible_to<U, SliceRef<const T>>)
 constexpr bool operator==(const U& a, SliceRef<T> b) {
   return internal::EqualImpl(a, b);
 }
 template <typename T, typename U>
-  requires(std::convertible_to<U, SliceRef<const T>>)
+  requires(::std::convertible_to<U, SliceRef<const T>>)
 constexpr bool operator==(SliceRef<T> a, const U& b) {
   return internal::EqualImpl(a, b);
 }
@@ -191,24 +192,29 @@ constexpr bool operator!=(SliceRef<T> a, SliceRef<const T> b) {
   return !(a == b);
 }
 template <typename T, typename U>
-  requires(std::convertible_to<U, SliceRef<const T>>)
+  requires(::std::convertible_to<U, SliceRef<const T>>)
 constexpr bool operator!=(const U& a, SliceRef<T> b) {
   return !(a == b);
 }
 template <typename T, typename U>
-  requires(std::convertible_to<U, SliceRef<const T>>)
+  requires(::std::convertible_to<U, SliceRef<const T>>)
 constexpr bool operator!=(SliceRef<T> a, const U& b) {
   return !(a == b);
 }
 
+}  // namespace rs
+
+namespace rs_std {
+template <typename T>
+using SliceRef [[deprecated("Use rs::SliceRef instead")]] = rs::SliceRef<T>;
 }  // namespace rs_std
 
 namespace crubit::internal {
 
 template <typename T>
-struct PtrLike<rs_std::SliceRef<T>> {
-  static constexpr bool kIsConst = std::is_const_v<T>;
-  static PtrData AsPtrData(rs_std::SliceRef<T> t) {
+struct PtrLike<rs::SliceRef<T>> {
+  static constexpr bool kIsConst = ::std::is_const_v<T>;
+  static PtrData AsPtrData(rs::SliceRef<T> t) {
     uintptr_t start = reinterpret_cast<uintptr_t>(t.data());
     return {
         .start = start,

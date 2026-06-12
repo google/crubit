@@ -70,7 +70,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
   template <typename T>
-  using impl = rs_std::impl<T, MyTrait>;
+  using impl = rs::impl<T, MyTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -147,11 +147,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  static ::stdlib::RefIterator new_(
-      rs_std::SliceRef<const ::std::int32_t> slice);
+  static ::stdlib::RefIterator new_(rs::SliceRef<const ::std::int32_t> slice);
 
   union {
-    rs_std::SliceRef<const ::std::int32_t> slice;
+    rs::SliceRef<const ::std::int32_t> slice;
   };
   union {
     ::std::uintptr_t index;
@@ -164,7 +163,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
 }  // namespace stdlib
 
 template <>
-struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
+struct rs::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
   static constexpr bool kIsImplemented = true;
   using Output CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: future :: Future>::Output") =
@@ -178,7 +177,7 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
 };
 
 template <>
-struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
+struct rs::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: iter :: Iterator>::Item") =
@@ -188,15 +187,14 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
 };
 
 template <>
-struct rs_std::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString> {
+struct rs::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString> {
   static constexpr bool kIsImplemented = true;
 
   static ::rs::alloc::string::String to_string(::stdlib::MyStruct const& self);
 };
 
 template <>
-struct rs_std::impl<::stdlib::NonCloneableIterator,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::NonCloneableIterator as :: core :: iter :: "
@@ -207,7 +205,7 @@ struct rs_std::impl<::stdlib::NonCloneableIterator,
 };
 
 template <>
-struct rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator> {
+struct rs::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::RefIterator<'a> as :: core :: iter :: Iterator>::Item") =
@@ -329,11 +327,11 @@ static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
+extern "C" void __crubit_thunk_new(rs::SliceRef<const ::std::int32_t>,
                                    ::stdlib::RefIterator* __ret_ptr);
 }
 inline ::stdlib::RefIterator RefIterator::new_(
-    rs_std::SliceRef<const ::std::int32_t> slice) {
+    rs::SliceRef<const ::std::int32_t> slice) {
   crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(slice, __return_value_storage);

@@ -121,7 +121,7 @@ pub fn MakeMyI8Struct() -> crate::MyOption<i8> {
 #[inline(always)]
 pub unsafe fn InspectStringViews(slice: *mut [::cc_std::std::__u::raw_string_view]) {
     unsafe {
-        crate::detail::__rust_thunk___Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(slice)
+        crate::detail::__rust_thunk___Z18InspectStringViewsN2rs8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(slice)
     }
 }
 
@@ -141,7 +141,7 @@ pub unsafe fn AcceptsSliceAndReturnsStatusErrorIfEmpty(
     slice: *const [::ffi_11::c_int],
 ) -> crate::MyOption<*const [::ffi_11::c_int]> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::ffi_11::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__crubit_return_abi_buffer,slice); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::ffi_11::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN2rs8SliceRefIKiEE(__crubit_return_abi_buffer,slice); })
     }
 }
 
@@ -296,11 +296,11 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
 // error: class `std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
 //   incomplete type
 
-// Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
+// Type bindings for rs::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
 
-// Type bindings for rs_std::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::std::__u::raw_string_view])
+// Type bindings for rs::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::std::__u::raw_string_view])
 
-// Type bindings for rs_std::SliceRef<int> suppressed due to being mapped to an existing Rust type (*mut[::ffi_11::c_int])
+// Type bindings for rs::SliceRef<int> suppressed due to being mapped to an existing Rust type (*mut[::ffi_11::c_int])
 
 mod detail {
     #[allow(unused_imports)]
@@ -331,14 +331,14 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z14MakeMyI8Structv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
-        #[link_name = "_Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE"]
-        pub(crate) unsafe fn __rust_thunk___Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(
+        #[link_name = "_Z18InspectStringViewsN2rs8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE"]
+        pub(crate) unsafe fn __rust_thunk___Z18InspectStringViewsN2rs8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(
             slice: *mut [::cc_std::std::__u::raw_string_view],
         );
         pub(crate) unsafe fn __rust_thunk___Z12MaybeVoidPtrv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
-        pub(crate) unsafe fn __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
+        pub(crate) unsafe fn __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN2rs8SliceRefIKiEE(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
             slice: *const [::ffi_11::c_int],
         );

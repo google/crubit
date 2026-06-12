@@ -89,7 +89,7 @@ NotImplemented final {
 }  // namespace trait_impl
 
 template <>
-struct rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
+struct rs::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::trait_impl::MyStruct const& self);

@@ -601,10 +601,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
+  static ::structs::unsupported_types::SomeStruct create(rs::char_ x);
 
   union {
-    rs_std::char_ unsupported_field;
+    rs::char_ unsupported_field;
   };
 
  private:
@@ -674,8 +674,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace structs::zst_fields
 
 template <>
-struct rs_std::impl<::structs::display::DisplayStruct,
-                    ::rs::core::fmt::Display> {
+struct rs::impl<::structs::display::DisplayStruct, ::rs::core::fmt::Display> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -687,8 +686,8 @@ struct rs_std::impl<::structs::display::DisplayStruct,
 };
 
 template <>
-struct rs_std::impl<::structs::interior_mutability::SomeStruct,
-                    ::rs::core::fmt::Debug> {
+struct rs::impl<::structs::interior_mutability::SomeStruct,
+                ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -1260,10 +1259,10 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::structs::unsupported_types::SomeStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    rs_std::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);
+    rs::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);
 }
 inline ::structs::unsupported_types::SomeStruct SomeStruct::create(
-    rs_std::char_ x) {
+    rs::char_ x) {
   crubit::Slot<::structs::unsupported_types::SomeStruct>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();

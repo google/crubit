@@ -7,7 +7,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_CPP_WAKER_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_CPP_WAKER_H_
 
-namespace rs_std {
+namespace rs {
 
 class CppWaker;
 
@@ -67,6 +67,10 @@ class CppWaker {
   friend void internal::rs_std_cpp_waker_drop(CppWaker* in);
 };
 
+}  // namespace rs
+
+namespace rs_std {
+using CppWaker [[deprecated("Use rs::CppWaker instead")]] = rs::CppWaker;
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_CPP_WAKER_H_

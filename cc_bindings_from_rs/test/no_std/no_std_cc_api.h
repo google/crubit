@@ -51,7 +51,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
 
   static ::no_std::NoStdStruct new_(::std::int32_t x, float y);
 
-  rs_std::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  rs::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   union {
     ::rs::alloc::string::String test;
@@ -85,9 +85,9 @@ inline ::no_std::NoStdStruct NoStdStruct::new_(::std::int32_t x, float y) {
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_display(::no_std::NoStdStruct const&);
+extern "C" rs::StrRef __crubit_thunk_display(::no_std::NoStdStruct const&);
 }
-inline rs_std::StrRef NoStdStruct::display() const& $(__anon1)
+inline rs::StrRef NoStdStruct::display() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_display(self);
