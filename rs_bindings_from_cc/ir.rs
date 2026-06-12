@@ -110,10 +110,11 @@ where
             .collect(),
         reexported_namespaces,
         unstable_rust_features: vec![],
+        top_level_items: BTreeMap::new(),
     })
 }
 
-pub fn make_ir(flat_ir: FlatIR) -> IR {
+fn make_ir_impl(flat_ir: FlatIR) -> IR {
     let mut used_decl_ids = HashMap::new();
     for item in &flat_ir.items {
         if let Some(existing_decl) = used_decl_ids.insert(item.id(), item) {
@@ -189,6 +190,25 @@ pub fn make_ir(flat_ir: FlatIR) -> IR {
         reopened_namespace_id_to_idx,
         function_name_to_functions,
     }
+}
+
+// TODO(b/523265360): Implement tree-traversal equivalent of make_ir
+fn make_ir_from_tree(flat_ir: FlatIR) -> IR {
+    // For now, this is a no-op fallback to the flat IR logic.
+    make_ir_impl(flat_ir)
+}
+
+pub fn make_ir(flat_ir: FlatIR) -> IR {
+    let use_nested_ir = flat_ir
+        .crubit_features
+        .get(&flat_ir.current_target)
+        .map_or(false, |features| features.0.contains(CrubitFeature::UseNestedIr));
+
+    if use_nested_ir {
+        return make_ir_from_tree(flat_ir);
+    }
+
+    make_ir_impl(flat_ir)
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1257,6 +1277,8 @@ pub struct Record {
     pub is_thread_safe: bool,
     #[serde(default)]
     pub is_explicit_class_template_instantiation_definition: bool,
+    #[serde(default)]
+    pub children: Vec<Item>,
 }
 
 impl GenericItem for Record {
@@ -1868,6 +1890,8 @@ pub struct Namespace {
     pub deprecated: Option<Rc<str>>,
     #[serde(default)]
     pub doc_comment: Option<Rc<str>>,
+    #[serde(default)]
+    pub children: Vec<Item>,
 }
 
 impl GenericItem for Namespace {
@@ -2266,6 +2290,8 @@ pub struct FlatIR {
     pub unstable_rust_features: Vec<String>,
     #[serde(default)]
     pub reexported_namespaces: Vec<Rc<str>>,
+    #[serde(default)]
+    pub top_level_items: BTreeMap<BazelLabel, Vec<Item>>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
@@ -2295,6 +2321,7 @@ impl Debug for FlatIR {
             crubit_features,
             unstable_rust_features,
             reexported_namespaces,
+            top_level_items,
         } = self;
         f.debug_struct("FlatIR")
             .field("public_headers", public_headers)
@@ -2568,6 +2595,7 @@ mod tests {
             crubit_features: Default::default(),
             unstable_rust_features: vec![],
             reexported_namespaces: vec![],
+            top_level_items: BTreeMap::new(),
         };
         assert_eq!(ir.flat_ir, expected);
     }

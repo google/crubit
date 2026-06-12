@@ -15,6 +15,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
@@ -1210,6 +1211,17 @@ llvm::json::Value Record::ToJson() const {
       {"is_aggregate", is_aggregate},
       {"is_canonical_alias", is_canonical_alias},
       {"child_item_ids", std::move(json_item_ids)},
+      {"children",
+       [&] {
+         llvm::json::Array json_children;
+         json_children.reserve(children.size());
+         for (const auto& child : children) {
+           json_children.push_back(std::visit(
+               [](const auto& alternative) { return alternative.ToJson(); },
+               child->as_variant()));
+         }
+         return json_children;
+       }()},
       {"enclosing_item_id", enclosing_item_id},
       {"must_bind", must_bind},
       {"overloads_operator_delete", overloads_operator_delete},
@@ -1277,6 +1289,10 @@ flat_proto::Record Record::ToFlatProto() const {
   proto.mutable_child_item_ids()->Reserve(child_item_ids.size());
   for (const auto& child : child_item_ids)
     proto.add_child_item_ids(child.value());
+  proto.mutable_children()->Reserve(children.size());
+  for (const auto& child : children) {
+    *proto.add_children() = crubit::ToFlatProto(*child);
+  }
   if (enclosing_item_id)
     proto.set_enclosing_item_id(enclosing_item_id->value());
   proto.set_must_bind(must_bind);
@@ -1639,6 +1655,17 @@ llvm::json::Value Namespace::ToJson() const {
       {"unknown_attr", unknown_attr},
       {"owning_target", owning_target},
       {"child_item_ids", std::move(json_item_ids)},
+      {"children",
+       [&] {
+         llvm::json::Array json_children;
+         json_children.reserve(children.size());
+         for (const auto& child : children) {
+           json_children.push_back(std::visit(
+               [](const auto& alternative) { return alternative.ToJson(); },
+               child->as_variant()));
+         }
+         return json_children;
+       }()},
       {"enclosing_item_id", enclosing_item_id},
       {"is_inline", is_inline},
       {"must_bind", must_bind},
@@ -1669,6 +1696,10 @@ flat_proto::Namespace Namespace::ToFlatProto() const {
   proto.mutable_child_item_ids()->Reserve(child_item_ids.size());
   for (const auto& child : child_item_ids)
     proto.add_child_item_ids(child.value());
+  proto.mutable_children()->Reserve(children.size());
+  for (const auto& child : children) {
+    *proto.add_children() = crubit::ToFlatProto(*child);
+  }
   if (enclosing_item_id)
     proto.set_enclosing_item_id(enclosing_item_id->value());
   proto.set_is_inline(is_inline);
@@ -1682,7 +1713,8 @@ llvm::json::Value IR::ToJson() const {
   std::vector<llvm::json::Value> json_items;
   json_items.reserve(items.size());
   for (const auto& item : items) {
-    std::visit([&](auto&& item) { json_items.push_back(item.ToJson()); }, item);
+    std::visit([&](auto&& item) { json_items.push_back(item.ToJson()); },
+               item.as_variant());
   }
   CHECK_EQ(json_items.size(), items.size());
 
@@ -1708,11 +1740,24 @@ llvm::json::Value IR::ToJson() const {
     features_json[target.value()] = std::move(feature_array);
   }
 
+  llvm::json::Object top_level_items_json;
+  for (const auto& [target, items] : top_level_items) {
+    llvm::json::Array items_json;
+    items_json.reserve(items.size());
+    for (const auto& item : items) {
+      items_json.push_back(std::visit(
+          [](const auto& alternative) { return alternative.ToJson(); },
+          item->as_variant()));
+    }
+    top_level_items_json[target.value()] = std::move(items_json);
+  }
+
   llvm::json::Object result{
       {"public_headers", public_headers},
       {"current_target", current_target},
       {"items", std::move(json_items)},
       {"top_level_item_ids", std::move(top_level_item_ids_json)},
+      {"top_level_items", std::move(top_level_items_json)},
       {"crubit_features", std::move(features_json)},
       {"reexported_namespaces", reexported_namespaces},
       {"unstable_rust_features", unstable_rust_features},
@@ -1753,7 +1798,7 @@ flat_proto::Item ToFlatProto(const IR::Item& item) {
           [&](const ExistingRustType& i) {
             *proto.mutable_existing_rust_type() = i.ToFlatProto();
           }},
-      item);
+      item.as_variant());
   return proto;
 }
 
@@ -1766,6 +1811,11 @@ void IR::ToFlatProto(flat_proto::IRProto* proto) const {
   for (const auto& h : public_headers)
     *proto->add_public_headers() = h.ToFlatProto();
   proto->set_current_target(current_target.value());
+  bool use_nested_ir = false;
+  if (auto it = crubit_features.find(current_target);
+      it != crubit_features.end()) {
+    use_nested_ir = it->second.contains("use_nested_ir");
+  }
   proto->mutable_items()->Reserve(items.size());
   for (const auto& item : items)
     *proto->add_items() = crubit::ToFlatProto(item);
@@ -1773,6 +1823,15 @@ void IR::ToFlatProto(flat_proto::IRProto* proto) const {
     auto& list = (*proto->mutable_top_level_item_ids())[target.value()];
     list.mutable_item_ids()->Reserve(item_ids.size());
     for (const auto& id : item_ids) list.add_item_ids(id.value());
+  }
+  if (use_nested_ir) {
+    for (const auto& [target, items] : top_level_items) {
+      auto& list = (*proto->mutable_top_level_items())[target.value()];
+      list.mutable_items()->Reserve(items.size());
+      for (const auto& item : items) {
+        *list.add_items() = crubit::ToFlatProto(*item);
+      }
+    }
   }
   if (!crate_root_path.empty()) proto->set_crate_root_path(crate_root_path);
   for (const auto& [target, features] : crubit_features) {
@@ -1789,12 +1848,60 @@ void IR::ToFlatProto(flat_proto::IRProto* proto) const {
 
 std::string ItemToString(const IR::Item& item) {
   return std::visit(
-      [&](auto&& item) { return llvm::formatv("{0}", item.ToJson()); }, item);
+      [&](auto&& item) { return llvm::formatv("{0}", item.ToJson()); },
+      item.as_variant());
 }
 
 void SetMustBindItem(IR::Item& item) {
   // All IR::Item variants have a `must_bind` field.
-  std::visit([](auto& item_variant) { item_variant.must_bind = true; }, item);
+  std::visit([](auto& item_variant) { item_variant.must_bind = true; },
+             item.as_variant());
+}
+
+void IR::BuildTree() {
+  top_level_items.clear();
+  absl::flat_hash_map<ItemId, std::shared_ptr<Item>> item_map;
+  item_map.reserve(items.size());
+
+  for (const auto& item : items) {
+    auto shared_item = std::make_shared<Item>(item);
+    ItemId id = std::visit([](const auto& val) { return val.id; },
+                           shared_item->as_variant());
+    item_map[id] = std::move(shared_item);
+  }
+
+  for (auto& [id, shared_item] : item_map) {
+    std::visit(visitor{[&](Record& r) {
+                         r.children.reserve(r.child_item_ids.size());
+                         for (const auto& child_id : r.child_item_ids) {
+                           if (auto it = item_map.find(child_id);
+                               it != item_map.end()) {
+                             r.children.push_back(it->second);
+                           }
+                         }
+                       },
+                       [&](Namespace& ns) {
+                         ns.children.reserve(ns.child_item_ids.size());
+                         for (const auto& child_id : ns.child_item_ids) {
+                           if (auto it = item_map.find(child_id);
+                               it != item_map.end()) {
+                             ns.children.push_back(it->second);
+                           }
+                         }
+                       },
+                       [](auto& other) {}},
+               shared_item->as_variant());
+  }
+
+  for (const auto& [target, item_ids] : top_level_item_ids) {
+    auto& list = top_level_items[target];
+    list.reserve(item_ids.size());
+    for (const auto& id : item_ids) {
+      if (auto it = item_map.find(id); it != item_map.end()) {
+        list.push_back(it->second);
+      }
+    }
+  }
 }
 
 }  // namespace crubit

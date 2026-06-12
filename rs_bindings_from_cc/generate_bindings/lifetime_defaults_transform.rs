@@ -817,5 +817,6 @@ pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
         crubit_features: ir.flat_ir().crubit_features.clone(),
         reexported_namespaces: ir.flat_ir().reexported_namespaces.clone(),
         unstable_rust_features: ir.flat_ir().unstable_rust_features.clone(),
+        top_level_items: ir.flat_ir().top_level_items.clone(),
     }))
 }
