@@ -21,7 +21,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     tags = [
         "alt_dep=//support/public:char",
-        "avoid_dep",
     ],
     visibility = ["//visibility:public"],
 
@@ -78,7 +77,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     tags = [
         "alt_dep=//support/public:slice_ref",
-        "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
@@ -114,7 +112,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     tags = [
         "alt_dep=//support/public:str_ref",
-        "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
@@ -165,7 +162,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     tags = [
         "alt_dep=//support/public:dyn_callable",
-        "avoid_dep",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -194,7 +190,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     tags = [
         "alt_dep=//support/public:traits",
-        "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
@@ -226,7 +221,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     tags = [
         "alt_dep=//support/public:option",
-        "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
@@ -241,7 +235,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     tags = [
         "alt_dep=//support/public:result",
-        "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
