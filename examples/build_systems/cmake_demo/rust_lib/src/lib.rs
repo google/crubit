@@ -7,13 +7,6 @@ use flate2::Compression;
 use std::fmt::Display;
 use std::path::PathBuf;
 
-// Opaque wrapper around the compressed archive bytes.
-// Crubit handles this safely without requiring C++ Vec bindings.
-#[derive(Clone, Default)]
-pub struct Archive {
-    data: Vec<u8>,
-}
-
 // Simple error struct for clean Crubit Result interop
 #[derive(Clone, Default)]
 pub struct Error {
@@ -52,14 +45,14 @@ impl DirIterator {
         })
     }
 
-    pub fn take_archive(&mut self) -> Result<Archive, Error> {
+    pub fn take_archive(&mut self) -> Result<Vec<u8>, Error> {
         let buffer = Vec::new();
         let enc = DeflateEncoder::new(buffer, Compression::default());
         let builder = tar::Builder::new(enc);
         let builder = std::mem::replace(&mut self.tar_builder, builder);
         let enc = builder.into_inner()?;
         let data = enc.finish()?;
-        Ok(Archive { data })
+        Ok(data)
     }
 }
 
@@ -104,7 +97,7 @@ impl Iterator for DirIterator {
                     )?;
                     Ok(DirEntry {
                         path: entry.path().display().to_string(),
-                        contents: Archive { data: contents.into_bytes() },
+                        contents: contents.into_bytes(),
                     })
                 },
             );
@@ -116,10 +109,10 @@ impl Iterator for DirIterator {
 #[derive(Clone, Default)]
 pub struct DirEntry {
     pub path: String,
-    pub contents: Archive,
+    pub contents: Vec<u8>,
 }
 
-// 2. Accepts the opaque Archive from C++ and computes the blake3 hash
-pub fn hash_archive(archive: &Archive) -> blake3::Hash {
-    blake3::hash(&archive.data)
+// 2. Hashes the bytes from C++ and computes the blake3 hash
+pub fn hash_archive(archive: &[u8]) -> blake3::Hash {
+    blake3::hash(archive)
 }

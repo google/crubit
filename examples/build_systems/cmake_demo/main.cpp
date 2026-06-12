@@ -12,6 +12,7 @@
 #include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/vec.h"
 
 int main(int argc, char* argv[]) {
   // Validate CLI arguments
@@ -35,7 +36,6 @@ int main(int argc, char* argv[]) {
   using ::rust_blake3_scanner::DirIterator;
   using ::rust_blake3_scanner::Error;
   using ::rust_blake3_scanner::DirEntry;
-  using ::rust_blake3_scanner::Archive;
   // new is a normal identifier in Rust, but a keyword in C++. Crubit will
   // escape C++ keywords that appear in bindings by appending an underscore.
   rs_std::Result<DirIterator, Error> walk_dir_res =
@@ -65,14 +65,14 @@ int main(int argc, char* argv[]) {
       continue;
     }
     const String& path = entry->path;
-    const Archive& archive = entry->contents;
+    const rs_std::Vec<std::uint8_t>& archive = entry->contents;
     blake3::Hash hash = rust_blake3_scanner::hash_archive(archive);
     std::cout << path << " - "
               << hash << std::endl;
   }
 
   // Hash and print the full archive of the directory.
-  rs_std::Result<Archive, Error> archive_res = walk_dir.take_archive();
+  rs_std::Result<rs_std::Vec<std::uint8_t>, Error> archive_res = walk_dir.take_archive();
   if (!archive_res.has_value()) {
     std::cerr << "Error: Failed to package archive: "
               << archive_res.err()
