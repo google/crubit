@@ -4,6 +4,7 @@
 
 use flate2::write::DeflateEncoder;
 use flate2::Compression;
+use std::fmt::Display;
 use std::path::PathBuf;
 
 // Opaque wrapper around the compressed archive bytes.
@@ -17,6 +18,12 @@ pub struct Archive {
 #[derive(Clone, Default)]
 pub struct Error {
     pub message: String,
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.message.fmt(f)
+    }
 }
 
 impl From<std::io::Error> for Error {
