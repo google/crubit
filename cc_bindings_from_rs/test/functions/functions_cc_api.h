@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/cxx20_backports.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/char.h"
@@ -518,7 +519,9 @@ MyStruct::new_(::std::int32_t x) {
   return __crubit_internal::__crubit_thunk_new(x);
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_diverse_ulifetimes(
@@ -583,7 +586,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::functions::generic_fn_tests::ctor_trait_tests::Movable>);
 inline void Movable::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Movable, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NonMovable) == 4,
@@ -610,7 +615,9 @@ NonMovable::new_(::std::int32_t value) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void NonMovable::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NonMovable, value));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_accept_uctor(

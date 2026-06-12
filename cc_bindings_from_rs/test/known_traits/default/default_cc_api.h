@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -275,7 +276,9 @@ inline ::std::int32_t SomeStruct::extract_int(
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace rs_default::derived_impl
 
@@ -308,7 +311,9 @@ inline ::std::int32_t SomeStruct::extract_int(
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace rs_default::explicit_impl
 
@@ -345,7 +350,9 @@ inline ::std::int32_t StructWithFieldWithNoDefault::extract_int(
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
 inline void StructWithFieldWithNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructWithFieldWithNoDefault, field));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(StructWithoutDefault) == 4,
@@ -359,7 +366,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::field_with_no_default::StructWithoutDefault>);
 inline void StructWithoutDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructWithoutDefault, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace rs_default::field_with_no_default
 
@@ -377,7 +386,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(
     ::std::is_trivially_move_assignable_v<::rs_default::no_impl::SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace rs_default::no_impl
 
@@ -410,7 +421,9 @@ inline ::std::int32_t SomeStruct::extract_int() const {
   return __crubit_internal::__crubit_thunk_extract_uint(self);
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace rs_default::transparent_struct
 

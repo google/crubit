@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/check.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/str_ref.h"
@@ -268,7 +269,9 @@ inline ::rs_index::CustomIndex CustomIndex::new_(::std::uintptr_t index) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void CustomIndex::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CustomIndex, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(Id) == 4,
@@ -289,7 +292,9 @@ inline ::rs_index::Id Id::new_(::std::int32_t id) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Id::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Id, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(IntPair) == 8,
@@ -364,8 +369,10 @@ inline ::std::int32_t& $(__anon1) IntPair::operator[](
           self, &index);
 }
 inline void IntPair::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(IntPair, x));
   static_assert(4 == offsetof(IntPair, y));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(Map) == 32,
@@ -423,8 +430,10 @@ inline rs_std::StrRef Map::operator[](
           self, _index);
 }
 inline void Map::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Map, data));
   static_assert(24 == offsetof(Map, row_size));
+  CRUBIT_WARNING_POP
 }
 }  // namespace rs_index
 

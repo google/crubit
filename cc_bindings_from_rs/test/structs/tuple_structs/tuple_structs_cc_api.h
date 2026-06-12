@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/tuple.h"
@@ -774,7 +775,9 @@ operator=(const CloneNoDefault& other) {
   return *this;
 }
 inline void CloneNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneNoDefault, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CopyNoDefault) == 4,
@@ -803,7 +806,9 @@ inline ::tuple_structs::CopyNoDefault CopyNoDefault::create(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void CopyNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CopyNoDefault, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(DefaultAndCloneNoUnpin) == 4,
@@ -845,7 +850,9 @@ inline ::tuple_structs::DefaultAndCloneNoUnpin& ::tuple_structs::
   return *this;
 }
 inline void DefaultAndCloneNoUnpin::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(DefaultAndCloneNoUnpin, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(DefaultNoCopyNoClone) == 4,
@@ -866,7 +873,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
 inline void DefaultNoCopyNoClone::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(DefaultNoCopyNoClone, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(DontMoveMe) == 8,
@@ -881,7 +890,9 @@ inline DontMoveMe::~DontMoveMe() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 inline void DontMoveMe::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(DontMoveMe, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructOnePrivateArg) == 4,
@@ -920,7 +931,9 @@ inline ::std::int32_t TupleStructOnePrivateArg::get_arg() const {
   return __crubit_internal::__crubit_thunk_get_uarg(&self);
 }
 inline void TupleStructOnePrivateArg::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructOnePrivateArg, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructOnePublicArg) == 4,
@@ -959,7 +972,9 @@ inline ::std::int32_t TupleStructOnePublicArg::get_arg() const {
   return __crubit_internal::__crubit_thunk_get_uarg(&self);
 }
 inline void TupleStructOnePublicArg::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructOnePublicArg, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructOnePublicArgOnePrivateArg) == 8,
@@ -1004,8 +1019,10 @@ inline ::std::int32_t TupleStructOnePublicArgOnePrivateArg::get_second_arg()
 }
 inline void
 TupleStructOnePublicArgOnePrivateArg::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructOnePublicArgOnePrivateArg, __field0));
   static_assert(4 == offsetof(TupleStructOnePublicArgOnePrivateArg, __field1));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructTwoPrivateArgs) == 8,
@@ -1056,8 +1073,10 @@ inline ::std::int32_t TupleStructTwoPrivateArgs::get_second_arg() const {
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(&self);
 }
 inline void TupleStructTwoPrivateArgs::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructTwoPrivateArgs, __field0));
   static_assert(4 == offsetof(TupleStructTwoPrivateArgs, __field1));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructTwoPublicArgs) == 8,
@@ -1108,8 +1127,10 @@ inline ::std::int32_t TupleStructTwoPublicArgs::get_second_arg() const {
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(&self);
 }
 inline void TupleStructTwoPublicArgs::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructTwoPublicArgs, __field0));
   static_assert(4 == offsetof(TupleStructTwoPublicArgs, __field1));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructWithCloneNoDefault) == 8,
@@ -1148,7 +1169,9 @@ inline ::std::int32_t const& $(__anon1)
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
 }
 inline void TupleStructWithCloneNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructWithCloneNoDefault, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructWithCppImmovableType) == 16,
@@ -1200,8 +1223,10 @@ inline ::std::int32_t const& $(__anon1)
 }
 inline void
 TupleStructWithCppImmovableType::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructWithCppImmovableType, __field1));
   static_assert(8 == offsetof(TupleStructWithCppImmovableType, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructWithDefaultAndCloneNoUnpin) == 4,
@@ -1238,7 +1263,9 @@ inline ::std::int32_t TupleStructWithDefaultAndCloneNoUnpin::get_arg() const {
 }
 inline void
 TupleStructWithDefaultAndCloneNoUnpin::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructWithDefaultAndCloneNoUnpin, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructWithDefaultNoCopyNoClone) == 4,
@@ -1254,7 +1281,9 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
 inline void
 TupleStructWithDefaultNoCopyNoClone::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructWithDefaultNoCopyNoClone, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructWithNoDefault) == 4,
@@ -1268,7 +1297,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithNoDefault>);
 inline void TupleStructWithNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructWithNoDefault, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructWithNonExhaustiveCtor) == 8,
@@ -1311,8 +1342,10 @@ TupleStructWithNonExhaustiveCtor::create(::std::int32_t first_arg,
 }
 inline void
 TupleStructWithNonExhaustiveCtor::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructWithNonExhaustiveCtor, __field0));
   static_assert(4 == offsetof(TupleStructWithNonExhaustiveCtor, __field1));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(TupleStructWithTupleFieldType) == 8,
@@ -1376,7 +1409,9 @@ TupleStructWithTupleFieldType::get_arg() const {
                            *__return_value_1_storage);
 }
 inline void TupleStructWithTupleFieldType::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TupleStructWithTupleFieldType, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace tuple_structs
 

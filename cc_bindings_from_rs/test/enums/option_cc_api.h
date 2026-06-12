@@ -19,6 +19,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/memswap.h"
 #include "support/internal/move_assign.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/option.h"
@@ -1723,7 +1724,9 @@ inline ::option::CloneNoDefault& ::option::CloneNoDefault::operator=(
   return *this;
 }
 inline void CloneNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneNoDefault, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CopyNoDefault) == 1,
@@ -1739,7 +1742,9 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::option::CopyNoDefault>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::CopyNoDefault>);
 inline void CopyNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CopyNoDefault, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasDefault) == 24,
@@ -1788,7 +1793,9 @@ inline rs_std::StrRef HasDefault::get_string_inside_option() const& $(__anon1)
   return __crubit_internal::__crubit_thunk_get_ustring_uinside_uoption(self);
 }
 inline void HasDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasDefault, foo));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasHasOptions) == 4,
@@ -1811,7 +1818,9 @@ inline ::option::HasHasOptions HasHasOptions::new_(::std::uint8_t value) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasHasOptions::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasHasOptions, me));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasNoDefault) == 32,
@@ -1846,8 +1855,10 @@ inline rs_std::StrRef HasNoDefault::get_string_inside_option() const& $(__anon1)
   return __crubit_internal::__crubit_thunk_get_ustring_uinside_uoption(self);
 }
 inline void HasNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasNoDefault, foo));
   static_assert(24 == offsetof(HasNoDefault, a));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasOptions) == 4,
@@ -1904,9 +1915,11 @@ inline ::option::HasOptions HasOptions::with_none() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasOptions::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasOptions, direct));
   static_assert(2 == offsetof(HasOptions, niche));
   static_assert(3 == offsetof(HasOptions, nested));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(LessThan20U8) == 1,
@@ -2040,7 +2053,9 @@ inline ::std::uint8_t LessThan20U8::value() const {
   return __crubit_internal::__crubit_thunk_value(&self);
 }
 inline void LessThan20U8::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(LessThan20U8, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(OptCloneNoDefault) == 2,
@@ -2083,7 +2098,9 @@ inline ::option::OptCloneNoDefault OptCloneNoDefault::new_(::std::uint8_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void OptCloneNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(OptCloneNoDefault, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(OptCopyNoDefault) == 2,
@@ -2111,7 +2128,9 @@ inline ::option::OptCopyNoDefault OptCopyNoDefault::new_(::std::uint8_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void OptCopyNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(OptCopyNoDefault, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(OptDefaultWithDrop) == 24,
@@ -2136,7 +2155,9 @@ inline ::option::OptDefaultWithDrop OptDefaultWithDrop::new_(rs_std::StrRef s) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void OptDefaultWithDrop::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(OptDefaultWithDrop, opt));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(OptNoDefaultWithDrop) == 32,
@@ -2172,7 +2193,9 @@ inline rs_std::StrRef OptNoDefaultWithDrop::get_string_inside_option() const& $(
   return __crubit_internal::__crubit_thunk_get_ustring_uinside_uoption(self);
 }
 inline void OptNoDefaultWithDrop::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(OptNoDefaultWithDrop, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(OptZst) == 1,
@@ -2190,7 +2213,9 @@ static_assert(::std::is_trivially_destructible_v<OptZst>);
 static_assert(::std::is_trivially_move_constructible_v<::option::OptZst>);
 static_assert(::std::is_trivially_move_assignable_v<::option::OptZst>);
 inline void OptZst::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(OptZst, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(OptionWithSizeTypes) == 32,
@@ -2204,8 +2229,10 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::option::OptionWithSizeTypes>);
 inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(OptionWithSizeTypes, uval));
   static_assert(16 == offsetof(OptionWithSizeTypes, ival));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ZStream) == 8,
@@ -2217,7 +2244,9 @@ static_assert(::std::is_trivially_destructible_v<ZStream>);
 static_assert(::std::is_trivially_move_constructible_v<::option::ZStream>);
 static_assert(::std::is_trivially_move_assignable_v<::option::ZStream>);
 inline void ZStream::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ZStream, zfree));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_pass_uoption_uptr(

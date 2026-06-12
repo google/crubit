@@ -2070,14 +2070,26 @@ pub(crate) fn generate_fields<'tcx>(
             },
         };
 
-        CcSnippet::with_include(
+        let warning_str = "-Wno-invalid-offsetof";
+        let mut snippet = CcSnippet::with_include(
             quote! {
                 inline void #adt_cc_name::__crubit_field_offset_assertions() {
+                    __NEWLINE__
+                    CRUBIT_WARNING_PUSH(#warning_str)
+                    __NEWLINE__
                     #cc_assertions
+                    __NEWLINE__
+                    CRUBIT_WARNING_POP
+                    __NEWLINE__
                 }
             },
             CcInclude::cstddef(),
-        )
+        );
+        snippet.prereqs.includes.insert(CcInclude::support_lib_header(
+            db.crubit_support_path_format(),
+            "internal/offsetof.h".into(),
+        ));
+        snippet
     };
 
     let rs_details: RsSnippet = if enum_kind == Some(EnumKind::ReprC) {

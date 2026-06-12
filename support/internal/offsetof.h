@@ -63,4 +63,19 @@ struct OffsetOfHelper<void(T)> {
 #define CRUBIT_OFFSET_OF(member, ...) \
   offsetof(::crubit::details::OffsetOfHelper<void(__VA_ARGS__)>::Type, member)
 
+#if defined(__clang__) || defined(__GNUC__)
+#define CRUBIT_DO_PRAGMA(x) _Pragma(#x)
+#define CRUBIT_WARNING_PUSH(warning) \
+  _Pragma("GCC diagnostic push")     \
+      CRUBIT_DO_PRAGMA(GCC diagnostic ignored warning)
+#define CRUBIT_WARNING_POP _Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER)
+#define CRUBIT_WARNING_PUSH(warning) \
+  __pragma(warning(push)) __pragma(warning(disable : 4646))
+#define CRUBIT_WARNING_POP __pragma(warning(pop))
+#else
+#define CRUBIT_WARNING_PUSH(warning)
+#define CRUBIT_WARNING_POP
+#endif
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_

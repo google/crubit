@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -90,7 +91,9 @@ inline void NeverStruct::method_never_return() const {
   __crubit_internal::__crubit_thunk_method_unever_ureturn(self);
 }
 inline void NeverStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NeverStruct, _non_zst_field));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_never_ureturn();

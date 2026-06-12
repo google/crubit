@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -199,7 +200,9 @@ static_assert(::std::is_trivially_destructible_v<Bar>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::Bar>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::Bar>);
 inline void Bar::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Bar, i));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(Foo) == 8,
@@ -230,8 +233,10 @@ inline ::uses_reexport::Bar Foo::bar() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Foo::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Foo, i));
   static_assert(4 == offsetof(Foo, bar_));
+  CRUBIT_WARNING_POP
 }
 }  // namespace uses_reexport
 
@@ -253,7 +258,9 @@ static_assert(::std::is_trivially_destructible_v<G>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::G>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::G>);
 inline void G::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(G, field));
+  CRUBIT_WARNING_POP
 }
 }  // namespace uses_reexport
 
@@ -270,7 +277,9 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::uses_reexport::InnerX>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::InnerX>);
 inline void InnerX::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(InnerX, field));
+  CRUBIT_WARNING_POP
 }
 }  // namespace uses_reexport
 
@@ -292,7 +301,9 @@ static_assert(::std::is_trivially_destructible_v<X1>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::X1>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::X1>);
 inline void X1::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(X1, x));
+  CRUBIT_WARNING_POP
 }
 }  // namespace uses_reexport
 

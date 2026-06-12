@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/check_no_mutable_aliasing.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/slice_ref.h"
@@ -157,7 +158,9 @@ inline void NonFreezeType::shared_self_mut_ref_allows_alias(
       __crubit_thunk_shared_uself_umut_uref_uallows_ualias(self, __param_1);
 }
 inline void NonFreezeType::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NonFreezeType, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(SomeStruct) == 4,
@@ -236,7 +239,9 @@ inline void SomeStruct::shared_self_and_shared_ref_allows_alias(
                                                                    __param_1);
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, field));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uref_uand_umut_uslice(

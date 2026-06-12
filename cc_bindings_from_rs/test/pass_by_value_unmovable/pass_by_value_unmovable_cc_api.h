@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -130,7 +131,9 @@ inline ::pass_by_value_unmovable::CppMovable& ::pass_by_value_unmovable::
   return *this;
 }
 inline void CppMovable::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CppMovable, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NotCppMovable) == 4,
@@ -145,7 +148,9 @@ inline NotCppMovable::~NotCppMovable() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 inline void NotCppMovable::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NotCppMovable, __field0));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_takes_uval_umovable(

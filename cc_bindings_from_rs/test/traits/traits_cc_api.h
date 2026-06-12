@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/traits.h"
@@ -413,8 +414,10 @@ operator=(const AssociatedTypeStruct& other) {
   return *this;
 }
 inline void AssociatedTypeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(AssociatedTypeStruct, a));
   static_assert(24 == offsetof(AssociatedTypeStruct, b));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(Foo) == 8,
@@ -442,7 +445,9 @@ inline ::traits::Foo Foo::new_(::std::int32_t x, ::std::int32_t y) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Foo::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Foo, a));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(LifetimeStruct) == 8,
@@ -455,7 +460,9 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::traits::LifetimeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::LifetimeStruct>);
 inline void LifetimeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(LifetimeStruct, x));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(MyStruct) == 4,
@@ -485,7 +492,9 @@ inline ::traits::MyStruct MyStruct::new_(::std::int32_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, x));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(MyStruct2) == 4,
@@ -505,7 +514,9 @@ static_assert(::std::is_trivially_move_assignable_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_copy_constructible_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_copy_assignable_v<::traits::MyStruct2>);
 inline void MyStruct2::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct2, y));
+  CRUBIT_WARNING_POP
 }
 }  // namespace traits
 
@@ -539,7 +550,9 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(
     ::std::is_trivially_copy_assignable_v<::traits::StructWithAssociatedConst>);
 inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructWithAssociatedConst, x));
+  CRUBIT_WARNING_POP
 }
 }  // namespace traits
 

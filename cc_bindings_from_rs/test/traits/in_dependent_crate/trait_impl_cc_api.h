@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
 
@@ -117,7 +118,9 @@ inline ::trait_impl::MyStruct MyStruct::new_(::std::int32_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, x));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NotImplemented) == 24,
@@ -132,7 +135,9 @@ inline NotImplemented::~NotImplemented() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 inline void NotImplemented::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NotImplemented, foo));
+  CRUBIT_WARNING_POP
 }
 }  // namespace trait_impl
 
