@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -312,8 +313,10 @@ static_assert(::std::is_trivially_destructible_v<U>);
 static_assert(::std::is_trivially_move_constructible_v<::unions::repr_c::U>);
 static_assert(::std::is_trivially_move_assignable_v<::unions::repr_c::U>);
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
   static_assert(0 == offsetof(U, y));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::unions::repr_c::U* __ret_ptr);
@@ -358,7 +361,9 @@ inline ::unions::repr_c_clone::U& ::unions::repr_c_clone::U::operator=(
   return *this;
 }
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::unions::repr_c_clone::U* __ret_ptr);
@@ -399,7 +404,9 @@ inline ::unions::repr_c_drop::U& ::unions::repr_c_drop::U::operator=(
   return *this;
 }
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
+  CRUBIT_WARNING_POP
 }
 }  // namespace unions::repr_c_drop
 
@@ -417,8 +424,10 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::unions::repr_c_packed::U>);
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
   static_assert(0 == offsetof(U, y));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::unions::repr_c_packed::U* __ret_ptr);
@@ -475,8 +484,10 @@ inline ::std::uint32_t U::get_y() const {
   return __crubit_internal::__crubit_thunk_get_uy(self);
 }
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
   static_assert(0 == offsetof(U, y));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::unions::repr_rust::U* __ret_ptr);
@@ -539,7 +550,9 @@ inline ::std::uint32_t U::get_x() const {
   return __crubit_internal::__crubit_thunk_get_ux(self);
 }
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::unions::repr_rust_clone::U* __ret_ptr);
@@ -597,7 +610,9 @@ inline ::std::int32_t* U::get_x() const {
   return __crubit_internal::__crubit_thunk_get_ux(self);
 }
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
+  CRUBIT_WARNING_POP
 }
 }  // namespace unions::repr_rust_drop
 
@@ -615,8 +630,10 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::unions::repr_rust_packed::U>);
 inline void U::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(U, x));
   static_assert(0 == offsetof(U, y));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::unions::repr_rust_packed::U* __ret_ptr);

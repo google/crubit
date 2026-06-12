@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -94,9 +95,11 @@ inline ::std::int32_t X::b() const {
   return __crubit_internal::__crubit_thunk_b(self);
 }
 inline void X::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(X, a_));
   static_assert(4 == offsetof(X, b_));
   static_assert(8 == offsetof(X, c));
+  CRUBIT_WARNING_POP
 }
 }  // namespace struct_with_conflicting_fields_and_member_functions
 

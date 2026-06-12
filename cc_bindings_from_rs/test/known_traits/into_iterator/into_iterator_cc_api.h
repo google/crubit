@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/bridge.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/iterator_adapter.h"
@@ -433,7 +434,9 @@ inline ::std::int32_t ContainerWithInherentBegin::begin() const {
   return __crubit_internal::__crubit_thunk_begin(self);
 }
 inline void ContainerWithInherentBegin::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ContainerWithInherentBegin, data));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ContainerWithRefIntoIter) == 8,
@@ -447,7 +450,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
 inline void ContainerWithRefIntoIter::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ContainerWithRefIntoIter, iter));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(MyContainer) == 12,
@@ -519,7 +524,9 @@ MyContainer::begin() & {
 }
 inline rs::IteratorEnd MyContainer::end() & { return rs::IteratorEnd(); }
 inline void MyContainer::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyContainer, data));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(MyContainerIntoIter) == 24,
@@ -533,8 +540,10 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MyContainerIntoIter>);
 inline void MyContainerIntoIter::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyContainerIntoIter, index));
   static_assert(8 == offsetof(MyContainerIntoIter, data));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(MyContainerIter) == 16,
@@ -548,7 +557,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MyContainerIter>);
 inline void MyContainerIter::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyContainerIter, data));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(MyContainerIterMut) == 16,
@@ -562,7 +573,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MyContainerIterMut>);
 inline void MyContainerIterMut::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyContainerIterMut, data));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(MyIterator) == 4,
@@ -576,7 +589,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyIterator>);
 inline void MyIterator::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyIterator, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(SimpleIntoIter) == 4,
@@ -590,7 +605,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::SimpleIntoIter>);
 inline void SimpleIntoIter::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SimpleIntoIter, val));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ucontainer(

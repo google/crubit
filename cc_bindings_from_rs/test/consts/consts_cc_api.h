@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -101,7 +102,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::consts::TyWithAssocConsts>);
 inline void TyWithAssocConsts::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(TyWithAssocConsts, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace consts
 

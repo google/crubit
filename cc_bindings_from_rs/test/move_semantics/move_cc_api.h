@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <array>
@@ -133,7 +134,9 @@ inline ::std::uint8_t Copyable::consume_self() const {
   return __crubit_internal::__crubit_thunk_consume_uself(&self);
 }
 inline void Copyable::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Copyable, field));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(Foo) == 8,
@@ -182,7 +185,9 @@ inline ::std::uint8_t Foo::into_byte() && {
   return __crubit_internal::__crubit_thunk_into_ubyte(self_slot.Get());
 }
 inline void Foo::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Foo, buf));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_consume_ufoo(::move::Foo*);

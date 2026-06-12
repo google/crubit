@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -170,7 +171,9 @@ inline ::std::int32_t Foo::into_i32(
   return __crubit_internal::__crubit_thunk_into_ui32(&s);
 }
 inline void Foo::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Foo, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace modules::impl_in_separate_private_module
 

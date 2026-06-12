@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/tuple.h"
 
@@ -227,7 +228,9 @@ static_assert(::std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::arrays::ArrayStruct>);
 inline void ArrayStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ArrayStruct, array));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasDrop) == 4,
@@ -250,7 +253,9 @@ inline ::arrays::HasDrop HasDrop::new_(::std::int32_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasDrop::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasDrop, x));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasDropAndDefault) == 4,
@@ -280,7 +285,9 @@ inline ::arrays::HasDropAndDefault& ::arrays::HasDropAndDefault::operator=(
   return *this;
 }
 inline void HasDropAndDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasDropAndDefault, x));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_uid(void*,

@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/char.h"
 #include "support/rs_std/traits.h"
@@ -749,8 +750,10 @@ inline float StructFloat::inspect(
   return __crubit_internal::__crubit_thunk_inspect(&s);
 }
 inline void StructFloat::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructFloat, __field0));
   static_assert(8 == offsetof(StructFloat, __field1));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(StructInteger) == 4,
@@ -801,7 +804,9 @@ inline ::std::int32_t StructInteger::inspect(
   return __crubit_internal::__crubit_thunk_inspect(&s);
 }
 inline void StructInteger::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructInteger, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(StructMemory) == 5,
@@ -852,8 +857,10 @@ inline ::std::int32_t StructMemory::inspect(
   return __crubit_internal::__crubit_thunk_inspect(&s);
 }
 inline void StructMemory::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructMemory, _padding));
   static_assert(1 == offsetof(StructMemory, i));
+  CRUBIT_WARNING_POP
 }
 }  // namespace structs::abi_classification
 
@@ -871,8 +878,10 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::default_repr::Point>);
 inline void Point::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
@@ -913,7 +922,9 @@ extern "C" void
 _u_ucrubit_uthunk_uto_ustring_u_x0000003a_x0000003a_x00000020structs_ugolden_x00000020_x0000003a_x0000003a_x00000020display_x00000020_x0000003a_x0000003a_x00000020DisplayStruct(
     const ::structs::display::DisplayStruct* self_, void* ret_ptr);
 inline void DisplayStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(DisplayStruct, value));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
@@ -949,7 +960,9 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::interior_mutability::SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, field));
+  CRUBIT_WARNING_POP
 }
 }  // namespace structs::interior_mutability
 
@@ -975,7 +988,9 @@ inline ::std::int32_t AField::operator_() const {
   return __crubit_internal::__crubit_thunk_operator(self);
 }
 inline void AField::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(AField, operator__));
+  CRUBIT_WARNING_POP
 }
 }  // namespace structs::keyword_named_fields_and_methods
 
@@ -1001,8 +1016,10 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, mut_const_ptr));
   static_assert(8 == offsetof(SomeStruct, const_mut_ptr));
+  CRUBIT_WARNING_POP
 }
 }  // namespace structs::nested_ptr_type_mutability_qualifiers
 
@@ -1019,8 +1036,10 @@ extern "C" void __crubit_thunk_drop(::structs::non_cpp_movable::Point&);
 }
 inline Point::~Point() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline void Point::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
@@ -1058,8 +1077,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::structs::repr_c::Point>);
 static_assert(::std::is_trivially_move_assignable_v<::structs::repr_c::Point>);
 inline void Point::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::std::int32_t, ::std::int32_t,
@@ -1097,8 +1118,10 @@ static_assert(
     ::std::is_trivially_move_assignable_v<
         ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat>);
 inline void StructFloat::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructFloat, __field0));
   static_assert(8 == offsetof(StructFloat, __field1));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_no_umangle_ucreate(
@@ -1184,8 +1207,10 @@ structs::struct_by_float_passing_with_no_thunk::StructFloat::operator=(
   return *this;
 }
 inline void StructFloat::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructFloat, __field0));
   static_assert(8 == offsetof(StructFloat, __field1));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void
@@ -1271,7 +1296,9 @@ inline ::structs::unsupported_types::SomeStruct SomeStruct::create(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(SomeStruct, unsupported_field));
+  CRUBIT_WARNING_POP
 }
 }  // namespace structs::unsupported_types
 
@@ -1289,7 +1316,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::zst_fields::ZstFields>);
 inline void ZstFields::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ZstFields, value));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(

@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
 
@@ -148,7 +149,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::generic_traits::AnotherStruct>);
 inline void AnotherStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(AnotherStruct, y));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(StructGeneric) == 4,
@@ -172,7 +175,9 @@ inline ::generic_traits::StructGeneric StructGeneric::new_(::std::int32_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void StructGeneric::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructGeneric, x));
+  CRUBIT_WARNING_POP
 }
 
 // Error generating bindings for trait `generic_traits_golden::TraitWithGeneric`

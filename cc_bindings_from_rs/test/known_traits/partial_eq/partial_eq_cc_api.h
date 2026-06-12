@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/tuple.h"
 
@@ -213,7 +214,9 @@ inline bool MyStruct::operator==(
           self, other);
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace partial_eq::basic_test
 
@@ -257,7 +260,9 @@ inline bool MyStruct::operator==(
           self, _other);
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace partial_eq::tuple_collision
 
@@ -297,7 +302,9 @@ inline bool MyStruct::operator==(::std::uintptr_t const& other) const {
           self, other);
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace partial_eq::usize_rhs
 

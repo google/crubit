@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
 
@@ -1153,7 +1154,9 @@ inline bool QrError::operator==(::enums::qr_error::QrError const& other) const {
           self, other);
 }
 inline void QrError::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(QrError, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(StructuredQrError) == 24,
@@ -1301,7 +1304,9 @@ inline bool StructuredQrError::operator==(
           self, other);
 }
 inline void StructuredQrError::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructuredQrError, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 }  // namespace enums::qr_error
 
@@ -1354,7 +1359,9 @@ inline bool ReprI128::is_max_i128() const {
   return __crubit_internal::__crubit_thunk_is_umax_ui128(self);
 }
 inline void ReprI128::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ReprI128, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ReprU128) == 16,
@@ -1388,7 +1395,9 @@ inline bool ReprU128::is_max_u128() const {
   return __crubit_internal::__crubit_thunk_is_umax_uu128(self);
 }
 inline void ReprU128::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ReprU128, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 }  // namespace enums::repr_128
 
@@ -1460,6 +1469,7 @@ inline ::enums::repr_c::MyEnum& ::enums::repr_c::MyEnum::operator=(
   return *this;
 }
 inline void MyEnum::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(8 == offsetof(MyEnum, E));
   static_assert(8 == offsetof(MyEnum, A));
   static_assert(8 == offsetof(MyEnum, B));
@@ -1473,6 +1483,7 @@ inline void MyEnum::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyEnum::__crubit_C_struct, a));
   static_assert(4 == offsetof(MyEnum::__crubit_C_struct, b));
   static_assert(8 == offsetof(MyEnum::__crubit_C_struct, c));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ReprCWithExtremeDiscriminants) == 4,
@@ -1547,7 +1558,11 @@ inline bool ReprCWithExtremeDiscriminants::is_max_i32() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_umax_ui32(self);
 }
-inline void ReprCWithExtremeDiscriminants::__crubit_field_offset_assertions() {}
+inline void ReprCWithExtremeDiscriminants::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
+
+  CRUBIT_WARNING_POP
+}
 static_assert(
     sizeof(ReprCWithSingleNoPayloadVariant) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -1575,7 +1590,11 @@ inline bool ReprCWithSingleNoPayloadVariant::is_single_variant() const {
   return __crubit_internal::__crubit_thunk_is_usingle_uvariant(self);
 }
 inline void
-ReprCWithSingleNoPayloadVariant::__crubit_field_offset_assertions() {}
+ReprCWithSingleNoPayloadVariant::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
+
+  CRUBIT_WARNING_POP
+}
 }  // namespace enums::repr_c
 
 namespace enums::repr_c_clone_active_variant {
@@ -1663,12 +1682,14 @@ inline ::enums::repr_c_clone_active_variant::CloneActiveVariant& ::enums::
   return *this;
 }
 inline void CloneActiveVariant::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(4 == offsetof(CloneActiveVariant, A));
   static_assert(4 == offsetof(CloneActiveVariant, B));
   static_assert(4 == offsetof(CloneActiveVariant, C));
   static_assert(0 == offsetof(CloneActiveVariant::__crubit_A_struct, __field0));
   static_assert(0 == offsetof(CloneActiveVariant::__crubit_B_struct, __field0));
   static_assert(0 == offsetof(CloneActiveVariant::__crubit_C_struct, __field0));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_ua(
@@ -1741,8 +1762,10 @@ inline ::enums::repr_c_clone_counter::CloneCount& ::enums::
   return *this;
 }
 inline void CloneCount::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(8 == offsetof(CloneCount, A));
   static_assert(0 == offsetof(CloneCount::__crubit_A_struct, p));
+  CRUBIT_WARNING_POP
 }
 }  // namespace enums::repr_c_clone_counter
 
@@ -1799,12 +1822,14 @@ inline ::enums::repr_c_drop::DropMe& ::enums::repr_c_drop::DropMe::operator=(
   return *this;
 }
 inline void DropMe::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(8 == offsetof(DropMe, A));
   static_assert(8 == offsetof(DropMe, B));
   static_assert(8 == offsetof(DropMe, C));
   static_assert(0 == offsetof(DropMe::__crubit_A_struct, __field0));
   static_assert(0 == offsetof(DropMe::__crubit_B_struct, __field0));
   static_assert(0 == offsetof(DropMe::__crubit_C_struct, p));
+  CRUBIT_WARNING_POP
 }
 }  // namespace enums::repr_c_drop
 
@@ -1851,8 +1876,10 @@ inline bool IntReprEnumWithNoPayload::is_no_payload2() const {
   return __crubit_internal::__crubit_thunk_is_uno_upayload2(self);
 }
 inline void IntReprEnumWithNoPayload::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 ==
                 offsetof(IntReprEnumWithNoPayload, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(IntReprWithSingleNoPayloadVariant) == 4,
@@ -1882,8 +1909,10 @@ inline bool IntReprWithSingleNoPayloadVariant::is_single_variant() const {
 }
 inline void
 IntReprWithSingleNoPayloadVariant::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(
       0 == offsetof(IntReprWithSingleNoPayloadVariant, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NegReprIntEnum) == 1,
@@ -1924,7 +1953,9 @@ inline bool NegReprIntEnum::is_minus_two() const {
   return __crubit_internal::__crubit_thunk_is_uminus_utwo(self);
 }
 inline void NegReprIntEnum::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NegReprIntEnum, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 }  // namespace enums::repr_int
 
@@ -1998,7 +2029,9 @@ inline ::std::int32_t RustReprEnum::get_first_item_from_tuple_payload() const {
       __crubit_thunk_get_ufirst_uitem_ufrom_utuple_upayload(self);
 }
 inline void RustReprEnum::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(RustReprEnum, __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(RustReprWithNamingConflictBetweenCtorsAndMethods) == 8,
@@ -2089,8 +2122,10 @@ RustReprWithNamingConflictBetweenCtorsAndMethods::get_value() const {
 }
 inline void RustReprWithNamingConflictBetweenCtorsAndMethods::
     __crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(RustReprWithNamingConflictBetweenCtorsAndMethods,
                               __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(RustReprWithSingleTuplePayloadVariant) == 4,
@@ -2134,8 +2169,10 @@ RustReprWithSingleTuplePayloadVariant::get_single_item_from_tuple_payload()
 }
 inline void
 RustReprWithSingleTuplePayloadVariant::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(RustReprWithSingleTuplePayloadVariant,
                               __opaque_blob_of_bytes));
+  CRUBIT_WARNING_POP
 }
 }  // namespace enums::repr_rust
 

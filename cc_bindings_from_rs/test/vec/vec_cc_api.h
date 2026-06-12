@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/check.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/vec.h"
 
@@ -126,7 +127,9 @@ inline ::vec::StructWithVec StructWithVec::new_(::std::int32_t val) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void StructWithVec::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructWithVec, v));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uvec(

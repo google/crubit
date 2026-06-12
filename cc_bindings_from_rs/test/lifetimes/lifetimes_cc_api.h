@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/traits.h"
@@ -280,7 +281,9 @@ inline StructWithLifetime::StructWithLifetime(
       value, this);
 }
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructWithLifetime, field_with_lifetime));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(StructWithLifetimeAndDropGlue) == 32,
@@ -308,10 +311,12 @@ StructWithLifetimeAndDropGlue::make_static_42() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void StructWithLifetimeAndDropGlue::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 ==
                 offsetof(StructWithLifetimeAndDropGlue, field_with_drop_glue));
   static_assert(24 ==
                 offsetof(StructWithLifetimeAndDropGlue, field_with_lifetime));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void

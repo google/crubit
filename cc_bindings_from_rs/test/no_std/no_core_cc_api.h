@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/str_ref.h"
@@ -89,7 +90,9 @@ inline rs_std::StrRef Test::s() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   return __crubit_internal::__crubit_thunk_s(self);
 }
 inline void Test::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Test, s_));
+  CRUBIT_WARNING_POP
 }
 }  // namespace no_core
 

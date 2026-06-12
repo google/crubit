@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
 
@@ -82,7 +83,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::trait_definition::MyStruct>);
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, y));
+  CRUBIT_WARNING_POP
 }
 }  // namespace trait_definition
 

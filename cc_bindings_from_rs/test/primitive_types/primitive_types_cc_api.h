@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/cxx20_backports.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 
@@ -314,6 +315,7 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::primitive_types::field_types::Types>);
 inline void Types::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Types, i8_func));
   static_assert(8 == offsetof(Types, c_char_func));
   static_assert(16 == offsetof(Types, c_void_mut_ptr));
@@ -343,6 +345,7 @@ inline void Types::__crubit_field_offset_assertions() {
   static_assert(146 == offsetof(Types, c_uchar));
   static_assert(147 == offsetof(Types, i8));
   static_assert(148 == offsetof(Types, u8));
+  CRUBIT_WARNING_POP
 }
 }  // namespace primitive_types::field_types
 
@@ -568,8 +571,10 @@ static_assert(
     ::std::is_trivially_move_assignable_v<
         ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
 inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(StructWithCVoidPointerMember, ptr_const));
   static_assert(8 == offsetof(StructWithCVoidPointerMember, ptr_mut));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" const void* __crubit_thunk_identity_uconst_uc_uvoid_uptr(

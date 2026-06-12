@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/cxx20_backports.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
@@ -163,7 +164,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_copy_assignable_v<::function_pointers::CStruct>);
 inline void CStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CStruct, field));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasFnPtrField) == 8,
@@ -192,7 +195,9 @@ inline ::function_pointers::HasFnPtrField HasFnPtrField::with_add_ten() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasFnPtrField::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasFnPtrField, ptr));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_call_ufn_uptr_uno_uargs_uor_ureturn(

@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 
@@ -158,7 +159,9 @@ inline void FooService::enum_in_signature(::foo_proto::FooEnum _e) {
   return __crubit_internal::__crubit_thunk_enum_uin_usignature(_e);
 }
 inline void FooService::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(FooService, stats));
+  CRUBIT_WARNING_POP
 }
 }  // namespace rust_lib
 

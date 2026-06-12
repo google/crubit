@@ -19,6 +19,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/memswap.h"
 #include "support/internal/move_assign.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/result.h"
@@ -1156,7 +1157,9 @@ inline ::result::CloneNoDefault& ::result::CloneNoDefault::operator=(
   return *this;
 }
 inline void CloneNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneNoDefault, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CloneNoDefaultResult) == 4,
@@ -1181,8 +1184,10 @@ inline ::result::CloneNoDefaultResult CloneNoDefaultResult::new_(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void CloneNoDefaultResult::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneNoDefaultResult, in_ok));
   static_assert(2 == offsetof(CloneNoDefaultResult, in_err));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CopyNoDefault) == 1,
@@ -1198,7 +1203,9 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::result::CopyNoDefault>);
 static_assert(::std::is_trivially_copy_assignable_v<::result::CopyNoDefault>);
 inline void CopyNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CopyNoDefault, val));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CopyNoDefaultResult) == 4,
@@ -1223,8 +1230,10 @@ inline ::result::CopyNoDefaultResult CopyNoDefaultResult::new_(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void CopyNoDefaultResult::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CopyNoDefaultResult, in_ok));
   static_assert(2 == offsetof(CopyNoDefaultResult, in_err));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(GetsResult) == 8,
@@ -1246,7 +1255,9 @@ inline ::result::GetsResult GetsResult::new_(::std::uint32_t val) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void GetsResult::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(GetsResult, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasDefault) == 24,
@@ -1294,7 +1305,9 @@ inline rs_std::StrRef HasDefault::val() const& $(__anon1)
   return __crubit_internal::__crubit_thunk_val(self);
 }
 inline void HasDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasDefault, val_));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasDefaultResult) == 48,
@@ -1319,8 +1332,10 @@ inline ::result::HasDefaultResult HasDefaultResult::new_(rs_std::StrRef val) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasDefaultResult::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasDefaultResult, in_ok));
   static_assert(24 == offsetof(HasDefaultResult, in_err));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasNoDefault) == 24,
@@ -1343,7 +1358,9 @@ inline rs_std::StrRef HasNoDefault::val() const& $(__anon1)
   return __crubit_internal::__crubit_thunk_val(self);
 }
 inline void HasNoDefault::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasNoDefault, val_));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(HasNoDefaultResult) == 48,
@@ -1369,8 +1386,10 @@ inline ::result::HasNoDefaultResult HasNoDefaultResult::new_(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasNoDefaultResult::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(HasNoDefaultResult, in_ok));
   static_assert(24 == offsetof(HasNoDefaultResult, in_err));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NestedResult) == 16,
@@ -1392,8 +1411,10 @@ inline ::result::NestedResult NestedResult::new_(::std::uint32_t val) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void NestedResult::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NestedResult, in_ok));
   static_assert(8 == offsetof(NestedResult, in_err));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ResultWithSizeTypes) == 64,
@@ -1407,10 +1428,12 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::result::ResultWithSizeTypes>);
 inline void ResultWithSizeTypes::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ResultWithSizeTypes, uval_in_ok));
   static_assert(16 == offsetof(ResultWithSizeTypes, uval_in_err));
   static_assert(32 == offsetof(ResultWithSizeTypes, ival_in_ok));
   static_assert(48 == offsetof(ResultWithSizeTypes, ival_in_err));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ZStream) == 16,
@@ -1422,7 +1445,9 @@ static_assert(::std::is_trivially_destructible_v<ZStream>);
 static_assert(::std::is_trivially_move_constructible_v<::result::ZStream>);
 static_assert(::std::is_trivially_move_assignable_v<::result::ZStream>);
 inline void ZStream::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ZStream, zfree));
+  CRUBIT_WARNING_POP
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uresult_uby_uvalue(

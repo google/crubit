@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/bridge.h"
 #include "support/internal/memswap.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/slice_ref.h"
@@ -278,7 +279,9 @@ inline MyStruct::MyStruct(::std::int32_t value) {
   __crubit_internal::__crubit_thunk_from_ui32(value, this);
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(MyStruct, x));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NonCloneableIterator) == 4,
@@ -303,7 +306,9 @@ inline ::stdlib::NonCloneableIterator NonCloneableIterator::new_(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void NonCloneableIterator::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NonCloneableIterator, x));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NonCloneableValue) == 4,
@@ -317,7 +322,9 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableValue>);
 inline void NonCloneableValue::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NonCloneableValue, x));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(RefIterator) == 24,
@@ -340,8 +347,10 @@ inline ::stdlib::RefIterator RefIterator::new_(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void RefIterator::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(RefIterator, slice));
   static_assert(16 == offsetof(RefIterator, index));
+  CRUBIT_WARNING_POP
 }
 }  // namespace stdlib
 

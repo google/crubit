@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/offsetof.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/str_ref.h"
@@ -603,7 +604,9 @@ inline CloneAllocTarget::CloneAllocTarget(::into::CloneAllocType value) {
           value_slot.Get(), this);
 }
 inline void CloneAllocTarget::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneAllocTarget, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CloneAllocType) == 24,
@@ -671,7 +674,9 @@ inline CloneAllocType::operator ::into::CloneAllocTarget() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void CloneAllocType::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneAllocType, value));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CloneCopyTarget) == 4,
@@ -697,7 +702,9 @@ inline CloneCopyTarget::CloneCopyTarget(::into::CloneCopyType value) {
           &value, this);
 }
 inline void CloneCopyTarget::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneCopyTarget, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CloneCopyType) == 4,
@@ -731,7 +738,9 @@ inline CloneCopyType::operator ::into::CloneCopyTarget() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void CloneCopyType::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CloneCopyType, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(CollidingOperators) == 8,
@@ -753,7 +762,9 @@ inline CollidingOperators::operator ::std::uintptr_t() {
   return __crubit_internal::__crubit_thunk_into_uusize(&self);
 }
 inline void CollidingOperators::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(CollidingOperators, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(Convert) == 4,
@@ -805,7 +816,9 @@ inline Convert::Convert(::into::ConvertRef value) {
           &value, this);
 }
 inline void Convert::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(Convert, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ConvertModule) == 4,
@@ -831,7 +844,9 @@ inline ConvertModule::operator ::std::int64_t() {
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }
 inline void ConvertModule::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ConvertModule, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(ConvertRef) == 16,
@@ -887,7 +902,9 @@ inline ConvertRef::operator ::into::Convert() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ConvertRef::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(ConvertRef, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(LoopA) == 4,
@@ -921,7 +938,9 @@ inline LoopA::LoopA(::into::LoopB value) {
           &value, this);
 }
 inline void LoopA::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(LoopA, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(LoopB) == 4,
@@ -955,7 +974,9 @@ inline LoopB::LoopB(::into::LoopA value) {
           &value, this);
 }
 inline void LoopB::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(LoopB, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NoCloneCopyDropTarget) == 4,
@@ -980,7 +1001,9 @@ inline NoCloneCopyDropTarget::NoCloneCopyDropTarget(
           &value, this);
 }
 inline void NoCloneCopyDropTarget::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NoCloneCopyDropTarget, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NoCloneCopyDropType) == 4,
@@ -1008,7 +1031,9 @@ inline NoCloneCopyDropType::operator ::into::NoCloneCopyDropTarget() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void NoCloneCopyDropType::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NoCloneCopyDropType, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NoCloneDefaultTarget) == 4,
@@ -1039,7 +1064,9 @@ inline NoCloneDefaultTarget::NoCloneDefaultTarget(
           &value, this);
 }
 inline void NoCloneDefaultTarget::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NoCloneDefaultTarget, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NoCloneDefaultType) == 4,
@@ -1073,7 +1100,9 @@ inline NoCloneDefaultType::operator ::into::NoCloneDefaultTarget() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void NoCloneDefaultType::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NoCloneDefaultType, __field0));
+  CRUBIT_WARNING_POP
 }
 static_assert(
     sizeof(NotFfiSafe) == 8,
@@ -1085,7 +1114,9 @@ static_assert(::std::is_trivially_destructible_v<NotFfiSafe>);
 static_assert(::std::is_trivially_move_constructible_v<::into::NotFfiSafe>);
 static_assert(::std::is_trivially_move_assignable_v<::into::NotFfiSafe>);
 inline void NotFfiSafe::__crubit_field_offset_assertions() {
+  CRUBIT_WARNING_PUSH("-Wno-invalid-offsetof")
   static_assert(0 == offsetof(NotFfiSafe, __field0));
+  CRUBIT_WARNING_POP
 }
 }  // namespace into
 
