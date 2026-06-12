@@ -42,15 +42,6 @@ fn is_cpp_movable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
         .unwrap_or_else(|| ty.is_primitive_ty())
 }
 
-fn has_relocating_ctor<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
-    ty.ty_adt_def()
-        .map(|adt| {
-            crate::BridgedBuiltin::new(db, adt).is_some()
-                || db.adt_needs_bindings(adt.did()).is_ok()
-        })
-        .unwrap_or(false)
-}
-
 pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
@@ -261,9 +252,7 @@ fn parse_tuple_template_specialization<'tcx>(
     }))
 }
 
-struct OptionApiGenerator<'a, 'tcx> {
-    db: &'a BindingsGenerator<'tcx>,
-    arg_ty_rs: Ty<'tcx>,
+struct OptionApiGenerator<'tcx> {
     arg_ty: TokenStream,
     needs_drop: bool,
     // Reads our tag out of our Option<T> and defines a variable `tag` pointing at it's value.
@@ -277,12 +266,10 @@ struct OptionApiGenerator<'a, 'tcx> {
     tag_type_cc: TokenStream,
 }
 
-impl<'tcx> OptionApiGenerator<'_, 'tcx> {
+impl<'tcx> OptionApiGenerator<'tcx> {
     fn api_snippets(self) -> ApiSnippets<'tcx> {
         let Self {
-            db,
             arg_ty,
-            arg_ty_rs,
             needs_drop,
             tag_method,
             none_val,
@@ -292,62 +279,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
             tag_type_cc,
             ..
         } = self;
-        let has_move_ctor = is_cpp_movable(db, arg_ty_rs);
-        let has_relocating_ctor = has_relocating_ctor(db, arg_ty_rs);
         let mut prereqs = CcPrerequisites::default();
-        if has_relocating_ctor {
-            prereqs.includes.insert(self.db.support_header("internal/slot.h"));
-        }
-        let set_none = quote! {
-            set_tag(#none_val);
-        };
-        let set_some_from_std_optional = {
-            let write_some = if has_move_ctor {
-                quote! { *some = ::std::move(value.value()); }
-            } else if has_relocating_ctor {
-                quote! { ::std::construct_at(some, crubit::UnsafeRelocateTag{}, ::std::move(*value)); }
-            } else {
-                quote! { *some = value.value(); }
-            };
-            quote! {
-                #write_some_to_tag
-                #arg_ty* some = #some_ptr_val;
-                #write_some
-                ::std::construct_at(&value, ::std::nullopt);
-            }
-        };
-        let take_some = if has_relocating_ctor {
-            quote! {
-                struct DeferSetTagNone {
-                    rs_std::Option<#arg_ty>* _value;
-                    DeferSetTagNone(rs_std::Option<#arg_ty>* self) : _value(self) {}
-                    ~DeferSetTagNone() {
-                        #set_none
-                    }
-
-                    private:
-                    void set_tag(#tag_type_cc tag) {
-                        _value->set_tag(tag);
-                    }
-                } defer(this);
-                return ::std::make_optional<#arg_ty>(crubit::UnsafeRelocateTag{}, ::std::move(*#some_ptr_val));
-            }
-        } else {
-            quote! {
-                #arg_ty& value = *#some_ptr_val;
-                ::std::optional<#arg_ty> return_value(::std::move(value));
-                ::std::destroy_at(&value);
-                #set_none
-                return return_value;
-            }
-        };
-
-        // Destruct a some value if present.
-        let reset = quote! {
-            if (tag() != #none_val) {
-                ::std::destroy_at(#some_ptr_val);
-            }
-        };
 
         let (drop, drop_details) = if needs_drop {
             (
@@ -356,7 +288,7 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
                 },
                 quote! {
                     inline constexpr rs_std::Option<#arg_ty>::~Option() noexcept {
-                        #reset
+                        this->reset();
                     }
                 },
             )
@@ -370,157 +302,89 @@ impl<'tcx> OptionApiGenerator<'_, 'tcx> {
             )
         };
 
-        // We can only move construct from an `Option<T>`'s `T` if it has a move constructor.
-        let (value_move_ctor_and_assign, value_move_ctor_and_assign_details) = if !has_move_ctor {
-            (quote! {}, quote! {})
-        } else {
-            (
-                quote! {
-                  Option(#arg_ty&& value) noexcept; __NEWLINE__
-                  Option& operator=(#arg_ty&& value) noexcept; __NEWLINE__ __NEWLINE__
-                },
-                quote! {
-                    inline rs_std::Option<#arg_ty>::Option(#arg_ty&& value) noexcept {
-                        #write_some_to_tag
-                        ::std::construct_at(#some_ptr_val, ::std::move(value));
-                    } __NEWLINE__
-                    inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(#arg_ty&& value) noexcept {
-                        if (tag() != #none_val) {
-                            ::crubit::MoveAssignOrDestroyAndConstruct(#some_ptr_val, ::std::move(value));
-                        } else {
-                          #write_some_to_tag
-                          ::std::construct_at(#some_ptr_val, ::std::move(value));
-                        }
-                        return *this;
-                    } __NEWLINE__
-                },
-            )
-        };
-
         let tag_method_main_api = tag_method.main_api.into_tokens(&mut prereqs);
         let main_api = CcSnippet {
             tokens: quote! {
-                constexpr Option();  __NEWLINE__ __NEWLINE__
+                using base_type = rs_std::OptionBase<rs_std::Option<#arg_ty>, #arg_ty>;
+                constexpr Option() = default;
+                constexpr Option(::std::nullopt_t) noexcept;
+                constexpr Option& operator=(::std::nullopt_t) noexcept;
 
-                constexpr explicit Option(::std::nullopt_t) noexcept; __NEWLINE__
-                constexpr Option& operator=(::std::nullopt_t) noexcept; __NEWLINE__ __NEWLINE__
+                template <typename U>
+                  requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+                           std::is_constructible_v<#arg_ty, U>)
+                Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
 
-                #value_move_ctor_and_assign
+                template <typename U>
+                  requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+                           std::is_constructible_v<#arg_ty, U>)
+                Option& operator=(U&& value) noexcept {
+                    base_type::operator=(::std::forward<U>(value));
+                    return *this;
+                }
 
-                explicit Option(::std::optional<#arg_ty>&& value) noexcept; __NEWLINE__
-                Option& operator=(::std::optional<#arg_ty>&& value) noexcept; __NEWLINE__ __NEWLINE__
+                template <typename Opt>
+                  requires(std::is_same_v<std::decay_t<Opt>, ::std::optional<#arg_ty>> &&
+                           !std::is_lvalue_reference_v<Opt>)
+                Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
 
-                template<typename... Args>
-                Option(::std::in_place_t, Args&&... args) noexcept;
+                template <typename Opt>
+                  requires(std::is_same_v<std::decay_t<Opt>, ::std::optional<#arg_ty>> &&
+                           !std::is_lvalue_reference_v<Opt>)
+                Option& operator=(Opt&& value) noexcept {
+                    base_type::operator=(::std::forward<Opt>(value));
+                    return *this;
+                }
+
+                template <typename... Args>
+                explicit Option(::std::in_place_t ip, Args&&... args) noexcept
+                    : base_type(ip, ::std::forward<Args>(args)...) {}
 
                 #drop
 
-                operator ::std::optional<#arg_ty>() && noexcept;
-
-                bool has_value() const noexcept; __NEWLINE__
-
-                #arg_ty& operator*() &; __NEWLINE__
-                #arg_ty const& operator*() const&; __NEWLINE__
-                #arg_ty&& operator*() &&; __NEWLINE__
-
-                #arg_ty* operator->(); __NEWLINE__
-                #arg_ty const* operator->() const; __NEWLINE__
             private:
+                friend base_type;
+                using tag_type = #tag_type_cc;
+                static constexpr tag_type kNoneVal = #none_val;
+
+                #arg_ty* some_ptr() noexcept {
+                    return #some_ptr_val;
+                }
+                #arg_ty const* some_const_ptr() const noexcept {
+                    return #some_const_ptr_val;
+                }
+                void set_some_tag() noexcept {
+                    #write_some_to_tag
+                }
+                constexpr void set_none_tag() noexcept {
+                    set_tag(kNoneVal);
+                }
+                constexpr bool is_none() const noexcept {
+                    return tag() == kNoneVal;
+                }
+
                 #tag_method_main_api
-                void check_has_value() const; __NEWLINE__
             },
             prereqs,
         };
+
         let mut prereqs = CcPrerequisites::default();
-        // For std::move.
         prereqs.includes.insert(CcInclude::utility());
-        prereqs.includes.insert(self.db.support_header("internal/move_assign.h"));
-        prereqs.includes.insert(self.db.support_header("internal/check.h"));
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
         let cc_details = CcSnippet {
             tokens: quote! {
-                inline constexpr rs_std::Option<#arg_ty>::Option() {
-                    #set_none
-                } __NEWLINE__
+                #drop_details __NEWLINE__
+                #tag_method_cc_details __NEWLINE__
 
-                inline constexpr rs_std::Option<#arg_ty>::Option(::std::nullopt_t) noexcept {
-                    #set_none
-                } __NEWLINE__
+                inline constexpr rs_std::Option<#arg_ty>::Option(::std::nullopt_t) noexcept : base_type(::std::nullopt) {} __NEWLINE__
                 inline constexpr rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(::std::nullopt_t) noexcept {
-                    #reset
-                    #set_none
+                    base_type::operator=(::std::nullopt);
                     return *this;
                 } __NEWLINE__
-
-                #value_move_ctor_and_assign_details
-
-                inline rs_std::Option<#arg_ty>::Option(::std::optional<#arg_ty>&& value) noexcept {
-                    if (value.has_value()) {
-                        #set_some_from_std_optional
-                    } else {
-                        #set_none
-                    }
-                } __NEWLINE__
-                inline rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(::std::optional<#arg_ty>&& value) noexcept {
-                    #reset
-                    if (value.has_value()) {
-                        #set_some_from_std_optional
-                    } else {
-                        #set_none
-                    }
-                    return *this;
-                } __NEWLINE__
-
-                template<typename... Args>
-                inline rs_std::Option<#arg_ty>::Option(::std::in_place_t, Args&&... args) noexcept {
-                    #write_some_to_tag
-                    ::std::construct_at(#some_ptr_val, ::std::forward<Args>(args)...);
-                } __NEWLINE__
-
-                #drop_details
-
-                inline rs_std::Option<#arg_ty>::operator ::std::optional<#arg_ty>() && noexcept {
-                    if (tag() == #none_val) {
-                        return ::std::nullopt;
-                    } else {
-                        #take_some
-                    }
-                } __NEWLINE__
-
-                inline bool rs_std::Option<#arg_ty>::has_value() const noexcept {
-                    return tag() != #none_val;
-                } __NEWLINE__
-
-                inline void rs_std::Option<#arg_ty>::check_has_value() const {
-                    CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
-                } __NEWLINE__
-
-                inline #arg_ty& rs_std::Option<#arg_ty>::operator*() & {
-                    check_has_value();
-                    return *#some_ptr_val;
-                } __NEWLINE__
-
-                inline #arg_ty const& rs_std::Option<#arg_ty>::operator*() const& {
-                    check_has_value();
-                    return *#some_const_ptr_val;
-                } __NEWLINE__
-
-                inline #arg_ty&& rs_std::Option<#arg_ty>::operator*() && {
-                    check_has_value();
-                    return ::std::move(*#some_ptr_val);
-                } __NEWLINE__
-
-                inline #arg_ty* rs_std::Option<#arg_ty>::operator->() {
-                    check_has_value();
-                    return #some_ptr_val;
-                } __NEWLINE__
-
-                inline #arg_ty const* rs_std::Option<#arg_ty>::operator->() const {
-                    check_has_value();
-                    return #some_const_ptr_val;
-                } __NEWLINE__
-
-                #tag_method_cc_details
             },
             prereqs,
         };
@@ -1651,8 +1515,6 @@ fn specialize_option<'tcx>(
             let some_discr_val = literal_of_tag_ty(tcx, discr_for_some.val, tag_type);
 
             OptionApiGenerator {
-                db,
-                arg_ty_rs: arg_ty.ty,
                 arg_ty: ty_tokens.clone(),
                 needs_drop,
                 tag_method,
@@ -1677,8 +1539,6 @@ fn specialize_option<'tcx>(
             let none_relative_val =
                 literal_of_tag_ty(tcx, niche_start + none_relative_idx, tag_type);
             OptionApiGenerator {
-                db,
-                arg_ty_rs: arg_ty.ty,
                 arg_ty: ty_tokens.clone(),
                 needs_drop,
                 tag_method,
@@ -1742,7 +1602,8 @@ fn specialize_option<'tcx>(
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Option<#ty_tokens> { __NEWLINE__
+        rs_std::Option<#ty_tokens>
+            : public rs_std::OptionBase<rs_std::Option<#ty_tokens>, #ty_tokens> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
 
