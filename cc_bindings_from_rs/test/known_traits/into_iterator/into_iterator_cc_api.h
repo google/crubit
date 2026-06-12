@@ -105,6 +105,73 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: into_iterator_rust_golden :: MoveOnlyIterator") alignas(4)
+    [[clang::trivial_abi]] MoveOnlyIterator final {
+ public:
+  // `into_iterator_rust_golden::MoveOnlyIterator` doesn't implement the
+  // `Default` trait
+  MoveOnlyIterator() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~MoveOnlyIterator() = default;
+  MoveOnlyIterator(MoveOnlyIterator&&) = default;
+  MoveOnlyIterator& operator=(MoveOnlyIterator&&) = default;
+
+  // `into_iterator_rust_golden::MoveOnlyIterator` doesn't implement the `Clone`
+  // trait
+  MoveOnlyIterator(const MoveOnlyIterator&) = delete;
+  MoveOnlyIterator& operator=(const MoveOnlyIterator&) = delete;
+  MoveOnlyIterator(::crubit::UnsafeRelocateTag, MoveOnlyIterator&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  template <typename TAdaptedSelf_ = MoveOnlyIterator>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
+  union {
+    ::std::int32_t val;
+  };
+  union {
+    ::std::int32_t count;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: into_iterator_rust_golden :: MoveOnlyPayload") alignas(4)
+    [[clang::trivial_abi]] MoveOnlyPayload final {
+ public:
+  // `into_iterator_rust_golden::MoveOnlyPayload` doesn't implement the
+  // `Default` trait
+  MoveOnlyPayload() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~MoveOnlyPayload() = default;
+  MoveOnlyPayload(MoveOnlyPayload&&) = default;
+  MoveOnlyPayload& operator=(MoveOnlyPayload&&) = default;
+
+  // `into_iterator_rust_golden::MoveOnlyPayload` doesn't implement the `Clone`
+  // trait
+  MoveOnlyPayload(const MoveOnlyPayload&) = delete;
+  MoveOnlyPayload& operator=(const MoveOnlyPayload&) = delete;
+  MoveOnlyPayload(::crubit::UnsafeRelocateTag, MoveOnlyPayload&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+
+  ::std::int32_t mutating_method();
+
+  union {
+    ::std::int32_t val;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: MyContainerIntoIter") alignas(8)
     [[clang::trivial_abi]] MyContainerIntoIter final {
  public:
@@ -125,6 +192,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                       MyContainerIntoIter&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TAdaptedSelf_ = MyContainerIntoIter>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
 
  private:
   union {
@@ -159,6 +231,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   MyContainerIter(::crubit::UnsafeRelocateTag, MyContainerIter&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TAdaptedSelf_ = MyContainerIter>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
 
  private:
   union {
@@ -189,6 +266,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   MyContainerIterMut(::crubit::UnsafeRelocateTag, MyContainerIterMut&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TAdaptedSelf_ = MyContainerIterMut>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
 
  private:
   union {
@@ -218,6 +300,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   MyIterator(::crubit::UnsafeRelocateTag, MyIterator&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TAdaptedSelf_ = MyIterator>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
   union {
     ::std::int32_t value;
   };
@@ -246,6 +333,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SimpleIntoIter(::crubit::UnsafeRelocateTag, SimpleIntoIter&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TAdaptedSelf_ = SimpleIntoIter>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
   union {
     ::std::int32_t val;
   };
@@ -261,6 +353,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 ::into_iterator_rust::ContainerWithInherentBegin make_inherent_container();
 
 ::into_iterator_rust::MyIterator make_iterator(::std::int32_t value);
+
+::into_iterator_rust::MoveOnlyIterator make_move_only_iterator(
+    ::std::int32_t val, ::std::int32_t count);
 
 ::into_iterator_rust::ContainerWithRefIntoIter make_ref_container(
     ::into_iterator_rust::MyIterator* $a crubit_nonnull iter);
@@ -296,6 +391,18 @@ struct rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
 
   static ::into_iterator_rust::MyIterator& $a
   into_iter(::into_iterator_rust::ContainerWithRefIntoIter self);
+};
+
+template <>
+struct rs_std::impl<::into_iterator_rust::MoveOnlyIterator,
+                    ::rs::core::iter::Iterator> {
+  static constexpr bool kIsImplemented = true;
+  using Item CRUBIT_INTERNAL_RUST_TYPE(
+      "<into_iterator_rust_golden::MoveOnlyIterator as :: core :: iter :: "
+      "Iterator>::Item") = ::into_iterator_rust::MoveOnlyPayload;
+
+  static ::std::optional<::into_iterator_rust::MoveOnlyPayload> next(
+      ::into_iterator_rust::MoveOnlyIterator& self);
 };
 
 template <>
@@ -371,11 +478,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   MyContainer(::crubit::UnsafeRelocateTag, MyContainer&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
+  template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorAdapter<::into_iterator_rust::MyContainerIntoIter> begin() &&;
+  template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorEnd end() &&;
+  template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorAdapter<::into_iterator_rust::MyContainerIter> begin() const&;
+  template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorEnd end() const&;
+  template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut> begin() &;
+  template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorEnd end() &;
   union {
     ::std::array<::std::int32_t, 3> data;
@@ -450,6 +563,43 @@ inline void ContainerWithRefIntoIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ContainerWithRefIntoIter, iter));
 }
 static_assert(
+    sizeof(MoveOnlyIterator) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(MoveOnlyIterator) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<MoveOnlyIterator>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::into_iterator_rust::MoveOnlyIterator>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::into_iterator_rust::MoveOnlyIterator>);
+inline void MoveOnlyIterator::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(MoveOnlyIterator, val));
+  static_assert(4 == offsetof(MoveOnlyIterator, count));
+}
+static_assert(
+    sizeof(MoveOnlyPayload) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(MoveOnlyPayload) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<MoveOnlyPayload>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::into_iterator_rust::MoveOnlyPayload>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::into_iterator_rust::MoveOnlyPayload>);
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_mutating_umethod(
+    ::into_iterator_rust::MoveOnlyPayload&);
+}
+inline ::std::int32_t MoveOnlyPayload::mutating_method() {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_mutating_umethod(self);
+}
+inline void MoveOnlyPayload::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(MoveOnlyPayload, val));
+}
+static_assert(
     sizeof(MyContainer) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
@@ -465,6 +615,7 @@ extern "C" void __crubit_thunk_into_uiter(
     ::into_iterator_rust::MyContainer*,
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
 }
+template <typename TAdaptedSelf_>
 inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIntoIter>
 MyContainer::begin() && {
   MyContainer&& self_ = ::std::move(*this);
@@ -479,12 +630,16 @@ MyContainer::begin() && {
   return rs::IteratorAdapter<::into_iterator_rust::MyContainerIntoIter>(
       call_into_iter());
 }
-inline rs::IteratorEnd MyContainer::end() && { return rs::IteratorEnd(); }
+template <typename TAdaptedSelf_>
+inline rs::IteratorEnd MyContainer::end() && {
+  return rs::IteratorEnd();
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_into_uiter(
     ::into_iterator_rust::MyContainer const&,
     ::into_iterator_rust::MyContainerIter* __ret_ptr);
 }
+template <typename TAdaptedSelf_>
 inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIter>
 MyContainer::begin() const& {
   const MyContainer& self_ = *this;
@@ -498,12 +653,16 @@ MyContainer::begin() const& {
   return rs::IteratorAdapter<::into_iterator_rust::MyContainerIter>(
       call_into_iter());
 }
-inline rs::IteratorEnd MyContainer::end() const& { return rs::IteratorEnd(); }
+template <typename TAdaptedSelf_>
+inline rs::IteratorEnd MyContainer::end() const& {
+  return rs::IteratorEnd();
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_into_uiter(
     ::into_iterator_rust::MyContainer&,
     ::into_iterator_rust::MyContainerIterMut* __ret_ptr);
 }
+template <typename TAdaptedSelf_>
 inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut>
 MyContainer::begin() & {
   MyContainer& self_ = *this;
@@ -517,7 +676,10 @@ MyContainer::begin() & {
   return rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut>(
       call_into_iter());
 }
-inline rs::IteratorEnd MyContainer::end() & { return rs::IteratorEnd(); }
+template <typename TAdaptedSelf_>
+inline rs::IteratorEnd MyContainer::end() & {
+  return rs::IteratorEnd();
+}
 inline void MyContainer::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyContainer, data));
 }
@@ -634,6 +796,21 @@ inline ::into_iterator_rust::MyIterator make_iterator(::std::int32_t value) {
 }
 
 namespace __crubit_internal {
+extern "C" void __crubit_thunk_make_umove_uonly_uiterator(
+    ::std::int32_t, ::std::int32_t,
+    ::into_iterator_rust::MoveOnlyIterator* __ret_ptr);
+}
+inline ::into_iterator_rust::MoveOnlyIterator make_move_only_iterator(
+    ::std::int32_t val, ::std::int32_t count) {
+  crubit::Slot<::into_iterator_rust::MoveOnlyIterator>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_make_umove_uonly_uiterator(
+      val, count, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_uref_ucontainer(
     ::into_iterator_rust::MyIterator* $a crubit_nonnull,
     ::into_iterator_rust::ContainerWithRefIntoIter* __ret_ptr);
@@ -685,6 +862,30 @@ rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
   return into_iterator_rust::__crubit_internal::
       __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e(
           &self);
+}
+
+namespace into_iterator_rust {
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMoveOnlyIterator(
+    ::into_iterator_rust::MoveOnlyIterator&, unsigned char* __ret_ptr);
+}
+}  // namespace into_iterator_rust
+inline ::std::optional<::into_iterator_rust::MoveOnlyPayload> rs_std::impl<
+    ::into_iterator_rust::MoveOnlyIterator,
+    ::rs::core::iter::Iterator>::next(::into_iterator_rust::MoveOnlyIterator&
+                                          self) {
+  unsigned char __return_value_storage[::crubit::OptionAbi<
+      ::crubit::TransmuteAbi<::into_iterator_rust::MoveOnlyPayload>>::kSize];
+  into_iterator_rust::__crubit_internal::
+      __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMoveOnlyIterator(
+          self, __return_value_storage);
+  return ::crubit::internal::Decode<::crubit::OptionAbi<
+      ::crubit::TransmuteAbi<::into_iterator_rust::MoveOnlyPayload>>>(
+      ::crubit::OptionAbi<
+          ::crubit::TransmuteAbi<::into_iterator_rust::MoveOnlyPayload>>(
+          ::crubit::TransmuteAbi<::into_iterator_rust::MoveOnlyPayload>()),
+      __return_value_storage);
 }
 
 namespace into_iterator_rust {

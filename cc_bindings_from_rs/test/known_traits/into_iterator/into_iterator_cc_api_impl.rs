@@ -31,6 +31,22 @@ const _: () =
 const _: () = assert!(
     ::core::mem::offset_of!(::into_iterator_rust_golden::ContainerWithRefIntoIter, iter) == 0
 );
+const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MoveOnlyIterator>() == 8);
+const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MoveOnlyIterator>() == 4);
+const _: () =
+    assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MoveOnlyIterator, val) == 0);
+const _: () =
+    assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MoveOnlyIterator, count) == 4);
+const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MoveOnlyPayload>() == 4);
+const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MoveOnlyPayload>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_mutating_umethod(
+    __self: &'static mut ::into_iterator_rust_golden::MoveOnlyPayload,
+) -> i32 {
+    unsafe { ::into_iterator_rust_golden::MoveOnlyPayload::mutating_method(__self) }
+}
+const _: () =
+    assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MoveOnlyPayload, val) == 0);
 const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyContainer>() == 12);
 const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyContainer>() == 4);
 #[unsafe(no_mangle)]
@@ -121,6 +137,17 @@ unsafe extern "C" fn __crubit_thunk_make_uiterator(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_make_umove_uonly_uiterator(
+    val: i32,
+    count: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::into_iterator_rust_golden::make_move_only_iterator(val, count);
+        (__ret_ptr as *mut ::into_iterator_rust_golden::MoveOnlyIterator).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_make_uref_ucontainer(
     iter: &'static mut ::into_iterator_rust_golden::MyIterator,
     __ret_ptr: *mut core::ffi::c_void,
@@ -153,6 +180,25 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_uru
     unsafe {
         let __self = __self.assume_init_read();
         <::into_iterator_rust_golden::ContainerWithRefIntoIter as::core::iter::IntoIterator>::into_iter(__self)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMoveOnlyIterator(
+    __self: &'static mut ::into_iterator_rust_golden::MoveOnlyIterator,
+    __ret_ptr: *mut core::ffi::c_uchar,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::into_iterator_rust_golden::MoveOnlyIterator as ::core::iter::Iterator>::next(__self);
+        unsafe {
+            ::bridge_rust::internal::encode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
+                    ::into_iterator_rust_golden::MoveOnlyPayload,
+                >()),
+                __ret_ptr as *mut core::ffi::c_uchar,
+                __rs_return_value,
+            );
+        }
     }
 }
 #[unsafe(no_mangle)]
