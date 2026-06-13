@@ -4,7 +4,7 @@
 
 #include "support/rs_std/cpp_waker.h"
 
-namespace rs_std::internal {
+namespace rs::internal {
 
 extern "C" CppWaker* rs_std_cpp_waker_clone(CppWaker* in) {
   return in->Clone();
@@ -18,4 +18,4 @@ extern "C" void rs_std_cpp_waker_wake_by_ref(CppWaker* in) { in->WakeByRef(); }
 
 extern "C" void rs_std_cpp_waker_drop(CppWaker* in) { in->Destroy(); }
 
-}  // namespace rs_std::internal
+}  // namespace rs::internal

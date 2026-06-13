@@ -131,7 +131,7 @@ void function_with_trivial_unnamed_lifetime_param(
 }  // namespace lifetimes
 
 template <>
-struct rs_std::impl<::lifetimes::StructWithLifetime, ::rs::core::fmt::Debug> {
+struct rs::impl<::lifetimes::StructWithLifetime, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function

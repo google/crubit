@@ -72,13 +72,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: AssociatedTypeTrait")
     AssociatedTypeTrait {
   template <typename T>
-  using impl = rs_std::impl<T, AssociatedTypeTrait>;
+  using impl = rs::impl<T, AssociatedTypeTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: DifferentTraitSameName")
     DifferentTraitSameName {
   template <typename T>
-  using impl = rs_std::impl<T, DifferentTraitSameName>;
+  using impl = rs::impl<T, DifferentTraitSameName>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
@@ -111,7 +111,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeTrait")
     LifetimeTrait {
   template <typename T>
-  using impl = rs_std::impl<T, LifetimeTrait>;
+  using impl = rs::impl<T, LifetimeTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
@@ -175,7 +175,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyTrait") MyTrait {
   template <typename T>
-  using impl = rs_std::impl<T, MyTrait>;
+  using impl = rs::impl<T, MyTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -210,16 +210,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
     TraitWithAssociatedConst {
   template <typename T>
-  using impl = rs_std::impl<T, TraitWithAssociatedConst>;
+  using impl = rs::impl<T, TraitWithAssociatedConst>;
 };
 
 }  // namespace traits
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
+    "(i32 , i32 ,)") rs::Tuple<::std::int32_t, ::std::int32_t> {
  public:
   // Default::default
   Tuple();
@@ -234,9 +234,9 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
+  Tuple(::std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
-  operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
+  operator ::std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
 
  private:
   unsigned char storage_[8];
@@ -268,7 +268,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
 
  private:
   union {
-    rs_std::Tuple<::std::int32_t, ::std::int32_t> a;
+    rs::Tuple<::std::int32_t, ::std::int32_t> a;
   };
 
  private:
@@ -278,8 +278,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
 }  // namespace traits
 
 template <>
-struct rs_std::impl<::traits::AssociatedTypeStruct,
-                    ::traits::AssociatedTypeTrait> {
+struct rs::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait> {
   static constexpr bool kIsImplemented = true;
   using MyAssocType CRUBIT_INTERNAL_RUST_TYPE(
       "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
@@ -298,7 +297,7 @@ struct rs_std::impl<::traits::AssociatedTypeStruct,
 };
 
 template <>
-struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
+struct rs::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t const& $a
@@ -309,14 +308,14 @@ struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
 };
 
 template <>
-struct rs_std::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
+struct rs::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::traits::MyStruct const& self);
 };
 
 template <>
-struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
+struct rs::impl<::traits::MyStruct, ::traits::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::traits::MyStruct const& self);
@@ -333,7 +332,7 @@ struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
 };
 
 template <>
-struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
+struct rs::impl<::traits::MyStruct2, ::traits::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::traits::MyStruct2 const& self);
@@ -350,8 +349,8 @@ struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
 };
 
 template <>
-struct rs_std::impl<::traits::StructWithAssociatedConst,
-                    ::traits::TraitWithAssociatedConst> {
+struct rs::impl<::traits::StructWithAssociatedConst,
+                ::traits::TraitWithAssociatedConst> {
   static constexpr bool kIsImplemented = true;
   static constexpr ::std::int32_t CONST_INT = INT32_C(10);
 
@@ -543,35 +542,35 @@ inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
 }
 }  // namespace traits
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_default(
-    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
+    rs::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
-inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
+inline ::rs::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
-    std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
-                    std::move(std::get<1>(tuple)));
+              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
+inline rs::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
+    ::std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
+  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
+                      ::std::move(::std::get<0>(tuple)));
+  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
+                      ::std::move(::std::get<1>(tuple)));
 }
-inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
+inline rs::Tuple<::std::int32_t, ::std::int32_t>::operator ::std::tuple<
     ::std::int32_t, ::std::int32_t>() && noexcept {
-  return std::tuple<::std::int32_t, ::std::int32_t>(
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4)));
+  return ::std::tuple<::std::int32_t, ::std::int32_t>(
+      ::std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)),
+      ::std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4)));
 }
 
 #endif

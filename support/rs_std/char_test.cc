@@ -24,11 +24,11 @@ namespace {
 //
 // There are no constructor-related checks, because well-formed-ness checks
 // require going through factory methods like `char_::from_u32`.
-static_assert(std::is_trivially_destructible_v<rs_std::char_>);
-static_assert(std::is_trivially_copy_constructible_v<rs_std::char_>);
-static_assert(std::is_trivially_copy_assignable_v<rs_std::char_>);
-static_assert(std::is_trivially_move_constructible_v<rs_std::char_>);
-static_assert(std::is_trivially_move_assignable_v<rs_std::char_>);
+static_assert(::std::is_trivially_destructible_v<rs_std::char_>);
+static_assert(::std::is_trivially_copy_constructible_v<rs_std::char_>);
+static_assert(::std::is_trivially_copy_assignable_v<rs_std::char_>);
+static_assert(::std::is_trivially_move_constructible_v<rs_std::char_>);
+static_assert(::std::is_trivially_move_assignable_v<rs_std::char_>);
 
 // ABI^H^H^HLayout assertions.
 //
@@ -39,7 +39,7 @@ static_assert(std::is_trivially_move_assignable_v<rs_std::char_>);
 // We don't map Rust's `char` to C++ `char32_t` because
 // https://en.cppreference.com/w/cpp/language/types#char32_t points out that the
 // builtin `char32_t` type "has the same size, signedness, and alignment as
-// std::uint_least32_t" (and therefore it is not guaranteed to be exactly
+// ::std::uint_least32_t" (and therefore it is not guaranteed to be exactly
 // 32-bits wide as required for ABI-compatibility with Rust).
 //
 // Equivalent layout and ABI assertion are also checked on Rust side in
@@ -54,7 +54,7 @@ static_assert(std::is_trivially_move_assignable_v<rs_std::char_>);
 // `bindings.rs`.
 static_assert(sizeof(rs_std::char_) == 4);
 static_assert(alignof(rs_std::char_) == 4);
-static_assert(std::is_standard_layout_v<rs_std::char_>);
+static_assert(::std::is_standard_layout_v<rs_std::char_>);
 
 // This test covers the following case from
 // https://en.cppreference.com/w/cpp/language/character_literal:
@@ -119,7 +119,7 @@ TEST(CharTest, FromU32ValidityChecks) {
   EXPECT_FALSE(rs_std::char_::from_u32(0xdfff).has_value());
 
   // Smallest valid value.
-  std::optional<rs_std::char_> maybe_c = rs_std::char_::from_u32('\0');
+  ::std::optional<rs_std::char_> maybe_c = rs_std::char_::from_u32('\0');
   ASSERT_TRUE(maybe_c.has_value());
   EXPECT_EQ(0x00, uint32_t{*maybe_c});
 
@@ -174,11 +174,11 @@ TEST(CharTest, DefaultConstructedValue) {
 }
 
 void ExpectEncodedIsUtf8(uint32_t data) {
-  std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
+  ::std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
   if (!c.has_value()) {
     return;
   }
-  std::array<uint8_t, 4> buffer;
+  ::std::array<uint8_t, 4> buffer;
   rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
   EXPECT_TRUE(rs_std::internal::IsUtf8(str.to_string_view()));
 }
@@ -193,11 +193,11 @@ class EncodedIsUtf8BytesTest : public testing::TestWithParam<EncodeTestCase> {};
 
 TEST_P(EncodedIsUtf8BytesTest, EncodedIsUtf8Bytes) {
   auto [data, expected_utf8_bytes] = GetParam();
-  std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
+  ::std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
   if (!c.has_value()) {
     return;
   }
-  std::array<uint8_t, 4> buffer;
+  ::std::array<uint8_t, 4> buffer;
   rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
   EXPECT_TRUE(rs_std::internal::IsUtf8(str.to_string_view()));
   EXPECT_EQ(absl::MakeSpan(str), expected_utf8_bytes);
@@ -213,7 +213,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST(CharTest, AbslStringify) {
   EXPECT_EQ(absl::StrCat(rs_std::char_('x')), "x");
-  std::string expected_emoji = "💩";
+  ::std::string expected_emoji = "💩";
   EXPECT_EQ(absl::StrCat(rs_std::char_(U'💩')), expected_emoji);
 }
 

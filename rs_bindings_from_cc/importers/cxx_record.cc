@@ -702,7 +702,7 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   auto top_level_namespace =
       AsTopLevelNamespace(templated_decl->getDeclContext());
   BridgeType::Callable::BackingType backing_type;
-  if (top_level_namespace == "rs_std" &&
+  if ((top_level_namespace == "rs_std" || top_level_namespace == "rs") &&
       templated_decl->getName() == "DynCallable") {
     backing_type = BridgeType::Callable::BackingType::kDynCallable;
   } else if (top_level_namespace == "absl" &&

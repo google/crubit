@@ -7,7 +7,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_OPTIONAL_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_OPTIONAL_H_
 
-namespace rs_std {
+namespace rs {
 
 template <typename T>
 struct Option final {
@@ -15,6 +15,11 @@ struct Option final {
                 "This type should only be used via a generated specialization");
 };
 
+}  // namespace rs
+
+namespace rs_std {
+template <typename T>
+using Option [[deprecated("Use rs::Option instead")]] = rs::Option<T>;
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_OPTIONAL_H_

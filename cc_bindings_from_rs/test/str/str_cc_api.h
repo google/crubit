@@ -26,7 +26,7 @@
 #include <utility>
 
 namespace str {
-static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
+static constexpr rs::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
 
 // Error generating bindings for static `str_golden::STATIC_STR_FOO` defined at
 // cc_bindings_from_rs/test/str/str.rs;l=43:
@@ -52,27 +52,27 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  static ::str::TypeWithStr create(rs_std::StrRef s);
+  static ::str::TypeWithStr create(rs::StrRef s);
 
   ::std::uintptr_t get_str_len() const;
 
   ::std::uint8_t const* get_str_data() const;
 
   union {
-    rs_std::StrRef str_field;
+    rs::StrRef str_field;
   };
 
  private:
   static void __crubit_field_offset_assertions();
 };
 
-rs_std::StrRef foo_as_str();
+rs::StrRef foo_as_str();
 
-::std::uint8_t const* get_str_data(rs_std::StrRef s);
+::std::uint8_t const* get_str_data(rs::StrRef s);
 
-::std::uintptr_t get_str_len(rs_std::StrRef s);
+::std::uintptr_t get_str_len(rs::StrRef s);
 
-void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
+void str_checked_as_potentially_aliasing(rs::StrRef __param_0,
                                          ::std::uint8_t& __param_1);
 
 static_assert(
@@ -93,10 +93,10 @@ static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef,
+extern "C" void __crubit_thunk_create(rs::StrRef,
                                       ::str::TypeWithStr* __ret_ptr);
 }
-inline ::str::TypeWithStr TypeWithStr::create(rs_std::StrRef s) {
+inline ::str::TypeWithStr TypeWithStr::create(rs::StrRef s) {
   crubit::Slot<::str::TypeWithStr> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
@@ -124,35 +124,35 @@ inline void TypeWithStr::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TypeWithStr, str_field));
 }
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_foo_uas_ustr();
+extern "C" rs::StrRef __crubit_thunk_foo_uas_ustr();
 }
-inline rs_std::StrRef foo_as_str() {
+inline rs::StrRef foo_as_str() {
   return __crubit_internal::__crubit_thunk_foo_uas_ustr();
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(rs_std::StrRef);
+extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(rs::StrRef);
 }
-inline ::std::uint8_t const* get_str_data(rs_std::StrRef s) {
+inline ::std::uint8_t const* get_str_data(rs::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_udata(s);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(rs_std::StrRef);
+extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(rs::StrRef);
 }
-inline ::std::uintptr_t get_str_len(rs_std::StrRef s) {
+inline ::std::uintptr_t get_str_len(rs::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_ulen(s);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
-    rs_std::StrRef, ::std::uint8_t&);
+    rs::StrRef, ::std::uint8_t&);
 }
-inline void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
+inline void str_checked_as_potentially_aliasing(rs::StrRef __param_0,
                                                 ::std::uint8_t& __param_1) {
   crubit::internal::CheckNoMutableAliasing(
       crubit::internal::AsMutPtrDatas<::std::uint8_t&>(__param_1),
-      crubit::internal::AsPtrDatas<rs_std::StrRef>(__param_0));
+      crubit::internal::AsPtrDatas<rs::StrRef>(__param_0));
   return __crubit_internal::
       __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(__param_0,
                                                              __param_1);

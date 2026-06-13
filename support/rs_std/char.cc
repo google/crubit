@@ -12,14 +12,14 @@
 #include "support/internal/check.h"
 #include "support/rs_std/str_ref.h"
 
-namespace rs_std {
+namespace rs {
 namespace {
 
 static constexpr uint8_t kContFlag = 0b10000000;
 
 }  // namespace
 
-StrRef char_::encode_utf8(std::span<uint8_t> output_buffer) const {
+StrRef char_::encode_utf8(::std::span<uint8_t> output_buffer) const {
   size_t len = len_utf8();
   CRUBIT_CHECK(len <= output_buffer.size());
   switch (len) {
@@ -53,8 +53,8 @@ StrRef char_::encode_utf8(std::span<uint8_t> output_buffer) const {
 
   // NOTE: sadly, this reinterpret_cast from `uint8_t*` to `const char*` is
   // required and prevents this function from being constexpr.
-  return StrRef::FromUtf8Unchecked(std::string_view(
+  return StrRef::FromUtf8Unchecked(::std::string_view(
       reinterpret_cast<const char*>(output_buffer.data()), len));
 }
 
-}  // namespace rs_std
+}  // namespace rs

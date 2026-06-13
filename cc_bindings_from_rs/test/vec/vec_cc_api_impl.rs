@@ -68,7 +68,7 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     unsafe { <::alloc::vec::Vec<i32> as ::core::clone::Clone>::clone_from(__self, source) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_drop_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e(
+unsafe extern "C" fn __crubit_drop_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e(
     vec: *mut ::alloc::vec::Vec<i32>,
 ) {
     unsafe { ::core::ptr::drop_in_place(vec) };

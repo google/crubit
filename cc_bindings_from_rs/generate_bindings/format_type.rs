@@ -118,16 +118,16 @@ fn format_slice_ref_for_cc<'tcx>(
     Ok(CcSnippet {
         prereqs,
         tokens: quote! {
-            rs_std::SliceRef<
+            rs::SliceRef<
                 #const_qualifier #tokens
             >
         },
     })
 }
 
-/// Returns a CcSnippet referencing `rs_std::StrRef` and its include path.
+/// Returns a CcSnippet referencing `rs::StrRef` and its include path.
 fn format_str_ref_for_cc<'tcx>(db: &BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
-    CcSnippet::with_include(quote! { rs_std::StrRef }, db.support_header("rs_std/str_ref.h"))
+    CcSnippet::with_include(quote! { rs::StrRef }, db.support_header("rs_std/str_ref.h"))
 }
 
 fn format_transparent_pointee_or_reference_for_cc<'tcx>(
@@ -343,7 +343,7 @@ pub fn format_ty_for_cc<'tcx>(
                 })
             ));
 
-            CcSnippet::with_include(quote! { rs_std::char_ }, db.support_header("rs_std/char.h"))
+            CcSnippet::with_include(quote! { rs::char_ }, db.support_header("rs_std/char.h"))
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
@@ -1128,7 +1128,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 ) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>> {
     Ok(CrubitAbiTypeWithCcPrereqs::from(match ty.kind() {
         ty::TyKind::Bool => CrubitAbiType::transmute("bool", "bool"),
-        ty::TyKind::Char => CrubitAbiType::transmute("char", "::rs_std::char_"),
+        ty::TyKind::Char => CrubitAbiType::transmute("char", "::rs::char_"),
         ty::TyKind::Int(int_ty) => match int_ty {
             ty::IntTy::Isize => CrubitAbiType::transmute("isize", "::std::intptr_t"),
             ty::IntTy::I8 => CrubitAbiType::transmute("i8", "::std::int8_t"),
@@ -1470,7 +1470,7 @@ pub fn is_bridged_type<'tcx>(
                 && !bridged.is_layout_compatible()
             {
                 // Bridge types behind a reference are not allowed. But Option is an exception
-                // because it can have a specialization generated (rs_std::Option<T>& is valid),
+                // because it can have a specialization generated (rs::Option<T>& is valid),
                 // so the following check allows it when detected.
                 if let ty::TyKind::Adt(adt, _) = referent.kind() {
                     if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {

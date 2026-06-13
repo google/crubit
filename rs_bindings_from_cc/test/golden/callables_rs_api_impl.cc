@@ -23,169 +23,167 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state, int& param_0);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state,
     struct ABICompatible* param_0, struct ABICompatible* out);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state,
     class LayoutCompatible* param_0, class LayoutCompatible* out);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state,
     unsigned char* param_0, unsigned char* out);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" int
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state, int param_0);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
-__crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_invoker___CcTemplateInstN2rs11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::TypeErasedState* state);
 extern "C" void
-__crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+__crubit_manager___CcTemplateInstN2rs11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::internal_any_invocable::FunctionToCall operation,
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
-extern "C" void __rust_thunk___Z11invoke_onceN6rs_std11DynCallableIFvvOEEE(
+extern "C" void __rust_thunk___Z11invoke_onceN2rs11DynCallableIFvvOEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void() &&>::kSize, f);
+      ::rs::internal_dyn_callable::DynCallableAbi<void() &&>::kSize, f);
   invoke_once(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void() &&>(
-          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+      ::rs::internal_dyn_callable::DynCallableAbi<void() &&>(
+          __crubit_manager___CcTemplateInstN2rs11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
               -> void {
-            __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            __crubit_invoker___CcTemplateInstN2rs11DynCallableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state);
           })
           .Decode(__f_decoder));
 }
 
-static_assert((void (*)(class rs_std::DynCallable<void() &&>)) & ::invoke_once);
+static_assert((void (*)(class rs::DynCallable<void() &&>)) & ::invoke_once);
 
-extern "C" void __rust_thunk___Z6invokeN6rs_std11DynCallableIFvvEEE(
+extern "C" void __rust_thunk___Z6invokeN2rs11DynCallableIFvvEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void()>::kSize, f);
+      ::rs::internal_dyn_callable::DynCallableAbi<void()>::kSize, f);
   invoke(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void()>(
-          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+      ::rs::internal_dyn_callable::DynCallableAbi<void()>(
+          __crubit_manager___CcTemplateInstN2rs11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
               -> void {
-            __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            __crubit_invoker___CcTemplateInstN2rs11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state);
           })
           .Decode(__f_decoder));
 }
 
-static_assert((void (*)(class rs_std::DynCallable<void()>)) & ::invoke);
+static_assert((void (*)(class rs::DynCallable<void()>)) & ::invoke);
 
-extern "C" void __rust_thunk___Z12invoke_constN6rs_std11DynCallableIKFvvEEE(
+extern "C" void __rust_thunk___Z12invoke_constN2rs11DynCallableIKFvvEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void() const>::kSize, f);
+      ::rs::internal_dyn_callable::DynCallableAbi<void() const>::kSize, f);
   invoke_const(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void() const>(
-          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+      ::rs::internal_dyn_callable::DynCallableAbi<void() const>(
+          __crubit_manager___CcTemplateInstN2rs11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
               -> void {
-            __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            __crubit_invoker___CcTemplateInstN2rs11DynCallableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state);
           })
           .Decode(__f_decoder));
 }
 
-static_assert((void (*)(class rs_std::DynCallable<void() const>)) &
-              ::invoke_const);
+static_assert((void (*)(class rs::DynCallable<void() const>)) & ::invoke_const);
 
-extern "C" int __rust_thunk___Z7map_intN6rs_std11DynCallableIKFiiEEEi(
+extern "C" int __rust_thunk___Z7map_intN2rs11DynCallableIKFiiEEEi(
     const unsigned char* f, int arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<int(int) const>::kSize,
-      f);
+      ::rs::internal_dyn_callable::DynCallableAbi<int(int) const>::kSize, f);
   return map_int(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<int(int) const>(
-          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+      ::rs::internal_dyn_callable::DynCallableAbi<int(int) const>(
+          __crubit_manager___CcTemplateInstN2rs11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state,
              ::absl::internal_any_invocable::ForwardedParameterType<int>
                  param_0) noexcept -> int {
-            return __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            return __crubit_invoker___CcTemplateInstN2rs11DynCallableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state, param_0);
           })
           .Decode(__f_decoder),
       arg);
 }
 
-static_assert((int (*)(class rs_std::DynCallable<int(int) const>, int)) &
+static_assert((int (*)(class rs::DynCallable<int(int) const>, int)) &
               ::map_int);
 
 extern "C" void
-__rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
+__rust_thunk___Z11map_bridgedN2rs11DynCallableIKF7BridgedS1_EEES1_(
     unsigned char* __return_abi_buffer, const unsigned char* f,
     const unsigned char* arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<struct Bridged(
-          struct Bridged) const>::kSize,
+      ::rs::internal_dyn_callable::DynCallableAbi<struct Bridged(struct Bridged)
+                                                      const>::kSize,
       f);
   ::crubit::Decoder __arg_decoder(::crubit::BridgedAbi::kSize, arg);
   ::crubit::Encoder __return_encoder(::crubit::BridgedAbi::kSize,
                                      __return_abi_buffer);
   ::crubit::BridgedAbi().Encode(
       map_bridged(
-          ::rs_std::internal_dyn_callable::DynCallableAbi<struct Bridged(
+          ::rs::internal_dyn_callable::DynCallableAbi<struct Bridged(
               struct Bridged) const>(
-              __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+              __crubit_manager___CcTemplateInstN2rs11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
               [](::absl::internal_any_invocable::TypeErasedState* state,
                  ::absl::internal_any_invocable::ForwardedParameterType<
                      struct Bridged>
@@ -194,7 +192,7 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
                 ::crubit::internal::Encode(::crubit::BridgedAbi(),
                                            bridge_param_0, param_0);
                 unsigned char out[::crubit::BridgedAbi::kSize];
-                __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+                __crubit_invoker___CcTemplateInstN2rs11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                     state, bridge_param_0, out);
                 return ::crubit::internal::Decode<::crubit::BridgedAbi>(
                     ::crubit::BridgedAbi(), out);
@@ -204,10 +202,9 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
       __return_encoder);
 }
 
-static_assert(
-    (struct Bridged (*)(class rs_std::DynCallable<Bridged(Bridged) const>,
-                        struct Bridged)) &
-    ::map_bridged);
+static_assert((struct Bridged (*)(class rs::DynCallable<Bridged(Bridged) const>,
+                                  struct Bridged)) &
+              ::map_bridged);
 
 static_assert(CRUBIT_SIZEOF(struct ABICompatible) == 4);
 static_assert(alignof(struct ABICompatible) == 4);
@@ -219,17 +216,17 @@ extern "C" void __rust_thunk___ZN13ABICompatibleC1Ev(
 }
 
 extern "C" void
-__rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EEES1_(
+__rust_thunk___Z18map_abi_compatibleN2rs11DynCallableIKF13ABICompatibleS1_EEES1_(
     struct ABICompatible* __return, const unsigned char* f,
     struct ABICompatible* arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
+      ::rs::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
           struct ABICompatible) const>::kSize,
       f);
   new (__return) auto(map_abi_compatible(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
+      ::rs::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
           struct ABICompatible) const>(
-          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+          __crubit_manager___CcTemplateInstN2rs11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state,
              ::absl::internal_any_invocable::ForwardedParameterType<
                  struct ABICompatible>
@@ -237,7 +234,7 @@ __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EE
             ::crubit::Slot<struct ABICompatible> stack_param_0(
                 std::move(param_0));
             ::crubit::Slot<struct ABICompatible> out;
-            __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            __crubit_invoker___CcTemplateInstN2rs11DynCallableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state, stack_param_0.Get(), out.Get());
             return std::move(out).AssumeInitAndTakeValue();
           })
@@ -246,7 +243,7 @@ __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EE
 }
 
 static_assert((struct ABICompatible (*)(
-                  class rs_std::DynCallable<ABICompatible(ABICompatible) const>,
+                  class rs::DynCallable<ABICompatible(ABICompatible) const>,
                   struct ABICompatible)) &
               ::map_abi_compatible);
 
@@ -268,17 +265,17 @@ extern "C" int __rust_thunk___ZNK16LayoutCompatible3getEv(
 static_assert((int (::LayoutCompatible::*)() const) & ::LayoutCompatible::get);
 
 extern "C" void
-__rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(
+__rust_thunk___Z21map_layout_compatibleN2rs11DynCallableIKF16LayoutCompatibleS1_EEES1_(
     class LayoutCompatible* __return, const unsigned char* f,
     class LayoutCompatible* arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<class LayoutCompatible(
+      ::rs::internal_dyn_callable::DynCallableAbi<class LayoutCompatible(
           class LayoutCompatible) const>::kSize,
       f);
   new (__return) auto(map_layout_compatible(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<class LayoutCompatible(
+      ::rs::internal_dyn_callable::DynCallableAbi<class LayoutCompatible(
           class LayoutCompatible) const>(
-          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+          __crubit_manager___CcTemplateInstN2rs11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state,
              ::absl::internal_any_invocable::ForwardedParameterType<
                  class LayoutCompatible>
@@ -286,7 +283,7 @@ __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibl
             ::crubit::Slot<class LayoutCompatible> stack_param_0(
                 std::move(param_0));
             ::crubit::Slot<class LayoutCompatible> out;
-            __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            __crubit_invoker___CcTemplateInstN2rs11DynCallableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state, stack_param_0.Get(), out.Get());
             return std::move(out).AssumeInitAndTakeValue();
           })
@@ -296,29 +293,29 @@ __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibl
 
 static_assert(
     (class LayoutCompatible (*)(
-        class rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const>,
+        class rs::DynCallable<LayoutCompatible(LayoutCompatible) const>,
         class LayoutCompatible)) &
     ::map_layout_compatible);
 
 extern "C" int
-__rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(
+__rust_thunk___Z25callable_taking_referenceN2rs11DynCallableIFvRiEEEi(
     const unsigned char* f, int arg) {
   ::crubit::Decoder __f_decoder(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void(int&)>::kSize, f);
+      ::rs::internal_dyn_callable::DynCallableAbi<void(int&)>::kSize, f);
   return callable_taking_reference(
-      ::rs_std::internal_dyn_callable::DynCallableAbi<void(int&)>(
-          __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
+      ::rs::internal_dyn_callable::DynCallableAbi<void(int&)>(
+          __crubit_manager___CcTemplateInstN2rs11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc,
           [](::absl::internal_any_invocable::TypeErasedState* state,
              ::absl::internal_any_invocable::ForwardedParameterType<int&>
                  param_0) noexcept -> void {
-            __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            __crubit_invoker___CcTemplateInstN2rs11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                 state, param_0);
           })
           .Decode(__f_decoder),
       arg);
 }
 
-static_assert((int (*)(class rs_std::DynCallable<void(int&)>, int)) &
+static_assert((int (*)(class rs::DynCallable<void(int&)>, int)) &
               ::callable_taking_reference);
 
 #pragma clang diagnostic pop

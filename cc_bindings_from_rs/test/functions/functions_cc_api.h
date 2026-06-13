@@ -97,7 +97,7 @@ void add_i32_via_ptr(::std::int32_t const* x, ::std::int32_t const* y,
     ::std::int32_t x, ::std::int32_t y,
     crubit::type_identity_t<::std::int32_t(::std::int32_t, ::std::int32_t)>& f);
 
-rs_std::char_ char_to_ascii_lowercase(rs_std::char_ c);
+rs::char_ char_to_ascii_lowercase(rs::char_ c);
 
 ::std::int32_t const& $(__anon1) get_identical_ref_with_inferred_lifetime(
     ::std::int32_t const* $(__anon1) crubit_nonnull x CRUBIT_LIFETIME_BOUND);
@@ -113,7 +113,7 @@ void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
 
 namespace functions::generic_fn_tests::as_mut_trait_tests {
 
-void prefix_sums(rs_std::SliceRef<::std::int32_t> arg);
+void prefix_sums(rs::SliceRef<::std::int32_t> arg);
 
 }
 
@@ -158,12 +158,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 //  or explicit lifetimes. `impl AsRef<[i32]>` is "sandwiched" in the middle to
 //  increase the chances that a conflict would be caught somehow.  The test
 //  never failed, so it's unclear how useful it is.
-void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
-                       rs_std::SliceRef<const ::std::int32_t> arg2,
-                       rs_std::SliceRef<const ::std::int32_t> arg3,
-                       rs_std::SliceRef<::std::int32_t> result);
+void diverse_lifetimes(rs::SliceRef<const ::std::int32_t> arg1,
+                       rs::SliceRef<const ::std::int32_t> arg2,
+                       rs::SliceRef<const ::std::int32_t> arg3,
+                       rs::SliceRef<::std::int32_t> result);
 
-::std::int32_t slice_ref_sum(rs_std::SliceRef<const ::std::int32_t> arg);
+::std::int32_t slice_ref_sum(rs::SliceRef<const ::std::int32_t> arg);
 
 //  This is an attempt to trigger an error seen in
 //  https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=42303eaaafe4a3538ad259e9e9b67f05
@@ -172,7 +172,7 @@ void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
 //  declare all their lifetimes as `'static` - see `fn
 //  replace_all_regions_with_static`.
 ::std::int32_t static_lifetime_requirement(
-    rs_std::SliceRef<const ::std::int32_t> arg);
+    rs::SliceRef<const ::std::int32_t> arg);
 
 ::std::int32_t struct_ref(
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& arg);
@@ -308,7 +308,7 @@ namespace functions::unsafe_fn_tests {
 }  // namespace functions::unsafe_fn_tests
 
 template <>
-struct rs_std::impl<
+struct rs::impl<
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct,
     ::rs::core::convert::AsRef<
         ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>> {
@@ -321,7 +321,7 @@ struct rs_std::impl<
 };
 
 template <>
-struct rs_std::impl<
+struct rs::impl<
     ::functions::generic_fn_tests::ctor_trait_tests::NonMovable,
     ::ctor::CtorNew<
         ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&>> {
@@ -442,10 +442,9 @@ inline ::std::int32_t apply_binary_i32_op(
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::char_ __crubit_thunk_char_uto_uascii_ulowercase(
-    rs_std::char_);
+extern "C" rs::char_ __crubit_thunk_char_uto_uascii_ulowercase(rs::char_);
 }
-inline rs_std::char_ char_to_ascii_lowercase(rs_std::char_ c) {
+inline rs::char_ char_to_ascii_lowercase(rs::char_ c) {
   return __crubit_internal::__crubit_thunk_char_uto_uascii_ulowercase(c);
 }
 
@@ -488,9 +487,9 @@ inline void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
 namespace functions::generic_fn_tests::as_mut_trait_tests {
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_prefix_usums(rs_std::SliceRef<::std::int32_t>);
+extern "C" void __crubit_thunk_prefix_usums(rs::SliceRef<::std::int32_t>);
 }
-inline void prefix_sums(rs_std::SliceRef<::std::int32_t> arg) {
+inline void prefix_sums(rs::SliceRef<::std::int32_t> arg) {
   return __crubit_internal::__crubit_thunk_prefix_usums(arg);
 }
 
@@ -522,19 +521,18 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_diverse_ulifetimes(
-    rs_std::SliceRef<const ::std::int32_t>,
-    rs_std::SliceRef<const ::std::int32_t>,
-    rs_std::SliceRef<const ::std::int32_t>, rs_std::SliceRef<::std::int32_t>);
+    rs::SliceRef<const ::std::int32_t>, rs::SliceRef<const ::std::int32_t>,
+    rs::SliceRef<const ::std::int32_t>, rs::SliceRef<::std::int32_t>);
 }
-inline void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
-                              rs_std::SliceRef<const ::std::int32_t> arg2,
-                              rs_std::SliceRef<const ::std::int32_t> arg3,
-                              rs_std::SliceRef<::std::int32_t> result) {
+inline void diverse_lifetimes(rs::SliceRef<const ::std::int32_t> arg1,
+                              rs::SliceRef<const ::std::int32_t> arg2,
+                              rs::SliceRef<const ::std::int32_t> arg3,
+                              rs::SliceRef<::std::int32_t> result) {
   crubit::internal::CheckNoMutableAliasing(
-      crubit::internal::AsMutPtrDatas<rs_std::SliceRef<::std::int32_t>>(result),
-      crubit::internal::AsPtrDatas<rs_std::SliceRef<const ::std::int32_t>,
-                                   rs_std::SliceRef<const ::std::int32_t>,
-                                   rs_std::SliceRef<const ::std::int32_t>>(
+      crubit::internal::AsMutPtrDatas<rs::SliceRef<::std::int32_t>>(result),
+      crubit::internal::AsPtrDatas<rs::SliceRef<const ::std::int32_t>,
+                                   rs::SliceRef<const ::std::int32_t>,
+                                   rs::SliceRef<const ::std::int32_t>>(
           arg1, arg2, arg3));
   return __crubit_internal::__crubit_thunk_diverse_ulifetimes(arg1, arg2, arg3,
                                                               result);
@@ -542,19 +540,18 @@ inline void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_slice_uref_usum(
-    rs_std::SliceRef<const ::std::int32_t>);
+    rs::SliceRef<const ::std::int32_t>);
 }
-inline ::std::int32_t slice_ref_sum(
-    rs_std::SliceRef<const ::std::int32_t> arg) {
+inline ::std::int32_t slice_ref_sum(rs::SliceRef<const ::std::int32_t> arg) {
   return __crubit_internal::__crubit_thunk_slice_uref_usum(arg);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_static_ulifetime_urequirement(
-    rs_std::SliceRef<const ::std::int32_t>);
+    rs::SliceRef<const ::std::int32_t>);
 }
 inline ::std::int32_t static_lifetime_requirement(
-    rs_std::SliceRef<const ::std::int32_t> arg) {
+    rs::SliceRef<const ::std::int32_t> arg) {
   return __crubit_internal::__crubit_thunk_static_ulifetime_urequirement(arg);
 }
 
