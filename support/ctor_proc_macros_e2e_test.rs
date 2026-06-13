@@ -11,8 +11,6 @@
 //! not added to macro_test.
 
 #![cfg(test)]
-// Callers are expected to enable `negative_impls`.
-// more_qualified_paths is used to make project_pin_type!() simpler to use.
 #![feature(negative_impls)]
 
 use googletest::gtest;
@@ -28,6 +26,14 @@ fn test_derive_default_unit_struct() {
     struct Struct;
     unsafe impl ::ctor::RecursivelyPinned for Struct {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
     impl !Unpin for Struct {}
 
@@ -43,6 +49,14 @@ fn test_derive_default_struct() {
     }
     unsafe impl ::ctor::RecursivelyPinned for Struct {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
     impl !Unpin for Struct {}
 
@@ -57,6 +71,14 @@ fn test_derive_default_tuple_struct() {
     struct Struct(i32, f32);
     unsafe impl ::ctor::RecursivelyPinned for Struct {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
     impl !Unpin for Struct {}
 
@@ -126,9 +148,9 @@ fn test_recursively_pinned_unit_struct() {
     #[::ctor::recursively_pinned]
     struct S;
     let _ = ::ctor::emplace!(::ctor::ctor!(S)).as_mut().project_pin();
-    assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
+    assert_eq!(::std::mem::size_of::<<S as ::ctor::RecursivelyPinned>::ProjectedPin<'static>>(), 0);
     let _ = ::ctor::emplace!(::ctor::ctor!(S)).as_ref().project_ref();
-    assert_eq!(::std::mem::size_of::<::ctor::project_ref_type!(S)>(), 0);
+    assert_eq!(::std::mem::size_of::<<S as ::ctor::RecursivelyPinned>::ProjectedRef<'static>>(), 0);
 }
 
 #[gtest]
@@ -137,9 +159,9 @@ fn test_recursively_pinned_fieldless_struct() {
     struct S {}
     let mut b = ::ctor::emplace!(::ctor::ctor!(S {}));
     let _ = b.as_mut().project_pin();
-    assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
+    assert_eq!(::std::mem::size_of::<<S as ::ctor::RecursivelyPinned>::ProjectedPin<'static>>(), 0);
     let _ = b.as_ref().project_ref();
-    assert_eq!(::std::mem::size_of::<::ctor::project_ref_type!(S)>(), 0);
+    assert_eq!(::std::mem::size_of::<<S as ::ctor::RecursivelyPinned>::ProjectedRef<'static>>(), 0);
 }
 
 #[gtest]
@@ -147,9 +169,9 @@ fn test_recursively_pinned_fieldless_tuple_struct() {
     #[::ctor::recursively_pinned]
     struct S();
     let _ = ::ctor::emplace!(::ctor::ctor!(S())).as_mut().project_pin();
-    assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
+    assert_eq!(::std::mem::size_of::<<S as ::ctor::RecursivelyPinned>::ProjectedPin<'static>>(), 0);
     let _ = ::ctor::emplace!(::ctor::ctor!(S())).as_ref().project_ref();
-    assert_eq!(::std::mem::size_of::<::ctor::project_ref_type!(S)>(), 0);
+    assert_eq!(::std::mem::size_of::<<S as ::ctor::RecursivelyPinned>::ProjectedRef<'static>>(), 0);
 }
 
 #[gtest]
@@ -157,11 +179,26 @@ fn test_recursively_pinned_in_module() {
     mod submodule {
         #[::ctor::recursively_pinned]
         pub struct S;
+
+        // Re-export `project_pin` and `project_ref` methods. They are marked as non-public because
+        // `S` has no public fields.
+        pub fn project_pin(
+            s: ::core::pin::Pin<&mut S>,
+        ) -> <S as ::ctor::RecursivelyPinned>::ProjectedPin<'_> {
+            s.project_pin()
+        }
+
+        pub fn project_ref(
+            s: ::core::pin::Pin<&S>,
+        ) -> <S as ::ctor::RecursivelyPinned>::ProjectedRef<'_> {
+            s.project_ref()
+        }
     }
-    let _: ::ctor::project_pin_type!(submodule::S) =
-        ::ctor::emplace!(::ctor::ctor!(submodule::S)).as_mut().project_pin();
-    let _: ::ctor::project_ref_type!(submodule::S) =
-        ::ctor::emplace!(::ctor::ctor!(submodule::S)).as_ref().project_ref();
+    let mut b = ::ctor::emplace!(::ctor::ctor!(submodule::S));
+    let _: <submodule::S as ::ctor::RecursivelyPinned>::ProjectedPin<'_> =
+        submodule::project_pin(b.as_mut());
+    let _: <submodule::S as ::ctor::RecursivelyPinned>::ProjectedRef<'_> =
+        submodule::project_ref(b.as_ref());
 }
 
 #[gtest]
@@ -324,4 +361,74 @@ fn test_maybe_unpin() {
 
     // And it can actually be constructed.
     let _ = ::ctor::emplace!(::ctor::ctor!(S { x: 42 }));
+}
+
+#[gtest]
+fn test_recursively_pinned_visibility() {
+    mod submodule {
+        #[::ctor::recursively_pinned]
+        pub struct PublicStructWithPublicFields {
+            pub x: i32,
+            y: i32, // This will be private in projection
+        }
+
+        impl PublicStructWithPublicFields {
+            pub fn new(
+                x: i32,
+                y: i32,
+            ) -> impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> {
+                ::ctor::ctor!(PublicStructWithPublicFields { x: x, y: y })
+            }
+        }
+    }
+
+    let mut b = ::ctor::emplace!(submodule::PublicStructWithPublicFields::new(42, 43));
+
+    // We can access project_pin and project_ref because the struct has at least one public field.
+    let mut p: <submodule::PublicStructWithPublicFields as ::ctor::RecursivelyPinned>::ProjectedPin<'_> = b.as_mut().project_pin();
+
+    // We can access the public field through the projection.
+    p.x.set(44);
+
+    assert_eq!(*b.as_ref().project_ref().x, 44);
+}
+
+#[gtest]
+fn test_recursively_pinned_visibility_crate() {
+    mod submodule {
+        #[::ctor::recursively_pinned]
+        pub struct PublicStructWithCrateFields {
+            pub(crate) x: i32,
+        }
+
+        impl PublicStructWithCrateFields {
+            pub fn new(x: i32) -> impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> {
+                ::ctor::ctor!(PublicStructWithCrateFields { x: x })
+            }
+        }
+    }
+
+    let mut b = ::ctor::emplace!(submodule::PublicStructWithCrateFields::new(42));
+
+    // project_pin should be pub(crate) because fields are pub(crate).
+    // Since we are in the same crate, we should be able to access it!
+    let mut p = b.as_mut().project_pin();
+    p.x.set(44);
+    assert_eq!(*b.as_ref().project_ref().x, 44);
+}
+
+#[gtest]
+fn test_recursively_pinned_union() {
+    #[::ctor::recursively_pinned]
+    union U {
+        x: i32,
+        #[allow(unused)]
+        y: f32,
+    }
+    let b = ::ctor::emplace!(::ctor::ctor!(U { x: 42 }));
+    assert_eq!(::std::mem::size_of::<<U as ::ctor::RecursivelyPinned>::ProjectedPin<'static>>(), 0);
+    assert_eq!(::std::mem::size_of::<<U as ::ctor::RecursivelyPinned>::ProjectedRef<'static>>(), 0);
+    unsafe {
+        assert_eq!(b.as_ref().get_ref().x, 42);
+    }
 }
