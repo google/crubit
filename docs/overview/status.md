@@ -123,6 +123,7 @@ features, used in public interfaces:
 *   specific known traits with equivalents in C++:
     *   `Clone`
     *   `Default`
+    *   `Display` (supports `AbslStringify` and `std::ostream`)
     *   `Drop`
     *   `From`
     *   `Into`
