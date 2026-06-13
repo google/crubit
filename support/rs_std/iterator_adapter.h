@@ -55,25 +55,27 @@ template <typename TAdaptedIterator>
 class IteratorAdapter {
  private:
   using impl = rs_std::impl<TAdaptedIterator, rs::core::iter::Iterator>;
-  static constexpr bool kIsPointerItem = std::is_pointer_v<typename impl::Item>;
+  static constexpr bool kIsPointerItem =
+      ::std::is_pointer_v<typename impl::Item>;
 
  public:
   using value_type =
-      std::conditional_t<kIsPointerItem,
-                         std::remove_pointer_t<typename impl::Item>,
-                         typename impl::Item>;
-  using difference_type = std::ptrdiff_t;
+      ::std::conditional_t<kIsPointerItem,
+                           ::std::remove_pointer_t<typename impl::Item>,
+                           typename impl::Item>;
+  using difference_type = ::std::ptrdiff_t;
   using pointer = void;
-  using reference = std::conditional_t<kIsPointerItem,
-                                       std::add_lvalue_reference_t<value_type>,
-                                       const value_type&>;
-  using iterator_category = std::input_iterator_tag;
-  using iterator_concept = std::input_iterator_tag;
+  using reference =
+      ::std::conditional_t<kIsPointerItem,
+                           ::std::add_lvalue_reference_t<value_type>,
+                           const value_type&>;
+  using iterator_category = ::std::input_iterator_tag;
+  using iterator_concept = ::std::input_iterator_tag;
 
   IteratorAdapter() = delete;
   explicit IteratorAdapter(TAdaptedIterator source)
-      : source_(std::move(source)) {
-    static_assert(std::input_iterator<IteratorAdapter>);
+      : source_(::std::move(source)) {
+    static_assert(::std::input_iterator<IteratorAdapter>);
     next();
   }
 
@@ -123,9 +125,9 @@ class IteratorAdapter {
   }
   friend value_type&& iter_move(const IteratorAdapter& self) noexcept {
     if constexpr (kIsPointerItem) {
-      return std::move(*self.current_item_.value());
+      return ::std::move(*self.current_item_.value());
     } else {
-      return std::move(*self.current_item_);
+      return ::std::move(*self.current_item_);
     }
   }
   IteratorAdapter& operator++() {
@@ -141,7 +143,7 @@ class IteratorAdapter {
   TAdaptedIterator source_;
 
   // `mutable` to support `iter_move` taking a `const IteratorAdapter&`.
-  mutable std::optional<typename impl::Item> current_item_;
+  mutable ::std::optional<typename impl::Item> current_item_;
 };
 
 template <typename TAdaptedIterator>
@@ -158,7 +160,7 @@ template <typename T>
 struct impl<T*, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item = typename rs_std::impl<T, ::rs::core::iter::Iterator>::Item;
-  static std::optional<Item> next(T* self) {
+  static ::std::optional<Item> next(T* self) {
     return rs_std::impl<T, ::rs::core::iter::Iterator>::next(*self);
   }
 };
