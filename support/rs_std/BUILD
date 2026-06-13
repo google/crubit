@@ -81,6 +81,7 @@ cc_library(
         "avoid_dep",
     ],
     visibility = [
+        "//storage/googlesql/safesql:__subpackages__",
         "//visibility:public",
     ],
 
