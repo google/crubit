@@ -2629,12 +2629,35 @@ fn generate_begin_and_end_for_type<'tcx>(
         PassingMode::MutRef => Ty::new_mut_ref(tcx, tcx.lifetimes.re_erased, self_ty),
     };
 
-    if !does_type_implement_trait(tcx, check_ty, into_iterator_trait_id, []) {
-        return Ok(None);
-    }
     if let Some(iterator_trait_id) = tcx.get_diagnostic_item(sym::Iterator)
         && does_type_implement_trait(tcx, self_ty, iterator_trait_id, [])
     {
+        let PassingMode::MutRef = passing_mode else {
+            return Ok(None);
+        };
+
+        let adt_cc_name = &core.cc_short_name;
+        let mut main_api_prereqs = CcPrerequisites::default();
+        main_api_prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
+        main_api_prereqs.move_only_defs_to_fwd_decls();
+
+        let main_api = CcSnippet {
+            tokens: quote! {
+                template <typename TAdaptedSelf_ = #adt_cc_name>
+                inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+                    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+                }
+                inline rs::IteratorEnd end() & {
+                    return rs::IteratorEnd();
+                }
+            },
+            prereqs: main_api_prereqs,
+        };
+
+        return Ok(Some(ApiSnippets { main_api, ..Default::default() }));
+    }
+
+    if !does_type_implement_trait(tcx, check_ty, into_iterator_trait_id, []) {
         return Ok(None);
     }
 
@@ -2742,7 +2765,9 @@ fn generate_begin_and_end_for_type<'tcx>(
     main_api_prereqs.move_only_defs_to_fwd_decls();
     let main_api = CcSnippet {
         tokens: quote! {
+            template <typename TAdaptedSelf_ = #adt_cc_name>
             rs::IteratorAdapter< #into_iter_cc_ty_tokens_main > begin() #ref_qualifiers;
+            template <typename TAdaptedSelf_ = #adt_cc_name>
             rs::IteratorEnd end() #ref_qualifiers;
         },
         prereqs: main_api_prereqs,
@@ -2766,6 +2791,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         tokens: quote! {
             #cc_thunk_decls_tokens
 
+            template <typename TAdaptedSelf_>
             inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > #adt_cc_name :: begin () #ref_qualifiers {
                 #self_binding
                 auto call_into_iter = [&]() -> decltype(auto) {
@@ -2773,6 +2799,7 @@ fn generate_begin_and_end_for_type<'tcx>(
                 };
                 return rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
             }
+            template <typename TAdaptedSelf_>
             inline rs::IteratorEnd #adt_cc_name :: end () #ref_qualifiers {
                 return rs::IteratorEnd();
             }
@@ -2789,13 +2816,24 @@ fn generate_into_iterator_impls<'tcx>(
     member_function_names: &mut HashSet<String>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let Some(into_iterator_trait_id) = tcx.get_diagnostic_item(sym::IntoIterator) else {
-        return ApiSnippets::default();
-    };
 
     if member_function_names.contains("begin") || member_function_names.contains("end") {
         return ApiSnippets::default();
     }
+
+    let ty::Adt(adt_def, _) = core.self_ty.kind() else {
+        return ApiSnippets::default();
+    };
+    let has_conflicting_field = adt_def
+        .all_fields()
+        .any(|field| field.name.as_str() == "begin" || field.name.as_str() == "end");
+    if has_conflicting_field {
+        return ApiSnippets::default();
+    }
+
+    let Some(into_iterator_trait_id) = tcx.get_diagnostic_item(sym::IntoIterator) else {
+        return ApiSnippets::default();
+    };
 
     let mut snippets = Vec::new();
 

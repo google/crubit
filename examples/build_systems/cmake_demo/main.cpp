@@ -48,17 +48,7 @@ int main(int argc, char* argv[]) {
   }
   DirIterator& walk_dir = *walk_dir_res;
 
-  // Crubit generates bindings to Trait methods as static methods on an
-  // `rs_std::impl` template struct. You can find details on how that works at
-  // https://crubit.rs/rust/traits.html
-  using dir_as_iter =
-      rs_std::impl<rust_blake3_scanner::DirIterator, rs::std::iter::Iterator>;
-  // Associated types of traits are exposed as typedefs on the `rs_std::impl` 
-  // struct.
-  std::optional<dir_as_iter::Item> next_dir = dir_as_iter::next(walk_dir);
-  while (next_dir.has_value()) {
-    rs_std::Result<DirEntry, Error> entry = std::move(*next_dir);
-    next_dir = dir_as_iter::next(walk_dir);
+  for (rs_std::Result<DirEntry, Error>&& entry : walk_dir) {
     if (!entry.has_value()) {
       std::cerr << "Error: Failed to read directory entry: "
                 << entry.err() << std::endl;
