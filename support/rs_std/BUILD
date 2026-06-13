@@ -219,6 +219,16 @@ cc_library(
     ],
 )
 
+crubit_cc_test(
+    name = "iterator_adapter_test",
+    srcs = ["iterator_adapter_test.cc"],
+    deps = [
+        ":iterator_adapter",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
 cc_library(
     name = "option",
     hdrs = ["option.h"],
