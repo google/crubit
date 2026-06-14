@@ -416,6 +416,7 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
   for (const absl::string_view trait : custom_traits) {
     result.custom.emplace_back(trait);
   }
+  absl::c_sort(result.custom);
   return absl::OkStatus();
 }
 

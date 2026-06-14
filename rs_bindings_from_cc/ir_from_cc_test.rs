@@ -725,6 +725,28 @@ fn test_struct_with_trait_derive_annotation() {
 }
 
 #[gtest]
+fn test_struct_with_custom_trait_derives_is_sorted() {
+    // Iteration over the importer's internal hash set is non-deterministic.
+    // To ensure **deterministic output** of Rust `#[derive(...)]` attributes,
+    // the importer must sort custom traits before emitting them to the IR.
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_trait_derive", "TraitD", "TraitB", "TraitA", "TraitC")]]
+                RecordWithDerives {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    let record = ir.records().find(|record| record.rs_name == "RecordWithDerives").unwrap();
+
+    assert_eq!(
+        record.trait_derives.custom,
+        vec![Rc::from("TraitA"), Rc::from("TraitB"), Rc::from("TraitC"), Rc::from("TraitD")]
+    );
+}
+
+#[gtest]
 fn test_crubit_internal_rust_type_annotation() {
     let ir = ir_from_cc(
         r#"
