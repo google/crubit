@@ -177,10 +177,13 @@ bzl_library(
     visibility = [
         "//:__subpackages__",
     ],
+    deps = [":global_features_bzl"],
 )
 
 bzl_library(
     name = "global_features_bzl",
     srcs = ["global_features.bzl"],
-    visibility = ["//cc_bindings_from_rs/bazel_support:__pkg__"],
+    visibility = [
+        "//:__subpackages__",
+    ],
 )
