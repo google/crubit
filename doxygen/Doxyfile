@@ -1,0 +1,24 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+PROJECT_NAME           = "Crubit Generated Bindings"
+OUTPUT_LANGUAGE        = English
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+
+QUIET                  = YES
+WARNINGS               = NO
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+
+# TODO: add custom stylesheet b/523378095
+HTML_EXTRA_STYLESHEET  =
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+SOURCE_BROWSER         = YES
