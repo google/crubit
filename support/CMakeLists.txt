@@ -9,6 +9,10 @@ add_library(crubit_support_annotations STATIC
 )
 set_target_properties(crubit_support_annotations PROPERTIES LINKER_LANGUAGE CXX)
 
+target_include_directories(crubit_support_annotations PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
 target_link_libraries(crubit_support_annotations PUBLIC
 crubit_support_annotations_internal
 )
@@ -18,13 +22,25 @@ add_library(crubit_support_annotations_internal STATIC
 )
 set_target_properties(crubit_support_annotations_internal PROPERTIES LINKER_LANGUAGE CXX)
 
+target_include_directories(crubit_support_annotations_internal PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
 add_library(crubit_support_bridge_cpp STATIC
 "bridge.h"
 )
 set_target_properties(crubit_support_bridge_cpp PROPERTIES LINKER_LANGUAGE CXX)
 
+target_include_directories(crubit_support_bridge_cpp PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
 add_library(crubit_support_lifetime_annotations STATIC
 "lifetime_annotations.h"
 )
 set_target_properties(crubit_support_lifetime_annotations PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_lifetime_annotations PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
 
