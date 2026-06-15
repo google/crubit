@@ -1282,7 +1282,9 @@ TupleWithSizeTypes final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < i32 >") rs_std::Option<::std::int32_t> {
+    "std :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
+    : public rs_std::OptionBase<rs_std::Option<::std::int32_t>,
+                                ::std::int32_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -1294,32 +1296,59 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option(::crubit::UnsafeRelocateTag, Option&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  constexpr Option();
-
-  constexpr explicit Option(::std::nullopt_t) noexcept;
+  using base_type =
+      rs_std::OptionBase<rs_std::Option<::std::int32_t>, ::std::int32_t>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
-
-  Option(::std::int32_t&& value) noexcept;
-  Option& operator=(::std::int32_t&& value) noexcept;
-
-  explicit Option(::std::optional<::std::int32_t>&& value) noexcept;
-  Option& operator=(::std::optional<::std::int32_t>&& value) noexcept;
-
+  template <typename U>
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
+  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  template <typename U>
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
+  Option& operator=(U&& value) noexcept {
+    base_type::operator=(::std::forward<U>(value));
+    return *this;
+  }
+  template <typename Opt>
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::int32_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
+  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  template <typename Opt>
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::int32_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
+  Option& operator=(Opt&& value) noexcept {
+    base_type::operator=(::std::forward<Opt>(value));
+    return *this;
+  }
   template <typename... Args>
-  Option(::std::in_place_t, Args&&... args) noexcept;
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
+      : base_type(ip, ::std::forward<Args>(args)...) {}
   ~Option() noexcept = default;
-  operator ::std::optional<::std::int32_t>() && noexcept;
-  bool has_value() const noexcept;
-  ::std::int32_t& operator*() &;
-  ::std::int32_t const& operator*() const&;
-  ::std::int32_t&& operator*() &&;
-  ::std::int32_t* operator->();
-  ::std::int32_t const* operator->() const;
 
  private:
+  friend base_type;
+  using tag_type = ::std::uint32_t;
+  static constexpr tag_type kNoneVal = 0;
+  ::std::int32_t* some_ptr() noexcept {
+    return reinterpret_cast<::std::int32_t*>(storage_ + 4);
+  }
+  ::std::int32_t const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int32_t const*>(storage_ + 4);
+  }
+  void set_some_tag() noexcept { set_tag(1); }
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
-  void check_has_value() const;
 
  private:
   unsigned char storage_[8];
@@ -2990,112 +3019,8 @@ static_assert(
     ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int32_t>>);
 static_assert(
     ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int32_t>>);
-inline constexpr rs_std::Option<::std::int32_t>::Option() { set_tag(0); }
-inline constexpr rs_std::Option<::std::int32_t>::Option(
-    ::std::nullopt_t) noexcept {
-  set_tag(0);
-}
-inline constexpr rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
-  if (tag() != 0) {
-    ::std::destroy_at(reinterpret_cast<::std::int32_t*>(storage_ + 4));
-  }
-  set_tag(0);
-  return *this;
-}
-inline rs_std::Option<::std::int32_t>::Option(::std::int32_t&& value) noexcept {
-  set_tag(1);
-  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
-                      ::std::move(value));
-}
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(::std::int32_t&& value) noexcept {
-  if (tag() != 0) {
-    ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::std::int32_t*>(storage_ + 4), ::std::move(value));
-  } else {
-    set_tag(1);
-    ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
-                        ::std::move(value));
-  }
-  return *this;
-}
-inline rs_std::Option<::std::int32_t>::Option(
-    ::std::optional<::std::int32_t>&& value) noexcept {
-  if (value.has_value()) {
-    set_tag(1);
-    ::std::int32_t* some = reinterpret_cast<::std::int32_t*>(storage_ + 4);
-    *some = ::std::move(value.value());
-    ::std::construct_at(&value, ::std::nullopt);
-  } else {
-    set_tag(0);
-  }
-}
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(
-    ::std::optional<::std::int32_t>&& value) noexcept {
-  if (tag() != 0) {
-    ::std::destroy_at(reinterpret_cast<::std::int32_t*>(storage_ + 4));
-  }
-  if (value.has_value()) {
-    set_tag(1);
-    ::std::int32_t* some = reinterpret_cast<::std::int32_t*>(storage_ + 4);
-    *some = ::std::move(value.value());
-    ::std::construct_at(&value, ::std::nullopt);
-  } else {
-    set_tag(0);
-  }
-  return *this;
-}
-template <typename... Args>
-inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t,
-                                              Args&&... args) noexcept {
-  set_tag(1);
-  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
-                      ::std::forward<Args>(args)...);
-}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t>>);
-inline rs_std::Option<::std::int32_t>::operator ::std::optional<
-    ::std::int32_t>() && noexcept {
-  if (tag() == 0) {
-    return ::std::nullopt;
-  } else {
-    ::std::int32_t& value = *reinterpret_cast<::std::int32_t*>(storage_ + 4);
-    ::std::optional<::std::int32_t> return_value(::std::move(value));
-    ::std::destroy_at(&value);
-    set_tag(0);
-    return return_value;
-  }
-}
-inline bool rs_std::Option<::std::int32_t>::has_value() const noexcept {
-  return tag() != 0;
-}
-inline void rs_std::Option<::std::int32_t>::check_has_value() const {
-  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
-}
-inline ::std::int32_t& rs_std::Option<::std::int32_t>::operator*() & {
-  check_has_value();
-  return *reinterpret_cast<::std::int32_t*>(storage_ + 4);
-}
-inline ::std::int32_t const& rs_std::Option<::std::int32_t>::operator*()
-    const& {
-  check_has_value();
-  return *reinterpret_cast<::std::int32_t const*>(storage_ + 4);
-}
-inline ::std::int32_t&& rs_std::Option<::std::int32_t>::operator*() && {
-  check_has_value();
-  return ::std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4));
-}
-inline ::std::int32_t* rs_std::Option<::std::int32_t>::operator->() {
-  check_has_value();
-  return reinterpret_cast<::std::int32_t*>(storage_ + 4);
-}
-inline ::std::int32_t const* rs_std::Option<::std::int32_t>::operator->()
-    const {
-  check_has_value();
-  return reinterpret_cast<::std::int32_t const*>(storage_ + 4);
-}
 inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
@@ -3112,6 +3037,15 @@ inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
   for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     storage_[0 + i] = __bytes[i];
   }
+}
+
+inline constexpr rs_std::Option<::std::int32_t>::Option(
+    ::std::nullopt_t) noexcept
+    : base_type(::std::nullopt) {}
+inline constexpr rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
+  base_type::operator=(::std::nullopt);
+  return *this;
 }
 
 #endif
