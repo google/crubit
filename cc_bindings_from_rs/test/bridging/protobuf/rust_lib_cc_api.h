@@ -63,7 +63,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
  private:
   // Field type has been replaced with a blob of bytes: Field is a bridged type
   // and might not be layout-compatible
-  //                                     with the C++ type (b/400633609)
+  //                 with the C++ type (b/400633609)
   ::std::array<unsigned char, 8> stats;
 
  private:

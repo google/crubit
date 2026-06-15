@@ -290,7 +290,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     ::std::int32_t __field1;
   };
   struct alignas(0) __crubit_A_struct {
-   public:
     ::std::int32_t __field0;
     ::std::int64_t __field1;
   };
@@ -301,12 +300,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Variant G has no size, so no struct is generated.
 
   struct alignas(0) __crubit_B_struct {
-   public:
     bool h;
     bool i;
   };
   struct alignas(0) __crubit_C_struct {
-   public:
     ::std::int32_t a;
     ::std::int32_t b;
     ::std::int32_t c;
@@ -524,11 +521,9 @@ CloneActiveVariant final {
     ::std::int32_t __field0;
   };
   struct alignas(0) __crubit_B_struct {
-   public:
     ::std::int32_t __field0;
   };
   struct alignas(0) __crubit_C_struct {
-   public:
     ::std::int32_t __field0;
   };
 
@@ -658,13 +653,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::int32_t __field0;
   };
   struct alignas(0) __crubit_B_struct {
-   public:
     ::std::int64_t __field0;
   };
   // Variant Q has no size, so no struct is generated.
 
   struct alignas(0) __crubit_C_struct {
-   public:
     ::std::int32_t* p;
   };
 

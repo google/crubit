@@ -237,8 +237,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     ::std::int32_t value;
   };
-  // Skipped bindings for field `_pinned`: ZST fields are not supported
-  // (b/258259459)
+  // Field `_pinned` omitted: C++ does not support zero-sized types.
  private:
   static void __crubit_field_offset_assertions();
 };

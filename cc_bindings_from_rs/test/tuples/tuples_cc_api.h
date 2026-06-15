@@ -406,8 +406,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   union {
     rs_std::Tuple<::std::int32_t> tuple_field;
   };
-  // Skipped bindings for field `empty_tuple_field`: ZST fields are not
-  // supported (b/258259459)
+  // Field `empty_tuple_field` omitted: C++ does not support zero-sized types.
  private:
   static void __crubit_field_offset_assertions();
 };

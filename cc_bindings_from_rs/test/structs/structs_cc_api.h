@@ -653,14 +653,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     ::std::int32_t value;
   };
-  // Skipped bindings for field `zst1`: ZST fields are not supported
-  // (b/258259459)
+  // Field `zst1` omitted: C++ does not support zero-sized types.
 
-  // Skipped bindings for field `zst2`: ZST fields are not supported
-  // (b/258259459)
+  // Field `zst2` omitted: C++ does not support zero-sized types.
 
-  // Skipped bindings for field `zst3`: ZST fields are not supported
-  // (b/258259459)
+  // Field `zst3` omitted: C++ does not support zero-sized types.
  private:
   static void __crubit_field_offset_assertions();
 };
