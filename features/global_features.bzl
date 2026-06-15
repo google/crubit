@@ -8,6 +8,7 @@ visibility(["//..."])
 
 SUPPORTED_FEATURES = [
     "supported",
+    "use_protobuf_ir",
     "assume_lifetimes",
 ]
 
