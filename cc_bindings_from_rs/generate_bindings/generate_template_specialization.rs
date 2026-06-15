@@ -22,7 +22,7 @@ use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use query_compiler::{get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
-#[rustversion::since(2026-05-18)]
+#[rustversion::nightly]
 use rustc_abi::LayoutData;
 use rustc_abi::{Layout, VariantIdx};
 use rustc_middle::ty::layout::PrimitiveExt;
@@ -1413,6 +1413,22 @@ fn specialize_result<'tcx>(
     );
     let err_discr_val = literal_of_tag_ty(tcx, discr_for_err.val, tag_type);
 
+    #[rustversion::stable]
+    let (ok_offset, err_offset) = {
+        let variants = match layout.variants() {
+            rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
+                unreachable!(
+                    "This should have been checked in parse_rs_std_template_specialization"
+                )
+            }
+            rustc_abi::Variants::Multiple { variants, .. } => variants,
+        };
+        (
+            Literal::u64_unsuffixed(variants[ok_idx].fields.offset(0).bytes()),
+            Literal::u64_unsuffixed(variants[err_idx].fields.offset(0).bytes()),
+        )
+    };
+    #[rustversion::nightly]
     let (ok_offset, err_offset) = (
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, ok_idx).fields.offset(0).bytes()),
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes()),
@@ -1643,6 +1659,19 @@ fn specialize_option<'tcx>(
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
+            #[rustversion::stable]
+            let payload_offset = {
+                let variants = match layout.variants() {
+                    rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
+                        unreachable!(
+                            "This should have been checked in parse_rs_std_template_specialization"
+                        )
+                    }
+                    rustc_abi::Variants::Multiple { variants, .. } => variants,
+                };
+                Literal::u64_unsuffixed(variants[some_idx].fields.offset(0).bytes())
+            };
+            #[rustversion::nightly]
             let payload_offset = Literal::u64_unsuffixed(
                 LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes(),
             );
