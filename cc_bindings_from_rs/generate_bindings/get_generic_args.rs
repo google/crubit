@@ -165,13 +165,8 @@ fn get_replacement_for_ctor_trait<'tcx>(
         .iter()
         .filter_map(|(clause, _)| {
             if let ty::ClauseKind::Projection(projection_predicate) = clause.kind().skip_binder() {
-                let projection_term = projection_predicate.projection_term;
-                #[rustversion::before(2026-04-22)]
-                let is_match = projection_term.def_id == ctor_output_def_id;
-                #[rustversion::since(2026-04-22)]
-                let is_match = projection_term.def_id() == ctor_output_def_id;
-
-                if is_match && projection_term.self_ty() == trait_ref.self_ty() {
+                let is_match = projection_predicate.def_id() == ctor_output_def_id;
+                if is_match && projection_predicate.self_ty() == trait_ref.self_ty() {
                     return projection_predicate.term.as_type();
                 }
             }
