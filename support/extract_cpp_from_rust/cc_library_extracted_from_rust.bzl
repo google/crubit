@@ -5,6 +5,7 @@
 """A library that extracts `global_cpp!` and `inline_cpp!` blocks from Rust files and makes them available in C++."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//support/extract_cpp_from_rust:extract_cpp.bzl", "extract_cpp")
 
 def cc_library_extracted_from_rust(name, srcs, **kwargs):
@@ -22,4 +23,9 @@ def cc_library_extracted_from_rust(name, srcs, **kwargs):
         name = name,
         hdrs = [extracted_header],
         **kwargs
+    )
+
+    rust_api_from_cpp(
+        name = name + "_rust",
+        cpp_target = ":" + name,
     )
