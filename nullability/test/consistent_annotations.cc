@@ -33,6 +33,13 @@ TEST(ConsistentAnnotations, InconsistentParameter2) {
       *p;
     }
   )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* p);
+    void target(int* _Nullable p) {  // [[unsafe]]
+      if (p) *p;
+    }
+  )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentParameter3) {
@@ -40,6 +47,13 @@ TEST(ConsistentAnnotations, InconsistentParameter3) {
     int target(int* _Nonnull p);
     int target(int* p) {  // [[unsafe]]
       *p;
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int target(int* _Nullable p);
+    int target(int* p) {  // [[unsafe]]
+      if (p) *p;
     }
   )cc"));
 }
@@ -140,6 +154,14 @@ TEST(ConsistentAnnotations, InconsistentReturnType1) {
 
 TEST(ConsistentAnnotations, InconsistentReturnType2) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
+    int X;
+    int* target();
+    int* _Nonnull target() {  // [[unsafe]]
+      return &X;
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* target();
     int* _Nullable target() {  // [[unsafe]]
       return nullptr;
@@ -148,6 +170,14 @@ TEST(ConsistentAnnotations, InconsistentReturnType2) {
 }
 
 TEST(ConsistentAnnotations, InconsistentReturnType3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int X;
+    int* _Nonnull target();
+    int* target() {  // [[unsafe]]
+      return &X;
+    }
+  )cc"));
+
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nullable target();
     int* target() {  // [[unsafe]]
@@ -253,10 +283,28 @@ TEST(ConsistentAnnotations, ConsistentStaticMemberVariable) {
 TEST(ConsistentAnnotations, InconsistentStaticMemberVariable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
-      static int *_Nonnull target;
+      static int* _Nonnull target;
     };
     // Annotation has to go within the declaration to be picked up.
-    int *_Nullable S::target /* [[unsafe]] */ = nullptr;
+    int* _Nullable S::target /* [[unsafe]] */ = nullptr;
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentStaticMemberVariable2) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      static int* target;
+    };
+    int* _Nullable S::target /* [[unsafe]] */ = nullptr;
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentStaticMemberVariable3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      static int* _Nullable target;
+    };
+    int* S::target /* [[unsafe]] */ = nullptr;
   )cc"));
 }
 

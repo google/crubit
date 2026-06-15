@@ -1057,32 +1057,6 @@ static void checkAnnotationsConsistentHelper(
     });
     return;
   }
-
-  // If a function parameter has a nullability annotation in the canonical
-  // declaration but no annotation in its corresponding definition, the
-  // annotation in the declaration is infused into the definition at the AST
-  // level. Consequently, T and CanonicalT will have the same nullabilities
-  // even though they are inconsistent in code. To catch this specific case,
-  // we attempt to read the raw attribute. If the nullability is set, but
-  // there's either no nullability attribute (or no attribute altogether), it
-  // means that there's an inconsistency in annotations.
-  if (const auto* AT = dyn_cast<AttributedType>(T)) {
-    if (AT->getImmediateNullability().has_value() &&
-        (!AT->getAttr() || (AT->getAttrKind() != attr::TypeNonNull &&
-                            AT->getAttrKind() != attr::TypeNullable &&
-                            AT->getAttrKind() != attr::TypeNullUnspecified)) &&
-        // Only issue the diagnostic if the infused nullability is different
-        // from the default.
-        Defaults.get(File) != *AT->getImmediateNullability()) {
-      Diags.push_back({
-          .Code = ErrorCode,
-          .Ctx = PointerNullabilityDiagnostic::Context::Other,
-          .Range = CharSourceRange::getTokenRange(Range),
-          .NoteRange = CharSourceRange::getTokenRange(CanonicalRange),
-          .NoteMessage = "previous declaration is here",
-      });
-    }
-  }
 }
 
 static void checkAnnotationsConsistent(
@@ -1107,15 +1081,42 @@ static void checkAnnotationsConsistent(
     if (NumParams > FuncCanonical->getNumParams())
       llvm::reportFatalInternalError(
           "Function decl has more parameters than its canonical declaration.");
+
+    // If a function parameter has a nullability annotation in the
+    // canonical declaration but no annotation in its corresponding definition,
+    // the Attribute (from the annotation) in the canonical declaration is
+    // infused into the definition's Type. To compare what is written/annotated,
+    // we consult the Type through the TypeSourceInfo, if available. The
+    // infusing seems to only happen for Function parameters for now, but
+    // we could use TSI for return types and global variable types as well.
+    const FunctionProtoType* FuncTSIPT = nullptr;
+    if (const auto* TSI = Func->getTypeSourceInfo()) {
+      if (const auto* FPT = TSI->getType()->getAs<FunctionProtoType>()) {
+        FuncTSIPT = FPT;
+      }
+    }
+    const FunctionProtoType* FuncCanonicalTSIPT = nullptr;
+    if (const auto* TSI = FuncCanonical->getTypeSourceInfo()) {
+      if (const auto* FPT = TSI->getType()->getAs<FunctionProtoType>()) {
+        FuncCanonicalTSIPT = FPT;
+      }
+    }
+
     for (unsigned int I = 0; I < NumParams; ++I) {
       const auto* Parm = Func->getParamDecl(I);
       const auto* ParmCanonical = FuncCanonical->getParamDecl(I);
-      checkAnnotationsConsistentHelper(
-          Parm->getType(), ParmCanonical->getType(), FileID, CanonicalFileID,
-          Parm->getSourceRange(), ParmCanonical->getSourceRange(), Diags,
-          Defaults,
-          PointerNullabilityDiagnostic::ErrorCode::
-              InconsistentAnnotationsForParameter);
+      QualType ParmType =
+          FuncTSIPT ? FuncTSIPT->getParamType(I) : Parm->getType();
+      QualType ParmCanonicalType = FuncCanonicalTSIPT
+                                       ? FuncCanonicalTSIPT->getParamType(I)
+                                       : ParmCanonical->getType();
+
+      checkAnnotationsConsistentHelper(ParmType, ParmCanonicalType, FileID,
+                                       CanonicalFileID, Parm->getSourceRange(),
+                                       ParmCanonical->getSourceRange(), Diags,
+                                       Defaults,
+                                       PointerNullabilityDiagnostic::ErrorCode::
+                                           InconsistentAnnotationsForParameter);
     }
     checkAnnotationsConsistentHelper(
         Func->getReturnType(), FuncCanonical->getReturnType(), FileID,
