@@ -422,6 +422,7 @@ message Enum {
   string deprecated = 14;
   string doc_comment = 15;
   string mangled_cc_name = 16;
+  bool is_incomplete = 17;
 }
 
 message GlobalVar {
