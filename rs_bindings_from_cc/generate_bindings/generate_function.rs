@@ -1130,6 +1130,7 @@ fn api_func_shape(
     db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
+    return_type: &RsTypeKind,
     errors: &Errors,
 ) -> Option<(Ident, ImplKind)> {
     let maybe_record = match func.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
@@ -1170,9 +1171,10 @@ fn api_func_shape_if_some(
     db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
+    return_type: &RsTypeKind,
 ) -> Option<(Ident, ImplKind)> {
     let errors = Errors::new();
-    let shape = api_func_shape(db, func, param_types, &errors);
+    let shape = api_func_shape(db, func, param_types, return_type, &errors);
     if !errors.is_empty() {
         errors.discard();
         return None;
@@ -1192,13 +1194,14 @@ pub fn get_binding(
             generate_function(db, (*function).clone(), None).ok().flatten().is_some()
         })
         .find_map(|function| {
-            let Ok((mut function_param_types, _)) = rs_type_kinds_for_func(db, function) else {
+            let Ok((mut function_param_types, return_type)) = rs_type_kinds_for_func(db, function)
+            else {
                 return None;
             };
             if !function_param_types.iter().eq(expected_param_types.iter()) {
                 return None;
             }
-            api_func_shape_if_some(db, function, &mut function_param_types)
+            api_func_shape_if_some(db, function, &mut function_param_types, &return_type)
         })
 }
 
@@ -1216,14 +1219,16 @@ pub fn is_record_clonable(db: &BindingsGenerator, record: Rc<Record>) -> bool {
                 function.params.len() == 2
             })
             .any(|function| {
-                let Ok((mut function_param_types, _)) = rs_type_kinds_for_func(db, function) else {
+                let Ok((mut function_param_types, return_type)) =
+                    rs_type_kinds_for_func(db, function)
+                else {
                     return false;
                 };
                 if function.params.len() != 2 || !function_param_types[1].is_shared_ref_to(&record)
                 {
                     return false;
                 }
-                api_func_shape_if_some(db, function, &mut function_param_types)
+                api_func_shape_if_some(db, function, &mut function_param_types, &return_type)
                     .is_some_and(|(func_name, _)| func_name == *"clone")
             })
 }
@@ -1708,7 +1713,7 @@ pub fn generate_function(
 
     let errors = Errors::new();
     let (func_name, impl_kind) =
-        if let Some(values) = api_func_shape(db, &func, &mut param_types, &errors) {
+        if let Some(values) = api_func_shape(db, &func, &mut param_types, &return_type, &errors) {
             values
         } else {
             errors.consolidate()?;
@@ -2125,6 +2130,18 @@ pub fn generate_function(
                     trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
             }
 
+            let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
+            let qualified_record_name = if Some(trait_record.id) == func.enclosing_item_id
+                && trait_record.template_specialization.is_none()
+            {
+                quote! { #record_name }
+            } else {
+                // If the trait is being implemented for a different record than its enclosing one
+                // (e.g. for conversion operators) retrieve the fully qualified path.
+                let t = db.rs_type_kind(trait_record.into())?;
+                t.to_token_stream(db)
+            };
+
             let mut extra_body = if let Some(name) = associated_return_type {
                 let associated_type;
                 if matches!(trait_name, TraitName::CcIndex { .. } | TraitName::CcIndexMut { .. }) {
@@ -2207,7 +2224,6 @@ pub fn generate_function(
                 });
             }
 
-            let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
             let mut assumed_lifetime_params = vec![];
             let mut trait_lifetime_params: Vec<Lifetime> = vec![];
             if assume_lifetimes {
@@ -2241,7 +2257,7 @@ pub fn generate_function(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
                             #extra_body
 
                             #[inline (always)]
@@ -2259,7 +2275,7 @@ pub fn generate_function(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<(#single_param_,)> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<(#single_param_,)> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
                             #extra_body
 
                             #[inline (always)]
@@ -2277,7 +2293,7 @@ pub fn generate_function(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
                             type CtorType = Self;
                             type Error = ::ctor::Infallible;
 
@@ -2295,7 +2311,7 @@ pub fn generate_function(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<#single_param_> for #record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<#single_param_> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
                             type CtorType = Self;
                             type Error = ::ctor::Infallible;
 
@@ -2336,14 +2352,6 @@ pub fn generate_function(
                 _ => None,
             };
 
-            let qualified_record_name = if Some(trait_record.id) == func.enclosing_item_id {
-                // If the method is defined in the record, then the record qualifier is not
-                // needed for better readability.
-                quote! { #record_name }
-            } else {
-                let t = db.rs_type_kind(trait_record.into())?;
-                t.to_token_stream(db)
-            };
             let mut self_type = db.rs_type_kind(trait_record.into())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
                 *lifetimes = trait_lifetime_params.clone();
@@ -2692,6 +2700,7 @@ fn function_signature(
                 *return_type = RsTypeKind::Primitive(Primitive::Bool);
             }
         }
+
         Some(
             TraitName::Clone
             | TraitName::CtorNew(..)
@@ -2700,15 +2709,17 @@ fn function_signature(
             | TraitName::UnsafeCtorNew(..)
             | TraitName::UnsafeFrom(..),
         ) => {
-            move_self_from_out_param_to_return_value(
-                db,
-                func,
-                return_type,
-                &mut api_params,
-                &mut thunk_args,
-                param_types,
-                &mut lifetimes,
-            )?;
+            if func.cc_name.is_constructor() {
+                move_self_from_out_param_to_return_value(
+                    db,
+                    func,
+                    return_type,
+                    &mut api_params,
+                    &mut thunk_args,
+                    param_types,
+                    &mut lifetimes,
+                )?;
+            }
             quoted_return_type = Some(quote! { Self });
 
             // CtorNew and From group parameters into a tuple.
@@ -2727,9 +2738,13 @@ fn function_signature(
                     )
                 };
                 api_params = vec![quote! {args: #args_type}];
-                let param_idents_without_this = param_idents.iter().skip(1);
+                let param_idents_for_unpack = if func.cc_name.is_constructor() {
+                    param_idents.iter().skip(1).collect::<Vec<_>>()
+                } else {
+                    param_idents.iter().collect::<Vec<_>>()
+                };
                 let thunk_vars = format_tuple_except_singleton(
-                    param_idents_without_this.map(|ts| quote! { mut #ts }),
+                    param_idents_for_unpack.into_iter().map(|ts| quote! { mut #ts }),
                 );
                 // We must unpack the input args from a tuple before doing other preparation.
                 thunk_prepare = {
