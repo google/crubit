@@ -16,6 +16,8 @@ def cc_library_extracted_from_rust(name, srcs, **kwargs):
         out = extracted_header,
     )
 
+    kwargs.setdefault("aspect_hints", ["//features:supported"])
+
     cc_library(
         name = name,
         hdrs = [extracted_header],
