@@ -202,6 +202,17 @@ impl<'de> Deserialize<'de> for SerializedCrubitFeature {
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct SerializedCrubitFeatures(pub flagset::FlagSet<CrubitFeature>);
 
+impl SerializedCrubitFeatures {
+    /// Returns a new `SerializedCrubitFeatures` after resolving conflicts.
+    pub fn resolved(mut features: flagset::FlagSet<CrubitFeature>) -> Self {
+        if features.contains(CrubitFeature::NoAssumeLifetimes) {
+            features -= CrubitFeature::AssumeLifetimes;
+        }
+        features -= CrubitFeature::NoAssumeLifetimes;
+        Self(features)
+    }
+}
+
 impl<'de> Deserialize<'de> for SerializedCrubitFeatures {
     fn deserialize<D>(deserializer: D) -> Result<SerializedCrubitFeatures, D::Error>
     where
@@ -226,13 +237,7 @@ impl<'de> Deserialize<'de> for SerializedCrubitFeatures {
                     result |= flags;
                 }
 
-                if result.contains(CrubitFeature::NoAssumeLifetimes) {
-                    result -= CrubitFeature::AssumeLifetimes;
-                }
-
-                result -= CrubitFeature::NoAssumeLifetimes;
-
-                Ok(SerializedCrubitFeatures(result))
+                Ok(SerializedCrubitFeatures::resolved(result))
             }
         }
 
