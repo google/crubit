@@ -14,13 +14,9 @@ use std::process;
 
 pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsResponse {
     let ir = if request.has_ir_proto() {
-        // TODO(rrijadi): Implement proto to ir::IR deserialization and swap out this block.
-        // This is gated behind a feature flag in the top-level call.
-        let mut response = GenerateBindingsResponse::new();
-        response.set_fatal_errors(
-            "Deserializing IRProto to ir::IR is not implemented yet.".to_string(),
-        );
-        return response;
+        ir::proto_to_ir(request.ir_proto())
+            .with_context(|| "Failed to deserialize IRProto".to_string())
+            .unwrap()
     } else {
         let json: &[u8] = request.json().as_bytes();
         deserialize_ir(json)
