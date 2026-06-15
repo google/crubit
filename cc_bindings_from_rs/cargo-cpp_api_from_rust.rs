@@ -540,7 +540,7 @@ extern crate proc_macro;
         Ok(lib_rs_content)
     }
 
-    fn compile_staticlib(&self, mut lib_rs_content: String, metadata: &Metadata) -> Result<()> {
+    fn compile_staticlib(&self, lib_rs_content: String, metadata: &Metadata) -> Result<()> {
         let root_name = &self.root.name;
         let deps_dir = &self.dirs.deps_dir;
         let profile_dir = &self.dirs.profile_dir;
