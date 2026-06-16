@@ -12,7 +12,7 @@ use std::process;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// The input Rust source files (.rs) to scan
-    #[arg(long, value_name = "FILE", required = true)]
+    #[arg(long, value_name = "FILE", required = true, num_args = 1..)]
     srcs: Vec<PathBuf>,
 
     /// The output C++ header file (.h)

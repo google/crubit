@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "gtest/gtest.h"
-#include "support/extract_cpp_from_rust/test/test_extracted_cc.h"
+#include "support/extract_cpp_from_rust/test/library_with_embedded_cpp_extracted_cc.h"
 
 namespace {
 
