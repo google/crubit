@@ -64,11 +64,17 @@ class IteratorAdapter {
                            ::std::remove_pointer_t<typename impl::Item>,
                            typename impl::Item>;
   using difference_type = ::std::ptrdiff_t;
+
+ private:
+  static constexpr bool kIsMoveOnly =
+      !::std::is_copy_constructible_v<value_type> &&
+      ::std::is_move_constructible_v<value_type>;
+
+ public:
   using pointer = void;
-  using reference =
-      ::std::conditional_t<kIsPointerItem,
-                           ::std::add_lvalue_reference_t<value_type>,
-                           const value_type&>;
+  using reference = ::std::conditional_t<
+      kIsPointerItem, ::std::add_lvalue_reference_t<value_type>,
+      ::std::conditional_t<kIsMoveOnly, value_type, const value_type&>>;
   using iterator_category = ::std::input_iterator_tag;
   using iterator_concept = ::std::input_iterator_tag;
 
@@ -119,6 +125,8 @@ class IteratorAdapter {
   reference operator*() const {
     if constexpr (kIsPointerItem) {
       return *current_item_.value();
+    } else if constexpr (kIsMoveOnly) {
+      return ::std::move(*current_item_);
     } else {
       return current_item_.value();
     }

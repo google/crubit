@@ -14,11 +14,20 @@ using ::into_iterator_rust::ContainerWithInherentBegin;
 using ::into_iterator_rust::ContainerWithRefIntoIter;
 using ::into_iterator_rust::make_container;
 using ::into_iterator_rust::make_inherent_container;
+using ::into_iterator_rust::make_iterator;
+using ::into_iterator_rust::make_move_only_iterator;
+using ::into_iterator_rust::MoveOnlyIterator;
+using ::into_iterator_rust::MoveOnlyPayload;
 using ::into_iterator_rust::MyContainer;
+using ::into_iterator_rust::MyIterator;
 
 static_assert(std::ranges::range<MyContainer>);
 static_assert(std::ranges::range<const MyContainer&>);
 static_assert(std::ranges::range<MyContainer&>);
+
+static_assert(std::ranges::range<MyIterator>);
+static_assert(!std::ranges::range<const MyIterator&>);
+static_assert(std::ranges::range<MyIterator&>);
 
 static_assert(std::ranges::input_range<MyContainer>);
 static_assert(std::ranges::input_range<const MyContainer&>);
@@ -68,6 +77,26 @@ TEST(IntoIteratorTest, MutRefContainer) {
 TEST(IntoIteratorTest, InherentBeginConflict) {
   ContainerWithInherentBegin c = make_inherent_container();
   EXPECT_EQ(c.begin(), 42);
+}
+
+TEST(IntoIteratorTest, DirectIteratorForLoop) {
+  MyIterator iter = make_iterator(42);
+  int count = 0;
+  for (int x : iter) {
+    EXPECT_EQ(x, 42);
+    if (++count >= 3) break;
+  }
+  EXPECT_EQ(count, 3);
+}
+
+TEST(IntoIteratorTest, MoveOnlyIteratorForLoop) {
+  MoveOnlyIterator iter = make_move_only_iterator(21, 3);
+  int count = 0;
+  for (MoveOnlyPayload&& payload : iter) {
+    EXPECT_EQ(payload.mutating_method(), 42);
+    count++;
+  }
+  EXPECT_EQ(count, 3);
 }
 
 }  // namespace

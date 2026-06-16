@@ -19,6 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/iterator_adapter.h"
 #include "support/rs_std/slice_ref.h"
 #include "support/rs_std/traits.h"
 
@@ -60,6 +61,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
 
   explicit MyStruct(::std::int32_t value);
 
+  template <typename TAdaptedSelf_ = MyStruct>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
   union {
     ::std::int32_t x;
   };
@@ -94,7 +100,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
 
   static ::stdlib::NonCloneableIterator new_(::std::int32_t x);
-
+  template <typename TAdaptedSelf_ = NonCloneableIterator>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
   union {
     ::std::int32_t x;
   };
@@ -149,7 +159,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
 
   static ::stdlib::RefIterator new_(
       rs_std::SliceRef<const ::std::int32_t> slice);
-
+  template <typename TAdaptedSelf_ = RefIterator>
+  inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+  }
+  inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
   union {
     rs_std::SliceRef<const ::std::int32_t> slice;
   };

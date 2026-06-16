@@ -136,3 +136,34 @@ pub fn make_iterator(value: i32) -> MyIterator {
 pub fn make_ref_container<'a>(iter: &'a mut MyIterator) -> ContainerWithRefIntoIter<'a> {
     ContainerWithRefIntoIter { iter }
 }
+
+pub struct MoveOnlyPayload {
+    pub val: i32,
+}
+
+pub struct MoveOnlyIterator {
+    pub val: i32,
+    pub count: i32,
+}
+
+impl Iterator for MoveOnlyIterator {
+    type Item = MoveOnlyPayload;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count > 0 {
+            self.count -= 1;
+            Some(MoveOnlyPayload { val: self.val })
+        } else {
+            None
+        }
+    }
+}
+
+impl MoveOnlyPayload {
+    pub fn mutating_method(&mut self) -> i32 {
+        self.val * 2
+    }
+}
+
+pub fn make_move_only_iterator(val: i32, count: i32) -> MoveOnlyIterator {
+    MoveOnlyIterator { val, count }
+}
