@@ -1586,7 +1586,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
         })
         .collect::<Option<TokenStream>>()?;
 
-    let unwrapper = match callable.fn_trait {
+    let unwrapper = match callable.rust_fn_trait {
         FnTrait::Fn => quote! { &*f },
         FnTrait::FnMut => quote! { &mut *f },
         FnTrait::FnOnce => {
@@ -1856,7 +1856,7 @@ fn generate_any_invocable_invoker_def(
         })
         .collect::<Option<TokenStream>>()?;
 
-    let unwrapper = match callable.fn_trait {
+    let unwrapper = match callable.cpp_fn_trait {
         FnTrait::Fn | FnTrait::FnMut => quote! { (*f) },
         FnTrait::FnOnce => {
             // include utility for std::move.
@@ -1949,7 +1949,7 @@ fn any_invocable_sig_spelling(callable: &Callable, db: &BindingsGenerator) -> Re
         .iter()
         .map(|param_ty| cpp_type_name::format_cpp_type_with_references(param_ty, db))
         .collect::<Result<Vec<TokenStream>>>()?;
-    let qual = match callable.fn_trait {
+    let qual = match callable.cpp_fn_trait {
         FnTrait::Fn => quote! { const },
         FnTrait::FnMut => quote! {},
         FnTrait::FnOnce => quote! { && },

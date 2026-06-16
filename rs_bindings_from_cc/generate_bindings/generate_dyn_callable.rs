@@ -66,7 +66,7 @@ pub fn callable_crubit_abi_type(
         }
     };
 
-    let qualifier = match callable.fn_trait {
+    let qualifier = match callable.cpp_fn_trait {
         FnTrait::Fn => quote! { const },
         FnTrait::FnMut => quote! {},
         FnTrait::FnOnce => quote! { && },

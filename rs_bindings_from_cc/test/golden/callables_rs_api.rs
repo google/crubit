@@ -31,11 +31,11 @@ pub fn invoke_once(
 #[inline(always)]
 pub fn invoke(
     f: ::alloc::boxed::Box<
-        dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
     >,
 ) {
     unsafe {
-        crate::detail::__rust_thunk___Z6invokeN6rs_std11DynCallableIFvvEEE(::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::FnMut()+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(||{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::FnMut()+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
+        crate::detail::__rust_thunk___Z6invokeN6rs_std11DynCallableIFvvEEE(::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn()+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(||{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn()+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
     }
 }
 
@@ -197,7 +197,7 @@ pub fn map_layout_compatible(
 #[inline(always)]
 pub unsafe fn callable_taking_reference(
     f: ::alloc::boxed::Box<
-        dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+        dyn ::core::ops::Fn(*mut ::ffi_11::c_int)
             + ::core::marker::Send
             + ::core::marker::Sync
             + 'static,
@@ -205,7 +205,7 @@ pub unsafe fn callable_taking_reference(
     arg: ::ffi_11::c_int,
 ) -> ::ffi_11::c_int {
     unsafe {
-        crate::detail::__rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::FnMut(*mut::ffi_11::c_int)+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: *mut::ffi_11::c_int|{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::FnMut(*mut::ffi_11::c_int)+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,arg)
+        crate::detail::__rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(*mut::ffi_11::c_int)+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: *mut::ffi_11::c_int|{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(*mut::ffi_11::c_int)+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,arg)
     }
 }
 
@@ -338,26 +338,26 @@ mod detail {
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
         f: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+            dyn ::core::ops::Fn(*mut ::ffi_11::c_int)
                 + ::core::marker::Send
                 + ::core::marker::Sync
                 + 'static,
         >,
         param_0: *mut ::ffi_11::c_int,
     ) {
-        (unsafe { &mut *f })(param_0);
+        (unsafe { &*f })(param_0);
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
         operation: ::dyn_callable_rs::FunctionToCall,
         from: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+            dyn ::core::ops::Fn(*mut ::ffi_11::c_int)
                 + ::core::marker::Send
                 + ::core::marker::Sync
                 + 'static,
         >,
         to: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnMut(*mut ::ffi_11::c_int)
+            dyn ::core::ops::Fn(*mut ::ffi_11::c_int)
                 + ::core::marker::Send
                 + ::core::marker::Sync
                 + 'static,
@@ -370,19 +370,19 @@ mod detail {
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
         f: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        (unsafe { &mut *f })();
+        (unsafe { &*f })();
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_manager___CcTemplateInstN6rs_std11DynCallableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
         operation: ::dyn_callable_rs::FunctionToCall,
         from: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
         to: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
         unsafe {

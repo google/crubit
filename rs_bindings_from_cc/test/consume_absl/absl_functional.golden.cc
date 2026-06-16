@@ -24,6 +24,15 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+extern "C" int
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    ::absl::internal_any_invocable::TypeErasedState* state, int param_0);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
 extern "C" void
 __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::absl::internal_any_invocable::TypeErasedState* state);
@@ -52,6 +61,11 @@ __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fpart
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
+extern "C" int
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    ::absl::AnyInvocable<int(int)>* f, int param_0) {
+  return (*f)(param_0);
+}
 extern "C" void
 __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::absl::AnyInvocable<void() &&>* f) {
@@ -144,5 +158,23 @@ extern "C" void __rust_thunk___Z17MyOptionIntMapperv(
 static_assert(
     (class absl::AnyInvocable<MyOption<int>(MyOption<int>) const> (*)()) &
     ::MyOptionIntMapper);
+
+extern "C" void __rust_thunk___Z23ReturnNonConstIntMapperv(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::Encoder __return_encoder(::crubit::AnyInvocableAbi<int(int)>::kSize,
+                                     __return_abi_buffer);
+  ::crubit::AnyInvocableAbi<int(int)>(
+      __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
+      [](::absl::internal_any_invocable::TypeErasedState* state,
+         ::absl::internal_any_invocable::ForwardedParameterType<int>
+             param_0) noexcept -> int {
+        return __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+            state, param_0);
+      })
+      .Encode(ReturnNonConstIntMapper(), __return_encoder);
+}
+
+static_assert((class absl::AnyInvocable<int(int)> (*)()) &
+              ::ReturnNonConstIntMapper);
 
 #pragma clang diagnostic pop

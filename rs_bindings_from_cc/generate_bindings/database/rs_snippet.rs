@@ -602,7 +602,15 @@ impl ToTokens for FnTrait {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Callable {
     pub backing_type: BackingType,
-    pub fn_trait: FnTrait,
+    /// The trait bound that should be used when spelling out the C++ function type.
+    pub cpp_fn_trait: FnTrait,
+    /// The trait bound that should be used when spelling out the Rust function type.
+    ///
+    /// This may differ from `cpp_fn_trait` in cases where we need to convert a C++ non-const
+    /// qualified function into a Rust `Fn`. This is because C++ does not maintain the same safety
+    /// guarantees that Rust FnMut needs to be called, e.g. an exclusive mutable reference. C++
+    /// allows for non-exclusive calls to mutable function objects.
+    pub rust_fn_trait: FnTrait,
     pub return_type: Rc<RsTypeKind>,
     pub param_types: Rc<[RsTypeKind]>,
     pub invoker_ident: Ident,
@@ -625,7 +633,7 @@ impl Callable {
         let rust_return_type_fragment = self.rust_return_type_fragment(db);
         let param_type_tokens =
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
-        let fn_trait = self.fn_trait;
+        let fn_trait = self.rust_fn_trait;
         quote! {
             dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send + ::core::marker::Sync + 'static
         }
@@ -744,9 +752,20 @@ impl BridgeRsTypeKind {
                             ),
                         },
                     },
-                    fn_trait: match fn_trait {
+                    cpp_fn_trait: match fn_trait {
                         ir::FnTrait::Fn => FnTrait::Fn,
                         ir::FnTrait::FnMut => FnTrait::FnMut,
+                        ir::FnTrait::FnOnce => FnTrait::FnOnce,
+                    },
+                    rust_fn_trait: match fn_trait {
+                        ir::FnTrait::Fn => FnTrait::Fn,
+                        ir::FnTrait::FnMut => {
+                            // C++ doesn't require exclusive access to invoke a mutable function,
+                            // so to be safe we use the more conservative `Fn` trait in Rust, which
+                            // because we mark it with Send + Sync, is safe to call anywhere in
+                            // parallel.
+                            FnTrait::Fn
+                        }
                         ir::FnTrait::FnOnce => FnTrait::FnOnce,
                     },
                     return_type: Rc::new(db.rs_type_kind(return_type.clone())?),

@@ -27,6 +27,10 @@ absl::AnyInvocable<int(int) const> ReturnIntMapper();
 // MyOption<int>.
 absl::AnyInvocable<MyOption<int>(MyOption<int>) const> MyOptionIntMapper();
 
+// Returns an AnyInvocable without const qualifier, which Crubit promotes to
+// Fn in Rust.
+absl::AnyInvocable<int(int)> ReturnNonConstIntMapper();
+
 // IncompleteRecord
 struct Incomplete;
 

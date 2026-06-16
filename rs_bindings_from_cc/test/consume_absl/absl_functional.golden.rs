@@ -59,6 +59,20 @@ pub fn MyOptionIntMapper() -> ::alloc::boxed::Box<
     }
 }
 
+/// Returns an AnyInvocable without const qualifier, which Crubit promotes to
+/// Fn in Rust.
+#[inline(always)]
+pub fn ReturnNonConstIntMapper() -> ::alloc::boxed::Box<
+    dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+        + ::core::marker::Send
+        + ::core::marker::Sync
+        + 'static,
+> {
+    unsafe {
+        ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(raw_any_invocable.get(),param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z23ReturnNonConstIntMapperv(__crubit_return_abi_buffer,); })
+    }
+}
+
 // error: struct `Incomplete` could not be bound
 //   incomplete type
 
@@ -180,6 +194,47 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z17MyOptionIntMapperv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
+        pub(crate) unsafe fn __rust_thunk___Z23ReturnNonConstIntMapperv(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+            f: *mut ::any_invocable::RawAnyInvocable,
+            param_0: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
