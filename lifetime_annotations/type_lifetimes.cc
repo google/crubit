@@ -796,7 +796,7 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
                                                       type_parm->getIndex());
     if (!arg_lifetimes) {
       assert(false);
-      return llvm::DenseMapInfo<ObjectLifetimes>::getEmptyKey();
+      return ObjectLifetimes();
     }
     return ObjectLifetimes(ret_lifetime, *arg_lifetimes);
   } else if (type->isRecordType()) {

@@ -338,10 +338,6 @@ namespace llvm {
 
 template <>
 struct DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes> {
-  static clang::tidy::lifetimes::ValueLifetimes getEmptyKey() {
-    return clang::tidy::lifetimes::ValueLifetimes(
-        DenseMapInfo<clang::QualType>().getEmptyKey());
-  }
 
   static bool isEqual(const clang::tidy::lifetimes::ValueLifetimes& lhs,
                       const clang::tidy::lifetimes::ValueLifetimes& rhs);
@@ -352,12 +348,6 @@ struct DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes> {
 
 template <>
 struct DenseMapInfo<clang::tidy::lifetimes::ObjectLifetimes> {
-  static clang::tidy::lifetimes::ObjectLifetimes getEmptyKey() {
-    return clang::tidy::lifetimes::ObjectLifetimes(
-        DenseMapInfo<clang::tidy::lifetimes::Lifetime>().getEmptyKey(),
-        DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>().getEmptyKey());
-  }
-
   static bool isEqual(const clang::tidy::lifetimes::ObjectLifetimes& lhs,
                       const clang::tidy::lifetimes::ObjectLifetimes& rhs) {
     return DenseMapInfo<clang::tidy::lifetimes::Lifetime>::isEqual(
