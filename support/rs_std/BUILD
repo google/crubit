@@ -289,9 +289,6 @@ rust_library(
     name = "lossy_formatter",
     srcs = ["lossy_formatter.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    proc_macro_deps = [
-        "//support:crubit_annotate",
-    ],
     visibility = [
         "//:__subpackages__",
     ],
@@ -308,18 +305,15 @@ crubit_rust_test(
     ],
 )
 
-cc_bindings_from_rust(
-    name = "lossy_formatter_cc",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crate = ":lossy_formatter",
-)
-
 cc_library(
     name = "lossy_formatter_for_bindings",
     hdrs = ["lossy_formatter_for_bindings.h"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//:__subpackages__"],
-    deps = [":lossy_formatter_cc"],
+    deps = [
+        # We depend on the extern "C" symbols in lossy_formatter.
+        ":lossy_formatter",
+    ],
 )
 
 cpp_api_from_rust_toolchain_bindings(

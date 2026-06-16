@@ -49,6 +49,15 @@ target_link_libraries(crubit_support_rs_std_iterator_adapter PUBLIC
 crubit_support_rs_std_traits
 )
 
+add_library(crubit_support_rs_std_lossy_formatter_for_bindings STATIC
+"lossy_formatter_for_bindings.h"
+)
+set_target_properties(crubit_support_rs_std_lossy_formatter_for_bindings PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_lossy_formatter_for_bindings PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
 add_library(crubit_support_rs_std_option STATIC
 "option.h"
 )

@@ -65,6 +65,23 @@ source_set("iterator_adapter") {
   ]
 }
 
+source_set("lossy_formatter_for_bindings") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "lossy_formatter_for_bindings.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:lossy_formatter",
+  ]
+}
+
 source_set("option") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -211,7 +228,6 @@ rust_static_library("lossy_formatter") {
   ]
   deps = [
     "$crubit_src_dir/support/ffi_11:ffi_11",
-    "$crubit_src_dir/support:crubit_annotate",
   ]
   allow_unsafe = true
   no_clippy = true
@@ -222,6 +238,7 @@ group("rs_std_cpp") {
     ":char",
     ":dyn_callable",
     ":iterator_adapter",
+    ":lossy_formatter_for_bindings",
     ":option",
     ":result",
     ":slice_ref",

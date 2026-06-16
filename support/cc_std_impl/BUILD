@@ -68,4 +68,7 @@ additional_rust_srcs_for_crubit_bindings(
     visibility = [
         "//support/cc_std:__subpackages__",
     ],
+    deps = [
+        "//support:crubit_annotate",
+    ],
 )

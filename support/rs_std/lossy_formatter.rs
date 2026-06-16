@@ -10,7 +10,6 @@ use std::slice;
 /// Wraps a [`Formatter<'formatter>`] for the duration of `'scope` to lossily write UTF-8.
 ///
 /// Writes bytes instead of [`str`]. Buffers up to 3 bytes of an incomplete UTF-8 sequence.
-#[crubit_annotate::must_bind]
 pub struct LossyFormatter<'scope, 'formatter> {
     writer: &'scope mut Formatter<'formatter>,
     incomplete: IncompleteUtf8,
@@ -42,7 +41,6 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
     ///
     /// [U+FFFD]: char::REPLACEMENT_CHARACTER
     /// [`write_str`]: Formatter::write_str
-    #[crubit_annotate::must_bind]
     #[must_use]
     pub unsafe fn write_bytes(&mut self, data: *const ffi_11::c_char, count: usize) -> usize {
         let data = if count > 0 {
@@ -105,7 +103,6 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
     ///
     /// [U+FFFD]: char::REPLACEMENT_CHARACTER
     /// [`write_char`]: Write::write_char
-    #[crubit_annotate::must_bind]
     #[must_use]
     pub fn write_byte(&mut self, data: u8) -> bool {
         let mut write_two_chars = |a, b| -> fmt::Result {
@@ -130,7 +127,6 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
     ///
     /// Returns the number of bytes successfully progressed: whether written to the underlying
     /// formatter or buffered as incomplete UTF-8.
-    #[crubit_annotate::must_bind]
     #[must_use]
     pub fn write_fill(&mut self, count: usize, data: u8) -> usize {
         if !data.is_ascii() {
@@ -166,7 +162,6 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
     /// Returns false if a write error occurred; otherwise, returns true.
     ///
     /// [U+FFFD]: char::REPLACEMENT_CHARACTER
-    #[crubit_annotate::must_bind]
     #[must_use]
     pub fn flush(&mut self) -> bool {
         if self.incomplete.is_empty() {
@@ -175,6 +170,37 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
         self.incomplete.clear();
         self.writer.write_char(char::REPLACEMENT_CHARACTER).is_ok()
     }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn crubit_LossyFormatter_write_bytes(
+    formatter: *mut ffi_11::c_void,
+    data: *const ffi_11::c_char,
+    count: usize,
+) -> usize {
+    unsafe { (*(formatter as *mut LossyFormatter<'_, '_>)).write_bytes(data, count) }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn crubit_LossyFormatter_write_byte(
+    formatter: *mut ffi_11::c_void,
+    data: u8,
+) -> bool {
+    unsafe { (*(formatter as *mut LossyFormatter<'_, '_>)).write_byte(data) }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn crubit_LossyFormatter_write_fill(
+    formatter: *mut ffi_11::c_void,
+    count: usize,
+    data: u8,
+) -> usize {
+    unsafe { (*(formatter as *mut LossyFormatter<'_, '_>)).write_fill(count, data) }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn crubit_LossyFormatter_flush(formatter: *mut ffi_11::c_void) -> bool {
+    unsafe { (*(formatter as *mut LossyFormatter<'_, '_>)).flush() }
 }
 
 impl<'scope, 'formatter> Debug for LossyFormatter<'scope, 'formatter> {
