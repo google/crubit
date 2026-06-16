@@ -33,12 +33,4 @@ __rust_thunk___ZN2TSIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_
   crubit::construct_at(__this);
 }
 
-extern "C" void
-__rust_thunk___ZN2TSIiE1fEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplate_5finstantiation_5fcc(
-    struct TS<int>* __this) {
-  __this->f();
-}
-
-static_assert((void (::TS<int>::*)()) & ::TS<int>::f);
-
 #pragma clang diagnostic pop
