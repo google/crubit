@@ -166,23 +166,34 @@ def generate_bindings(
     )
 
     # Run the `rs_bindings_from_cc` to generate the _rust_api_impl.cc and _rust_api.rs files.
-    cc_common.create_compile_action(
-        compilation_context = compilation_context,
-        actions = ctx.actions,
-        action_name = ACTION_NAMES.rs_bindings_from_cc,
+    if not cc_common.action_is_enabled(
         feature_configuration = feature_configuration,
-        cc_toolchain = cc_toolchain,
-        source_file = public_hdrs[0],
-        output_file = cc_output,
-        additional_inputs = depset(
-            direct = [
-                ctx.executable._clang_format,
-                ctx.executable._rustfmt,
-                rs_bindings_from_cc_tool,
-            ] + ctx.files._rustfmt_cfg,
-            transitive = [action_inputs],
-        ),
-        additional_outputs = [x for x in [rs_output, namespaces_output, error_report_output] if x != None],
-        variables = variables,
-    )
+        action_name = ACTION_NAMES.rs_bindings_from_cc,
+    ):
+        ctx.actions.write(output = cc_output, content = "")
+        ctx.actions.write(output = rs_output, content = "")
+        ctx.actions.write(output = namespaces_output, content = "[]")
+        if error_report_output:
+            ctx.actions.write(output = error_report_output, content = "{}")
+    else:
+        cc_common.create_compile_action(
+            compilation_context = compilation_context,
+            actions = ctx.actions,
+            action_name = ACTION_NAMES.rs_bindings_from_cc,
+            feature_configuration = feature_configuration,
+            cc_toolchain = cc_toolchain,
+            source_file = public_hdrs[0],
+            output_file = cc_output,
+            additional_inputs = depset(
+                direct = [
+                    ctx.executable._clang_format,
+                    ctx.executable._rustfmt,
+                    rs_bindings_from_cc_tool,
+                ] + ctx.files._rustfmt_cfg,
+                transitive = [action_inputs],
+            ),
+            additional_outputs = [x for x in [rs_output, namespaces_output, error_report_output] if x != None],
+            variables = variables,
+        )
+
     return (cc_output, rs_output, namespaces_output, error_report_output)
