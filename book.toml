@@ -10,5 +10,6 @@ title = "Crubit Documentation"
 [preprocessor.tabs]
 
 [output.html]
+git-repository-url = "https://github.com/google/crubit"
 additional-css = ["theme/tabs.css"]
 additional-js = ["theme/tabs.js"]
