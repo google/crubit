@@ -25,9 +25,7 @@ use crate::{
 };
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{
-    escape_non_identifier_chars, expect_format_cc_type_name, make_rs_ident, CcInclude,
-};
+use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, TemplateSpecialization,
     TraitImplTemplateSpecialization,
@@ -51,7 +49,7 @@ use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
-use rustc_span::symbol::sym;
+use rustc_span::symbol::{sym, Symbol};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -587,6 +585,7 @@ fn generate_into_impls<'tcx>(
                 core.def_id,
                 core.rs_fully_qualified_name.clone(),
                 /*is_constructor=*/ false,
+                /*within_template=*/ false,
             )
             .ok()?;
 
@@ -783,6 +782,7 @@ fn generate_constructor_impls<'tcx>(
                     core.def_id,
                     core.rs_fully_qualified_name.clone(),
                     /*is_constructor=*/ true,
+                    /*within_template=*/ false,
                 )
                 .ok()?;
                 let thunk_name = method_name_to_cc_thunk_name
@@ -839,6 +839,7 @@ fn generate_constructor_impls<'tcx>(
                     &thunk_name_cc_ident,
                     /*has_self_param=*/ true,
                     /*is_constructor=*/ true,
+                    /*within_template=*/ false,
                 )
                 .ok()?;
                 let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
@@ -994,11 +995,19 @@ fn generate_display_impl<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let Some(display_trait_id) = tcx.get_diagnostic_item(sym::Display) else {
+    let Some(def_id) = core.def_id else {
         return ApiSnippets::default();
+    };
+    let err_snippets = |err| generate_unsupported_def(db, def_id, err).into_main_api();
+    let Some(display_trait_id) = tcx.get_diagnostic_item(sym::Display) else {
+        return err_snippets(anyhow!(
+            "Internal Crubit Error: `std::fmt::Display` trait not found."
+        ));
     };
 
     if !does_type_implement_trait(tcx, core.self_ty, display_trait_id, []) {
+        // This isn't an error, our type doesn't implement `Display` and so we don't generate
+        // any bindings.
         return ApiSnippets::default();
     }
 
@@ -1007,49 +1016,47 @@ fn generate_display_impl<'tcx>(
     // `Display` delegates to `ToString` which requires `alloc::string::String`
     // (which is not available in `core` as it doesn't support heap allocation).
     if crate_name.as_str() == "core" {
-        return ApiSnippets::default();
+        return err_snippets(anyhow!("`core` crate does not support `std::fmt::Display` because it requires `alloc::string::String` which is not available in `core`"));
     }
 
-    let thunk_ident = format_cc_ident(
-        db,
-        &escape_non_identifier_chars(&format!(
-            "__crubit_thunk_to_string_{}",
-            core.rs_fully_qualified_name
-        )),
-    )
-    .expect("Valid thunk ident");
-    let fully_qualified_adt_name = &core.cc_fully_qualified_name;
-    let adt_cc_short_name = &core.cc_short_name;
-    let rs_fully_qualified_name = &core.rs_fully_qualified_name;
+    let Some(to_string_trait_id) = tcx.get_diagnostic_item(Symbol::intern("ToString")) else {
+        return err_snippets(anyhow!("Internal Crubit Error: `ToString` trait not found."));
+    };
 
-    let rs_details = RsSnippet::new(quote! {
-        #[unsafe(no_mangle)]
-        pub unsafe extern "C" fn #thunk_ident(
-            self_: *const #rs_fully_qualified_name,
-            ret_ptr: *mut ::alloc::string::String,
+    let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
+        match generate_trait_thunks(
+            db,
+            to_string_trait_id,
+            &[],
+            core.self_ty,
+            core.def_id,
+            core.rs_fully_qualified_name.clone(),
+            /*is_constructor=*/ false,
+            /*within_template=*/ true,
         ) {
-            unsafe {
-                ::core::ptr::write(
-                    ret_ptr,
-                    ::alloc::string::ToString::to_string(&*self_),
-                );
-            }
-        }
-    });
+            Ok(thunks) => thunks,
+            Err(err) => return err_snippets(err),
+        };
+
+    let to_string_thunk_name = method_name_to_cc_thunk_name
+        .into_values()
+        .exactly_one()
+        .expect("Expecting a single `to_string` method");
+    let adt_cc_short_name = &core.cc_short_name;
 
     let main_api = CcSnippet::new(quote! {
         __NEWLINE__ __COMMENT__ "AbslStringify and std::ostream support via std::fmt::Display"
         template <typename Sink, typename Str = rs::alloc::string::String>
         friend void AbslStringify(Sink& sink, const #adt_cc_short_name& self) {
             crubit::Slot<Str> s;
-            #thunk_ident(&self, s.Get());
+            #to_string_thunk_name(self, s.Get());
             AbslStringify(sink, ::std::move(s).AssumeInitAndTakeValue().as_str());
         }
         __NEWLINE__
         template <typename Str = rs::alloc::string::String>
         friend ::std::ostream& operator<<(::std::ostream& os, const #adt_cc_short_name& self) {
             crubit::Slot<Str> s;
-            #thunk_ident(&self, s.Get());
+            #to_string_thunk_name(self, s.Get());
             return os << ::std::string_view(::std::move(s).AssumeInitAndTakeValue().as_str());
         }
         __NEWLINE__
@@ -1064,13 +1071,8 @@ fn generate_display_impl<'tcx>(
         prereqs.includes.insert(db.support_header("internal/slot.h"));
         prereqs.includes.insert(CcInclude::SystemHeader("utility".into()));
         prereqs.includes.insert(CcInclude::SystemHeader("ostream".into()));
-        let tokens = quote! {
-            extern "C" void #thunk_ident(
-                const #fully_qualified_adt_name* self_,
-                void* ret_ptr
-            );
-        };
-        CcSnippet { tokens, prereqs }
+        let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
+        CcSnippet { tokens: cc_thunk_decls, prereqs }
     };
 
     ApiSnippets { main_api, cc_details, rs_details }
@@ -1111,6 +1113,7 @@ pub fn generate_adt<'tcx>(
             core.def_id,
             core.rs_fully_qualified_name.clone(),
             /*is_constructor=*/ false,
+            /*within_template=*/ false,
         )
         .expect("`generate_adt_core` should have already validated `Drop` support");
         // Don't introduce additional feature prerequisites for the `Drop` trait impl, as this
@@ -2696,8 +2699,7 @@ fn get_into_iter_item_ty<'tcx>(
         .associated_items(into_iterator_trait_id)
         .in_definition_order()
         .find(|item| {
-            item.name() == rustc_span::symbol::Symbol::intern("Item")
-                && matches!(item.kind, ty::AssocKind::Type { .. })
+            item.name() == Symbol::intern("Item") && matches!(item.kind, ty::AssocKind::Type { .. })
         })
         .expect("Item to be a required associated item of IntoIterator");
 
@@ -2784,6 +2786,7 @@ fn generate_begin_and_end_for_type<'tcx>(
             core.def_id,
             rs_fully_qualified_name,
             /*is_constructor=*/ false,
+            /*within_template=*/ false,
         )?;
 
     let into_iter_thunk_name = method_name_to_cc_thunk_name

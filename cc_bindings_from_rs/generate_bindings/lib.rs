@@ -1333,6 +1333,7 @@ fn generate_default_ctor<'tcx>(
             core.def_id,
             core.rs_fully_qualified_name.clone(),
             /*is_constructor=*/ true,
+            /*within_template=*/ false,
         )?;
 
         let cc_struct_name = &core.cc_short_name;
@@ -1452,6 +1453,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                     core.def_id,
                     core.rs_fully_qualified_name.clone(),
                     /*is_constructor=*/ true,
+                    /*within_template=*/ false,
                 )?;
                 let main_api = CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ "Clone::clone"

@@ -241,16 +241,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   template <typename Sink, typename Str = rs::alloc::string::String>
   friend void AbslStringify(Sink& sink, const DisplayStruct& self) {
     crubit::Slot<Str> s;
-    _u_ucrubit_uthunk_uto_ustring_u_x0000003a_x0000003a_x00000020structs_ugolden_x00000020_x0000003a_x0000003a_x00000020display_x00000020_x0000003a_x0000003a_x00000020DisplayStruct(
-        &self, s.Get());
+    __crubit_thunk_to_ustring(self, s.Get());
     AbslStringify(sink, ::std::move(s).AssumeInitAndTakeValue().as_str());
   }
   template <typename Str = rs::alloc::string::String>
   friend ::std::ostream& operator<<(::std::ostream& os,
                                     const DisplayStruct& self) {
     crubit::Slot<Str> s;
-    _u_ucrubit_uthunk_uto_ustring_u_x0000003a_x0000003a_x00000020structs_ugolden_x00000020_x0000003a_x0000003a_x00000020display_x00000020_x0000003a_x0000003a_x00000020DisplayStruct(
-        &self, s.Get());
+    __crubit_thunk_to_ustring(self, s.Get());
     return os << ::std::string_view(
                ::std::move(s).AssumeInitAndTakeValue().as_str());
   }
@@ -906,9 +904,9 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::display::DisplayStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::display::DisplayStruct>);
-extern "C" void
-_u_ucrubit_uthunk_uto_ustring_u_x0000003a_x0000003a_x00000020structs_ugolden_x00000020_x0000003a_x0000003a_x00000020display_x00000020_x0000003a_x0000003a_x00000020DisplayStruct(
-    const ::structs::display::DisplayStruct* self_, void* ret_ptr);
+extern "C" void __crubit_thunk_to_ustring(
+    ::structs::display::DisplayStruct const&,
+    ::rs::alloc::string::String* __ret_ptr);
 inline void DisplayStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DisplayStruct, value));
 }

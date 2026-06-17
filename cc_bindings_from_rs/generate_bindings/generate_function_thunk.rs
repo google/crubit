@@ -115,6 +115,7 @@ pub fn generate_thunk_decl<'tcx>(
     thunk_name: &Ident,
     has_self_param: bool,
     is_constructor: bool,
+    within_template: bool,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
@@ -215,14 +216,18 @@ pub fn generate_thunk_decl<'tcx>(
         attributes.push(quote! {[[noreturn]]});
     }
 
-    Ok(CcSnippet {
-        prereqs,
-        tokens: quote! {
+    let mut tokens = quote! {
+        extern "C" #(#attributes)* #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
+    };
+    if !within_template {
+        tokens = quote! {
             namespace __crubit_internal {
-                extern "C" #(#attributes)* #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
+                #tokens
             }
-        },
-    })
+        }
+    }
+
+    Ok(CcSnippet { prereqs, tokens })
 }
 
 /// Creates Rust code to convert a bridged type from a C ABI type to a Rust type.
@@ -693,6 +698,7 @@ pub struct TraitThunks<'tcx> {
     pub rs_thunk_impls: RsSnippet,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn generate_trait_thunks<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_id: DefId,
@@ -702,6 +708,7 @@ pub fn generate_trait_thunks<'tcx>(
     def_id: Option<DefId>,
     rs_fully_qualified_name: TokenStream,
     is_constructor: bool,
+    within_template: bool,
 ) -> Result<TraitThunks<'tcx>> {
     let tcx = db.tcx();
     assert!(tcx.is_trait(trait_id));
@@ -825,6 +832,7 @@ pub fn generate_trait_thunks<'tcx>(
             &thunk_name_cc_ident,
             /*has_self_param=*/ method.is_method(),
             is_constructor,
+            within_template,
         )?);
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 

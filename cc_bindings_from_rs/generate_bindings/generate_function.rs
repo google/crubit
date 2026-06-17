@@ -1083,6 +1083,7 @@ pub fn generate_function<'tcx>(
             &thunk_name_cc,
             function_kind.has_self_param(),
             /*is_constructor=*/ false,
+            /*within_template=*/ false,
         )?
         .into_tokens(&mut prereqs);
         if static_method_mode == StaticMethodMode::ForceStaticMethod {
