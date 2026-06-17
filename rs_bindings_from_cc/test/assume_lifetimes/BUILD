@@ -80,9 +80,7 @@ crubit_test_cc_library(
     aspect_hints = [
         "//features:experimental",
     ],
-    deps = [
-        ":test_annotations",
-    ],
+    deps = [":test_annotations"],
 )
 
 golden_test(

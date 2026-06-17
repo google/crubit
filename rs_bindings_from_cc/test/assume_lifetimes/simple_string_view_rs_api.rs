@@ -28,6 +28,18 @@ unsafe impl<'a> ::cxx::ExternType for SV<'a> {
     type Id = ::cxx::type_id!(":: SV");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Display for SV<'_> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        let mut f = ::lossy_formatter::LossyFormatter::new(f);
+        if unsafe {
+            crate::detail::__crubit_fmt__2SV___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fassume_5flifetimes_3asimple_5fstring_5fview(self,&mut f)
+        } {
+            ::core::result::Result::Ok(())
+        } else {
+            ::core::result::Result::Err(::core::fmt::Error)
+        }
+    }
+}
 forward_declare::unsafe_define!(forward_declare::symbol!(":: SV"), crate::SV<'_>);
 
 impl<'a> Default for SV<'a> {
@@ -116,6 +128,10 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN2SVC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __crubit_fmt__2SV___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fassume_5flifetimes_3asimple_5fstring_5fview(
+            value: &crate::SV,
+            formatter: &mut ::lossy_formatter::LossyFormatter,
+        ) -> bool;
         pub(crate) unsafe fn __rust_thunk___Z8sv_ident2SV<'s>(
             __return: *mut ::core::ffi::c_void,
             s: &mut crate::SV<'s>,
