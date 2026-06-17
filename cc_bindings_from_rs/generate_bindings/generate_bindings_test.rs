@@ -1945,3 +1945,41 @@ fn test_generate_bindings_c_stdlib_conflict_top_level_submod() {
         );
     });
 }
+
+#[test]
+fn test_trait_impl_for_mapped_cpp_type() {
+    let test_src = r#"
+            #![allow(unused)]
+            #[doc = "CRUBIT_ANNOTATE: cpp_type=::some_ns::SomeCppStruct"]
+            #[doc = "CRUBIT_ANNOTATE: include_path=some_ns/some_cpp_struct.h"]
+            pub struct SomeCppStruct(i32);
+
+            impl std::iter::Iterator for SomeCppStruct {
+                type Item = i32;
+                fn next(&mut self) -> Option<Self::Item> {
+                    todo!()
+                }
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+
+        // Ensure the include path is present in the generated header.
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                __HASH_TOKEN__ include "some_ns/some_cpp_struct.h"
+                ...
+                template <>
+                struct rs_std::impl<::some_ns::SomeCppStruct, ::rs::core::iter::Iterator> {
+                    ...
+                };
+                ...
+            }
+        );
+
+        // Ensure no bogus forward declaration is emitted.
+        assert!(!bindings.cc_api.to_string().contains("struct SomeCppStruct;"));
+    });
+}

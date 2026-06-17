@@ -1823,7 +1823,25 @@ fn generate_trait_impl_specialization<'tcx>(
         let canonical_name = db.symbol_canonical_name(def_id).expect(
             "Self type should have a canonical name if we are generating a specialization for it",
         );
-        if canonical_name.krate_num == db.source_crate_num() {
+        // When `self_ty` belongs to the current crate (`source_crate_num()`), we must distinguish
+        // between standard Rust structs (which get a C++ definition in `main_apis`) and mapped C++
+        // types (`cpp_type.is_some()`, whose `main_api` generation is suppressed by Crubit).
+        //
+        // For standard Rust structs, we insert `def_id` into `fwd_decls` to avoid C++ dependency
+        // cycles between a container and its iterator. For mapped C++ types, emitting a forward
+        // declaration in the Rust crate's namespace is incorrect and fails to pull in the real C++
+        // header. Instead, we must explicitly add the annotated `include_path` to prerequisites.
+        if canonical_name.unqualified.cpp_type.is_some() {
+            let attrs = crubit_attr::get_attrs(db.tcx(), def_id)
+                .map_err(|err| (impl_def_id, arc_anyhow::Error::from(err)))?;
+            if let Some(path) = attrs.include_path {
+                prereqs.includes.insert(CcInclude::from_path(path.as_str()));
+            } else {
+                // The C++ type is already available (e.g., a fundamental type or from a header
+                // injected globally via command-line flags). No additional #include, forward
+                // declaration, or def dependency is needed.
+            }
+        } else if canonical_name.krate_num == db.source_crate_num() {
             prereqs.fwd_decls.insert(def_id);
         } else {
             prereqs.depend_on_def(db, def_id).map_err(|err| (impl_def_id, err))?;

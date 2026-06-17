@@ -133,3 +133,33 @@ golden_test(
     golden_rs = "layout_equivalent_pointers_cc_api_impl.rs",
     rust_library = "layout_equivalent_pointers",
 )
+
+rust_library(
+    name = "mapped_cpp_type",
+    srcs = ["mapped_cpp_type.rs"],
+    aspect_hints = [
+        ":mapped_cpp_type_hint",
+    ],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+)
+
+cc_bindings_from_rust_library_config(
+    name = "mapped_cpp_type_hint",
+    extra_cc_hdrs = ["mapped_cpp_type_def.h"],
+)
+
+cc_bindings_from_rust(
+    name = "mapped_cpp_type_cc_api",
+    crate = ":mapped_cpp_type",
+)
+
+crubit_cc_test(
+    name = "mapped_cpp_type_test",
+    srcs = ["mapped_cpp_type_test.cc"],
+    deps = [
+        ":mapped_cpp_type_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)
