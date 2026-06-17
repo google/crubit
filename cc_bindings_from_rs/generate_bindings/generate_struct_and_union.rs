@@ -920,10 +920,15 @@ fn generate_trait_operator_impls<'tcx>(
         tcx.non_blanket_impls_for_ty(trait_def_id, core.self_ty)
             .map(|impl_id| {
                 let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
-                // Index 0 of our trait ref is the self type, so index 1 is the real type arg
-                // (e.g. `T` in `Index<T>` or in `IndexMut<T>`).
+                // Index 0 of our trait ref is the self type.
+                // If there is a second argument, it is the real type arg (e.g. `T` in `Index<T>`).
+                // Otherwise (e.g. for `Neg` or `Not`), we use the self type as a placeholder.
                 let trait_args = trait_ref.args;
-                let trait_arg_ty = trait_args.type_at(1);
+                let trait_arg_ty = if trait_args.len() > 1 {
+                    trait_args.type_at(1)
+                } else {
+                    trait_args.type_at(0)
+                };
                 (impl_id, trait_arg_ty)
             })
             .avoid_colliding_types(tcx, |(_impl_id, trait_arg_ty)| *trait_arg_ty)
@@ -982,8 +987,118 @@ fn generate_trait_operator_impls<'tcx>(
             "eq",
             "operator==",
         ),
+        query_trait_impls(
+            tcx.lang_items().add_trait().expect("Could not find Add trait"),
+            "add",
+            "operator+",
+        ),
+        query_trait_impls(
+            tcx.lang_items().add_assign_trait().expect("Could not find AddAssign trait"),
+            "add_assign",
+            "operator+=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().bitand_trait().expect("Could not find BitAnd trait"),
+            "bitand",
+            "operator&",
+        ),
+        query_trait_impls(
+            tcx.lang_items().bitand_assign_trait().expect("Could not find BitAndAssign trait"),
+            "bitand_assign",
+            "operator&=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().bitor_trait().expect("Could not find BitOr trait"),
+            "bitor",
+            "operator|",
+        ),
+        query_trait_impls(
+            tcx.lang_items().bitor_assign_trait().expect("Could not find BitOrAssign trait"),
+            "bitor_assign",
+            "operator|=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().bitxor_trait().expect("Could not find BitXor trait"),
+            "bitxor",
+            "operator^",
+        ),
+        query_trait_impls(
+            tcx.lang_items().bitxor_assign_trait().expect("Could not find BitXorAssign trait"),
+            "bitxor_assign",
+            "operator^=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().div_trait().expect("Could not find Div trait"),
+            "div",
+            "operator/",
+        ),
+        query_trait_impls(
+            tcx.lang_items().div_assign_trait().expect("Could not find DivAssign trait"),
+            "div_assign",
+            "operator/=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().mul_trait().expect("Could not find Mul trait"),
+            "mul",
+            "operator*",
+        ),
+        query_trait_impls(
+            tcx.lang_items().mul_assign_trait().expect("Could not find MulAssign trait"),
+            "mul_assign",
+            "operator*=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().neg_trait().expect("Could not find Neg trait"),
+            "neg",
+            "operator-",
+        ),
+        query_trait_impls(
+            tcx.lang_items().not_trait().expect("Could not find Not trait"),
+            "not",
+            "operator!",
+        ),
+        query_trait_impls(
+            tcx.lang_items().rem_trait().expect("Could not find Rem trait"),
+            "rem",
+            "operator%",
+        ),
+        query_trait_impls(
+            tcx.lang_items().rem_assign_trait().expect("Could not find RemAssign trait"),
+            "rem_assign",
+            "operator%=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().shl_trait().expect("Could not find Shl trait"),
+            "shl",
+            "operator<<",
+        ),
+        query_trait_impls(
+            tcx.lang_items().shl_assign_trait().expect("Could not find ShlAssign trait"),
+            "shl_assign",
+            "operator<<=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().shr_trait().expect("Could not find Shr trait"),
+            "shr",
+            "operator>>",
+        ),
+        query_trait_impls(
+            tcx.lang_items().shr_assign_trait().expect("Could not find ShrAssign trait"),
+            "shr_assign",
+            "operator>>=",
+        ),
+        query_trait_impls(
+            tcx.lang_items().sub_trait().expect("Could not find Sub trait"),
+            "sub",
+            "operator-",
+        ),
+        query_trait_impls(
+            tcx.lang_items().sub_assign_trait().expect("Could not find SubAssign trait"),
+            "sub_assign",
+            "operator-=",
+        ),
         // TODO(b/483382648): Add support for other traits / operators - e.g. `PartialOrd`,
-        // (`operator<`, `operator<=`, etc., `operator<=>` seems hard), `Add`, `AddAssign`, etc.
+        // (`operator<`, `operator<=`, etc., `operator<=>` seems hard)
     ]
     .into_iter()
     .flatten()
