@@ -448,6 +448,13 @@ impl CcInclude {
         Self::SystemHeader("array".into())
     }
 
+    /// Creates a `CcInclude` that represents `#include <compare>` and provides
+    /// C++ types like `std::strong_ordering`.
+    /// https://en.cppreference.com/w/cpp/header/compare
+    pub fn compare() -> Self {
+        Self::SystemHeader("compare".into())
+    }
+
     /// Creates a `CcInclude` that represents `#include <cstddef>` and provides
     /// C++ types like `std::size_t` or `std::ptrdiff_t`.  See
     /// https://en.cppreference.com/w/cpp/header/cstddef

@@ -698,6 +698,54 @@ pub struct TraitThunks<'tcx> {
     pub rs_thunk_impls: RsSnippet,
 }
 
+pub fn trait_method_thunk_name<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_id: DefId,
+    method_name: &str,
+    self_ty: Ty<'tcx>,
+    type_args: &[Ty<'tcx>],
+) -> Result<String> {
+    let tcx = db.tcx();
+    let method = tcx
+        .associated_items(trait_id)
+        .in_definition_order()
+        .find(|item| {
+            item.name().as_str() == method_name && matches!(item.kind, ty::AssocKind::Fn { .. })
+        })
+        .ok_or_else(|| anyhow!("Method {} not found in trait {:?}", method_name, trait_id))?;
+    let method_def_id = method.def_id;
+
+    let generics = tcx.generics_of(method_def_id);
+    if generics.own_params.iter().any(|p| p.kind.is_ty_or_const()) {
+        bail!("Generic trait methods are not supported");
+    }
+    assert!(generics.has_self);
+    let substs = tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from));
+
+    let thunk_name = if db.is_golden_test() {
+        let print_types = type_args.iter().map(|ty| format!("{}", ty)).collect_vec();
+        let escaped_method_name = if print_types.is_empty() {
+            escape_non_identifier_chars(method_name)
+        } else {
+            escape_non_identifier_chars(&format!("{}_{}", method_name, print_types.join("_")))
+        };
+        format!("__crubit_thunk_{}", escaped_method_name)
+    } else {
+        #[rustversion::any(since(1.94), since(2025-05-06))]
+        let instance = ty::Instance::new_raw(method_def_id, substs);
+        #[rustversion::all(before(1.94), before(2025-05-06))]
+        let instance = ty::Instance::new(method_def_id, substs);
+
+        let symbol = tcx.symbol_name(instance);
+        format!(
+            "__crubit_thunk_{:x}_{}",
+            tcx.stable_crate_id(db.source_crate_num()),
+            &escape_non_identifier_chars(symbol.name)
+        )
+    };
+    Ok(thunk_name)
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn generate_trait_thunks<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -780,33 +828,8 @@ pub fn generate_trait_thunks<'tcx>(
             tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from))
         };
 
-        let thunk_name = {
-            if db.is_golden_test() {
-                let print_types = type_args.iter().map(|ty| format!("{}", ty)).collect_vec();
-                let method_name = if print_types.is_empty() {
-                    escape_non_identifier_chars(method.name().as_str())
-                } else {
-                    escape_non_identifier_chars(&format!(
-                        "{}_{}",
-                        method.name().as_str(),
-                        print_types.join("_")
-                    ))
-                };
-                format!("__crubit_thunk_{}", method_name)
-            } else {
-                #[rustversion::any(since(1.94), since(2025-05-06))]
-                let instance = ty::Instance::new_raw(method.def_id, substs);
-                #[rustversion::all(before(1.94), before(2025-05-06))]
-                let instance = ty::Instance::new(method.def_id, substs);
-
-                let symbol = tcx.symbol_name(instance);
-                format!(
-                    "__crubit_thunk_{:x}_{}",
-                    tcx.stable_crate_id(db.source_crate_num()),
-                    &escape_non_identifier_chars(symbol.name)
-                )
-            }
-        };
+        let thunk_name =
+            trait_method_thunk_name(db, trait_id, method.name().as_str(), self_ty, type_args)?;
 
         // We normalize here to expand associated types to their underlying type.
         let sig_mid = try_normalize(
