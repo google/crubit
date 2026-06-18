@@ -1,5 +1,4 @@
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
-load("//build_integration:build_integration.bzl", "bazel_to_builds")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
@@ -72,14 +71,5 @@ crubit_cc_test(
     deps = [
         ":bindings_support",
         "//testing/base/public:gunit_main",
-    ],
-)
-
-bazel_to_builds(
-    name = "generate_builds",
-    cmake = "CMakeLists.txt",
-    gn = "BUILD.gn",
-    targets = [
-        ":bindings_support",
     ],
 )
