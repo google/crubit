@@ -192,7 +192,8 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
                      param_0) noexcept -> struct Bridged {
                 unsigned char bridge_param_0[::crubit::BridgedAbi::kSize];
                 ::crubit::internal::Encode(::crubit::BridgedAbi(),
-                                           bridge_param_0, param_0);
+                                           bridge_param_0,
+                                           ::std::move(param_0));
                 unsigned char out[::crubit::BridgedAbi::kSize];
                 __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
                     state, bridge_param_0, out);

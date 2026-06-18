@@ -141,7 +141,7 @@ extern "C" void __rust_thunk___Z17MyOptionIntMapperv(
         ::crubit::internal::Encode(
             ::crubit::MyOptionAbi<::crubit::TransmuteAbi<int>>(
                 ::crubit::TransmuteAbi<int>()),
-            bridge_param_0, param_0);
+            bridge_param_0, ::std::move(param_0));
         unsigned char
             out[::crubit::MyOptionAbi<::crubit::TransmuteAbi<int>>::kSize];
         __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(

@@ -12,6 +12,9 @@
 // Calls the invocable and returns void.
 void CallVoidVoid(absl::AnyInvocable<void() &&> f);
 
+bool CallWithAnyInvocableParam(
+    absl::AnyInvocable<void(absl::AnyInvocable<void() &&>)> f);
+
 // Returns an invocable that increments its argument.
 absl::AnyInvocable<int(int) const> ReturnIntMapper();
 int CallIntInt(absl::AnyInvocable<int(int) const> f, int i);

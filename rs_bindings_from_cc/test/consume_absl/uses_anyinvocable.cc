@@ -11,6 +11,13 @@
 
 void CallVoidVoid(absl::AnyInvocable<void() &&> f) { std::move(f)(); }
 
+bool CallWithAnyInvocableParam(
+    absl::AnyInvocable<void(absl::AnyInvocable<void() &&>)> f) {
+  bool inner_called = false;
+  f([&inner_called]() { inner_called = true; });
+  return inner_called;
+}
+
 absl::AnyInvocable<int(int) const> ReturnIntMapper() {
   return [](int x) -> int { return x + 1; };
 }

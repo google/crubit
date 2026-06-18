@@ -20,6 +20,14 @@ fn test_call_void_void() {
 }
 
 #[gtest]
+fn test_call_with_any_invocable_param() {
+    let res = CallWithAnyInvocableParam(Box::new(|g: Box<dyn FnOnce() + Send + Sync>| {
+        g();
+    }));
+    expect_that!(res, eq(true));
+}
+
+#[gtest]
 fn test_return_int_void() {
     let f: Box<dyn Fn(i32) -> i32 + Send + Sync> = ReturnIntMapper();
     expect_that!(f(41), eq(42));
