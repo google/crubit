@@ -19,3 +19,7 @@ pub fn return_vec() -> Vec<i32> {
 pub fn take_vec(v: Vec<i32>) -> i32 {
     v.iter().sum()
 }
+
+pub fn return_u8_vec() -> Vec<u8> {
+    b"Hello".to_vec()
+}

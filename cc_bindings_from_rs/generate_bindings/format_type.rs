@@ -1280,7 +1280,9 @@ impl BridgedBuiltin {
     /// Determines if an AdtDef is for a Result, Option, or Vec.
     pub fn new(db: &BindingsGenerator<'_>, adt: AdtDef<'_>) -> Option<Self> {
         let tcx = db.tcx();
-        if tcx.is_diagnostic_item(rustc_span::symbol::sym::Vec, adt.did()) {
+        if tcx.is_diagnostic_item(rustc_span::symbol::sym::Vec, adt.did())
+            || crate::matches_qualified_name(db, adt.did(), &["alloc", "vec", "Vec"])
+        {
             return Some(BridgedBuiltin::Vec);
         }
 

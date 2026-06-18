@@ -8,6 +8,7 @@
 
 #include "gtest/gtest.h"
 #include "absl/types/span.h"
+#include "support/rs_std/rs_alloc.h"
 #include "support/rs_std/slice_ref.h"
 
 namespace crubit {
@@ -60,6 +61,24 @@ TEST(VecTest, Indexing) {
   // Bounds check (death test)
   EXPECT_DEATH(v[3], "");
   EXPECT_DEATH(const_v[3], "");
+}
+
+TEST(VecTest, CStringCallability) {
+  rs_std::Vec<uint8_t> u8_vec = vec::return_u8_vec();
+  EXPECT_EQ(u8_vec.size(), 5);
+
+  rs_std::Vec<uint8_t> u8_vec_copy = u8_vec;
+
+  auto result = ::rs::alloc::ffi::CString::new_(std::move(u8_vec_copy));
+  ASSERT_TRUE(result.has_value());
+  ::rs::alloc::ffi::CString c_str = std::move(result).value();
+  EXPECT_EQ(c_str.as_bytes().size(), 5);
+  EXPECT_EQ(c_str.as_bytes().data()[0], 'H');
+
+  ::rs::alloc::ffi::CString c_str2 =
+      ::rs::alloc::ffi::CString::from_vec_unchecked(std::move(u8_vec));
+  EXPECT_EQ(c_str2.as_bytes().size(), 5);
+  EXPECT_EQ(c_str2.as_bytes().data()[0], 'H');
 }
 
 }  // namespace
