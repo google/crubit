@@ -80,6 +80,10 @@ target_include_directories(crubit_support_rs_std_result PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
+target_link_libraries(crubit_support_rs_std_result PUBLIC
+crubit_support_internal_bindings_support
+)
+
 add_library(crubit_support_rs_std_slice_ref STATIC
 "slice_ref.h"
 )

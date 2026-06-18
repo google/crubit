@@ -15,8 +15,6 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
-#include "support/internal/check.h"
-#include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/result.h"
 
@@ -65,7 +63,9 @@ using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
 template <>
 struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < i32 , i32 >")
-        rs_std::Result<::std::int32_t, ::std::int32_t> {
+        rs_std::Result<::std::int32_t, ::std::int32_t>
+    : public rs_std::ResultBase<rs_std::Result<::std::int32_t, ::std::int32_t>,
+                                ::std::int32_t, ::std::int32_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -77,32 +77,65 @@ struct alignas(4)
   Result(::crubit::UnsafeRelocateTag, Result&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  Result(::std::int32_t&& ok) noexcept;
-  Result& operator=(::std::int32_t&& ok) noexcept;
-  Result(rs_std::unexpected<::std::int32_t>&& err) noexcept;
-  Result& operator=(rs_std::unexpected<::std::int32_t>&& err) noexcept;
+
+ public:
+  using base_type =
+      rs_std::ResultBase<rs_std::Result<::std::int32_t, ::std::int32_t>,
+                         ::std::int32_t, ::std::int32_t>;
+  template <typename U>
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
+  explicit constexpr Result(U&& ok) noexcept
+      : base_type(::std::forward<U>(ok)) {}
+  template <typename U>
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
+  constexpr Result& operator=(U&& ok) noexcept {
+    base_type::operator=(::std::forward<U>(ok));
+    return *this;
+  }
+  template <typename F>
+    requires(std::is_constructible_v<::std::int32_t, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
+      : base_type(::std::move(err)) {}
+  template <typename F>
+    requires(std::is_constructible_v<::std::int32_t, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
+    base_type::operator=(::std::move(err));
+    return *this;
+  }
   template <typename... Args>
-  Result(::std::in_place_t, Args&&... args);
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
+      : base_type(ip, ::std::forward<Args>(args)...) {}
   template <typename... Args>
-  Result(rs_std::unexpect_t, Args&&... args);
-  explicit constexpr operator bool() const noexcept;
-  constexpr bool has_value() const noexcept;
-  ::std::int32_t& value() &;
-  ::std::int32_t&& value() &&;
-  ::std::int32_t& err() &;
-  ::std::int32_t&& err() &&;
-  ::std::int32_t& operator*() &;
-  ::std::int32_t const& operator*() const&;
-  ::std::int32_t&& operator*() &&;
-  ::std::int32_t* operator->();
-  ::std::int32_t const* operator->() const;
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
+      : base_type(u, ::std::forward<Args>(args)...) {}
   ~Result() noexcept = default;
 
  private:
+  friend base_type;
+  bool has_value_impl() const noexcept { return tag() == 0; }
+  ::std::int32_t* ok_ptr() noexcept {
+    return reinterpret_cast<::std::int32_t*>(__storage + 4);
+  }
+  ::std::int32_t const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int32_t const*>(__storage + 4);
+  }
+  ::std::int32_t* err_ptr() noexcept {
+    return reinterpret_cast<::std::int32_t*>(__storage + 4);
+  }
+  ::std::int32_t const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int32_t const*>(__storage + 4);
+  }
+  void set_ok_tag() noexcept { set_tag(0); }
+  void set_err_tag() noexcept { set_tag(1); }
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
-  void check_has_ok() const;
-  void check_has_err() const;
 
  private:
   unsigned char __storage[8];
@@ -114,7 +147,9 @@ struct alignas(4)
 template <>
 struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u32 , i8 >")
-        rs_std::Result<::std::uint32_t, ::std::int8_t> {
+        rs_std::Result<::std::uint32_t, ::std::int8_t>
+    : public rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::int8_t>,
+                                ::std::uint32_t, ::std::int8_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -126,32 +161,65 @@ struct alignas(4)
   Result(::crubit::UnsafeRelocateTag, Result&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  Result(::std::uint32_t&& ok) noexcept;
-  Result& operator=(::std::uint32_t&& ok) noexcept;
-  Result(rs_std::unexpected<::std::int8_t>&& err) noexcept;
-  Result& operator=(rs_std::unexpected<::std::int8_t>&& err) noexcept;
+
+ public:
+  using base_type =
+      rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::int8_t>,
+                         ::std::uint32_t, ::std::int8_t>;
+  template <typename U>
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::uint32_t, U>)
+  explicit constexpr Result(U&& ok) noexcept
+      : base_type(::std::forward<U>(ok)) {}
+  template <typename U>
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::std::uint32_t, U>)
+  constexpr Result& operator=(U&& ok) noexcept {
+    base_type::operator=(::std::forward<U>(ok));
+    return *this;
+  }
+  template <typename F>
+    requires(std::is_constructible_v<::std::int8_t, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
+      : base_type(::std::move(err)) {}
+  template <typename F>
+    requires(std::is_constructible_v<::std::int8_t, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
+    base_type::operator=(::std::move(err));
+    return *this;
+  }
   template <typename... Args>
-  Result(::std::in_place_t, Args&&... args);
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
+      : base_type(ip, ::std::forward<Args>(args)...) {}
   template <typename... Args>
-  Result(rs_std::unexpect_t, Args&&... args);
-  explicit constexpr operator bool() const noexcept;
-  constexpr bool has_value() const noexcept;
-  ::std::uint32_t& value() &;
-  ::std::uint32_t&& value() &&;
-  ::std::int8_t& err() &;
-  ::std::int8_t&& err() &&;
-  ::std::uint32_t& operator*() &;
-  ::std::uint32_t const& operator*() const&;
-  ::std::uint32_t&& operator*() &&;
-  ::std::uint32_t* operator->();
-  ::std::uint32_t const* operator->() const;
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
+      : base_type(u, ::std::forward<Args>(args)...) {}
   ~Result() noexcept = default;
 
  private:
+  friend base_type;
+  bool has_value_impl() const noexcept { return tag() == 0; }
+  ::std::uint32_t* ok_ptr() noexcept {
+    return reinterpret_cast<::std::uint32_t*>(__storage + 4);
+  }
+  ::std::uint32_t const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
+  }
+  ::std::int8_t* err_ptr() noexcept {
+    return reinterpret_cast<::std::int8_t*>(__storage + 1);
+  }
+  ::std::int8_t const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int8_t const*>(__storage + 1);
+  }
+  void set_ok_tag() noexcept { set_tag(0); }
+  void set_err_tag() noexcept { set_tag(1); }
   constexpr ::std::uint8_t tag() const& noexcept;
   constexpr void set_tag(::std::uint8_t tag) noexcept;
-  void check_has_ok() const;
-  void check_has_err() const;
 
  private:
   unsigned char __storage[8];
@@ -234,114 +302,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Result<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Result<::std::int32_t, ::std::int32_t>>);
-inline rs_std::Result<::std::int32_t, ::std::int32_t>::Result(
-    ::std::int32_t&& ok) noexcept {
-  set_tag(0);
-  ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 4),
-                      ::std::move(ok));
-}
-inline rs_std::Result<::std::int32_t, ::std::int32_t>& rs_std::Result<
-    ::std::int32_t, ::std::int32_t>::operator=(::std::int32_t&& ok) noexcept {
-  if (!has_value()) {
-    ::std::destroy_at(reinterpret_cast<::std::int32_t*>(__storage + 4));
-    set_tag(0);
-    ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 4),
-                        ::std::move(ok));
-  } else {
-    set_tag(0);
-    ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::std::int32_t*>(__storage + 4), ::std::move(ok));
-  }
-  return *this;
-}
-
-inline rs_std::Result<::std::int32_t, ::std::int32_t>::Result(
-    rs_std::unexpected<::std::int32_t>&& err) noexcept {
-  set_tag(1);
-  ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 4),
-                      ::std::move(err.error()));
-}
-inline rs_std::Result<::std::int32_t, ::std::int32_t>&
-rs_std::Result<::std::int32_t, ::std::int32_t>::operator=(
-    rs_std::unexpected<::std::int32_t>&& err) noexcept {
-  if (has_value()) {
-    ::std::destroy_at(__storage + 4);
-    set_tag(1);
-    ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 4),
-                        ::std::move(err.error()));
-  } else {
-    set_tag(1);
-    ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::std::int32_t*>(__storage + 4),
-        ::std::move(err.error()));
-  }
-  return *this;
-}
-
-template <typename... Args>
-inline rs_std::Result<::std::int32_t, ::std::int32_t>::Result(std::in_place_t,
-                                                              Args&&... args) {
-  set_tag(0);
-  std::construct_at(__storage + 4, std::forward<Args>(args)...);
-}
-template <typename... Args>
-inline rs_std::Result<::std::int32_t, ::std::int32_t>::Result(
-    rs_std::unexpect_t, Args&&... args) {
-  set_tag(1);
-  std::construct_at(__storage + 4, std::forward<Args>(args)...);
-}
-inline constexpr rs_std::Result<::std::int32_t, ::std::int32_t>::operator bool()
-    const noexcept {
-  return has_value();
-}
-inline constexpr bool
-rs_std::Result<::std::int32_t, ::std::int32_t>::has_value() const noexcept {
-  return tag() == 0;
-}
-inline ::std::int32_t&
-rs_std::Result<::std::int32_t, ::std::int32_t>::value() & {
-  check_has_ok();
-  return *reinterpret_cast<::std::int32_t*>(__storage + 4);
-}
-inline ::std::int32_t&&
-rs_std::Result<::std::int32_t, ::std::int32_t>::value() && {
-  check_has_ok();
-  return ::std::move(*reinterpret_cast<::std::int32_t*>(__storage + 4));
-}
-inline ::std::int32_t& rs_std::Result<::std::int32_t, ::std::int32_t>::err() & {
-  check_has_err();
-  return *reinterpret_cast<::std::int32_t*>(__storage + 4);
-}
-inline ::std::int32_t&&
-rs_std::Result<::std::int32_t, ::std::int32_t>::err() && {
-  check_has_err();
-  return ::std::move(*reinterpret_cast<::std::int32_t*>(__storage + 4));
-}
-inline ::std::int32_t&
-rs_std::Result<::std::int32_t, ::std::int32_t>::operator*() & {
-  check_has_ok();
-  return *reinterpret_cast<::std::int32_t*>(__storage + 4);
-}
-inline ::std::int32_t const&
-rs_std::Result<::std::int32_t, ::std::int32_t>::operator*() const& {
-  check_has_ok();
-  return *reinterpret_cast<::std::int32_t const*>(__storage + 4);
-}
-inline ::std::int32_t&&
-rs_std::Result<::std::int32_t, ::std::int32_t>::operator*() && {
-  check_has_ok();
-  return ::std::move(*reinterpret_cast<::std::int32_t*>(__storage + 4));
-}
-inline ::std::int32_t*
-rs_std::Result<::std::int32_t, ::std::int32_t>::operator->() {
-  check_has_ok();
-  return reinterpret_cast<::std::int32_t*>(__storage + 4);
-}
-inline ::std::int32_t const*
-rs_std::Result<::std::int32_t, ::std::int32_t>::operator->() const {
-  check_has_ok();
-  return reinterpret_cast<::std::int32_t const*>(__storage + 4);
-}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::int32_t, ::std::int32_t>>);
 inline constexpr ::std::uint32_t
@@ -361,15 +321,6 @@ inline constexpr void rs_std::Result<::std::int32_t, ::std::int32_t>::set_tag(
   }
 }
 
-inline void rs_std::Result<::std::int32_t, ::std::int32_t>::check_has_ok()
-    const {
-  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
-}
-inline void rs_std::Result<::std::int32_t, ::std::int32_t>::check_has_err()
-    const {
-  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
-}
-
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
@@ -382,114 +333,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Result<::std::uint32_t, ::std::int8_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Result<::std::uint32_t, ::std::int8_t>>);
-inline rs_std::Result<::std::uint32_t, ::std::int8_t>::Result(
-    ::std::uint32_t&& ok) noexcept {
-  set_tag(0);
-  ::std::construct_at(reinterpret_cast<::std::uint32_t*>(__storage + 4),
-                      ::std::move(ok));
-}
-inline rs_std::Result<::std::uint32_t, ::std::int8_t>& rs_std::Result<
-    ::std::uint32_t, ::std::int8_t>::operator=(::std::uint32_t&& ok) noexcept {
-  if (!has_value()) {
-    ::std::destroy_at(reinterpret_cast<::std::int8_t*>(__storage + 1));
-    set_tag(0);
-    ::std::construct_at(reinterpret_cast<::std::uint32_t*>(__storage + 4),
-                        ::std::move(ok));
-  } else {
-    set_tag(0);
-    ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::std::uint32_t*>(__storage + 4), ::std::move(ok));
-  }
-  return *this;
-}
-
-inline rs_std::Result<::std::uint32_t, ::std::int8_t>::Result(
-    rs_std::unexpected<::std::int8_t>&& err) noexcept {
-  set_tag(1);
-  ::std::construct_at(reinterpret_cast<::std::int8_t*>(__storage + 1),
-                      ::std::move(err.error()));
-}
-inline rs_std::Result<::std::uint32_t, ::std::int8_t>&
-rs_std::Result<::std::uint32_t, ::std::int8_t>::operator=(
-    rs_std::unexpected<::std::int8_t>&& err) noexcept {
-  if (has_value()) {
-    ::std::destroy_at(__storage + 4);
-    set_tag(1);
-    ::std::construct_at(reinterpret_cast<::std::int8_t*>(__storage + 1),
-                        ::std::move(err.error()));
-  } else {
-    set_tag(1);
-    ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::std::int8_t*>(__storage + 1),
-        ::std::move(err.error()));
-  }
-  return *this;
-}
-
-template <typename... Args>
-inline rs_std::Result<::std::uint32_t, ::std::int8_t>::Result(std::in_place_t,
-                                                              Args&&... args) {
-  set_tag(0);
-  std::construct_at(__storage + 4, std::forward<Args>(args)...);
-}
-template <typename... Args>
-inline rs_std::Result<::std::uint32_t, ::std::int8_t>::Result(
-    rs_std::unexpect_t, Args&&... args) {
-  set_tag(1);
-  std::construct_at(__storage + 1, std::forward<Args>(args)...);
-}
-inline constexpr rs_std::Result<::std::uint32_t, ::std::int8_t>::operator bool()
-    const noexcept {
-  return has_value();
-}
-inline constexpr bool
-rs_std::Result<::std::uint32_t, ::std::int8_t>::has_value() const noexcept {
-  return tag() == 0;
-}
-inline ::std::uint32_t&
-rs_std::Result<::std::uint32_t, ::std::int8_t>::value() & {
-  check_has_ok();
-  return *reinterpret_cast<::std::uint32_t*>(__storage + 4);
-}
-inline ::std::uint32_t&&
-rs_std::Result<::std::uint32_t, ::std::int8_t>::value() && {
-  check_has_ok();
-  return ::std::move(*reinterpret_cast<::std::uint32_t*>(__storage + 4));
-}
-inline ::std::int8_t& rs_std::Result<::std::uint32_t, ::std::int8_t>::err() & {
-  check_has_err();
-  return *reinterpret_cast<::std::int8_t*>(__storage + 1);
-}
-inline ::std::int8_t&&
-rs_std::Result<::std::uint32_t, ::std::int8_t>::err() && {
-  check_has_err();
-  return ::std::move(*reinterpret_cast<::std::int8_t*>(__storage + 1));
-}
-inline ::std::uint32_t&
-rs_std::Result<::std::uint32_t, ::std::int8_t>::operator*() & {
-  check_has_ok();
-  return *reinterpret_cast<::std::uint32_t*>(__storage + 4);
-}
-inline ::std::uint32_t const&
-rs_std::Result<::std::uint32_t, ::std::int8_t>::operator*() const& {
-  check_has_ok();
-  return *reinterpret_cast<::std::uint32_t const*>(__storage + 4);
-}
-inline ::std::uint32_t&&
-rs_std::Result<::std::uint32_t, ::std::int8_t>::operator*() && {
-  check_has_ok();
-  return ::std::move(*reinterpret_cast<::std::uint32_t*>(__storage + 4));
-}
-inline ::std::uint32_t*
-rs_std::Result<::std::uint32_t, ::std::int8_t>::operator->() {
-  check_has_ok();
-  return reinterpret_cast<::std::uint32_t*>(__storage + 4);
-}
-inline ::std::uint32_t const*
-rs_std::Result<::std::uint32_t, ::std::int8_t>::operator->() const {
-  check_has_ok();
-  return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
-}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::std::uint32_t, ::std::int8_t>>);
 inline constexpr ::std::uint8_t
@@ -507,15 +350,6 @@ inline constexpr void rs_std::Result<::std::uint32_t, ::std::int8_t>::set_tag(
   for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
-}
-
-inline void rs_std::Result<::std::uint32_t, ::std::int8_t>::check_has_ok()
-    const {
-  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
-}
-inline void rs_std::Result<::std::uint32_t, ::std::int8_t>::check_has_err()
-    const {
-  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 
 #endif

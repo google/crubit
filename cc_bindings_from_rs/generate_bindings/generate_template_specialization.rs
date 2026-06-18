@@ -463,127 +463,11 @@ struct ResultApiGenerator<'a, 'tcx> {
 }
 
 impl<'tcx> ResultApiGenerator<'_, 'tcx> {
-    fn drop_method(&self) -> (TokenStream, TokenStream) {
-        let ok_ptr_val = &self.ok_ptr_val;
-        let err_ptr_val = &self.err_ptr_val;
-        let ok_ty_cpp = &self.ok_ty_cpp;
-        let err_ty_cpp = &self.err_ty_cpp;
-        let ok_ptr = quote! { reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val) };
-        let err_ptr = quote! { reinterpret_cast<#err_ty_cpp*>(#err_ptr_val) };
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
-        if self.needs_drop {
-            (
-                quote! { ~Result() noexcept; },
-                quote! {
-                    inline #full_self_ty::~Result() noexcept {
-                        if (has_value()) {
-                            ::std::destroy_at(#ok_ptr);
-                        } else {
-                            ::std::destroy_at(#err_ptr);
-                        }
-                    }
-                },
-            )
-        } else {
-            (
-                quote! { ~Result() noexcept = default; },
-                quote! { static_assert(::std::is_trivially_destructible_v<#full_self_ty>); },
-            )
-        }
-    }
-
-    fn move_operations_ok(&self) -> ApiSnippets<'tcx> {
-        if !is_cpp_movable(self.db, self.ok_ty_rs) {
-            let ctor_msg = format!(
-                "Move constructor is not available for the Ok variant because {} does not have a move constructor",
-                self.ok_ty_rs
-            );
-            return ApiSnippets::comment_only(&ctor_msg);
-        }
-        let ok_ty_cpp = &self.ok_ty_cpp;
-        let ok_ptr_val = &self.ok_ptr_val;
-        let ok_ptr = quote! { reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val) };
-        let err_ty_cpp = &self.err_ty_cpp;
-        let err_ptr_val = &self.err_ptr_val;
-        let err_ptr = quote! { reinterpret_cast<#err_ty_cpp*>(#err_ptr_val) };
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
-        let write_ok_to_tag = &self.write_ok_to_tag;
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                Result(#ok_ty_cpp&& ok) noexcept;
-                Result& operator=(#ok_ty_cpp&& ok) noexcept;
-            }),
-            cc_details: CcSnippet::new(quote! {
-                inline #full_self_ty::Result(#ok_ty_cpp&& ok) noexcept {
-                    #write_ok_to_tag
-                    ::std::construct_at(#ok_ptr, ::std::move(ok));
-                } __NEWLINE__
-
-                inline #full_self_ty& #full_self_ty::operator=(#ok_ty_cpp&& ok) noexcept {
-                    if (!has_value()) {
-                        ::std::destroy_at(#err_ptr);
-                        #write_ok_to_tag
-                        ::std::construct_at(#ok_ptr, ::std::move(ok));
-                    } else {
-                        #write_ok_to_tag
-                        ::crubit::MoveAssignOrDestroyAndConstruct(#ok_ptr, ::std::move(ok));
-                    }
-                    return *this;
-                } __NEWLINE__
-            }),
-            ..Default::default()
-        }
-    }
-
-    fn move_operations_err(&self) -> ApiSnippets<'tcx> {
-        let has_move = is_cpp_movable(self.db, self.err_ty_rs);
-        let ok_ty_cpp = &self.ok_ty_cpp;
-        let err_ty_cpp = &self.err_ty_cpp;
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
-        let err_ptr_val = &self.err_ptr_val;
-        let ok_ptr_val = &self.ok_ptr_val;
-        let write_err_to_tag = &self.write_err_to_tag;
-        let err_ptr = quote! { reinterpret_cast<#err_ty_cpp*>(#err_ptr_val) };
-        if !has_move {
-            let ctor_msg = format!("Move constructor not available for Err variant because {} has not move constructor", self.err_ty_rs);
-            ApiSnippets::comment_only(&ctor_msg)
-        } else {
-            ApiSnippets {
-                main_api: CcSnippet::new(quote! {
-                    Result(rs_std::unexpected<#err_ty_cpp>&& err) noexcept;
-                    Result& operator=(rs_std::unexpected<#err_ty_cpp>&& err) noexcept;
-                }),
-                cc_details: CcSnippet::new(quote! {
-                    inline #full_self_ty::Result(rs_std::unexpected<#err_ty_cpp>&& err) noexcept {
-                        #write_err_to_tag
-                        ::std::construct_at(#err_ptr, ::std::move(err.error()));
-                    } __NEWLINE__
-
-                    inline #full_self_ty& #full_self_ty::operator=(rs_std::unexpected<#err_ty_cpp>&& err) noexcept {
-                        if (has_value()) {
-                            ::std::destroy_at(#ok_ptr_val);
-                            #write_err_to_tag
-                            ::std::construct_at(#err_ptr, ::std::move(err.error()));
-                        } else {
-                            #write_err_to_tag
-                            ::crubit::MoveAssignOrDestroyAndConstruct(#err_ptr, ::std::move(err.error()));
-                        }
-                        return *this;
-                    } __NEWLINE__
-                }),
-                ..Default::default()
-            }
-        }
-    }
-
     fn api_snippets(self) -> ApiSnippets<'tcx> {
-        let (drop, drop_details) = self.drop_method();
-        let move_constructor_ok = self.move_operations_ok();
-        let move_constructor_err = self.move_operations_err();
         let Self {
-            db,
             ok_ty_cpp,
             err_ty_cpp,
+            needs_drop,
             tag_method,
             has_value_impl,
             ok_ptr_val,
@@ -595,137 +479,104 @@ impl<'tcx> ResultApiGenerator<'_, 'tcx> {
         let mut prereqs = CcPrerequisites::default();
         let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
 
-        let move_construct_ok = move_constructor_ok.main_api.into_tokens(&mut prereqs);
-        let move_construct_err = move_constructor_err.main_api.into_tokens(&mut prereqs);
+        let (drop, drop_details) = if needs_drop {
+            (
+                quote! { ~Result() noexcept; },
+                quote! {
+                    inline #full_self_ty::~Result() noexcept {
+                        this->Reset();
+                    }
+                },
+            )
+        } else {
+            (
+                quote! { ~Result() noexcept = default; },
+                quote! { static_assert(::std::is_trivially_destructible_v<#full_self_ty>); },
+            )
+        };
 
         let tag_method_main_api = tag_method.main_api.into_tokens(&mut prereqs);
         let main_api = CcSnippet {
             tokens: quote! {
-                #move_construct_ok __NEWLINE__
-                #move_construct_err __NEWLINE__
+            public:
+                using base_type = rs_std::ResultBase<rs_std::Result<#ok_ty_cpp, #err_ty_cpp>, #ok_ty_cpp, #err_ty_cpp>;
+
+                template <typename U>
+                  requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+                           !rs_std::is_unexpected_v<std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+                           std::is_constructible_v<#ok_ty_cpp, U>)
+                explicit constexpr Result(U&& ok) noexcept : base_type(::std::forward<U>(ok)) {}
+
+                template <typename U>
+                  requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+                           !rs_std::is_unexpected_v<std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+                           std::is_constructible_v<#ok_ty_cpp, U>)
+                constexpr Result& operator=(U&& ok) noexcept {
+                    base_type::operator=(::std::forward<U>(ok));
+                    return *this;
+                }
+
+                template <typename F>
+                  requires(std::is_constructible_v<#err_ty_cpp, F>)
+                explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept : base_type(::std::move(err)) {}
+
+                template <typename F>
+                  requires(std::is_constructible_v<#err_ty_cpp, F>)
+                constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
+                    base_type::operator=(::std::move(err));
+                    return *this;
+                }
 
                 template <typename... Args>
-                Result(::std::in_place_t, Args&&... args); __NEWLINE__
+                explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
+                    : base_type(ip, ::std::forward<Args>(args)...) {}
 
                 template <typename... Args>
-                Result(rs_std::unexpect_t, Args&&... args); __NEWLINE__
-
-                explicit constexpr operator bool() const noexcept; __NEWLINE__
-                constexpr bool has_value() const noexcept; __NEWLINE__
-
-                #ok_ty_cpp& value() &; __NEWLINE__
-                #ok_ty_cpp&& value() &&; __NEWLINE__
-
-                #err_ty_cpp& err() &; __NEWLINE__
-                #err_ty_cpp&& err() &&; __NEWLINE__
-
-                #ok_ty_cpp& operator*() &; __NEWLINE__
-                #ok_ty_cpp const& operator*() const&; __NEWLINE__
-                #ok_ty_cpp&& operator*() &&; __NEWLINE__
-
-                #ok_ty_cpp* operator->(); __NEWLINE__
-                #ok_ty_cpp const* operator->() const; __NEWLINE__
+                explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
+                    : base_type(u, ::std::forward<Args>(args)...) {}
 
                 #drop
 
             private:
-                #tag_method_main_api
+                friend base_type;
 
-                void check_has_ok() const;
-                void check_has_err() const;
+                bool has_value_impl() const noexcept {
+                    return #has_value_impl;
+                }
+                #ok_ty_cpp* ok_ptr() noexcept {
+                    return reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
+                }
+                #ok_ty_cpp const* ok_const_ptr() const noexcept {
+                    return reinterpret_cast<#ok_ty_cpp const*>(#ok_ptr_val);
+                }
+                #err_ty_cpp* err_ptr() noexcept {
+                    return reinterpret_cast<#err_ty_cpp*>(#err_ptr_val);
+                }
+                #err_ty_cpp const* err_const_ptr() const noexcept {
+                    return reinterpret_cast<#err_ty_cpp const*>(#err_ptr_val);
+                }
+                void set_ok_tag() noexcept {
+                    #write_ok_to_tag
+                }
+                void set_err_tag() noexcept {
+                    #write_err_to_tag
+                }
+
+                #tag_method_main_api
             },
             prereqs,
         };
 
         let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(CcInclude::cstring());
         prereqs.includes.insert(CcInclude::utility());
-        prereqs.includes.insert(db.support_header("internal/check.h"));
-        prereqs.includes.insert(db.support_header("internal/move_assign.h"));
-        let move_construct_ok_details = move_constructor_ok.cc_details.into_tokens(&mut prereqs);
-        let move_construct_err_details = move_constructor_err.cc_details.into_tokens(&mut prereqs);
         let tag_method_cc_details = tag_method.cc_details.into_tokens(&mut prereqs);
         let cc_details = CcSnippet {
             tokens: quote! {
-                #move_construct_ok_details __NEWLINE__
-                #move_construct_err_details __NEWLINE__
-
-                template <typename... Args>
-                inline #full_self_ty::Result(std::in_place_t, Args&&... args) {
-                    #write_ok_to_tag
-                    std::construct_at(#ok_ptr_val, std::forward<Args>(args)...);
-                } __NEWLINE__
-
-                template <typename... Args>
-                inline #full_self_ty::Result(rs_std::unexpect_t, Args&&... args) {
-                    #write_err_to_tag
-                    std::construct_at(#err_ptr_val, std::forward<Args>(args)...);
-                } __NEWLINE__
-
-                inline constexpr #full_self_ty::operator bool() const noexcept {
-                    return has_value();
-                } __NEWLINE__
-
-                inline constexpr bool #full_self_ty::has_value() const noexcept {
-                    return #has_value_impl;
-                } __NEWLINE__
-
-                inline #ok_ty_cpp& #full_self_ty::value() & {
-                    check_has_ok();
-                    return *reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
-                } __NEWLINE__
-
-                inline #ok_ty_cpp&& #full_self_ty::value() && {
-                    check_has_ok();
-                    return ::std::move(*reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val));
-                } __NEWLINE__
-
-                inline #err_ty_cpp& #full_self_ty::err() & {
-                    check_has_err();
-                    return *reinterpret_cast<#err_ty_cpp*>(#err_ptr_val);
-                } __NEWLINE__
-
-                inline #err_ty_cpp&& #full_self_ty::err() && {
-                    check_has_err();
-                    return ::std::move(*reinterpret_cast<#err_ty_cpp*>(#err_ptr_val));
-                } __NEWLINE__
-
-                inline #ok_ty_cpp& #full_self_ty::operator*() & {
-                    check_has_ok();
-                    return *reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
-                } __NEWLINE__
-
-                inline #ok_ty_cpp const& #full_self_ty::operator*() const& {
-                    check_has_ok();
-                    return *reinterpret_cast<#ok_ty_cpp const*>(#ok_ptr_val);
-                } __NEWLINE__
-
-                inline #ok_ty_cpp&& #full_self_ty::operator*() && {
-                    check_has_ok();
-                    return ::std::move(*reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val));
-                } __NEWLINE__
-
-                inline #ok_ty_cpp* #full_self_ty::operator->() {
-                    check_has_ok();
-                    return reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
-                } __NEWLINE__
-
-                inline #ok_ty_cpp const* #full_self_ty::operator->() const {
-                    check_has_ok();
-                    return reinterpret_cast<#ok_ty_cpp const*>(#ok_ptr_val);
-                } __NEWLINE__
-
-
                 #drop_details __NEWLINE__
-                #tag_method_cc_details __NEWLINE__
-
-                inline void #full_self_ty::check_has_ok() const {
-                    CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
-                } __NEWLINE__
-
-                inline void #full_self_ty::check_has_err() const {
-                    CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
-                } __NEWLINE__
+                #tag_method_cc_details
             },
             prereqs,
         };
@@ -1419,7 +1270,8 @@ fn specialize_result<'tcx>(
         struct
         alignas(#align_literal) __NEWLINE__
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Result<#ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
+        rs_std::Result<#ok_ty_tokens, #err_ty_tokens>
+            : public rs_std::ResultBase<rs_std::Result<#ok_ty_tokens, #err_ty_tokens>, #ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
 

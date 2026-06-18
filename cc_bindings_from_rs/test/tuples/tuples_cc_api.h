@@ -16,9 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/bridge.h"
-#include "support/internal/check.h"
 #include "support/internal/memswap.h"
-#include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/option.h"
@@ -1388,7 +1386,10 @@ struct alignas(4)
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < i32 , :: alloc :: string :: String >")
-    rs_std::Result<::std::int32_t, ::rs::alloc::string::String> {
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>
+    : public rs_std::ResultBase<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
+          ::std::int32_t, ::rs::alloc::string::String> {
  public:
   // Clone::clone
   Result(const Result&);
@@ -1400,33 +1401,67 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Result(::crubit::UnsafeRelocateTag, Result&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
-  Result(::std::int32_t&& ok) noexcept;
-  Result& operator=(::std::int32_t&& ok) noexcept;
-  Result(rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept;
-  Result& operator=(
-      rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept;
+
+ public:
+  using base_type = rs_std::ResultBase<
+      rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
+      ::std::int32_t, ::rs::alloc::string::String>;
+  template <typename U>
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
+  explicit constexpr Result(U&& ok) noexcept
+      : base_type(::std::forward<U>(ok)) {}
+  template <typename U>
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
+  constexpr Result& operator=(U&& ok) noexcept {
+    base_type::operator=(::std::forward<U>(ok));
+    return *this;
+  }
+  template <typename F>
+    requires(std::is_constructible_v<::rs::alloc::string::String, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
+      : base_type(::std::move(err)) {}
+  template <typename F>
+    requires(std::is_constructible_v<::rs::alloc::string::String, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
+    base_type::operator=(::std::move(err));
+    return *this;
+  }
   template <typename... Args>
-  Result(::std::in_place_t, Args&&... args);
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
+      : base_type(ip, ::std::forward<Args>(args)...) {}
   template <typename... Args>
-  Result(rs_std::unexpect_t, Args&&... args);
-  explicit constexpr operator bool() const noexcept;
-  constexpr bool has_value() const noexcept;
-  ::std::int32_t& value() &;
-  ::std::int32_t&& value() &&;
-  ::rs::alloc::string::String& err() &;
-  ::rs::alloc::string::String&& err() &&;
-  ::std::int32_t& operator*() &;
-  ::std::int32_t const& operator*() const&;
-  ::std::int32_t&& operator*() &&;
-  ::std::int32_t* operator->();
-  ::std::int32_t const* operator->() const;
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
+      : base_type(u, ::std::forward<Args>(args)...) {}
   ~Result() noexcept;
 
  private:
+  friend base_type;
+  bool has_value_impl() const noexcept {
+    return tag() == UINT64_C(18446744073709551615);
+  }
+  ::std::int32_t* ok_ptr() noexcept {
+    return reinterpret_cast<::std::int32_t*>(__storage + 8);
+  }
+  ::std::int32_t const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int32_t const*>(__storage + 8);
+  }
+  ::rs::alloc::string::String* err_ptr() noexcept {
+    return reinterpret_cast<::rs::alloc::string::String*>(__storage);
+  }
+  ::rs::alloc::string::String const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::rs::alloc::string::String const*>(__storage);
+  }
+  void set_ok_tag() noexcept { set_tag(UINT64_C(18446744073709551615)); }
+  void set_err_tag() noexcept {}
   constexpr ::std::uint64_t tag() const& noexcept;
   constexpr void set_tag(::std::uint64_t tag) noexcept;
-  void check_has_ok() const;
-  void check_has_err() const;
 
  private:
   unsigned char __storage[24];
@@ -3074,123 +3109,9 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
   }
   return *this;
 }
-inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
-    ::std::int32_t&& ok) noexcept {
-  set_tag(UINT64_C(18446744073709551615));
-  ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 8),
-                      ::std::move(ok));
-}
-inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
-    ::std::int32_t&& ok) noexcept {
-  if (!has_value()) {
-    ::std::destroy_at(
-        reinterpret_cast<::rs::alloc::string::String*>(__storage));
-    set_tag(UINT64_C(18446744073709551615));
-    ::std::construct_at(reinterpret_cast<::std::int32_t*>(__storage + 8),
-                        ::std::move(ok));
-  } else {
-    set_tag(UINT64_C(18446744073709551615));
-    ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::std::int32_t*>(__storage + 8), ::std::move(ok));
-  }
-  return *this;
-}
-
-inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
-    rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept {
-  ::std::construct_at(reinterpret_cast<::rs::alloc::string::String*>(__storage),
-                      ::std::move(err.error()));
-}
-inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
-    rs_std::unexpected<::rs::alloc::string::String>&& err) noexcept {
-  if (has_value()) {
-    ::std::destroy_at(__storage + 8);
-    ::std::construct_at(
-        reinterpret_cast<::rs::alloc::string::String*>(__storage),
-        ::std::move(err.error()));
-  } else {
-    ::crubit::MoveAssignOrDestroyAndConstruct(
-        reinterpret_cast<::rs::alloc::string::String*>(__storage),
-        ::std::move(err.error()));
-  }
-  return *this;
-}
-
-template <typename... Args>
-inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
-    std::in_place_t, Args&&... args) {
-  set_tag(UINT64_C(18446744073709551615));
-  std::construct_at(__storage + 8, std::forward<Args>(args)...);
-}
-template <typename... Args>
-inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
-    rs_std::unexpect_t, Args&&... args) {
-  std::construct_at(__storage, std::forward<Args>(args)...);
-}
-inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::
-operator bool() const noexcept {
-  return has_value();
-}
-inline constexpr bool rs_std::Result<
-    ::std::int32_t, ::rs::alloc::string::String>::has_value() const noexcept {
-  return tag() == UINT64_C(18446744073709551615);
-}
-inline ::std::int32_t&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::value() & {
-  check_has_ok();
-  return *reinterpret_cast<::std::int32_t*>(__storage + 8);
-}
-inline ::std::int32_t&&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::value() && {
-  check_has_ok();
-  return ::std::move(*reinterpret_cast<::std::int32_t*>(__storage + 8));
-}
-inline ::rs::alloc::string::String&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::err() & {
-  check_has_err();
-  return *reinterpret_cast<::rs::alloc::string::String*>(__storage);
-}
-inline ::rs::alloc::string::String&&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::err() && {
-  check_has_err();
-  return ::std::move(
-      *reinterpret_cast<::rs::alloc::string::String*>(__storage));
-}
-inline ::std::int32_t&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator*() & {
-  check_has_ok();
-  return *reinterpret_cast<::std::int32_t*>(__storage + 8);
-}
-inline ::std::int32_t const& rs_std::Result<
-    ::std::int32_t, ::rs::alloc::string::String>::operator*() const& {
-  check_has_ok();
-  return *reinterpret_cast<::std::int32_t const*>(__storage + 8);
-}
-inline ::std::int32_t&&
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator*() && {
-  check_has_ok();
-  return ::std::move(*reinterpret_cast<::std::int32_t*>(__storage + 8));
-}
-inline ::std::int32_t*
-rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator->() {
-  check_has_ok();
-  return reinterpret_cast<::std::int32_t*>(__storage + 8);
-}
-inline ::std::int32_t const* rs_std::Result<
-    ::std::int32_t, ::rs::alloc::string::String>::operator->() const {
-  check_has_ok();
-  return reinterpret_cast<::std::int32_t const*>(__storage + 8);
-}
 inline rs_std::Result<::std::int32_t,
                       ::rs::alloc::string::String>::~Result() noexcept {
-  if (has_value()) {
-    ::std::destroy_at(reinterpret_cast<::std::int32_t*>(__storage + 8));
-  } else {
-    ::std::destroy_at(
-        reinterpret_cast<::rs::alloc::string::String*>(__storage));
-  }
+  this->Reset();
 }
 inline constexpr ::std::uint64_t rs_std::Result<
     ::std::int32_t, ::rs::alloc::string::String>::tag() const& noexcept {
@@ -3208,15 +3129,6 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::set_tag(
   for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
-}
-
-inline void rs_std::Result<::std::int32_t,
-                           ::rs::alloc::string::String>::check_has_ok() const {
-  CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
-}
-inline void rs_std::Result<::std::int32_t,
-                           ::rs::alloc::string::String>::check_has_err() const {
-  CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
 }
 
 #endif

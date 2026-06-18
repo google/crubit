@@ -111,6 +111,9 @@ source_set("result") {
   public = [
     "result.h",
   ]
+  deps = [
+    "$crubit_src_dir/support/internal:bindings_support",
+  ]
 }
 
 source_set("slice_ref") {
