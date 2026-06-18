@@ -55,26 +55,14 @@ template <typename TAdaptedIterator>
 class IteratorAdapter {
  private:
   using impl = rs_std::impl<TAdaptedIterator, rs::core::iter::Iterator>;
-  static constexpr bool kIsPointerItem =
-      ::std::is_pointer_v<typename impl::Item>;
+  using element_type = impl::Item;
 
  public:
-  using value_type =
-      ::std::conditional_t<kIsPointerItem,
-                           ::std::remove_pointer_t<typename impl::Item>,
-                           typename impl::Item>;
+  using value_type = ::std::remove_const_t<element_type>;
   using difference_type = ::std::ptrdiff_t;
-
- private:
-  static constexpr bool kIsMoveOnly =
-      !::std::is_copy_constructible_v<value_type> &&
-      ::std::is_move_constructible_v<value_type>;
-
- public:
-  using pointer = void;
-  using reference = ::std::conditional_t<
-      kIsPointerItem, ::std::add_lvalue_reference_t<value_type>,
-      ::std::conditional_t<kIsMoveOnly, value_type, const value_type&>>;
+  using pointer = value_type*;
+  using reference = value_type&;
+  using const_reference = const value_type&;
   using iterator_category = ::std::input_iterator_tag;
   using iterator_concept = ::std::input_iterator_tag;
 
@@ -122,21 +110,9 @@ class IteratorAdapter {
   //   a `const value_type&` and not `value_type&` (the former cannot be moved
   //   out of).  `iter_move` has to move out of `current_item_`, so we mark
   //   `current_item_` as `mutable` to reconcile all of these requirements.
-  reference operator*() const {
-    if constexpr (kIsPointerItem) {
-      return *current_item_.value();
-    } else if constexpr (kIsMoveOnly) {
-      return ::std::move(*current_item_);
-    } else {
-      return current_item_.value();
-    }
-  }
+  reference operator*() const { return current_item_.value(); }
   friend value_type&& iter_move(const IteratorAdapter& self) noexcept {
-    if constexpr (kIsPointerItem) {
-      return ::std::move(*self.current_item_.value());
-    } else {
-      return ::std::move(*self.current_item_);
-    }
+    return ::std::move(*self.current_item_);
   }
   IteratorAdapter& operator++() {
     next();

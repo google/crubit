@@ -64,7 +64,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `into_iterator_rust_golden::ContainerWithInherentBegin` defined at
   // cc_bindings_from_rs/test/known_traits/into_iterator/into_iterator.rs;l=100:
   // into_iterator_rust_golden::ContainerWithInherentBegin has a method named
-  // `begin` or `end`, which prevents binding `begin` and `end` methods for
+  // `begin`, `end`, or `into_iter`, which prevents binding methods for
   // IntoIterator.
 
   union {
@@ -486,9 +486,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
   template <typename TAdaptedSelf_ = MyContainer>
-  rs::IteratorAdapter<::into_iterator_rust::MyContainerIntoIter> begin() &&;
-  template <typename TAdaptedSelf_ = MyContainer>
-  rs::IteratorEnd end() &&;
+  inline ::into_iterator_rust::MyContainerIntoIter into_iter() &&;
   template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorAdapter<::into_iterator_rust::MyContainerIter> begin() const&;
   template <typename TAdaptedSelf_ = MyContainer>
@@ -623,8 +621,7 @@ extern "C" void __crubit_thunk_into_uiter(
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
 }
 template <typename TAdaptedSelf_>
-inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIntoIter>
-MyContainer::begin() && {
+inline ::into_iterator_rust::MyContainerIntoIter MyContainer::into_iter() && {
   MyContainer&& self_ = ::std::move(*this);
   auto call_into_iter = [&]() -> decltype(auto) {
     crubit::Slot<::into_iterator_rust::MyContainerIntoIter>
@@ -634,12 +631,7 @@ MyContainer::begin() && {
                                                  __return_value_storage);
     return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
   };
-  return rs::IteratorAdapter<::into_iterator_rust::MyContainerIntoIter>(
-      call_into_iter());
-}
-template <typename TAdaptedSelf_>
-inline rs::IteratorEnd MyContainer::end() && {
-  return rs::IteratorEnd();
+  return call_into_iter();
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_into_uiter(

@@ -40,7 +40,7 @@ TEST(IntoIteratorTest, ValueContainer) {
   MyContainer c = make_container(10, 20, 30);
   int count = 0;
   int sum = 0;
-  for (int x : std::move(c)) {
+  for (int x : std::move(c).into_iter()) {
     count++;
     sum += x;
   }
@@ -53,9 +53,9 @@ TEST(IntoIteratorTest, SharedRefContainer) {
   const MyContainer& const_c = c;
   int count = 0;
   int sum = 0;
-  for (const int& x : const_c) {
+  for (const int* x : const_c) {
     count++;
-    sum += x;
+    sum += *x;
   }
   EXPECT_EQ(count, 3);
   EXPECT_EQ(sum, 60);
@@ -63,13 +63,13 @@ TEST(IntoIteratorTest, SharedRefContainer) {
 
 TEST(IntoIteratorTest, MutRefContainer) {
   MyContainer c = make_container(10, 20, 30);
-  for (int& x : c) {
-    x *= 2;
+  for (int* x : c) {
+    *x *= 2;
   }
 
   int sum = 0;
-  for (int x : std::move(c)) {
-    sum += x;
+  for (int* x : c) {
+    sum += *x;
   }
   EXPECT_EQ(sum, 120);
 }
@@ -92,7 +92,27 @@ TEST(IntoIteratorTest, DirectIteratorForLoop) {
 TEST(IntoIteratorTest, MoveOnlyIteratorForLoop) {
   MoveOnlyIterator iter = make_move_only_iterator(21, 3);
   int count = 0;
-  for (MoveOnlyPayload&& payload : iter) {
+  for (MoveOnlyPayload& payload : iter) {
+    EXPECT_EQ(payload.mutating_method(), 42);
+    count++;
+  }
+  EXPECT_EQ(count, 3);
+}
+
+TEST(IntoIteratorTest, MoveOnlyIteratorReferenceForLoop) {
+  MoveOnlyIterator iter_v = make_move_only_iterator(21, 3);
+  MoveOnlyIterator& iter = iter_v;
+  int count = 0;
+  for (MoveOnlyPayload& payload : iter) {
+    EXPECT_EQ(payload.mutating_method(), 42);
+    count++;
+  }
+  EXPECT_EQ(count, 3);
+}
+
+TEST(IntoIteratorTest, MoveOnlyIteratorPrvalueForLoop) {
+  int count = 0;
+  for (MoveOnlyPayload& payload : make_move_only_iterator(21, 3)) {
     EXPECT_EQ(payload.mutating_method(), 42);
     count++;
   }

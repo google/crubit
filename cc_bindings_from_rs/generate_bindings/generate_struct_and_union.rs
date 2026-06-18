@@ -2945,6 +2945,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     let mut main_api_prereqs = CcPrerequisites::default();
     let into_iter_cc_ty_tokens_main = into_iter_cc_ty.clone().into_tokens(&mut main_api_prereqs);
     main_api_prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
+    main_api_prereqs.move_defs_to_fwd_decls();
 
     let iterator_trait_id = tcx
         .get_diagnostic_item(sym::Iterator)
@@ -2969,27 +2970,6 @@ fn generate_begin_and_end_for_type<'tcx>(
     });
     main_api_prereqs.template_specializations.insert(specialization);
 
-    let (ref_qualifiers, self_binding) = match passing_mode {
-        PassingMode::Value => {
-            (quote! { && }, quote! { #adt_cc_name&& self_ = ::std::move(*this); })
-        }
-        PassingMode::SharedRef => {
-            (quote! { const & }, quote! { const #adt_cc_name& self_ = *this; })
-        }
-        PassingMode::MutRef => (quote! { & }, quote! { #adt_cc_name& self_ = *this; }),
-    };
-
-    main_api_prereqs.move_only_defs_to_fwd_decls();
-    let main_api = CcSnippet {
-        tokens: quote! {
-            template <typename TAdaptedSelf_ = #adt_cc_name>
-            rs::IteratorAdapter< #into_iter_cc_ty_tokens_main > begin() #ref_qualifiers;
-            template <typename TAdaptedSelf_ = #adt_cc_name>
-            rs::IteratorEnd end() #ref_qualifiers;
-        },
-        prereqs: main_api_prereqs,
-    };
-
     let mut cc_details_prereqs = CcPrerequisites::default();
     let into_iter_cc_ty_tokens_details = into_iter_cc_ty.into_tokens(&mut cc_details_prereqs);
     cc_details_prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
@@ -3004,25 +2984,66 @@ fn generate_begin_and_end_for_type<'tcx>(
         quote! { call_into_iter() }
     };
 
-    let cc_details = CcSnippet {
-        tokens: quote! {
-            #cc_thunk_decls_tokens
+    let (main_api_tokens, cc_details_tokens) = match passing_mode {
+        PassingMode::Value => {
+            let self_binding = quote! { #adt_cc_name&& self_ = ::std::move(*this); };
+            (
+                quote! {
+                    template <typename TAdaptedSelf_ = #adt_cc_name>
+                    inline #into_iter_cc_ty_tokens_main into_iter() &&;
+                },
+                quote! {
+                    #cc_thunk_decls_tokens
 
-            template <typename TAdaptedSelf_>
-            inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > #adt_cc_name :: begin () #ref_qualifiers {
-                #self_binding
-                auto call_into_iter = [&]() -> decltype(auto) {
-                    #impl_body_tokens
-                };
-                return rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
-            }
-            template <typename TAdaptedSelf_>
-            inline rs::IteratorEnd #adt_cc_name :: end () #ref_qualifiers {
-                return rs::IteratorEnd();
-            }
-        },
-        prereqs: cc_details_prereqs,
+                    template <typename TAdaptedSelf_>
+                    inline #into_iter_cc_ty_tokens_details #adt_cc_name :: into_iter () && {
+                        #self_binding
+                        auto call_into_iter = [&]() -> decltype(auto) {
+                            #impl_body_tokens
+                        };
+                        return #call_expr;
+                    }
+                },
+            )
+        }
+        PassingMode::SharedRef | PassingMode::MutRef => {
+            let (ref_qualifiers, self_binding) = match passing_mode {
+                PassingMode::SharedRef => {
+                    (quote! { const & }, quote! { const #adt_cc_name& self_ = *this; })
+                }
+                PassingMode::MutRef => (quote! { & }, quote! { #adt_cc_name& self_ = *this; }),
+                PassingMode::Value => unreachable!(),
+            };
+            (
+                quote! {
+                    template <typename TAdaptedSelf_ = #adt_cc_name>
+                    rs::IteratorAdapter< #into_iter_cc_ty_tokens_main > begin() #ref_qualifiers;
+                    template <typename TAdaptedSelf_ = #adt_cc_name>
+                    rs::IteratorEnd end() #ref_qualifiers;
+                },
+                quote! {
+                    #cc_thunk_decls_tokens
+
+                    template <typename TAdaptedSelf_>
+                    inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > #adt_cc_name :: begin () #ref_qualifiers {
+                        #self_binding
+                        auto call_into_iter = [&]() -> decltype(auto) {
+                            #impl_body_tokens
+                        };
+                        return rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
+                    }
+                    template <typename TAdaptedSelf_>
+                    inline rs::IteratorEnd #adt_cc_name :: end () #ref_qualifiers {
+                        return rs::IteratorEnd();
+                    }
+                },
+            )
+        }
     };
+
+    let main_api = CcSnippet { tokens: main_api_tokens, prereqs: main_api_prereqs };
+
+    let cc_details = CcSnippet { tokens: cc_details_tokens, prereqs: cc_details_prereqs };
 
     Ok(Some(ApiSnippets { main_api, cc_details, rs_details: rs_thunk_impls }))
 }
@@ -3034,22 +3055,25 @@ fn generate_into_iterator_impls<'tcx>(
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
 
-    if member_function_names.contains("begin") || member_function_names.contains("end") {
-        bail!("{} has a method named `begin` or `end`, which prevents binding `begin` and `end` methods for IntoIterator.", core.self_ty);
+    if member_function_names.contains("begin")
+        || member_function_names.contains("end")
+        || member_function_names.contains("into_iter")
+    {
+        bail!("{} has a method named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.self_ty);
     }
 
-    let ty::Adt(adt_def, _) = core.self_ty.kind() else {
-        bail!("Internal Crubit Error: Expected ADT type. Please file a bug.");
-    };
-    let has_conflicting_field =
-        adt_def.all_fields().any(|field| matches!(field.name.as_str(), "begin" | "end"));
+    let adt_def =
+        core.self_ty.ty_adt_def().expect("generate_adt_core should have confirmed this was an ADT");
+    let has_conflicting_field = adt_def
+        .all_fields()
+        .any(|field| matches!(field.name.as_str(), "begin" | "end" | "into_iter"));
     if has_conflicting_field {
-        bail!("{} has a field named `begin` or `end`, which prevents binding `begin` and `end` methods for IntoIterator.", core.self_ty);
+        bail!("{} has a field named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.self_ty);
     }
 
-    let Some(into_iterator_trait_id) = tcx.get_diagnostic_item(sym::IntoIterator) else {
-        bail!("Internal Crubit Error: IntoIterator trait not found. Please file a bug.");
-    };
+    let into_iterator_trait_id = tcx
+        .get_diagnostic_item(sym::IntoIterator)
+        .expect("Could not find IntoIterator trait. Please file a crubit bug.");
 
     Ok([PassingMode::Value, PassingMode::SharedRef, PassingMode::MutRef]
         .into_iter()
