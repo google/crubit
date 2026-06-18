@@ -107,4 +107,16 @@ includes spanshots of what the generated bindings look like.
     *   Examples:
         [`examples/cpp/`](https://github.com/google/crubit/tree/main/examples/cpp)
 
+## Test Matrix
+
+|Nightly|Stable|
+| ---   | ---  |
+| [![nightly-0](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-0.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | [![stable-0](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/stable-0.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) |
+| [![nightly-1](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-1.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | [![stable-1](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/stable-1.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) |
+| [![nightly-2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-2.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
+| [![nightly-3](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-3.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
+| [![nightly-4](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-4.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
+| [![nightly-5](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-5.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
+| [![nightly-6](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-6.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
+
 
