@@ -22,44 +22,54 @@ This page should evolve over time:
 ## Types
 
 See [crubit.rs/types](http://crubit.rs/types) for more details about types in
-general, including explanations of what it means for a type to be ABI-compatible
-versus layout-compatible.
+general, including explanations of what it means for a type to be
+ABI-compatible, layout-compatible, or bridged.
 
-The following types are supported:
+The following table summarizes the mapping and compatibility of types between
+C++ and Rust:
 
-*   ABI compatible:
-    *   integer types (except 128-bit integers)
-    *   floating point types
-    *   function pointers with ABI-compatible arguments and return types
-    *   Raw pointers to an ABI-compatible or layout-compatible type
-*   Layout compatible:
-    *   user-defined types
-    *   `std::string_view` / `absl::string_view`
-    *   `[T; N]`, `&[T]`, `&mut [T]`, and `&str`
-    *   `std::vector<T>`
-    *   `std::unique_ptr<T>`
-*   Bridged:
-    *   `std::string`
-    *   Rust tuples (e.g. `(i32, i64)`)
-    *   `std::optional<T>`
-    *   Protocol buffers
-    *   `absl::Status`
+Conceptual Type        | C++ Type                     | Rust Type                    | Compatibility     | Notes
+:--------------------- | :--------------------------- | :--------------------------- | :---------------- | :----
+**Primitives**         |                              |                              |                   |
+Integers               | `int32_t`, `int64_t`, etc.   | `i32`, `i64`, etc.           | ABI compatible    | Except 128-bit integers (`i128`/`u128` are not yet supported: b/254094650)
+Floating point         | `float`, `double`            | `f32`, `f64`                 | ABI compatible    |
+**Pointers & Refs**    |                              |                              |                   |
+Raw pointers           | `T*`, `const T*`             | `*mut T`, `*const T`         | ABI compatible    | If `T` is compatible
+References             | `const T&` / `T&`            | `&T` / `&mut T`              | Layout compatible | Supported as function parameters and return types
+String slices          | `rs_std::StrRef`             | `&str`                       | Layout compatible |
+Slices                 | `rs_std::SliceRef<T>`        | `&[T]`, `&mut [T]`           | Layout compatible |
+**Smart Pointers**     |                              |                              |                   |
+Unique pointer         | `std::unique_ptr<T>`         | `cc_std::std::unique_ptr<T>` | Layout compatible |
+**Containers**         |                              |                              |                   |
+Vector (C++)           | `std::vector<T>`             | `cc_std::std::vector<T>`     | Layout compatible | C++ `std::vector` in Rust
+Vector (Rust)          | `rs_std::Vec<T>`             | `Vec<T>`                     | Layout compatible | Rust `Vec` in C++
+Fixed-size array       | `std::array<T, N>`           | `[T; N]`                     | Layout compatible |
+**Strings**            |                              |                              |                   |
+String view            | `std::string_view`           | `cc_std::std::string_view`   | Layout compatible |
+Growable string (C++)  | `std::string`                | `cc_std::std::string`        | Bridged           |
+Growable string (Rust) | `rs::alloc::string::String`  | `String`                     | Layout compatible |
+**Option & Result**    |                              |                              |                   |
+Optional (C++)         | `std::optional<T>`           | `cc_std::std::optional<T>`   | Layout compatible |
+Option (Rust)          | `rs_std::Option<T>`          | `Option<T>`                  | Layout compatible | Converts to/from `std::optional<T>` in C++
+Result                 | `rs_std::Result<T, E>`       | `Result<T, E>`               | Layout compatible |
+**Other**              |                              |                              |                   |
+User-defined types     | `struct`/`class`             | `struct`/`enum`/`union`      | Layout compatible | Must be rust-movable (trivially copyable or `[[clang::trivial_abi]]`)
+Tuples                 | `rs_std::Tuple<T1, T2, ...>` | `(T1, T2, ...)`              | Layout compatible |
+Protocol Buffers       | C++ Proto                    | Rust Proto                   | Bridged           |
+Status                 | `absl::Status`               | `absl_status::Status`        | Bridged           |
 
-We have *experimental* unreleased support for the following types:
+### Experimental Type Support
 
 *   b/362475441: references and pointers to `MaybeUninit<T>`, which are treated
     as `T`.
 
-We have planned support for the following types:
-
-*   Bridged `Option<T>`
+### Unsupported Types
 
 The following types are **not** yet supported, among many others:
 
 *   b/254507801: Rust `!`
-*   b/254094650: `i128` and `u128`
-*   Rust `String`
-*   `Result<T, E>`
+*   b/254094650: `i128` and `u128` (as ABI-compatible primitives; they are not
+    supported at all)
 *   b/254099023: `()` as anything but a return type.
 *   b/213960614: `std::byte`
 
@@ -119,13 +129,20 @@ features, used in public interfaces:
     *   non-repr(C) unions
 *   aliases (via `use`, `type`)
 *   functions and methods, including trait methods
+    *   associated trait types and constants
 *   references
 *   specific known traits with equivalents in C++:
-    *   `Clone`
-    *   `Default`
-    *   `Drop`
-    *   `From`
-    *   `Into`
+    *   `Clone` (copy constructor/assignment)
+    *   `Copy` (trivial copyability)
+    *   `Default` (default constructor)
+    *   `Drop` (destructor)
+    *   `From` / `Into` (converting constructors/operators)
+    *   `PartialEq` (comparison operators `==`, `!=`)
+    *   `Display` (`std::ostream` `operator<<`, `absl::AbslStringify`)
+    *   `Index` / `IndexMut` (`operator[]`)
+    *   `IntoIterator` (range-based `for` loop support via `begin`/`end`
+        adapters)
+    *   Arithmetic and bitwise operators (e.g., `Add` maps to `operator+`)
 *   simple `const` constants
 *   Defining a C++ enum from Rust
 
@@ -136,7 +153,6 @@ We have *experimental* unreleased support for the following language features:
 
 The following features are **not** supported yet, among others:
 
-*   associated trait types and constants 
 *   defining C++ abstractions from Rust
     *   inheriting from a C++ class
     *   defining a C++ base class

@@ -1,7 +1,9 @@
 # Summary
 
+<!-- mdformat-off -->
+
 [Home](./index.md)
-[Are We Crubit Yet?](./overview/status.md)
+[Are We Crubit Yet?](./overview/status.md) <!-- mdformat-on -->
 
 # Types
 
@@ -15,22 +17,10 @@
 
 - [Visibility](./types/visibility.md)
 
-# Rust Bindings for C++ Libraries
-
-- [Overview](./cpp/index.md)
-- [Cookbook](./cpp/cookbook.md)
-- [Best Practices](./cpp/best_practices.md)
-- [Customizing](./cpp/customizing.md)
-
----
-
-- [Functions](./cpp/functions.md)
-- [Classes and Structs](./cpp/classes_and_structs.md)
-- [Enums](./cpp/enums.md)
-
 # C++ Bindings for Rust Libraries
 
 - [Overview](./rust/index.md)
+-   [Building](./rust/building.md)
 - [Functions](./rust/functions.md)
 - [Structs](./rust/structs.md)
 - [Enums](./rust/enums.md)
@@ -42,6 +32,20 @@
 ---
 
 - [Movable Types](./rust/movable_types.md)
+
+# Rust Bindings for C++ Libraries
+
+-   [Overview](./cpp/index.md)
+-   [Building the tool](./cpp/building.md)
+-   [Cookbook](./cpp/cookbook.md)
+-   [Best Practices](./cpp/best_practices.md)
+-   [Customizing](./cpp/customizing.md)
+
+--------------------------------------------------------------------------------
+
+-   [Functions](./cpp/functions.md)
+-   [Classes and Structs](./cpp/classes_and_structs.md)
+-   [Enums](./cpp/enums.md)
 
 # Integration notes
 
