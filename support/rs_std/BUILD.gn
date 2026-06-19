@@ -213,6 +213,23 @@ source_set("vec") {
   ]
 }
 
+source_set("waker") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "waker.h",
+  ]
+  sources = [
+    "waker.cc",
+  ]
+}
+
 rust_static_library("dyn_callable_rs") {
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
@@ -228,6 +245,43 @@ rust_static_library("dyn_callable_rs") {
   ]
   deps = [
     "$crubit_src_dir/support:bridge_rust",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("dyn_erased_future") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "dyn_erased_future"
+  crate_root = "dyn_erased_future.rs"
+  edition = "2024"
+  sources = [
+    "dyn_erased_future.rs",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:erased_future",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("erased_future") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "erased_future"
+  crate_root = "erased_future.rs"
+  edition = "2024"
+  sources = [
+    "erased_future.rs",
   ]
   allow_unsafe = true
   no_clippy = true
@@ -267,12 +321,15 @@ group("rs_std_cpp") {
     ":traits",
     ":tuple",
     ":vec",
+    ":waker",
   ]
 }
 
 group("rs_std_rust") {
   public_deps = [
     ":dyn_callable_rs",
+    ":dyn_erased_future",
+    ":erased_future",
     ":lossy_formatter",
   ]
 }

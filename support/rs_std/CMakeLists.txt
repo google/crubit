@@ -154,3 +154,13 @@ target_include_directories(crubit_support_rs_std_vec PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
+add_library(crubit_support_rs_std_waker STATIC
+"waker.cc"
+"waker.h"
+)
+set_target_properties(crubit_support_rs_std_waker PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_waker PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+

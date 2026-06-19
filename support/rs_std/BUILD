@@ -408,7 +408,9 @@ bazel_to_builds(
         ":char",
         ":dyn_callable",
         ":dyn_callable_rs",
+        ":dyn_erased_future",
         ":dyn_erased_future_cc",
+        ":erased_future",
         ":iterator_adapter",
         ":lossy_formatter",
         ":lossy_formatter_for_bindings",
@@ -419,5 +421,6 @@ bazel_to_builds(
         ":traits",
         ":tuple",
         ":vec",
+        ":waker",
     ],
 )
