@@ -36,6 +36,19 @@ absl::any_invocable
 crubit_support_bridge_cpp
 )
 
+add_library(crubit_support_rs_std_dyn_erased_future_cc STATIC
+"dyn_erased_future.h"
+)
+set_target_properties(crubit_support_rs_std_dyn_erased_future_cc PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_dyn_erased_future_cc PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_dyn_erased_future_cc PUBLIC
+crubit_support_rs_std_waker
+)
+
 add_library(crubit_support_rs_std_iterator_adapter STATIC
 "iterator_adapter.h"
 )

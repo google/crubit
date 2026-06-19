@@ -71,6 +71,64 @@ cc_library(
 )
 
 cc_library(
+    name = "waker",
+    srcs = ["waker.cc"],
+    hdrs = ["waker.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+)
+
+rust_library(
+    name = "erased_future",
+    srcs = ["erased_future.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+)
+
+crubit_rust_test(
+    name = "erased_future_test",
+    size = "small",
+    srcs = ["erased_future_test.rs"],
+    deps = [
+        ":erased_future",
+        "@crate_index//:googletest",
+    ],
+)
+
+rust_library(
+    name = "dyn_erased_future",
+    srcs = ["dyn_erased_future.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    link_deps = [
+        ":waker",
+    ],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+    deps = [
+        ":erased_future",
+    ],
+)
+
+cc_library(
+    name = "dyn_erased_future_cc",
+    hdrs = ["dyn_erased_future.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+    deps = [":waker"],
+)
+
+cc_library(
     name = "slice_ref",
     hdrs = ["slice_ref.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
@@ -350,6 +408,7 @@ bazel_to_builds(
         ":char",
         ":dyn_callable",
         ":dyn_callable_rs",
+        ":dyn_erased_future_cc",
         ":iterator_adapter",
         ":lossy_formatter",
         ":lossy_formatter_for_bindings",
