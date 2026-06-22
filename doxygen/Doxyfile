@@ -9,8 +9,8 @@ EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = NO
 EXTRACT_STATIC         = YES
 
-QUIET                  = YES
-WARNINGS               = NO
+QUIET                  = NO
+WARNINGS               = YES
 
 GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
@@ -21,4 +21,12 @@ HTML_EXTRA_STYLESHEET  =
 
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
-SOURCE_BROWSER         = YES
+SOURCE_BROWSER         = NO
+VERBATIM_HEADERS       = NO
+
+PREDEFINED             = CRUBIT_INTERNAL_RUST_TYPE(t,...)= \
+                         CRUBIT_INTERNAL_SAME_ABI= \
+                         CRUBIT_TRIVIAL_ABI= \
+                         CRUBIT_VIEW= \
+                         CRUBIT_LIFETIME_BOUND= \
+                         "alignas(x)="
