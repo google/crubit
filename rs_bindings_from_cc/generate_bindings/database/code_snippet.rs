@@ -457,13 +457,14 @@ pub fn generated_items_to_token_stream<'db>(
 }
 
 pub fn integer_constant_to_token_stream(
+    db: &crate::BindingsGenerator,
     integer_constant: IntegerConstant,
     underlying_type: &RsTypeKind,
 ) -> Result<TokenStream> {
     let RsTypeKind::Primitive(primitive) = *underlying_type.unalias() else {
         bail!(
-            "integer_constant_to_token_stream called with non-primitive underlying type:\n\
-            {underlying_type:#?}\n"
+            "integer_constant_to_token_stream called with non-primitive underlying type:\n  {}",
+            underlying_type.display(db),
         )
     };
     let IntegerConstant { is_negative, wrapped_value } = integer_constant;

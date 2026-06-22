@@ -195,7 +195,7 @@ fn generate_type_alias(
 fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Constant);
     let type_ = db.rs_type_kind(constant.type_.clone())?;
-    let value = match integer_constant_to_token_stream(constant.value, &type_) {
+    let value = match integer_constant_to_token_stream(db, constant.value, &type_) {
         Ok(value) => value,
         Err(e) => {
             return Ok(ApiSnippets {

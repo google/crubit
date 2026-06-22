@@ -45,10 +45,11 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
                 return omitting_bindings_comment(format!("unknown attribute(s): {unknown_attr}"));
             }
             let ident = make_rs_ident(&enumerator.identifier.identifier);
-            let value = match integer_constant_to_token_stream(enumerator.value, &underlying_type) {
-                Ok(value) => value,
-                Err(err) => return omitting_bindings_comment(err.to_string()),
-            };
+            let value =
+                match integer_constant_to_token_stream(db, enumerator.value, &underlying_type) {
+                    Ok(value) => value,
+                    Err(err) => return omitting_bindings_comment(err.to_string()),
+                };
             let deprecated_attr = enumerator.deprecated.clone().map(DeprecatedAttr);
             quote! { #deprecated_attr pub const #ident: #name = #name(#value); }
         })
