@@ -95,7 +95,7 @@ source_set("lossy_formatter_for_bindings") {
     "lossy_formatter_for_bindings.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:lossy_formatter",
+    "$crubit_src_dir/support/rs_std:lossy_formatter_for_bindings_rs",
   ]
 }
 
@@ -300,7 +300,25 @@ rust_static_library("lossy_formatter") {
   sources = [
     "lossy_formatter.rs",
   ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
+rust_static_library("lossy_formatter_for_bindings_rs") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "lossy_formatter_for_bindings_rs"
+  crate_root = "lossy_formatter_for_bindings.rs"
+  edition = "2024"
+  sources = [
+    "lossy_formatter_for_bindings.rs",
+  ]
   deps = [
+    "$crubit_src_dir/support/rs_std:lossy_formatter",
     "$crubit_src_dir/support/ffi_11:ffi_11",
   ]
   allow_unsafe = true
@@ -331,5 +349,6 @@ group("rs_std_rust") {
     ":dyn_erased_future",
     ":erased_future",
     ":lossy_formatter",
+    ":lossy_formatter_for_bindings_rs",
   ]
 }

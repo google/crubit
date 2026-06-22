@@ -348,10 +348,7 @@ rust_library(
     srcs = ["lossy_formatter.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
-        "//:__subpackages__",
-    ],
-    deps = [
-        "//support/ffi_11",
+        "//visibility:public",
     ],
 )
 
@@ -363,14 +360,27 @@ crubit_rust_test(
     ],
 )
 
+rust_library(
+    name = "lossy_formatter_for_bindings_rs",
+    srcs = ["lossy_formatter_for_bindings.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        ":lossy_formatter",
+        "//support/ffi_11",
+    ],
+)
+
 cc_library(
     name = "lossy_formatter_for_bindings",
     hdrs = ["lossy_formatter_for_bindings.h"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//:__subpackages__"],
     deps = [
-        # We depend on the extern "C" symbols in lossy_formatter.
-        ":lossy_formatter",
+        # We depend on the extern "C" symbols in lossy_formatter_for_bindings_rs.
+        ":lossy_formatter_for_bindings_rs",
     ],
 )
 
@@ -414,6 +424,7 @@ bazel_to_builds(
         ":iterator_adapter",
         ":lossy_formatter",
         ":lossy_formatter_for_bindings",
+        ":lossy_formatter_for_bindings_rs",
         ":option",
         ":result",
         ":slice_ref",
