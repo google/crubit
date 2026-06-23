@@ -287,6 +287,21 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
         .alignment = context.getTypeAlignInChars(cpp_type).getQuantity(),
     };
   }
+  std::vector<std::string> lifetime_inputs;
+  if (ictx_.AreAssumedLifetimesEnabledForTarget(
+          ictx_.GetOwningTarget(type_decl))) {
+    absl::StatusOr<std::optional<std::vector<std::string>>> opt_lifetimes =
+        GetAnnotationWithStringArgs(*type_decl, "lifetime_params");
+    if (!opt_lifetimes.ok()) {
+      return ictx_.HardError(
+          *type_decl,
+          FormattedError::FromStatus(std::move(opt_lifetimes).status()));
+    }
+    if (opt_lifetimes->has_value()) {
+      lifetime_inputs = **std::move(opt_lifetimes);
+    }
+  }
+
   return ExistingRustType{
       .rs_name = std::move(format_string),
       .cc_name = std::move(cc_name),
@@ -296,6 +311,7 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
       .size_align = std::move(size_align),
       .is_same_abi = *is_same_abi,
       .id = ictx_.GenerateItemId(type_decl),
+      .lifetime_inputs = std::move(lifetime_inputs),
   };
 }
 

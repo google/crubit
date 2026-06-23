@@ -139,9 +139,7 @@ fn decl_lifetime_arity_impl(
             bail!("Incomplete records unhandled for lifetimes: {:?}", item.cc_name_as_str())
         }
         Item::Enum(_ec) => bail!("Enums unhandled for lifetimes: {:?}", item.cc_name_as_str()),
-        Item::ExistingRustType(_ec) => {
-            bail!("Existing Rust types unhandled for lifetimes: {:?}", item.cc_name_as_str())
-        }
+        Item::ExistingRustType(ec) => Ok(ec.lifetime_inputs.len()),
         Item::Func(_) => {
             bail!("Unexpected function found in type position: {:?}", item.cc_name_as_str())
         }

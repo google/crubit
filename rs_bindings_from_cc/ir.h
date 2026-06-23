@@ -1125,6 +1125,7 @@ struct ExistingRustType {
   bool is_same_abi;
   ItemId id;
   bool must_bind = false;
+  std::vector<std::string> lifetime_inputs;
 };
 
 inline std::ostream& operator<<(std::ostream& o,

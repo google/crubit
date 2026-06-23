@@ -80,6 +80,9 @@ ASPECT_HINTS = {
     "template_instantiation": [
         "//features:template_instantiation",
     ],
+    "crubit_internal_rust_type": [
+        "//features:assume_lifetimes",
+    ],
 }
 
 rust_bindings_from_cc_cli_flag(

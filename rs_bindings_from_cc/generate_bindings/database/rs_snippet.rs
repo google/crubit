@@ -864,7 +864,7 @@ impl RsTypeKind {
                 RsTypeKind::new_type_alias(db, type_alias, options, lifetimes)
             }
             Item::ExistingRustType(existing_rust_type) => {
-                RsTypeKind::new_existing_rust_type(db, existing_rust_type)
+                RsTypeKind::new_existing_rust_type(db, existing_rust_type, lifetimes)
             }
             other_item => bail!("Item does not define a type: {other_item:?}"),
         }
@@ -980,6 +980,7 @@ impl RsTypeKind {
     fn new_existing_rust_type<'db>(
         db: impl Deref<Target = BindingsGenerator<'db>> + Copy,
         existing_rust_type: Rc<ExistingRustType>,
+        lifetimes: &[Lifetime],
     ) -> Result<Self> {
         if existing_rust_type.rs_name.as_ref() == SLICE_REF_NAME_RS {
             let [template_arg] = &existing_rust_type.template_args[..] else {
@@ -1032,10 +1033,23 @@ impl RsTypeKind {
             })
         });
 
-        let rust_type = interpolate_spelled_rust_type(uninterpolated_rust_type, &mut iter)
+        let mut rust_type = interpolate_spelled_rust_type(uninterpolated_rust_type, &mut iter)
             .map_err(|e| {
                 anyhow!("Failed to interpolate rust type {}: {e}", existing_rust_type.rs_name)
             })?;
+
+        if !lifetimes.is_empty() {
+            let lifetimes_tokens =
+                lifetimes.iter().map(|lt| make_rs_lifetime_ident(&lt.0)).collect::<Vec<_>>();
+            rust_type = quote! { #rust_type < #(#lifetimes_tokens),* > };
+        } else if !existing_rust_type.lifetime_inputs.is_empty() {
+            let lifetimes_tokens = existing_rust_type
+                .lifetime_inputs
+                .iter()
+                .map(|_| quote! { '_ })
+                .collect::<Vec<_>>();
+            rust_type = quote! { #rust_type < #(#lifetimes_tokens),* > };
+        }
 
         let remaining_template_args = iter.collect::<Vec<_>>();
         if !remaining_template_args.is_empty() {

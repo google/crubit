@@ -1360,6 +1360,14 @@ pub fn generate_adt<'tcx>(
             quote! {alignas(#alignment)},
             quote! {[[clang::trivial_abi]]},
         ];
+        if !core.lifetime_params.is_empty() {
+            let lifetimes = core
+                .lifetime_params
+                .iter()
+                .map(|lt| proc_macro2::Literal::string(lt))
+                .collect::<Vec<_>>();
+            attributes.push(quote! { CRUBIT_LIFETIME_PARAMS(#(#lifetimes),*) });
+        }
         if core
             .def_id
             .map(|id| db.repr_attrs(id).to_vec())
@@ -1565,12 +1573,21 @@ pub fn generate_adt_core<'tcx>(
     let size_in_bytes = layout.size().bytes();
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
+    let generics = tcx.generics_of(def_id);
+    let lifetime_params = generics
+        .own_params
+        .iter()
+        .filter(|p| matches!(p.kind, ty::GenericParamDefKind::Lifetime))
+        .map(|p| p.name.as_str().strip_prefix('\'').unwrap_or("").to_string())
+        .collect::<Vec<_>>();
+
     Ok(Rc::new(AdtCoreBindings {
         def_id: Some(def_id),
         keyword,
         cc_short_name: cpp_name,
         rs_fully_qualified_name,
         cc_fully_qualified_name,
+        lifetime_params,
         self_ty,
         alignment_in_bytes,
         size_in_bytes,

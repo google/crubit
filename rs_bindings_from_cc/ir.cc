@@ -527,6 +527,7 @@ llvm::json::Value ExistingRustType::ToJson() const {
       {"is_same_abi", is_same_abi},
       {"id", id},
       {"must_bind", must_bind},
+      {"lifetime_inputs", lifetime_inputs},
   };
   if (size_align.has_value()) {
     override.insert({"size_align", size_align->ToJson()});
@@ -549,6 +550,7 @@ flat_proto::ExistingRustType ExistingRustType::ToFlatProto() const {
   proto.set_is_same_abi(is_same_abi);
   proto.set_id(id.value());
   proto.set_must_bind(must_bind);
+  for (const auto& l : lifetime_inputs) proto.add_lifetime_inputs(l);
   return proto;
 }
 

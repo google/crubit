@@ -32,7 +32,8 @@ namespace lifetimes {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetime") alignas(8)
-    [[clang::trivial_abi]] StructWithLifetime final {
+    [[clang::trivial_abi]] CRUBIT_LIFETIME_PARAMS("a")
+        StructWithLifetime final {
  public:
   // `lifetimes_golden::StructWithLifetime` doesn't implement the `Default`
   // trait
@@ -51,8 +52,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  static ::lifetimes::StructWithLifetime from_ref(
-      ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
+  static ::lifetimes::StructWithLifetime
+      [[clang::annotate_type("lifetime", "a")]] from_ref(
+          ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
   ::std::int32_t const& $a into_ref() const;
 
@@ -61,13 +63,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::std::int32_t const& $(__anon1)
       borrow_from_self() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  static ::lifetimes::StructWithLifetime make_static_42();
+  static ::lifetimes::StructWithLifetime
+      [[clang::annotate_type("lifetime", "static")]] make_static_42();
 
-  static ::lifetimes::StructWithLifetime from_static_ref(
-      ::std::int32_t const* $static crubit_nonnull field_with_lifetime);
+  static ::lifetimes::StructWithLifetime
+      [[clang::annotate_type("lifetime", "static")]] from_static_ref(
+          ::std::int32_t const* $static crubit_nonnull field_with_lifetime);
 
-  static ::lifetimes::StructWithLifetime from_static_ref_where_bound(
-      ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
+  static ::lifetimes::StructWithLifetime [[clang::annotate_type(
+      "lifetime",
+      "static")]] from_static_ref_where_bound(::std::int32_t const* $a
+                                                  crubit_nonnull
+                                                      field_with_lifetime);
 
   ::std::int32_t const& $static borrow_from_static_self() const& $static;
 
@@ -87,7 +94,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
-    [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
+    [[clang::trivial_abi]] CRUBIT_LIFETIME_PARAMS("a")
+        StructWithLifetimeAndDropGlue final {
  public:
   // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
   // `Default` trait
@@ -112,7 +120,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
+  static ::lifetimes::StructWithLifetimeAndDropGlue
+      [[clang::annotate_type("lifetime", "static")]] make_static_42();
 
   union {
     ::rs::alloc::string::String field_with_drop_glue;
@@ -162,10 +171,12 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
     ::std::int32_t const* $a crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime [[clang::annotate_type("lifetime", "a")]] *
+        __ret_ptr);
 }
-inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
-    ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
+inline ::lifetimes::StructWithLifetime
+    [[clang::annotate_type("lifetime", "a")]] StructWithLifetime::from_ref(
+        ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_uref(field_with_lifetime,
@@ -174,8 +185,8 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t const& $a
-__crubit_thunk_into_uref(::lifetimes::StructWithLifetime*);
+extern "C" ::std::int32_t const& $a __crubit_thunk_into_uref(
+    ::lifetimes::StructWithLifetime [[clang::annotate_type("lifetime", "a")]]*);
 }
 inline ::std::int32_t const& $a StructWithLifetime::into_ref() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
@@ -184,7 +195,7 @@ inline ::std::int32_t const& $a StructWithLifetime::into_ref() const {
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_value(
-    ::lifetimes::StructWithLifetime*);
+    ::lifetimes::StructWithLifetime [[clang::annotate_type("lifetime", "a")]]*);
 }
 inline ::std::int32_t StructWithLifetime::value() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
@@ -203,9 +214,13 @@ inline ::std::int32_t const& $(__anon1) StructWithLifetime::borrow_from_self()
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime
+    [[clang::annotate_type("lifetime", "static")]] *
+    __ret_ptr);
 }
-inline ::lifetimes::StructWithLifetime StructWithLifetime::make_static_42() {
+inline ::lifetimes::StructWithLifetime
+    [[clang::annotate_type("lifetime",
+                           "static")]] StructWithLifetime::make_static_42() {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
@@ -215,10 +230,14 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::make_static_42() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref(
     ::std::int32_t const* $static crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime
+        [[clang::annotate_type("lifetime", "static")]] *
+        __ret_ptr);
 }
-inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
-    ::std::int32_t const* $static crubit_nonnull field_with_lifetime) {
+inline ::lifetimes::StructWithLifetime
+    [[clang::annotate_type("lifetime", "static")]] StructWithLifetime::
+        from_static_ref(
+            ::std::int32_t const* $static crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref(field_with_lifetime,
@@ -229,11 +248,14 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref_uwhere_ubound(
     ::std::int32_t const* $a crubit_nonnull,
-    ::lifetimes::StructWithLifetime* __ret_ptr);
+    ::lifetimes::StructWithLifetime
+        [[clang::annotate_type("lifetime", "static")]] *
+        __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime
-StructWithLifetime::from_static_ref_where_bound(
-    ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
+    [[clang::annotate_type("lifetime", "static")]] StructWithLifetime::
+        from_static_ref_where_bound(
+            ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref_uwhere_ubound(
@@ -297,10 +319,12 @@ inline StructWithLifetimeAndDropGlue::~StructWithLifetimeAndDropGlue() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
-    ::lifetimes::StructWithLifetimeAndDropGlue* __ret_ptr);
+    ::lifetimes::StructWithLifetimeAndDropGlue
+    [[clang::annotate_type("lifetime", "static")]] *
+    __ret_ptr);
 }
-inline ::lifetimes::StructWithLifetimeAndDropGlue
-StructWithLifetimeAndDropGlue::make_static_42() {
+inline ::lifetimes::StructWithLifetimeAndDropGlue [[clang::annotate_type(
+    "lifetime", "static")]] StructWithLifetimeAndDropGlue::make_static_42() {
   crubit::Slot<::lifetimes::StructWithLifetimeAndDropGlue>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();

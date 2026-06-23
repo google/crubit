@@ -515,7 +515,16 @@ pub fn format_ty_for_cc<'tcx>(
                 .symbol_canonical_name(def_id)
                 .ok_or_else(|| anyhow!("Failed to generate canonical name for `{ty}`"))?;
 
-            CcSnippet { tokens: canonical_name.format_for_cc(db)?, prereqs }
+            let mut cc_name = canonical_name.format_for_cc(db)?;
+            if !substs.is_empty() && location.is_bridgeable() {
+                for subst in substs {
+                    if let ty::GenericArgKind::Lifetime(region) = subst.kind() {
+                        let annotation = format_region_as_cc_lifetime_explicit(db, region);
+                        annotation.to_tokens(&mut cc_name);
+                    }
+                }
+            }
+            CcSnippet { tokens: cc_name, prereqs }
         }
 
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
@@ -1032,6 +1041,17 @@ pub fn format_region_as_cc_lifetime<'tcx>(
         let name_ident = Ident::new(name, proc_macro2::Span::call_site());
         quote! { $(#name_ident) }
     }
+}
+
+fn format_region_as_cc_lifetime_explicit<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    region: ty::Region<'tcx>,
+) -> TokenStream {
+    let Some(name) = region.get_name(db.tcx()) else {
+        return TokenStream::new();
+    };
+    let name = name.as_str().strip_prefix('\'').unwrap();
+    quote! { [[clang::annotate_type("lifetime", #name)]] }
 }
 
 #[track_caller]
