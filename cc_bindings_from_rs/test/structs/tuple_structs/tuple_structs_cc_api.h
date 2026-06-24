@@ -40,6 +40,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~CloneNoDefault();
 
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  CloneNoDefault(CloneNoDefault&&) = delete;
+  ::tuple_structs::CloneNoDefault& operator=(CloneNoDefault&&) = delete;
   // Clone::clone
   CloneNoDefault(const CloneNoDefault&);
 
