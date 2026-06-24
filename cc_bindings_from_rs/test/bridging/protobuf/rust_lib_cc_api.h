@@ -77,14 +77,18 @@ static_assert(
     alignof(FooService) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::rust_lib::FooService* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::rust_lib::FooService::FooService() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::rust_lib::FooService&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline FooService::~FooService() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -97,10 +101,12 @@ inline ::rust_lib::FooService& ::rust_lib::FooService::operator=(
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_handle_urequest(::rust_lib::FooService&,
                                                const ::foo_service::FooRequest*,
                                                ::foo_service::FooResponse*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool FooService::handle_request(const ::foo_service::FooRequest* req,
                                        ::foo_service::FooResponse* rsp) {
   auto&& self = *this;
@@ -108,10 +114,12 @@ inline bool FooService::handle_request(const ::foo_service::FooRequest* req,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_request_ustats(
     ::rust_lib::FooService const&,
     const ::foo_service::FooRequestStats** __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline const ::foo_service::FooRequestStats* FooService::request_stats()
     const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
@@ -127,9 +135,11 @@ inline const ::foo_service::FooRequestStats* FooService::request_stats()
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_urequest_ustats(
     ::rust_lib::FooService const&, ::foo_service::FooRequestStats* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
   auto&& self = *this;
   crubit::Slot<::foo_service::FooRequestStats> __return_value_ret_val_holder;
@@ -140,9 +150,11 @@ inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_update_urequest_ustats(
     ::rust_lib::FooService&, ::foo_service::FooRequestStats*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void FooService::update_request_stats(
     ::foo_service::FooRequestStats updated_stats) {
   auto&& self = *this;
@@ -152,8 +164,10 @@ inline void FooService::update_request_stats(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_enum_uin_usignature(::foo_proto::FooEnum);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void FooService::enum_in_signature(::foo_proto::FooEnum _e) {
   return __crubit_internal::__crubit_thunk_enum_uin_usignature(_e);
 }

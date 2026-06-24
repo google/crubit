@@ -110,9 +110,11 @@ namespace [[deprecated]] innermost_deprecated {
 namespace modules::basic_module {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_add_ui32(::std::int32_t,
                                                   ::std::int32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
@@ -124,9 +126,11 @@ namespace modules {
 namespace [[deprecated]] deprecated_module {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_add_ui32(::std::int32_t,
                                                   ::std::int32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
@@ -149,9 +153,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::modules::impl_in_separate_private_module::Foo>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::modules::impl_in_separate_private_module::Foo Foo::create(
     ::std::int32_t i) {
   crubit::Slot<::modules::impl_in_separate_private_module::Foo>
@@ -162,9 +168,11 @@ inline ::modules::impl_in_separate_private_module::Foo Foo::create(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_into_ui32(
     ::modules::impl_in_separate_private_module::Foo*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t Foo::into_i32(
     ::modules::impl_in_separate_private_module::Foo s) {
   return __crubit_internal::__crubit_thunk_into_ui32(&s);

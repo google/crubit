@@ -236,7 +236,10 @@ pub fn generate_thunk_decl<'tcx>(
     }
 
     let mut tokens = quote! {
-        extern "C" #(#attributes)* #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
+        __NEWLINE__
+        __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+        extern "C" #(#attributes)* #thunk_ret_type #thunk_name ( #( #thunk_params ),* ); __NEWLINE__
+        __LITERALLY__ "/// \\endcond"
     };
     if !within_template {
         tokens = quote! {

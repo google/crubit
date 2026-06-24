@@ -316,8 +316,10 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::unions::repr_c::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_c::U create() {
   crubit::Slot<::unions::repr_c::U> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -340,13 +342,17 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::unions::repr_c_clone::U>);
 static_assert(::std::is_trivially_move_assignable_v<::unions::repr_c_clone::U>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(::unions::repr_c_clone::U const&,
                                      ::unions::repr_c_clone::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(::unions::repr_c_clone::U&,
                                            ::unions::repr_c_clone::U const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_c_clone::U::U(const U& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
@@ -361,8 +367,10 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::unions::repr_c_clone::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_c_clone::U create() {
   crubit::Slot<::unions::repr_c_clone::U> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -381,14 +389,18 @@ static_assert(
     alignof(U) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::unions::repr_c_drop::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_c_drop::U::U() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::unions::repr_c_drop::U&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline U::~U() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline ::unions::repr_c_drop::U::U(U&& other) : U() {
   *this = ::std::move(other);
@@ -421,8 +433,10 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::unions::repr_c_packed::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_c_packed::U create() {
   crubit::Slot<::unions::repr_c_packed::U> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -444,32 +458,40 @@ static_assert(::std::is_trivially_destructible_v<U>);
 static_assert(::std::is_trivially_move_constructible_v<::unions::repr_rust::U>);
 static_assert(::std::is_trivially_move_assignable_v<::unions::repr_rust::U>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_set_ux(::unions::repr_rust::U&, ::std::uint32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void U::set_x(::std::uint32_t x) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ux(self, x);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint32_t __crubit_thunk_get_ux(::unions::repr_rust::U const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint32_t U::get_x() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ux(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_set_uy(::unions::repr_rust::U&, ::std::uint32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void U::set_y(::std::uint32_t y) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_uy(self, y);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint32_t __crubit_thunk_get_uy(::unions::repr_rust::U const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint32_t U::get_y() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uy(self);
@@ -479,8 +501,10 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::unions::repr_rust::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_rust::U create() {
   crubit::Slot<::unions::repr_rust::U> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -504,13 +528,17 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::unions::repr_rust_clone::U>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(::unions::repr_rust_clone::U const&,
                                      ::unions::repr_rust_clone::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(::unions::repr_rust_clone::U&,
                                            ::unions::repr_rust_clone::U const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_rust_clone::U::U(const U& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
@@ -522,18 +550,22 @@ inline ::unions::repr_rust_clone::U& ::unions::repr_rust_clone::U::operator=(
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_set_ux(::unions::repr_rust_clone::U&,
                                       ::std::uint32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void U::set_x(::std::uint32_t x) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ux(self, x);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint32_t __crubit_thunk_get_ux(
     ::unions::repr_rust_clone::U const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint32_t U::get_x() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ux(self);
@@ -542,8 +574,10 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::unions::repr_rust_clone::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_rust_clone::U create() {
   crubit::Slot<::unions::repr_rust_clone::U> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -562,14 +596,18 @@ static_assert(
     alignof(U) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::unions::repr_rust_drop::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_rust_drop::U::U() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::unions::repr_rust_drop::U&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline U::~U() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline ::unions::repr_rust_drop::U::U(U&& other) : U() {
   *this = ::std::move(other);
@@ -580,18 +618,22 @@ inline ::unions::repr_rust_drop::U& ::unions::repr_rust_drop::U::operator=(
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_set_ux(::unions::repr_rust_drop::U&,
                                       ::std::int32_t*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void U::set_x(::std::int32_t* x) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ux(self, x);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t* __crubit_thunk_get_ux(
     ::unions::repr_rust_drop::U const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t* U::get_x() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ux(self);
@@ -619,8 +661,10 @@ inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, y));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::unions::repr_rust_packed::U* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::unions::repr_rust_packed::U create() {
   crubit::Slot<::unions::repr_rust_packed::U> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();

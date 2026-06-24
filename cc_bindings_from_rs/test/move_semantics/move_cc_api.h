@@ -104,8 +104,10 @@ static_assert(
     alignof(Copyable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::move::Copyable* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::move::Copyable::Copyable() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -115,9 +117,11 @@ static_assert(::std::is_trivially_move_assignable_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_constructible_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_assignable_v<::move::Copyable>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Copyable* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::move::Copyable Copyable::from_byte(::std::uint8_t byte) {
   crubit::Slot<::move::Copyable> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -126,8 +130,10 @@ inline ::move::Copyable Copyable::from_byte(::std::uint8_t byte) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_consume_uself(::move::Copyable*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t Copyable::consume_self() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_consume_uself(&self);
@@ -142,12 +148,16 @@ static_assert(
     alignof(Foo) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::move::Foo* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::move::Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::move::Foo&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline Foo::~Foo() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline ::move::Foo::Foo(Foo&& other) : Foo() { *this = ::std::move(other); }
 inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
@@ -155,9 +165,11 @@ inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Foo* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::move::Foo Foo::from_byte(::std::uint8_t byte) {
   crubit::Slot<::move::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -166,16 +178,20 @@ inline ::move::Foo Foo::from_byte(::std::uint8_t byte) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_read_ubyte(::move::Foo const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t Foo::read_byte() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_read_ubyte(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_into_ubyte(::move::Foo*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t Foo::into_byte() && {
   auto&& self = *this;
   crubit::Slot self_slot((::std::move(self)));
@@ -185,8 +201,10 @@ inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, buf));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_consume_ufoo(::move::Foo*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void consume_foo(::move::Foo _foo) {
   crubit::Slot _foo_slot((::std::move(_foo)));
   return __crubit_internal::__crubit_thunk_consume_ufoo(_foo_slot.Get());

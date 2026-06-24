@@ -813,7 +813,9 @@ fn test_format_item_static_method() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" float ... (float, float);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline float Math::add_i32(float x, float y) {
                   return __crubit_internal::...(x, y);
@@ -907,8 +909,10 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" ::std::int32_t ...(
-                    ::std::int32_t const* $a crubit_nonnull);
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C" ::std::int32_t ...(
+                        ::std::int32_t const* $a crubit_nonnull);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline ::std::int32_t SomeStruct::fn_taking_reference(
                     ::std::int32_t const* $a crubit_nonnull x) {
@@ -982,7 +986,9 @@ fn test_format_item_method_taking_self_by_value(test_src: &str) {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" float ...(::rust_out::SomeStruct*);
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C" float ...(::rust_out::SomeStruct*);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline float SomeStruct::into_f32() && {
                   auto&& self = *this;
@@ -1059,7 +1065,9 @@ fn test_format_item_method_taking_self_by_const_ref(test_src: &str) {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" float ...(::rust_out::SomeStruct const&);
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C" float ...(::rust_out::SomeStruct const&);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline float SomeStruct::get_f32() const {
                   auto&& self = *this;
@@ -1128,7 +1136,9 @@ fn test_format_item_method_taking_self_by_mutable_ref(test_src: &str) {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" void ...(::rust_out::SomeStruct&, float);
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C" void ...(::rust_out::SomeStruct&, float);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline void SomeStruct::set_f32(float new_value) {
                   auto&& self = *this;
@@ -1287,12 +1297,16 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                // `drop` thunk decl
-                extern "C" void ...(::rust_out::TypeUnderTest&);
+                    // `drop` thunk decl
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C" void ...(::rust_out::TypeUnderTest&);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 namespace __crubit_internal {  // `pass_by_value` thunk decl
-                extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
                     crubit::Slot<::rust_out::TypeUnderTest> __return_value_ret_val_holder;

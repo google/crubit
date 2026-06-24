@@ -82,8 +82,10 @@ static_assert(
     alignof(TypeWithStr) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::str::TypeWithStr* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::str::TypeWithStr::TypeWithStr() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -93,9 +95,11 @@ static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::str::TypeWithStr* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::str::TypeWithStr TypeWithStr::create(rs_std::StrRef s) {
   crubit::Slot<::str::TypeWithStr> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -104,18 +108,22 @@ inline ::str::TypeWithStr TypeWithStr::create(rs_std::StrRef s) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(
     ::str::TypeWithStr const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uintptr_t TypeWithStr::get_str_len() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_ulen(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(
     ::str::TypeWithStr const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t const* TypeWithStr::get_str_data() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_udata(self);
@@ -124,30 +132,38 @@ inline void TypeWithStr::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TypeWithStr, str_field));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" rs_std::StrRef __crubit_thunk_foo_uas_ustr();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::StrRef foo_as_str() {
   return __crubit_internal::__crubit_thunk_foo_uas_ustr();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(rs_std::StrRef);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t const* get_str_data(rs_std::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_udata(s);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(rs_std::StrRef);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uintptr_t get_str_len(rs_std::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_ulen(s);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
     rs_std::StrRef, ::std::uint8_t&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
                                                 ::std::uint8_t& __param_1) {
   crubit::internal::CheckNoMutableAliasing(

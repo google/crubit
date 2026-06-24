@@ -71,17 +71,21 @@ static_assert(
     alignof(NonTriviallyDestructable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(
     ::non_trivially_destructible::NonTriviallyDestructable&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline NonTriviallyDestructable::~NonTriviallyDestructable() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -97,15 +101,19 @@ non_trivially_destructible::NonTriviallyDestructable::operator=(
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     ::non_trivially_destructible::NonTriviallyDestructable const&,
     ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     ::non_trivially_destructible::NonTriviallyDestructable&,
     ::non_trivially_destructible::NonTriviallyDestructable const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable(const NonTriviallyDestructable& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -122,9 +130,11 @@ inline void NonTriviallyDestructable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonTriviallyDestructable, field));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_uby_uvalue(
     ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::non_trivially_destructible::NonTriviallyDestructable
 return_by_value() {
   crubit::Slot<::non_trivially_destructible::NonTriviallyDestructable>
@@ -135,9 +145,11 @@ return_by_value() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_take_uby_uvalue(
     ::non_trivially_destructible::NonTriviallyDestructable*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void take_by_value(
     ::non_trivially_destructible::NonTriviallyDestructable _x) {
   crubit::Slot _x_slot((::std::move(_x)));

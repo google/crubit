@@ -39,10 +39,12 @@ struct rs_std::impl<::CcType, ::trait::Trait> {
 
 namespace trait {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t
 __crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(
     ::CcType const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace trait
 inline ::std::int32_t rs_std::impl<::CcType, ::trait::Trait>::get_value(
     ::CcType const& self) {

@@ -148,8 +148,10 @@ static_assert(
     alignof(LeafRsType) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::leaf_rs_lib::LeafRsType* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::leaf_rs_lib::LeafRsType::LeafRsType() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -164,24 +166,30 @@ inline void LeafRsType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsType, field));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_unwrap(::leaf_rs_lib::LeafRsType*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x) {
   return __crubit_internal::__crubit_thunk_unwrap(&x);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_unwrap_uenum(
     ::leaf_rs_lib::LeafRsEnum*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x) {
   return __crubit_internal::__crubit_thunk_unwrap_uenum(&x);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_wrap(::std::uint8_t,
                                     ::leaf_rs_lib::LeafRsType* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x) {
   crubit::Slot<::leaf_rs_lib::LeafRsType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -190,9 +198,11 @@ inline ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_wrap_uenum(::std::uint8_t,
                                           ::leaf_rs_lib::LeafRsEnum* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x) {
   crubit::Slot<::leaf_rs_lib::LeafRsEnum> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();

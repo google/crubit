@@ -109,14 +109,18 @@ static_assert(
     alignof(CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::pass_by_value_unmovable::CppMovable __crubit_thunk_default();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::pass_by_value_unmovable::CppMovable::CppMovable() {
   *this = __crubit_internal::__crubit_thunk_default();
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::pass_by_value_unmovable::CppMovable&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline CppMovable::~CppMovable() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -139,8 +143,10 @@ static_assert(
     alignof(NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::pass_by_value_unmovable::NotCppMovable&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline NotCppMovable::~NotCppMovable() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -148,9 +154,11 @@ inline void NotCppMovable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotCppMovable, __field0));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_takes_uval_umovable(
     ::pass_by_value_unmovable::CppMovable);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void takes_val_movable(::pass_by_value_unmovable::CppMovable _val) {
   return __crubit_internal::__crubit_thunk_takes_uval_umovable(_val);
 }

@@ -83,8 +83,10 @@ static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::example_crate::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::example_crate::MyStruct::MyStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -96,9 +98,11 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::example_crate::MyStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::example_crate::MyStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::example_crate::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::example_crate::MyStruct MyStruct::new_(::std::int32_t x) {
   crubit::Slot<::example_crate::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -112,10 +116,12 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 
 namespace example_crate {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t
 __crubit_thunk_MyTrait_uadd_uwith_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
     ::example_crate::MyStruct const&, ::std::int32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace example_crate
 inline ::std::int32_t
 rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with(
@@ -127,10 +133,12 @@ rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with(
 
 namespace example_crate {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" rs_std::StrRef
 __crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
     ::example_crate::MyStruct const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace example_crate
 inline rs_std::StrRef
 rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::describe(

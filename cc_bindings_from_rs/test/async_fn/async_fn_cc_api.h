@@ -168,8 +168,10 @@ static_assert(
     alignof(NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::async_fn::NotCppMovable&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline NotCppMovable::~NotCppMovable() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -183,14 +185,18 @@ static_assert(
     alignof(StructWithDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::async_fn::StructWithDrop* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::async_fn::StructWithDrop::StructWithDrop() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::async_fn::StructWithDrop&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline StructWithDrop::~StructWithDrop() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -207,10 +213,12 @@ inline void StructWithDrop::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithDrop, field));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_add(
     ::std::int32_t, ::std::int32_t,
     ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::crubit::DynErasedFuture<::std::int32_t> add(::std::int32_t x,
                                                      ::std::int32_t y) {
   ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
@@ -221,9 +229,11 @@ inline ::crubit::DynErasedFuture<::std::int32_t> add(::std::int32_t x,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_do_unothing(
     ::crubit::DynErasedFuture<void>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::crubit::DynErasedFuture<void> do_nothing() {
   ::crubit::Slot<::crubit::DynErasedFuture<void>> __return_value_ret_val_holder;
   __crubit_internal::__crubit_thunk_do_unothing(
@@ -232,9 +242,11 @@ inline ::crubit::DynErasedFuture<void> do_nothing() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_pend_u5_utimes(
     ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::crubit::DynErasedFuture<::std::int32_t> pend_5_times() {
   ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
       __return_value_ret_val_holder;
@@ -244,11 +256,13 @@ inline ::crubit::DynErasedFuture<::std::int32_t> pend_5_times() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ucpp_ulayout_uequivalent(
     ::std::int32_t,
     ::crubit::DynErasedFuture<crubit::test::AsyncFnCppLayoutEquivalent>*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::crubit::DynErasedFuture<crubit::test::AsyncFnCppLayoutEquivalent>
 return_cpp_layout_equivalent(::std::int32_t x) {
   ::crubit::Slot<
@@ -260,10 +274,12 @@ return_cpp_layout_equivalent(::std::int32_t x) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ustruct_uwith_udrop(
     ::std::int32_t,
     ::crubit::DynErasedFuture<::async_fn::StructWithDrop>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::crubit::DynErasedFuture<::async_fn::StructWithDrop>
 return_struct_with_drop(::std::int32_t x) {
   ::crubit::Slot<::crubit::DynErasedFuture<::async_fn::StructWithDrop>>

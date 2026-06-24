@@ -255,9 +255,11 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::rs_default::derived_impl::SomeStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::rs_default::derived_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -267,9 +269,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::derived_impl::SomeStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::derived_impl::SomeStruct*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t SomeStruct::extract_int(
     ::rs_default::derived_impl::SomeStruct s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
@@ -288,9 +292,11 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::rs_default::explicit_impl::SomeStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::rs_default::explicit_impl::SomeStruct::SomeStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -300,9 +306,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::explicit_impl::SomeStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::explicit_impl::SomeStruct*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t SomeStruct::extract_int(
     ::rs_default::explicit_impl::SomeStruct s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
@@ -321,10 +329,12 @@ static_assert(
     alignof(StructWithFieldWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
     StructWithFieldWithNoDefault() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -337,9 +347,11 @@ static_assert(
     ::std::is_trivially_move_assignable_v<
         ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t StructWithFieldWithNoDefault::extract_int(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
@@ -390,9 +402,11 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::rs_default::transparent_struct::SomeStruct
 __crubit_thunk_default();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::rs_default::transparent_struct::SomeStruct::SomeStruct() {
   *this = __crubit_internal::__crubit_thunk_default();
 }
@@ -402,9 +416,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::transparent_struct::SomeStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::transparent_struct::SomeStruct const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t SomeStruct::extract_int() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_extract_uint(self);

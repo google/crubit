@@ -148,8 +148,10 @@ static_assert(
     alignof(CStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::function_pointers::CStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::function_pointers::CStruct::CStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -181,9 +183,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(
     ::std::is_trivially_copy_assignable_v<::function_pointers::HasFnPtrField>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_with_uadd_uten(
     ::function_pointers::HasFnPtrField* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::function_pointers::HasFnPtrField HasFnPtrField::with_add_ten() {
   crubit::Slot<::function_pointers::HasFnPtrField>
       __return_value_ret_val_holder;
@@ -195,9 +199,11 @@ inline void HasFnPtrField::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasFnPtrField, ptr));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_call_ufn_uptr_uno_uargs_uor_ureturn(
     crubit::type_identity_t<void()>&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void call_fn_ptr_no_args_or_return(
     crubit::type_identity_t<void()>& fn_ptr) {
   return __crubit_internal::__crubit_thunk_call_ufn_uptr_uno_uargs_uor_ureturn(
@@ -205,20 +211,24 @@ inline void call_fn_ptr_no_args_or_return(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_call_ufn_uptr_uwith_ufive(
     crubit::type_identity_t<::std::int32_t(::std::int32_t)>&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t call_fn_ptr_with_five(
     crubit::type_identity_t<::std::int32_t(::std::int32_t)>& fn_ptr) {
   return __crubit_internal::__crubit_thunk_call_ufn_uptr_uwith_ufive(fn_ptr);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t
 __crubit_thunk_call_ufn_uptr_uwith_urepr_uc_ustruct_uptr_ucontaining_useven(
     crubit::type_identity_t<
         ::std::int32_t(::function_pointers::CStruct const*)>&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
     crubit::type_identity_t<
         ::std::int32_t(::function_pointers::CStruct const*)>& fn_ptr) {
