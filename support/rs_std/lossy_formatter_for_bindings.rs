@@ -36,7 +36,7 @@ pub unsafe extern "C" fn crubit_LossyFormatter_write_byte(
     formatter: &mut LossyFormatter<'_, '_>,
     data: u8,
 ) -> bool {
-    formatter.write_byte(data)
+    formatter.write_byte(data).is_ok()
 }
 
 /// FFI bindings for `LossyFormatter::write_fill` to be linked to by
