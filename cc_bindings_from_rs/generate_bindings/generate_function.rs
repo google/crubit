@@ -1212,8 +1212,15 @@ pub fn get_async_future_output_ty<'tcx>(
         .ok_or_else(|| anyhow!("crubit.rs-bug: Future::Output lang item not found"))?;
     #[rustversion::stable(1.95)]
     let alias_def_id = alias_ty.def_id;
-    #[rustversion::any(nightly, stable(1.96))]
+    #[rustversion::any(all(nightly, before(2026-06-23)), stable(1.96))]
     let alias_def_id = alias_ty.kind.def_id();
+    #[rustversion::all(nightly, since(2026-06-23))]
+    let alias_def_id = alias_ty.kind.try_to_projection().ok_or_else(|| {
+        anyhow!(
+            "go/crubit-bug: async function return type has unexpected alias kind (not a \
+            projection/trait associated type)",
+        )
+    })?;
     tcx.explicit_item_bounds(alias_def_id)
         .iter_instantiated_copied(tcx, alias_ty.args)
         .find_map(|unnorm| {
