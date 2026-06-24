@@ -23,14 +23,16 @@ use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{is_copy, post_analysis_typing_env};
+use query_compiler::{
+    does_type_implement_trait_considering_regions, is_copy, post_analysis_typing_env,
+};
 use quote::quote;
 use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
-use rustc_span::symbol::Symbol;
+use rustc_span::symbol::{sym, Symbol};
 use std::collections::BTreeSet;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -633,6 +635,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     rs_return_type: Ty<'tcx>,
     self_param: ThunkSelfParameter,
     params: &[Param<'tcx>],
+    is_async: bool,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
@@ -704,7 +707,21 @@ pub(crate) fn generate_thunk_call<'tcx>(
         quote! { __crubit_internal }
     };
 
-    let return_body = if is_bridged_type(db, rs_return_type)?.is_none()
+    let return_body = if is_async {
+        let CcSnippet { tokens: cc_ret_ty, prereqs: ret_prereqs } =
+            db.format_ty_for_cc(rs_return_type, TypeLocation::FnReturn { is_constructor: false })?;
+        prereqs += ret_prereqs;
+        let local_name = expect_format_cc_ident("__return_value_ret_val_holder");
+        prereqs.includes.insert(CcInclude::utility()); // for `std::move`
+        prereqs.includes.insert(db.support_header("internal/slot.h"));
+        prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
+        thunk_args.push(quote! { #local_name.Get() });
+        quote! {
+            ::crubit::Slot<::crubit::DynErasedFuture<#cc_ret_ty>> #local_name;
+            #qualifier::#thunk_name(#( #thunk_args ),*);
+            return ::std::move(#local_name).AssumeInitAndTakeValue();
+        }
+    } else if is_bridged_type(db, rs_return_type)?.is_none()
         && is_c_abi_compatible_by_value(tcx, rs_return_type)
     {
         // C++ compilers can emit diagnostics if a function marked [[noreturn]] looks like it
@@ -852,11 +869,30 @@ pub fn generate_function<'tcx>(
     check_fn_sig(&sig_mid)?;
 
     let rs_return_type = sig_mid.output();
-    if tcx.asyncness(def_id).is_async() {
-        let return_ty = get_async_future_output_ty(tcx, rs_return_type)?;
-        // TODO(b/453897096): Support async functions.
-        bail!("async functions are not yet supported, consider manually wrapping with `DynFuture` instead and writing to an output `*mut {return_ty}` parameter instead.");
-    }
+    let is_async = tcx.asyncness(def_id).is_async();
+    let actual_rs_return_type = if is_async {
+        let send_trait_id = tcx
+            .get_diagnostic_item(sym::Send)
+            .ok_or_else(|| anyhow!("crubit.rs-bug: Send trait not found"))?;
+        if !does_type_implement_trait_considering_regions(
+            tcx,
+            rs_return_type,
+            send_trait_id,
+            def_id,
+            [],
+        ) {
+            bail!("Crubit currently only supports async functions that return a Send future.");
+        }
+        let future_output_ty = get_async_future_output_ty(tcx, rs_return_type)?;
+        if let Some(bridged) = is_bridged_type(db, future_output_ty)?
+            && !bridged.is_layout_compatible()
+        {
+            bail!("Crubit currently does not support async functions returning bridged types that require conversion thunks, found `{future_output_ty}`.");
+        }
+        future_output_ty
+    } else {
+        rs_return_type
+    };
 
     let trait_ref = tcx
         .impl_of_assoc(def_id)
@@ -891,7 +927,17 @@ pub fn generate_function<'tcx>(
     };
 
     let mut main_api_prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(db, &sig_mid)?.into_tokens(&mut main_api_prereqs);
+    let main_api_ret_type = if is_async {
+        let CcSnippet { tokens: cc_ret_ty, prereqs: ret_prereqs } = db.format_ty_for_cc(
+            actual_rs_return_type,
+            TypeLocation::FnReturn { is_constructor: false },
+        )?;
+        main_api_prereqs += ret_prereqs;
+        main_api_prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
+        quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
+    } else {
+        format_ret_ty_for_cc(db, &sig_mid)?.into_tokens(&mut main_api_prereqs)
+    };
 
     let params = {
         let names = fn_arg_idents(tcx, def_id);
@@ -1004,9 +1050,10 @@ pub fn generate_function<'tcx>(
         db,
         def_id,
         thunk_name_cc.clone(),
-        rs_return_type,
+        actual_rs_return_type,
         thunk_self,
         &params,
+        is_async,
     )?
     .into_tokens(&mut main_api_prereqs);
 
@@ -1084,6 +1131,7 @@ pub fn generate_function<'tcx>(
             function_kind.has_self_param(),
             /*is_constructor=*/ false,
             /*within_template=*/ false,
+            is_async,
         )?
         .into_tokens(&mut prereqs);
         if static_method_mode == StaticMethodMode::ForceStaticMethod {
@@ -1174,6 +1222,7 @@ pub fn generate_function<'tcx>(
             &thunk_name,
             fully_qualified_fn_name,
             /*is_constructor=*/ false,
+            is_async,
         )?
     };
 
