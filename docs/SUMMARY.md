@@ -51,6 +51,7 @@
 
 - [Cargo build](./overview/cargo_build.md)
 - [Build System Integrations](./overview/build_systems.md)
+- [Required unstable features of Rust](./overview/unstable_features.md)
 
 # Design
 
