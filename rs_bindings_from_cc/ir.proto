@@ -534,9 +534,6 @@ message Item {
 // Redundantly naming this `IRProto` for now to avoid overlap with the `IR`
 // struct in `ir.h`.
 message IRProto {
-  message ItemIdList {
-    repeated int64 item_ids = 1;
-  }
   message FeatureSet {
     repeated string features = 1;
   }
@@ -547,12 +544,9 @@ message IRProto {
   repeated HeaderName public_headers = 1;
   string current_target = 2;
   repeated Item items = 3;
-  map<string, ItemIdList> top_level_item_ids = 4;
   string crate_root_path = 5;
   map<string, FeatureSet> crubit_features = 6;
   repeated string unstable_rust_features = 7;
   repeated string reexported_namespaces = 8;
-  // Lexical tree structure of the IR. We would like for this to fully
-  // replace `top_level_item_ids` eventually. (See b/523265360)
   map<string, ItemList> top_level_items = 9;
 }
