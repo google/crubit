@@ -48,7 +48,7 @@ void demo() {
   std::cout << my_account << std::endl;
 
   if (account::is_valid_username("bob")) {
-    std::cout << "Valid user\n";
+    std::cout << "Valid user" << std::endl;
   }
 }
 ```
