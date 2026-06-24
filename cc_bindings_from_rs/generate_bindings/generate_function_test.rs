@@ -1015,24 +1015,100 @@ fn test_format_item_generic_fn_unsupported_type_param() {
 }
 
 #[test]
-fn test_format_item_unsupported_fn_async() {
+fn test_format_item_fn_async() {
     let test_src = r#"
             pub async fn async_function() {}
         "#;
     test_format_item(test_src, "async_function", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(err, "async functions are not yet supported, consider manually wrapping with `DynFuture` instead and writing to an output `*mut ()` parameter instead.");
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ::crubit::DynErasedFuture<void> async_function();
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                    extern "C" void ...(::crubit::DynErasedFuture<void>* __ret_ptr);
+                }
+                ...
+                inline ::crubit::DynErasedFuture<void> async_function() {
+                    ::crubit::Slot<::crubit::DynErasedFuture<void>> __return_value_ret_val_holder;
+                    __crubit_internal::...(__return_value_ret_val_holder.Get());
+                    return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+                }
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(__ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>) -> () {
+                    unsafe {
+                        ::core::ptr::write(__ret_ptr, ::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
+                    }
+                }
+            }
+        );
     });
 }
 
 #[test]
-fn test_format_item_unsupported_fn_async_returning_type() {
+fn test_format_item_fn_async_returning_type() {
     let test_src = r#"
             pub async fn async_function() -> i32 { 42 }
         "#;
     test_format_item(test_src, "async_function", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ::crubit::DynErasedFuture<::std::int32_t> async_function();
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                    extern "C" void ...(::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
+                }
+                ...
+                inline ::crubit::DynErasedFuture<::std::int32_t> async_function() {
+                    ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>> __return_value_ret_val_holder;
+                    __crubit_internal::...(__return_value_ret_val_holder.Get());
+                    return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+                }
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(__ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>) -> () {
+                    unsafe {
+                        ::core::ptr::write(__ret_ptr, ::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
+                    }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_unsupported_fn_async_not_send() {
+    let test_src = r#"
+            pub async fn async_function(_: *const ()) {}
+        "#;
+    test_format_item(test_src, "async_function", |result| {
         let err = result.unwrap_err();
-        assert_eq!(err, "async functions are not yet supported, consider manually wrapping with `DynFuture` instead and writing to an output `*mut i32` parameter instead.");
+        assert_eq!(
+            err,
+            "Crubit currently only supports async functions that return a Send future."
+        );
     });
 }
 

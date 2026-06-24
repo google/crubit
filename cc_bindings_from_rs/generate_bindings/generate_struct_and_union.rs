@@ -624,6 +624,7 @@ fn generate_into_impls<'tcx>(
                     },
                     ty: core.self_ty,
                 }],
+                /*is_async=*/ false,
             )
             .expect("Self type of `Into` impl should be bridgeable");
 
@@ -840,6 +841,7 @@ fn generate_constructor_impls<'tcx>(
                     /*has_self_param=*/ true,
                     /*is_constructor=*/ true,
                     /*within_template=*/ false,
+                    /*is_async=*/ false,
                 )
                 .ok()?;
                 let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
@@ -854,6 +856,7 @@ fn generate_constructor_impls<'tcx>(
                     &thunk_name,
                     fully_qualified_fn_name,
                     /*is_constructor=*/ true,
+                    /*is_async=*/ false,
                 )
                 .ok()?;
                 (thunk_name_cc_ident, cc_thunk_decls, rs_details)
@@ -2940,6 +2943,7 @@ fn generate_begin_and_end_for_type<'tcx>(
             /*has_self=*/ false, /*by_copy=*/ false, /*is_trait_method=*/ false,
         ),
         &[param],
+        /* is_async= */ false,
     )?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
