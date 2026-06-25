@@ -118,6 +118,8 @@ class Importer final : public ImportContext {
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;
   bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
+  bool HasConflictWithAlreadyImportedLinkageName(
+      llvm::StringRef linkage_name) const override;
   absl::StatusOr<bool> DetectFormatter(
       const clang::TypeDecl& decl) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
@@ -220,6 +222,7 @@ class Importer final : public ImportContext {
   //
   // Note that this includes non-TypeDecls in the form of using decls.
   absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
+  absl::flat_hash_set<std::string> imported_linkage_names_;
 };  // class Importer
 
 }  // namespace crubit
