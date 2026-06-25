@@ -18,6 +18,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/dyn_erased_future.h"
+#include "support/rs_std/run_crubit_future.h"
 
 #include <cstddef>
 #include <cstdint>
