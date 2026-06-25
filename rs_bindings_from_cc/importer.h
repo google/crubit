@@ -118,6 +118,8 @@ class Importer final : public ImportContext {
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;
   bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
+  bool IsRecordImplDebugEnabledForTarget(
+      const BazelLabel& label) const override;
   absl::StatusOr<bool> DetectFormatter(
       const clang::TypeDecl& decl) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(

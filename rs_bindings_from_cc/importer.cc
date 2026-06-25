@@ -1090,6 +1090,14 @@ bool Importer::IsUnsafeViewEnabledForTarget(const BazelLabel& label) const {
   return IsFeatureEnabledForTarget(label, "unsafe_view");
 }
 
+bool Importer::IsRecordImplDebugEnabledForTarget(
+    const BazelLabel& label) const {
+  // `record_impl_debug` is enabled if explicitly requested, or if the
+  // "all" feature set is enabled (e.g. via :experimental aspect hint).
+  return IsFeatureEnabledForTarget(label, "record_impl_debug") ||
+         IsFeatureEnabledForTarget(label, "all");
+}
+
 absl::StatusOr<bool> Importer::DetectFormatter(
     const clang::TypeDecl& decl) const {
   CRUBIT_ASSIGN_OR_RETURN(std::optional<bool> override_display,
