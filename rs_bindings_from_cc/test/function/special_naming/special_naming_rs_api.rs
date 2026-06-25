@@ -66,6 +66,11 @@ unsafe impl ::cxx::ExternType for SimpleStruct {
     type Id = ::cxx::type_id!("SimpleStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for SimpleStruct {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("SimpleStruct").field("x", &self.x).finish()
+    }
+}
 
 impl Default for SimpleStruct {
     #[inline(always)]
@@ -90,6 +95,11 @@ impl !Sync for OtherStruct {}
 unsafe impl ::cxx::ExternType for OtherStruct {
     type Id = ::cxx::type_id!("OtherStruct");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for OtherStruct {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("OtherStruct").field("y", &self.y).finish()
+    }
 }
 
 impl Default for OtherStruct {
