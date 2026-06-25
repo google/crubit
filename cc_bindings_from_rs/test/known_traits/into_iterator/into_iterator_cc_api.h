@@ -543,9 +543,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithInherentBegin>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_begin(
     ::into_iterator_rust::ContainerWithInherentBegin const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t ContainerWithInherentBegin::begin() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_begin(self);
@@ -594,9 +596,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MoveOnlyPayload>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_mutating_umethod(
     ::into_iterator_rust::MoveOnlyPayload&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t MoveOnlyPayload::mutating_method() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_mutating_umethod(self);
@@ -616,10 +620,12 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyContainer>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_into_uiter(
     ::into_iterator_rust::MyContainer*,
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 template <typename TAdaptedSelf_>
 inline ::into_iterator_rust::MyContainerIntoIter MyContainer::into_iter() && {
   MyContainer&& self_ = ::std::move(*this);
@@ -634,10 +640,12 @@ inline ::into_iterator_rust::MyContainerIntoIter MyContainer::into_iter() && {
   return call_into_iter();
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_into_uiter(
     ::into_iterator_rust::MyContainer const&,
     ::into_iterator_rust::MyContainerIter* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 template <typename TAdaptedSelf_>
 inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIter>
 MyContainer::begin() const& {
@@ -657,10 +665,12 @@ inline rs::IteratorEnd MyContainer::end() const& {
   return rs::IteratorEnd();
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_into_uiter(
     ::into_iterator_rust::MyContainer&,
     ::into_iterator_rust::MyContainerIterMut* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 template <typename TAdaptedSelf_>
 inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut>
 MyContainer::begin() & {
@@ -754,10 +764,12 @@ inline void SimpleIntoIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SimpleIntoIter, val));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_make_ucontainer(
     ::std::int32_t, ::std::int32_t, ::std::int32_t,
     ::into_iterator_rust::MyContainer* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::into_iterator_rust::MyContainer make_container(::std::int32_t a,
                                                         ::std::int32_t b,
                                                         ::std::int32_t c) {
@@ -769,9 +781,11 @@ inline ::into_iterator_rust::MyContainer make_container(::std::int32_t a,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_make_uinherent_ucontainer(
     ::into_iterator_rust::ContainerWithInherentBegin* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::into_iterator_rust::ContainerWithInherentBegin
 make_inherent_container() {
   crubit::Slot<::into_iterator_rust::ContainerWithInherentBegin>
@@ -783,9 +797,11 @@ make_inherent_container() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_make_uiterator(
     ::std::int32_t, ::into_iterator_rust::MyIterator* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::into_iterator_rust::MyIterator make_iterator(::std::int32_t value) {
   crubit::Slot<::into_iterator_rust::MyIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -795,10 +811,12 @@ inline ::into_iterator_rust::MyIterator make_iterator(::std::int32_t value) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_make_umove_uonly_uiterator(
     ::std::int32_t, ::std::int32_t,
     ::into_iterator_rust::MoveOnlyIterator* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::into_iterator_rust::MoveOnlyIterator make_move_only_iterator(
     ::std::int32_t val, ::std::int32_t count) {
   crubit::Slot<::into_iterator_rust::MoveOnlyIterator>
@@ -810,10 +828,12 @@ inline ::into_iterator_rust::MoveOnlyIterator make_move_only_iterator(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_make_uref_ucontainer(
     ::into_iterator_rust::MyIterator* $a crubit_nonnull,
     ::into_iterator_rust::ContainerWithRefIntoIter* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::into_iterator_rust::ContainerWithRefIntoIter make_ref_container(
     ::into_iterator_rust::MyIterator* $a crubit_nonnull iter) {
   crubit::Slot<::into_iterator_rust::ContainerWithRefIntoIter>
@@ -828,11 +848,13 @@ inline ::into_iterator_rust::ContainerWithRefIntoIter make_ref_container(
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithInherentBegin(
     ::into_iterator_rust::ContainerWithInherentBegin*,
     ::into_iterator_rust::SimpleIntoIter* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::into_iterator_rust::SimpleIntoIter
 rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
@@ -849,10 +871,12 @@ rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::into_iterator_rust::MyIterator& $a
 __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e(
     ::into_iterator_rust::ContainerWithRefIntoIter*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::into_iterator_rust::MyIterator& $a
 rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
@@ -865,10 +889,12 @@ rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMoveOnlyIterator(
     ::into_iterator_rust::MoveOnlyIterator&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::std::optional<::into_iterator_rust::MoveOnlyPayload> rs_std::impl<
     ::into_iterator_rust::MoveOnlyIterator,
@@ -889,11 +915,13 @@ inline ::std::optional<::into_iterator_rust::MoveOnlyPayload> rs_std::impl<
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     ::into_iterator_rust::MyContainer*,
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::into_iterator_rust::MyContainerIntoIter rs_std::impl<
     ::into_iterator_rust::MyContainer,
@@ -910,10 +938,12 @@ inline ::into_iterator_rust::MyContainerIntoIter rs_std::impl<
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIntoIter(
     ::into_iterator_rust::MyContainerIntoIter&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::std::optional<::std::int32_t> rs_std::impl<
     ::into_iterator_rust::MyContainerIntoIter,
@@ -933,10 +963,12 @@ inline ::std::optional<::std::int32_t> rs_std::impl<
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e(
     ::into_iterator_rust::MyContainerIter&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::std::optional<::std::int32_t const * $a crubit_nonnull> rs_std::impl<
     ::into_iterator_rust::MyContainerIter,
@@ -959,10 +991,12 @@ inline ::std::optional<::std::int32_t const * $a crubit_nonnull> rs_std::impl<
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e(
     ::into_iterator_rust::MyContainerIterMut&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::std::optional<::std::int32_t* $a crubit_nonnull> rs_std::impl<
     ::into_iterator_rust::MyContainerIterMut,
@@ -983,10 +1017,12 @@ inline ::std::optional<::std::int32_t* $a crubit_nonnull> rs_std::impl<
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyIterator(
     ::into_iterator_rust::MyIterator&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::std::optional<::std::int32_t> rs_std::impl<
     ::into_iterator_rust::MyIterator,
@@ -1005,10 +1041,12 @@ inline ::std::optional<::std::int32_t> rs_std::impl<
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aSimpleIntoIter(
     ::into_iterator_rust::SimpleIntoIter&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace into_iterator_rust
 inline ::std::optional<::std::int32_t>
 rs_std::impl<::into_iterator_rust::SimpleIntoIter, ::rs::core::iter::Iterator>::

@@ -49,9 +49,11 @@ using DirectReexportOfTransitive CRUBIT_INTERNAL_RUST_TYPE(
 namespace transitive_reexports {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_direct_uto_utransitive(
     ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::direct::Transitive direct_to_transitive(
     ::direct::Direct const& direct) {
   crubit::Slot<::direct::Transitive> __return_value_ret_val_holder;
@@ -62,9 +64,11 @@ inline ::direct::Transitive direct_to_transitive(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_direct_uto_utransitive_uglob_ua(
     ::direct::Direct const&, ::direct::TransitiveGlobA* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::direct::TransitiveGlobA direct_to_transitive_glob_a(
     ::direct::Direct const& direct) {
   crubit::Slot<::direct::TransitiveGlobA> __return_value_ret_val_holder;
@@ -75,9 +79,11 @@ inline ::direct::TransitiveGlobA direct_to_transitive_glob_a(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_direct_uto_utransitive_uprivate_utype_ualias(
     ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::direct::Transitive direct_to_transitive_private_type_alias(
     ::direct::Direct const& direct) {
   crubit::Slot<::direct::Transitive> __return_value_ret_val_holder;
@@ -89,9 +95,11 @@ inline ::direct::Transitive direct_to_transitive_private_type_alias(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_direct_uto_utransitive_uuse_ualias(
     ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::direct::Transitive direct_to_transitive_use_alias(
     ::direct::Direct const& direct) {
   crubit::Slot<::direct::Transitive> __return_value_ret_val_holder;
@@ -102,9 +110,11 @@ inline ::direct::Transitive direct_to_transitive_use_alias(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_direct_uto_utransittive_utype_ualias(
     ::direct::Direct const&, ::direct::Transitive* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::direct::Transitive direct_to_transittive_type_alias(
     ::direct::Direct const& direct) {
   crubit::Slot<::direct::Transitive> __return_value_ret_val_holder;

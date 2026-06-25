@@ -102,42 +102,52 @@ crubit::test::MyStatus return_status_or_unit();
 crubit::test::MyStatus return_status_or_unit_alias();
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_accept_uoptional_uby_ureference(
     crubit::test::MyOptional<::std::int32_t> const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t accept_optional_by_reference(
     crubit::test::MyOptional<::std::int32_t> const& opt) {
   return __crubit_internal::__crubit_thunk_accept_uoptional_uby_ureference(opt);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_accept_uoptional_uby_uvalue(
     crubit::test::MyOptional<::std::int32_t>*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t accept_optional_by_value(
     crubit::test::MyOptional<::std::int32_t> opt) {
   return __crubit_internal::__crubit_thunk_accept_uoptional_uby_uvalue(&opt);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_accept_ustatus(crubit::test::MyStatus*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool accept_status(crubit::test::MyStatus status) {
   return __crubit_internal::__crubit_thunk_accept_ustatus(&status);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_accept_ustatus_uor_uunit(
     crubit::test::MyStatus*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool accept_status_or_unit(crubit::test::MyStatus status) {
   return __crubit_internal::__crubit_thunk_accept_ustatus_uor_uunit(&status);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create_ubool_ubool_upair(
     crubit::test::MyPair<bool, bool>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyPair<bool, bool> create_bool_bool_pair() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -151,9 +161,11 @@ inline crubit::test::MyPair<bool, bool> create_bool_bool_pair() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create_uint_ubool_upair(
     crubit::test::MyIntBoolPair* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyIntBoolPair create_int_bool_pair() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -167,9 +179,11 @@ inline crubit::test::MyIntBoolPair create_int_bool_pair() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create_ustatus_uwith_uprivate_usecret(
     crubit::test::MyStatus* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatus create_status_with_private_secret() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -183,9 +197,11 @@ inline crubit::test::MyStatus create_status_with_private_secret() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create_ustatus_uwith_usecret(
     crubit::test::MyStatus* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatus create_status_with_secret() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -199,9 +215,11 @@ inline crubit::test::MyStatus create_status_with_secret() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create_ustatus_uwith_usecret_ualias(
     crubit::test::MyStatus* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatus create_status_with_secret_alias() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -215,16 +233,20 @@ inline crubit::test::MyStatus create_status_with_secret_alias() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uok_usecret(crubit::test::MyStatus*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool is_ok_secret(crubit::test::MyStatus status) {
   return __crubit_internal::__crubit_thunk_is_uok_usecret(&status);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_uoptional_uby_uvalue(
     ::std::int32_t, crubit::test::MyOptional<::std::int32_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyOptional<::std::int32_t> return_optional_by_value(
     ::std::int32_t x) {
   union __return_value_crubit_return_union {
@@ -239,9 +261,11 @@ inline crubit::test::MyOptional<::std::int32_t> return_optional_by_value(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ustatus(
     crubit::test::MyStatus* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatus return_status() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -254,9 +278,11 @@ inline crubit::test::MyStatus return_status() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ustatus_ualias(
     crubit::test::MyStatus* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatus return_status_alias() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -270,10 +296,12 @@ inline crubit::test::MyStatus return_status_alias() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ustatus_unon_uunit(
     crubit::test::MyStatusOr<::std::uint32_t>*,
     crubit::test::MyStatusOr<::std::uint64_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatusOr<::std::uint64_t> return_status_non_unit(
     crubit::test::MyStatusOr<::std::uint32_t> status) {
   union __return_value_crubit_return_union {
@@ -288,9 +316,11 @@ inline crubit::test::MyStatusOr<::std::uint64_t> return_status_non_unit(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ustatus_uor_uunit(
     crubit::test::MyStatus* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatus return_status_or_unit() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -304,9 +334,11 @@ inline crubit::test::MyStatus return_status_or_unit() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ustatus_uor_uunit_ualias(
     crubit::test::MyStatus* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::test::MyStatus return_status_or_unit_alias() {
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}

@@ -211,8 +211,10 @@ static_assert(::std::is_trivially_destructible_v<Foo>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::Foo>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::uses_reexport::Foo* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::uses_reexport::Foo Foo::create() {
   crubit::Slot<::uses_reexport::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -221,8 +223,10 @@ inline ::uses_reexport::Foo Foo::create() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_bar(::uses_reexport::Bar* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::uses_reexport::Bar Foo::bar() {
   crubit::Slot<::uses_reexport::Bar> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -303,8 +307,10 @@ using ::uses_reexport::f1;
 namespace uses_reexport {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_f1();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t f1() { return __crubit_internal::__crubit_thunk_f1(); }
 
 }  // namespace uses_reexport
@@ -316,8 +322,10 @@ using ::uses_reexport::f2;
 namespace uses_reexport {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_f2();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
 
 }  // namespace uses_reexport
@@ -325,13 +333,17 @@ inline ::std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
 namespace uses_reexport {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_g1();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t g1() { return __crubit_internal::__crubit_thunk_g1(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_g2();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
 }  // namespace uses_reexport

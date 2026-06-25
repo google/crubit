@@ -2352,13 +2352,17 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::option::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::option::CloneNoDefault>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(::option::CloneNoDefault const&,
                                      ::option::CloneNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(::option::CloneNoDefault&,
                                            ::option::CloneNoDefault const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::CloneNoDefault::CloneNoDefault(const CloneNoDefault& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
@@ -2395,14 +2399,18 @@ static_assert(
     alignof(HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::option::HasDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasDefault::HasDefault() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::option::HasDefault&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline HasDefault::~HasDefault() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -2415,9 +2423,11 @@ inline ::option::HasDefault& ::option::HasDefault::operator=(
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::HasDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasDefault HasDefault::new_(rs_std::StrRef s) {
   crubit::Slot<::option::HasDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2426,9 +2436,11 @@ inline ::option::HasDefault HasDefault::new_(rs_std::StrRef s) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" rs_std::StrRef __crubit_thunk_get_ustring_uinside_uoption(
     ::option::HasDefault const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::StrRef HasDefault::get_string_inside_option() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
@@ -2448,9 +2460,11 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::option::HasHasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasHasOptions>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasHasOptions* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasHasOptions HasHasOptions::new_(::std::uint8_t value) {
   crubit::Slot<::option::HasHasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2467,15 +2481,19 @@ static_assert(
     alignof(HasNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::option::HasNoDefault&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline HasNoDefault::~HasNoDefault() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::HasNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasNoDefault HasNoDefault::new_(rs_std::StrRef s) {
   crubit::Slot<::option::HasNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2484,9 +2502,11 @@ inline ::option::HasNoDefault HasNoDefault::new_(rs_std::StrRef s) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" rs_std::StrRef __crubit_thunk_get_ustring_uinside_uoption(
     ::option::HasNoDefault const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::StrRef HasNoDefault::get_string_inside_option() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
@@ -2506,9 +2526,11 @@ static_assert(::std::is_trivially_destructible_v<HasOptions>);
 static_assert(::std::is_trivially_move_constructible_v<::option::HasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasOptions>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasOptions* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasOptions HasOptions::new_(::std::uint8_t value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2517,9 +2539,11 @@ inline ::option::HasOptions HasOptions::new_(::std::uint8_t value) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_with_uoption(rs_std::Option<::std::uint8_t>*,
                                             ::option::HasOptions* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasOptions HasOptions::with_option(
     rs_std::Option<::std::uint8_t> value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
@@ -2530,9 +2554,11 @@ inline ::option::HasOptions HasOptions::with_option(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_from_uref(rs_std::Option<::std::uint8_t> const&,
                                          ::option::HasOptions* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasOptions HasOptions::from_ref(
     rs_std::Option<::std::uint8_t> const& value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
@@ -2542,8 +2568,10 @@ inline ::option::HasOptions HasOptions::from_ref(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_with_unone(::option::HasOptions* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::HasOptions HasOptions::with_none() {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2667,9 +2695,11 @@ static_assert(::std::is_trivially_move_assignable_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_constructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::LessThan20U8>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(
     ::std::uint8_t, rs_std::Option<::option::LessThan20U8>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<::option::LessThan20U8> LessThan20U8::new_(
     ::std::uint8_t value) {
   crubit::Slot<rs_std::Option<::option::LessThan20U8>>
@@ -2680,8 +2710,10 @@ inline rs_std::Option<::option::LessThan20U8> LessThan20U8::new_(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_value(::option::LessThan20U8*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t LessThan20U8::value() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_value(&self);
@@ -2701,13 +2733,17 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::option::OptCloneNoDefault>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(::option::OptCloneNoDefault const&,
                                      ::option::OptCloneNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(::option::OptCloneNoDefault&,
                                            ::option::OptCloneNoDefault const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::OptCloneNoDefault::OptCloneNoDefault(
     const OptCloneNoDefault& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -2720,9 +2756,11 @@ inline ::option::OptCloneNoDefault& ::option::OptCloneNoDefault::operator=(
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCloneNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::OptCloneNoDefault OptCloneNoDefault::new_(::std::uint8_t x) {
   crubit::Slot<::option::OptCloneNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2748,9 +2786,11 @@ static_assert(
 static_assert(
     ::std::is_trivially_copy_assignable_v<::option::OptCopyNoDefault>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCopyNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::OptCopyNoDefault OptCopyNoDefault::new_(::std::uint8_t x) {
   crubit::Slot<::option::OptCopyNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2767,15 +2807,19 @@ static_assert(
     alignof(OptDefaultWithDrop) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::option::OptDefaultWithDrop&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline OptDefaultWithDrop::~OptDefaultWithDrop() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::OptDefaultWithDrop* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::OptDefaultWithDrop OptDefaultWithDrop::new_(rs_std::StrRef s) {
   crubit::Slot<::option::OptDefaultWithDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2792,15 +2836,19 @@ static_assert(
     alignof(OptNoDefaultWithDrop) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::option::OptNoDefaultWithDrop&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline OptNoDefaultWithDrop::~OptNoDefaultWithDrop() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::OptNoDefaultWithDrop* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::OptNoDefaultWithDrop OptNoDefaultWithDrop::new_(
     rs_std::StrRef s) {
   crubit::Slot<::option::OptNoDefaultWithDrop> __return_value_ret_val_holder;
@@ -2810,9 +2858,11 @@ inline ::option::OptNoDefaultWithDrop OptNoDefaultWithDrop::new_(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" rs_std::StrRef __crubit_thunk_get_ustring_uinside_uoption(
     ::option::OptNoDefaultWithDrop const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::StrRef OptNoDefaultWithDrop::get_string_inside_option() const& $(
     __anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
@@ -2828,8 +2878,10 @@ static_assert(
     alignof(OptZst) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::option::OptZst* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::option::OptZst::OptZst() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -2867,10 +2919,12 @@ inline void ZStream::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ZStream, zfree));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_pass_uoption_uptr(
     rs_std::Option<::std::int32_t const*>*,
     rs_std::Option<::std::int32_t const*>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<::std::int32_t const*> pass_option_ptr(
     rs_std::Option<::std::int32_t const*> x) {
   crubit::Slot<rs_std::Option<::std::int32_t const*>>
@@ -2882,10 +2936,12 @@ inline rs_std::Option<::std::int32_t const*> pass_option_ptr(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_uoption_uresult(
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
 return_option_result() {
@@ -2899,10 +2955,12 @@ return_option_result() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_uoption_uresult_uunmovable(
     rs_std::Option<rs_std::Result<::option::HasNoDefault,
                                   ::rs::alloc::string::String>>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<
     rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
 return_option_result_unmovable() {
@@ -2916,13 +2974,15 @@ return_option_result_unmovable() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_stress_utesting_unested_utypes(
     rs_std::Option<rs_std::Result<
         rs_std::Option<
             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
         rs_std::Result<rs_std::Option<::std::int32_t>,
                        rs_std::Option<::std::int32_t>>>>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
@@ -2941,10 +3001,12 @@ stress_testing_nested_types() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_stringify_ulen(
     rs_std::Option<::option::HasDefault> const&,
     rs_std::Option<::std::uint32_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x) {
   crubit::Slot<rs_std::Option<::std::uint32_t>> __return_value_ret_val_holder;
@@ -2954,10 +3016,12 @@ inline rs_std::Option<::std::uint32_t> stringify_len(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_take_uoption_uresult_uunmovable(
     rs_std::Option<
         rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void take_option_result_unmovable(
     rs_std::Option<
         rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
@@ -3054,15 +3118,19 @@ rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     rs_std::Option<::option::CloneNoDefault> const&,
     rs_std::Option<::option::CloneNoDefault>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     rs_std::Option<::option::CloneNoDefault>&,
     rs_std::Option<::option::CloneNoDefault> const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<::option::CloneNoDefault>::Option(const Option& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
@@ -3353,19 +3421,23 @@ rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     rs_std::Option<
         rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> const&,
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     rs_std::Option<
         rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&,
     rs_std::Option<
         rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<rs_std::Result<
     ::std::int32_t, ::rs::alloc::string::String>>::Option(const Option& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -3487,6 +3559,7 @@ operator=(::std::nullopt_t) noexcept {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     rs_std::Option<
         rs_std::Result<rs_std::Option<rs_std::Result<
@@ -3498,8 +3571,10 @@ extern "C" void __crubit_thunk_clone(
             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
         rs_std::Result<rs_std::Option<::std::int32_t>,
                        rs_std::Option<::std::int32_t>>>>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     rs_std::Option<
         rs_std::Result<rs_std::Option<rs_std::Result<
@@ -3511,7 +3586,8 @@ extern "C" void __crubit_thunk_clone_ufrom(
                            ::std::int32_t, ::rs::alloc::string::String>>,
                        rs_std::Result<rs_std::Option<::std::int32_t>,
                                       rs_std::Option<::std::int32_t>>>> const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
@@ -3729,15 +3805,19 @@ rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const&,
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&,
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
     const Result& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -3842,6 +3922,7 @@ inline constexpr void rs_std::Result<
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
                                                  ::rs::alloc::string::String>>,
@@ -3851,8 +3932,10 @@ extern "C" void __crubit_thunk_clone(
                                                  ::rs::alloc::string::String>>,
                    rs_std::Result<rs_std::Option<::std::int32_t>,
                                   rs_std::Option<::std::int32_t>>>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
                                                  ::rs::alloc::string::String>>,
@@ -3862,7 +3945,8 @@ extern "C" void __crubit_thunk_clone_ufrom(
                                                  ::rs::alloc::string::String>>,
                    rs_std::Result<rs_std::Option<::std::int32_t>,
                                   rs_std::Option<::std::int32_t>>> const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,

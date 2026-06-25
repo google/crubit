@@ -68,15 +68,19 @@ static_assert(
     alignof(NoStdStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::no_std::NoStdStruct&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline NoStdStruct::~NoStdStruct() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::int32_t, float,
                                    ::no_std::NoStdStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::no_std::NoStdStruct NoStdStruct::new_(::std::int32_t x, float y) {
   crubit::Slot<::no_std::NoStdStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -85,8 +89,10 @@ inline ::no_std::NoStdStruct NoStdStruct::new_(::std::int32_t x, float y) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" rs_std::StrRef __crubit_thunk_display(::no_std::NoStdStruct const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::StrRef NoStdStruct::display() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;

@@ -747,20 +747,26 @@ static_assert(
     alignof(CloneNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::tuple_structs::CloneNoDefault&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline CloneNoDefault::~CloneNoDefault() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     ::tuple_structs::CloneNoDefault const&,
     ::tuple_structs::CloneNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     ::tuple_structs::CloneNoDefault&, ::tuple_structs::CloneNoDefault const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::CloneNoDefault::CloneNoDefault(
     const CloneNoDefault& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -791,9 +797,11 @@ static_assert(
 static_assert(
     ::std::is_trivially_copy_assignable_v<::tuple_structs::CopyNoDefault>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::CopyNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::CopyNoDefault CopyNoDefault::create(
     ::std::int32_t value) {
   crubit::Slot<::tuple_structs::CopyNoDefault> __return_value_ret_val_holder;
@@ -811,9 +819,11 @@ static_assert(
     alignof(DefaultAndCloneNoUnpin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::DefaultAndCloneNoUnpin* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -823,15 +833,19 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::DefaultAndCloneNoUnpin>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     ::tuple_structs::DefaultAndCloneNoUnpin const&,
     ::tuple_structs::DefaultAndCloneNoUnpin* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     ::tuple_structs::DefaultAndCloneNoUnpin&,
     ::tuple_structs::DefaultAndCloneNoUnpin const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin(
     const DefaultAndCloneNoUnpin& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -853,9 +867,11 @@ static_assert(
     alignof(DefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::DefaultNoCopyNoClone* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::DefaultNoCopyNoClone::DefaultNoCopyNoClone() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -874,8 +890,10 @@ static_assert(
     alignof(DontMoveMe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::tuple_structs::DontMoveMe&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline DontMoveMe::~DontMoveMe() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
@@ -898,9 +916,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructOnePrivateArg>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructOnePrivateArg* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructOnePrivateArg
 TupleStructOnePrivateArg::create(::std::int32_t arg) {
   crubit::Slot<::tuple_structs::TupleStructOnePrivateArg>
@@ -911,9 +931,11 @@ TupleStructOnePrivateArg::create(::std::int32_t arg) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructOnePrivateArg*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructOnePrivateArg::get_arg() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_uarg(&self);
@@ -937,9 +959,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructOnePublicArg>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructOnePublicArg* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructOnePublicArg TupleStructOnePublicArg::create(
     ::std::int32_t arg) {
   crubit::Slot<::tuple_structs::TupleStructOnePublicArg>
@@ -950,9 +974,11 @@ inline ::tuple_structs::TupleStructOnePublicArg TupleStructOnePublicArg::create(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructOnePublicArg*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructOnePublicArg::get_arg() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_uarg(&self);
@@ -977,10 +1003,12 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructOnePublicArgOnePrivateArg* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructOnePublicArgOnePrivateArg
 TupleStructOnePublicArgOnePrivateArg::create(::std::int32_t first_arg,
                                              ::std::int32_t second_arg) {
@@ -993,9 +1021,11 @@ TupleStructOnePublicArgOnePrivateArg::create(::std::int32_t first_arg,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructOnePublicArgOnePrivateArg*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructOnePublicArgOnePrivateArg::get_second_arg()
     const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
@@ -1022,10 +1052,12 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructTwoPrivateArgs>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructTwoPrivateArgs* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructTwoPrivateArgs
 TupleStructTwoPrivateArgs::create(::std::int32_t first_arg,
                                   ::std::int32_t second_arg) {
@@ -1038,18 +1070,22 @@ TupleStructTwoPrivateArgs::create(::std::int32_t first_arg,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_ufirst_uarg(
     ::tuple_structs::TupleStructTwoPrivateArgs*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructTwoPrivateArgs::get_first_arg() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_ufirst_uarg(&self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructTwoPrivateArgs*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructTwoPrivateArgs::get_second_arg() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(&self);
@@ -1074,10 +1110,12 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructTwoPublicArgs>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructTwoPublicArgs* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructTwoPublicArgs
 TupleStructTwoPublicArgs::create(::std::int32_t first_arg,
                                  ::std::int32_t second_arg) {
@@ -1090,18 +1128,22 @@ TupleStructTwoPublicArgs::create(::std::int32_t first_arg,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_ufirst_uarg(
     ::tuple_structs::TupleStructTwoPublicArgs*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructTwoPublicArgs::get_first_arg() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_ufirst_uarg(&self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructTwoPublicArgs*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructTwoPublicArgs::get_second_arg() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(&self);
@@ -1117,16 +1159,20 @@ static_assert(
     alignof(TupleStructWithCloneNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(
     ::tuple_structs::TupleStructWithCloneNoDefault&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline TupleStructWithCloneNoDefault::~TupleStructWithCloneNoDefault() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructWithCloneNoDefault* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructWithCloneNoDefault
 TupleStructWithCloneNoDefault::create(::std::int32_t value) {
   crubit::Slot<::tuple_structs::TupleStructWithCloneNoDefault>
@@ -1137,9 +1183,11 @@ TupleStructWithCloneNoDefault::create(::std::int32_t value) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t const& $(__anon1) __crubit_thunk_get_uvalue(
     ::tuple_structs::TupleStructWithCloneNoDefault const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t const& $(__anon1)
     TupleStructWithCloneNoDefault::get_value() const& $(__anon1)
         CRUBIT_LIFETIME_BOUND {
@@ -1156,17 +1204,21 @@ static_assert(
     alignof(TupleStructWithCppImmovableType) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(
     ::tuple_structs::TupleStructWithCppImmovableType&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline TupleStructWithCppImmovableType::~TupleStructWithCppImmovableType() {
   __crubit_internal::__crubit_thunk_drop(*this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructWithCppImmovableType* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructWithCppImmovableType
 TupleStructWithCppImmovableType::create(::std::int32_t first_arg,
                                         ::std::int32_t second_arg) {
@@ -1179,18 +1231,22 @@ TupleStructWithCppImmovableType::create(::std::int32_t first_arg,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_ufirst_uarg(
     ::tuple_structs::TupleStructWithCppImmovableType const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructWithCppImmovableType::get_first_arg() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ufirst_uarg(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t const& $(__anon1) __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructWithCppImmovableType const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t const& $(__anon1)
     TupleStructWithCppImmovableType::get_second_arg() const& $(__anon1)
         CRUBIT_LIFETIME_BOUND {
@@ -1215,9 +1271,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin
 TupleStructWithDefaultAndCloneNoUnpin::create() {
   crubit::Slot<::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>
@@ -1228,9 +1286,11 @@ TupleStructWithDefaultAndCloneNoUnpin::create() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t TupleStructWithDefaultAndCloneNoUnpin::get_arg() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uarg(self);
@@ -1276,9 +1336,11 @@ static_assert(
     alignof(TupleStructWithNonExhaustiveCtor) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::TupleStructWithNonExhaustiveCtor* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructWithNonExhaustiveCtor::
     TupleStructWithNonExhaustiveCtor() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -1294,10 +1356,12 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructWithNonExhaustiveCtor* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructWithNonExhaustiveCtor
 TupleStructWithNonExhaustiveCtor::create(::std::int32_t first_arg,
                                          ::std::int32_t second_arg) {
@@ -1320,9 +1384,11 @@ static_assert(
     alignof(TupleStructWithTupleFieldType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructWithTupleFieldType::
     TupleStructWithTupleFieldType() {
   __crubit_internal::__crubit_thunk_default(this);
@@ -1338,9 +1404,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructWithTupleFieldType>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(
     void**, ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::tuple_structs::TupleStructWithTupleFieldType
 TupleStructWithTupleFieldType::create(
     ::std::tuple<::std::int32_t, ::std::int32_t> __param_0) {
@@ -1358,9 +1426,11 @@ TupleStructWithTupleFieldType::create(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructWithTupleFieldType*, void** __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::tuple<::std::int32_t, ::std::int32_t>
 TupleStructWithTupleFieldType::get_arg() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
@@ -1382,9 +1452,11 @@ inline void TupleStructWithTupleFieldType::__crubit_field_offset_assertions() {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
   __crubit_internal::__crubit_thunk_default(this);
 }

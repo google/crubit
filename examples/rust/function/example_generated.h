@@ -21,9 +21,11 @@ namespace example_crate {
 ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y);
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_add_utwo_uintegers(::std::int32_t,
                                                             ::std::int32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_utwo_uintegers(x, y);
 }

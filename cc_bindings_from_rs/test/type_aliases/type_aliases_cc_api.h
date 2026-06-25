@@ -241,9 +241,11 @@ namespace type_aliases::test_generics_matching {
 namespace type_aliases::test_generics_matching {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_returns_uflipped_ualias(
     rs_std::Result<::std::uint32_t, ::std::int8_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Result<::std::uint32_t, ::std::int8_t> returns_flipped_alias() {
   crubit::Slot<rs_std::Result<::std::uint32_t, ::std::int8_t>>
       __return_value_ret_val_holder;
@@ -254,9 +256,11 @@ inline rs_std::Result<::std::uint32_t, ::std::int8_t> returns_flipped_alias() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_returns_umatching_ualias(
     rs_std::Result<::std::int32_t, ::std::int32_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Result<::std::int32_t, ::std::int32_t> returns_matching_alias() {
   crubit::Slot<rs_std::Result<::std::int32_t, ::std::int32_t>>
       __return_value_ret_val_holder;
@@ -267,9 +271,11 @@ inline rs_std::Result<::std::int32_t, ::std::int32_t> returns_matching_alias() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_returns_uspecialized(
     rs_std::Result<::std::int32_t, ::std::int32_t>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::Result<::std::int32_t, ::std::int32_t> returns_specialized() {
   crubit::Slot<rs_std::Result<::std::int32_t, ::std::int32_t>>
       __return_value_ret_val_holder;
@@ -284,8 +290,10 @@ inline rs_std::Result<::std::int32_t, ::std::int32_t> returns_specialized() {
 namespace type_aliases::test_type_aliases {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_func_uusing_ualias();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t func_using_alias() {
   return __crubit_internal::__crubit_thunk_func_uusing_ualias();
 }

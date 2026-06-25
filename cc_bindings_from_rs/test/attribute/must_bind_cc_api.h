@@ -68,8 +68,10 @@ static_assert(::std::is_trivially_destructible_v<Original>);
 static_assert(::std::is_trivially_move_constructible_v<::must_bind::Original>);
 static_assert(::std::is_trivially_move_assignable_v<::must_bind::Original>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::must_bind::Original* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::must_bind::Original Original::new_() {
   crubit::Slot<::must_bind::Original> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -80,8 +82,10 @@ inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, x));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_bar();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void bar() { return __crubit_internal::__crubit_thunk_bar(); }
 
 }  // namespace must_bind

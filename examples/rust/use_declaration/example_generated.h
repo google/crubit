@@ -68,8 +68,10 @@ static_assert(
     alignof(Type) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::example_crate::Type* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::example_crate::Type::Type() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -88,8 +90,10 @@ using ::example_crate::function;
 namespace example_crate {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_function();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void function() { return __crubit_internal::__crubit_thunk_function(); }
 
 }  // namespace example_crate

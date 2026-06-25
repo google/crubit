@@ -70,8 +70,10 @@ static_assert(
     alignof(Color) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::example_crate::Color* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::example_crate::Color::Color() {
   __crubit_internal::__crubit_thunk_default(this);
 }

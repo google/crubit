@@ -59,8 +59,10 @@ static_assert(
     alignof(Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::example_crate::Struct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::example_crate::Struct::Struct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -69,13 +71,17 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::Struct>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Struct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(::example_crate::Struct const&,
                                      ::example_crate::Struct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(::example_crate::Struct&,
                                            ::example_crate::Struct const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::example_crate::Struct::Struct(const Struct& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }

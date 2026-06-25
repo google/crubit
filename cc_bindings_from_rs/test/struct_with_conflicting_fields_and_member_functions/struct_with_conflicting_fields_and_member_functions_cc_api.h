@@ -77,18 +77,22 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::struct_with_conflicting_fields_and_member_functions::X>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_a(
     ::struct_with_conflicting_fields_and_member_functions::X const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t X::a() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_a(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_b(
     ::struct_with_conflicting_fields_and_member_functions::X const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t X::b() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_b(self);

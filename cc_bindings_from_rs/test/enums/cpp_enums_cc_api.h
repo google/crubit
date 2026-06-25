@@ -72,8 +72,10 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 namespace cpp_enums::forward_declared_enum {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::cpp_enums::forward_declared_enum::B __crubit_thunk_AFunction();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::cpp_enums::forward_declared_enum::B AFunction() {
   return __crubit_internal::__crubit_thunk_AFunction();
 }

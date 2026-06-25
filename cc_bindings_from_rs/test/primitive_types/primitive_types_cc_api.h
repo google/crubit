@@ -285,15 +285,19 @@ maybe_uninit_ref_mut(::std::int32_t* $static maybe_uninit);
 namespace primitive_types::argument_types {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_c_uchar_umut_uptr_uarg(decltype(char(0))*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void c_char_mut_ptr_arg(decltype(char(0))* __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_umut_uptr_uarg(__param_0);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_c_uchar_uptr_uarg(decltype(char(0)) const*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void c_char_ptr_arg(decltype(char(0)) const* __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_uptr_uarg(__param_0);
 }
@@ -349,203 +353,267 @@ inline void Types::__crubit_field_offset_assertions() {
 namespace primitive_types::return_types {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(char(0)) c_char() {
   return __crubit_internal::__crubit_thunk_c_uchar();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(char(0)) const* __crubit_thunk_c_uchar_uconst_uptr();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(char(0)) const* c_char_const_ptr() {
   return __crubit_internal::__crubit_thunk_c_uchar_uconst_uptr();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" crubit::type_identity_t<void(decltype(char(0)))>&
 __crubit_thunk_c_uchar_ufunc();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::type_identity_t<void(decltype(char(0)))>& c_char_func() {
   return __crubit_internal::__crubit_thunk_c_uchar_ufunc();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(char(0))* __crubit_thunk_c_uchar_umut_uptr();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(char(0))* c_char_mut_ptr() {
   return __crubit_internal::__crubit_thunk_c_uchar_umut_uptr();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" double __crubit_thunk_c_udouble();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline double c_double() {
   return __crubit_internal::__crubit_thunk_c_udouble();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" float __crubit_thunk_c_ufloat();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline float c_float() { return __crubit_internal::__crubit_thunk_c_ufloat(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_c_uint();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t c_int() {
   return __crubit_internal::__crubit_thunk_c_uint();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int64_t __crubit_thunk_c_ulong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int64_t c_long() {
   return __crubit_internal::__crubit_thunk_c_ulong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" long long __crubit_thunk_c_ulonglong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline long long c_longlong() {
   return __crubit_internal::__crubit_thunk_c_ulonglong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int8_t __crubit_thunk_c_uschar();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int8_t c_schar() {
   return __crubit_internal::__crubit_thunk_c_uschar();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int16_t __crubit_thunk_c_ushort();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int16_t c_short() {
   return __crubit_internal::__crubit_thunk_c_ushort();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_c_uuchar();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t c_uchar() {
   return __crubit_internal::__crubit_thunk_c_uuchar();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint32_t __crubit_thunk_c_uuint();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint32_t c_uint() {
   return __crubit_internal::__crubit_thunk_c_uuint();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint64_t __crubit_thunk_c_uulong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint64_t c_ulong() {
   return __crubit_internal::__crubit_thunk_c_uulong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" unsigned long long __crubit_thunk_c_uulonglong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline unsigned long long c_ulonglong() {
   return __crubit_internal::__crubit_thunk_c_uulonglong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint16_t __crubit_thunk_c_uushort();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint16_t c_ushort() {
   return __crubit_internal::__crubit_thunk_c_uushort();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_c_uvoid();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void c_void() { return __crubit_internal::__crubit_thunk_c_uvoid(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" const void* __crubit_thunk_c_uvoid_uconst_uptr();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline const void* c_void_const_ptr() {
   return __crubit_internal::__crubit_thunk_c_uvoid_uconst_uptr();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void* __crubit_thunk_c_uvoid_umut_uptr();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void* c_void_mut_ptr() {
   return __crubit_internal::__crubit_thunk_c_uvoid_umut_uptr();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" float __crubit_thunk_f32();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline float f32() { return __crubit_internal::__crubit_thunk_f32(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" double __crubit_thunk_f64();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline double f64() { return __crubit_internal::__crubit_thunk_f64(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int16_t __crubit_thunk_i16();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int16_t i16() { return __crubit_internal::__crubit_thunk_i16(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_i32();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t i32() { return __crubit_internal::__crubit_thunk_i32(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int64_t __crubit_thunk_i64();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int64_t i64() { return __crubit_internal::__crubit_thunk_i64(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int8_t __crubit_thunk_i8();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int8_t i8() { return __crubit_internal::__crubit_thunk_i8(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" crubit::type_identity_t<void(::std::int8_t)>&
 __crubit_thunk_i8_ufunc();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline crubit::type_identity_t<void(::std::int8_t)>& i8_func() {
   return __crubit_internal::__crubit_thunk_i8_ufunc();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::intptr_t __crubit_thunk_isize();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::intptr_t isize() {
   return __crubit_internal::__crubit_thunk_isize();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint16_t __crubit_thunk_u16();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint16_t u16() { return __crubit_internal::__crubit_thunk_u16(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint32_t __crubit_thunk_u32();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint32_t u32() { return __crubit_internal::__crubit_thunk_u32(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint64_t __crubit_thunk_u64();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint64_t u64() { return __crubit_internal::__crubit_thunk_u64(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_u8();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t u8() { return __crubit_internal::__crubit_thunk_u8(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uintptr_t __crubit_thunk_usize();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uintptr_t usize() {
   return __crubit_internal::__crubit_thunk_usize();
 }
@@ -572,26 +640,32 @@ inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(StructWithCVoidPointerMember, ptr_mut));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" const void* __crubit_thunk_identity_uconst_uc_uvoid_uptr(
     const void*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline const void* identity_const_c_void_ptr(const void* ptr) {
   return __crubit_internal::__crubit_thunk_identity_uconst_uc_uvoid_uptr(ptr);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void* __crubit_thunk_identity_umut_uc_uvoid_uptr(void*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void* identity_mut_c_void_ptr(void* ptr) {
   return __crubit_internal::__crubit_thunk_identity_umut_uc_uvoid_uptr(ptr);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new_ustruct_uwith_uc_uvoid_upointer_umember(
     const void*, void*,
     ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember
 new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut) {
   crubit::Slot<::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>
@@ -607,36 +681,44 @@ new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut) {
 namespace primitive_types::test_maybe_uninit {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t const* __crubit_thunk_maybe_uuninit_uptr(
     ::std::int32_t const*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t const* maybe_uninit_ptr(
     ::std::int32_t const* maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uptr(maybe_uninit);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t* __crubit_thunk_maybe_uuninit_uptr_umut(
     ::std::int32_t*);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t* maybe_uninit_ptr_mut(::std::int32_t* maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uptr_umut(
       maybe_uninit);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t const& $static
 __crubit_thunk_maybe_uuninit_uref(::std::int32_t const* $static);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t const& $static
 maybe_uninit_ref(::std::int32_t const* $static maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uref(maybe_uninit);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t& $static
 __crubit_thunk_maybe_uuninit_uref_umut(::std::int32_t* $static);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t& $static
 maybe_uninit_ref_mut(::std::int32_t* $static maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uref_umut(

@@ -1104,10 +1104,12 @@ inline constexpr QrError QrError::MakeInvalidCharacter() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_Structured(
     ::enums::qr_error::StructuredQrError*,
     ::enums::qr_error::QrError* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::qr_error::QrError QrError::MakeStructured(
     ::enums::qr_error::StructuredQrError __param_0) {
   crubit::Slot<::enums::qr_error::QrError> __return_value_ret_val_holder;
@@ -1126,19 +1128,23 @@ static_assert(
 static_assert(
     ::std::is_trivially_copy_assignable_v<::enums::qr_error::QrError>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_udata_utoo_ulong(
     ::enums::qr_error::QrError const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool QrError::is_data_too_long() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_udata_utoo_ulong(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError(
     ::enums::qr_error::QrError const&, ::enums::qr_error::QrError const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool QrError::operator==(::enums::qr_error::QrError const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -1163,9 +1169,11 @@ inline constexpr StructuredQrError StructuredQrError::MakeAtLeast2Pieces() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_TotalMismatch(
     ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeTotalMismatch(::std::uintptr_t __param_0) {
   crubit::Slot<::enums::qr_error::StructuredQrError>
@@ -1213,10 +1221,12 @@ inline constexpr StructuredQrError StructuredQrError::MakeStructuredWrongEnc() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_SeqGreaterThanTotal(
     ::std::uint8_t, ::std::uint8_t,
     ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeSeqGreaterThanTotal(::std::uint8_t __param_0,
                                            ::std::uint8_t __param_1) {
@@ -1229,10 +1239,12 @@ StructuredQrError::MakeSeqGreaterThanTotal(::std::uint8_t __param_0,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_LengthMismatch(
     ::std::uintptr_t, ::std::uintptr_t,
     ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeLengthMismatch(::std::uintptr_t __param_0,
                                       ::std::uintptr_t __param_1) {
@@ -1245,9 +1257,11 @@ StructuredQrError::MakeLengthMismatch(::std::uintptr_t __param_0,
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_UnsupportedVersion(
     ::std::int16_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::qr_error::StructuredQrError
 StructuredQrError::MakeUnsupportedVersion(::std::int16_t __param_0) {
   crubit::Slot<::enums::qr_error::StructuredQrError>
@@ -1259,9 +1273,11 @@ StructuredQrError::MakeUnsupportedVersion(::std::int16_t __param_0) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_SplitMax16(
     ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::qr_error::StructuredQrError StructuredQrError::MakeSplitMax16(
     ::std::uintptr_t __param_0) {
   crubit::Slot<::enums::qr_error::StructuredQrError>
@@ -1281,11 +1297,13 @@ static_assert(::std::is_trivially_copy_constructible_v<
 static_assert(::std::is_trivially_copy_assignable_v<
               ::enums::qr_error::StructuredQrError>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError(
     ::enums::qr_error::StructuredQrError const&,
     ::enums::qr_error::StructuredQrError const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool StructuredQrError::operator==(
     ::enums::qr_error::StructuredQrError const& other) const {
   auto&& self = *this;
@@ -1330,18 +1348,22 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_128::ReprI128>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_umin_ui128(
     ::enums::repr_128::ReprI128 const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprI128::is_min_i128() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_umin_ui128(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_umax_ui128(
     ::enums::repr_128::ReprI128 const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprI128::is_max_i128() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_umax_ui128(self);
@@ -1373,9 +1395,11 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_128::ReprU128>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_umax_uu128(
     ::enums::repr_128::ReprU128 const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprU128::is_max_u128() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_umax_uu128(self);
@@ -1394,15 +1418,19 @@ static_assert(
     alignof(MyEnum) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::enums::repr_c::MyEnum* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c::MyEnum::MyEnum() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_E(::rs::alloc::string::String*, ::std::int32_t,
                                  ::enums::repr_c::MyEnum* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c::MyEnum MyEnum::MakeE(
     ::rs::alloc::string::String __param_0, ::std::int32_t __param_1) {
   crubit::Slot __param_0_slot((::std::move(__param_0)));
@@ -1414,9 +1442,11 @@ inline ::enums::repr_c::MyEnum MyEnum::MakeE(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_A(::std::int32_t, ::std::int64_t,
                                  ::enums::repr_c::MyEnum* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c::MyEnum MyEnum::MakeA(::std::int32_t __param_0,
                                              ::std::int64_t __param_1) {
   crubit::Slot<::enums::repr_c::MyEnum> __return_value_ret_val_holder;
@@ -1441,8 +1471,10 @@ inline MyEnum MyEnum::MakeD() {
   return MyEnum(PrivateTagCtorTag{}, Tag{INT64_C(10002)});
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::enums::repr_c::MyEnum&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline MyEnum::~MyEnum() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline ::enums::repr_c::MyEnum::MyEnum(MyEnum&& other) : MyEnum() {
   *this = ::std::move(other);
@@ -1506,36 +1538,44 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c::ReprCWithExtremeDiscriminants>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uminus_uone(
     ::enums::repr_c::ReprCWithExtremeDiscriminants const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprCWithExtremeDiscriminants::is_minus_one() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uminus_uone(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uminus_utwo(
     ::enums::repr_c::ReprCWithExtremeDiscriminants const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprCWithExtremeDiscriminants::is_minus_two() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uminus_utwo(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_umin_ui32(
     ::enums::repr_c::ReprCWithExtremeDiscriminants const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprCWithExtremeDiscriminants::is_min_i32() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_umin_ui32(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_umax_ui32(
     ::enums::repr_c::ReprCWithExtremeDiscriminants const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprCWithExtremeDiscriminants::is_max_i32() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_umax_ui32(self);
@@ -1560,9 +1600,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c::ReprCWithSingleNoPayloadVariant>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_usingle_uvariant(
     ::enums::repr_c::ReprCWithSingleNoPayloadVariant const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool ReprCWithSingleNoPayloadVariant::is_single_variant() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_usingle_uvariant(self);
@@ -1580,18 +1622,22 @@ static_assert(
     alignof(CloneActiveVariant) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
     CloneActiveVariant() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_A(
     ::std::int32_t,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant
 CloneActiveVariant::MakeA(::std::int32_t __param_0) {
   crubit::Slot<::enums::repr_c_clone_active_variant::CloneActiveVariant>
@@ -1602,10 +1648,12 @@ CloneActiveVariant::MakeA(::std::int32_t __param_0) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_B(
     ::std::int32_t,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant
 CloneActiveVariant::MakeB(::std::int32_t __param_0) {
   crubit::Slot<::enums::repr_c_clone_active_variant::CloneActiveVariant>
@@ -1616,10 +1664,12 @@ CloneActiveVariant::MakeB(::std::int32_t __param_0) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_C(
     ::std::int32_t,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant
 CloneActiveVariant::MakeC(::std::int32_t __param_0) {
   crubit::Slot<::enums::repr_c_clone_active_variant::CloneActiveVariant>
@@ -1634,15 +1684,19 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c_clone_active_variant::CloneActiveVariant>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant&,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
     CloneActiveVariant(const CloneActiveVariant& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -1664,27 +1718,33 @@ inline void CloneActiveVariant::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneActiveVariant::__crubit_C_struct, __field0));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_ua(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool is_a(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const& e) {
   return __crubit_internal::__crubit_thunk_is_ua(e);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_ub(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool is_b(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const& e) {
   return __crubit_internal::__crubit_thunk_is_ub(e);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uc(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool is_c(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const& e) {
   return __crubit_internal::__crubit_thunk_is_uc(e);
@@ -1701,9 +1761,11 @@ static_assert(
     alignof(CloneCount) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::enums::repr_c_clone_counter::CloneCount* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_clone_counter::CloneCount::CloneCount() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -1713,15 +1775,19 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c_clone_counter::CloneCount>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(
     ::enums::repr_c_clone_counter::CloneCount const&,
     ::enums::repr_c_clone_counter::CloneCount* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(
     ::enums::repr_c_clone_counter::CloneCount&,
     ::enums::repr_c_clone_counter::CloneCount const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_clone_counter::CloneCount::CloneCount(
     const CloneCount& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
@@ -1748,15 +1814,19 @@ static_assert(
     alignof(DropMe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::enums::repr_c_drop::DropMe* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_drop::DropMe::DropMe() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_A(::std::int32_t,
                                  ::enums::repr_c_drop::DropMe* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_drop::DropMe DropMe::MakeA(::std::int32_t __param_0) {
   crubit::Slot<::enums::repr_c_drop::DropMe> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1765,9 +1835,11 @@ inline ::enums::repr_c_drop::DropMe DropMe::MakeA(::std::int32_t __param_0) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_B(::std::int64_t,
                                  ::enums::repr_c_drop::DropMe* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_c_drop::DropMe DropMe::MakeB(::std::int64_t __param_0) {
   crubit::Slot<::enums::repr_c_drop::DropMe> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1780,8 +1852,10 @@ inline DropMe DropMe::MakeQ() {
   return DropMe(PrivateTagCtorTag{}, Tag{INT64_C(2)});
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::enums::repr_c_drop::DropMe&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline DropMe::~DropMe() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline ::enums::repr_c_drop::DropMe::DropMe(DropMe&& other) : DropMe() {
   *this = ::std::move(other);
@@ -1827,18 +1901,22 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_int::IntReprEnumWithNoPayload>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uno_upayload1(
     ::enums::repr_int::IntReprEnumWithNoPayload const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool IntReprEnumWithNoPayload::is_no_payload1() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uno_upayload1(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uno_upayload2(
     ::enums::repr_int::IntReprEnumWithNoPayload const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool IntReprEnumWithNoPayload::is_no_payload2() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uno_upayload2(self);
@@ -1866,9 +1944,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_int::IntReprWithSingleNoPayloadVariant>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_usingle_uvariant(
     ::enums::repr_int::IntReprWithSingleNoPayloadVariant const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool IntReprWithSingleNoPayloadVariant::is_single_variant() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_usingle_uvariant(self);
@@ -1900,18 +1980,22 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_int::NegReprIntEnum>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uminus_uone(
     ::enums::repr_int::NegReprIntEnum const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool NegReprIntEnum::is_minus_one() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uminus_uone(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_uminus_utwo(
     ::enums::repr_int::NegReprIntEnum const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool NegReprIntEnum::is_minus_two() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uminus_utwo(self);
@@ -1946,10 +2030,12 @@ inline constexpr RustReprEnum RustReprEnum::MakeVariant3() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_TuplePayloadVariant(
     ::std::int32_t, ::std::int32_t,
     ::enums::repr_rust::RustReprEnum* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_rust::RustReprEnum RustReprEnum::MakeTuplePayloadVariant(
     ::std::int32_t __param_0, ::std::int32_t __param_1) {
   crubit::Slot<::enums::repr_rust::RustReprEnum> __return_value_ret_val_holder;
@@ -1964,27 +2050,33 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_rust::RustReprEnum>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_uvariant_unumber(
     ::enums::repr_rust::RustReprEnum const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t RustReprEnum::get_variant_number() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvariant_unumber(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool __crubit_thunk_is_utuple_upayload_uvariant(
     ::enums::repr_rust::RustReprEnum const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool RustReprEnum::is_tuple_payload_variant() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_utuple_upayload_uvariant(self);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_ufirst_uitem_ufrom_utuple_upayload(
     ::enums::repr_rust::RustReprEnum const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t RustReprEnum::get_first_item_from_tuple_payload() const {
   auto&& self = *this;
   return __crubit_internal::
@@ -2008,10 +2100,12 @@ static_assert(
     ::std::is_trivially_move_assignable_v<
         ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_MakeNoPayloadVariant(
     ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
 RustReprWithNamingConflictBetweenCtorsAndMethods::MakeNoPayloadVariant() {
   crubit::Slot<
@@ -2024,11 +2118,13 @@ RustReprWithNamingConflictBetweenCtorsAndMethods::MakeNoPayloadVariant() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_MakeTuplePayloadVariant(
     ::std::int32_t,
     ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
 RustReprWithNamingConflictBetweenCtorsAndMethods::MakeTuplePayloadVariant(
     ::std::int32_t i) {
@@ -2042,11 +2138,13 @@ RustReprWithNamingConflictBetweenCtorsAndMethods::MakeTuplePayloadVariant(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_MakeStructPayloadVariant(
     ::std::int32_t,
     ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods*
         __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods
 RustReprWithNamingConflictBetweenCtorsAndMethods::MakeStructPayloadVariant(
     ::std::int32_t x) {
@@ -2060,10 +2158,12 @@ RustReprWithNamingConflictBetweenCtorsAndMethods::MakeStructPayloadVariant(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_uvariant_unumber(
     ::enums::repr_rust::
         RustReprWithNamingConflictBetweenCtorsAndMethods const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t
 RustReprWithNamingConflictBetweenCtorsAndMethods::get_variant_number() const {
   auto&& self = *this;
@@ -2071,10 +2171,12 @@ RustReprWithNamingConflictBetweenCtorsAndMethods::get_variant_number() const {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_get_uvalue(
     ::enums::repr_rust::
         RustReprWithNamingConflictBetweenCtorsAndMethods const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t
 RustReprWithNamingConflictBetweenCtorsAndMethods::get_value() const {
   auto&& self = *this;
@@ -2093,10 +2195,12 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_SingleVariant(
     ::std::int32_t,
     ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant
 RustReprWithSingleTuplePayloadVariant::MakeSingleVariant(
     ::std::int32_t __param_0) {
@@ -2114,10 +2218,12 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t
 __crubit_thunk_get_usingle_uitem_ufrom_utuple_upayload(
     ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t
 RustReprWithSingleTuplePayloadVariant::get_single_item_from_tuple_payload()
     const {

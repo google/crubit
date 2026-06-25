@@ -188,9 +188,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(
     ::std::is_trivially_move_assignable_v<::partial_eq::basic_test::MyStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::basic_test::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::partial_eq::basic_test::MyStruct MyStruct::new_(::std::uintptr_t val) {
   crubit::Slot<::partial_eq::basic_test::MyStruct>
       __return_value_ret_val_holder;
@@ -200,11 +202,13 @@ inline ::partial_eq::basic_test::MyStruct MyStruct::new_(::std::uintptr_t val) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abasic_utest_x0000003a_x0000003aMyStruct_upartial_ueq_ugolden_x0000003a_x0000003abasic_utest_x0000003a_x0000003aMyStruct(
     ::partial_eq::basic_test::MyStruct const&,
     ::partial_eq::basic_test::MyStruct const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool MyStruct::operator==(
     ::partial_eq::basic_test::MyStruct const& other) const {
   auto&& self = *this;
@@ -231,9 +235,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::partial_eq::tuple_collision::MyStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::tuple_collision::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::partial_eq::tuple_collision::MyStruct MyStruct::new_(
     ::std::uintptr_t val) {
   crubit::Slot<::partial_eq::tuple_collision::MyStruct>
@@ -244,11 +250,13 @@ inline ::partial_eq::tuple_collision::MyStruct MyStruct::new_(
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
     ::partial_eq::tuple_collision::MyStruct const&,
     rs_std::Tuple<::std::uintptr_t, bool> const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool MyStruct::operator==(
     rs_std::Tuple<::std::uintptr_t, bool> const& _other) const {
   auto&& self = *this;
@@ -275,9 +283,11 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(
     ::std::is_trivially_move_assignable_v<::partial_eq::usize_rhs::MyStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::usize_rhs::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::partial_eq::usize_rhs::MyStruct MyStruct::new_(::std::uintptr_t val) {
   crubit::Slot<::partial_eq::usize_rhs::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -286,10 +296,12 @@ inline ::partial_eq::usize_rhs::MyStruct MyStruct::new_(::std::uintptr_t val) {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003ausize_urhs_x0000003a_x0000003aMyStruct_uusize(
     ::partial_eq::usize_rhs::MyStruct const&, ::std::uintptr_t const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline bool MyStruct::operator==(::std::uintptr_t const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -304,9 +316,11 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uintptr_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     rs_std::Tuple<::std::uintptr_t, bool>* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::rs_std::Tuple<::std::uintptr_t, bool>::Tuple() {
   __crubit_internal::__crubit_thunk_default(this);
 }
