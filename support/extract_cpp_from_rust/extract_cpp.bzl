@@ -9,6 +9,7 @@ def _extract_cpp_impl(ctx):
 
     args = ctx.actions.args()
     args.add("--out", out_file.path)
+    args.add("--target", ctx.attr.target)
     args.add_all("--srcs", ctx.files.srcs)
 
     ctx.actions.run(
@@ -28,6 +29,10 @@ extract_cpp = rule(
         "srcs": attr.label_list(
             allow_files = [".rs"],
             doc = "Rust source files to extract C++ payloads from",
+        ),
+        "target": attr.string(
+            doc = "The label of the parent target",
+            mandatory = True,
         ),
         "out": attr.output(doc = "The output C++ header file"),
         "_extractor": attr.label(

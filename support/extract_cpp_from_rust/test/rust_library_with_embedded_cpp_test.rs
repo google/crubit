@@ -46,3 +46,10 @@ fn test_string_with_brace() {
         "String with { and } in it!"
     );
 }
+
+#[gtest]
+fn test_inline_thunk_sync() {
+    assert_eq!(library_with_embedded_cpp::call_get_test_global_val(), 0);
+    library_with_embedded_cpp::set_global_val_to_99();
+    assert_eq!(library_with_embedded_cpp::call_get_test_global_val(), 99);
+}

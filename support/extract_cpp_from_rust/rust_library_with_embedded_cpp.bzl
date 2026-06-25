@@ -9,21 +9,24 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//support/extract_cpp_from_rust:extract_cpp.bzl", "extract_cpp")
 
-def rust_library_with_embedded_cpp(name, srcs, deps = [], cc_deps = [], **kwargs):
-    """Compiles a Rust library containing `global_cpp!` blocks."""
+def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [], **kwargs):
+    """Compiles a Rust library containing `global_cpp!` or 'inline_cpp!' blocks."""
     cc_lib_name = name + "_extracted_cc"
     extracted_header = cc_lib_name + ".h"
+
+    target = "//{}:{}".format(native.package_name(), name)
 
     extract_cpp(
         name = cc_lib_name + "_extract_cpp",
         srcs = srcs,
         out = extracted_header,
+        target = target,
     )
 
     cc_library(
         name = cc_lib_name,
         hdrs = [extracted_header],
-        deps = cc_deps,
+        deps = deps_of_cc_library,
         aspect_hints = ["//features:supported"],
     )
 
@@ -37,5 +40,9 @@ def rust_library_with_embedded_cpp(name, srcs, deps = [], cc_deps = [], **kwargs
         name = name,
         srcs = srcs,
         deps = deps + [":" + rust_bindings_name],
+        proc_macro_deps = kwargs.pop("proc_macro_deps", []) + [
+            "//support/extract_cpp_from_rust:inline_cpp_macro",
+        ],
+        rustc_env = dict(kwargs.pop("rustc_env", {}), CRUBIT_TARGET = target),
         **kwargs
     )

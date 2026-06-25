@@ -6,8 +6,15 @@ macro_rules! global_cpp {
     ($($t:tt)*) => {};
 }
 
+use inline_cpp_macro::inline_cpp;
+
 global_cpp! {
     #include "third_party/absl/strings/string_view.h"
+
+    int test_global_val = 0;
+    int get_test_global_val() {
+        return test_global_val;
+    }
 
     int add_two_ints(int a, int b) {
         return a + b;
@@ -98,4 +105,14 @@ pub fn call_get_string_with_brace() -> String {
 pub fn call_get_char_with_brace() -> u8 {
     let c = library_with_embedded_cpp_extracted_cc::my_test_namespace::GetCharWithBrace();
     u8::from(c)
+}
+
+pub fn call_get_test_global_val() -> i32 {
+    library_with_embedded_cpp_extracted_cc::get_test_global_val()
+}
+
+pub fn set_global_val_to_99() {
+    inline_cpp! {
+        test_global_val = 99;
+    }
 }

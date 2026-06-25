@@ -8,7 +8,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library_with_embedded_cpp(
     name = "library_with_embedded_cpp",
     srcs = ["library_with_embedded_cpp.rs"],
-    cc_deps = [
+    deps_of_cc_library = [
         "@abseil-cpp//absl/strings:string_view",
     ],
 )
