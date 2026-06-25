@@ -884,7 +884,6 @@ struct Record {
   // Set if this is [[deprecated]]. If no message was given, will be "".
   std::optional<std::string> deprecated;
 
-  // TODO(b/523265360): Remove child_item_ids.
   std::vector<std::shared_ptr<Item>> children;
 };
 
@@ -1079,7 +1078,6 @@ struct Namespace {
   std::optional<std::string> deprecated;
   std::optional<std::string> doc_comment;
 
-  // TODO(b/523265360): Remove child_item_ids.
   std::vector<std::shared_ptr<Item>> children;
 };
 
@@ -1151,9 +1149,6 @@ struct IR {
   llvm::json::Value ToJson() const;
   void ToFlatProto(rs_bindings_from_cc::ir_proto::flat::IRProto* proto) const;
 
-  // TODO(b/523265360): Remove this once use_nested_ir flag is retired.
-  bool UseNestedIr() const;
-
   template <typename T>
   std::vector<const T*> get_items_if() const {
     std::vector<const T*> filtered_items;
@@ -1187,6 +1182,10 @@ struct IR {
 
   using Item = ::crubit::Item;
   std::vector<Item> items;
+  // TODO(b/523265360): This field is no longer serialized or passed Rust, and
+  // serves only as a transient map used by BuildTree() to construct the
+  // top_level_items tree. It should be removed once the importer is refactored
+  // to populate top_level_items directly during AST import.
   absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids;
   absl::flat_hash_map<BazelLabel, std::vector<std::shared_ptr<Item>>>
       top_level_items;

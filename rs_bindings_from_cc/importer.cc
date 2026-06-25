@@ -777,6 +777,10 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   for (auto& ordered_item : ordered_items) {
     invocation_.ir_.items.push_back(ordered_item.second);
   }
+  // TODO(b/523265360): This field is no longer serialized or passed to Rust,
+  // and serves only as a transient map used by IR::BuildTree() to construct the
+  // top_level_items tree. It should be removed once the importer is refactored
+  // to populate top_level_items directly during AST import.
   invocation_.ir_.top_level_item_ids =
       GetTopLevelItemIdsInSourceOrder(translation_unit_decl);
 
@@ -1214,7 +1218,6 @@ IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
   return ImportUnsupportedItem(decl, std::nullopt, {error},
                                /*is_hard_error=*/true);
 }
-
 
 IR::Item Importer::ImportUnsupportedItem(
     const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,
