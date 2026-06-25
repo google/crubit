@@ -877,6 +877,7 @@ struct Record {
   bool overloads_operator_delete = false;
   bool has_private_or_deleted_operator_delete = false;
   bool detected_formatter = false;
+  bool impl_debug = false;
 
   // Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
   // Thread-safe types implement Send+Sync and wrap their internals in
@@ -1130,6 +1131,7 @@ struct ExistingRustType {
   bool is_same_abi;
   ItemId id;
   bool must_bind = false;
+  bool impl_debug = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o,
