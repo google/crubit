@@ -73,8 +73,7 @@ std::pair<std::optional<int>, std::optional<std::pair<float, Vec3<float>>>>
 MakeStuff();
 
 // Not a bridge type!
-struct [[clang::annotate("crubit_internal_trait_derive", "Debug", "PartialEq")]]
-Stuff {
+struct [[clang::annotate("crubit_internal_trait_derive", "PartialEq")]] Stuff {
   int i;
   float f;
 };

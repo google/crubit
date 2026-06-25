@@ -27,6 +27,11 @@ unsafe impl ::cxx::ExternType for Nonmovable {
     type Id = ::cxx::type_id!(":: Nonmovable");
     type Kind = ::cxx::kind::Opaque;
 }
+impl ::core::fmt::Debug for Nonmovable {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("Nonmovable").finish()
+    }
+}
 forward_declare::unsafe_define!(forward_declare::symbol!(":: Nonmovable"), crate::Nonmovable);
 
 impl ::ctor::CtorNew<()> for Nonmovable {
@@ -57,6 +62,11 @@ impl !Sync for Base {}
 unsafe impl ::cxx::ExternType for Base {
     type Id = ::cxx::type_id!(":: Base");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for Base {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("Base").finish()
+    }
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: Base"), crate::Base);
 impl Base {
@@ -119,6 +129,11 @@ impl !Sync for Derived {}
 unsafe impl ::cxx::ExternType for Derived {
     type Id = ::cxx::type_id!(":: Derived");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for Derived {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("Derived").finish_non_exhaustive()
+    }
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: Derived"), crate::Derived);
 impl Derived {

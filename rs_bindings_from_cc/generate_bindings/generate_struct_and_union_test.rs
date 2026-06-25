@@ -10,6 +10,7 @@ use googletest::{expect_that, gtest, matchers::contains_substring};
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_record, with_lifetime_macros};
 use multiplatform_ir_testing::{
     ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency,
+    ir_proto_from_record_impl_debug_cc,
 };
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -2134,5 +2135,35 @@ fn test_non_thread_safe_struct_has_negative_send_sync() -> Result<()> {
     assert_rs_matches!(rs_api, quote! { pub field: ::ffi_11::c_int });
     assert_rs_not_matches!(rs_api, quote! { __opaque });
 
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_debug() -> Result<()> {
+    let proto = ir_proto_from_record_impl_debug_cc("struct S { int x; };")?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for S { ... }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_crubit_override_debug_false() -> Result<()> {
+    let proto = ir_proto_from_record_impl_debug_cc(
+        r#"struct [[clang::annotate("crubit_override_debug", false)]] S { int x; };"#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for S { ... }
+        }
+    );
     Ok(())
 }

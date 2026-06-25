@@ -40,6 +40,11 @@ unsafe impl ::cxx::ExternType for DeprecatedStruct {
     type Id = ::cxx::type_id!(":: DeprecatedStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for DeprecatedStruct {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("DeprecatedStruct").finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: DeprecatedStruct"),
     crate::DeprecatedStruct
@@ -69,6 +74,11 @@ impl !Sync for DeprecatedStructWithMessage {}
 unsafe impl ::cxx::ExternType for DeprecatedStructWithMessage {
     type Id = ::cxx::type_id!(":: DeprecatedStructWithMessage");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for DeprecatedStructWithMessage {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("DeprecatedStructWithMessage").finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: DeprecatedStructWithMessage"),
@@ -137,6 +147,11 @@ unsafe impl ::cxx::ExternType for StructWithDeprecatedCtor {
     type Id = ::cxx::type_id!(":: StructWithDeprecatedCtor");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for StructWithDeprecatedCtor {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("StructWithDeprecatedCtor").finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithDeprecatedCtor"),
     crate::StructWithDeprecatedCtor
@@ -165,6 +180,11 @@ impl !Sync for StructWithDeprecatedCtorWithMessage {}
 unsafe impl ::cxx::ExternType for StructWithDeprecatedCtorWithMessage {
     type Id = ::cxx::type_id!(":: StructWithDeprecatedCtorWithMessage");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for StructWithDeprecatedCtorWithMessage {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("StructWithDeprecatedCtorWithMessage").finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithDeprecatedCtorWithMessage"),
@@ -284,6 +304,15 @@ impl !Sync for DeprecatedFields {}
 unsafe impl ::cxx::ExternType for DeprecatedFields {
     type Id = ::cxx::type_id!(":: DeprecatedFields");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for DeprecatedFields {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("DeprecatedFields")
+            .field("no_message", &self.no_message)
+            .field("message", &self.message)
+            .finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: DeprecatedFields"),

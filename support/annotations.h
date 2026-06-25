@@ -141,6 +141,21 @@
 // inference.
 #define CRUBIT_UNSAFE_MARK_SAFE CRUBIT_OVERRIDE_UNSAFE(false)
 
+// Overrides the `Debug` binding generation for a struct, class, or union.
+//
+// By default, Crubit generates a custom `Debug` implementation for all concrete
+// structs/classes and all unions, but not abstract structs/classes. Use
+// `CRUBIT_OVERRIDE_DEBUG` to opt-out (or opt-in for abstract types).
+//
+// Unlike Rust's `derive(Debug)`, does not require all fields to `impl Debug`.
+// However, only guaranteed to be exhaustive if all the following hold:
+// * The type is a struct or class, not a union.
+// * Every field is supported, named, and implements `Debug`, including
+//   non-generic Rust types that implement `Debug`.
+// * The type has no bases.
+#define CRUBIT_OVERRIDE_DEBUG(should_bind) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_override_debug", should_bind)
+
 // Marks a type as deriving a trait.
 //
 // This can be applied to a struct, class, or enum.
@@ -148,7 +163,7 @@
 // For example, this C++ header:
 //
 // ```c++
-// struct CRUBIT_TRAIT_DERIVE("Debug") MyStruct {
+// struct CRUBIT_TRAIT_DERIVE("Clone") MyStruct {
 //     bool enable_foo;
 // };
 // ```
@@ -156,11 +171,15 @@
 // Becomes this Rust interface:
 //
 // ```rust
-// #[derive(..., Debug)]
+// #[derive(..., Clone)]
 // pub struct MyStruct {
 //   enable_foo: bool,
 // }
 // ```
+//
+// Deriving `Debug` is deprecated in favor of the default behavior.
+// To opt out of the default `Debug` implementation, use
+// `CRUBIT_OVERRIDE_DEBUG(false)`.
 #define CRUBIT_TRAIT_DERIVE(...)                                         \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
                                __VA_ARGS__)

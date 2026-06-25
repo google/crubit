@@ -28,6 +28,11 @@ unsafe impl ::cxx::ExternType for NoDiscard {
     type Id = ::cxx::type_id!(":: NoDiscard");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for NoDiscard {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("NoDiscard").finish()
+    }
+}
 forward_declare::unsafe_define!(forward_declare::symbol!(":: NoDiscard"), crate::NoDiscard);
 
 impl Default for NoDiscard {
@@ -54,6 +59,11 @@ impl !Sync for NoDiscardWithMessage {}
 unsafe impl ::cxx::ExternType for NoDiscardWithMessage {
     type Id = ::cxx::type_id!(":: NoDiscardWithMessage");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for NoDiscardWithMessage {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("NoDiscardWithMessage").finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: NoDiscardWithMessage"),
@@ -137,6 +147,11 @@ unsafe impl ::cxx::ExternType for NodiscardCtor {
     type Id = ::cxx::type_id!(":: NodiscardCtor");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for NodiscardCtor {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("NodiscardCtor").finish()
+    }
+}
 forward_declare::unsafe_define!(forward_declare::symbol!(":: NodiscardCtor"), crate::NodiscardCtor);
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
@@ -171,6 +186,11 @@ impl !Sync for NodiscardCtorWithMessage {}
 unsafe impl ::cxx::ExternType for NodiscardCtorWithMessage {
     type Id = ::cxx::type_id!(":: NodiscardCtorWithMessage");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for NodiscardCtorWithMessage {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("NodiscardCtorWithMessage").finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: NodiscardCtorWithMessage"),
