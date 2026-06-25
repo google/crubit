@@ -1737,7 +1737,8 @@ pub fn generate_function(
             if enclosing_id == derived.id {
                 return false;
             };
-            let Some(base_item) = db.ir().get_decl(enclosing_id) else { return false };
+            let Some(&idx) = db.ir().item_id_to_item_idx().get(&enclosing_id) else { return false };
+            let base_item = &db.ir().flat_ir().items[idx];
             let Item::Record(_) = base_item else { return false };
             let Ok(bindings_info) = db.has_bindings(base_item.clone()) else { return false };
             bindings_info.visibility == Visibility::Public
@@ -3016,12 +3017,9 @@ fn has_copy_assignment_operator_from_const_reference(
         return false;
     };
     record
-        .children
+        .child_item_ids
         .iter()
-        .filter_map(|item| match item {
-            Item::Func(func) => Some(func.clone()),
-            _ => None,
-        })
+        .filter_map(|&child_item_id| db.find_decl::<Rc<Func>>(child_item_id).ok())
         .any(|func| {
             let operator_equals = matches!(&func.cc_name,
                     UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "=");

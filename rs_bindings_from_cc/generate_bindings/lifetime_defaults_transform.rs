@@ -8,12 +8,11 @@ use arc_anyhow::Result;
 use database::BindingsGenerator;
 use error_report::bail;
 use ir::{
-    make_ir, BazelLabel, CcType, CcTypeVariant, Func, Item, ItemId, PointerType, PointerTypeKind,
-    Record, TreeIR, TypeAlias, IR,
+    make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, ItemId, PointerType, PointerTypeKind,
+    Record, TypeAlias, IR,
 };
-use itertools::Itertools;
 use memoized::memoized;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 /// A binding for one (possibly renamed) variable.
@@ -66,7 +65,8 @@ pub fn record_lifetime_arity(
     }
 
     // Otherwise, we need to handle the various ways that a lifetime parameter may be implied.
-    for child in &rc.children {
+    for cid in &rc.child_item_ids {
+        let child = db.find_untyped_decl(*cid);
         if let Item::Func(f) = child {
             // There are three cases for [[lifetimebound]] on a member function f. (We're loose
             // here in that "the arity of X" means "the lifetime arity of the type of X".)
@@ -287,6 +287,11 @@ struct LifetimeResult {
 impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     fn new(db: &'a BindingsGenerator<'db>) -> Self {
         LifetimeDefaults { db, bindings: BindingContext::new() }
+    }
+
+    fn find_untyped_decl(&self, decl_id: ItemId) -> &'db Item {
+        let idx = self.db.ir().item_id_to_item_idx().get(&decl_id).unwrap();
+        &self.db.ir().flat_ir().items[*idx]
     }
 
     /// Returns a state representing the given `lifetime`.
@@ -620,7 +625,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     fn bind_lifetime_inputs(&mut self, id: Option<ItemId>) -> Result<Vec<Rc<str>>> {
         let mut this_lifetimebound_names = vec![];
         let item = if let Some(id) = id {
-            self.db.find_untyped_decl(id)
+            self.find_untyped_decl(id)
         } else {
             return Ok(this_lifetimebound_names);
         };
@@ -794,71 +799,24 @@ pub fn lifetime_defaults_transform_item(db: &BindingsGenerator, item: &Item) -> 
     LifetimeDefaults::new(db).add_lifetime_to_item(item)
 }
 
-/// Helper to transform a slice of nested items.
-fn transform_children(db: &BindingsGenerator, children: &[Item]) -> Result<Vec<Item>> {
-    let mut transformed_children = Vec::with_capacity(children.len());
-    for c in children {
-        transformed_children.push(transform_item(db, c)?);
-    }
-    Ok(transformed_children)
-}
-
-/// Recursively traverses and transforms an Item and its nested children.
-fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
-    let mut transformed = LifetimeDefaults::new(db).add_lifetime_to_item(item)?;
-
-    match &mut transformed {
-        Item::Record(record) => {
-            let mut record = Rc::as_ref(record).clone();
-            record.children = transform_children(db, &record.children)?;
-            transformed = Item::Record(Rc::new(record));
-        }
-        Item::Namespace(ns) => {
-            let mut ns = Rc::as_ref(ns).clone();
-            ns.children = transform_children(db, &ns.children)?;
-            transformed = Item::Namespace(Rc::new(ns));
-        }
-        _ => {}
-    }
-    Ok(transformed)
-}
-
-/// Helper to flatten a reconstructed tree back into a flat vector.
-fn flatten_tree(items: &[Item], output: &mut Vec<Item>) {
-    for item in items {
-        output.push(item.clone());
-        match item {
-            Item::Record(r) => flatten_tree(&r.children, output),
-            Item::Namespace(ns) => flatten_tree(&ns.children, output),
-            _ => {}
-        }
-    }
-}
-
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
 pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
     let ir = db.ir();
-
-    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item>> = BTreeMap::new();
-    for (target, items) in &ir.tree_ir().top_level_items {
-        let transformed_roots = items.iter().map(|item| transform_item(db, item)).try_collect()?;
-        top_level_items.insert(target.clone(), transformed_roots);
+    let mut new_items = vec![];
+    for item in ir.items() {
+        let new_item = LifetimeDefaults::new(db).add_lifetime_to_item(item)?;
+        new_items.push(new_item);
     }
-
-    let mut items = vec![];
-    for ts in top_level_items.values() {
-        flatten_tree(ts, &mut items);
-    }
-
-    Ok(make_ir(TreeIR {
-        public_headers: ir.tree_ir().public_headers.clone(),
-        current_target: ir.tree_ir().current_target.clone(),
-        items,
-        crate_root_path: ir.tree_ir().crate_root_path.clone(),
-        crubit_features: ir.tree_ir().crubit_features.clone(),
-        reexported_namespaces: ir.tree_ir().reexported_namespaces.clone(),
-        unstable_rust_features: ir.tree_ir().unstable_rust_features.clone(),
-        top_level_items,
+    Ok(make_ir(FlatIR {
+        public_headers: ir.flat_ir().public_headers.clone(),
+        current_target: ir.flat_ir().current_target.clone(),
+        items: new_items,
+        top_level_item_ids: ir.flat_ir().top_level_item_ids.clone(),
+        crate_root_path: ir.flat_ir().crate_root_path.clone(),
+        crubit_features: ir.flat_ir().crubit_features.clone(),
+        reexported_namespaces: ir.flat_ir().reexported_namespaces.clone(),
+        unstable_rust_features: ir.flat_ir().unstable_rust_features.clone(),
+        top_level_items: ir.flat_ir().top_level_items.clone(),
     }))
 }

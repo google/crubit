@@ -194,16 +194,20 @@ pub fn collect_unqualified_member_functions(
     record: Rc<Record>,
 ) -> Rc<[Rc<Func>]> {
     record
-        .children
+        .child_item_ids
         .iter()
-        .filter_map(|child_item| {
+        .filter_map(|id| {
+            let Ok(child_item) = db.find_decl::<Item>(*id) else {
+                return None;
+            };
+
             if let Item::Func(member_function) = child_item
                 && let UnqualifiedIdentifier::Identifier(_) = &member_function.rs_name
             {
-                Some(member_function.clone())
-            } else {
-                None
+                return Some(member_function.clone());
             }
+
+            None
         })
         .collect()
 }
@@ -577,12 +581,11 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     let mut items = vec![];
     let mut nested_items = vec![];
     for child_item in child_items(&record, db) {
-        let id = child_item.item.id();
-        api_snippets.append(db.generate_item(child_item.item)?);
+        api_snippets.append(db.generate_item(child_item.item.clone())?);
         if child_item.is_nested {
-            nested_items.push(id);
+            nested_items.push(child_item.item.id());
         } else {
-            items.push(id);
+            items.push(child_item.item.id());
         }
     }
 
@@ -818,23 +821,24 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
 
 /// Returns an iterator over the child items of this record, including
 /// whether each child item should be nested in a module.
-pub fn child_items<'a>(
+pub fn child_items<'a, 'db>(
     record: &'a Record,
-    db: &'a BindingsGenerator,
-) -> impl Iterator<Item = ChildItem> + 'a {
-    record.children.iter().map(move |item| {
+    db: &'a BindingsGenerator<'db>,
+) -> impl Iterator<Item = ChildItem<'db>> + use<'a, 'db> {
+    record.child_item_ids.iter().map(move |&child_item_id| {
+        let item = db.find_untyped_decl(child_item_id);
         let is_nested = item.place_in_nested_module_if_nested_in_record()
             && db.has_bindings(item.clone()).is_ok();
-        ChildItem { is_nested, item: item.clone() }
+        ChildItem { is_nested, item }
     })
 }
 
 /// A child item of a record.
-pub struct ChildItem {
+pub struct ChildItem<'a> {
     /// Whether the child item should be nested in a module.
     pub is_nested: bool,
     /// The child item.
-    pub item: Item,
+    pub item: &'a Item,
 }
 
 pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> Assertion {

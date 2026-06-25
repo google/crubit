@@ -425,12 +425,13 @@ pub fn resolve_names(
     db: &BindingsGenerator,
     parent: Rc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
-    let child_items = match parent.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
-        Some(Item::Namespace(ns)) => ns.children.iter(),
-        Some(Item::Record(record)) => record.children.iter(),
-        None => db.ir().top_level_items_in_target(&parent.owning_target).iter(),
-        _ => bail!("not a parent namespace or record"),
-    };
+    let child_item_ids: &[ItemId] =
+        match parent.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
+            Some(Item::Namespace(ns)) => &ns.child_item_ids,
+            Some(Item::Record(record)) => &record.child_item_ids,
+            None => db.ir().top_level_item_ids_in_target(&parent.owning_target),
+            _ => bail!("not a parent namespace or record"),
+        };
 
     let mut names: HashMap<Rc<str>, ResolvedName> = HashMap::new();
     {
@@ -462,9 +463,8 @@ pub fn resolve_names(
             }
         };
 
-        for item in child_items.clone() {
-            let id = item.id();
-            match item {
+        for &id in child_item_ids {
+            match db.find_untyped_decl(id) {
                 Item::IncompleteRecord(incomplete_record) => {
                     insert(
                         incomplete_record.rs_name.identifier.clone(),
@@ -511,13 +511,12 @@ pub fn resolve_names(
     }
 
     // Pass 2: Insert module names for records, checking for conflicts.
-    for item in child_items {
-        if let Item::Record(record) = item {
-            let id = record.id;
+    for &id in child_item_ids {
+        if let Item::Record(record) = db.find_untyped_decl(id) {
             let make_module_for_nested_items = record
-                .children
+                .child_item_ids
                 .iter()
-                .any(|child| child.place_in_nested_module_if_nested_in_record());
+                .any(|id| db.find_untyped_decl(*id).place_in_nested_module_if_nested_in_record());
             if make_module_for_nested_items {
                 let mut name = record.rs_name.identifier.as_ref().to_snake_case();
 

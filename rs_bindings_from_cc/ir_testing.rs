@@ -89,6 +89,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
         /* current_target= */ TESTING_TARGET.into(),
+        /* top_level_item_ids= */ BTreeMap::new(),
         /* crate_root_path= */ None,
         /* crubit_features= */
         <BTreeMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
@@ -107,6 +108,8 @@ pub const DEPENDENCY_TARGET: &str = "//test:dependency";
 /// `header_source` of the header will be updated to contain the `#include` line
 /// for the header with `dependency_header_source`. The name of the dependency
 /// target is exposed as `DEPENDENCY_TARGET`.
+///
+/// This will eventually be replaced by `ir_proto_from_cc_dependency`.
 pub fn ir_from_cc_dependency(
     platform: multiplatform_testing::Platform,
     header_source: &str,

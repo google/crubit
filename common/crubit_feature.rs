@@ -58,6 +58,8 @@ flagset::flags! {
         /// when possible.
         AlwaysSpecializeGenericsInCppApiFromRust,
 
+        /// Generate bindings using the nested IR.
+        UseNestedIr,
     }
 }
 
@@ -85,6 +87,7 @@ impl CrubitFeature {
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "always_specialize_generics_in_cpp_api_from_rust"
             }
+            Self::UseNestedIr => "use_nested_ir",
         }
     }
 
@@ -113,6 +116,7 @@ impl CrubitFeature {
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "//features:always_specialize_generics_in_cpp_api_from_rust"
             }
+            Self::UseNestedIr => "//features:use_nested_ir",
         }
     }
 }
@@ -144,6 +148,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"always_specialize_generics_in_cpp_api_from_rust" => {
             CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust.into()
         }
+        b"use_nested_ir" => CrubitFeature::UseNestedIr.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -267,6 +272,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::UseNestedIr
         );
     }
 
@@ -302,6 +308,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::UseNestedIr
         );
     }
 
@@ -322,6 +329,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::UseNestedIr
         );
     }
 
@@ -343,6 +351,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::UseNestedIr
         );
     }
 }
