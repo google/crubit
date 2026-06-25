@@ -46,6 +46,12 @@ fn is_rvalue_reference(db: &BindingsGenerator<'_>, did: DefId) -> bool {
         || matches_qualified_name(db, did, &["rust_out", "ctor", "RvalueReference"])
 }
 
+/// Returns true if `did` is the struct `::ctor::ByValue`.
+fn is_ctor_by_value(db: &BindingsGenerator<'_>, did: DefId) -> bool {
+    matches_qualified_name(db, did, &["ctor", "ByValue"])
+        || matches_qualified_name(db, did, &["rust_out", "ctor", "ByValue"])
+}
+
 fn format_non_owning_pointer_prefix<'tcx>(
     db: &BindingsGenerator<'tcx>,
     region: ty::Region<'tcx>,
@@ -404,7 +410,9 @@ pub fn format_ty_for_cc<'tcx>(
             bail!("C++ doesn't have a standard equivalent of `{ty}` (b/254094650)");
         }
 
-        ty::TyKind::Adt(adt, substs) if is_rvalue_reference(db, adt.did()) => {
+        ty::TyKind::Adt(adt, substs)
+            if is_rvalue_reference(db, adt.did()) || is_ctor_by_value(db, adt.did()) =>
+        {
             // TODO(jeanpierreda): We need to support const rvalue references and CRef/CMut.
             // (Likely this should be merged with the handling for actual Rust references.)
             let referent = substs[1].expect_ty();
@@ -416,7 +424,7 @@ pub fn format_ty_for_cc<'tcx>(
                 } else {
                     let region = substs[0]
                         .as_region()
-                        .expect("RvalueReference's first parameter should be a lifetime");
+                        .expect("RvalueReference/ByValue's first parameter should be a lifetime");
                     format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
                 };
 
@@ -681,9 +689,10 @@ pub fn format_ty_for_cc<'tcx>(
             prereqs.includes.insert(db.support_header("internal/cxx20_backports.h"));
 
             let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
-            let param_types = format_param_types_for_cc(db, &sig, /*has_self_param=*/ false)?
-                .into_iter()
-                .map(|cc_param| cc_param.snippet.into_tokens(&mut prereqs));
+            let param_types =
+                format_param_types_for_cc_api(db, &sig, /*has_self_param=*/ false)?
+                    .into_iter()
+                    .map(|cc_param| cc_param.snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
                 crubit::type_identity_t<
                     #ret_type( #( #param_types ),* )
@@ -796,18 +805,32 @@ pub struct CcParamTy<'tcx> {
     pub is_lifetime_bound: bool,
 }
 
-/// Returns the C++ parameter types.
-pub fn format_param_types_for_cc<'tcx>(
+/// Returns the C++ parameter types, both for thunks and non-thunks
+fn format_param_types_for_cc_impl<'tcx>(
     db: &BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
+    is_thunk: bool,
 ) -> Result<Vec<CcParamTy<'tcx>>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
     let param_types = sig_mid.inputs();
     let mut snippets = Vec::with_capacity(param_types.len());
-    for (i, param_type) in param_types.iter().copied().enumerate() {
+    let ctor_plain_values = db
+        .crate_features(db.source_crate_num())
+        .contains(crubit_feature::CrubitFeature::CtorPlainValues);
+
+    for (i, mut param_type) in param_types.iter().copied().enumerate() {
         let is_self_param = i == 0 && has_self_param;
         let location = TypeLocation::FnParam { elided_is_output, is_self_param };
+
+        if !is_thunk
+            && ctor_plain_values
+            && let ty::TyKind::Adt(adt, substs) = param_type.kind()
+            && is_ctor_by_value(db, adt.did())
+        {
+            param_type = substs[1].expect_ty();
+        }
+
         let cc_type = db
             .format_ty_for_cc(param_type, location)
             .with_context(|| format!("Error handling parameter #{i} of type `{param_type}`"))?;
@@ -820,6 +843,24 @@ pub fn format_param_types_for_cc<'tcx>(
         });
     }
     Ok(snippets)
+}
+
+/// Returns the C++ parameter types for the C++ API.
+pub fn format_param_types_for_cc_api<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    sig_mid: &ty::FnSig<'tcx>,
+    has_self_param: bool,
+) -> Result<Vec<CcParamTy<'tcx>>> {
+    format_param_types_for_cc_impl(db, sig_mid, has_self_param, /*is_thunk=*/ false)
+}
+
+/// Returns the C++ parameter types for the thunks.
+pub fn format_param_types_for_cc_thunk<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    sig_mid: &ty::FnSig<'tcx>,
+    has_self_param: bool,
+) -> Result<Vec<CcParamTy<'tcx>>> {
+    format_param_types_for_cc_impl(db, sig_mid, has_self_param, /*is_thunk=*/ true)
 }
 
 fn try_ty_as_maybe_uninit<'tcx>(
@@ -956,7 +997,8 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             // We support generics if they're for `std::option::Option` or `std::result::Result`.
             let is_supported_generic_type = BridgedBuiltin::new(db, adt).is_some()
                 || !has_non_lifetime_substs(substs)
-                || is_rvalue_reference(db, adt.did());
+                || is_rvalue_reference(db, adt.did())
+                || is_ctor_by_value(db, adt.did());
             ensure!(
                 has_cpp_type || is_supported_generic_type || has_composable_bridging,
                 "Generic types without composable bridging are not supported yet (b/259749095)"

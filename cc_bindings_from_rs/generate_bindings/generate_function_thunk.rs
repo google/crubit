@@ -4,7 +4,7 @@
 
 use crate::generate_function::{fn_arg_idents, get_async_future_output_ty};
 use crate::{
-    does_type_implement_trait, format_cc_ident, format_param_types_for_cc, is_bridged_type,
+    does_type_implement_trait, format_cc_ident, format_param_types_for_cc_thunk, is_bridged_type,
     is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedBuiltin,
     BridgedType, BridgedTypeConversionInfo, RsSnippet, TypeLocation,
 };
@@ -138,7 +138,7 @@ pub fn generate_thunk_decl<'tcx>(
     };
 
     let mut thunk_params = {
-        let cpp_types = format_param_types_for_cc(db, sig_mid, has_self_param)?;
+        let cpp_types = format_param_types_for_cc_thunk(db, sig_mid, has_self_param)?;
         sig_mid
             .inputs()
             .iter()

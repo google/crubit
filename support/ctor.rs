@@ -879,8 +879,69 @@ where
     }
 }
 
-/// !Unpin to override the blanket `Ctor` impl.
+/// !SelfCtor to override the blanket `Ctor` impl.
 impl<'a, T: ?Sized> !SelfCtor for RvalueReference<'a, T> {}
+
+/// Represents the type `T` by value, but is passed by rvalue reference.
+///
+/// This is currently an implementation detail of the `impl Ctor` bindings, but
+/// it can also be used in trait implementations if `impl Ctor` is not available,
+/// due to "overlapping" impls that Rust doesn't recognize as disjoint due to different
+/// associated types. (Rust does not recognize `Ctor![i32]` and `Ctor![i64]` as disjoint,
+/// even though no type can implement both.)
+#[repr(transparent)]
+pub struct ByValue<'a, T: ?Sized>(pub RvalueReference<'a, T>);
+
+impl<T: ?Sized> Deref for ByValue<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+// SAFETY: forwards to `RvalueReference`'s `Ctor` impl, meets all requirements.
+unsafe impl<'a, T: ?Sized> Ctor for ByValue<'a, T>
+where
+    T: CtorNew<Self>,
+{
+    type Output = T;
+    type Error = <T as CtorNew<Self>>::Error;
+
+    unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
+        // SAFETY: forwards to `RvalueReference`'s `Ctor` impl, meets all requirements.
+        unsafe { T::ctor_new(self).ctor(dest) }
+    }
+}
+
+/// !SelfCtor to override the blanket `Ctor` impl.
+impl<'a, T: ?Sized> !SelfCtor for ByValue<'a, T> {}
+
+/// Blanket implementation so that any type that supports move construction
+/// (constructed from `RvalueReference`) automatically supports construction
+/// from `ByValue`.
+impl<'a, T: ?Sized> CtorNew<ByValue<'a, T>> for T
+where
+    T: CtorNew<RvalueReference<'a, T>>,
+{
+    type CtorType = <T as CtorNew<RvalueReference<'a, T>>>::CtorType;
+    type Error = <T as CtorNew<RvalueReference<'a, T>>>::Error;
+
+    fn ctor_new(args: ByValue<'a, T>) -> Self::CtorType {
+        <T as CtorNew<RvalueReference<'a, T>>>::ctor_new(args.0)
+    }
+}
+
+impl<'a, T: ?Sized> UnsafeCtorNew<ByValue<'a, T>> for T
+where
+    T: UnsafeCtorNew<RvalueReference<'a, T>>,
+{
+    type CtorType = <T as UnsafeCtorNew<RvalueReference<'a, T>>>::CtorType;
+    type Error = <T as UnsafeCtorNew<RvalueReference<'a, T>>>::Error;
+
+    unsafe fn ctor_new(args: ByValue<'a, T>) -> Self::CtorType {
+        unsafe { <T as UnsafeCtorNew<RvalueReference<'a, T>>>::ctor_new(args.0) }
+    }
+}
 
 /// Const rvalue reference (move-reference) type. Usually not very helpful.
 ///

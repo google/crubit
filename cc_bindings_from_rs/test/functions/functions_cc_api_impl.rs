@@ -155,11 +155,11 @@ const _: () = assert!(
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_accept_uctor(
-    c1: ::ctor::RvalueReference<
+    c1: ::ctor::ByValue<
         'static,
         ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
     >,
-    c2: ::ctor::RvalueReference<
+    c2: ::ctor::ByValue<
         'static,
         ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
     >,
@@ -169,7 +169,7 @@ unsafe extern "C" fn __crubit_thunk_accept_uctor(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_accept_uctor_uarray(
     a: &'static mut ::core::mem::MaybeUninit<
-        [::ctor::RvalueReference<
+        [::ctor::ByValue<
             'static,
             ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
         >; 3],
@@ -186,11 +186,11 @@ unsafe extern "C" fn __crubit_thunk_accept_uctor_utuple(
 ) -> i32 {
     unsafe {
         let c = ({
-            let c_0: ::ctor::RvalueReference<
+            let c_0: ::ctor::ByValue<
                 'static,
                 ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
             > = ((*c)[0usize]
-                as *const ::ctor::RvalueReference<
+                as *const ::ctor::ByValue<
                     'static,
                     ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
                 >)

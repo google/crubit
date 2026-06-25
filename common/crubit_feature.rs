@@ -58,6 +58,9 @@ flagset::flags! {
         /// when possible.
         AlwaysSpecializeGenericsInCppApiFromRust,
 
+
+        /// Converts `impl Ctor<Output=T>` parameters to plain `T` instead of `T&&` in the C++ API.
+        CtorPlainValues,
     }
 }
 
@@ -85,6 +88,7 @@ impl CrubitFeature {
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "always_specialize_generics_in_cpp_api_from_rust"
             }
+            Self::CtorPlainValues => "ctor_plain_values",
         }
     }
 
@@ -113,6 +117,7 @@ impl CrubitFeature {
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "//features:always_specialize_generics_in_cpp_api_from_rust"
             }
+            Self::CtorPlainValues => "//features:ctor_plain_values",
         }
     }
 }
@@ -144,6 +149,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"always_specialize_generics_in_cpp_api_from_rust" => {
             CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust.into()
         }
+        b"ctor_plain_values" => CrubitFeature::CtorPlainValues.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -267,6 +273,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::CtorPlainValues
         );
     }
 
@@ -302,6 +309,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::CtorPlainValues
         );
     }
 
@@ -322,6 +330,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::CtorPlainValues
         );
     }
 
@@ -343,6 +352,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::CtorPlainValues
         );
     }
 }

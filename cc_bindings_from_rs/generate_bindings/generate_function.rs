@@ -8,7 +8,7 @@ use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, ident_or_opt_ident, is_thunk_required,
 };
 use crate::{
-    format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
+    format_param_types_for_cc_api, format_region_as_cc_lifetime, format_ret_ty_for_cc,
     format_top_level_ns_for_crate, generate_deprecated_tag, is_bridged_type,
     is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType, CcType,
     RsSnippet,
@@ -202,7 +202,8 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
         }
     } else if is_c_abi_compatible_by_value(tcx, ty) {
         if let ty::TyKind::Adt(adt, _) = ty.kind()
-            && crate::matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
+            && (crate::matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
+                || crate::matches_qualified_name(db, adt.did(), &["ctor", "ByValue"]))
         {
             includes.insert(code_gen_utils::CcInclude::utility());
             quote! { ::std::move(#cc_ident) }
@@ -941,7 +942,8 @@ pub fn generate_function<'tcx>(
 
     let params = {
         let names = fn_arg_idents(tcx, def_id);
-        let cpp_types = format_param_types_for_cc(db, &sig_mid, function_kind.has_self_param())?;
+        let cpp_types =
+            format_param_types_for_cc_api(db, &sig_mid, function_kind.has_self_param())?;
         names
             .into_iter()
             .enumerate()
