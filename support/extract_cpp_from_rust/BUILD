@@ -41,6 +41,16 @@ rust_proc_macro(
     visibility = ["//visibility:public"],
     deps = [
         ":inline_cpp_utils",
+        "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
+    ],
+)
+
+rust_test(
+    name = "inline_cpp_macro_test",
+    crate = ":inline_cpp_macro_proc_macro_internal",
+    deps = [
+        "@crate_index//:googletest",
+        "@crate_index//:proc-macro2",
     ],
 )
