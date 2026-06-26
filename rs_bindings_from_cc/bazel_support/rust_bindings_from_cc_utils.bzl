@@ -274,4 +274,7 @@ bindings_attrs = {
     "_verbose_log_targets": attr.label(
         default = "//common/bazel_support:verbose_log_targets",
     ),
+    "_android_constraint": attr.label(
+        default = "@platforms//os:android",
+    ),
 }
