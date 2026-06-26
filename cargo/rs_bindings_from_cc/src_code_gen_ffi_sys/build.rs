@@ -9,4 +9,8 @@ const PATH_TO_SRC_ROOT: &str = "../../..";
 fn main() {
     crubit_build::compile_cc_lib(PATH_TO_SRC_ROOT, SOURCES).unwrap();
 }
-const SOURCES: &[&str] = &["rs_bindings_from_cc/src_code_gen_ffi.cc"];
+const SOURCES: &[&str] = &[
+    "rs_bindings_from_cc/src_code_gen_ffi.cc",
+    "rs_bindings_from_cc/src_code_gen_ffi_native_proto.cc",
+    "rs_bindings_from_cc/src_code_gen_ffi_serialized_proto.cc",
+];

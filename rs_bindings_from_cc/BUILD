@@ -576,12 +576,30 @@ multiplatform_rust_test(
 
 cc_library(
     name = "src_code_gen_ffi",
-    srcs = ["src_code_gen_ffi.cc"],
+    srcs = [
+        "src_code_gen_ffi.cc",
+        "src_code_gen_ffi_serialized_proto.cc",
+    ],
     hdrs = ["src_code_gen_ffi.h"],
     deps = [
         "//common:cc_ffi_types",
         "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",
         "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+crubit_cc_test(
+    name = "src_code_gen_ffi_test",
+    srcs = ["src_code_gen_ffi_test.cc"],
+    deps = [
+        ":cmdline",  # buildcleaner: keep
+        ":cmdline_flags",
+        ":src_code_gen_ffi",
+        "//net/proto2/contrib/parse_proto:parse_text_proto",
+        "//rs_bindings_from_cc/generate_bindings:cc_api_ffi",  # buildcleaner: keep
+        "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",  # buildcleaner: keep
+        "//testing/base/public:gunit_main",
+        "@abseil-cpp//absl/flags:flag",
     ],
 )
 

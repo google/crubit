@@ -6,13 +6,16 @@ use arc_anyhow::Context;
 use database::code_snippet::Bindings;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
 use generate_bindings::generate_bindings as inner_generate_bindings;
-use generate_bindings_rust_proto::{GenerateBindingsRequest, GenerateBindingsResponse};
+use generate_bindings_rust_proto::{GenerateBindingsRequestView, GenerateBindingsResponseMut};
 use ir::deserialize_ir;
 use std::ffi::OsString;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::process;
 
-pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsResponse {
+pub fn generate_bindings(
+    request: GenerateBindingsRequestView<'_>,
+    mut response: GenerateBindingsResponseMut<'_>,
+) {
     let ir = if request.has_ir_proto() {
         ir::proto_to_ir(request.ir_proto())
             .with_context(|| "Failed to deserialize IRProto".to_string())
@@ -26,16 +29,24 @@ pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsR
             })
             .unwrap()
     };
-    let crubit_support_path_format: &str =
-        std::str::from_utf8(request.crubit_support_path_format().as_ref()).unwrap();
-    let clang_format_exe_path: OsString =
-        std::str::from_utf8(request.clang_format_exe_path().as_ref()).unwrap().into();
+    let crubit_support_path_format: &str = request
+        .crubit_support_path_format()
+        .to_str()
+        .expect("crubit_support_path_format is not valid UTF-8");
+    let clang_format_exe_path: OsString = request
+        .clang_format_exe_path()
+        .to_str()
+        .expect("clang_format_exe_path is not valid UTF-8")
+        .into();
     let rustfmt_exe_path: OsString =
-        std::str::from_utf8(request.rustfmt_exe_path().as_ref()).unwrap().into();
-    let rustfmt_config_path: OsString =
-        std::str::from_utf8(request.rustfmt_config_path().as_ref()).unwrap().into();
+        request.rustfmt_exe_path().to_str().expect("rustfmt_exe_path is not valid UTF-8").into();
+    let rustfmt_config_path: OsString = request
+        .rustfmt_config_path()
+        .to_str()
+        .expect("rustfmt_config_path is not valid UTF-8")
+        .into();
     let kythe_default_corpus: &str =
-        std::str::from_utf8(request.kythe_default_corpus().as_ref()).unwrap();
+        request.kythe_default_corpus().to_str().expect("kythe_default_corpus is not valid UTF-8");
     let generate_error_report = request.generate_error_report();
     let is_golden_test = request.is_golden_test();
     let kythe_annotations = request.kythe_annotations();
@@ -64,15 +75,12 @@ pub fn generate_bindings(request: &GenerateBindingsRequest) -> GenerateBindingsR
         )
         .unwrap();
 
-        let mut response = GenerateBindingsResponse::new();
         response.set_rs_api(rs_api);
         response.set_rs_api_impl(rs_api_impl);
         if let Some(report) = error_report {
             response.set_error_report(report.to_json_string());
         }
         response.set_fatal_errors(fatal_errors.take_string());
-
-        response
     }))
     .unwrap_or_else(|_| process::abort())
 }

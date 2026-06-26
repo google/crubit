@@ -32,7 +32,10 @@ rust_proto_library(
 
 rust_library(
     name = "cc_api_ffi",
-    srcs = ["cc_api_ffi.rs"],
+    srcs = [
+        "cc_api_ffi.rs",
+        "cc_api_ffi_serialized_proto.rs",
+    ],
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",

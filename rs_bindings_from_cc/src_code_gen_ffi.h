@@ -9,10 +9,18 @@
 
 namespace crubit {
 
+// The public interface called by the rest of the generator.
 rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse
 GenerateBindingsProtoCall(
     const rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest&
         request);
+
+// Helper that passes serialized protobufs.
+rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse
+GenerateBindingsProtoCallSerialized(
+    const rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest&
+        request);
+
 }  // namespace crubit
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_SRC_CODE_GEN_FFI_H_

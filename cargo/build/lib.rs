@@ -63,7 +63,13 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
     }
     cc_lib.include(path_to_src_root.as_ref());
     for p in sources.into_iter().map(|p| path_to_src_root.as_ref().join(p.as_ref())) {
-        paths::add_source_file(&mut cc_lib, &p)?;
+        if p.exists() {
+            paths::add_source_file(&mut cc_lib, &p)?;
+        } else {
+            // Trigger a rebuild if a copybara-stripped file is added later
+            println!("cargo::rerun-if-changed={}", p.display());
+            println!("cargo::warning=Skipping internal-only source file: {}", p.display());
+        }
     }
     for p in absl_include_dirs.into_iter().chain(clang_include_dirs) {
         paths::add_include_path(&mut cc_lib, p, false);

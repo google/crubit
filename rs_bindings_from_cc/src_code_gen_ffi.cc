@@ -4,30 +4,14 @@
 
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
 
-#include <string>
-
-#include "absl/strings/string_view.h"
-#include "common/ffi_types.h"
-
 namespace crubit {
 
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest;
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
 
-extern "C" FfiU8SliceBox GenerateBindingsImpl(FfiU8Slice serialized_request);
-
 GenerateBindingsResponse GenerateBindingsProtoCall(
     const GenerateBindingsRequest& request) {
-  std::string serialized_request = request.SerializeAsString();
-  FfiU8SliceBox serialized_response =
-      GenerateBindingsImpl(MakeFfiU8Slice(serialized_request));
-
-  GenerateBindingsResponse response;
-  response.ParseFromString(
-      absl::string_view(serialized_response.ptr, serialized_response.size));
-
-  FreeFfiU8SliceBox(serialized_response);
-  return response;
+  return GenerateBindingsProtoCallSerialized(request);
 }
 
 }  // namespace crubit
