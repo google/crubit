@@ -2796,7 +2796,11 @@ fn get_into_iter_ty<'tcx>(
         })
         .expect("IntoIter to be a required associated item of IntoIterator");
 
+    #[rustversion::before(2026-06-23)]
     let projection_ty = Ty::new_projection(tcx, into_iter_assoc_item.def_id, [self_ty]);
+    #[rustversion::since(2026-06-23)]
+    let projection_ty =
+        Ty::new_projection(tcx, ty::IsRigid::No, into_iter_assoc_item.def_id, [self_ty]);
 
     query_compiler::try_normalize(
         tcx,
@@ -2821,7 +2825,10 @@ fn get_into_iter_item_ty<'tcx>(
         })
         .expect("Item to be a required associated item of IntoIterator");
 
+    #[rustversion::before(2026-06-23)]
     let projection_ty = Ty::new_projection(tcx, item_assoc_item.def_id, [self_ty]);
+    #[rustversion::since(2026-06-23)]
+    let projection_ty = Ty::new_projection(tcx, ty::IsRigid::No, item_assoc_item.def_id, [self_ty]);
 
     query_compiler::try_normalize(
         tcx,

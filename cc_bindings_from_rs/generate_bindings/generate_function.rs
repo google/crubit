@@ -1247,11 +1247,11 @@ pub fn get_async_future_output_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     rs_return_type: Ty<'tcx>,
 ) -> Result<Ty<'tcx>> {
-    #[rustversion::stable(1.95)]
+    #[rustversion::any(all(nightly, since(2026-06-23)), stable(1.95))]
     let ty::TyKind::Alias(_, alias_ty) = rs_return_type.kind() else {
         bail!("async functions should always return a TyKind::Alias, this should never happen.");
     };
-    #[rustversion::any(nightly, stable(1.96))]
+    #[rustversion::any(all(nightly, before(2026-06-23)), stable(1.96))]
     let ty::TyKind::Alias(alias_ty) = rs_return_type.kind() else {
         bail!("async functions should always return a TyKind::Alias, this should never happen.");
     };
