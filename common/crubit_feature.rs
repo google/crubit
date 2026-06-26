@@ -60,6 +60,9 @@ flagset::flags! {
 
         /// Generate bindings using the nested IR.
         UseNestedIr,
+
+        /// Enable custom Debug impls for records.
+        RecordImplDebug,
     }
 }
 
@@ -88,6 +91,7 @@ impl CrubitFeature {
                 "always_specialize_generics_in_cpp_api_from_rust"
             }
             Self::UseNestedIr => "use_nested_ir",
+            Self::RecordImplDebug => "record_impl_debug",
         }
     }
 
@@ -117,6 +121,7 @@ impl CrubitFeature {
                 "//features:always_specialize_generics_in_cpp_api_from_rust"
             }
             Self::UseNestedIr => "//features:use_nested_ir",
+            Self::RecordImplDebug => "//features:record_impl_debug",
         }
     }
 }
@@ -149,6 +154,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
             CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust.into()
         }
         b"use_nested_ir" => CrubitFeature::UseNestedIr.into(),
+        b"record_impl_debug" => CrubitFeature::RecordImplDebug.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -273,6 +279,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::UseNestedIr
+                | CrubitFeature::RecordImplDebug
         );
     }
 
@@ -309,6 +316,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::UseNestedIr
+                | CrubitFeature::RecordImplDebug
         );
     }
 
@@ -330,6 +338,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::UseNestedIr
+                | CrubitFeature::RecordImplDebug
         );
     }
 
@@ -352,6 +361,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::UseNestedIr
+                | CrubitFeature::RecordImplDebug
         );
     }
 }
