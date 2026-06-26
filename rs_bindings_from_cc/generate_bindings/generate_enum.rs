@@ -73,7 +73,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
             fmt_fn_name: fmt_fn_name.clone(),
             param_type: fully_qualified_cc_name.clone(),
         });
-        let display_impl = DisplayImpl { type_name: name.clone(), fmt_fn_name };
+        let display_impl = DisplayImpl { type_name: quote! { #name }, fmt_fn_name };
         quote! {
             #display_impl
         }

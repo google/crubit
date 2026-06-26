@@ -7,7 +7,10 @@
 
 #include "rs_bindings_from_cc/test/assume_lifetimes/test_annotations.h"
 
-struct LIFETIME_PARAMS("a") SV {};
+struct LIFETIME_PARAMS("a") SV {
+  template <typename Sink>
+  friend void AbslStringify(Sink&, const SV&) {}
+};
 
 // TODO(zarko): We should mark 'unknowns (or equivalent) as unsafe.
 SV sv_ident(SV s);
