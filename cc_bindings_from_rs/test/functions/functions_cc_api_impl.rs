@@ -165,12 +165,95 @@ const _: () = assert!(
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_accept_uctor(
+    _c1: ::ctor::RvalueReference<
+        'static,
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+    >,
+    _c2: ::ctor::RvalueReference<
+        'static,
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+    >,
+) -> i32 {
+    unsafe { ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor(_c1, _c2) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_uctor_uarray(
+    _c: &'static mut ::core::mem::MaybeUninit<
+        [::ctor::RvalueReference<
+            'static,
+            ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+        >; 3],
+    >,
+) -> i32 {
+    unsafe {
+        let _c = _c.assume_init_read();
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor_array(_c)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_uctor_utuple(
+    _c: *const [*const core::ffi::c_void; 1usize],
+) -> i32 {
+    unsafe {
+        let _c = ({
+            let _c_0: ::ctor::RvalueReference<
+                'static,
+                ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+            > = ((*_c)[0usize]
+                as *const ::ctor::RvalueReference<
+                    'static,
+                    ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+                >)
+                .read();
+            _c_0
+        },);
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor_tuple(_c)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_urvalue_uref_uexplicitly(
     _c: ::ctor::RvalueReference<
         'static,
         ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
     >,
 ) -> i32 {
-    unsafe { ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor(_c) }
+    unsafe {
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_rvalue_ref_explicitly(_c)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_urvalue_ureference_uarray(
+    _a: &'static mut ::core::mem::MaybeUninit<
+        [::ctor::RvalueReference<
+            'static,
+            ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+        >; 3],
+    >,
+) -> i32 {
+    unsafe {
+        let _a = _a.assume_init_read();
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_rvalue_reference_array(_a)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_urvalue_ureference_utuple(
+    _t: *const [*const core::ffi::c_void; 1usize],
+) -> i32 {
+    unsafe {
+        let _t = ({
+            let _t_0: ::ctor::RvalueReference<
+                'static,
+                ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+            > = ((*_t)[0usize]
+                as *const ::ctor::RvalueReference<
+                    'static,
+                    ::functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable,
+                >)
+                .read();
+            _t_0
+        },);
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_rvalue_reference_tuple(_t)
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_basic_utest(arg: i32) -> i32 {

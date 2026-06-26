@@ -36,9 +36,39 @@ use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, 
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
-use rustc_span::def_id::CrateNum;
+use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
 use std::rc::Rc;
+
+/// Returns true if `did` is the struct `::ctor::RvalueReference`.
+fn is_rvalue_reference(db: &BindingsGenerator<'_>, did: DefId) -> bool {
+    if matches_qualified_name(db, did, &["ctor", "RvalueReference"]) {
+        return true;
+    }
+    // For unit tests, where we can't use the `ctor` crate.
+    #[cfg(test)]
+    if matches_qualified_name(db, did, &["rust_out", "ctor", "RvalueReference"]) {
+        return true;
+    }
+    false
+}
+
+fn format_non_owning_pointer_prefix<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    region: ty::Region<'tcx>,
+    referent: Ty<'tcx>,
+    prereqs: &mut CcPrerequisites<'tcx>,
+) -> TokenStream {
+    let lifetime = format_region_as_cc_lifetime(db, region, prereqs);
+    // Don't annotate maybe uninit with crubit_nonnull.
+    let annotation = if try_ty_as_maybe_uninit(db, referent).is_some() {
+        quote! {}
+    } else {
+        prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        quote! { crubit_nonnull }
+    };
+    quote! { * #lifetime #annotation }
+}
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
 pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
@@ -381,16 +411,27 @@ pub fn format_ty_for_cc<'tcx>(
             bail!("C++ doesn't have a standard equivalent of `{ty}` (b/254094650)");
         }
 
+        ty::TyKind::Adt(adt, substs) if is_rvalue_reference(db, adt.did()) => {
+            // TODO(jeanpierreda): We need to support const rvalue references and CRef/CMut.
+            // (Likely this should be merged with the handling for actual Rust references.)
+            let referent = substs[1].expect_ty();
+            let mut prereqs = CcPrerequisites::default();
+            let sigil = if matches!(location, TypeLocation::FnParam { .. }) {
+                quote! { && }
+            } else {
+                let region = substs[0]
+                    .as_region()
+                    .expect("RvalueReference's first parameter should be a lifetime");
+                format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
+            };
+
+            let mut snippet =
+                format_pointer_or_reference_ty_for_cc(db, referent, Mutability::Mut, sigil)?;
+            snippet.prereqs += prereqs;
+            return Ok(snippet);
+        }
+
         ty::TyKind::Adt(adt, substs) => {
-            if matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"]) {
-                let referent = substs[1].expect_ty();
-                return format_pointer_or_reference_ty_for_cc(
-                    db,
-                    referent,
-                    Mutability::Mut,
-                    quote! { && },
-                );
-            }
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
@@ -554,15 +595,7 @@ pub fn format_ty_for_cc<'tcx>(
 
             let mut prereqs = CcPrerequisites::default();
             let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
-                let lifetime = format_region_as_cc_lifetime(db, region, &mut prereqs);
-                // Don't annotate maybe uninit with crubit_nonnull.
-                let annotation = if try_ty_as_maybe_uninit(db, referent).is_some() {
-                    quote! {}
-                } else {
-                    prereqs.includes.insert(db.support_header("annotations_internal.h"));
-                    quote! { crubit_nonnull }
-                };
-                quote! { * #lifetime #annotation }
+                format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
             } else if matches!(location, TypeLocation::FnParam { .. }) {
                 // Omit the lifetime of parameter-location references whose lifetime is trivial.
                 // References with non-trivial lifetimes will be converted to pointers above.
@@ -928,7 +961,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             // We support generics if they're for `std::option::Option` or `std::result::Result`.
             let is_supported_generic_type = BridgedBuiltin::new(db, adt).is_some()
                 || !has_non_lifetime_substs(substs)
-                || matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"]);
+                || is_rvalue_reference(db, adt.did());
             ensure!(
                 has_cpp_type || is_supported_generic_type || has_composable_bridging,
                 "Generic types without composable bridging are not supported yet (b/259749095)"

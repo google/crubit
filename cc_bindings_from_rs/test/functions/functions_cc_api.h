@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -243,14 +244,46 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 ::std::int32_t accept_ctor(
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c);
+    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c2);
+
+::std::int32_t accept_ctor_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                     crubit_nonnull,
+                 3>
+        _c);
 
 // Error generating bindings for function
 // `functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor_movable`
 // defined at
-// cc_bindings_from_rs/test/functions/functions.rs;l=313:
+// cc_bindings_from_rs/test/functions/functions.rs;l=316:
 // No valid non-generic replacement for generic type param `impl Ctor<Output =
 // Movable>`
+
+::std::int32_t accept_ctor_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                 crubit_nonnull>
+        _c);
+
+::std::int32_t accept_rvalue_ref_explicitly(
+    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c);
+
+::std::int32_t accept_rvalue_reference_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                     $(__anon1) crubit_nonnull,
+                 3>
+        _a);
+
+::std::int32_t accept_rvalue_reference_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                 $(__anon1) crubit_nonnull>
+        _t);
+
+// Error generating bindings for function
+// `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor` defined
+// at
+// cc_bindings_from_rs/test/functions/functions.rs;l=324:
+// Attempted to write out unknown type from Rust to C
 
 }  // namespace functions::generic_fn_tests::ctor_trait_tests
 
@@ -323,18 +356,22 @@ template <>
 struct rs_std::impl<
     ::functions::generic_fn_tests::ctor_trait_tests::NonMovable,
     ::ctor::CtorNew<
-        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&>> {
+        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+        $a crubit_nonnull>> {
   static constexpr bool kIsImplemented = true;
   using CtorType CRUBIT_INTERNAL_RUST_TYPE(
       "<functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable as :: "
       "ctor :: CtorNew>::CtorType") =
-      ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&;
+      ::functions::generic_fn_tests::ctor_trait_tests::NonMovable* $a
+      crubit_nonnull;
   using Error CRUBIT_INTERNAL_RUST_TYPE(
       "<functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable as :: "
       "ctor :: CtorNew>::Error") = ::std::int32_t;
 
-  static ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& ctor_new(
-      ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& args);
+  static ::functions::generic_fn_tests::ctor_trait_tests::NonMovable* $a
+      crubit_nonnull
+      ctor_new(
+          ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& args);
 };
 
 namespace functions::fn_abi_tests {
@@ -613,11 +650,76 @@ inline void NonMovable::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_accept_uctor(
+    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&,
     ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&);
 }
 inline ::std::int32_t accept_ctor(
+    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c2) {
+  return __crubit_internal::__crubit_thunk_accept_uctor(::std::move(_c1),
+                                                        ::std::move(_c2));
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_uctor_uarray(void*);
+}
+inline ::std::int32_t accept_ctor_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                     crubit_nonnull,
+                 3>
+        _c) {
+  return __crubit_internal::__crubit_thunk_accept_uctor_uarray(&_c);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_uctor_utuple(void**);
+}
+inline ::std::int32_t accept_ctor_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                 crubit_nonnull>
+        _c) {
+  auto&& _c_0 = ::std::get<0>(_c);
+  auto&& _c_cabi_0 = ::std::move(_c_0);
+  void* _c_cabi[] = {&_c_cabi_0};
+  return __crubit_internal::__crubit_thunk_accept_uctor_utuple(_c_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_uref_uexplicitly(
+    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&);
+}
+inline ::std::int32_t accept_rvalue_ref_explicitly(
     ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c) {
-  return __crubit_internal::__crubit_thunk_accept_uctor(::std::move(_c));
+  return __crubit_internal::__crubit_thunk_accept_urvalue_uref_uexplicitly(
+      ::std::move(_c));
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_ureference_uarray(
+    void*);
+}
+inline ::std::int32_t accept_rvalue_reference_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                     $(__anon1) crubit_nonnull,
+                 3>
+        _a) {
+  return __crubit_internal::__crubit_thunk_accept_urvalue_ureference_uarray(
+      &_a);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_ureference_utuple(
+    void**);
+}
+inline ::std::int32_t accept_rvalue_reference_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+                 $(__anon1) crubit_nonnull>
+        _t) {
+  auto&& _t_0 = ::std::get<0>(_t);
+  auto&& _t_cabi_0 = ::std::move(_t_0);
+  void* _t_cabi[] = {&_t_cabi_0};
+  return __crubit_internal::__crubit_thunk_accept_urvalue_ureference_utuple(
+      _t_cabi);
 }
 
 }  // namespace functions::generic_fn_tests::ctor_trait_tests
@@ -736,18 +838,21 @@ $(__anon1) rs_std::impl<
 
 namespace functions {
 namespace __crubit_internal {
-extern "C" ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&
-__crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&);
+extern "C" ::functions::generic_fn_tests::ctor_trait_tests::NonMovable* $a
+    crubit_nonnull
+    __crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
+        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&);
 }
 }  // namespace functions
-inline ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&
-rs_std::impl<
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable,
-    ::ctor::CtorNew<
-        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&>>::
-    ctor_new(
-        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& args) {
+inline ::functions::generic_fn_tests::ctor_trait_tests::NonMovable* $a
+    crubit_nonnull
+    rs_std::impl<
+        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable,
+        ::ctor::CtorNew<
+            ::functions::generic_fn_tests::ctor_trait_tests::NonMovable *
+            $a crubit_nonnull>>::
+        ctor_new(::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&
+                     args) {
   return functions::__crubit_internal::
       __crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
           ::std::move(args));
