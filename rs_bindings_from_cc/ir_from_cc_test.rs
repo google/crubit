@@ -3586,15 +3586,10 @@ fn test_record_items() {
               }
             },
             quote! {
-              ... UnsupportedItem {
-                  name: "TopLevelStruct::operator int",
-                  ...
-                  kind: Func,
-                  path: None,
-                  errors: [FormattedError {
-                    ... message: "Function name is not supported: Unsupported name: operator int",
-                  }],
-                  ...
+              Func {
+                ...
+                rs_name: ConversionOperator,
+                ...
               }
             },
         ]

@@ -80,6 +80,9 @@ ASPECT_HINTS = {
     "template_instantiation": [
         "//features:template_instantiation",
     ],
+    "conversion_operators": [
+        "//features:assume_this_lifetimes",
+    ],
 }
 
 rust_bindings_from_cc_cli_flag(

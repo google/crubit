@@ -361,6 +361,11 @@ llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier) {
     return llvm::json::Object{
         {"Operator", *op},
     };
+  } else if (auto* conversion_op =
+                 std::get_if<ConversionOperator>(&unqualified_identifier)) {
+    return llvm::json::Object{
+        {"ConversionOperator", nullptr},
+    };
   } else {
     SpecialName special_name = std::get<SpecialName>(unqualified_identifier);
     return llvm::json::Object{
@@ -380,6 +385,9 @@ flat_proto::UnqualifiedIdentifier ToFlatProto(
           [&](const Operator& op) { *proto.mutable_oper() = op.ToFlatProto(); },
           [&](const SpecialName& special_name) {
             proto.set_special_name(crubit::ToFlatProto(special_name));
+          },
+          [&](const ConversionOperator& conversion_operator) {
+            proto.mutable_conversion_operator();
           }},
       unqualified_identifier);
   return proto;

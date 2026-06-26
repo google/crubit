@@ -222,6 +222,14 @@ fn func_has_bindings(
     let target = &func.owning_target;
     let enabled_features = ir.target_crubit_features(target);
 
+    if matches!(func.cc_name, ir::UnqualifiedIdentifier::ConversionOperator)
+        && !enabled_features.contains(CrubitFeature::AssumeThisLifetimes)
+    {
+        return Err(NoBindingsReason::Unsupported(anyhow!(
+            "Conversion operators are only supported when AssumeThisLifetimes is enabled"
+        )));
+    }
+
     let mut missing_features = vec![];
 
     if func.is_member_or_descendant_of_class_template

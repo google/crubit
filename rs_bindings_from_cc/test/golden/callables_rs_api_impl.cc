@@ -16,11 +16,88 @@
 #include <memory>
 #include <utility>
 
+#include "absl/functional/any_invocable_crubit_abi.h"
+
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/callables.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state, int& param_0);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state,
+    struct ABICompatible* param_0, struct ABICompatible* out);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state,
+    class LayoutCompatible* param_0, class LayoutCompatible* out);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state,
+    unsigned char* param_0, unsigned char* out);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" int
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state, int param_0);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::TypeErasedState* state);
+extern "C" void
+__crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
 extern "C" void
 __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -97,6 +174,53 @@ __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fpar
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
+extern "C" void
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<void(int&)>* f, int& param_0) {
+  (*f)(param_0);
+}
+extern "C" void
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<void()>* f) {
+  (*f)();
+}
+extern "C" void
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<void() &&>* f) {
+  std::move (*f)();
+}
+extern "C" void
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<struct ABICompatible(struct ABICompatible) const>* f,
+    struct ABICompatible* param_0, struct ABICompatible* out) {
+  new (out) struct ABICompatible((*f)(std::move(*param_0)));
+}
+extern "C" void
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<class LayoutCompatible(class LayoutCompatible) const>*
+        f,
+    class LayoutCompatible* param_0, class LayoutCompatible* out) {
+  new (out) class LayoutCompatible((*f)(std::move(*param_0)));
+}
+extern "C" void
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<struct Bridged(struct Bridged) const>* f,
+    unsigned char* param_0, unsigned char* out) {
+  ::crubit::internal::Encode(
+      ::crubit::BridgedAbi(), out,
+      (*f)(::crubit::internal::Decode<::crubit::BridgedAbi>(
+          ::crubit::BridgedAbi(), param_0)));
+}
+extern "C" int
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<int(int) const>* f, int param_0) {
+  return (*f)(param_0);
+}
+extern "C" void
+__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    ::absl::AnyInvocable<void() const>* f) {
+  (*f)();
+}
 extern "C" void __rust_thunk___Z11invoke_onceN6rs_std11DynCallableIFvvOEEE(
     const unsigned char* f) {
   ::crubit::Decoder __f_decoder(

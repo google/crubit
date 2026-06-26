@@ -88,6 +88,10 @@ message Operator {
   string name = 1;
 }
 
+// A C++ conversion operator. The target type is resolved in the Rust
+// generator using the enclosing function's return type.
+message ConversionOperator {}
+
 enum SpecialName {
   SPECIAL_NAME_UNSPECIFIED = 0;
   DESTRUCTOR = 1;
@@ -99,6 +103,7 @@ message UnqualifiedIdentifier {
     Identifier ident = 1;
     Operator oper = 2;
     SpecialName special_name = 3;
+    ConversionOperator conversion_operator = 4;
   }
 }
 

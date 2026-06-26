@@ -297,6 +297,9 @@ impl<'db> BindingsGenerator<'db> {
                             &record_name().expect("constructor must be associated with a record"),
                         );
                     }
+                    ir::UnqualifiedIdentifier::ConversionOperator => {
+                        name.push_str("operator [conversion]");
+                    }
                 }
                 return name.into();
             }

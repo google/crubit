@@ -362,6 +362,7 @@ pub fn generate_function_assertion(
         UnqualifiedIdentifier::Operator(_op) => Ok(None),
         UnqualifiedIdentifier::Constructor => Ok(None),
         UnqualifiedIdentifier::Destructor => Ok(None),
+        UnqualifiedIdentifier::ConversionOperator => Ok(None),
     }
 }
 
@@ -423,6 +424,13 @@ pub fn generate_function_thunk_impl(
             quote! { crubit::construct_at }
         }
         UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
+        UnqualifiedIdentifier::ConversionOperator => {
+            let target_type_cpp = cpp_type_name::format_cpp_type_with_references(
+                &db.rs_type_kind(func.return_type.clone())?,
+                db,
+            )?;
+            quote! { operator #target_type_cpp }
+        }
     };
 
     let mut param_idents = func
@@ -535,7 +543,9 @@ pub fn generate_function_thunk_impl(
 
     let mut this_ref_qualification = match &func.rs_name {
         UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
-        UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => {
+        UnqualifiedIdentifier::Identifier(_)
+        | UnqualifiedIdentifier::Operator(_)
+        | UnqualifiedIdentifier::ConversionOperator => {
             func.instance_method_metadata.as_ref().map(|meta| meta.reference)
         }
     };

@@ -290,6 +290,36 @@ pub unsafe fn callable_taking_reference(
 // error: class `std::fpos<__mbstate_t>` could not be bound
 //   incomplete type
 
+// error: class `absl::internal_any_invocable::CoreImpl<false, ABICompatible, ABICompatible>` could not be bound
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
+//   template instantiation is not yet supported
+
+// error: class `absl::internal_any_invocable::CoreImpl<false, LayoutCompatible, LayoutCompatible>` could not be bound
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
+//   template instantiation is not yet supported
+
+// error: class `absl::internal_any_invocable::CoreImpl<false, Bridged, Bridged>` could not be bound
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
+//   template instantiation is not yet supported
+
+// error: class `absl::internal_any_invocable::CoreImpl<false, int, int>` could not be bound
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
+//   template instantiation is not yet supported
+
+// error: class `absl::internal_any_invocable::CoreImpl<false, void>` could not be bound
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
+//   template instantiation is not yet supported
+
+// error: class `absl::internal_any_invocable::CoreImpl<false, void, int &>` could not be bound
+//   Crubit is not enabled on defining target:
+//     third_party/absl/functional/internal/any_invocable.h
+//   template instantiation is not yet supported
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -334,6 +364,307 @@ mod detail {
             f: *const ::core::ffi::c_uchar,
             arg: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(*mut ::ffi_11::c_int)
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: *mut ::ffi_11::c_int,
+    ) {
+        (unsafe { &*f })(param_0);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(*mut ::ffi_11::c_int)
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(*mut ::ffi_11::c_int)
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+            param_0: *mut ::ffi_11::c_int,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        (unsafe { &*f })();
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        (unsafe {
+            ::core::ptr::replace(
+                f,
+                ::alloc::boxed::Box::new(|| {
+                    ::core::unreachable!("Called FnOnce after it was moved");
+                }),
+            )
+        })();
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::ABICompatible) -> crate::ABICompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: *mut crate::ABICompatible,
+        out: *mut crate::ABICompatible,
+    ) {
+        let param_0 = unsafe { ::core::ptr::read(param_0) };
+        match (unsafe { &*f })(param_0) {
+            result => unsafe {
+                ::core::ptr::write(out, result);
+            },
+        }
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::ABICompatible) -> crate::ABICompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::ABICompatible) -> crate::ABICompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+            param_0: *mut crate::ABICompatible,
+            out: *mut crate::ABICompatible,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::LayoutCompatible) -> crate::LayoutCompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: *mut crate::LayoutCompatible,
+        out: *mut crate::LayoutCompatible,
+    ) {
+        let param_0 = unsafe { ::core::ptr::read(param_0) };
+        match (unsafe { &*f })(param_0) {
+            result => unsafe {
+                ::core::ptr::write(out, result);
+            },
+        }
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::LayoutCompatible) -> crate::LayoutCompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::LayoutCompatible) -> crate::LayoutCompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+            param_0: *mut crate::LayoutCompatible,
+            out: *mut crate::LayoutCompatible,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::RustBridged) -> crate::RustBridged
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: *mut ::core::ffi::c_uchar,
+        bridge_buffer: *mut ::core::ffi::c_uchar,
+    ) {
+        let param_0 = unsafe { ::bridge_rust::internal::decode(crate::RustBridgedAbi, param_0) };
+        unsafe {
+            ::bridge_rust::internal::encode(
+                crate::RustBridgedAbi,
+                bridge_buffer,
+                (unsafe { &*f })(param_0),
+            )
+        };
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::RustBridged) -> crate::RustBridged
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::RustBridged) -> crate::RustBridged
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+            param_0: *const ::core::ffi::c_uchar,
+            out: *mut ::core::ffi::c_uchar,
+        );
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+            param_0: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        (unsafe { &*f })();
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
+    }
+    unsafe extern "C" {
+        pub(crate) unsafe fn __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+            f: *mut ::any_invocable::RawAnyInvocable,
+        );
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN6rs_std11DynCallableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(

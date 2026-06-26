@@ -419,6 +419,10 @@ enum SpecialName {
   kConstructor,
 };
 
+// The target type of the conversion operator is not stored in the struct but
+// rather is resolved using the enclosing Func's return type.
+struct ConversionOperator {};
+
 rs_bindings_from_cc::ir_proto::flat::SpecialName ToFlatProto(
     SpecialName special_name);
 
@@ -430,7 +434,8 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 // Note that constructors are given a separate variant, so that we can treat
 // them differently. After all, they are not invoked or defined like normal
 // functions.
-using UnqualifiedIdentifier = std::variant<Identifier, Operator, SpecialName>;
+using UnqualifiedIdentifier =
+    std::variant<Identifier, Operator, SpecialName, ConversionOperator>;
 llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier);
 rs_bindings_from_cc::ir_proto::flat::UnqualifiedIdentifier ToFlatProto(
     const UnqualifiedIdentifier& unqualified_identifier);

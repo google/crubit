@@ -771,6 +771,7 @@ pub enum UnqualifiedIdentifier {
     Operator(Operator),
     Constructor,
     Destructor,
+    ConversionOperator,
 }
 
 impl UnqualifiedIdentifier {
@@ -804,6 +805,7 @@ impl Debug for UnqualifiedIdentifier {
             UnqualifiedIdentifier::Operator(op) => Debug::fmt(op, f),
             UnqualifiedIdentifier::Constructor => f.write_str("Constructor"),
             UnqualifiedIdentifier::Destructor => f.write_str("Destructor"),
+            UnqualifiedIdentifier::ConversionOperator => f.write_str("ConversionOperator"),
         }
     }
 }

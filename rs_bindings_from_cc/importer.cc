@@ -1215,7 +1215,6 @@ IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
                                /*is_hard_error=*/true);
 }
 
-
 IR::Item Importer::ImportUnsupportedItem(
     const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,
     std::vector<FormattedError> errors, bool is_hard_error) {
@@ -1940,8 +1939,12 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
           // clang-format on
       }
       LOG(FATAL) << "The `switch` above should handle all cases";
+    case clang::DeclarationName::CXXConversionFunctionName:
+      return TranslatedUnqualifiedIdentifier{
+          .cc_identifier = ConversionOperator{},
+          .crubit_rust_name = crubit_rust_name,
+      };
     default:
-      // To be implemented later: CXXConversionFunctionName.
       // There are also e.g. literal operators, deduction guides, etc., but
       // we might not need to implement them at all. Full list at:
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3

@@ -62,9 +62,6 @@ impl Default for TrivialCustomType {
 // error: function `TrivialCustomType::operator||` could not be bound
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
-// error: function `TrivialCustomType::operator int` could not be bound
-//   Function name is not supported: Unsupported name: operator int
-
 #[::ctor::recursively_pinned]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType

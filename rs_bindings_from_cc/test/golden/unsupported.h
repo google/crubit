@@ -12,9 +12,6 @@ struct TrivialCustomType final {
   // added.
   bool operator||(const TrivialCustomType&) const;
 
-  // clang::DeclarationName::NameKind::CXXConversionFunctionName
-  explicit operator int() const { return i; }
-
   int i;
 };
 
