@@ -846,6 +846,11 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   // any null entries introduced by cycles.
 
   std::optional<IR::Item> result = ImportDecl(decl);
+  if (result.has_value()) {
+    if (const auto* func = std::get_if<Func>(&result->as_variant())) {
+      imported_linkage_names_.insert(func->mangled_name);
+    }
+  }
   auto [it, inserted] = import_cache_.try_emplace(decl, result);
   if (!inserted) {
     // TODO(jeanpierreda): Fix and promote to CHECK.
@@ -1088,6 +1093,11 @@ bool Importer::AreAssumedLifetimesEnabledForTarget(
 
 bool Importer::IsUnsafeViewEnabledForTarget(const BazelLabel& label) const {
   return IsFeatureEnabledForTarget(label, "unsafe_view");
+}
+
+bool Importer::HasConflictWithAlreadyImportedLinkageName(
+    llvm::StringRef linkage_name) const {
+  return imported_linkage_names_.contains(linkage_name);
 }
 
 absl::StatusOr<bool> Importer::DetectFormatter(

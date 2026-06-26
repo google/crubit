@@ -235,6 +235,9 @@ class ImportContext {
   // `[[gsl::Pointer]]` as unsafe.
   virtual bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const = 0;
 
+  virtual bool HasConflictWithAlreadyImportedLinkageName(
+      llvm::StringRef linkage_name) const = 0;
+
   virtual bool IsFeatureEnabledForTarget(const BazelLabel& label,
                                          absl::string_view feature) const = 0;
 

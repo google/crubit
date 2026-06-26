@@ -440,6 +440,17 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         {std::move(error)}, must_bind_);
   };
 
+  if (function_decl->isWeakImported()) {
+    return unsupported(FormattedError::Static("Function is weakly imported"));
+  }
+
+  std::string mangled_name = ictx_.GetMangledName(function_decl);
+  if (ictx_.HasConflictWithAlreadyImportedLinkageName(mangled_name)) {
+    return unsupported(
+        FormattedError::Static("Function uses a linkage name that is already "
+                               "used by another function"));
+  }
+
   // We should only import methods of class template specializations
   // that can be instantiated: the template may spell out the method,
   // but it's not guaranteed to be instantiable for the template parameter(s);
