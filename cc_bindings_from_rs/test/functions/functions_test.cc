@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -177,10 +178,43 @@ TEST(GenericFnTest, IntoTraitTests) {
             tests::generic_param_nested_deeper_in_param_ty({1, 2, 3}));
 }
 
-TEST(GenericFnTest, CtorTraitTests) {
+TEST(GenericFnTest, CtorTraitParam) {
   namespace tests = functions::generic_fn_tests::ctor_trait_tests;
-  tests::NonMovable non_movable = tests::NonMovable::new_(123);
-  EXPECT_EQ(42, tests::accept_ctor(std::move(non_movable)));
+  tests::NonMovable c1 = tests::NonMovable::new_(123);
+  tests::NonMovable c2 = tests::NonMovable::new_(456);
+  EXPECT_EQ(42, tests::accept_ctor(std::move(c1), std::move(c2)));
+}
+
+TEST(GenericFnTest, CtorTraitTupleParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::NonMovable c = tests::NonMovable::new_(123);
+  std::tuple<tests::NonMovable*> t{&c};
+  EXPECT_EQ(42, tests::accept_ctor_tuple(t));
+}
+
+TEST(GenericFnTest, CtorTraitArrayParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::NonMovable c1 = tests::NonMovable::new_(1);
+  tests::NonMovable c2 = tests::NonMovable::new_(2);
+  tests::NonMovable c3 = tests::NonMovable::new_(3);
+  std::array<tests::NonMovable*, 3> arr{&c1, &c2, &c3};
+  EXPECT_EQ(42, tests::accept_ctor_array(arr));
+}
+
+TEST(GenericFnTest, RvalueRefNestedTupleParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::NonMovable c = tests::NonMovable::new_(123);
+  std::tuple<tests::NonMovable*> t{&c};
+  EXPECT_EQ(42, tests::accept_rvalue_reference_tuple(t));
+}
+
+TEST(GenericFnTest, RvalueRefNestedArrayParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::NonMovable c1 = tests::NonMovable::new_(1);
+  tests::NonMovable c2 = tests::NonMovable::new_(2);
+  tests::NonMovable c3 = tests::NonMovable::new_(3);
+  std::array<tests::NonMovable*, 3> arr{&c1, &c2, &c3};
+  EXPECT_EQ(42, tests::accept_rvalue_reference_array(arr));
 }
 
 }  // namespace

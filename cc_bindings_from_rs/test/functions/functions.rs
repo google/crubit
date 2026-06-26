@@ -302,7 +302,10 @@ pub mod generic_fn_tests {
             }
         }
 
-        pub fn accept_ctor(_c: impl Ctor<Output = NonMovable>) -> i32 {
+        pub fn accept_ctor(
+            _c1: impl Ctor<Output = NonMovable>,
+            _c2: impl Ctor<Output = NonMovable>,
+        ) -> i32 {
             42
         }
 
@@ -311,6 +314,37 @@ pub mod generic_fn_tests {
         }
 
         pub fn accept_ctor_movable(_c: impl Ctor<Output = Movable>) -> i32 {
+            42
+        }
+
+        pub fn accept_rvalue_ref_explicitly(_c: ::ctor::RvalueReference<'_, NonMovable>) -> i32 {
+            42
+        }
+
+        pub fn return_ctor() -> impl Ctor<Output = NonMovable> {
+            NonMovable::new(123)
+        }
+
+        // This is tricky to support without pointers, because tuples of references don't really
+        // mean what you would expect.
+        pub fn accept_rvalue_reference_tuple(
+            _t: (::ctor::RvalueReference<'_, NonMovable>,),
+        ) -> i32 {
+            42
+        }
+
+        // This needs to fail to get bindings, because arrays can't hold rvalue references.
+        pub fn accept_rvalue_reference_array(
+            _a: [::ctor::RvalueReference<'_, NonMovable>; 3],
+        ) -> i32 {
+            42
+        }
+
+        pub fn accept_ctor_tuple<C: Ctor<Output = NonMovable>>(_c: (C,)) -> i32 {
+            42
+        }
+
+        pub fn accept_ctor_array<C: Ctor<Output = NonMovable>>(_c: [C; 3]) -> i32 {
             42
         }
     }
