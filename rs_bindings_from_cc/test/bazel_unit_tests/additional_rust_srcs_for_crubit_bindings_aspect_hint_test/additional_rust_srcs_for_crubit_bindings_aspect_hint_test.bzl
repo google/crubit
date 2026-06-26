@@ -15,7 +15,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
 )
-load("//rs_bindings_from_cc/bazel_support:providers.bzl", "RustBindingsFromCcInfo")
+load("//rs_bindings_from_cc/bazel_support:providers.bzl", "AdditionalRustSrcsProviderInfo", "RustBindingsFromCcInfo")
 load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "ActionsInfo",
@@ -172,15 +172,46 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
 
 additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test = crubit_make_analysis_test(_test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_impl)
 
+def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets_impl(ctx):
+    env = analysistest.begin(ctx)
+    tut = analysistest.target_under_test(env)
+    asserts.true(env, AdditionalRustSrcsProviderInfo in tut, "expected target under test to have AdditionalRustSrcsProviderInfo")
+    asserts.equals(env, 1, len(tut[AdditionalRustSrcsProviderInfo].deps))
+    return analysistest.end(env)
+
+additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets_test = crubit_make_analysis_test(
+    _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets_impl,
+    config_settings = {
+        "@bazel_tools//tools/cpp:sanitizer_build_for_toolchain_resolution_flag": True,
+    },
+)
+
+def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets():
+    additional_rust_srcs_for_crubit_bindings(
+        name = "sanitizer_cc_lib_additional_rust_srcs",
+        srcs = [
+            "my_cc_lib_rust_api.rs",
+        ],
+        tags = ["manual"],
+        deps = [":a_rust_lib_dep"],
+    )
+
+    additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets_test(
+        name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets_test",
+        target_under_test = ":sanitizer_cc_lib_additional_rust_srcs",
+    )
+
 def additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(name):
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli()
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers()
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate()
+    _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets()
     native.test_suite(
         name = name,
         tests = [
             ":additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_test",
             ":test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers_test",
             ":additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test",
+            ":additional_rust_srcs_for_crubit_bindings_aspect_hint_sanitizer_transition_resets_test",
         ],
     )
