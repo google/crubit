@@ -36,6 +36,7 @@ rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2021",
     proc_macro_deps = [":ctor_proc_macros"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=allow_internal_unstable,auto_traits,negative_impls,super_let"],
