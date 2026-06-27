@@ -167,6 +167,13 @@ class Importer final : public ImportContext {
   // deterministic/reproducible order.
   std::vector<ItemId> GetOrderedItemIdsOfTemplateInstantiations() const;
 
+  void FindAlwaysInstantiateSpecs(const clang::DeclContext* decl_context);
+  bool IsAlwaysInstantiate(
+      const clang::ClassTemplateSpecializationDecl* spec_decl) const;
+
+  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
+      always_instantiate_specs_;
+
   std::optional<IR::Item> GetDeclItem(clang::Decl* decl) override;
   // Stores the comments of this target in source order.
   void ImportFreeComments();
