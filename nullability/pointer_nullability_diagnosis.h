@@ -39,6 +39,9 @@ struct PointerNullabilityDiagnostic {
     /// A nonnull pointer field is nullable at method exit.
     /// `NoteRange` refers to the field declaration.
     NonnullPointerFieldNullableAtExit,
+    /// A nonnull pointer field is nullable when default constructor exits.
+    /// `NoteRange` refers to the field declaration.
+    NonnullPointerFieldNullableAtDefaultConstructorExit,
     /// A pointer-typed expression was encountered with no corresponding model.
     Untracked,
     /// A nullability assertion was violated.

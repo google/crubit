@@ -1204,10 +1204,10 @@ static CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl& Method) {
   if (!Method.hasBody()) {
     // If the method doesn't have a body, fall back to using the entire method
     // source range (which should be the source range for the declaration).
-    CharSourceRange::getTokenRange(Method.getSourceRange());
+    return CharSourceRange::getTokenRange(Method.getSourceRange());
   }
 
-  auto* Body = dyn_cast<CompoundStmt>(Method.getBody());
+  auto* Body = dyn_cast_if_present<CompoundStmt>(Method.getBody());
   if (Body == nullptr) {
     return CharSourceRange::getTokenRange(Method.getBody()->getSourceRange());
   }
@@ -1378,6 +1378,72 @@ static DiagTransferFunc pointerNullabilityDiagnoserAfter(
       .Build();
 }
 
+static void checkDefaultedOrImplicitDefaultConstructor(
+    clang::ASTContext& Ctx, const TypeNullabilityDefaults& Defaults,
+    const FieldDecl& Member,
+    llvm::SmallVector<PointerNullabilityDiagnostic>& Diags) {
+  // Ignore if this is not a C++ class or struct.
+  const CXXRecordDecl* RD =
+      dyn_cast_if_present<CXXRecordDecl>(Member.getParent());
+  if (RD == nullptr || RD->isTemplated() ||
+      Ctx.getSourceManager().isInSystemHeader(RD->getLocation())) {
+    return;
+  }
+  const TagDecl::TagKind DeclKind = RD->getTagKind();
+  if (DeclKind != TagDecl::TagKind::Class &&
+      DeclKind != TagDecl::TagKind::Struct) {
+    return;
+  }
+
+  // Only run once per record, when checking its first field.
+  if (RD->fields().empty() || *RD->fields().begin() != &Member) {
+    return;
+  }
+
+  // Ignore if there is no default constructor or if it is user-provided.
+  if (!RD->hasDefaultConstructor() || RD->hasUserProvidedDefaultConstructor()) {
+    return;
+  }
+
+  // Ignore if the default constructor is deleted.
+  for (const CXXMethodDecl* Method : RD->methods()) {
+    if (isa<CXXConstructorDecl>(Method) &&
+        cast<CXXConstructorDecl>(Method)->isDefaultConstructor()) {
+      if (Method->isDeleted()) return;
+      break;
+    }
+  }
+
+  // Check all fields of the record for uninitialized nonnull pointers.
+  for (const FieldDecl* Field : RD->fields()) {
+    // Ignore if the field is not a supported pointer type.
+    if (!isSupportedRawPointerType(Field->getType()) &&
+        !isSupportedSmartPointerType(Field->getType())) {
+      continue;
+    }
+    // Ignore if the field has an in-class initializer.
+    if (Field->hasInClassInitializer()) {
+      continue;
+    }
+
+    // Ignore if the field is not annotated as nonnull.
+    TypeNullability FieldNullability = getTypeNullability(*Field, Defaults);
+    if (FieldNullability.empty() ||
+        FieldNullability.front().concrete() != NullabilityKind::NonNull) {
+      continue;
+    }
+
+    Diags.push_back({
+        .Code = PointerNullabilityDiagnostic::ErrorCode::
+            NonnullPointerFieldNullableAtDefaultConstructorExit,
+        .Ctx = PointerNullabilityDiagnostic::Context::Other,
+        .Range = CharSourceRange::getTokenRange(Field->getSourceRange()),
+        .NoteRange = CharSourceRange::getTokenRange(Field->getSourceRange()),
+        .NoteMessage = "pointer field is declared here",
+    });
+  }
+}
+
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis() {
   // This limit is set based on empirical observations. Mostly, it is a rough
   // proxy for a line between "finite" and "effectively infinite", rather than a
@@ -1407,6 +1473,7 @@ diagnosePointerNullability(const ValueDecl* VD,
 
   if (const FieldDecl* Member = dyn_cast<FieldDecl>(VD)) {
     checkNonnullPointerMemberDefaultInitializer(Ctx, Defaults, *Member, Diags);
+    checkDefaultedOrImplicitDefaultConstructor(Ctx, Defaults, *Member, Diags);
   }
 
   const auto* Func = dyn_cast<FunctionDecl>(VD);
