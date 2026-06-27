@@ -16,6 +16,7 @@ use crate::generate_function::{
 };
 use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, replace_all_regions_with_static,
+    trait_method_thunk_name,
 };
 use crate::{
     does_type_implement_trait, generate_const, generate_deprecated_tag, generate_must_use_tag,
@@ -1108,6 +1109,211 @@ fn generate_trait_operator_impls<'tcx>(
     .collect()
 }
 
+fn generate_compare_impls<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets<'tcx> {
+    let tcx = db.tcx();
+    let ord_trait_id = tcx.get_diagnostic_item(sym::Ord).expect("Could not find Ord trait");
+    let partial_ord_trait_id =
+        tcx.get_diagnostic_item(sym::PartialOrd).expect("Could not find PartialOrd trait");
+
+    let mut snippets = Vec::new();
+
+    // Handle Ord impls (Rhs is always Self)
+    for impl_id in tcx.non_blanket_impls_for_ty(ord_trait_id, core.self_ty) {
+        match generate_ord_impls(db, core) {
+            Ok(s) => snippets.push(s),
+            Err(err) => snippets.push(generate_unsupported_def(db, impl_id, err).into_main_api()),
+        }
+    }
+
+    // Handle PartialOrd impls
+    let mut ord_rhs_types = HashSet::new();
+    let implements_ord = tcx.non_blanket_impls_for_ty(ord_trait_id, core.self_ty).next().is_some();
+    if implements_ord {
+        ord_rhs_types.insert(erase_regions(tcx, core.self_ty));
+    }
+
+    for impl_id in tcx.non_blanket_impls_for_ty(partial_ord_trait_id, core.self_ty) {
+        let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
+        let rhs_ty = trait_ref.args.type_at(1);
+        let erased_rhs_ty = erase_regions(tcx, rhs_ty);
+
+        if ord_rhs_types.contains(&erased_rhs_ty) {
+            continue;
+        }
+
+        match generate_partial_ord_impls(db, core, rhs_ty) {
+            Ok(s) => snippets.push(s),
+            Err(err) => snippets.push(generate_unsupported_def(db, impl_id, err).into_main_api()),
+        }
+    }
+
+    snippets.into_iter().collect()
+}
+
+fn generate_ord_impls<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> Result<ApiSnippets<'tcx>> {
+    let tcx = db.tcx();
+    let adt_cc_short_name = &core.cc_short_name;
+
+    let static_self_ty = replace_all_regions_with_static(tcx, core.self_ty);
+    let self_rs_ty = db.format_ty_for_rs(static_self_ty)?;
+
+    let ord_trait_id =
+        tcx.get_diagnostic_item(sym::Ord).ok_or_else(|| anyhow!("Could not find Ord trait"))?;
+    let thunk_name_str = trait_method_thunk_name(db, ord_trait_id, "cmp", core.self_ty, &[])?;
+    let thunk_name = format_ident!("{}", thunk_name_str);
+
+    let main_api = CcSnippet::new(quote! {
+        __NEWLINE__
+        ::std::strong_ordering operator<=>(const #adt_cc_short_name& other) const;
+        __NEWLINE__
+    });
+
+    let mut cc_details_prereqs = CcPrerequisites::default();
+    cc_details_prereqs.includes.insert(CcInclude::compare());
+
+    let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.self_ty);
+    let ref_self_cc_ty = db.format_ty_for_cc(
+        ref_self_ty,
+        TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
+    )?;
+    let ref_self_cc_tokens = ref_self_cc_ty.into_tokens(&mut cc_details_prereqs);
+
+    let cc_details = CcSnippet {
+        tokens: quote! {
+            namespace __crubit_internal {
+                extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_self_cc_tokens);
+            }
+            inline ::std::strong_ordering #adt_cc_short_name::operator<=>(const #adt_cc_short_name& other) const {
+                auto val = __crubit_internal::#thunk_name(*this, other);
+                return val < 0 ? ::std::strong_ordering::less : (val > 0 ? ::std::strong_ordering::greater : ::std::strong_ordering::equal);
+            }
+        },
+        prereqs: cc_details_prereqs,
+    };
+
+    let rs_details = RsSnippet::new(quote! {
+        #[unsafe(no_mangle)]
+        extern "C" fn #thunk_name(
+            lhs: &#self_rs_ty,
+            rhs: &#self_rs_ty,
+        ) -> i8 {
+            match <#self_rs_ty as ::core::cmp::Ord>::cmp(lhs, rhs) {
+                ::core::cmp::Ordering::Less => -1,
+                ::core::cmp::Ordering::Equal => 0,
+                ::core::cmp::Ordering::Greater => 1,
+            }
+        }
+    });
+
+    Ok(ApiSnippets { main_api, cc_details, rs_details })
+}
+
+fn generate_partial_ord_impls<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+    rhs_ty: Ty<'tcx>,
+) -> Result<ApiSnippets<'tcx>> {
+    let tcx = db.tcx();
+    let adt_cc_short_name = &core.cc_short_name;
+
+    let static_self_ty = replace_all_regions_with_static(tcx, core.self_ty);
+    let self_rs_ty = db.format_ty_for_rs(static_self_ty)?;
+
+    let rhs_ty = replace_all_regions_with_static(tcx, rhs_ty);
+
+    if rhs_ty.flags().intersects(has_type_or_const_vars()) {
+        bail!(
+            "PartialOrd impl has uninstantiated generic parameters, which is not yet supported {rhs_ty}"
+        );
+    }
+
+    let ref_rhs_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, rhs_ty);
+
+    let rhs_cc_ty_for_main = db.format_ty_for_cc(
+        ref_rhs_ty,
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+    )?;
+
+    let rhs_cc_ty_for_impl = db.format_ty_for_cc(
+        ref_rhs_ty,
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+    )?;
+
+    let rhs_rs_ty = db.format_ty_for_rs(rhs_ty)?;
+
+    let mut main_api_prereqs = CcPrerequisites::default();
+    main_api_prereqs.includes.insert(CcInclude::compare());
+    let rhs_cc_tokens_for_main = rhs_cc_ty_for_main.into_tokens(&mut main_api_prereqs);
+
+    let partial_ord_trait_id = tcx
+        .get_diagnostic_item(sym::PartialOrd)
+        .ok_or_else(|| anyhow!("Could not find PartialOrd trait"))?;
+    let thunk_name_str =
+        trait_method_thunk_name(db, partial_ord_trait_id, "partial_cmp", core.self_ty, &[rhs_ty])?;
+    let thunk_name = format_ident!("{}", thunk_name_str);
+
+    let main_api = CcSnippet {
+        tokens: quote! {
+            __NEWLINE__
+            ::std::partial_ordering operator<=>(#rhs_cc_tokens_for_main other) const;
+            __NEWLINE__
+        },
+        prereqs: main_api_prereqs,
+    };
+
+    let mut cc_details_prereqs = CcPrerequisites::default();
+    let rhs_cc_tokens_for_impl = rhs_cc_ty_for_impl.into_tokens(&mut cc_details_prereqs);
+
+    let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.self_ty);
+    let ref_self_cc_ty = db.format_ty_for_cc(
+        ref_self_ty,
+        TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
+    )?;
+    let ref_self_cc_tokens = ref_self_cc_ty.into_tokens(&mut cc_details_prereqs);
+
+    let ref_rhs_cc_ty = db.format_ty_for_cc(
+        ref_rhs_ty,
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+    )?;
+    let ref_rhs_cc_tokens = ref_rhs_cc_ty.into_tokens(&mut cc_details_prereqs);
+
+    let cc_details = CcSnippet {
+        tokens: quote! {
+            namespace __crubit_internal {
+                extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_rhs_cc_tokens);
+            }
+            inline ::std::partial_ordering #adt_cc_short_name::operator<=>(#rhs_cc_tokens_for_impl other) const {
+                auto val = __crubit_internal::#thunk_name(*this, other);
+                return val == 2 ? ::std::partial_ordering::unordered : (val < 0 ? ::std::partial_ordering::less : (val > 0 ? ::std::partial_ordering::greater : ::std::partial_ordering::equivalent));
+            }
+        },
+        prereqs: cc_details_prereqs,
+    };
+
+    let rs_details = RsSnippet::new(quote! {
+        #[unsafe(no_mangle)]
+        extern "C" fn #thunk_name(
+            lhs: &#self_rs_ty,
+            rhs: &#rhs_rs_ty,
+        ) -> i8 {
+            match <#self_rs_ty as ::core::cmp::PartialOrd<#rhs_rs_ty>>::partial_cmp(lhs, rhs) {
+                ::core::option::Option::Some(::core::cmp::Ordering::Less) => -1,
+                ::core::option::Option::Some(::core::cmp::Ordering::Equal) => 0,
+                ::core::option::Option::Some(::core::cmp::Ordering::Greater) => 1,
+                ::core::option::Option::None => 2,
+            }
+        }
+    });
+
+    Ok(ApiSnippets { main_api, cc_details, rs_details })
+}
+
 fn generate_display_impl<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -1303,6 +1509,7 @@ pub fn generate_adt<'tcx>(
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
     let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());
     let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref());
+    let compare_snippets = generate_compare_impls(db, core.as_ref());
     let display_snippets = generate_display_impl(db, core.as_ref());
     let into_iterator_snippets = generate_into_iterator_impls(
         db,
@@ -1331,6 +1538,7 @@ pub fn generate_adt<'tcx>(
         constructor_operator_snippets,
         display_snippets,
         into_iterator_snippets,
+        compare_snippets,
     ]
     .into_iter()
     .collect();
