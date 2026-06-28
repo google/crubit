@@ -100,7 +100,4 @@ pub enum MoveCtorStyle {
     Default,
     // The type is Default (and Unpin) and can be moved using MemSwap and std::move.
     MemSwap,
-    // The type cannot be moved but has a copy constructor and assignment operator that are used in
-    // lieu of the move constructor and assignment operator.
-    Copy,
 }
