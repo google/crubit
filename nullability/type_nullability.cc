@@ -374,6 +374,10 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   // The file whose #pragma governs the type currently being walked.
   FileID File;
 
+  // The file whose #pragma governs inner components after reporting the
+  // outermost pointer slot.
+  std::optional<FileID> NextInnerFile;
+
   // The most complete and direct TypeLoc seen so far for the type currently
   // being visited.
   std::optional<TypeLoc> BestLocSoFar;
@@ -561,6 +565,10 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     derived().report(T, File, PendingNullability, BestLocSoFar);
     PendingNullability.reset();
     BestLocSoFar = std::nullopt;
+    if (NextInnerFile) {
+      File = *NextInnerFile;
+      NextInnerFile = std::nullopt;
+    }
   }
 
   // If we see foo<args>::ty then we may need sugar from args to resugar ty.
@@ -827,9 +835,15 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       TemplateDecl *TD = TST->getTemplateName().getAsTemplateDecl();
       llvm::SaveAndRestore<const TemplateContext *> UseAlias(
           CurrentTemplateContext, &Ctx);
-      llvm::SaveAndRestore SwitchFile(File, isTransparentAlias(QualType(TST, 0))
-                                                ? File
-                                                : getGoverningFile(TD));
+      FileID DeclFile =
+          isTransparentAlias(QualType(TST, 0)) ? File : getGoverningFile(TD);
+      std::optional<llvm::SaveAndRestore<FileID>> SwitchFile;
+      std::optional<llvm::SaveAndRestore<std::optional<FileID>>> SwitchInner;
+      if (isSupportedPointerType(QualType(TST, 0))) {
+        SwitchInner.emplace(NextInnerFile, DeclFile);
+      } else {
+        SwitchFile.emplace(File, DeclFile);
+      }
       visitType(TST, L);
       return;
     }
@@ -925,7 +939,14 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     if (!BoundTemplateArgs.empty())
       Restore.emplace(CurrentTemplateContext, &BoundTemplateArgs.front());
 
-    llvm::SaveAndRestore SwitchFile(File, getGoverningFile(T->getDecl()));
+    FileID DeclFile = getGoverningFile(T->getDecl());
+    std::optional<llvm::SaveAndRestore<FileID>> SwitchFile;
+    std::optional<llvm::SaveAndRestore<std::optional<FileID>>> SwitchInner;
+    if (isSupportedPointerType(QualType(T, 0))) {
+      SwitchInner.emplace(NextInnerFile, DeclFile);
+    } else {
+      SwitchFile.emplace(File, DeclFile);
+    }
     // Don't look for new Locs inside an alias.
     visitType(T, std::nullopt);
   }
