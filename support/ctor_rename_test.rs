@@ -16,6 +16,14 @@ fn test_derive_default_unit_struct() {
     struct Struct;
     unsafe impl renamed_ctor::RecursivelyPinned for Struct {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
     impl !Unpin for Struct {}
 
@@ -50,5 +58,6 @@ fn test_recursively_pinned_unit_struct() {
     #[renamed_ctor::recursively_pinned(crate = renamed_ctor)]
     struct S;
     let _ = ::renamed_ctor::emplace!(::renamed_ctor::ctor!(S)).as_mut().project_pin();
-    assert_eq!(std::mem::size_of::<renamed_ctor::project_pin_type!(S)>(), 0);
+    type Projected = <S as renamed_ctor::RecursivelyPinned>::ProjectedPin<'static>;
+    assert_eq!(std::mem::size_of::<Projected>(), 0);
 }
