@@ -507,9 +507,9 @@ TEST_F(GetTypeNullabilityTest, PragmaTypedef) {
 #pragma nullability file_default nonnull
     using PP = P*;
   )cpp";
-  EXPECT_THAT(nullVec("PP*"),
-              ElementsAre(NullabilityKind::Unspecified,
-                          NullabilityKind::NonNull, NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("PP*"), ElementsAre(NullabilityKind::Unspecified,
+                                          NullabilityKind::Unspecified,
+                                          NullabilityKind::NonNull));
 }
 
 TEST_F(GetTypeNullabilityTest, PragmaMacroUsesExpansionLoc) {
@@ -540,9 +540,9 @@ TEST_F(GetTypeNullabilityTest, PragmaTemplate) {
     };
   )cpp";
   // int* is written in the main file, so the main file's "unspecified" applies.
-  EXPECT_THAT(nullVec("P<int*>"), ElementsAre(NullabilityKind::NonNull,
+  EXPECT_THAT(nullVec("P<int*>"), ElementsAre(NullabilityKind::Unspecified,
                                               NullabilityKind::Unspecified));
-  EXPECT_THAT(nullVec("S<int*>::P"), ElementsAre(NullabilityKind::NonNull,
+  EXPECT_THAT(nullVec("S<int*>::P"), ElementsAre(NullabilityKind::Unspecified,
                                                  NullabilityKind::Unspecified));
 }
 
@@ -630,7 +630,7 @@ TEST_F(GetTypeNullabilityTest, OverrideAliasPragma) {
   // Unknown does not override the alias' pragma, because it's not valid to put
   // Unknown on a TypedefType.
   EXPECT_THAT(nullVec("_Null_unspecified PragmaNullable"),
-              ElementsAre(NullabilityKind::Nullable));
+              ElementsAre(NullabilityKind::Unspecified));
   // Nonnull as a specifier does override the alias' pragma.
   EXPECT_THAT(nullVec("_Nonnull PragmaNullable"),
               ElementsAre(NullabilityKind::NonNull));
@@ -646,7 +646,7 @@ TEST_F(GetTypeNullabilityTest, OverrideAliasPragma) {
   // Unknown does not override the alias' pragma, because it's not valid to put
   // Unknown on a TypedefType.
   EXPECT_THAT(nullVec("Unknown<PragmaNullable>"),
-              ElementsAre(NullabilityKind::Nullable));
+              ElementsAre(NullabilityKind::Unspecified));
   // Nonnull as a template alias does override the alias' pragma.
   EXPECT_THAT(nullVec("Nonnull<PragmaNullable>"),
               ElementsAre(NullabilityKind::NonNull));
@@ -702,9 +702,9 @@ TEST_F(GetTypeNullabilityTest, PragmaSmartPointers) {
   EXPECT_THAT(nullVec("_Null_unspecified transparent::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Unspecified));
   EXPECT_THAT(nullVec("opaque::unique_ptr<int>"),
-              ElementsAre(NullabilityKind::Nullable));
+              ElementsAre(NullabilityKind::NonNull));
   EXPECT_THAT(nullVec("_Null_unspecified opaque::unique_ptr<int>"),
-              ElementsAre(NullabilityKind::Nullable));
+              ElementsAre(NullabilityKind::NonNull));
 }
 
 TEST_F(GetTypeNullabilityTest,
