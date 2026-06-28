@@ -131,6 +131,7 @@ bzl_library(
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_aspect",
+        "//util/scaffolding/internal/rust:customers_bzl",
         "@bazel_skylib//lib:collections",
         "@rules_cc//cc/common",
         "@rules_rust//rust/private:providers_bzl",

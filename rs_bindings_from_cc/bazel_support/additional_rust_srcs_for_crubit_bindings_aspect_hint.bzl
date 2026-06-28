@@ -59,13 +59,15 @@ load(
     "rust_bindings_from_cc_aspect",
 )
 
-visibility([
+PUBLIC_VISIBILITY = [
     # <internal link> start
     "//examples/...",
     "//rs_bindings_from_cc/...",
     "//support/...",
     # <internal link> end
-])
+]
+
+visibility(PUBLIC_VISIBILITY)
 
 def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cc_support_deps = [], unstable_rust_features = []):
     return AdditionalRustSrcsProviderInfo(
