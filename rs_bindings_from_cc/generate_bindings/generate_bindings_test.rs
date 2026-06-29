@@ -1471,3 +1471,31 @@ fn test_interpolate_spelled_rust_type() {
         expected
     );
 }
+
+#[gtest]
+fn test_nested_ir_end_to_end() -> Result<()> {
+    let header_source = "namespace outer { struct Inner { int x; }; }";
+
+    let ir = ir_testing::ir_from_cc_dependency(
+        multiplatform_testing::test_platform(),
+        header_source,
+        "// no dependencies",
+        None,
+        /*kythe_annotations=*/ false,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub mod outer {
+                ...
+                pub struct Inner {
+                    pub x: ::ffi_11::c_int,
+                }
+                ...
+            }
+        }
+    );
+    Ok(())
+}

@@ -30,11 +30,8 @@ trait IrTestingExt {
 impl IrTestingExt for IR {
     #[track_caller]
     fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item {
-        let Some(idx) = self.item_id_to_item_idx().get(&decl_id) else {
-            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.flat_ir())
-        };
-        let Some(item) = self.flat_ir().items.get(*idx) else {
-            panic!("Couldn't find an item at idx {} in IR:\n{:#?}", idx, self.flat_ir())
+        let Some(item) = self.get_decl(decl_id) else {
+            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.tree_ir())
         };
         item
     }
@@ -1400,8 +1397,8 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
     );
     let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
     // Make sure the instantiation of the class template appears exactly once in the
-    // `top_level_item_ids`.
-    assert_eq!(1, ir.top_level_item_ids().iter().filter(|&&id| id == record_id).count());
+    // `top_level_items`.
+    assert_eq!(1, ir.top_level_items().iter().filter(|item| item.id() == record_id).count());
     // Type alias for the class template specialization.
     assert_ir_matches!(
         ir,
@@ -1589,9 +1586,9 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     // source location. Test that they are sorted deterministically. (Implementation
     // detail: the ordering is by mangled name).
     let class_template_specialization_names = ir
-        .top_level_item_ids()
+        .top_level_items()
         .iter()
-        .filter_map(|id| match ir.find_decl(*id).unwrap() {
+        .filter_map(|item| match item {
             ir::Item::Record(r) if r.rs_name.identifier.contains("__CcTemplateInst") => {
                 Some(r.rs_name.identifier.as_ref())
             }
@@ -3488,8 +3485,7 @@ fn test_top_level_items() {
     )
     .unwrap();
 
-    let top_level_items =
-        ir.top_level_item_ids().iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let top_level_items = ir.top_level_items().iter().collect_vec();
 
     assert_items_match!(
         top_level_items,
@@ -3899,9 +3895,9 @@ fn test_items_inside_linkage_spec_decl_are_imported() {
 
 #[gtest]
 fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
-    // The test below assumes the first top_level_item_ids element is the one added
+    // The test below assumes the first top_level_items element is the one added
     // by the the source code under test. Let's double check that assumption here.
-    assert!(ir_from_cc("").unwrap().top_level_item_ids().is_empty());
+    assert!(ir_from_cc("").unwrap().top_level_items().is_empty());
 
     let ir = ir_from_cc(
         r#"
@@ -3910,7 +3906,7 @@ fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
     }"#,
     )
     .unwrap();
-    let item_id = ir.top_level_item_ids()[0];
+    let item_id = ir.top_level_items().first().expect("should have a first item").id();
 
     assert_ir_matches!(
         ir,
@@ -4002,8 +3998,8 @@ fn test_function_redeclared_as_friend() {
                     enclosing_item_id: None ...
                     adl_enclosing_record: None ...
                 }),
-            ],
-            top_level_item_ids: map! { ... BazelLabel(#TESTING_TARGET): [ItemId(...), ItemId(...)] ... }
+            ] ...
+            top_level_items: map! { ... BazelLabel(#TESTING_TARGET): [Record(Record { rs_name: "SomeClass" ... }), Func(Func { cc_name: "bar" ... })] ... }
         }
     );
 }
@@ -4303,14 +4299,14 @@ fn test_source_location_class_template_specialization() {
 }
 
 #[gtest]
-fn test_top_level_item_ids_from_multiple_targets() {
+fn test_top_level_items_from_multiple_targets() {
     let dependency_header = r#"struct FromDependency {};"#;
     let header = "struct FromHeader {};";
     let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
-          top_level_item_ids: map! {
+          top_level_items: map! {
             ...
             BazelLabel(#DEPENDENCY_TARGET): [...]
             ...
