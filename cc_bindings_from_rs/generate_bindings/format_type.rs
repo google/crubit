@@ -611,11 +611,11 @@ pub fn format_ty_for_cc<'tcx>(
                     use rustc_type_ir::inherent::FSigKind;
                     rustc_middle::ty::FnSig {
                         inputs_and_output: sig_tys.inputs_and_output,
-                        fn_sig_kind: ty::FnSigKind::new(
-                            fn_header.abi(),
-                            fn_header.safety(),
-                            fn_header.c_variadic(),
-                        ),
+                        // We do not support #[splat], so we do not set it here.
+                        fn_sig_kind: ty::FnSigKind::default()
+                            .set_abi(fn_header.abi())
+                            .set_safety(fn_header.safety())
+                            .set_c_variadic(fn_header.c_variadic()),
                     }
                 };
                 sig

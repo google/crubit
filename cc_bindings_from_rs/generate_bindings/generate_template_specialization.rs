@@ -35,13 +35,6 @@ use rustc_span::def_id::DefId;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-fn is_cpp_movable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
-    ty.ty_adt_def()
-        .map(|adt| db.has_move_ctor_and_assignment_operator(Some(adt.did()), ty).is_some())
-        // Primitive types bind to C++ primitives that support move construction and assignment.
-        .unwrap_or_else(|| ty.is_primitive_ty())
-}
-
 pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
@@ -447,11 +440,8 @@ fn get_result_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> Res
     }
 }
 
-struct ResultApiGenerator<'a, 'tcx> {
-    db: &'a BindingsGenerator<'tcx>,
-    ok_ty_rs: Ty<'tcx>,
+struct ResultApiGenerator<'tcx> {
     ok_ty_cpp: TokenStream,
-    err_ty_rs: Ty<'tcx>,
     err_ty_cpp: TokenStream,
     needs_drop: bool,
     tag_method: ApiSnippets<'tcx>,
@@ -462,7 +452,7 @@ struct ResultApiGenerator<'a, 'tcx> {
     err_ptr_val: TokenStream,
 }
 
-impl<'tcx> ResultApiGenerator<'_, 'tcx> {
+impl<'tcx> ResultApiGenerator<'tcx> {
     fn api_snippets(self) -> ApiSnippets<'tcx> {
         let Self {
             ok_ty_cpp,
@@ -1151,10 +1141,7 @@ fn specialize_result<'tcx>(
 
     let result_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => ResultApiGenerator {
-            db,
-            ok_ty_rs: ok_ty.ty,
             ok_ty_cpp: ok_ty_tokens.clone(),
-            err_ty_rs: err_ty.ty,
             err_ty_cpp: err_ty_tokens.clone(),
             needs_drop,
             tag_method,
@@ -1211,10 +1198,7 @@ fn specialize_result<'tcx>(
                 )
             };
             ResultApiGenerator {
-                db,
-                ok_ty_rs: ok_ty.ty,
                 ok_ty_cpp: ok_ty_tokens.clone(),
-                err_ty_rs: err_ty.ty,
                 err_ty_cpp: err_ty_tokens.clone(),
                 needs_drop,
                 tag_method,

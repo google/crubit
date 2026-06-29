@@ -2571,6 +2571,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                 })
                 .collect();
 
+            #[rustversion::since(2026-05-18)]
             let layout = &self.layout;
             let variant_alignments = match layout_variants {
                 Variants::Multiple { variants: layout_vars, .. } => {

@@ -1264,11 +1264,12 @@ pub fn get_async_future_output_ty<'tcx>(
     #[rustversion::any(all(nightly, before(2026-06-23)), stable(1.96))]
     let alias_def_id = alias_ty.kind.def_id();
     #[rustversion::all(nightly, since(2026-06-23))]
-    let alias_def_id = alias_ty.kind.try_to_opaque().map(|id| id.into()).ok_or_else(|| {
-        anyhow!(
+    let alias_def_id: DefId =
+        alias_ty.kind.try_to_opaque().map(|id| id.into()).ok_or_else(|| {
+            anyhow!(
             "crubit.rs-bug: Future::Output alias is not an opaque type, this should never happen.",
         )
-    })?;
+        })?;
     tcx.explicit_item_bounds(alias_def_id)
         .iter_instantiated_copied(tcx, alias_ty.args)
         .find_map(|unnorm| {
