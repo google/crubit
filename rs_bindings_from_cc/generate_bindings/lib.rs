@@ -1052,22 +1052,24 @@ fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
             crate_path: crate_path.clone(),
             uniform_repr_template_type: uniform_repr_template_type.as_ref().map(|r| {
                 Rc::new(match r.as_ref() {
-                    UniformReprTemplateType::StdVector { element_type } => {
-                        UniformReprTemplateType::StdVector {
-                            element_type: all_static_lifetimes_internal(Rc::new(
-                                element_type.clone(),
-                            ))
-                            .as_ref()
-                            .clone(),
-                        }
-                    }
-                    UniformReprTemplateType::StdUniquePtr { element_type } => {
-                        UniformReprTemplateType::StdUniquePtr {
-                            element_type: all_static_lifetimes_internal(Rc::new(
-                                element_type.clone(),
-                            ))
-                            .as_ref()
-                            .clone(),
+                    UniformReprTemplateType::StdVector { element_type }
+                    | UniformReprTemplateType::StdUniquePtr { element_type }
+                    | UniformReprTemplateType::StdAtomic { element_type } => {
+                        let element_type =
+                            all_static_lifetimes_internal(Rc::new(element_type.clone()))
+                                .as_ref()
+                                .clone();
+                        match r.as_ref() {
+                            UniformReprTemplateType::StdVector { .. } => {
+                                UniformReprTemplateType::StdVector { element_type }
+                            }
+                            UniformReprTemplateType::StdUniquePtr { .. } => {
+                                UniformReprTemplateType::StdUniquePtr { element_type }
+                            }
+                            UniformReprTemplateType::StdAtomic { .. } => {
+                                UniformReprTemplateType::StdAtomic { element_type }
+                            }
+                            _ => unreachable!(),
                         }
                     }
                     UniformReprTemplateType::AbslSpan {
