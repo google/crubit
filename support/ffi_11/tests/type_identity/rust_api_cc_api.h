@@ -63,118 +63,152 @@ unsigned long long c_ulonglong();
 // reserved keyword and can't be used as a C++ identifier
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(char(0)) c_char() {
   return __crubit_internal::__crubit_thunk_c_uchar();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(char16_t(0)) __crubit_thunk_c_uchar16_ut();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(char16_t(0)) c_char16_t() {
   return __crubit_internal::__crubit_thunk_c_uchar16_ut();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(char32_t(0)) __crubit_thunk_c_uchar32_ut();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(char32_t(0)) c_char32_t() {
   return __crubit_internal::__crubit_thunk_c_uchar32_ut();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(char8_t(0)) __crubit_thunk_c_uchar8_ut();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(char8_t(0)) c_char8_t() {
   return __crubit_internal::__crubit_thunk_c_uchar8_ut();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" double __crubit_thunk_c_udouble();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline double c_double() {
   return __crubit_internal::__crubit_thunk_c_udouble();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" float __crubit_thunk_c_ufloat();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline float c_float() { return __crubit_internal::__crubit_thunk_c_ufloat(); }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_c_uint();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t c_int() {
   return __crubit_internal::__crubit_thunk_c_uint();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int64_t __crubit_thunk_c_ulong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int64_t c_long() {
   return __crubit_internal::__crubit_thunk_c_ulong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" long long __crubit_thunk_c_ulonglong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline long long c_longlong() {
   return __crubit_internal::__crubit_thunk_c_ulonglong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" decltype(nullptr) __crubit_thunk_c_unullptr_ut();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline decltype(nullptr) c_nullptr_t() {
   return __crubit_internal::__crubit_thunk_c_unullptr_ut();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int8_t __crubit_thunk_c_uschar();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int8_t c_schar() {
   return __crubit_internal::__crubit_thunk_c_uschar();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int16_t __crubit_thunk_c_ushort();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int16_t c_short() {
   return __crubit_internal::__crubit_thunk_c_ushort();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint8_t __crubit_thunk_c_uuchar();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint8_t c_uchar() {
   return __crubit_internal::__crubit_thunk_c_uuchar();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint32_t __crubit_thunk_c_uuint();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint32_t c_uint() {
   return __crubit_internal::__crubit_thunk_c_uuint();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint64_t __crubit_thunk_c_uulong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint64_t c_ulong() {
   return __crubit_internal::__crubit_thunk_c_uulong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" unsigned long long __crubit_thunk_c_uulonglong();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline unsigned long long c_ulonglong() {
   return __crubit_internal::__crubit_thunk_c_uulonglong();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::uint16_t __crubit_thunk_c_uushort();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::uint16_t c_ushort() {
   return __crubit_internal::__crubit_thunk_c_uushort();
 }

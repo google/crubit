@@ -66,9 +66,11 @@ static_assert(
     alignof(ReprRustUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(
     ::example_crate::ReprRustUnion* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::example_crate::ReprRustUnion::ReprRustUnion() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -78,17 +80,21 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::example_crate::ReprRustUnion>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_set_ua(::example_crate::ReprRustUnion&,
                                       ::std::int32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void ReprRustUnion::set_a(::std::int32_t a) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ua(self, a);
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_set_ub(::example_crate::ReprRustUnion&, double);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void ReprRustUnion::set_b(double b) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ub(self, b);

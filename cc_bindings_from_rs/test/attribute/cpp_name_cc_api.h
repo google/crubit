@@ -65,8 +65,10 @@ static_assert(::std::is_trivially_destructible_v<Replaced>);
 static_assert(::std::is_trivially_move_constructible_v<::cpp_name::Replaced>);
 static_assert(::std::is_trivially_move_assignable_v<::cpp_name::Replaced>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::cpp_name::Replaced* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::cpp_name::Replaced Replaced::create() {
   crubit::Slot<::cpp_name::Replaced> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();

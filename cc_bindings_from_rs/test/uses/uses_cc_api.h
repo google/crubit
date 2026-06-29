@@ -183,9 +183,11 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::uses::AliasOfExportedStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_create(::std::int32_t,
                                       ::uses::AliasOfExportedStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::uses::AliasOfExportedStruct AliasOfExportedStruct::create(
     ::std::int32_t field) {
   crubit::Slot<::uses::AliasOfExportedStruct> __return_value_ret_val_holder;
@@ -249,8 +251,10 @@ using XFromExternCrate CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") =
 namespace uses::a::c {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_private_umiddle_upath();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t private_middle_path() {
   return __crubit_internal::__crubit_thunk_private_umiddle_upath();
 }
@@ -264,8 +268,10 @@ using ::uses::doc_hidden_test::visible::private_fn;
 namespace uses::doc_hidden_test::visible {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_private_ufn();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
@@ -279,8 +285,10 @@ using ::uses::f;
 namespace uses {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_f();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 
 }  // namespace uses
@@ -288,8 +296,10 @@ inline ::std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 namespace uses {
 constexpr auto public_name = ::uses::other_public_name;
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_other_upublic_uname();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void other_public_name() {
   return __crubit_internal::__crubit_thunk_other_upublic_uname();
 }
@@ -299,8 +309,10 @@ inline void other_public_name() {
 namespace uses {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t __crubit_thunk_private_ufn();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
@@ -310,8 +322,10 @@ inline ::std::int32_t private_fn() {
 namespace uses {
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_ux(::extern_crate::X* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::extern_crate::X return_x() {
   crubit::Slot<::extern_crate::X> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -320,8 +334,10 @@ inline ::extern_crate::X return_x() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_return_uy(::extern_crate::Y* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::extern_crate::Y return_y() {
   crubit::Slot<::extern_crate::Y> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();

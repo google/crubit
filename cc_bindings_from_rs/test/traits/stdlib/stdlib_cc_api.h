@@ -240,14 +240,18 @@ static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::stdlib::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::stdlib::MyStruct::MyStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::stdlib::MyStruct&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline MyStruct::~MyStruct() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline ::stdlib::MyStruct::MyStruct(MyStruct&& other) : MyStruct() {
   *this = ::std::move(other);
@@ -257,13 +261,17 @@ inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(MyStruct&& other) {
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone(::stdlib::MyStruct const&,
                                      ::stdlib::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_clone_ufrom(::stdlib::MyStruct&,
                                            ::stdlib::MyStruct const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::stdlib::MyStruct::MyStruct(const MyStruct& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);
 }
@@ -275,9 +283,11 @@ inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(
   return *this;
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::stdlib::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::stdlib::MyStruct MyStruct::new_(::std::int32_t x) {
   crubit::Slot<::stdlib::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -285,9 +295,11 @@ inline ::stdlib::MyStruct MyStruct::new_(::std::int32_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_from_ui32(::std::int32_t,
                                          ::stdlib::MyStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline MyStruct::MyStruct(::std::int32_t value) {
   __crubit_internal::__crubit_thunk_from_ui32(value, this);
 }
@@ -306,9 +318,11 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableIterator>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::stdlib::NonCloneableIterator* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::stdlib::NonCloneableIterator NonCloneableIterator::new_(
     ::std::int32_t x) {
   crubit::Slot<::stdlib::NonCloneableIterator> __return_value_ret_val_holder;
@@ -343,9 +357,11 @@ static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
                                    ::stdlib::RefIterator* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::stdlib::RefIterator RefIterator::new_(
     rs_std::SliceRef<const ::std::int32_t> slice) {
   crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
@@ -361,10 +377,12 @@ inline void RefIterator::__crubit_field_offset_assertions() {
 
 namespace stdlib {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     ::stdlib::MyStruct&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace stdlib
 inline ::std::optional<::std::int32_t>
 rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
@@ -383,10 +401,12 @@ rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
 
 namespace stdlib {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_ToString_uto_ustring_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     ::stdlib::MyStruct const&, ::rs::alloc::string::String* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace stdlib
 inline ::rs::alloc::string::String
 rs_std::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString>::to_string(
@@ -401,10 +421,12 @@ rs_std::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString>::to_string(
 
 namespace stdlib {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aNonCloneableIterator(
     ::stdlib::NonCloneableIterator&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace stdlib
 inline ::std::optional<::stdlib::NonCloneableValue>
 rs_std::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
@@ -423,10 +445,12 @@ rs_std::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
 
 namespace stdlib {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void
 __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e(
     ::stdlib::RefIterator&, unsigned char* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace stdlib
 inline ::std::optional<::std::int32_t const * $a crubit_nonnull>
 rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator>::next(

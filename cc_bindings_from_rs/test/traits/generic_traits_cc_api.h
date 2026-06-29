@@ -162,9 +162,11 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::generic_traits::StructGeneric>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::generic_traits::StructGeneric* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::generic_traits::StructGeneric StructGeneric::new_(::std::int32_t x) {
   crubit::Slot<::generic_traits::StructGeneric> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -185,10 +187,12 @@ inline void StructGeneric::__crubit_field_offset_assertions() {
 
 namespace generic_traits {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t
 __crubit_thunk_TraitWithGeneric_ufoo_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32(
     ::generic_traits::StructGeneric const&, ::std::int32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace generic_traits
 inline ::std::int32_t
 rs_std::impl<::generic_traits::StructGeneric,
@@ -201,10 +205,12 @@ rs_std::impl<::generic_traits::StructGeneric,
 
 namespace generic_traits {
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" ::std::int32_t
 __crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32_ui32(
     ::generic_traits::StructGeneric const&, ::std::int32_t, ::std::int32_t);
-}
+/// \endcond
+}  // namespace __crubit_internal
 }  // namespace generic_traits
 inline ::std::int32_t rs_std::impl<
     ::generic_traits::StructGeneric,

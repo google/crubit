@@ -66,8 +66,10 @@ static_assert(
     alignof(NeverStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_default(::never::NeverStruct* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::never::NeverStruct::NeverStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
@@ -75,16 +77,20 @@ static_assert(::std::is_trivially_destructible_v<NeverStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::never::NeverStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::never::NeverStruct>);
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" [[noreturn]] void __crubit_thunk_associated_ufn_unever_ureturn();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void NeverStruct::associated_fn_never_return() {
   __crubit_internal::__crubit_thunk_associated_ufn_unever_ureturn();
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" [[noreturn]] void __crubit_thunk_method_unever_ureturn(
     ::never::NeverStruct const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void NeverStruct::method_never_return() const {
   auto&& self = *this;
   __crubit_internal::__crubit_thunk_method_unever_ureturn(self);
@@ -93,8 +99,10 @@ inline void NeverStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NeverStruct, _non_zst_field));
 }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" [[noreturn]] void __crubit_thunk_never_ureturn();
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline void never_return() {
   __crubit_internal::__crubit_thunk_never_ureturn();
 }

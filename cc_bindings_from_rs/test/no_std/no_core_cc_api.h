@@ -68,12 +68,16 @@ static_assert(
     alignof(Test) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_drop(::no_core::Test&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline Test::~Test() { __crubit_internal::__crubit_thunk_drop(*this); }
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" void __crubit_thunk_new(::no_core::Test* __ret_ptr);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline ::no_core::Test Test::new_() {
   crubit::Slot<::no_core::Test> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -82,8 +86,10 @@ inline ::no_core::Test Test::new_() {
 }
 
 namespace __crubit_internal {
+/// \cond CRUBIT_INTERNAL
 extern "C" rs_std::StrRef __crubit_thunk_s(::no_core::Test const&);
-}
+/// \endcond
+}  // namespace __crubit_internal
 inline rs_std::StrRef Test::s() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_s(self);

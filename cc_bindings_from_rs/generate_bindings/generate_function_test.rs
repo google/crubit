@@ -40,7 +40,9 @@ fn test_generated_bindings_fn_export_name() {
                     ...
                     double public_function(double x, double y);
                     namespace __crubit_internal {
+                        __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                         extern "C" double export_name(double, double);
+                        __LITERALLY__ "/// \\endcond"
                     }
                     inline double public_function(double x, double y) {
                         return __crubit_internal::export_name(x, y);
@@ -229,7 +231,9 @@ fn test_format_item_fn_mangling() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" double ...(double, double);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline double public_function(double x, double y) {
@@ -267,7 +271,9 @@ fn test_format_item_fn_export_name() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" double export_name(double, double);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline double public_function(double x, double y) {
@@ -463,7 +469,9 @@ fn test_format_fn_cpp_name() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" void __crubit_thunk_foo();
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline void Create() {
@@ -502,7 +510,9 @@ fn test_format_item_fn_const() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" ::std::int32_t ...( ::std::int32_t);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline ::std::int32_t foo(::std::int32_t i) {
@@ -798,9 +808,11 @@ fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C"
-                ::std::int32_t const& $(__anon1) ...(
-                    ::std::int32_t const* $(__anon1) crubit_nonnull);
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C"
+                    ::std::int32_t const& $(__anon1) ...(
+                        ::std::int32_t const* $(__anon1) crubit_nonnull);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline
                 ::std::int32_t const& $(__anon1)
@@ -868,15 +880,17 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C"
-                ::std::int32_t const& $(foo)
-                ...(
-                    ::std::int32_t const* $a crubit_nonnull,
-                    ::std::int32_t const* $(foo) crubit_nonnull,
-                    ::std::int32_t const* $(foo) crubit_nonnull,
-                    ::std::int32_t const* $static crubit_nonnull,
-                    ::std::int32_t const&,
-                    ::std::int32_t const&);
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
+                    extern "C"
+                    ::std::int32_t const& $(foo)
+                    ...(
+                        ::std::int32_t const* $a crubit_nonnull,
+                        ::std::int32_t const* $(foo) crubit_nonnull,
+                        ::std::int32_t const* $(foo) crubit_nonnull,
+                        ::std::int32_t const* $static crubit_nonnull,
+                        ::std::int32_t const&,
+                        ::std::int32_t const&);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 inline
                 ::std::int32_t const& $(foo)
@@ -1135,7 +1149,9 @@ fn test_format_item_fn_rust_abi() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" double ...(double, double);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline double add(double x, double y) {
@@ -1213,7 +1229,9 @@ fn test_format_item_fn_rust_abi_with_param_taking_struct_by_value() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" ::std::int32_t ...(::rust_out::S*);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline ::std::int32_t into_i32(::rust_out::S s) {
@@ -1258,7 +1276,9 @@ fn test_format_item_fn_rust_abi_returning_struct_by_value() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" void ...(::std::int32_t, ::rust_out::S* __ret_ptr);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline ::rust_out::S create(::std::int32_t i) {
@@ -1324,7 +1344,9 @@ fn test_format_item_fn_vectorcall_abi() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" double ...(double, double);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline double add(double x, double y) {
@@ -1422,7 +1444,9 @@ fn test_format_item_fn_with_multiple_anonymous_parameter_names() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" void ...(double, double);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline void foo(double __param_0, double __param_1) {
@@ -1469,7 +1493,9 @@ fn test_format_item_fn_with_destructuring_parameter_name() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
+                    __LITERALLY__ "/// \\cond CRUBIT_INTERNAL"
                     extern "C" ::std::int32_t ...(::rust_out::S*);
+                    __LITERALLY__ "/// \\endcond"
                 }
                 ...
                 inline ::std::int32_t func(::rust_out::S __param_0) {
