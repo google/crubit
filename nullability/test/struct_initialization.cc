@@ -232,5 +232,42 @@ TEST(PointerNullabilityTest, SmartPointerInitializerList) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, DefaultConstructorInitialization) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+
+    struct TrivialPOD {
+      int* _Nonnull p;
+    };
+
+    struct DefaultedDefaultCtor {
+      DefaultedDefaultCtor() = default;  // [[unsafe]]
+      int* _Nonnull p;
+    };
+
+    struct ImplicitDefaultCtor {
+      std::unique_ptr<int> _Nonnull ptr;
+    };
+
+    struct DeletedDefaultCtor {
+      DeletedDefaultCtor() = delete;
+      int* _Nonnull p;
+    };
+
+    template <typename T>
+    struct TemplatedDefaultedCtor {
+      TemplatedDefaultedCtor() = default;  // [[unsafe]]
+      T* _Nonnull p;
+    };
+
+    void target() {
+      TrivialPOD pod;                         // [[unsafe]]
+      DefaultedDefaultCtor defaulted;         // [[unsafe]]
+      ImplicitDefaultCtor implicit;           // [[unsafe]]
+      TemplatedDefaultedCtor<int> templated;  // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
