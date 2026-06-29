@@ -499,11 +499,8 @@ impl<'db> BindingsGenerator<'db> {
 
     #[track_caller]
     pub fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &'db ir::Item {
-        let Some(idx) = self.ir().item_id_to_item_idx().get(&decl_id) else {
-            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.ir().flat_ir())
-        };
-        let Some(item) = self.ir().flat_ir().items.get(*idx) else {
-            panic!("Couldn't find an item at idx {} in IR:\n{:#?}", idx, self.ir().flat_ir())
+        let Some(item) = self.ir().get_decl(decl_id) else {
+            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.ir().tree_ir())
         };
         item
     }

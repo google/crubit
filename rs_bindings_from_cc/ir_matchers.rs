@@ -86,7 +86,7 @@ pub mod internal {
         // c,]`). We use rustfmt to format the failure messages. So to make the
         // input token stream consistent with failure messages we format the
         // input token stream with rustfmt as well.
-        Ok(ir_to_string(ir.flat_ir_debug_print().parse().unwrap())?.parse().unwrap())
+        Ok(ir_to_string(ir.tree_ir_debug_print().parse().unwrap())?.parse().unwrap())
     }
 
     fn ir_to_string(input: TokenStream) -> Result<String> {
@@ -146,8 +146,8 @@ mod tests {
 
     #[gtest]
     fn test_optional_trailing_comma() {
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { FlatIR { ... }});
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { FlatIR { ... }},);
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { TreeIR { ... }});
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { TreeIR { ... }},);
 
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir},);
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[gtest]
-    #[should_panic(expected = "input:\n\n```\nFlatIR {")]
+    #[should_panic(expected = "input:\n\n```\nTreeIR {")]
     fn test_assert_ir_not_matches_panics_on_match() {
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {items});
     }
