@@ -2,7 +2,6 @@
 
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
-load("//build_integration:build_integration.bzl", "bazel_to_builds")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
@@ -289,26 +288,5 @@ filegroup(
     srcs = ["annotations.swig"],
     visibility = [
         "//visibility:public",
-    ],
-)
-
-bazel_to_builds(
-    name = "generate_builds",
-    cmake = "CMakeLists.txt",
-    gn = "BUILD.gn",
-    targets = [
-        ":annotations",
-        ":annotations_internal",
-        ":bridge_cpp",
-        ":bridge_rust",
-        ":cref",
-        ":ctor",
-        ":ctor_proc_macros",
-        ":crubit_annotate",
-        ":forward_declare",
-        ":forward_declare_proc_macros",
-        ":lifetime_annotations",
-        ":oops",
-        ":operator",
     ],
 )

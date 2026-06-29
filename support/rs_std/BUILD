@@ -2,7 +2,6 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
-load("//build_integration:build_integration.bzl", "bazel_to_builds")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
@@ -407,31 +406,5 @@ cpp_api_from_rust_toolchain_bindings(
     deps = [
         ":rs_alloc",
         ":rs_core",
-    ],
-)
-
-bazel_to_builds(
-    name = "generate_builds",
-    cmake = "CMakeLists.txt",
-    gn = "BUILD.gn",
-    targets = [
-        ":char",
-        ":dyn_callable",
-        ":dyn_callable_rs",
-        ":dyn_erased_future",
-        ":dyn_erased_future_cc",
-        ":erased_future",
-        ":iterator_adapter",
-        ":lossy_formatter",
-        ":lossy_formatter_for_bindings",
-        ":lossy_formatter_for_bindings_rs",
-        ":option",
-        ":result",
-        ":slice_ref",
-        ":str_ref",
-        ":traits",
-        ":tuple",
-        ":vec",
-        ":waker",
     ],
 )

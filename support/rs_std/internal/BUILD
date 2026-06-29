@@ -1,7 +1,6 @@
 """Internal C++ libraries that help work with Rust types."""
 
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
-load("//build_integration:build_integration.bzl", "bazel_to_builds")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -27,14 +26,5 @@ cc_test(
         "@fuzztest",
         "@fuzztest//:fuzztest_gtest_main",
         "@googletest//:gmock",
-    ],
-)
-
-bazel_to_builds(
-    name = "generate_builds",
-    cmake = "CMakeLists.txt",
-    gn = "BUILD.gn",
-    targets = [
-        ":is_utf8",
     ],
 )
