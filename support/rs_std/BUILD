@@ -76,7 +76,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
     ],
 )
 
@@ -86,7 +85,6 @@ rust_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
     ],
 )
 
@@ -109,7 +107,6 @@ rust_library(
     ],
     visibility = [
         "//:__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
     ],
     deps = [
         ":erased_future",
@@ -122,7 +119,6 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
     ],
     deps = [":waker"],
 )
