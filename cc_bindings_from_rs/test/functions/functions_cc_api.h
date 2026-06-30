@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -181,76 +182,88 @@ void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
 
 namespace functions::generic_fn_tests::ctor_trait_tests {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: "
-    "Movable") alignas(4) [[clang::trivial_abi]] Movable final {
- public:
-  // `functions_golden::generic_fn_tests::ctor_trait_tests::Movable` doesn't
-  // implement the `Default` trait
-  Movable() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Movable() = default;
-  Movable(Movable&&) = default;
-  Movable& operator=(Movable&&) = default;
-
-  // `functions_golden::generic_fn_tests::ctor_trait_tests::Movable` doesn't
-  // implement the `Clone` trait
-  Movable(const Movable&) = delete;
-  Movable& operator=(const Movable&) = delete;
-  Movable(::crubit::UnsafeRelocateTag, Movable&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
-  union {
-    ::std::int32_t value;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: "
-    "NonMovable") alignas(4) [[clang::trivial_abi]] NonMovable final {
+    "CppMovable") alignas(4) [[clang::trivial_abi]] CppMovable final {
  public:
-  // `functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable` doesn't
+  // `functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable` doesn't
   // implement the `Default` trait
-  NonMovable() = delete;
+  CppMovable() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
-  ~NonMovable() = default;
-  NonMovable(NonMovable&&) = default;
-  NonMovable& operator=(NonMovable&&) = default;
+  ~CppMovable() = default;
+  CppMovable(CppMovable&&) = default;
+  CppMovable& operator=(CppMovable&&) = default;
 
-  // `functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable` doesn't
+  // `functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable` doesn't
   // implement the `Clone` trait
-  NonMovable(const NonMovable&) = delete;
-  NonMovable& operator=(const NonMovable&) = delete;
-  NonMovable(::crubit::UnsafeRelocateTag, NonMovable&& value) {
+  CppMovable(const CppMovable&) = delete;
+  CppMovable& operator=(const CppMovable&) = delete;
+  CppMovable(::crubit::UnsafeRelocateTag, CppMovable&& value) {
     ::std::memcpy(this, &value, sizeof(value));
   }
 
-  static ::functions::generic_fn_tests::ctor_trait_tests::NonMovable new_(
+  static ::functions::generic_fn_tests::ctor_trait_tests::CppMovable new_(
       ::std::int32_t value);
 
   union {
     ::std::int32_t value;
   };
-  // Field `_pinned` omitted: C++ does not support zero-sized types.
+
  private:
   static void __crubit_field_offset_assertions();
 };
 
 ::std::int32_t accept_ctor(
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c);
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c2);
+
+::std::int32_t accept_ctor_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     crubit_nonnull,
+                 3>
+        a);
+
+::std::int32_t accept_ctor_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 crubit_nonnull>
+        c);
+
+::std::int32_t accept_rvalue_ref(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
+
+::std::int32_t accept_rvalue_reference_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     $(__anon1) crubit_nonnull,
+                 3>
+        a);
+
+::std::int32_t accept_rvalue_reference_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 $(__anon1) crubit_nonnull>
+        t);
 
 // Error generating bindings for function
-// `functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor_movable`
-// defined at
-// cc_bindings_from_rs/test/functions/functions.rs;l=313:
-// No valid non-generic replacement for generic type param `impl Ctor<Output =
-// Movable>`
+// `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor` defined
+// at
+// cc_bindings_from_rs/test/functions/functions.rs;l=327:
+// Attempted to write out unknown type from Rust to C
+
+::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
+return_rvalue_reference(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
+
+::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 $a crubit_nonnull,
+             1>
+return_rvalue_reference_array(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
+
+::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+             $a crubit_nonnull>
+return_rvalue_reference_tuple(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
 
 }  // namespace functions::generic_fn_tests::ctor_trait_tests
 
@@ -321,20 +334,38 @@ struct rs_std::impl<
 
 template <>
 struct rs_std::impl<
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable,
     ::ctor::CtorNew<
-        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&>> {
+        ::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+        $a crubit_nonnull>> {
   static constexpr bool kIsImplemented = true;
-  using CtorType CRUBIT_INTERNAL_RUST_TYPE(
-      "<functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable as :: "
-      "ctor :: CtorNew>::CtorType") =
-      ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&;
-  using Error CRUBIT_INTERNAL_RUST_TYPE(
-      "<functions_golden::generic_fn_tests::ctor_trait_tests::NonMovable as :: "
-      "ctor :: CtorNew>::Error") = ::std::int32_t;
 
-  static ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& ctor_new(
-      ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& args);
+  // Error generating bindings for associated type
+  // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
+  // ctor::CtorNew<ctor::RvalueReference<'a,
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`
+  // defined at
+  // cc_bindings_from_rs/test/functions/functions.rs;l=294:
+  // Generic types are not supported yet (b/259749095)
+
+  // Error generating bindings for associated type
+  // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
+  // ctor::CtorNew<ctor::RvalueReference<'a,
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`
+  // defined at
+  // cc_bindings_from_rs/test/functions/functions.rs;l=295:
+  // Failed to format type for the definition of `std::convert::Infallible`:
+  // Zero-sized types (ZSTs) are not supported (b/258259459)
+
+  // Error generating bindings for associated function
+  // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
+  // ctor::CtorNew<ctor::RvalueReference<'a,
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::ctor_new`
+  // defined at
+  // cc_bindings_from_rs/test/functions/functions.rs;l=296:
+  // Error formatting function return type
+  // `ctor::RustMoveCtor<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`:
+  // Generic types are not supported yet (b/259749095)
 };
 
 namespace functions::fn_abi_tests {
@@ -571,53 +602,157 @@ inline ::std::int32_t struct_ref(
 namespace functions::generic_fn_tests::ctor_trait_tests {
 
 static_assert(
-    sizeof(Movable) == 4,
+    sizeof(CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Movable) == 4,
+    alignof(CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Movable>);
+static_assert(::std::is_trivially_destructible_v<CppMovable>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::functions::generic_fn_tests::ctor_trait_tests::Movable>);
+              ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
 static_assert(::std::is_trivially_move_assignable_v<
-              ::functions::generic_fn_tests::ctor_trait_tests::Movable>);
-inline void Movable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Movable, value));
-}
-static_assert(
-    sizeof(NonMovable) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(NonMovable) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NonMovable>);
-static_assert(::std::is_trivially_move_constructible_v<
-              ::functions::generic_fn_tests::ctor_trait_tests::NonMovable>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::functions::generic_fn_tests::ctor_trait_tests::NonMovable>);
+              ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::int32_t,
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable* __ret_ptr);
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable* __ret_ptr);
 }
-inline ::functions::generic_fn_tests::ctor_trait_tests::NonMovable
-NonMovable::new_(::std::int32_t value) {
-  crubit::Slot<::functions::generic_fn_tests::ctor_trait_tests::NonMovable>
+inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable
+CppMovable::new_(::std::int32_t value) {
+  crubit::Slot<::functions::generic_fn_tests::ctor_trait_tests::CppMovable>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void NonMovable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonMovable, value));
+inline void CppMovable::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(CppMovable, value));
 }
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_accept_uctor(
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&);
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
 }
 inline ::std::int32_t accept_ctor(
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& _c) {
-  return __crubit_internal::__crubit_thunk_accept_uctor(::std::move(_c));
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c2) {
+  return __crubit_internal::__crubit_thunk_accept_uctor(::std::move(c1),
+                                                        ::std::move(c2));
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_uctor_uarray(void*);
+}
+inline ::std::int32_t accept_ctor_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     crubit_nonnull,
+                 3>
+        a) {
+  return __crubit_internal::__crubit_thunk_accept_uctor_uarray(&a);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_uctor_utuple(void**);
+}
+inline ::std::int32_t accept_ctor_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 crubit_nonnull>
+        c) {
+  auto&& c_0 = ::std::get<0>(c);
+  auto&& c_cabi_0 = ::std::move(c_0);
+  void* c_cabi[] = {&c_cabi_0};
+  return __crubit_internal::__crubit_thunk_accept_uctor_utuple(c_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_uref(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
+}
+inline ::std::int32_t accept_rvalue_ref(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  return __crubit_internal::__crubit_thunk_accept_urvalue_uref(::std::move(c));
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_ureference_uarray(
+    void*);
+}
+inline ::std::int32_t accept_rvalue_reference_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     $(__anon1) crubit_nonnull,
+                 3>
+        a) {
+  return __crubit_internal::__crubit_thunk_accept_urvalue_ureference_uarray(&a);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_ureference_utuple(
+    void**);
+}
+inline ::std::int32_t accept_rvalue_reference_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 $(__anon1) crubit_nonnull>
+        t) {
+  auto&& t_0 = ::std::get<0>(t);
+  auto&& t_cabi_0 = ::std::move(t_0);
+  void* t_cabi[] = {&t_cabi_0};
+  return __crubit_internal::__crubit_thunk_accept_urvalue_ureference_utuple(
+      t_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
+__crubit_thunk_return_urvalue_ureference(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
+}
+inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
+return_rvalue_reference(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  return __crubit_internal::__crubit_thunk_return_urvalue_ureference(
+      ::std::move(c));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_urvalue_ureference_uarray(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
+    void* __ret_ptr);
+}
+inline ::std::array<
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+        $a crubit_nonnull,
+    1>
+return_rvalue_reference_array(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  crubit::Slot<
+      ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                       $a crubit_nonnull,
+                   1>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_return_urvalue_ureference_uarray(
+      ::std::move(c), __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_urvalue_ureference_utuple(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
+    void** __ret_ptr);
+}
+inline ::std::tuple<
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+    $a crubit_nonnull>
+return_rvalue_reference_tuple(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  ::functions::generic_fn_tests::ctor_trait_tests::CppMovable* $a crubit_nonnull
+      __return_value_0_ret_val_holder;
+  ::functions::generic_fn_tests::ctor_trait_tests::CppMovable*
+      $a crubit_nonnull* __return_value_0_storage =
+          &__return_value_0_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage};
+  __crubit_internal::__crubit_thunk_return_urvalue_ureference_utuple(
+      ::std::move(c), __return_value_storage);
+  return ::std::make_tuple(*__return_value_0_storage);
 }
 
 }  // namespace functions::generic_fn_tests::ctor_trait_tests
@@ -732,25 +867,6 @@ $(__anon1) rs_std::impl<
   return functions::__crubit_internal::
       __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
           self);
-}
-
-namespace functions {
-namespace __crubit_internal {
-extern "C" ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&
-__crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&);
-}
-}  // namespace functions
-inline ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&
-rs_std::impl<
-    ::functions::generic_fn_tests::ctor_trait_tests::NonMovable,
-    ::ctor::CtorNew<
-        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&&>>::
-    ctor_new(
-        ::functions::generic_fn_tests::ctor_trait_tests::NonMovable&& args) {
-  return functions::__crubit_internal::
-      __crubit_thunk_CtorNew_uctor_unew_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_uctor_x0000003a_x0000003aRvalueReference_x0000003c_x00000027a_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aNonMovable_x0000003e(
-          ::std::move(args));
 }
 
 #pragma clang diagnostic pop

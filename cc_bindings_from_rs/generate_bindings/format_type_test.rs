@@ -614,3 +614,51 @@ fn test_format_ty_for_rs_failures() {
         },
     );
 }
+
+fn rvalue_reference_preamble() -> TokenStream {
+    quote! {
+        pub struct SomeStruct {
+            pub x: i32,
+        }
+        pub mod ctor {
+            pub struct RvalueReference<'a, T: ?Sized>(pub &'a mut T);
+        }
+    }
+}
+
+#[test]
+fn test_format_ty_for_cc_rvalue_reference_param() {
+    // Test as a top-level parameter (location = FnParam) which formats as "SomeStruct &&".
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[("ctor::RvalueReference<'static, SomeStruct>", "::rust_out::SomeStruct &&")],
+        rvalue_reference_preamble(),
+        |desc, tcx, ty, expected| {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
+        },
+    );
+}
+
+#[test]
+fn test_format_ty_for_cc_rvalue_reference_return() {
+    test_ty(
+        TypeLocation::FnReturn { is_constructor: false },
+        &[("ctor::RvalueReference<'static, SomeStruct>", "::rust_out::SomeStruct &&")],
+        rvalue_reference_preamble(),
+        |desc, tcx, ty, expected| {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet =
+                db.format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false }).unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
+        },
+    );
+}

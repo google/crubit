@@ -277,41 +277,76 @@ pub mod generic_fn_tests {
 
     pub mod ctor_trait_tests {
         use crubit_annotate::must_bind;
-        use ctor::Ctor;
-        use std::marker::PhantomPinned;
+        use ctor::{emplace, Ctor, CtorNew, Infallible, RustMoveCtor, RvalueReference};
 
         #[must_bind]
-        pub struct NonMovable {
+        pub struct CppMovable {
             pub value: i32,
-            _pinned: PhantomPinned,
         }
 
-        impl NonMovable {
+        impl CppMovable {
             pub fn new(value: i32) -> Self {
-                NonMovable { value, _pinned: PhantomPinned }
+                CppMovable { value }
             }
         }
 
-        impl<'a> ::ctor::CtorNew<::ctor::RvalueReference<'a, Self>> for NonMovable {
-            type CtorType = ::ctor::RvalueReference<'a, Self>;
-            type Error = i32;
-            fn ctor_new(
-                args: ::ctor::RvalueReference<'a, Self>,
-            ) -> ::ctor::RvalueReference<'a, Self> {
-                args
+        impl<'a> CtorNew<RvalueReference<'a, Self>> for CppMovable {
+            type CtorType = RustMoveCtor<Self>;
+            type Error = Infallible;
+            fn ctor_new(args: RvalueReference<'a, Self>) -> Self::CtorType {
+                RustMoveCtor::new(Self::new(args.0.value))
             }
         }
 
-        pub fn accept_ctor(_c: impl Ctor<Output = NonMovable>) -> i32 {
-            42
+        pub fn accept_ctor(c1: Ctor![CppMovable], c2: Ctor![CppMovable]) -> i32 {
+            emplace!(c1).value + emplace!(c2).value
         }
 
-        pub struct Movable {
-            pub value: i32,
+        pub fn accept_rvalue_ref(c: RvalueReference<'_, CppMovable>) -> i32 {
+            c.value
         }
 
-        pub fn accept_ctor_movable(_c: impl Ctor<Output = Movable>) -> i32 {
-            42
+        pub fn return_rvalue_reference<'a>(
+            c: RvalueReference<'a, CppMovable>,
+        ) -> RvalueReference<'a, CppMovable> {
+            c
+        }
+
+        pub fn return_rvalue_reference_tuple<'a>(
+            c: RvalueReference<'a, CppMovable>,
+        ) -> (RvalueReference<'a, CppMovable>,) {
+            (c,)
+        }
+
+        pub fn return_rvalue_reference_array<'a>(
+            c: RvalueReference<'a, CppMovable>,
+        ) -> [RvalueReference<'a, CppMovable>; 1] {
+            [c]
+        }
+
+        pub fn return_ctor() -> impl Ctor<Output = CppMovable> {
+            CppMovable::new(123)
+        }
+
+        // This needs the rvalue references to become pointers: tuples of references don't
+        // mean what you would expect.
+        pub fn accept_rvalue_reference_tuple(t: (RvalueReference<'_, CppMovable>,)) -> i32 {
+            t.0.value
+        }
+
+        // This needs the rvalue references to become pointers: arrays can't hold references.
+        pub fn accept_rvalue_reference_array(a: [RvalueReference<'_, CppMovable>; 3]) -> i32 {
+            a.into_iter().map(|c| c.value).sum()
+        }
+
+        pub fn accept_ctor_tuple(c: (Ctor![CppMovable],)) -> i32 {
+            emplace!(c.0).value
+        }
+
+        pub fn accept_ctor_array<C: Ctor<Output = CppMovable, Error = Infallible>>(
+            a: [C; 3],
+        ) -> i32 {
+            a.into_iter().map(|c| emplace!(c).value).sum()
         }
     }
 }

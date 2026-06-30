@@ -4,8 +4,11 @@
 
 #include "cc_bindings_from_rs/test/functions/functions.h"
 
+#include <array>
 #include <cstdint>
 #include <optional>
+#include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -177,10 +180,73 @@ TEST(GenericFnTest, IntoTraitTests) {
             tests::generic_param_nested_deeper_in_param_ty({1, 2, 3}));
 }
 
-TEST(GenericFnTest, CtorTraitTests) {
+TEST(GenericFnTest, CtorTraitParam) {
   namespace tests = functions::generic_fn_tests::ctor_trait_tests;
-  tests::NonMovable non_movable = tests::NonMovable::new_(123);
-  EXPECT_EQ(42, tests::accept_ctor(std::move(non_movable)));
+  tests::CppMovable c1 = tests::CppMovable::new_(40);
+  tests::CppMovable c2 = tests::CppMovable::new_(2);
+  EXPECT_EQ(42, tests::accept_ctor(std::move(c1), std::move(c2)));
+}
+
+TEST(GenericFnTest, CtorTraitRvalueRefParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c = tests::CppMovable::new_(42);
+  EXPECT_EQ(42, tests::accept_rvalue_ref(std::move(c)));
+}
+
+TEST(GenericFnTest, CtorTraitTupleParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c = tests::CppMovable::new_(42);
+  std::tuple<tests::CppMovable*> t{&c};
+  EXPECT_EQ(42, tests::accept_ctor_tuple(t));
+}
+
+TEST(GenericFnTest, CtorTraitArrayParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c1 = tests::CppMovable::new_(100);
+  tests::CppMovable c2 = tests::CppMovable::new_(20);
+  tests::CppMovable c3 = tests::CppMovable::new_(3);
+  std::array<tests::CppMovable*, 3> arr{&c1, &c2, &c3};
+  EXPECT_EQ(123, tests::accept_ctor_array(arr));
+}
+
+TEST(GenericFnTest, RvalueRefNestedTupleParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c = tests::CppMovable::new_(42);
+  std::tuple<tests::CppMovable*> t{&c};
+  EXPECT_EQ(42, tests::accept_rvalue_reference_tuple(t));
+}
+
+TEST(GenericFnTest, RvalueRefNestedArrayParam) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c1 = tests::CppMovable::new_(100);
+  tests::CppMovable c2 = tests::CppMovable::new_(20);
+  tests::CppMovable c3 = tests::CppMovable::new_(3);
+  std::array<tests::CppMovable*, 3> arr{&c1, &c2, &c3};
+  EXPECT_EQ(123, tests::accept_rvalue_reference_array(arr));
+}
+
+TEST(GenericFnTest, RvalueRefReturn) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c = tests::CppMovable::new_(42);
+  tests::CppMovable&& returned = tests::return_rvalue_reference(std::move(c));
+  ASSERT_EQ(&returned, &c);
+  EXPECT_EQ(returned.value, 42);
+}
+
+TEST(GenericFnTest, RvalueRefReturnTuple) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c = tests::CppMovable::new_(42);
+  auto tuple_ret = tests::return_rvalue_reference_tuple(std::move(c));
+  ASSERT_EQ(std::get<0>(tuple_ret), &c);
+  EXPECT_EQ(std::get<0>(tuple_ret)->value, 42);
+}
+
+TEST(GenericFnTest, RvalueRefReturnArray) {
+  namespace tests = functions::generic_fn_tests::ctor_trait_tests;
+  tests::CppMovable c = tests::CppMovable::new_(42);
+  auto array_ret = tests::return_rvalue_reference_array(std::move(c));
+  ASSERT_EQ(array_ret[0], &c);
+  EXPECT_EQ(array_ret[0]->value, 42);
 }
 
 }  // namespace
