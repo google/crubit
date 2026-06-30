@@ -1156,9 +1156,6 @@ struct IR {
   llvm::json::Value ToJson() const;
   void ToFlatProto(rs_bindings_from_cc::ir_proto::flat::IRProto* proto) const;
 
-  // TODO(b/523265360): Remove this once use_nested_ir flag is retired.
-  bool UseNestedIr() const;
-
   template <typename T>
   std::vector<const T*> get_items_if() const {
     std::vector<const T*> filtered_items;

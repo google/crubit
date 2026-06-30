@@ -397,7 +397,7 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Identifier(id) => {
             let fn_ident = format_cc_ident(&id.identifier)?;
             let namespace_qualifier = db.namespace_qualifier(func).format_for_cc()?;
-            if func.instance_method_metadata.is_some() {
+            if func.instance_method_metadata.is_some() || func.adl_enclosing_record.is_some() {
                 quote! {#fn_ident}
             } else {
                 quote! { #namespace_qualifier #fn_ident }

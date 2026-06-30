@@ -246,8 +246,7 @@ fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Resul
 
     let mut api_snippets = ApiSnippets::default();
 
-    for &item_id in &namespace.child_item_ids {
-        let item = db.find_untyped_decl(item_id);
+    for item in &namespace.children {
         api_snippets.append(db.generate_item(item.clone())?);
     }
 
@@ -255,7 +254,7 @@ fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Resul
     api_snippets.generated_items.insert(
         namespace.canonical_namespace_id,
         GeneratedItem::CanonicalNamespace {
-            items: namespace.child_item_ids.to_vec(),
+            items: namespace.children.iter().map(|c| c.id()).collect(),
             deprecated_attr: namespace.deprecated.clone().map(DeprecatedAttr),
         },
     );
@@ -452,8 +451,7 @@ pub fn generate_bindings_tokens(
         snippets.features |= Feature::cfg_sanitize;
     }
 
-    for top_level_item_id in ir.top_level_item_ids() {
-        let item = db.find_untyped_decl(*top_level_item_id);
+    for item in ir.top_level_items_in_target(ir.current_target()) {
         snippets.append(db.generate_item(item.clone())?);
     }
 
@@ -555,11 +553,10 @@ pub fn generate_bindings_tokens(
         free_functions: _,
     } = snippets;
 
-    let main_api = code_snippet::generated_items_to_token_stream(
-        &generated_items,
-        &db,
-        ir.top_level_item_ids(),
-    );
+    let top_level_ids: Vec<ItemId> =
+        ir.top_level_items_in_target(ir.current_target()).iter().map(|item| item.id()).collect();
+    let main_api =
+        code_snippet::generated_items_to_token_stream(&generated_items, &db, &top_level_ids);
 
     let cc_details = CppDetails {
         includes: generate_rs_api_impl_includes(&db, crubit_support_path_format, internal_includes),

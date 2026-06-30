@@ -30,11 +30,8 @@ trait IrTestingExt {
 impl IrTestingExt for IR {
     #[track_caller]
     fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item {
-        let Some(idx) = self.item_id_to_item_idx().get(&decl_id) else {
-            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.flat_ir())
-        };
-        let Some(item) = self.flat_ir().items.get(*idx) else {
-            panic!("Couldn't find an item at idx {} in IR:\n{:#?}", idx, self.flat_ir())
+        let Some(item) = self.get_decl(decl_id) else {
+            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.tree_ir())
         };
         item
     }
@@ -1400,8 +1397,8 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
     );
     let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
     // Make sure the instantiation of the class template appears exactly once in the
-    // `top_level_item_ids`.
-    assert_eq!(1, ir.top_level_item_ids().iter().filter(|&&id| id == record_id).count());
+    // `top_level_items`.
+    assert_eq!(1, ir.top_level_items().iter().filter(|item| item.id() == record_id).count());
     // Type alias for the class template specialization.
     assert_ir_matches!(
         ir,
@@ -1488,10 +1485,10 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
             template_specialization: Some(TemplateSpecialization { ...
                 defining_target: BazelLabel("//test:testing_target"), ...
             }), ...
-            doc_comment: Some("Doc comment for template specialization for T=int."), ...
+            doc_comment: Some("Doc comment for template specialization for T=int." ...), ...
             fields: [Field {
                 rust_identifier: Some("value"), ...
-                doc_comment: Some("Doc comment of the `value` field specialization for T=int."), ...
+                doc_comment: Some("Doc comment of the `value` field specialization for T=int." ...), ...
                 type_: CcType { variant: Primitive(Int), ... },
                 access: Public,
                 offset: 0, ...
@@ -1519,7 +1516,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
             unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I@F@GetValue#1",
             owning_target: BazelLabel("//test:testing_target"),
             mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
-            doc_comment: Some("Doc comment of the GetValue method specialization for T=int."), ...
+            doc_comment: Some("Doc comment of the GetValue method specialization for T=int." ...), ...
             is_inline: true, ...
             instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
             enclosing_item_id: Some(ItemId(#record_id)), ...
@@ -1589,9 +1586,9 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     // source location. Test that they are sorted deterministically. (Implementation
     // detail: the ordering is by mangled name).
     let class_template_specialization_names = ir
-        .top_level_item_ids()
+        .top_level_items()
         .iter()
-        .filter_map(|id| match ir.find_decl(*id).unwrap() {
+        .filter_map(|item| match item {
             ir::Item::Record(r) if r.rs_name.identifier.contains("__CcTemplateInst") => {
                 Some(r.rs_name.identifier.as_ref())
             }
@@ -2653,9 +2650,17 @@ fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
     .unwrap();
     assert_ir_matches!(
         ir,
-        quote! { UnsupportedItem {
-          name: "SomeStruct::StaticMemberFunction" ...
-        }}
+        quote! {
+          top_level_items: [
+            ...
+            (
+                BazelLabel("//test:testing_target"),
+                [UnsupportedItem(UnsupportedItem { name: "SomeStruct" ... })]
+                ...
+            ),
+            ...
+          ]
+        }
     );
 }
 
@@ -2671,9 +2676,17 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
     .unwrap();
     assert_ir_matches!(
         ir,
-        quote! { UnsupportedItem {
-          name: "SomeStruct::NonStaticMemberFunction" ...
-        }}
+        quote! {
+          top_level_items: [
+            ...
+            (
+                BazelLabel("//test:testing_target"),
+                [UnsupportedItem(UnsupportedItem { name: "SomeStruct" ... })]
+                ...
+            ),
+            ...
+          ]
+        }
     );
 }
 
@@ -2797,20 +2810,26 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
     assert_ir_matches!(
         ir,
         quote! {
-            Namespace(Namespace {
-                cc_name: "MyNamespace",
-                rs_name: "MyNamespace" ...
-                id: ItemId(#ns_id) ...
-                child_item_ids: [ItemId(#child_id)] ...
-                enclosing_item_id: None ...
-            }),
-            IncompleteRecord(IncompleteRecord {
-                cc_name: "FwdDeclared" ...
-                rs_name: "FwdDeclared" ...
-                id: ItemId(#child_id) ...
-                ...
-                enclosing_item_id: Some(ItemId(#ns_id)) ...
-            }),
+          top_level_items: [
+            ...
+            (
+                BazelLabel("//test:testing_target"),
+                [Namespace(Namespace {
+                    cc_name: "MyNamespace",
+                    rs_name: "MyNamespace" ...
+                    id: ItemId(#ns_id) ...
+                    child_item_ids: [ItemId(#child_id)] ...
+                    enclosing_item_id: None ...
+                    children: [IncompleteRecord(IncompleteRecord {
+                        cc_name: "FwdDeclared" ...
+                        rs_name: "FwdDeclared" ...
+                        id: ItemId(#child_id) ...
+                        enclosing_item_id: Some(ItemId(#ns_id)) ...
+                    })],
+                })],
+            ),
+            ...
+          ]
         }
     );
 
@@ -3488,8 +3507,7 @@ fn test_top_level_items() {
     )
     .unwrap();
 
-    let top_level_items =
-        ir.top_level_item_ids().iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let top_level_items = ir.top_level_items().iter().collect_vec();
 
     assert_items_match!(
         top_level_items,
@@ -3802,23 +3820,31 @@ fn test_reopened_namespaces() {
     assert_ir_matches!(
         ir,
         quote! {
+          top_level_items: [
             ...
-            Namespace(Namespace {
-                cc_name: "test_namespace_bindings" ...
-            })
+            (
+                BazelLabel("//test:testing_target"),
+                [
+                    Namespace(Namespace {
+                        cc_name: "test_namespace_bindings",
+                        ...
+                        children: [Namespace(Namespace {
+                            cc_name: "inner",
+                            ...
+                        })],
+                    }),
+                    Namespace(Namespace {
+                        cc_name: "test_namespace_bindings",
+                        ...
+                        children: [Namespace(Namespace {
+                            cc_name: "inner",
+                            ...
+                        })],
+                    }),
+                ],
+            ),
             ...
-            Namespace(Namespace {
-              cc_name: "inner" ...
-            })
-            ...
-            Namespace(Namespace {
-              cc_name: "test_namespace_bindings" ...
-            })
-            ...
-            Namespace(Namespace {
-              cc_name: "inner" ...
-            })
-            ...
+          ]
         }
     );
 }
@@ -3899,9 +3925,9 @@ fn test_items_inside_linkage_spec_decl_are_imported() {
 
 #[gtest]
 fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
-    // The test below assumes the first top_level_item_ids element is the one added
+    // The test below assumes the first top_level_items element is the one added
     // by the the source code under test. Let's double check that assumption here.
-    assert!(ir_from_cc("").unwrap().top_level_item_ids().is_empty());
+    assert!(ir_from_cc("").unwrap().top_level_items().is_empty());
 
     let ir = ir_from_cc(
         r#"
@@ -3910,7 +3936,7 @@ fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
     }"#,
     )
     .unwrap();
-    let item_id = ir.top_level_item_ids()[0];
+    let item_id = ir.top_level_items().first().expect("should have a first item").id();
 
     assert_ir_matches!(
         ir,
@@ -3940,13 +3966,21 @@ fn test_inline_namespace() {
     assert_ir_matches!(
         ir,
         quote! {
+          top_level_items: [
             ...
-            Namespace(Namespace {
-                cc_name: "test_namespace_bindings" ...
-            }) ...
-            Namespace(Namespace {
-                cc_name: "inner" ...
-            }) ...
+            (
+                BazelLabel("//test:testing_target"),
+                [Namespace(Namespace {
+                    cc_name: "test_namespace_bindings",
+                    ...
+                    children: [Namespace(Namespace {
+                        cc_name: "inner",
+                        ...
+                    })],
+                })],
+            ),
+            ...
+          ]
         }
     );
 }
@@ -3976,34 +4010,36 @@ fn test_function_redeclared_as_friend() {
     assert_ir_matches!(
         ir,
         quote! {
-            items: [
+          top_level_items: [
+            ...
+            (
+                BazelLabel(#TESTING_TARGET),
+                [
+                    Record(Record {
+                        rs_name: "SomeClass",
+                        ...
+                        children: [
+                            Func(Func { cc_name: Constructor, rs_name: Constructor ... }),
+                            Func(Func { cc_name: Constructor, rs_name: Constructor ... }),
+                            Func(Func { cc_name: Constructor, rs_name: Constructor ... }),
+                            Func(Func { cc_name: Destructor, rs_name: Destructor ... }),
+                            Func(Func { cc_name: "operator=", rs_name: "operator=" ... }),
+                            Func(Func { cc_name: "operator=", rs_name: "operator=" ... }),
+                        ],
+                    }),
+                    Func(Func {
+                        cc_name: "bar",
+                        rs_name: "bar",
+                        ...
+                        enclosing_item_id: None,
+                        adl_enclosing_record: None,
+                        ...
+                    }),
+                ]
                 ...
-                Record(Record {
-                    rs_name: "SomeClass" ...
-                    child_item_ids: [
-                        ItemId(...),
-                        ItemId(...),
-                        ItemId(...),
-                        ItemId(...),
-                        ItemId(...),
-                        ItemId(...),
-                    ] ...
-                    enclosing_item_id: None ...
-                }),
-                Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
-                Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
-                Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
-                Func(Func { cc_name: Destructor, rs_name: Destructor ...  }),
-                Func(Func { cc_name: "operator=", rs_name: "operator=" ...  }),
-                Func(Func { cc_name: "operator=", rs_name: "operator=" ...  }),
-                Func(Func {
-                    cc_name: "bar",
-                    rs_name: "bar" ...
-                    enclosing_item_id: None ...
-                    adl_enclosing_record: None ...
-                }),
-            ],
-            top_level_item_ids: map! { ... BazelLabel(#TESTING_TARGET): [ItemId(...), ItemId(...)] ... }
+            ),
+            ...
+          ]
         }
     );
 }
@@ -4052,25 +4088,41 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
     assert_ir_matches!(
         ir,
         quote! {
-            items: [
+          top_level_items: [
+            ...
+            (
+                BazelLabel("//test:testing_target"),
+                [
+                    Namespace(Namespace {
+                        cc_name: "ns",
+                        rs_name: "ns",
+                        ...
+                        child_item_ids: [ItemId(#function_id)],
+                        enclosing_item_id: None,
+                        ...
+                        children: [Func(Func {
+                            cc_name: "f",
+                            rs_name: "f",
+                            ...
+                            enclosing_item_id: Some(ItemId(...)),
+                            ...
+                        })],
+                        ...
+                    }),
+                    Namespace(Namespace {
+                        cc_name: "ns",
+                        rs_name: "ns",
+                        ...
+                        child_item_ids: [],
+                        ...
+                        children: [],
+                        ...
+                    }),
+                ]
                 ...
-                Namespace(Namespace {
-                    cc_name: "ns",
-                    rs_name: "ns" ...
-                    child_item_ids: [ItemId(#function_id)] ...
-                    enclosing_item_id: None ...
-                }),
-                Func(Func {
-                    cc_name: "f",
-                    rs_name: "f" ...
-                    enclosing_item_id: Some(ItemId(...)) ...
-                }),
-                Namespace(Namespace {
-                    cc_name: "ns",
-                    rs_name: "ns" ...
-                    child_item_ids: [] ...
-                }),
-            ]
+            ),
+            ...
+          ]
         }
     );
 }
@@ -4303,20 +4355,19 @@ fn test_source_location_class_template_specialization() {
 }
 
 #[gtest]
-fn test_top_level_item_ids_from_multiple_targets() {
+fn test_top_level_items_from_multiple_targets() {
     let dependency_header = r#"struct FromDependency {};"#;
     let header = "struct FromHeader {};";
     let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
-          top_level_item_ids: map! {
+          top_level_items: [
+            (BazelLabel("//_unknown_target:<unknown>"), [ ... ] ... ),
+            (BazelLabel(#DEPENDENCY_TARGET), [ ... ] ... ),
+            (BazelLabel(#TESTING_TARGET), [ ... ] ... ),
             ...
-            BazelLabel(#DEPENDENCY_TARGET): [...]
-            ...
-            BazelLabel(#TESTING_TARGET): [...]
-            ...
-          }
+          ]
         }
     );
 }

@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::OnceCell;
 use std::cmp::Ordering;
 use std::collections::hash_map::{Entry, HashMap};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -78,8 +78,8 @@ where
 
 /// Deserialize `IR` from JSON bytes.
 pub fn deserialize_ir(bytes: &[u8]) -> Result<IR> {
-    let flat_ir = serde_json::from_slice(bytes)?;
-    Ok(make_ir(flat_ir))
+    let tree_ir = serde_json::from_slice(bytes)?;
+    Ok(make_ir(tree_ir))
 }
 
 /// Create a testing `IR` instance from given parts. This function does not use
@@ -88,7 +88,6 @@ pub fn make_ir_from_parts<CrubitFeatures>(
     items: Vec<Item>,
     public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
-    top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
     crate_root_path: Option<Rc<str>>,
     crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
     reexported_namespaces: Vec<Rc<str>>,
@@ -96,11 +95,22 @@ pub fn make_ir_from_parts<CrubitFeatures>(
 where
     CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
 {
-    make_ir(FlatIR {
+    // To avoid rewiring tests as part of migrating to nested IR, automatically populate the roots
+    // of the tree from the flat list of items.
+    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item>> = BTreeMap::new();
+    for item in &items {
+        if item.enclosing_item_id().is_none() {
+            let target = item.owning_target().unwrap_or_else(|| current_target.clone());
+            top_level_items.entry(target).or_default().push(item.clone());
+        }
+    }
+
+    make_ir(TreeIR {
         public_headers,
         current_target,
         items,
-        top_level_item_ids,
+        // TODO(b/523265360): Remove top_level_item_ids in follow-up CL.
+        top_level_item_ids: Default::default(),
         crate_root_path,
         crubit_features: crubit_features
             .into_iter()
@@ -110,30 +120,97 @@ where
             .collect(),
         reexported_namespaces,
         unstable_rust_features: vec![],
-        top_level_items: BTreeMap::new(),
+        top_level_items,
     })
 }
 
-fn make_ir_impl(flat_ir: FlatIR) -> IR {
+/// A pre-order depth-first search iterator over the nested IR tree.
+/// Preserves C++ declaration order and allows bindings generator components (e.g., `has_bindings`)
+/// that expect a flat list of items to work in-place on the nested IR without a full rewrite.
+pub struct ItemsIterator<'a> {
+    stack: Vec<&'a Item>,
+    visited: HashSet<ItemId>,
+}
+
+impl<'a> ItemsIterator<'a> {
+    fn new(mut stack: Vec<&'a Item>) -> Self {
+        // Reverse so we pop roots in their original order.
+        stack.reverse();
+        Self { stack, visited: HashSet::new() }
+    }
+}
+
+impl<'a> Iterator for ItemsIterator<'a> {
+    type Item = &'a Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(item) = self.stack.pop() {
+            let id = item.id();
+            if !self.visited.insert(id) {
+                continue;
+            }
+            match item {
+                Item::Record(record) => {
+                    self.stack.extend(record.children.iter().rev());
+                }
+                Item::Namespace(ns) => {
+                    self.stack.extend(ns.children.iter().rev());
+                }
+                _ => {}
+            }
+            return Some(item);
+        }
+        None
+    }
+}
+// Read-only traversal to populate the lookup cache with deserialized items.
+fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, Item>) {
+    item_id_to_item.insert(item.id(), item.clone());
+    match item {
+        Item::Record(record) => {
+            for child in &record.children {
+                populate_item_id_to_item(child, item_id_to_item);
+            }
+        }
+        Item::Namespace(ns) => {
+            for child in &ns.children {
+                populate_item_id_to_item(child, item_id_to_item);
+            }
+        }
+        _ => {}
+    }
+}
+
+pub fn make_ir(tree_ir: TreeIR) -> IR {
     let mut used_decl_ids = HashMap::new();
-    for item in &flat_ir.items {
+    for item in &tree_ir.items {
         if let Some(existing_decl) = used_decl_ids.insert(item.id(), item) {
             panic!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
         }
     }
-    let item_id_to_item_idx = flat_ir
-        .items
-        .iter()
-        .enumerate()
-        .map(|(idx, item)| (item.id(), idx))
-        .collect::<HashMap<_, _>>();
+
+    let mut item_id_to_item = HashMap::new();
+
+    for items in tree_ir.top_level_items.values() {
+        for item in items {
+            populate_item_id_to_item(item, &mut item_id_to_item);
+        }
+    }
+
+    let ordered_items =
+        ItemsIterator::new(tree_ir.top_level_items.values().flat_map(|v| v.iter()).collect());
 
     let mut lifetimes: HashMap<LifetimeId, LifetimeName> = HashMap::new();
-    for item in &flat_ir.items {
+    let mut namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize> = HashMap::new();
+    let mut reopened_namespace_id_to_idx: HashMap<ItemId, usize> = HashMap::new();
+    let mut function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>> =
+        HashMap::new();
+
+    for item in ordered_items {
         let lifetime_params = match item {
-            Item::Record(record) => &record.lifetime_params,
-            Item::Func(func) => &func.lifetime_params,
-            _ => continue,
+            Item::Record(record) => &record.lifetime_params[..],
+            Item::Func(func) => &func.lifetime_params[..],
+            _ => &[],
         };
         for lifetime in lifetime_params {
             match lifetimes.entry(lifetime.id) {
@@ -141,8 +218,8 @@ fn make_ir_impl(flat_ir: FlatIR) -> IR {
                     panic!(
                         "Duplicate use of lifetime ID {:?} in item {item:?} for names: '{}, '{}",
                         lifetime.id,
-                        &occupied.get().name,
-                        &lifetime.name
+                        occupied.get().name,
+                        lifetime.name
                     )
                 }
                 Entry::Vacant(vacant) => {
@@ -150,65 +227,30 @@ fn make_ir_impl(flat_ir: FlatIR) -> IR {
                 }
             }
         }
-    }
-    let mut namespace_id_to_number_of_reopened_namespaces = HashMap::new();
-    let mut reopened_namespace_id_to_idx = HashMap::new();
 
-    flat_ir
-        .items
-        .iter()
-        .filter_map(|item| match item {
-            Item::Namespace(ns) if ns.owning_target == flat_ir.current_target => {
-                Some((ns.canonical_namespace_id, ns.id))
-            }
-            _ => None,
-        })
-        .for_each(|(canonical_id, id)| {
+        if let Item::Namespace(ns) = item
+            && ns.owning_target == tree_ir.current_target
+        {
+            let canonical_id = ns.canonical_namespace_id;
             let current_count =
                 *namespace_id_to_number_of_reopened_namespaces.entry(canonical_id).or_insert(0);
-            reopened_namespace_id_to_idx.insert(id, current_count);
+            reopened_namespace_id_to_idx.insert(ns.id, current_count);
             namespace_id_to_number_of_reopened_namespaces.insert(canonical_id, current_count + 1);
-        });
+        }
 
-    let mut function_name_to_functions = HashMap::<UnqualifiedIdentifier, Vec<Rc<Func>>>::new();
-    flat_ir
-        .items
-        .iter()
-        .filter_map(|item| match item {
-            Item::Func(func) => Some(func),
-            _ => None,
-        })
-        .for_each(|f| {
-            function_name_to_functions.entry(f.rs_name.clone()).or_default().push(f.clone());
-        });
+        if let Item::Func(func) = item {
+            function_name_to_functions.entry(func.rs_name.clone()).or_default().push(func.clone());
+        }
+    }
 
     IR {
-        flat_ir,
-        item_id_to_item_idx,
+        tree_ir,
+        item_id_to_item,
         lifetimes,
         namespace_id_to_number_of_reopened_namespaces,
         reopened_namespace_id_to_idx,
         function_name_to_functions,
     }
-}
-
-// TODO(b/523265360): Implement tree-traversal equivalent of make_ir
-fn make_ir_from_tree(flat_ir: FlatIR) -> IR {
-    // For now, this is a no-op fallback to the flat IR logic.
-    make_ir_impl(flat_ir)
-}
-
-pub fn make_ir(flat_ir: FlatIR) -> IR {
-    let use_nested_ir = flat_ir
-        .crubit_features
-        .get(&flat_ir.current_target)
-        .is_some_and(|features| features.0.contains(CrubitFeature::UseNestedIr));
-
-    if use_nested_ir {
-        return make_ir_from_tree(flat_ir);
-    }
-
-    make_ir_impl(flat_ir)
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -717,8 +759,6 @@ impl BazelLabel {
         result
     }
 
-    /// Private helper function for simplifying PartialEq, PartialOrd, and Hash implementations
-    /// to ensure that //foo:bar and //foo/bar:bar are considered identical.
     fn components(&self) -> (&str, &str) {
         (self.target_name(), self.package_name())
     }
@@ -2271,17 +2311,18 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<ExistingRustType> {
     }
 }
 
-// There's no reason to hide FlatIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
+// There's no reason to hide TreeIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
 // and transforming the json is strictly worse than transforming the ir itself.
 
 #[derive(PartialEq, Eq, Clone, Deserialize)]
 #[serde(deny_unknown_fields, rename(deserialize = "IR"))]
-pub struct FlatIR {
+pub struct TreeIR {
     #[serde(default)]
     pub public_headers: Vec<HeaderName>,
     pub current_target: BazelLabel,
     #[serde(default)]
     pub items: Vec<Item>,
+    // TODO(b/523265360): Remove top_level_item_ids in follow-up CL.
     #[serde(default)]
     pub top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
     #[serde(default)]
@@ -2299,42 +2340,39 @@ pub struct FlatIR {
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
 ///
 /// See b/272530008.
-impl Debug for FlatIR {
+impl Debug for TreeIR {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // BTreeMap has consistent ordering, unlike HashMap, so it's reasonable to rely on a
         // consistent Debug output.
         struct DebugBTreeMap<T>(pub T);
         impl<K: Debug, V: Debug> Debug for DebugBTreeMap<&BTreeMap<K, V>> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                // prefix the map with `map!` so that the output can be fed to rustfmt.
-                // The end result is something like `map! { k1: v1, k2: v2 }`, which reads well.
-                write!(f, "map!")?;
-                Debug::fmt(&self.0, f)
+                f.debug_list().entries(self.0.iter()).finish()
             }
         }
         // exhaustive-match so we don't forget to add fields to Debug when we add to
-        // FlatIR.
-        let FlatIR {
+        // TreeIR.
+        let TreeIR {
             public_headers,
             current_target,
             items,
-            top_level_item_ids,
+            // TODO(b/523265360): Remove top_level_item_ids in follow-up CL.
+            top_level_item_ids: _,
             crate_root_path,
             crubit_features,
             unstable_rust_features,
             reexported_namespaces,
-            // TODO(rrijadi): Use `top_level_items` in `Debug` impl.
-            top_level_items: _,
+            top_level_items,
         } = self;
-        f.debug_struct("FlatIR")
+        f.debug_struct("TreeIR")
             .field("public_headers", public_headers)
             .field("current_target", current_target)
             .field("items", items)
-            .field("top_level_item_ids", &DebugBTreeMap(top_level_item_ids))
             .field("crate_root_path", crate_root_path)
             .field("crubit_features", &DebugBTreeMap(crubit_features))
             .field("unstable_rust_features", unstable_rust_features)
             .field("reexported_namespaces", reexported_namespaces)
+            .field("top_level_items", &DebugBTreeMap(top_level_items))
             .finish()
     }
 }
@@ -2344,9 +2382,8 @@ impl Debug for FlatIR {
 /// `rs_api_impl.cc` files).
 #[derive(PartialEq, Debug)]
 pub struct IR {
-    flat_ir: FlatIR,
-    // A map from a `decl_id` to an index of an `Item` in the `flat_ir.items` vec.
-    item_id_to_item_idx: HashMap<ItemId, usize>,
+    tree_ir: TreeIR,
+    item_id_to_item: HashMap<ItemId, Item>,
     lifetimes: HashMap<LifetimeId, LifetimeName>,
     namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize>,
     reopened_namespace_id_to_idx: HashMap<ItemId, usize>,
@@ -2354,44 +2391,42 @@ pub struct IR {
 }
 
 impl IR {
-    pub fn flat_ir(&self) -> &FlatIR {
-        &self.flat_ir
+    pub fn tree_ir(&self) -> &TreeIR {
+        &self.tree_ir
     }
 
     pub fn unstable_rust_features(&self) -> &[String] {
-        &self.flat_ir.unstable_rust_features
+        &self.tree_ir.unstable_rust_features
     }
 
-    pub fn item_id_to_item_idx(&self) -> &HashMap<ItemId, usize> {
-        &self.item_id_to_item_idx
+    pub fn get_decl(&self, id: ItemId) -> Option<&Item> {
+        self.item_id_to_item.get(&id)
+    }
+
+    pub fn items(&self) -> impl Iterator<Item = &Item> + '_ {
+        let roots = self.tree_ir.top_level_items.values().flat_map(|v| v.iter());
+        ItemsIterator::new(roots.collect())
     }
 
     pub fn lifetimes(&self) -> impl Iterator<Item = (&LifetimeId, &LifetimeName)> {
         self.lifetimes.iter()
     }
 
-    pub fn items(&self) -> impl Iterator<Item = &Item> {
-        self.flat_ir.items.iter()
+    /// Returns the top-level items of a target.
+    pub fn top_level_items_in_target(&self, target: &BazelLabel) -> &[Item] {
+        self.tree_ir.top_level_items.get(target).map(|v| v.as_slice()).unwrap_or_default()
     }
 
-    pub fn top_level_item_ids_in_target(&self, target: &BazelLabel) -> &[ItemId] {
-        &self.flat_ir.top_level_item_ids[target]
-    }
-
-    pub fn top_level_item_ids(&self) -> &[ItemId] {
-        self.top_level_item_ids_in_target(self.current_target())
-    }
-
-    pub fn items_mut(&mut self) -> impl Iterator<Item = &mut Item> {
-        self.flat_ir.items.iter_mut()
+    pub fn top_level_items(&self) -> &[Item] {
+        self.top_level_items_in_target(self.current_target())
     }
 
     pub fn reexported_namespaces(&self) -> &[Rc<str>] {
-        &self.flat_ir.reexported_namespaces
+        &self.tree_ir.reexported_namespaces
     }
 
     pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName> {
-        self.flat_ir.public_headers.iter()
+        self.tree_ir.public_headers.iter()
     }
 
     pub fn functions(&self) -> impl Iterator<Item = &Rc<Func>> {
@@ -2467,7 +2502,7 @@ impl IR {
     /// Returns the Crubit features enabled for the given `target`.
     #[must_use]
     pub fn target_crubit_features(&self, target: &BazelLabel) -> flagset::FlagSet<CrubitFeature> {
-        self.flat_ir.crubit_features.get(target).cloned().unwrap_or_default().0
+        self.tree_ir.crubit_features.get(target).cloned().unwrap_or_default().0
     }
 
     /// Returns a mutable reference to the Crubit features enabled for the given
@@ -2483,11 +2518,11 @@ impl IR {
         // TODO(jeanpierreda): migrate to raw_entry_mut when stable.
         // (target is taken by reference exactly because ideally this function would use
         // the raw entry API.)
-        &mut self.flat_ir.crubit_features.entry(target.clone()).or_default().0
+        &mut self.tree_ir.crubit_features.entry(target.clone()).or_default().0
     }
 
     pub fn current_target(&self) -> &BazelLabel {
-        &self.flat_ir.current_target
+        &self.tree_ir.current_target
     }
 
     // Returns the standard Debug print string for the `flat_ir`. The reason why we
@@ -2497,8 +2532,8 @@ impl IR {
     // chokes on HashMaps. Therefore this method.
     //
     // Used for `token_stream_matchers`, do not use for anything else.
-    pub fn flat_ir_debug_print(&self) -> String {
-        format!("{:?}", self.flat_ir)
+    pub fn tree_ir_debug_print(&self) -> String {
+        format!("{:?}", self.tree_ir)
     }
 
     pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&LifetimeName> {
@@ -2526,7 +2561,7 @@ impl IR {
     }
 
     pub fn crate_root_path(&self) -> Option<Rc<str>> {
-        self.flat_ir.crate_root_path.clone()
+        self.tree_ir.crate_root_path.clone()
     }
 
     pub fn crate_root_path_tokens(&self) -> TokenStream {
@@ -2589,18 +2624,18 @@ mod tests {
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
-        let expected = FlatIR {
+        let expected = TreeIR {
             public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
-            top_level_item_ids: BTreeMap::new(),
             items: vec![],
+            top_level_item_ids: BTreeMap::new(),
             crate_root_path: None,
             crubit_features: Default::default(),
             unstable_rust_features: vec![],
             reexported_namespaces: vec![],
             top_level_items: BTreeMap::new(),
         };
-        assert_eq!(ir.flat_ir, expected);
+        assert_eq!(ir.tree_ir, expected);
     }
 
     #[gtest]
@@ -2725,5 +2760,101 @@ mod tests {
             BazelLabel::from("//foo_bar:baz").convert_to_cc_identifier(),
             BazelLabel::from("//foo/bar:baz").convert_to_cc_identifier()
         );
+    }
+
+    #[gtest]
+    fn test_make_ir_happy_path() {
+        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+            current_target: "//foo:bar",
+            top_level_items: [(
+                "//foo:bar",
+                __ {
+                    items: [__ {
+                        namespace_decl: __ {
+                            cc_name: __ { identifier: "nsA" },
+                            rs_name: __ { identifier: "nsA" },
+                            unique_name: "nsA",
+                            id: 1,
+                            canonical_namespace_id: 1,
+                            owning_target: "//foo:bar",
+                            is_inline: false,
+                            must_bind: false,
+                            child_item_ids: [2],
+                            children: [__ {
+                                namespace_decl: __ {
+                                    cc_name: __ { identifier: "nsB" },
+                                    rs_name: __ { identifier: "nsB" },
+                                    unique_name: "nsB",
+                                    id: 2,
+                                    canonical_namespace_id: 2,
+                                    owning_target: "//foo:bar",
+                                    is_inline: false,
+                                    must_bind: false,
+                                    child_item_ids: [3],
+                                    children: [__ {
+                                        comment: __ { text: "hello", id: 3, must_bind: false }
+                                    }]
+                                }
+                            }]
+                        }
+                    }]
+                }
+            )]
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
+
+        let ids: Vec<_> = ir.items().map(|item| item.id().0).collect();
+        assert_eq!(ids, vec![1, 2, 3]);
+    }
+
+    #[gtest]
+    fn test_make_ir_redeclarations() {
+        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+            current_target: "//foo:bar",
+            top_level_items: [(
+                "//foo:bar",
+                __ {
+                    items: [
+                        __ {
+                            namespace_decl: __ {
+                                cc_name: __ { identifier: "ns1" },
+                                rs_name: __ { identifier: "ns1" },
+                                unique_name: "ns1",
+                                id: 100,
+                                canonical_namespace_id: 100,
+                                owning_target: "//foo:bar",
+                                is_inline: false,
+                                must_bind: false,
+                                child_item_ids: [200],
+                                children: [__ {
+                                    comment: __ { text: "hello", id: 200, must_bind: false }
+                                }]
+                            }
+                        },
+                        __ {
+                            namespace_decl: __ {
+                                cc_name: __ { identifier: "ns1" },
+                                rs_name: __ { identifier: "ns1" },
+                                unique_name: "ns1",
+                                id: 101,
+                                canonical_namespace_id: 100,
+                                owning_target: "//foo:bar",
+                                is_inline: false,
+                                must_bind: false,
+                                child_item_ids: [200],
+                                children: [__ {
+                                    comment: __ { text: "hello", id: 200, must_bind: false }
+                                }]
+                            }
+                        }
+                    ]
+                }
+            )]
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
+
+        let comment_items: Vec<_> = ir.items().filter(|item| item.id() == ItemId(200)).collect();
+
+        assert_eq!(comment_items.len(), 1);
     }
 }
