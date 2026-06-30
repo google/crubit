@@ -52,6 +52,8 @@ struct CmdlineArgs {
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       target_to_features;
 
+  absl::flat_hash_map<BazelLabel, std::string> target_to_crate_name;
+
   std::optional<std::vector<std::string>> do_not_bind_allowlist;
 
   std::string template_blocklist_path_regex;

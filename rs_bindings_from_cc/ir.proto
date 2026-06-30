@@ -560,4 +560,5 @@ message IRProto {
   // Lexical tree structure of the IR. We would like for this to fully
   // replace `top_level_item_ids` eventually. (See b/523265360)
   map<string, ItemList> top_level_items = 9;
+  map<string, string> crate_names = 10;
 }

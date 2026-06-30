@@ -43,6 +43,7 @@ class Invocation {
       std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist,
       absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
           crubit_features,
+      absl::flat_hash_map<BazelLabel, std::string> crate_names,
       bool kythe_annotations,
       std::shared_ptr<const llvm::Regex> template_blocklist_path_regex)
       : target_(target),
@@ -62,6 +63,7 @@ class Invocation {
                               public_headers.end());
     ir_.current_target = target_;
     ir_.crubit_features = std::move(crubit_features);
+    ir_.crate_names = std::move(crate_names);
   }
 
   // Returns the target of a header, if any.

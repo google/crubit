@@ -71,18 +71,20 @@ ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
           "unparseable headers may be removed frp, public_headers, but kept "
           "attributed to that target in target_args.");
 ABSL_FLAG(std::string, target, "", "The target to generate bindings for.");
-ABSL_FLAG(std::string, target_args, "",
-          "Per-target Crubit arguments, encoded as a JSON array. This contains "
-          "both the list of headers assigned to the target (h), and the set of "
-          "enabled features (f). For example:"
-          "[\n"
-          "  {\n"
-          "     \"t\": \"//foo/bar:baz\",\n"
-          "     \"h\": [\"foo/bar/header1.h\", \"foo/bar/header2.h\"],\n"
-          "     \"f\": [\"supported\"]\n"
-          "  },\n"
-          "...\n"
-          "]");
+ABSL_FLAG(
+    std::string, target_args, "",
+    "Per-target Crubit arguments, encoded as a JSON array. This contains "
+    "the list of headers assigned to the target (h), the set of "
+    "enabled features (f), and the (optional) crate name (c). For example:"
+    "[\n"
+    "  {\n"
+    "     \"t\": \"//foo/bar:baz\",\n"
+    "     \"h\": [\"foo/bar/header1.h\", \"foo/bar/header2.h\"],\n"
+    "     \"f\": [\"supported\"],\n"
+    "     \"c\": \"some_not_target_name_derived_crate_name\"\n"
+    "  },\n"
+    "...\n"
+    "]");
 ABSL_FLAG(std::vector<std::string>, extra_rs_srcs, std::vector<std::string>(),
           "Additional Rust source files to include into the crate.");
 ABSL_FLAG(std::vector<std::string>, reexported_namespaces,
@@ -152,6 +154,7 @@ struct TargetArgs {
   std::string target;
   std::vector<std::string> headers;
   std::vector<std::string> features;
+  std::optional<std::string> crate_name;
 };
 
 bool fromJSON(const llvm::json::Value& json, TargetArgs& out,
@@ -159,7 +162,8 @@ bool fromJSON(const llvm::json::Value& json, TargetArgs& out,
   llvm::json::ObjectMapper mapper(json, path);
   return mapper && mapper.map("t", out.target) &&
          mapper.mapOptional("h", out.headers) &&
-         mapper.mapOptional("f", out.features);
+         mapper.mapOptional("f", out.features) &&
+         mapper.mapOptional("c", out.crate_name);
 }
 
 std::vector<HeaderName> PublicHeaders() {
@@ -219,6 +223,9 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
             "array of non-empty strings");
       }
       args.target_to_features[BazelLabel(target)].insert(feature);
+    }
+    if (it.crate_name.has_value()) {
+      args.target_to_crate_name[BazelLabel(target)] = *it.crate_name;
     }
   }
   return absl::OkStatus();
