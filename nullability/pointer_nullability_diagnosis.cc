@@ -668,12 +668,73 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseConstructorCall(
       ConstructorArgs, CtorDecl, State, *Result.Context);
 }
 
+static void checkRecordFieldsForUninitializedNonnull(
+    const CXXRecordDecl* absl_nonnull RD,
+    const TypeNullabilityDefaults& Defaults, ASTContext& Ctx,
+    PointerNullabilityDiagnostic::ErrorCode Code,
+    PointerNullabilityDiagnostic::Context DiagCtx, CharSourceRange Range,
+    bool VerifyInClassInitializers,
+    SmallVectorImpl<PointerNullabilityDiagnostic>& Diags) {
+  for (const FieldDecl* Field : RD->fields()) {
+    if (!isSupportedPointerType(Field->getType())) {
+      continue;
+    }
+
+    TypeNullability FieldNullability = getTypeNullability(*Field, Defaults);
+    if (FieldNullability.empty() ||
+        FieldNullability.front().concrete() != NullabilityKind::NonNull) {
+      continue;
+    }
+
+    if (const Expr* Init = Field->getInClassInitializer()) {
+      if (VerifyInClassInitializers &&
+          Init->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNull)) {
+        Diags.push_back({
+            .Code = Code,
+            .Ctx = DiagCtx,
+            .Range = Range,
+            .NoteRange =
+                CharSourceRange::getTokenRange(Field->getSourceRange()),
+            .NoteMessage = "pointer field is declared here",
+        });
+      }
+      continue;
+    }
+
+    // The nonnull pointer field has no in-class initializer.
+    Diags.push_back({
+        .Code = Code,
+        .Ctx = DiagCtx,
+        .Range = Range,
+        .NoteRange = CharSourceRange::getTokenRange(Field->getSourceRange()),
+        .NoteMessage = "pointer field is declared here",
+    });
+  }
+}
+
 static SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
     const CXXConstructExpr* absl_nonnull CE,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
   const CXXConstructorDecl* CtorDecl = CE->getConstructor();
   ArrayRef<const Expr*> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
-  return diagnoseConstructorCall(ConstructorArgs, CtorDecl, Result, State);
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics =
+      diagnoseConstructorCall(ConstructorArgs, CtorDecl, Result, State);
+
+  // Diagnose uninitialized or null-initialized nonnull pointer members during
+  // default construction of aggregate classes.
+  if (CtorDecl->isDefaultConstructor() && !CE->isListInitialization()) {
+    const CXXRecordDecl* RD = CtorDecl->getParent();
+    if (!RD->hasUserProvidedDefaultConstructor()) {
+      checkRecordFieldsForUninitializedNonnull(
+          RD, State.Lattice.defaults(), *Result.Context,
+          PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+          PointerNullabilityDiagnostic::Context::Initializer,
+          CharSourceRange::getTokenRange(CE->getSourceRange()),
+          /*VerifyInClassInitializers=*/true, Diagnostics);
+    }
+  }
+
+  return Diagnostics;
 }
 
 static SmallVector<PointerNullabilityDiagnostic>
@@ -1204,7 +1265,7 @@ static CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl& Method) {
   if (!Method.hasBody()) {
     // If the method doesn't have a body, fall back to using the entire method
     // source range (which should be the source range for the declaration).
-    CharSourceRange::getTokenRange(Method.getSourceRange());
+    return CharSourceRange::getTokenRange(Method.getSourceRange());
   }
 
   auto* Body = dyn_cast<CompoundStmt>(Method.getBody());
