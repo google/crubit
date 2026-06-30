@@ -1634,7 +1634,7 @@ fn add_specialization_prereqs<'tcx>(
 fn generate_trait_impl_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_impl: &TraitImplTemplateSpecialization,
-) -> std::result::Result<ApiSnippets<'tcx>, (DefId, Error)> {
+) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     let impl_def_id = trait_impl.trait_impl;
     let trait_header = tcx.impl_trait_header(impl_def_id);
@@ -1650,7 +1650,7 @@ fn generate_trait_impl_specialization<'tcx>(
     let canonical_trait_name = db.symbol_canonical_name(trait_def_id).expect(
         "symbol_canonical_name was unexpectedly called on a trait without a canonical name",
     );
-    let trait_name = canonical_trait_name.format_for_cc(db).map_err(|err| (impl_def_id, err))?;
+    let trait_name = canonical_trait_name.format_for_cc(db)?;
 
     let mut prereqs = CcPrerequisites::default();
     let trait_args: Vec<_> = trait_ref
@@ -1661,21 +1661,17 @@ fn generate_trait_impl_specialization<'tcx>(
         .filter_map(|arg| arg.as_type())
         .map(|arg| {
             if arg.flags().intersects(has_type_or_const_vars()) {
-                return Err((impl_def_id, anyhow!("Implementation of traits must specify all types to receive bindings.")));
+                bail!("Implementation of traits must specify all types to receive bindings.");
             }
             if arg.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
-                return Err((
-                    impl_def_id,
-                    anyhow!(
-                        "b/491106325 - isize and usize types are not yet supported as trait type arguments."
-                    ),
-                ));
+                bail!(
+                    "b/491106325 - isize and usize types are not yet supported as trait type arguments."
+                );
             }
             db.format_ty_for_cc(arg, TypeLocation::Other)
                 .map(|snippet| snippet.into_tokens(&mut prereqs))
-                .map_err(|err| (impl_def_id, err))
         })
-        .collect::<std::result::Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>>>()?;
 
     let type_args = if trait_args.is_empty() {
         quote! {}
@@ -1685,10 +1681,9 @@ fn generate_trait_impl_specialization<'tcx>(
 
     let trait_name_with_args = quote! { #trait_name #type_args };
 
-    prereqs.depend_on_def(db, trait_def_id).map_err(|err| (impl_def_id, err))?;
+    prereqs.depend_on_def(db, trait_def_id)?;
     if let Some(adt) = trait_ref.self_ty().ty_adt_def() {
-        add_specialization_prereqs(db, &mut prereqs, adt.did())
-            .map_err(|err| (impl_def_id, err))?;
+        add_specialization_prereqs(db, &mut prereqs, adt.did())?;
     }
 
     let mut member_function_names = HashSet::new();
@@ -1737,8 +1732,8 @@ pub fn generate_template_specialization<'tcx>(
     let mut snippets = match &specialization {
         TemplateSpecialization::RsStd(rs_std) => rs_std.clone().api_snippets(db),
         TemplateSpecialization::TraitImpl(trait_impl) => {
-            generate_trait_impl_specialization(db, trait_impl).unwrap_or_else(|(def_id, err)| {
-                generate_unsupported_def(db, def_id, err).into_main_api()
+            generate_trait_impl_specialization(db, trait_impl).unwrap_or_else(|err| {
+                generate_unsupported_def(db, trait_impl.trait_impl, err).into_main_api()
             })
         }
     };
