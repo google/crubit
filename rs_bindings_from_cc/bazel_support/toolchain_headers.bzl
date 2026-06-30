@@ -9,6 +9,7 @@ load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "AdditionalRustSrcsProviderInfo",
     "DepsForBindingsInfo",
+    "RustBindingsFromCcInfo",
     "RustToolchainHeadersInfo",
 )
 load(
@@ -33,6 +34,18 @@ def _add_prefix(strings, prefix):
     return [prefix + s for s in strings]
 
 def _bindings_for_toolchain_headers_impl(ctx):
+    if ctx.target_platform_has_constraint(ctx.attr._android_constraint[platform_common.ConstraintValueInfo]):
+        return [
+            RustToolchainHeadersInfo(headers = depset()),
+            RustBindingsFromCcInfo(
+                cc_info = ctx.attr._stl[CcInfo],
+                dep_variant_info = None,
+                pass_through_dep_variant_infos = depset(),
+                target_args = depset(),
+                namespaces = None,
+                additional_rust_srcs = depset(),
+            ),
+        ]
     toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
     if toolchain == None:
         return RustToolchainHeadersInfo(headers = depset())
