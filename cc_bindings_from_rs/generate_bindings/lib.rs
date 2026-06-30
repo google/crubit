@@ -1182,7 +1182,12 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
                 lang_items.try_trait(),
             ];
             let is_excluded_builtin = excluded_traits.iter().any(|id| id.eq(&Some(*trait_id)));
-            has_meaningful_impl && !is_excluded_builtin
+
+            let included_auto_traits = [lang_items.unpin_trait()];
+            let is_included_auto_trait =
+                included_auto_traits.iter().any(|id| id.eq(&Some(*trait_id)));
+
+            (is_included_auto_trait || has_meaningful_impl) && !is_excluded_builtin
         })
         .collect::<Vec<DefId>>()
         .into_boxed_slice();
@@ -2147,6 +2152,15 @@ impl NodeSortKey {
                 }
             }
             TemplateSpecialization::TraitImpl(t) => Self::from_def_id(tcx, t.trait_impl),
+            TemplateSpecialization::NegativeAutoTraitImpl(u) => {
+                let trait_name = tcx.item_name(u.trait_id);
+                // While other trait impls have a single `DefId` representing the particular
+                // type-trait impl combination, auto trait impls do not have this, so we construct
+                // a path string manually.
+                let path_str = format!("{} as !{trait_name}", tcx.def_path_str(u.self_def_id));
+                let hash = tcx.def_path_hash(u.self_def_id).local_hash().as_u64();
+                NodeSortKey { hash, path_str }
+            }
         }
     }
 }
