@@ -5,7 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
 
-
 struct SomeStruct {
   typedef int nested_type;
 };
@@ -21,5 +20,9 @@ typedef union {
 } SomeOtherUnion;
 
 SomeStruct::nested_type FunctionUsingNestedType();
+
+extern "C" {
+typedef struct IncompleteExternC IncompleteExternC;
+}
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_

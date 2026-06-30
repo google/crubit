@@ -104,7 +104,9 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         clang::ElaboratedTypeKeyword::None, /*Qualifier=*/std::nullopt,
         typedef_name_decl);
     if (const auto* tag_decl = type->getAsTagDecl();
-        tag_decl && tag_decl->getDeclContext() == decl_context &&
+        tag_decl &&
+        tag_decl->getDeclContext()->getRedeclContext() ==
+            decl_context->getRedeclContext() &&
         tag_decl->getName() == decl->getName()) {
       return ictx_.ImportUnsupportedItem(
           *decl, std::nullopt,

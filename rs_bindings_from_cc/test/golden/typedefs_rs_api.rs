@@ -133,6 +133,12 @@ pub fn FunctionUsingNestedType() -> crate::some_struct::nested_type {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
 }
 
+// error: type alias `IncompleteExternC` could not be bound
+//   Typedef only used to introduce a name in C. Not importing.
+
+// error: struct `IncompleteExternC` could not be bound
+//   incomplete type
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
