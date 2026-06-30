@@ -1539,11 +1539,11 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for RsStdTemplateSpecialization<'tcx>
 }
 
 /// Collect trait implementations and map them to `TemplateSpecialization::TraitImpl`.
-pub(crate) fn collect_trait_impls<'a, 'tcx>(
-    db: &'a BindingsGenerator<'tcx>,
-) -> impl Iterator<Item = TemplateSpecialization<'tcx>> + use<'a, 'tcx> {
+pub(crate) fn append_trait_impls<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_impls: &mut Vec<TemplateSpecialization<'tcx>>,
+) {
     let tcx = db.tcx();
-    let supported_traits: Vec<DefId> = db.supported_traits().iter().copied().collect();
     // TyCtxt makes it easy to get all the implementations of a trait, but there isn't an easy way
     // to say give me all the trait implementations for this type. This is by design. The compiler
     // lazily determines conformance to traits as needed for types and never computes every trait
@@ -1559,44 +1559,42 @@ pub(crate) fn collect_trait_impls<'a, 'tcx>(
     // specializaitons, which are required to be in an enclosing namespace of the template they
     // specialize. This prevents them from living in the same namespace as our other bindings, as
     // they may implement a trait that is not enclosed by that namespace.
-    supported_traits.into_iter().flat_map(move |trait_def_id| {
+    for &trait_def_id in db.supported_traits().iter() {
         use rustc_middle::ty::fast_reject::SimplifiedType;
-        tcx.trait_impls_of(trait_def_id)
-            .non_blanket_impls()
-            .into_iter()
-            .filter_map(move |(simple_ty, impl_def_ids)| match simple_ty {
-                SimplifiedType::Adt(did) => {
-                    // Only bind implementations for supported ADTs.
-                    let canonical_name = db.symbol_canonical_name(*did)?;
-                    // We explicitly want to allow ADTs that specify cpp_type.
-                    // These are typically C++ types that have generated Rust bindings.
-                    if canonical_name.unqualified.cpp_type.is_none()
-                        && db.adt_needs_bindings(*did).is_err()
-                    {
-                        return None;
-                    }
-                    let adt_cc_name = canonical_name.format_for_cc(db).ok()?;
-                    Some((adt_cc_name, impl_def_ids))
-                }
+        for (simple_ty, impl_def_ids) in tcx.trait_impls_of(trait_def_id).non_blanket_impls() {
+            let SimplifiedType::Adt(did) = simple_ty else {
                 // TODO: b/457803426 - Support trait implementations for non-adt types.
-                _ => None,
-            })
-            .flat_map(move |(adt_cc_name, impl_def_ids)| {
-                impl_def_ids
-                    .iter()
-                    .copied()
-                    // TODO: b/458768435 - This is technically suboptimal. We could instead only
-                    // query for the impls from this crate, but the logic is complicated by
-                    // supporting LOCAL_CRATE. Revisit once we've migrated to rmetas.
-                    .filter(|impl_def_id| impl_def_id.krate == db.source_crate_num())
-                    .map(move |impl_def_id| {
-                        TemplateSpecialization::TraitImpl(TraitImplTemplateSpecialization {
-                            self_ty_cc_name: adt_cc_name.clone(),
-                            trait_impl: impl_def_id,
-                        })
-                    })
-            })
-    })
+                continue;
+            };
+            // Only bind implementations for supported ADTs.
+            let Some(canonical_name) = db.symbol_canonical_name(*did) else {
+                continue;
+            };
+            // We explicitly want to allow ADTs that specify cpp_type.
+            // These are typically C++ types that have generated Rust bindings.
+            if canonical_name.unqualified.cpp_type.is_none() && db.adt_needs_bindings(*did).is_err()
+            {
+                continue;
+            }
+            let Ok(adt_cc_name) = canonical_name.format_for_cc(db) else {
+                continue;
+            };
+            for &impl_def_id in impl_def_ids {
+                // TODO: b/458768435 - This is technically suboptimal. We could instead only
+                // query for the impls from this crate, but the logic is complicated by
+                // supporting LOCAL_CRATE. Revisit once we've migrated to rmetas.
+                if impl_def_id.krate != db.source_crate_num() {
+                    continue;
+                }
+                trait_impls.push(TemplateSpecialization::TraitImpl(
+                    TraitImplTemplateSpecialization {
+                        self_ty_cc_name: adt_cc_name.clone(),
+                        trait_impl: impl_def_id,
+                    },
+                ));
+            }
+        }
+    }
 }
 
 // Helper function for generate_trait_impl_specialization

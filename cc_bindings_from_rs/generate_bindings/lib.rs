@@ -37,7 +37,7 @@ use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
     generate_adt_core, into_trait_impls_by_destination, scalar_value_to_string,
 };
-use crate::generate_template_specialization::collect_trait_impls;
+use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
 use database::code_snippet::{
@@ -2222,7 +2222,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         cc_api_impl.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
     }
 
-    let worklist: Vec<_> = std::mem::take(&mut cc_details_prereqs.template_specializations)
+    let mut worklist: Vec<_> = std::mem::take(&mut cc_details_prereqs.template_specializations)
         .into_iter()
         .chain(std::mem::take(&mut cc_details_prereqs.lazy_template_specializations))
         .chain(
@@ -2236,8 +2236,8 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                 })
                 .cloned(),
         )
-        .chain(collect_trait_impls(db))
         .collect();
+    append_trait_impls(db, &mut worklist);
 
     let GeneratedSpecializations { mut specializations, impls_cc_details } =
         generate_specializations_fixpoint(
