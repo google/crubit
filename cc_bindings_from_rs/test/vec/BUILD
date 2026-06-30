@@ -44,9 +44,9 @@ crubit_cc_test(
     srcs = ["vec_test.cc"],
     deps = [
         ":vec_cc_api",
-        "//support/public:slice_ref",
-        "//support/public:vec",
         "//support/rs_std:rs_alloc",
+        "//support/rs_std:slice_ref",
+        "//support/rs_std:vec",
         "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/types:span",
     ],

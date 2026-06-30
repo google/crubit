@@ -42,7 +42,7 @@ rust_bindings_from_cc_binary(
 deps_for_bindings(
     name = "deps_for_bindings",
     deps_for_generated_cc_file = [
-        "//support/public:bindings_support",
+        "//support/internal:bindings_support",
         "//support:bridge_cpp",
         "//support/rs_std:dyn_callable",
         "//support/rs_std:lossy_formatter_for_bindings",

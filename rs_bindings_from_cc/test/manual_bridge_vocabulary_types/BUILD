@@ -40,7 +40,7 @@ cc_library(
         "//features:supported",
     ],
     deps = [
-        "//support/public:annotations",
+        "//support:annotations",
         "@abseil-cpp//absl/types:span",
     ],
 )

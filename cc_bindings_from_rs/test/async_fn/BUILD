@@ -52,7 +52,7 @@ crubit_cc_test(
     srcs = ["async_fn_test.cc"],
     deps = [
         ":async_fn_cc_api",
-        "//support/public:bindings_support",
+        "//support/internal:bindings_support",
         "//support/rs_std:waker",
         "//testing/base/public:gunit_main",
     ],

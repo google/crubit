@@ -32,7 +32,7 @@ cc_library(
         "//features:supported",
     ],
     deps = [
-        "//support/public:bindings_support",  # build_cleaner: keep
+        "//support/internal:bindings_support",  # build_cleaner: keep
     ],
 )
 

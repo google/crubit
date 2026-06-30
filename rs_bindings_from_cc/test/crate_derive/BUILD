@@ -10,7 +10,7 @@ crubit_test_cc_library(
         "//features:experimental",
     ],
     deps = [
-        "//support/public:bindings_support",
+        "//support/internal:bindings_support",
     ],
 )
 
