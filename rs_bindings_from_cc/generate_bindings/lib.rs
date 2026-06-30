@@ -636,10 +636,6 @@ pub fn generate_bindings_tokens(
             // C++ names don't follow Rust guidelines:
             #![allow(nonstandard_style)] __NEWLINE__
 
-            // TODO(b/499149377): Remove this after we switch to compiling with edition 2024. Until
-            // then, ensure we don't introduce any more compatibility problems.
-            #![deny(rust_2024_compatibility)]
-
             // Parts of our generated code are sometimes considered dead
             // (b/349776381).
             #![allow(unused)] __NEWLINE__
