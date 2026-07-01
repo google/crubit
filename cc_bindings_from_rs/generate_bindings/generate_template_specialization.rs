@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::generate_function_thunk::replace_all_regions_with_static;
+use crate::generate_function_thunk::{make_thunk_name, replace_all_regions_with_static, ThunkKind};
 use crate::generate_struct_and_union::{
     generate_associated_item, generate_relocating_ctor, has_type_or_const_vars,
     scalar_value_to_string,
@@ -900,15 +900,19 @@ fn specialize_vec<'tcx>(
         .unwrap_or_else(|err| err.explicitly_deleted);
     let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
 
-    let target_path_mangled_hash = if db.is_golden_test() {
-        "".to_string()
-    } else {
-        format!("{:x}_", tcx.stable_crate_id(db.source_crate_num()))
-    };
-
     let qualified_name = cc_fully_qualified_name.to_string();
     let name = escape_non_identifier_chars(&qualified_name);
-    let drop_thunk_name = format_ident!("__crubit_drop_{}{}", target_path_mangled_hash, name);
+    let drop_trait = tcx.lang_items().drop_trait().expect("Could not find Drop trait");
+    let drop_assoc_fn = tcx
+        .associated_items(drop_trait)
+        .in_definition_order()
+        .find(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
+        .expect("Drop should have a method");
+    let substs = tcx.mk_args_trait(rs_std.self_ty_rs, std::iter::empty());
+    let drop_thunk_name = format_ident!(
+        "{}",
+        make_thunk_name(db, ThunkKind::TraitMethod { method: drop_assoc_fn, substs })
+    );
 
     let rs_drop = quote! {
         #[unsafe(no_mangle)]
