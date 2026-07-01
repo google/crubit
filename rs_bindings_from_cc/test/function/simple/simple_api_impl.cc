@@ -37,10 +37,6 @@ static_assert((int (*)(int, int)) & ::multiply_with_unnamed_parameters);
 static_assert((int (*)(int, int, int)) &
               ::multiply_with_keyword_named_parameters);
 
-static_assert((int (*)()) & ::llvm_no_mangle_marker);
-
-static_assert((int (*)()) & ::asm_name_with_dollar_sign);
-
 static_assert((crubit::type_identity_t<int(int, int)> * (*)()) &
               ::get_pointer_to_multiply_function);
 

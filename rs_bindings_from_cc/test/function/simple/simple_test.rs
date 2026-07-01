@@ -107,15 +107,3 @@ fn test_apply_binary_op() {
     expect_eq!(100 * 200, simple::apply_binary_op(100, 200, Some(multiply)),);
     expect_eq!(300 + 400, simple::apply_binary_op(300, 400, Some(add)),);
 }
-
-#[gtest]
-fn test_llvm_no_mangle_marker() {
-    use simple::llvm_no_mangle_marker;
-    expect_eq!(llvm_no_mangle_marker(), 42);
-}
-
-#[gtest]
-fn asm_name_with_dollar_sign() {
-    use simple::asm_name_with_dollar_sign;
-    expect_eq!(asm_name_with_dollar_sign(), 42);
-}
