@@ -1742,6 +1742,11 @@ llvm::json::Value IR::ToJson() const {
     features_json[target.value()] = std::move(feature_array);
   }
 
+  llvm::json::Object crate_names_json;
+  for (const auto& [target, name] : crate_names) {
+    crate_names_json[target.value()] = name;
+  }
+
   // TODO(b/513299904): Should remove once protobuf IR rollout is complete.
   llvm::json::Object top_level_items_json;
   for (const auto& [target, items] : top_level_items) {
@@ -1762,6 +1767,7 @@ llvm::json::Value IR::ToJson() const {
       {"top_level_item_ids", std::move(top_level_item_ids_json)},
       {"top_level_items", std::move(top_level_items_json)},
       {"crubit_features", std::move(features_json)},
+      {"crate_names", std::move(crate_names_json)},
       {"reexported_namespaces", reexported_namespaces},
       {"unstable_rust_features", unstable_rust_features},
   };
@@ -1829,6 +1835,9 @@ void IR::ToFlatProto(flat_proto::IRProto* proto) const {
     std::vector<std::string> sorted_features(features.begin(), features.end());
     absl::c_sort(sorted_features);
     set.mutable_features()->Add(sorted_features.begin(), sorted_features.end());
+  }
+  for (const auto& [target, name] : crate_names) {
+    (*proto->mutable_crate_names())[target.value()] = name;
   }
   proto->mutable_unstable_rust_features()->Add(unstable_rust_features.begin(),
                                                unstable_rust_features.end());

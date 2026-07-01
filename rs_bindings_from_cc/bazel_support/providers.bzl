@@ -34,8 +34,8 @@ RustBindingsFromCcInfo = provider(
                                            "passed through to downstream bindings in case the " +
                                            "target doesn't get bindings."),
         "target_args": ("A depset of strings, each one representing a mapping of target " +
-                        "to its per-target arguments (headers, features) in json format:\n\n" +
-                        "{'t': <target>, 'h': [<header>], 'f': [<feature>]}"),
+                        "to its per-target arguments (headers, features, crate name) in json format:\n\n" +
+                        "{'t': <target>, 'h': [<header>], 'f': [<feature>], 'c': <crate_name>}"),
         "namespaces": ("A json file containing the namespace hierarchy for the target we " +
                        "are generating bindings for, or None."),
         "additional_rust_srcs": ("A depset of files containing all files that appear in an " +

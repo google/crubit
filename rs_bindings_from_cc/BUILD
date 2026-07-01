@@ -434,6 +434,7 @@ rust_library(
         "@crate_index//:quote",  # v1
         "@crate_index//:serde",  # v1
         "@crate_index//:serde_json",  # v1
+        "@crate_index//:syn",  # v1
     ],
 )
 

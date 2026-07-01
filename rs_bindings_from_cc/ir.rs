@@ -7,7 +7,7 @@
 //! information.
 
 use arc_anyhow::{bail, ensure, Context, Error, Result};
-use code_gen_utils::make_rs_ident;
+use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -119,6 +119,7 @@ where
             })
             .collect(),
         reexported_namespaces,
+        crate_names: BTreeMap::new(),
         unstable_rust_features: vec![],
         top_level_items,
     })
@@ -2314,6 +2315,21 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<ExistingRustType> {
 // There's no reason to hide TreeIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
 // and transforming the json is strictly worse than transforming the ir itself.
 
+fn deserialize_crate_names<'de, D>(deserializer: D) -> Result<BTreeMap<BazelLabel, Ident>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let map = BTreeMap::<BazelLabel, &str>::deserialize(deserializer)?;
+    map.into_iter()
+        .map(|(key, value)| {
+            let ident = try_make_rs_ident(value).map_err(|_| {
+                serde::de::Error::custom(format!("Invalid crate name identifier {value:?}"))
+            })?;
+            Ok((key, ident))
+        })
+        .collect()
+}
+
 #[derive(PartialEq, Eq, Clone, Deserialize)]
 #[serde(deny_unknown_fields, rename(deserialize = "IR"))]
 pub struct TreeIR {
@@ -2329,6 +2345,8 @@ pub struct TreeIR {
     pub crate_root_path: Option<Rc<str>>,
     #[serde(default)]
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
+    #[serde(default, deserialize_with = "deserialize_crate_names")]
+    pub crate_names: BTreeMap<BazelLabel, Ident>,
     #[serde(default)]
     pub unstable_rust_features: Vec<String>,
     #[serde(default)]
@@ -2360,6 +2378,7 @@ impl Debug for TreeIR {
             top_level_item_ids: _,
             crate_root_path,
             crubit_features,
+            crate_names,
             unstable_rust_features,
             reexported_namespaces,
             top_level_items,
@@ -2370,6 +2389,7 @@ impl Debug for TreeIR {
             .field("items", items)
             .field("crate_root_path", crate_root_path)
             .field("crubit_features", &DebugBTreeMap(crubit_features))
+            .field("crate_names", &DebugBTreeMap(crate_names))
             .field("unstable_rust_features", unstable_rust_features)
             .field("reexported_namespaces", reexported_namespaces)
             .field("top_level_items", &DebugBTreeMap(top_level_items))
@@ -2499,6 +2519,11 @@ impl IR {
         *target == *self.current_target()
     }
 
+    /// Returns the custom crate name for the given `target` if it was explicitly specified.
+    pub fn crate_name(&self, target: &BazelLabel) -> Option<Ident> {
+        self.tree_ir.crate_names.get(target).cloned()
+    }
+
     /// Returns the Crubit features enabled for the given `target`.
     #[must_use]
     pub fn target_crubit_features(&self, target: &BazelLabel) -> flagset::FlagSet<CrubitFeature> {
@@ -2587,7 +2612,11 @@ pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ide
     if ir.is_current_target(owning_target) {
         None
     } else {
-        let owning_crate = make_rs_ident(&owning_target.target_name_escaped());
+        let owning_crate = if let Some(custom_name) = ir.crate_name(owning_target) {
+            custom_name
+        } else {
+            make_rs_ident(&owning_target.target_name_escaped())
+        };
         Some(owning_crate)
     }
 }
@@ -2631,6 +2660,7 @@ mod tests {
             top_level_item_ids: BTreeMap::new(),
             crate_root_path: None,
             crubit_features: Default::default(),
+            crate_names: BTreeMap::new(),
             unstable_rust_features: vec![],
             reexported_namespaces: vec![],
             top_level_items: BTreeMap::new(),
@@ -2856,5 +2886,84 @@ mod tests {
         let comment_items: Vec<_> = ir.items().filter(|item| item.id() == ItemId(200)).collect();
 
         assert_eq!(comment_items.len(), 1);
+    }
+
+    #[gtest]
+    fn test_proto_crate_names() {
+        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+            current_target: "//foo:bar",
+            crate_names: [("//dep:target", "custom_crate")]
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
+        assert_eq!(
+            ir.crate_name(&"//dep:target".into()).map(|i| i.to_string()),
+            Some("custom_crate".to_string())
+        );
+    }
+
+    #[gtest]
+    fn test_proto_crate_names_invalid_ident() {
+        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+            current_target: "//foo:bar",
+            crate_names: [("//dep:target", "invalid*crate")]
+        });
+        let result = proto_to_ir(proto.as_view());
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("Invalid crate name identifier: \"invalid*crate\""),
+            "error: {}",
+            err_msg
+        );
+    }
+
+    #[gtest]
+    fn test_crate_names_deserialization_invalid_ident() {
+        let input = r#"
+        {
+            "public_headers": [],
+            "current_target": "//foo:bar",
+            "crate_names": {
+                "//dep:target": "invalid*crate"
+            }
+        }
+        "#;
+        let result = deserialize_ir(input.as_bytes());
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("Invalid crate name identifier \"invalid*crate\""),
+            "error: {}",
+            err_msg
+        );
+    }
+
+    #[gtest]
+    fn test_rs_imported_crate_name_with_custom_name() {
+        let input = r#"
+        {
+            "public_headers": [],
+            "current_target": "//foo:bar",
+            "crate_names": {
+                "//dep:target": "custom_crate"
+            }
+        }
+        "#;
+        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
+        assert_eq!(crate_ident.to_string(), "custom_crate");
+    }
+
+    #[gtest]
+    fn test_rs_imported_crate_name_without_custom_name() {
+        let input = r#"
+        {
+            "public_headers": [],
+            "current_target": "//foo:bar"
+        }
+        "#;
+        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
+        assert_eq!(crate_ident.to_string(), "target");
     }
 }

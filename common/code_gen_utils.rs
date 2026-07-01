@@ -245,6 +245,14 @@ fn hyphen_to_underscore(s: &str) -> Cow<'_, str> {
 ///
 /// Hyphens are converted to underscores in the identifier.
 pub fn make_rs_ident(ident: &str) -> Ident {
+    try_make_rs_ident(ident).expect("Failed to make Rust identifier")
+}
+
+/// Makes an 'Ident' to be used in the Rust source code. Escapes Rust keywords.
+/// Returns an error if `ident` is empty or is otherwise an invalid identifier.
+///
+/// Hyphens are converted to underscores in the identifier.
+pub fn try_make_rs_ident(ident: &str) -> Result<Ident> {
     // Target names, which become crate names, may sometimes contain hyphens.
     // Since identifiers cannot contain hyphens, we convert them to underscores.
     let ident = hyphen_to_underscore(ident);
@@ -254,11 +262,12 @@ pub fn make_rs_ident(ident: &str) -> Ident {
     // NOTE: the above PR was accepted for 2021 and 2018 editions, but `try` still isn't escaped,
     // so we may need to tweak something.
     if matches!(&*ident, "gen" | "async" | "await" | "try" | "dyn") {
-        return format_ident!("r#{}", ident);
+        return Ok(format_ident!("r#{}", ident));
     }
     match syn::parse_str::<syn::Ident>(&ident) {
-        Ok(_) => format_ident!("{}", ident),
-        Err(_) => format_ident!("r#{}", ident),
+        Ok(_) => Ok(format_ident!("{}", ident)),
+        Err(_) if !ident.starts_with("r#") => try_make_rs_ident(&format!("r#{ident}")),
+        Err(err) => Err(err.into()),
     }
 }
 
@@ -697,6 +706,13 @@ pub mod tests {
     #[should_panic]
     fn test_make_rs_ident_unfinished_group() {
         make_rs_ident("(foo"); // No closing `)`.
+    }
+
+    #[gtest]
+    #[should_panic]
+    fn test_try_make_rs_ident_unfinished_group() {
+        let result = try_make_rs_ident("(foo"); // No closing `)`.
+        assert!(result.is_err());
     }
 
     #[gtest]
