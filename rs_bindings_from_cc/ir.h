@@ -889,7 +889,6 @@ struct Record {
   // Set if this is [[deprecated]]. If no message was given, will be "".
   std::optional<std::string> deprecated;
 
-  // TODO(b/523265360): Remove child_item_ids.
   std::vector<std::shared_ptr<Item>> children;
 };
 
@@ -1084,7 +1083,6 @@ struct Namespace {
   std::optional<std::string> deprecated;
   std::optional<std::string> doc_comment;
 
-  // TODO(b/523265360): Remove child_item_ids.
   std::vector<std::shared_ptr<Item>> children;
 };
 
@@ -1148,6 +1146,8 @@ struct Item
 
   const Base& as_variant() const { return *this; }
   Base& as_variant() { return *this; }
+
+  ItemId id() const;
 };
 
 // A complete intermediate representation of bindings for publicly accessible
@@ -1189,11 +1189,13 @@ struct IR {
 
   using Item = ::crubit::Item;
   std::vector<Item> items;
-  absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids;
   absl::flat_hash_map<BazelLabel, std::vector<std::shared_ptr<Item>>>
       top_level_items;
 
-  void BuildTree();
+  std::vector<ItemId> top_level_item_ids(const BazelLabel& target) const;
+
+  void BuildTree(
+      absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids);
   // Empty string signals that the bindings should be generated in the crate
   // root. This is the default state.
   //

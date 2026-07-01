@@ -1720,16 +1720,6 @@ flat_proto::Namespace Namespace::ToFlatProto() const {
 }
 
 llvm::json::Value IR::ToJson() const {
-  llvm::json::Object top_level_item_ids_json;
-  for (const auto& [target, item_ids] : top_level_item_ids) {
-    std::vector<llvm::json::Value> item_ids_json;
-    item_ids_json.reserve(item_ids.size());
-    for (const auto& item_id : item_ids) {
-      item_ids_json.push_back(item_id.value());
-    }
-    top_level_item_ids_json[target.value()] = std::move(item_ids_json);
-  }
-
   llvm::json::Object features_json;
   for (const auto& [target, features] : crubit_features) {
     std::vector<std::string> sorted_features(features.begin(), features.end());
@@ -1758,8 +1748,6 @@ llvm::json::Value IR::ToJson() const {
   llvm::json::Object result{
       {"public_headers", public_headers},
       {"current_target", current_target},
-      {"items", llvm::json::Array{}},
-      {"top_level_item_ids", std::move(top_level_item_ids_json)},
       {"top_level_items", std::move(top_level_items_json)},
       {"crubit_features", std::move(features_json)},
       {"reexported_namespaces", reexported_namespaces},
@@ -1848,10 +1836,27 @@ void SetMustBindItem(IR::Item& item) {
              item.as_variant());
 }
 
+ItemId Item::id() const {
+  return std::visit([](const auto& val) { return val.id; }, as_variant());
+}
+
+std::vector<ItemId> IR::top_level_item_ids(const BazelLabel& target) const {
+  std::vector<ItemId> ids;
+  auto it = top_level_items.find(target);
+  if (it != top_level_items.end()) {
+    ids.reserve(it->second.size());
+    for (const auto& item : it->second) {
+      ids.push_back(item->id());
+    }
+  }
+  return ids;
+}
+
 // Produces a nested IR which inlines child items on namespaces and records to
 // replace the legacy representation (an array of item IDs).
 // See crubit.rs-better-ir for more context.
-void IR::BuildTree() {
+void IR::BuildTree(
+    absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids) {
   top_level_items.clear();
   absl::flat_hash_map<ItemId, std::shared_ptr<Item>> item_map;
   item_map.reserve(items.size());

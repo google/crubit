@@ -108,9 +108,6 @@ where
     make_ir(TreeIR {
         public_headers,
         current_target,
-        items,
-        // TODO(b/523265360): Remove top_level_item_ids in follow-up CL.
-        top_level_item_ids: Default::default(),
         crate_root_path,
         crubit_features: crubit_features
             .into_iter()
@@ -163,9 +160,19 @@ impl<'a> Iterator for ItemsIterator<'a> {
         None
     }
 }
+
 // Read-only traversal to populate the lookup cache with deserialized items.
 fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, Item>) {
-    item_id_to_item.insert(item.id(), item.clone());
+    match item_id_to_item.entry(item.id()) {
+        Entry::Vacant(vacant) => {
+            vacant.insert(item.clone());
+        }
+        Entry::Occupied(occupied) => {
+            if occupied.get() != item {
+                panic!("Duplicate decl_id found in {:?} and {:?}", occupied.get(), item);
+            }
+        }
+    }
     match item {
         Item::Record(record) => {
             for child in &record.children {
@@ -182,13 +189,6 @@ fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, I
 }
 
 pub fn make_ir(tree_ir: TreeIR) -> IR {
-    let mut used_decl_ids = HashMap::new();
-    for item in &tree_ir.items {
-        if let Some(existing_decl) = used_decl_ids.insert(item.id(), item) {
-            panic!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
-        }
-    }
-
     let mut item_id_to_item = HashMap::new();
 
     for items in tree_ir.top_level_items.values() {
@@ -2321,11 +2321,6 @@ pub struct TreeIR {
     pub public_headers: Vec<HeaderName>,
     pub current_target: BazelLabel,
     #[serde(default)]
-    pub items: Vec<Item>,
-    // TODO(b/523265360): Remove top_level_item_ids in follow-up CL.
-    #[serde(default)]
-    pub top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
-    #[serde(default)]
     pub crate_root_path: Option<Rc<str>>,
     #[serde(default)]
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
@@ -2345,19 +2340,19 @@ impl Debug for TreeIR {
         // BTreeMap has consistent ordering, unlike HashMap, so it's reasonable to rely on a
         // consistent Debug output.
         struct DebugBTreeMap<T>(pub T);
+
+        // Format as `[ (k, v) ]` instead of `map! { k: v }` because rustfmt fails on macros
+        // with complicated contents (our nested items) which it cannot verify is valid Rust. This
+        // ensures the output is parse-able for rustfmt on test failures. See b/272530008.
         impl<K: Debug, V: Debug> Debug for DebugBTreeMap<&BTreeMap<K, V>> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 f.debug_list().entries(self.0.iter()).finish()
             }
         }
-        // exhaustive-match so we don't forget to add fields to Debug when we add to
-        // TreeIR.
+        // exhaustive-match so we don't forget to add fields to Debug when we add to TreeIR.
         let TreeIR {
             public_headers,
             current_target,
-            items,
-            // TODO(b/523265360): Remove top_level_item_ids in follow-up CL.
-            top_level_item_ids: _,
             crate_root_path,
             crubit_features,
             unstable_rust_features,
@@ -2367,7 +2362,6 @@ impl Debug for TreeIR {
         f.debug_struct("TreeIR")
             .field("public_headers", public_headers)
             .field("current_target", current_target)
-            .field("items", items)
             .field("crate_root_path", crate_root_path)
             .field("crubit_features", &DebugBTreeMap(crubit_features))
             .field("unstable_rust_features", unstable_rust_features)
@@ -2627,8 +2621,6 @@ mod tests {
         let expected = TreeIR {
             public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
-            items: vec![],
-            top_level_item_ids: BTreeMap::new(),
             crate_root_path: None,
             crubit_features: Default::default(),
             unstable_rust_features: vec![],
