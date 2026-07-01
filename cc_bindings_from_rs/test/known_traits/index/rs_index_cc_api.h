@@ -481,10 +481,10 @@ rs_std::Vec<::rs::alloc::string::String>::operator=(Vec&& other) {
   return *this;
 }
 extern "C" void
-__crubit_drop_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e(
+__crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     void* vec) noexcept;
 inline rs_std::Vec<::rs::alloc::string::String>::~Vec() noexcept {
-  __crubit_drop_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e(
+  __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
       this);
 }
 inline ::rs::alloc::string::String*
