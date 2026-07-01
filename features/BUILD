@@ -169,6 +169,17 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling converting `impl Ctor<Output=T>` parameters to plain `T` instead of `T&&`.
+# This flag only impacts cpp_api_from_rust users.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "ctor_plain_values",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["ctor_plain_values"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
