@@ -86,6 +86,7 @@ pub struct CcPrerequisites<'tcx> {
 pub enum TemplateSpecialization<'tcx> {
     RsStd(RsStdTemplateSpecialization<'tcx>),
     TraitImpl(TraitImplTemplateSpecialization),
+    NegativeAutoTraitImpl(NegativeAutoTraitImplTemplateSpecialization),
 }
 
 #[derive(Clone, Debug)]
@@ -102,6 +103,25 @@ impl Eq for TraitImplTemplateSpecialization {}
 impl Hash for TraitImplTemplateSpecialization {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.trait_impl.hash(state);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct NegativeAutoTraitImplTemplateSpecialization {
+    pub self_ty_cc_name: TokenStream,
+    pub self_def_id: DefId,
+    pub trait_id: DefId,
+}
+impl PartialEq for NegativeAutoTraitImplTemplateSpecialization {
+    fn eq(&self, other: &Self) -> bool {
+        self.self_def_id == other.self_def_id && self.trait_id == other.trait_id
+    }
+}
+impl Eq for NegativeAutoTraitImplTemplateSpecialization {}
+impl Hash for NegativeAutoTraitImplTemplateSpecialization {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.self_def_id.hash(state);
+        self.trait_id.hash(state);
     }
 }
 
