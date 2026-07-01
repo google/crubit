@@ -18,7 +18,7 @@
 //!
 //! Because base classes are always `!Unpin`, mutable references to base must
 //! take the form of `Pin<&mut Base>`. See
-//! docs/unpin.md
+//! docs/design/unpin.md
 //!
 //! To implement upcasting, implement the `Inherits` trait.
 //!

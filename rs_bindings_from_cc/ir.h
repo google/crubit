@@ -813,7 +813,7 @@ struct Record {
   // aligned due to layout issues, the parent struct must instead receive an
   // alignment adjustment as necessary, via .override_alignment=true.
   //
-  // More information: docs/struct_layout
+  // More information: docs/design/struct_layout.md
   bool override_alignment = false;
 
   // Whether the C++ type is explicitly annotated as safe or unsafe, or has no

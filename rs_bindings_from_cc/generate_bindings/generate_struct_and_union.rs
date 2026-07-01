@@ -99,7 +99,7 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
 /// Such unsupported fields should be replaced with a typeless, unaligned block
 /// of memory, of a size that can fill up space to the next field.
 ///
-/// See docs/struct_layout
+/// See docs/design/struct_layout.md
 fn get_field_rs_type_kind_for_layout(
     db: &BindingsGenerator,
     record: &Record,
@@ -437,7 +437,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
                 offset: field.offset,
                 // We retain the end offset of fields only if we have a matching Rust type
                 // to represent them. Otherwise we'll fill up all the space to the next field.
-                // See: docs/struct_layout
+                // See: docs/design/struct_layout.md
                 end: match get_field_rs_type_kind_for_layout(db, &record, field) {
                     // Regular field
                     Ok(_rs_type) => Some(field.offset + field.size),

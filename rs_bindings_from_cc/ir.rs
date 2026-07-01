@@ -1358,7 +1358,7 @@ impl Record {
     /// by value and have their memory directly mutated by Rust using
     /// memcpy-like assignment/swap.
     ///
-    /// Described in more detail at: docs/unpin
+    /// Described in more detail at: docs/design/unpin.md
     pub fn is_unpin(&self) -> bool {
         self.is_trivial_abi
     }
