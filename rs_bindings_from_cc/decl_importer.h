@@ -86,6 +86,12 @@ class Invocation {
   // The main output of the import process
   IR ir_;
 
+  // Transient map of top level items used to build the tree.
+  absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids_;
+
+  // Transient map of child items used to build the tree.
+  absl::flat_hash_map<ItemId, std::vector<ItemId>> child_item_ids;
+
   // Returns whether to record extra location information for Kythe annotations.
   bool kythe_annotations() const { return kythe_annotations_; }
 

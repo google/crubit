@@ -66,15 +66,17 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
         {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
+  ItemId id = ictx_.GenerateItemId(namespace_decl);
+  ictx_.invocation_.child_item_ids[id] = std::move(item_ids);
+
   return Namespace{.cc_name = identifier->cc_identifier,
                    .rs_name = identifier->cc_identifier,
                    .unique_name = ictx_.GetUniqueName(*namespace_decl),
-                   .id = ictx_.GenerateItemId(namespace_decl),
+                   .id = id,
                    .canonical_namespace_id =
                        ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),
                    .unknown_attr = std::move(*unknown_attr),
                    .owning_target = ictx_.GetOwningTarget(namespace_decl),
-                   .child_item_ids = std::move(item_ids),
                    .enclosing_item_id = *std::move(enclosing_item_id),
                    .is_inline = namespace_decl->isInline(),
                    .deprecated = std::move(deprecated),

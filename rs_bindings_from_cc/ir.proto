@@ -363,7 +363,6 @@ message Record {
   RecordType record_type = 28;
   bool is_aggregate = 29;
   bool is_canonical_alias = 30;
-  repeated int64 child_item_ids = 31;
   int64 enclosing_item_id = 32;
   bool must_bind = 33;
   bool overloads_operator_delete = 34;
@@ -491,7 +490,6 @@ message Namespace {
   int64 canonical_namespace_id = 5;
   string unknown_attr = 6;
   string owning_target = 7;
-  repeated int64 child_item_ids = 8;
   int64 enclosing_item_id = 9;
   bool is_inline = 10;
   bool must_bind = 11;
@@ -539,9 +537,6 @@ message Item {
 // Redundantly naming this `IRProto` for now to avoid overlap with the `IR`
 // struct in `ir.h`.
 message IRProto {
-  message ItemIdList {
-    repeated int64 item_ids = 1;
-  }
   message FeatureSet {
     repeated string features = 1;
   }
@@ -551,13 +546,9 @@ message IRProto {
 
   repeated HeaderName public_headers = 1;
   string current_target = 2;
-  repeated Item items = 3;
-  map<string, ItemIdList> top_level_item_ids = 4;
   string crate_root_path = 5;
   map<string, FeatureSet> crubit_features = 6;
   repeated string unstable_rust_features = 7;
   repeated string reexported_namespaces = 8;
-  // Lexical tree structure of the IR. We would like for this to fully
-  // replace `top_level_item_ids` eventually. (See b/523265360)
   map<string, ItemList> top_level_items = 9;
 }

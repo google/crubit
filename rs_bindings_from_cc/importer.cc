@@ -849,11 +849,11 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     auto* parent_item = std::get_if<Record>(&(parent_it->second.value()));
 
     auto child_id = GenerateItemId(decl);
+    auto& parent_child_ids = invocation_.child_item_ids[parent_item->id];
     if (!IsUnsupportedAndAlien(child_id) &&
-        std::find(parent_item->child_item_ids.begin(),
-                  parent_item->child_item_ids.end(),
-                  child_id) == parent_item->child_item_ids.end()) {
-      parent_item->child_item_ids.push_back(child_id);
+        std::find(parent_child_ids.begin(), parent_child_ids.end(), child_id) ==
+            parent_child_ids.end()) {
+      parent_child_ids.push_back(child_id);
     }
   }
 
@@ -870,20 +870,20 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   for (auto& ordered_item : ordered_items) {
     invocation_.ir_.items.push_back(ordered_item.second);
   }
-  invocation_.ir_.top_level_item_ids =
+  invocation_.top_level_item_ids_ =
       GetTopLevelItemIdsInSourceOrder(translation_unit_decl);
 
   // TODO(b/257302656): Consider placing the generated template instantiations
   // into a separate namespace (maybe `crubit::instantiated_templates` ?).
-  llvm::copy(GetOrderedItemIdsOfTemplateInstantiations(),
-             std::back_inserter(
-                 invocation_.ir_.top_level_item_ids[invocation_.target_]));
+  llvm::copy(
+      GetOrderedItemIdsOfTemplateInstantiations(),
+      std::back_inserter(invocation_.top_level_item_ids_[invocation_.target_]));
 
   // Remove any unsupported alien (to the current target) items.
   // IsUnsupportedAndAlien only returns true for items outside the current
   // target that are unsupported. You have to run it only if label is not equal
   // to the current target; you can skip the current target.
-  for (auto& [label, item_ids] : invocation_.ir_.top_level_item_ids) {
+  for (auto& [label, item_ids] : invocation_.top_level_item_ids_) {
     if (label == invocation_.target_) continue;
     item_ids.erase(std::remove_if(item_ids.begin(), item_ids.end(),
                                   [&](ItemId item_id) {
@@ -967,10 +967,10 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
 
   // Logic for `ClassTemplateSpecializationDecl`: insert them into
   // `class_template_instantiations_`, so that they will get included in
-  // IR::top_level_item_ids.
+  // the top-level items.
   // Note: The 'gating' logic here needs to be consistent with the 'gating'
   // logic in `GetItemIdsInSourceOrder`, or else the class template
-  // instantiation decl ID is inserted into the IR::top_level_item_ids but does
+  // instantiation decl ID is inserted into the top-level items but does
   // not have its corresponding IR item, resulting in lookup failures (crashes)
   // when generating bindings.
   if (result.has_value()) {

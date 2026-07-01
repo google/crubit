@@ -1239,12 +1239,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(detected_formatter).status()));
   }
 
+  ItemId id = ictx_.GenerateItemId(record_decl);
+  ictx_.invocation_.child_item_ids[id] = std::move(item_ids);
+
   auto record = Record{
       .rs_name = Identifier(rs_name),
       .cc_name = Identifier(cc_name),
       .unique_name = ictx_.GetUniqueName(*record_decl),
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
-      .id = ictx_.GenerateItemId(record_decl),
+      .id = id,
       .owning_target = std::move(owning_target),
       .template_specialization = std::move(template_specialization),
       .unknown_attr = std::move(*unknown_attr),
@@ -1276,7 +1279,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           anon_typedef != nullptr || is_canonical_template_alias,
       .is_explicit_class_template_instantiation_definition =
           is_explicit_class_template_instantiation_definition,
-      .child_item_ids = std::move(item_ids),
       .enclosing_item_id = std::move(enclosing_item_id),
       .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
       .has_private_or_deleted_operator_delete =
