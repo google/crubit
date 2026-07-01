@@ -1182,12 +1182,6 @@ flat_proto::OwnedPtrConfig OwnedPtrConfig::ToFlatProto() const {
 }
 
 llvm::json::Value Record::ToJson() const {
-  std::vector<llvm::json::Value> json_item_ids;
-  json_item_ids.reserve(child_item_ids.size());
-  for (const auto& id : child_item_ids) {
-    json_item_ids.push_back(id.value());
-  }
-
   llvm::json::Object record{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
@@ -1218,7 +1212,6 @@ llvm::json::Value Record::ToJson() const {
       {"record_type", RecordTypeToString(record_type)},
       {"is_aggregate", is_aggregate},
       {"is_canonical_alias", is_canonical_alias},
-      {"child_item_ids", std::move(json_item_ids)},
       // TODO(b/513299904): Should remove once protobuf IR rollout is complete.
       {"children",
        [&] {
@@ -1295,9 +1288,6 @@ flat_proto::Record Record::ToFlatProto() const {
   proto.set_record_type(crubit::ToFlatProto(record_type));
   proto.set_is_aggregate(is_aggregate);
   proto.set_is_canonical_alias(is_canonical_alias);
-  proto.mutable_child_item_ids()->Reserve(child_item_ids.size());
-  for (const auto& child : child_item_ids)
-    proto.add_child_item_ids(child.value());
   proto.mutable_children()->Reserve(children.size());
   for (const auto& child : children) {
     *proto.add_children() = crubit::ToFlatProto(*child);
@@ -1649,12 +1639,6 @@ flat_proto::Comment Comment::ToFlatProto() const {
 }
 
 llvm::json::Value Namespace::ToJson() const {
-  std::vector<llvm::json::Value> json_item_ids;
-  json_item_ids.reserve(child_item_ids.size());
-  for (const auto& id : child_item_ids) {
-    json_item_ids.push_back(id.value());
-  }
-
   llvm::json::Object ns{
       {"cc_name", cc_name},
       {"rs_name", rs_name},
@@ -1663,7 +1647,6 @@ llvm::json::Value Namespace::ToJson() const {
       {"canonical_namespace_id", canonical_namespace_id},
       {"unknown_attr", unknown_attr},
       {"owning_target", owning_target},
-      {"child_item_ids", std::move(json_item_ids)},
       // TODO(b/513299904): Should remove once protobuf IR rollout is complete.
       {"children",
        [&] {
@@ -1703,9 +1686,6 @@ flat_proto::Namespace Namespace::ToFlatProto() const {
   proto.set_canonical_namespace_id(canonical_namespace_id.value());
   if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
   proto.set_owning_target(owning_target.value());
-  proto.mutable_child_item_ids()->Reserve(child_item_ids.size());
-  for (const auto& child : child_item_ids)
-    proto.add_child_item_ids(child.value());
   proto.mutable_children()->Reserve(children.size());
   for (const auto& child : children) {
     *proto.add_children() = crubit::ToFlatProto(*child);
@@ -1720,16 +1700,6 @@ flat_proto::Namespace Namespace::ToFlatProto() const {
 }
 
 llvm::json::Value IR::ToJson() const {
-  llvm::json::Object top_level_item_ids_json;
-  for (const auto& [target, item_ids] : top_level_item_ids) {
-    std::vector<llvm::json::Value> item_ids_json;
-    item_ids_json.reserve(item_ids.size());
-    for (const auto& item_id : item_ids) {
-      item_ids_json.push_back(item_id.value());
-    }
-    top_level_item_ids_json[target.value()] = std::move(item_ids_json);
-  }
-
   llvm::json::Object features_json;
   for (const auto& [target, features] : crubit_features) {
     std::vector<std::string> sorted_features(features.begin(), features.end());
@@ -1758,8 +1728,6 @@ llvm::json::Value IR::ToJson() const {
   llvm::json::Object result{
       {"public_headers", public_headers},
       {"current_target", current_target},
-      {"items", llvm::json::Array{}},
-      {"top_level_item_ids", std::move(top_level_item_ids_json)},
       {"top_level_items", std::move(top_level_items_json)},
       {"crubit_features", std::move(features_json)},
       {"reexported_namespaces", reexported_namespaces},
@@ -1848,10 +1816,46 @@ void SetMustBindItem(IR::Item& item) {
              item.as_variant());
 }
 
+ItemId Item::id() const {
+  return std::visit([](const auto& val) { return val.id; }, as_variant());
+}
+
+std::vector<ItemId> IR::top_level_item_ids(const BazelLabel& target) const {
+  std::vector<ItemId> ids;
+  auto it = top_level_items.find(target);
+  if (it != top_level_items.end()) {
+    ids.reserve(it->second.size());
+    for (const auto& item : it->second) {
+      ids.push_back(item->id());
+    }
+  }
+  return ids;
+}
+
+std::vector<ItemId> Record::child_item_ids() const {
+  std::vector<ItemId> ids;
+  ids.reserve(children.size());
+  for (const auto& child : children) {
+    ids.push_back(child->id());
+  }
+  return ids;
+}
+
+std::vector<ItemId> Namespace::child_item_ids() const {
+  std::vector<ItemId> ids;
+  ids.reserve(children.size());
+  for (const auto& child : children) {
+    ids.push_back(child->id());
+  }
+  return ids;
+}
+
 // Produces a nested IR which inlines child items on namespaces and records to
 // replace the legacy representation (an array of item IDs).
 // See crubit.rs-better-ir for more context.
-void IR::BuildTree() {
+void IR::BuildTree(
+    absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids,
+    absl::flat_hash_map<ItemId, std::vector<ItemId>> child_item_ids) {
   top_level_items.clear();
   absl::flat_hash_map<ItemId, std::shared_ptr<Item>> item_map;
   item_map.reserve(items.size());
@@ -1862,22 +1866,57 @@ void IR::BuildTree() {
     item_map[id] = std::make_shared<Item>(item);
   }
 
-  for (auto& [id, shared_item] : item_map) {
+  for (auto& item : items) {
     std::visit(visitor{[&](Record& r) {
-                         r.children.reserve(r.child_item_ids.size());
-                         for (const auto& child_id : r.child_item_ids) {
-                           if (auto it = item_map.find(child_id);
-                               it != item_map.end()) {
-                             r.children.push_back(it->second);
+                         if (auto it = child_item_ids.find(r.id);
+                             it != child_item_ids.end()) {
+                           r.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               r.children.push_back(item_it->second);
+                             }
                            }
                          }
                        },
                        [&](Namespace& ns) {
-                         ns.children.reserve(ns.child_item_ids.size());
-                         for (const auto& child_id : ns.child_item_ids) {
-                           if (auto it = item_map.find(child_id);
-                               it != item_map.end()) {
-                             ns.children.push_back(it->second);
+                         if (auto it = child_item_ids.find(ns.id);
+                             it != child_item_ids.end()) {
+                           ns.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               ns.children.push_back(item_it->second);
+                             }
+                           }
+                         }
+                       },
+                       [](auto& other) {}},
+               item.as_variant());
+  }
+
+  for (auto& [id, shared_item] : item_map) {
+    std::visit(visitor{[&](Record& r) {
+                         if (auto it = child_item_ids.find(r.id);
+                             it != child_item_ids.end()) {
+                           r.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               r.children.push_back(item_it->second);
+                             }
+                           }
+                         }
+                       },
+                       [&](Namespace& ns) {
+                         if (auto it = child_item_ids.find(ns.id);
+                             it != child_item_ids.end()) {
+                           ns.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               ns.children.push_back(item_it->second);
+                             }
                            }
                          }
                        },

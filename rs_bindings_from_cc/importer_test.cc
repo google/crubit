@@ -928,7 +928,7 @@ TEST(ImporterTest, TopLevelItemIds) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<IR::Item> items;
-  for (const auto& id : ir.top_level_item_ids.at(ir.current_target)) {
+  for (const auto& id : ir.top_level_item_ids(ir.current_target)) {
     auto item = FindItemById(ir, id);
     ASSERT_TRUE(item.has_value());
     items.push_back(*item);
@@ -956,7 +956,7 @@ TEST(ImporterTest, ForwardDeclarationAndDefinition) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<IR::Item> items;
-  for (const auto& id : ir.top_level_item_ids.at(ir.current_target)) {
+  for (const auto& id : ir.top_level_item_ids(ir.current_target)) {
     auto item = FindItemById(ir, id);
     items.push_back(*item);
   }
@@ -976,7 +976,7 @@ TEST(ImporterTest, DuplicateForwardDeclarations) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<IR::Item> items;
-  for (const auto& id : ir.top_level_item_ids.at(ir.current_target)) {
+  for (const auto& id : ir.top_level_item_ids(ir.current_target)) {
     auto item = FindItemById(ir, id);
     items.push_back(*item);
   }
@@ -1004,7 +1004,7 @@ TEST(ImporterTest, RecordItemIds) {
   ASSERT_EQ(records.size(), 2);
 
   std::vector<IR::Item> items;
-  for (const auto& id : records[0]->child_item_ids) {
+  for (const auto& id : records[0]->child_item_ids()) {
     auto item = FindItemById(ir, id);
     ASSERT_TRUE(item.has_value());
     items.push_back(*item);
