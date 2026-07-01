@@ -53,3 +53,26 @@ fn test_inline_thunk_sync() {
     library_with_embedded_cpp::set_global_val_to_99();
     assert_eq!(library_with_embedded_cpp::call_get_test_global_val(), 99);
 }
+
+#[gtest]
+fn test_inline_add() {
+    assert_eq!(library_with_embedded_cpp::call_inline_add(5, 10), 15);
+}
+
+#[gtest]
+fn test_inline_string_length() {
+    let c_str = std::ffi::CString::new("Hello exhaustive world!").unwrap();
+    assert_eq!(library_with_embedded_cpp::call_inline_string_length(&c_str), 23);
+}
+
+#[gtest]
+fn test_inline_point_sum() {
+    assert_eq!(library_with_embedded_cpp::call_inline_point_sum(40, 2), 42);
+}
+
+#[gtest]
+fn test_inline_max_ptr() {
+    let val1 = 100;
+    let val2 = 200;
+    assert_eq!(library_with_embedded_cpp::call_inline_max_ptr(&val1, &val2), &val2);
+}

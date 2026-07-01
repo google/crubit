@@ -18,12 +18,7 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
     let thunk_name = quote::format_ident!("{}", name_str);
 
     let expanded = quote! {
-        {
-            unsafe extern "C" {
-                fn #thunk_name();
-            }
-            unsafe { #thunk_name() }
-        }
+        inline_cpp_generated_bindings::#thunk_name
     };
 
     TokenStream::from(expanded)

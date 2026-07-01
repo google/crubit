@@ -184,6 +184,93 @@ pub fn extract_global_cpp(
     Ok(extracted)
 }
 
+struct LexToken<'a> {
+    kind: ra_ap_rustc_lexer::TokenKind,
+    text: &'a str,
+}
+
+struct ParsedThunk {
+    params: String,
+    return_type: String,
+    body: String,
+}
+
+/// Parses the raw string contents of an `inline_cpp!` block into C++ components
+/// expected in format `(args) -> return_type { body }`.
+fn parse_extracted_cpp(body_text: &str) -> Result<ParsedThunk, String> {
+    let mut tokens = Vec::new();
+    let mut offset = 0;
+    for t in ra_ap_rustc_lexer::tokenize(body_text, ra_ap_rustc_lexer::FrontmatterAllowed::No) {
+        let len = t.len as usize;
+        tokens.push(LexToken { kind: t.kind, text: &body_text[offset..offset + len] });
+        offset += len;
+    }
+
+    let Some(first_idx) =
+        tokens.iter().position(|t| t.kind != ra_ap_rustc_lexer::TokenKind::Whitespace)
+    else {
+        return Err("Empty inline_cpp! block is not allowed".to_string());
+    };
+
+    if tokens[first_idx].kind != ra_ap_rustc_lexer::TokenKind::OpenParen {
+        return Err("inline_cpp! block must start with a parameter list `(args)`".to_string());
+    }
+
+    let mut paren_depth = 0;
+    let Some(close_paren_idx) = tokens[first_idx..]
+        .iter()
+        .enumerate()
+        .find(|&(_, t)| {
+            match t.kind {
+                ra_ap_rustc_lexer::TokenKind::OpenParen => paren_depth += 1,
+                ra_ap_rustc_lexer::TokenKind::CloseParen => {
+                    paren_depth -= 1;
+                    if paren_depth == 0 {
+                        return true;
+                    }
+                }
+                _ => {}
+            }
+            false
+        })
+        .map(|(pos, _)| first_idx + pos)
+    else {
+        return Err("Mismatched parameter parentheses inside inline_cpp!".to_string());
+    };
+
+    let Some(open_brace_idx) = tokens[(close_paren_idx + 1)..]
+        .iter()
+        .enumerate()
+        .find(|&(_, t)| t.kind == ra_ap_rustc_lexer::TokenKind::OpenBrace)
+        .map(|(pos, _)| close_paren_idx + 1 + pos)
+    else {
+        return Err(
+            "Missing body open brace '{' after parameter list inside inline_cpp!".to_string()
+        );
+    };
+
+    let Some(last_idx) =
+        tokens.iter().rposition(|t| t.kind != ra_ap_rustc_lexer::TokenKind::Whitespace)
+    else {
+        return Err("Missing body contents inside inline_cpp!".to_string());
+    };
+    if tokens[last_idx].kind != ra_ap_rustc_lexer::TokenKind::CloseBrace {
+        return Err("Mismatched body braces inside inline_cpp!".to_string());
+    }
+
+    let params: String = tokens[(first_idx + 1)..close_paren_idx].iter().map(|t| t.text).collect();
+    // Extract return type (expected to match `-> ReturnType` between parenthesis and body brace)
+    let ret_type_raw: String =
+        tokens[(close_paren_idx + 1)..open_brace_idx].iter().map(|t| t.text).collect();
+    let return_type = ret_type_raw.trim().to_string();
+    if return_type.is_empty() || !return_type.starts_with("->") {
+        return Err("inline_cpp! block must specify a return type starting with `->`".to_string());
+    }
+    let body: String = tokens[(open_brace_idx + 1)..last_idx].iter().map(|t| t.text).collect();
+
+    Ok(ParsedThunk { params: params.trim().to_string(), return_type, body })
+}
+
 pub fn extract_inline_cpp(
     rust_source: &str,
     tokens: &[ra_ap_rustc_lexer::Token],
@@ -199,9 +286,11 @@ pub fn extract_inline_cpp(
         {
             let thunk_name =
                 inline_cpp_utils::compute_thunk_name(target, file_name, macro_line, macro_col);
+            let parsed = parse_extracted_cpp(braced_body_text)
+                .map_err(|e| format!("{} at {}:{}", e, file_name, macro_line))?;
             extracted.push_str(&format!(
-                "extern \"C\" void {}() {{\n{}\n}}\n\n",
-                thunk_name, braced_body_text
+                "inline auto {}({}) {} {{\n{}\n}}\n\n",
+                thunk_name, parsed.params, parsed.return_type, parsed.body
             ));
         }
     }
@@ -300,11 +389,12 @@ mod tests {
 
     #[gtest]
     fn test_extract_inline_cpp() {
-        let input = "let r = inline_cpp! { return 42; };";
+        let input = "let r = inline_cpp! { () -> int { return 42; } };";
         let file_name = "test_src.rs";
         let target = "//test:target";
         let thunk_name = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 9);
-        let expected_thunk = format!("extern \"C\" void {}() {{\n return 42; \n}}\n\n", thunk_name);
+        let expected_thunk =
+            format!("inline auto {}() -> int {{\n return 42; \n}}\n\n", thunk_name);
         expect_eq!(
             extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
             expected_thunk
@@ -313,15 +403,16 @@ mod tests {
 
     #[gtest]
     fn test_extract_inline_cpp_same_line() {
-        let input = "inline_cpp! { return 1; }; inline_cpp! { return 2; };";
+        let input =
+            "\ninline_cpp! { () -> int { return 1; } };\ninline_cpp! { () -> int { return 2; } };";
         let file_name = "test_src.rs";
         let target = "//test:target";
-        let thunk_name1 = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 1);
-        let thunk_name2 = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 28);
+        let thunk_name1 = inline_cpp_utils::compute_thunk_name(target, file_name, 2, 1);
+        let thunk_name2 = inline_cpp_utils::compute_thunk_name(target, file_name, 3, 1);
 
         let expected = format!(
-            "extern \"C\" void {}() {{\n return 1; \n}}\n\n\
-             extern \"C\" void {}() {{\n return 2; \n}}\n\n",
+            "inline auto {}() -> int {{\n return 1; \n}}\n\n\
+             inline auto {}() -> int {{\n return 2; \n}}\n\n",
             thunk_name1, thunk_name2
         );
         expect_eq!(
@@ -332,12 +423,12 @@ mod tests {
 
     #[gtest]
     fn test_extract_inline_cpp_nested_braces() {
-        let input = "inline_cpp! { if (true) { return 1; } else { return 2; } };";
+        let input = "inline_cpp! { () -> int { if (true) { return 1; } else { return 2; } } };";
         let file_name = "test_src.rs";
         let target = "//test:target";
         let thunk_name = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 1);
         let expected = format!(
-            "extern \"C\" void {}() {{\n if (true) {{ return 1; }} else {{ return 2; }} \n}}\n\n",
+            "inline auto {}() -> int {{\n if (true) {{ return 1; }} else {{ return 2; }} \n}}\n\n",
             thunk_name
         );
         expect_eq!(
@@ -348,11 +439,27 @@ mod tests {
 
     #[gtest]
     fn test_extract_inline_cpp_newlines() {
-        let input = "line 1\r\nline 2\r\ninline_cpp! { return 4; };";
+        let input = "line 1\r\nline 2\r\ninline_cpp! { () -> void { return; } };";
         let file_name = "test_src.rs";
         let target = "//test:target";
         let thunk_name = inline_cpp_utils::compute_thunk_name(target, file_name, 3, 1);
-        let expected = format!("extern \"C\" void {}() {{\n return 4; \n}}\n\n", thunk_name);
+        let expected = format!("inline auto {}() -> void {{\n return; \n}}\n\n", thunk_name);
+        expect_eq!(
+            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            expected
+        );
+    }
+
+    #[gtest]
+    fn test_extract_inline_cpp_with_signature() {
+        let input = "inline_cpp! { (int a, double b) -> int { return a + b; } }";
+        let file_name = "test_src.rs";
+        let target = "//test:target";
+        let thunk_name = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 1);
+        let expected = format!(
+            "inline auto {}(int a, double b) -> int {{\n return a + b; \n}}\n\n",
+            thunk_name
+        );
         expect_eq!(
             extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
             expected

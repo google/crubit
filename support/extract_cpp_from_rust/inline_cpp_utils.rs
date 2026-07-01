@@ -36,5 +36,5 @@ pub fn compute_thunk_name(target: &str, file_path: &str, line: usize, col: usize
     let escaped_name: String =
         filename.chars().map(|c| if c == '.' || c == '-' { '_' } else { c }).collect();
 
-    format!("__inline_cpp_thunk_{}_{:016x}", escaped_name, hash)
+    format!("inline_cpp_thunk_{}_{:016x}", escaped_name, hash)
 }

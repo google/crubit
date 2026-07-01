@@ -36,10 +36,15 @@ def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [
         cpp_target = ":" + cc_lib_name,
     )
 
+    bindings_label = ":" + rust_bindings_name
     rust_library(
         name = name,
         srcs = srcs,
         deps = deps + [":" + rust_bindings_name],
+        aliases = {
+            bindings_label: "inline_cpp_generated_bindings",
+            ":" + cc_lib_name: "inline_cpp_generated_bindings",
+        },
         proc_macro_deps = kwargs.pop("proc_macro_deps", []) + [
             "//support/extract_cpp_from_rust:inline_cpp_macro",
         ],
