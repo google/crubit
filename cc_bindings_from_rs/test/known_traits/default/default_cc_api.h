@@ -255,11 +255,14 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aderived_uimpl_x0000003a_x0000003aSomeStruct(
     ::rs_default::derived_impl::SomeStruct* __ret_ptr);
 }
 inline ::rs_default::derived_impl::SomeStruct::SomeStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aderived_uimpl_x0000003a_x0000003aSomeStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -288,11 +291,14 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aexplicit_uimpl_x0000003a_x0000003aSomeStruct(
     ::rs_default::explicit_impl::SomeStruct* __ret_ptr);
 }
 inline ::rs_default::explicit_impl::SomeStruct::SomeStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aexplicit_uimpl_x0000003a_x0000003aSomeStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -321,13 +327,16 @@ static_assert(
     alignof(StructWithFieldWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003afield_uwith_uno_udefault_x0000003a_x0000003aStructWithFieldWithNoDefault(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*
         __ret_ptr);
 }
 inline ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
     StructWithFieldWithNoDefault() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003afield_uwith_uno_udefault_x0000003a_x0000003aStructWithFieldWithNoDefault(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<StructWithFieldWithNoDefault>);
 static_assert(
@@ -391,10 +400,11 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" ::rs_default::transparent_struct::SomeStruct
-__crubit_thunk_default();
+__crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003atransparent_ustruct_x0000003a_x0000003aSomeStruct();
 }
 inline ::rs_default::transparent_struct::SomeStruct::SomeStruct() {
-  *this = __crubit_internal::__crubit_thunk_default();
+  *this = __crubit_internal::
+      __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003atransparent_ustruct_x0000003a_x0000003aSomeStruct();
 }
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<

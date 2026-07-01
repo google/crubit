@@ -747,28 +747,38 @@ static_assert(
     alignof(CloneNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::tuple_structs::CloneNoDefault&);
+extern "C" void
+__crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
+    ::tuple_structs::CloneNoDefault&);
 }
 inline CloneNoDefault::~CloneNoDefault() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
+          *this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(
+extern "C" void
+__crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
     ::tuple_structs::CloneNoDefault const&,
     ::tuple_structs::CloneNoDefault* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
     ::tuple_structs::CloneNoDefault&, ::tuple_structs::CloneNoDefault const&);
 }
 inline ::tuple_structs::CloneNoDefault::CloneNoDefault(
     const CloneNoDefault& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
+          other, this);
 }
 inline ::tuple_structs::CloneNoDefault& ::tuple_structs::CloneNoDefault::
 operator=(const CloneNoDefault& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
+            *this, other);
   }
   return *this;
 }
@@ -811,11 +821,14 @@ static_assert(
     alignof(DefaultAndCloneNoUnpin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
     ::tuple_structs::DefaultAndCloneNoUnpin* __ret_ptr);
 }
 inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<DefaultAndCloneNoUnpin>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -823,23 +836,29 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::DefaultAndCloneNoUnpin>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(
+extern "C" void
+__crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
     ::tuple_structs::DefaultAndCloneNoUnpin const&,
     ::tuple_structs::DefaultAndCloneNoUnpin* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
     ::tuple_structs::DefaultAndCloneNoUnpin&,
     ::tuple_structs::DefaultAndCloneNoUnpin const&);
 }
 inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin(
     const DefaultAndCloneNoUnpin& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
+          other, this);
 }
 inline ::tuple_structs::DefaultAndCloneNoUnpin& ::tuple_structs::
     DefaultAndCloneNoUnpin::operator=(const DefaultAndCloneNoUnpin& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
+            *this, other);
   }
   return *this;
 }
@@ -853,11 +872,14 @@ static_assert(
     alignof(DefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultNoCopyNoClone(
     ::tuple_structs::DefaultNoCopyNoClone* __ret_ptr);
 }
 inline ::tuple_structs::DefaultNoCopyNoClone::DefaultNoCopyNoClone() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultNoCopyNoClone(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -874,10 +896,14 @@ static_assert(
     alignof(DontMoveMe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::tuple_structs::DontMoveMe&);
+extern "C" void
+__crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aDontMoveMe(
+    ::tuple_structs::DontMoveMe&);
 }
 inline DontMoveMe::~DontMoveMe() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aDontMoveMe(
+          *this);
 }
 inline void DontMoveMe::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DontMoveMe, value));
@@ -1117,11 +1143,14 @@ static_assert(
     alignof(TupleStructWithCloneNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
+extern "C" void
+__crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
     ::tuple_structs::TupleStructWithCloneNoDefault&);
 }
 inline TupleStructWithCloneNoDefault::~TupleStructWithCloneNoDefault() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
+          *this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
@@ -1156,11 +1185,14 @@ static_assert(
     alignof(TupleStructWithCppImmovableType) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
+extern "C" void
+__crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCppImmovableType(
     ::tuple_structs::TupleStructWithCppImmovableType&);
 }
 inline TupleStructWithCppImmovableType::~TupleStructWithCppImmovableType() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCppImmovableType(
+          *this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
@@ -1276,12 +1308,15 @@ static_assert(
     alignof(TupleStructWithNonExhaustiveCtor) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithNonExhaustiveCtor(
     ::tuple_structs::TupleStructWithNonExhaustiveCtor* __ret_ptr);
 }
 inline ::tuple_structs::TupleStructWithNonExhaustiveCtor::
     TupleStructWithNonExhaustiveCtor() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithNonExhaustiveCtor(
+          this);
 }
 static_assert(
     ::std::is_trivially_destructible_v<TupleStructWithNonExhaustiveCtor>);
@@ -1320,12 +1355,15 @@ static_assert(
     alignof(TupleStructWithTupleFieldType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithTupleFieldType(
     ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
 }
 inline ::tuple_structs::TupleStructWithTupleFieldType::
     TupleStructWithTupleFieldType() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithTupleFieldType(
+          this);
 }
 static_assert(
     ::std::is_trivially_destructible_v<TupleStructWithTupleFieldType>);
@@ -1382,11 +1420,14 @@ inline void TupleStructWithTupleFieldType::__crubit_field_offset_assertions() {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
     rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
+          this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);

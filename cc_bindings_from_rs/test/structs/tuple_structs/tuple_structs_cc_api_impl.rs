@@ -14,13 +14,13 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::CloneNoDefault>() == 8);
 const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::CloneNoDefault>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
     __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::CloneNoDefault>,
 ) {
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
     __self: &'static ::tuple_structs_golden::CloneNoDefault,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -31,7 +31,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
     __self: &'static mut ::tuple_structs_golden::CloneNoDefault,
     source: &'static ::tuple_structs_golden::CloneNoDefault,
 ) -> () {
@@ -54,7 +54,9 @@ const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::DefaultAndCl
 const _: () =
     assert!(::std::mem::align_of::<::tuple_structs_golden::DefaultAndCloneNoUnpin>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::default::Default>::default();
@@ -62,7 +64,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
     __self: &'static ::tuple_structs_golden::DefaultAndCloneNoUnpin,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -73,7 +75,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
     __self: &'static mut ::tuple_structs_golden::DefaultAndCloneNoUnpin,
     source: &'static ::tuple_structs_golden::DefaultAndCloneNoUnpin,
 ) -> () {
@@ -90,7 +92,9 @@ const _: () =
 const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::DefaultNoCopyNoClone>() == 4);
 const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::DefaultNoCopyNoClone>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultNoCopyNoClone(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::tuple_structs_golden::DefaultNoCopyNoClone as ::core::default::Default>::default();
@@ -102,7 +106,7 @@ const _: () =
 const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::DontMoveMe>() == 8);
 const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::DontMoveMe>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aDontMoveMe(
     __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::DontMoveMe>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -270,7 +274,7 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::tuple_structs_golden::TupleStructWithCloneNoDefault>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
     __self: &'static mut ::core::mem::MaybeUninit<
         ::tuple_structs_golden::TupleStructWithCloneNoDefault,
     >,
@@ -299,7 +303,7 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::tuple_structs_golden::TupleStructWithCppImmovableType>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCppImmovableType(
     __self: &'static mut ::core::mem::MaybeUninit<
         ::tuple_structs_golden::TupleStructWithCppImmovableType,
     >,
@@ -382,7 +386,9 @@ const _: () = assert!(
     ::std::mem::align_of::<::tuple_structs_golden::TupleStructWithNonExhaustiveCtor>() == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithNonExhaustiveCtor(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value=<::tuple_structs_golden::TupleStructWithNonExhaustiveCtor as::core::default::Default>::default();
         (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor)
@@ -413,7 +419,9 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::tuple_structs_golden::TupleStructWithTupleFieldType>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithTupleFieldType(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value=<::tuple_structs_golden::TupleStructWithTupleFieldType as::core::default::Default>::default();
         (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithTupleFieldType)
@@ -462,7 +470,9 @@ unsafe extern "C" fn __crubit_thunk_get_uarg(
 const _: () =
     assert!(::core::mem::offset_of!(::tuple_structs_golden::TupleStructWithTupleFieldType, 0) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;

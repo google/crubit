@@ -1394,10 +1394,14 @@ static_assert(
     alignof(MyEnum) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::enums::repr_c::MyEnum* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
+    ::enums::repr_c::MyEnum* __ret_ptr);
 }
 inline ::enums::repr_c::MyEnum::MyEnum() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
+          this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_E(::rs::alloc::string::String*, ::std::int32_t,
@@ -1441,9 +1445,15 @@ inline MyEnum MyEnum::MakeD() {
   return MyEnum(PrivateTagCtorTag{}, Tag{INT64_C(10002)});
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::enums::repr_c::MyEnum&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
+    ::enums::repr_c::MyEnum&);
 }
-inline MyEnum::~MyEnum() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline MyEnum::~MyEnum() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
+          *this);
+}
 inline ::enums::repr_c::MyEnum::MyEnum(MyEnum&& other) : MyEnum() {
   *this = ::std::move(other);
 }
@@ -1580,12 +1590,15 @@ static_assert(
     alignof(CloneActiveVariant) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
     CloneActiveVariant() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
+          this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_A(
@@ -1634,24 +1647,30 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c_clone_active_variant::CloneActiveVariant>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(
+extern "C" void
+__crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
     ::enums::repr_c_clone_active_variant::CloneActiveVariant&,
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
     CloneActiveVariant(const CloneActiveVariant& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
+          other, this);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant& ::enums::
     repr_c_clone_active_variant::CloneActiveVariant::operator=(
         const CloneActiveVariant& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
+            *this, other);
   }
   return *this;
 }
@@ -1701,11 +1720,14 @@ static_assert(
     alignof(CloneCount) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
     ::enums::repr_c_clone_counter::CloneCount* __ret_ptr);
 }
 inline ::enums::repr_c_clone_counter::CloneCount::CloneCount() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<CloneCount>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -1713,23 +1735,29 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c_clone_counter::CloneCount>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(
+extern "C" void
+__crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
     ::enums::repr_c_clone_counter::CloneCount const&,
     ::enums::repr_c_clone_counter::CloneCount* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
     ::enums::repr_c_clone_counter::CloneCount&,
     ::enums::repr_c_clone_counter::CloneCount const&);
 }
 inline ::enums::repr_c_clone_counter::CloneCount::CloneCount(
     const CloneCount& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
+          other, this);
 }
 inline ::enums::repr_c_clone_counter::CloneCount& ::enums::
     repr_c_clone_counter::CloneCount::operator=(const CloneCount& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
+            *this, other);
   }
   return *this;
 }
@@ -1748,10 +1776,14 @@ static_assert(
     alignof(DropMe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::enums::repr_c_drop::DropMe* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
+    ::enums::repr_c_drop::DropMe* __ret_ptr);
 }
 inline ::enums::repr_c_drop::DropMe::DropMe() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
+          this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_A(::std::int32_t,
@@ -1780,9 +1812,15 @@ inline DropMe DropMe::MakeQ() {
   return DropMe(PrivateTagCtorTag{}, Tag{INT64_C(2)});
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::enums::repr_c_drop::DropMe&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
+    ::enums::repr_c_drop::DropMe&);
 }
-inline DropMe::~DropMe() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline DropMe::~DropMe() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
+          *this);
+}
 inline ::enums::repr_c_drop::DropMe::DropMe(DropMe&& other) : DropMe() {
   *this = ::std::move(other);
 }

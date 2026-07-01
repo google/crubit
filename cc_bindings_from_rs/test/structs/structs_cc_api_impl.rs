@@ -143,7 +143,7 @@ unsafe extern "C" fn __crubit_thunk_get_ux(
 const _: () = assert!(::std::mem::size_of::<::structs_golden::display::DisplayStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::structs_golden::display::DisplayStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_to_ustring(
+unsafe extern "C" fn __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
     __self: &'static ::structs_golden::display::DisplayStruct,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -169,7 +169,9 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::structs_golden::interior_mutability::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003ainterior_umutability_x0000003a_x0000003aSomeStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value=<::structs_golden::interior_mutability::SomeStruct as::core::default::Default>::default();
         (__ret_ptr as *mut ::structs_golden::interior_mutability::SomeStruct)
@@ -199,7 +201,9 @@ const _: () = assert!(
         == 8
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003anested_uptr_utype_umutability_uqualifiers_x0000003a_x0000003aSomeStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value=<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct as::core::default::Default>::default();
         (__ret_ptr as *mut ::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct)
@@ -221,7 +225,7 @@ const _: () = assert!(
 const _: () = assert!(::std::mem::size_of::<::structs_golden::non_cpp_movable::Point>() == 8);
 const _: () = assert!(::std::mem::align_of::<::structs_golden::non_cpp_movable::Point>() == 4);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003anon_ucpp_umovable_x0000003a_x0000003aPoint(
     __self: &'static mut ::core::mem::MaybeUninit<::structs_golden::non_cpp_movable::Point>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -334,7 +338,7 @@ const _: () = assert!(
         == 8
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
     __self: &'static ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -345,7 +349,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
     __self: &'static mut ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
     source: &'static ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
 ) -> () {
@@ -400,7 +404,9 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003aunsupported_utypes_x0000003a_x0000003aSomeStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::structs_golden::unsupported_types::SomeStruct as ::core::default::Default>::default(

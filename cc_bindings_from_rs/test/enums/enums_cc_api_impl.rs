@@ -135,7 +135,9 @@ unsafe extern "C" fn __crubit_thunk_is_umax_uu128(
 const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_c::MyEnum>() == 40);
 const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c::MyEnum>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::enums_golden::repr_c::MyEnum as ::core::default::Default>::default();
@@ -166,7 +168,7 @@ unsafe extern "C" fn __crubit_thunk_A(
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
     __self: &'static mut ::core::mem::MaybeUninit<::enums_golden::repr_c::MyEnum>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -216,7 +218,9 @@ const _: () = assert!(
     ::std::mem::align_of::<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant>() == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::default::Default>::default();
         (__ret_ptr as *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant)
@@ -251,7 +255,7 @@ unsafe extern "C" fn __crubit_thunk_C(__param_0: i32, __ret_ptr: *mut core::ffi:
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
     __self: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -262,7 +266,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
     __self: &'static mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
     source: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
 ) -> () {
@@ -293,7 +297,9 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::enums_golden::repr_c_clone_counter::CloneCount>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::enums_golden::repr_c_clone_counter::CloneCount as ::core::default::Default>::default(
@@ -303,7 +309,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
     __self: &'static ::enums_golden::repr_c_clone_counter::CloneCount,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -317,7 +323,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
     __self: &'static mut ::enums_golden::repr_c_clone_counter::CloneCount,
     source: &'static ::enums_golden::repr_c_clone_counter::CloneCount,
 ) -> () {
@@ -330,7 +336,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
 const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_c_drop::DropMe>() == 16);
 const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c_drop::DropMe>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::enums_golden::repr_c_drop::DropMe as ::core::default::Default>::default();
@@ -352,7 +360,7 @@ unsafe extern "C" fn __crubit_thunk_B(__param_0: i64, __ret_ptr: *mut core::ffi:
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
     __self: &'static mut ::core::mem::MaybeUninit<::enums_golden::repr_c_drop::DropMe>,
 ) {
     unsafe { __self.assume_init_drop() };

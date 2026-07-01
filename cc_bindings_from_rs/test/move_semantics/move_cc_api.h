@@ -104,10 +104,14 @@ static_assert(
     alignof(Copyable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::move::Copyable* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aCopyable(
+    ::move::Copyable* __ret_ptr);
 }
 inline ::move::Copyable::Copyable() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aCopyable(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<Copyable>);
 static_assert(::std::is_trivially_move_constructible_v<::move::Copyable>);
@@ -142,13 +146,23 @@ static_assert(
     alignof(Foo) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::move::Foo* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aFoo(
+    ::move::Foo* __ret_ptr);
 }
-inline ::move::Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::move::Foo::Foo() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aFoo(
+          this);
+}
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::move::Foo&);
+extern "C" void __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(
+    ::move::Foo&);
 }
-inline Foo::~Foo() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline Foo::~Foo() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(*this);
+}
 inline ::move::Foo::Foo(Foo&& other) : Foo() { *this = ::std::move(other); }
 inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
   crubit::MemSwap(*this, other);

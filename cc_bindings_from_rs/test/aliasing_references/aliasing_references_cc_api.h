@@ -125,11 +125,14 @@ static_assert(
     alignof(NonFreezeType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aNonFreezeType(
     ::aliasing_references::NonFreezeType* __ret_ptr);
 }
 inline ::aliasing_references::NonFreezeType::NonFreezeType() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aNonFreezeType(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<NonFreezeType>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -166,11 +169,14 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aSomeStruct(
     ::aliasing_references::SomeStruct* __ret_ptr);
 }
 inline ::aliasing_references::SomeStruct::SomeStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aSomeStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<

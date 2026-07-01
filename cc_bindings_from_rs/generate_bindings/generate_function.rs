@@ -6,6 +6,7 @@ use crate::format_type::{format_cc_ident, has_elided_region, region_is_elided, C
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, ident_or_opt_ident, is_thunk_required,
+    make_thunk_name, ThunkKind,
 };
 use crate::{
     format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
@@ -14,9 +15,7 @@ use crate::{
     RsSnippet,
 };
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{
-    escape_non_identifier_chars, expect_format_cc_ident, make_rs_ident, CcInclude,
-};
+use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
@@ -73,14 +72,13 @@ impl<'tcx> FunctionKind<'tcx> {
     }
 }
 
-fn thunk_name(
+pub(crate) fn function_symbol_name(
     db: &BindingsGenerator,
     def_id: DefId,
     export_name: Option<Symbol>,
-    needs_thunk: bool,
 ) -> String {
     let tcx = db.tcx();
-    let symbol_name = if db.is_golden_test() {
+    if db.is_golden_test() {
         if let Some(export_name) = export_name {
             export_name.to_string()
         } else {
@@ -115,27 +113,24 @@ fn thunk_name(
                 .unwrap_or(def_name)
         }
     } else {
-        // `expect` and `expect_resolve` are used because `fn get_generic_args`
-        // should be called earlier to reject cases with unsupported generics.
         let typing_env = ty::TypingEnv::non_body_analysis(tcx, def_id);
         let args = db.get_generic_args(def_id).expect("Generics should be checked earlier");
         let span = tcx.def_span(def_id);
         let instance = ty::Instance::expect_resolve(tcx, typing_env, def_id, args, span);
         tcx.symbol_name(instance).name.to_string()
-    };
-    let target_path_mangled_hash = if db.is_golden_test() {
-        "".to_string()
-    } else {
-        format!("{:x}_", tcx.stable_crate_id(db.source_crate_num()))
-    };
+    }
+}
+
+fn thunk_name(
+    db: &BindingsGenerator,
+    def_id: DefId,
+    export_name: Option<Symbol>,
+    needs_thunk: bool,
+) -> String {
     if needs_thunk {
-        format!(
-            "__crubit_thunk_{}{}",
-            target_path_mangled_hash,
-            &escape_non_identifier_chars(&symbol_name)
-        )
+        make_thunk_name(db, ThunkKind::Function { def_id, export_name })
     } else {
-        symbol_name
+        function_symbol_name(db, def_id, export_name)
     }
 }
 

@@ -82,10 +82,14 @@ static_assert(
     alignof(TypeWithStr) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::str::TypeWithStr* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ustr_ugolden_x0000003a_x0000003aTypeWithStr(
+    ::str::TypeWithStr* __ret_ptr);
 }
 inline ::str::TypeWithStr::TypeWithStr() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ustr_ugolden_x0000003a_x0000003aTypeWithStr(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<TypeWithStr>);
 static_assert(::std::is_trivially_move_constructible_v<::str::TypeWithStr>);

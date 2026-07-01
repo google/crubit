@@ -14,7 +14,9 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::arrays_golden::ArrayStruct>() == 8);
 const _: () = assert!(::std::mem::align_of::<::arrays_golden::ArrayStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aArrayStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::arrays_golden::ArrayStruct as ::core::default::Default>::default();
@@ -25,7 +27,7 @@ const _: () = assert!(::core::mem::offset_of!(::arrays_golden::ArrayStruct, arra
 const _: () = assert!(::std::mem::size_of::<::arrays_golden::HasDrop>() == 4);
 const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDrop>() == 4);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDrop(
     __self: &'static mut ::core::mem::MaybeUninit<::arrays_golden::HasDrop>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -41,7 +43,9 @@ const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDrop, x) == 0)
 const _: () = assert!(::std::mem::size_of::<::arrays_golden::HasDropAndDefault>() == 4);
 const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDropAndDefault>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::arrays_golden::HasDropAndDefault as ::core::default::Default>::default();
@@ -49,7 +53,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
     __self: &'static mut ::core::mem::MaybeUninit<::arrays_golden::HasDropAndDefault>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -196,7 +200,9 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_utuple_uarray_uid(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;

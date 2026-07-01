@@ -253,31 +253,37 @@ StructWithLifetime::borrow_from_static_self() const& $static {
 }
 namespace __crubit_internal {
 extern "C" ::std::int32_t const& $a
-__crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(
+__crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
     ::lifetimes::StructWithLifetime*);
 }
 inline StructWithLifetime::operator ::std::int32_t const& $a() {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
-      __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(&self);
+      __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+          &self);
 }
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_into_ui32(
+extern "C" ::std::int32_t
+__crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(
     ::lifetimes::StructWithLifetime*);
 }
 inline StructWithLifetime::operator ::std::int32_t() {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
-  return __crubit_internal::__crubit_thunk_into_ui32(&self);
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(
+          &self);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_u_x00000026_x00000027a_x00000020i32(
+extern "C" void
+__crubit_thunk_From_ufrom_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
     ::std::int32_t const* $a crubit_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline StructWithLifetime::StructWithLifetime(
     ::std::int32_t const* $a crubit_nonnull value) {
-  __crubit_internal::__crubit_thunk_from_u_x00000026_x00000027a_x00000020i32(
-      value, this);
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+          value, this);
 }
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithLifetime, field_with_lifetime));
@@ -289,11 +295,14 @@ static_assert(
     alignof(StructWithLifetimeAndDropGlue) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
+extern "C" void
+__crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
     ::lifetimes::StructWithLifetimeAndDropGlue&);
 }
 inline StructWithLifetimeAndDropGlue::~StructWithLifetimeAndDropGlue() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
+          *this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(

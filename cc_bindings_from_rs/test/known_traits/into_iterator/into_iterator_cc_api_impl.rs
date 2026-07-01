@@ -50,7 +50,7 @@ const _: () =
 const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyContainer>() == 12);
 const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyContainer>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_uiter(
+unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     __self: &'static mut ::core::mem::MaybeUninit<::into_iterator_rust_golden::MyContainer>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -65,7 +65,7 @@ unsafe extern "C" fn __crubit_thunk_into_uiter(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_uiter(
+unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026into_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     __self: &'static ::into_iterator_rust_golden::MyContainer,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -76,7 +76,7 @@ unsafe extern "C" fn __crubit_thunk_into_uiter(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_uiter(
+unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026mut_x00000020into_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     __self: &'static mut ::into_iterator_rust_golden::MyContainer,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {

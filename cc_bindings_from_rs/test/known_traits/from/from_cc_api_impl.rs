@@ -14,13 +14,13 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::from_golden::CloneAllocSource>() == 24);
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneAllocSource>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneAllocSource>,
 ) {
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
     __self: &'static ::from_golden::CloneAllocSource,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -31,7 +31,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
     __self: &'static mut ::from_golden::CloneAllocSource,
     source: &'static ::from_golden::CloneAllocSource,
 ) -> () {
@@ -54,7 +54,7 @@ unsafe extern "C" fn __crubit_thunk_get_uvalue(
     unsafe { ::from_golden::CloneAllocSource::get_value(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneAllocSource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -70,13 +70,13 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::CloneAllocSource, v
 const _: () = assert!(::std::mem::size_of::<::from_golden::CloneAllocType>() == 24);
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneAllocType>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneAllocType>,
 ) {
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
     __self: &'static ::from_golden::CloneAllocType,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -87,7 +87,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
     __self: &'static mut ::from_golden::CloneAllocType,
     source: &'static ::from_golden::CloneAllocType,
 ) -> () {
@@ -100,7 +100,7 @@ unsafe extern "C" fn __crubit_thunk_get_uvalue(
     unsafe { ::from_golden::CloneAllocType::get_value(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
     value: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneAllocSource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -116,7 +116,7 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::CloneAllocType, val
 const _: () = assert!(::std::mem::size_of::<::from_golden::CloneCopySource>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneCopySource>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneCopySource_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneCopySource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -132,7 +132,9 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::CloneCopySource, 0)
 const _: () = assert!(::std::mem::size_of::<::from_golden::CloneCopyType>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneCopyType>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::from_golden::CloneCopyType as ::core::default::Default>::default();
@@ -140,7 +142,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneCopyType_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
     value: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneCopySource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -156,7 +158,7 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::CloneCopyType, 0) =
 const _: () = assert!(::std::mem::size_of::<::from_golden::CollidingConstructor>() == 8);
 const _: () = assert!(::std::mem::align_of::<::from_golden::CollidingConstructor>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_uusize(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uusize(
     value: usize,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -169,7 +171,7 @@ unsafe extern "C" fn __crubit_thunk_from_uusize(
 const _: () = assert!(::std::mem::size_of::<::from_golden::LoopA>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::LoopA>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopB(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::LoopA>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -181,7 +183,7 @@ unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopB(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aLoopB(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
     value: &'static mut ::core::mem::MaybeUninit<::from_golden::LoopB>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -196,7 +198,7 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::LoopA, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::from_golden::LoopB>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::LoopB>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopA(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::LoopB>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -208,7 +210,7 @@ unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopA(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aLoopA(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
     value: &'static mut ::core::mem::MaybeUninit<::from_golden::LoopA>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -223,7 +225,7 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::LoopB, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::from_golden::NoCloneCopyDropSource>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::NoCloneCopyDropSource>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::NoCloneCopyDropSource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -239,7 +241,7 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::NoCloneCopyDropSour
 const _: () = assert!(::std::mem::size_of::<::from_golden::NoCloneCopyDropType>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::NoCloneCopyDropType>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
     value: &'static mut ::core::mem::MaybeUninit<::from_golden::NoCloneCopyDropSource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -255,7 +257,9 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::NoCloneCopyDropType
 const _: () = assert!(::std::mem::size_of::<::from_golden::NoCloneDefaultSource>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::NoCloneDefaultSource>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::from_golden::NoCloneDefaultSource as ::core::default::Default>::default();
@@ -263,7 +267,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::NoCloneDefaultSource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -279,7 +283,9 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::NoCloneDefaultSourc
 const _: () = assert!(::std::mem::size_of::<::from_golden::NoCloneDefaultType>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::NoCloneDefaultType>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::from_golden::NoCloneDefaultType as ::core::default::Default>::default();
@@ -287,7 +293,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
     value: &'static mut ::core::mem::MaybeUninit<::from_golden::NoCloneDefaultSource>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -310,7 +316,7 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ui32(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNotFfiSafe_ui32(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::NotFfiSafe>,
 ) -> i32 {
     unsafe {
@@ -321,7 +327,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 const _: () = assert!(::std::mem::size_of::<::from_golden::Opaque>() == 4);
 const _: () = assert!(::std::mem::align_of::<::from_golden::Opaque>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ui32(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui32(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
 ) -> i32 {
     unsafe {
@@ -330,7 +336,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ui64(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui64(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
 ) -> i64 {
     unsafe {
@@ -339,7 +345,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui64(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_u_x00000026_x00000027static_x00000020str(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
 ) -> &'static str {
     unsafe {
@@ -348,7 +354,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027static_x00000020st
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ui16(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui16(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
 ) -> i16 {
     unsafe {
@@ -357,7 +363,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui16(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -389,7 +395,7 @@ unsafe extern "C" fn __crubit_thunk_get_uarg(
     unsafe { ::from_golden::OpaqueRef::get_arg(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
+unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::OpaqueRef<'static>>,
 ) -> &'static str {
     unsafe {
@@ -398,7 +404,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aOpaque(
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_ufrom_ugolden_x0000003a_x0000003aOpaque(
     value: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {

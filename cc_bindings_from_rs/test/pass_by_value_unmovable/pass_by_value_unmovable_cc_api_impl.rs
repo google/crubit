@@ -14,11 +14,12 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::pass_by_value_unmovable_golden::CppMovable>() == 4);
 const _: () = assert!(::std::mem::align_of::<::pass_by_value_unmovable_golden::CppMovable>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default() -> ::pass_by_value_unmovable_golden::CppMovable {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
+) -> ::pass_by_value_unmovable_golden::CppMovable {
     unsafe { <::pass_by_value_unmovable_golden::CppMovable as ::core::default::Default>::default() }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
     __self: &'static mut ::core::mem::MaybeUninit<::pass_by_value_unmovable_golden::CppMovable>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -30,7 +31,7 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::pass_by_value_unmovable_golden::NotCppMovable>() == 4);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aNotCppMovable(
     __self: &'static mut ::core::mem::MaybeUninit<::pass_by_value_unmovable_golden::NotCppMovable>,
 ) {
     unsafe { __self.assume_init_drop() };

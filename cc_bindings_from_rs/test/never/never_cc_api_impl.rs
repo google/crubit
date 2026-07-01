@@ -14,7 +14,9 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::never_golden::NeverStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::never_golden::NeverStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_unever_ugolden_x0000003a_x0000003aNeverStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::never_golden::NeverStruct as ::core::default::Default>::default();

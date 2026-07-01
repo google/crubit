@@ -240,15 +240,25 @@ static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::stdlib::MyStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+    ::stdlib::MyStruct* __ret_ptr);
 }
 inline ::stdlib::MyStruct::MyStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::stdlib::MyStruct&);
+extern "C" void
+__crubit_thunk_Drop_udrop_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+    ::stdlib::MyStruct&);
 }
-inline MyStruct::~MyStruct() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline MyStruct::~MyStruct() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+          *this);
+}
 inline ::stdlib::MyStruct::MyStruct(MyStruct&& other) : MyStruct() {
   *this = ::std::move(other);
 }
@@ -257,20 +267,26 @@ inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(MyStruct&& other) {
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(::stdlib::MyStruct const&,
-                                     ::stdlib::MyStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+    ::stdlib::MyStruct const&, ::stdlib::MyStruct* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(::stdlib::MyStruct&,
-                                           ::stdlib::MyStruct const&);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+    ::stdlib::MyStruct&, ::stdlib::MyStruct const&);
 }
 inline ::stdlib::MyStruct::MyStruct(const MyStruct& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+          other, this);
 }
 inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(
     const MyStruct& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+            *this, other);
   }
   return *this;
 }
@@ -285,11 +301,14 @@ inline ::stdlib::MyStruct MyStruct::new_(::std::int32_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ui32(::std::int32_t,
-                                         ::stdlib::MyStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_From_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct_ui32(
+    ::std::int32_t, ::stdlib::MyStruct* __ret_ptr);
 }
 inline MyStruct::MyStruct(::std::int32_t value) {
-  __crubit_internal::__crubit_thunk_from_ui32(value, this);
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct_ui32(
+          value, this);
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));

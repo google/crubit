@@ -527,27 +527,37 @@ static_assert(
     alignof(CloneAllocSource) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::from::CloneAllocSource&);
+extern "C" void
+__crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+    ::from::CloneAllocSource&);
 }
 inline CloneAllocSource::~CloneAllocSource() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+          *this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(::from::CloneAllocSource const&,
-                                     ::from::CloneAllocSource* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+    ::from::CloneAllocSource const&, ::from::CloneAllocSource* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(::from::CloneAllocSource&,
-                                           ::from::CloneAllocSource const&);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+    ::from::CloneAllocSource&, ::from::CloneAllocSource const&);
 }
 inline ::from::CloneAllocSource::CloneAllocSource(
     const CloneAllocSource& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+          other, this);
 }
 inline ::from::CloneAllocSource& ::from::CloneAllocSource::operator=(
     const CloneAllocSource& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+            *this, other);
   }
   return *this;
 }
@@ -573,7 +583,7 @@ inline rs_std::StrRef CloneAllocSource::get_value() const& $(__anon1)
 }
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
     ::from::CloneAllocSource*, ::from::CloneAllocType* __ret_ptr);
 }
 inline CloneAllocSource::operator ::from::CloneAllocType() {
@@ -582,7 +592,7 @@ inline CloneAllocSource::operator ::from::CloneAllocType() {
   crubit::Slot<::from::CloneAllocType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
           self_slot.Get(), __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
@@ -596,26 +606,36 @@ static_assert(
     alignof(CloneAllocType) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::from::CloneAllocType&);
+extern "C" void
+__crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+    ::from::CloneAllocType&);
 }
 inline CloneAllocType::~CloneAllocType() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+          *this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(::from::CloneAllocType const&,
-                                     ::from::CloneAllocType* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+    ::from::CloneAllocType const&, ::from::CloneAllocType* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(::from::CloneAllocType&,
-                                           ::from::CloneAllocType const&);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+    ::from::CloneAllocType&, ::from::CloneAllocType const&);
 }
 inline ::from::CloneAllocType::CloneAllocType(const CloneAllocType& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+          other, this);
 }
 inline ::from::CloneAllocType& ::from::CloneAllocType::operator=(
     const CloneAllocType& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
+            *this, other);
   }
   return *this;
 }
@@ -630,13 +650,13 @@ inline rs_std::StrRef CloneAllocType::get_value() const& $(__anon1)
 }
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
     ::from::CloneAllocSource*, ::from::CloneAllocType* __ret_ptr);
 }
 inline CloneAllocType::CloneAllocType(::from::CloneAllocSource value) {
   crubit::Slot value_slot((::std::move(value)));
   __crubit_internal::
-      __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
           value_slot.Get(), this);
 }
 inline void CloneAllocType::__crubit_field_offset_assertions() {
@@ -657,7 +677,7 @@ static_assert(
 static_assert(::std::is_trivially_copy_assignable_v<::from::CloneCopySource>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneCopySource_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
     ::from::CloneCopySource*, ::from::CloneCopyType* __ret_ptr);
 }
 inline CloneCopySource::operator ::from::CloneCopyType() {
@@ -665,7 +685,7 @@ inline CloneCopySource::operator ::from::CloneCopyType() {
   crubit::Slot<::from::CloneCopyType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneCopySource_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
@@ -679,10 +699,14 @@ static_assert(
     alignof(CloneCopyType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::from::CloneCopyType* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
+    ::from::CloneCopyType* __ret_ptr);
 }
 inline ::from::CloneCopyType::CloneCopyType() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<CloneCopyType>);
 static_assert(::std::is_trivially_move_constructible_v<::from::CloneCopyType>);
@@ -691,12 +715,12 @@ static_assert(::std::is_trivially_copy_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_assignable_v<::from::CloneCopyType>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneCopyType_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
     ::from::CloneCopySource*, ::from::CloneCopyType* __ret_ptr);
 }
 inline CloneCopyType::CloneCopyType(::from::CloneCopySource value) {
   __crubit_internal::
-      __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneCopyType_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
           &value, this);
 }
 inline void CloneCopyType::__crubit_field_offset_assertions() {
@@ -714,11 +738,14 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::CollidingConstructor>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_uusize(
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uusize(
     ::std::uintptr_t, ::from::CollidingConstructor* __ret_ptr);
 }
 inline CollidingConstructor::CollidingConstructor(::std::uintptr_t value) {
-  __crubit_internal::__crubit_thunk_from_uusize(value, this);
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uusize(
+          value, this);
 }
 inline void CollidingConstructor::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CollidingConstructor, value));
@@ -733,24 +760,28 @@ static_assert(::std::is_trivially_destructible_v<LoopA>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopA>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopA>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopB(
+extern "C" void
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
     ::from::LoopA*, ::from::LoopB* __ret_ptr);
 }
 inline LoopA::operator ::from::LoopB() {
   auto&& self = *this;
   crubit::Slot<::from::LoopB> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopB(
-      &self, __return_value_storage);
+  __crubit_internal::
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
+          &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aLoopB(
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
     ::from::LoopB*, ::from::LoopA* __ret_ptr);
 }
 inline LoopA::LoopA(::from::LoopB value) {
-  __crubit_internal::__crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aLoopB(
-      &value, this);
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
+          &value, this);
 }
 inline void LoopA::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LoopA, __field0));
@@ -765,24 +796,28 @@ static_assert(::std::is_trivially_destructible_v<LoopB>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopB>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopB>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopA(
+extern "C" void
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
     ::from::LoopB*, ::from::LoopA* __ret_ptr);
 }
 inline LoopB::operator ::from::LoopA() {
   auto&& self = *this;
   crubit::Slot<::from::LoopA> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aLoopA(
-      &self, __return_value_storage);
+  __crubit_internal::
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
+          &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aLoopA(
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
     ::from::LoopA*, ::from::LoopB* __ret_ptr);
 }
 inline LoopB::LoopB(::from::LoopA value) {
-  __crubit_internal::__crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aLoopA(
-      &value, this);
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
+          &value, this);
 }
 inline void LoopB::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LoopB, __field0));
@@ -800,7 +835,7 @@ static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneCopyDropSource>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
     ::from::NoCloneCopyDropSource*, ::from::NoCloneCopyDropType* __ret_ptr);
 }
 inline NoCloneCopyDropSource::operator ::from::NoCloneCopyDropType() {
@@ -808,7 +843,7 @@ inline NoCloneCopyDropSource::operator ::from::NoCloneCopyDropType() {
   crubit::Slot<::from::NoCloneCopyDropType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
@@ -828,13 +863,13 @@ static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneCopyDropType>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
     ::from::NoCloneCopyDropSource*, ::from::NoCloneCopyDropType* __ret_ptr);
 }
 inline NoCloneCopyDropType::NoCloneCopyDropType(
     ::from::NoCloneCopyDropSource value) {
   __crubit_internal::
-      __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
           &value, this);
 }
 inline void NoCloneCopyDropType::__crubit_field_offset_assertions() {
@@ -847,10 +882,14 @@ static_assert(
     alignof(NoCloneDefaultSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::from::NoCloneDefaultSource* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
+    ::from::NoCloneDefaultSource* __ret_ptr);
 }
 inline ::from::NoCloneDefaultSource::NoCloneDefaultSource() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<NoCloneDefaultSource>);
 static_assert(
@@ -859,7 +898,7 @@ static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneDefaultSource>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
     ::from::NoCloneDefaultSource*, ::from::NoCloneDefaultType* __ret_ptr);
 }
 inline NoCloneDefaultSource::operator ::from::NoCloneDefaultType() {
@@ -867,7 +906,7 @@ inline NoCloneDefaultSource::operator ::from::NoCloneDefaultType() {
   crubit::Slot<::from::NoCloneDefaultType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
@@ -881,10 +920,14 @@ static_assert(
     alignof(NoCloneDefaultType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::from::NoCloneDefaultType* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
+    ::from::NoCloneDefaultType* __ret_ptr);
 }
 inline ::from::NoCloneDefaultType::NoCloneDefaultType() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<NoCloneDefaultType>);
 static_assert(
@@ -893,13 +936,13 @@ static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneDefaultType>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
     ::from::NoCloneDefaultSource*, ::from::NoCloneDefaultType* __ret_ptr);
 }
 inline NoCloneDefaultType::NoCloneDefaultType(
     ::from::NoCloneDefaultSource value) {
   __crubit_internal::
-      __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
           &value, this);
 }
 inline void NoCloneDefaultType::__crubit_field_offset_assertions() {
@@ -924,11 +967,15 @@ inline ::from::NotFfiSafe NotFfiSafe::create() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_into_ui32(::from::NotFfiSafe*);
+extern "C" ::std::int32_t
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNotFfiSafe_ui32(
+    ::from::NotFfiSafe*);
 }
 inline NotFfiSafe::operator ::std::int32_t() {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_into_ui32(&self);
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNotFfiSafe_ui32(
+          &self);
 }
 inline void NotFfiSafe::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotFfiSafe, __field0));
@@ -943,38 +990,52 @@ static_assert(::std::is_trivially_destructible_v<Opaque>);
 static_assert(::std::is_trivially_move_constructible_v<::from::Opaque>);
 static_assert(::std::is_trivially_move_assignable_v<::from::Opaque>);
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_into_ui32(::from::Opaque*);
+extern "C" ::std::int32_t
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui32(
+    ::from::Opaque*);
 }
 inline Opaque::operator ::std::int32_t() {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_into_ui32(&self);
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui32(
+          &self);
 }
 namespace __crubit_internal {
-extern "C" ::std::int64_t __crubit_thunk_into_ui64(::from::Opaque*);
+extern "C" ::std::int64_t
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui64(
+    ::from::Opaque*);
 }
 inline Opaque::operator ::std::int64_t() {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_into_ui64(&self);
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui64(
+          &self);
 }
 namespace __crubit_internal {
 extern "C" rs_std::StrRef
-__crubit_thunk_into_u_x00000026_x00000027static_x00000020str(::from::Opaque*);
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_u_x00000026_x00000027static_x00000020str(
+    ::from::Opaque*);
 }
 inline Opaque::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
-      __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(&self);
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_u_x00000026_x00000027static_x00000020str(
+          &self);
 }
 namespace __crubit_internal {
-extern "C" ::std::int16_t __crubit_thunk_into_ui16(::from::Opaque*);
+extern "C" ::std::int16_t
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui16(
+    ::from::Opaque*);
 }
 inline Opaque::operator ::std::int16_t() {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_into_ui16(&self);
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui16(
+          &self);
 }
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
     ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
 }
 inline Opaque::operator ::from::OpaqueRef() {
@@ -982,7 +1043,7 @@ inline Opaque::operator ::from::OpaqueRef() {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
@@ -1018,20 +1079,24 @@ inline rs_std::StrRef OpaqueRef::get_arg() const {
 }
 namespace __crubit_internal {
 extern "C" rs_std::StrRef
-__crubit_thunk_into_u_x00000026_x00000027a_x00000020str(::from::OpaqueRef*);
+__crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
+    ::from::OpaqueRef*);
 }
 inline OpaqueRef::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
-      __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(&self);
+      __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
+          &self);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aOpaque(
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_ufrom_ugolden_x0000003a_x0000003aOpaque(
     ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
 }
 inline OpaqueRef::OpaqueRef(::from::Opaque value) {
   __crubit_internal::
-      __crubit_thunk_from_ufrom_ugolden_x0000003a_x0000003aOpaque(&value, this);
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_ufrom_ugolden_x0000003a_x0000003aOpaque(
+          &value, this);
 }
 inline void OpaqueRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OpaqueRef, __field0));

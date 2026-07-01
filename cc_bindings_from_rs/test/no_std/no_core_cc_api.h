@@ -68,9 +68,15 @@ static_assert(
     alignof(Test) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::no_core::Test&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
+    ::no_core::Test&);
 }
-inline Test::~Test() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline Test::~Test() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
+          *this);
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::no_core::Test* __ret_ptr);
 }

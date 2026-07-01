@@ -14,7 +14,9 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::rs_default_golden::derived_impl::SomeStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::rs_default_golden::derived_impl::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aderived_uimpl_x0000003a_x0000003aSomeStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::rs_default_golden::derived_impl::SomeStruct as ::core::default::Default>::default();
@@ -36,7 +38,9 @@ const _: () = assert!(::std::mem::size_of::<::rs_default_golden::explicit_impl::
 const _: () =
     assert!(::std::mem::align_of::<::rs_default_golden::explicit_impl::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aexplicit_uimpl_x0000003a_x0000003aSomeStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::rs_default_golden::explicit_impl::SomeStruct as ::core::default::Default>::default();
@@ -63,7 +67,9 @@ const _: () = assert!(
     ) == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003afield_uwith_uno_udefault_x0000003a_x0000003aStructWithFieldWithNoDefault(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value=<::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault as::core::default::Default>::default();
         (__ret_ptr
@@ -102,8 +108,8 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::rs_default_golden::transparent_struct::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default() -> ::rs_default_golden::transparent_struct::SomeStruct
-{
+unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003atransparent_ustruct_x0000003a_x0000003aSomeStruct(
+) -> ::rs_default_golden::transparent_struct::SomeStruct {
     unsafe {
         <::rs_default_golden::transparent_struct::SomeStruct as ::core::default::Default>::default()
     }

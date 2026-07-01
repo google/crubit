@@ -371,17 +371,24 @@ static_assert(
     alignof(AssociatedTypeStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
     ::traits::AssociatedTypeStruct* __ret_ptr);
 }
 inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::traits::AssociatedTypeStruct&);
+extern "C" void
+__crubit_thunk_Drop_udrop_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
+    ::traits::AssociatedTypeStruct&);
 }
 inline AssociatedTypeStruct::~AssociatedTypeStruct() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
+          *this);
 }
 inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
     AssociatedTypeStruct&& other)
@@ -394,21 +401,28 @@ operator=(AssociatedTypeStruct&& other) {
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(::traits::AssociatedTypeStruct const&,
-                                     ::traits::AssociatedTypeStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
+    ::traits::AssociatedTypeStruct const&,
+    ::traits::AssociatedTypeStruct* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
     ::traits::AssociatedTypeStruct&, ::traits::AssociatedTypeStruct const&);
 }
 inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
     const AssociatedTypeStruct& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
+          other, this);
 }
 inline ::traits::AssociatedTypeStruct& ::traits::AssociatedTypeStruct::
 operator=(const AssociatedTypeStruct& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
+            *this, other);
   }
   return *this;
 }
@@ -423,9 +437,15 @@ static_assert(
     alignof(Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::traits::Foo* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aFoo(
+    ::traits::Foo* __ret_ptr);
 }
-inline ::traits::Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
+inline ::traits::Foo::Foo() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aFoo(
+          this);
+}
 static_assert(::std::is_trivially_destructible_v<Foo>);
 static_assert(::std::is_trivially_move_constructible_v<::traits::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::Foo>);
@@ -464,10 +484,14 @@ static_assert(
     alignof(MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::traits::MyStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct(
+    ::traits::MyStruct* __ret_ptr);
 }
 inline ::traits::MyStruct::MyStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct>);
@@ -494,10 +518,14 @@ static_assert(
     alignof(MyStruct2) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::traits::MyStruct2* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct2(
+    ::traits::MyStruct2* __ret_ptr);
 }
 inline ::traits::MyStruct2::MyStruct2() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct2(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<MyStruct2>);
 static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct2>);
@@ -523,11 +551,14 @@ static_assert(
     alignof(StructWithAssociatedConst) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aStructWithAssociatedConst(
     ::traits::StructWithAssociatedConst* __ret_ptr);
 }
 inline ::traits::StructWithAssociatedConst::StructWithAssociatedConst() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aStructWithAssociatedConst(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<StructWithAssociatedConst>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -546,11 +577,14 @@ inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
     rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
+          this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);

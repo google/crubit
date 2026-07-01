@@ -18,7 +18,9 @@ const _: () = assert!(
     ::std::mem::align_of::<::non_trivially_destructible_golden::NonTriviallyDestructable>() == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value=<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::default::Default>::default();
         (__ret_ptr as *mut ::non_trivially_destructible_golden::NonTriviallyDestructable)
@@ -26,7 +28,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     __self: &'static mut ::core::mem::MaybeUninit<
         ::non_trivially_destructible_golden::NonTriviallyDestructable,
     >,
@@ -34,7 +36,7 @@ extern "C" fn __crubit_thunk_drop(
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     __self: &'static ::non_trivially_destructible_golden::NonTriviallyDestructable,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -45,7 +47,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     __self: &'static mut ::non_trivially_destructible_golden::NonTriviallyDestructable,
     source: &'static ::non_trivially_destructible_golden::NonTriviallyDestructable,
 ) -> () {

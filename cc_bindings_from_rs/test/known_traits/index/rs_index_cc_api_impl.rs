@@ -83,7 +83,7 @@ const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::IntPair, y) == 
 const _: () = assert!(::std::mem::size_of::<::rs_index_golden::Map>() == 32);
 const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Map>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_urs_uindex_ugolden_x0000003a_x0000003aMap(
     __self: &'static mut ::core::mem::MaybeUninit<::rs_index_golden::Map>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -130,7 +130,9 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::alloc::vec::Vec<::alloc::string::String> as ::core::default::Default>::default();
@@ -138,7 +140,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     __self: &'static ::alloc::vec::Vec<::alloc::string::String>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -149,7 +151,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     __self: &'static mut ::alloc::vec::Vec<::alloc::string::String>,
     source: &'static ::alloc::vec::Vec<::alloc::string::String>,
 ) -> () {

@@ -60,17 +60,24 @@ static_assert(
     alignof(NonTrivialStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aNonTrivialStruct(
     ::example_crate::NonTrivialStruct* __ret_ptr);
 }
 inline ::example_crate::NonTrivialStruct::NonTrivialStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aNonTrivialStruct(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::example_crate::NonTrivialStruct&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uexample_ucrate_ugolden_x0000003a_x0000003aNonTrivialStruct(
+    ::example_crate::NonTrivialStruct&);
 }
 inline NonTrivialStruct::~NonTrivialStruct() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uexample_ucrate_ugolden_x0000003a_x0000003aNonTrivialStruct(
+          *this);
 }
 inline ::example_crate::NonTrivialStruct::NonTrivialStruct(
     NonTrivialStruct&& other)

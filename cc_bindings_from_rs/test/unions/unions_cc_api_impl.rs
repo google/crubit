@@ -25,7 +25,7 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
 const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_c_clone::U>() == 4);
 const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_c_clone::U>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
     __self: &'static ::unions_golden::repr_c_clone::U,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -36,7 +36,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
     __self: &'static mut ::unions_golden::repr_c_clone::U,
     source: &'static ::unions_golden::repr_c_clone::U,
 ) -> () {
@@ -55,7 +55,9 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
 const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_c_drop::U>() == 8);
 const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_c_drop::U>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::unions_golden::repr_c_drop::U as ::core::default::Default>::default();
@@ -63,7 +65,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
     __self: &'static mut ::core::mem::MaybeUninit<::unions_golden::repr_c_drop::U>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -116,7 +118,7 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
 const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_rust_clone::U>() == 4);
 const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_rust_clone::U>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
     __self: &'static ::unions_golden::repr_rust_clone::U,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -127,7 +129,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
     __self: &'static mut ::unions_golden::repr_rust_clone::U,
     source: &'static ::unions_golden::repr_rust_clone::U,
 ) -> () {
@@ -159,7 +161,9 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
 const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_rust_drop::U>() == 8);
 const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_rust_drop::U>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::unions_golden::repr_rust_drop::U as ::core::default::Default>::default();
@@ -167,7 +171,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
     __self: &'static mut ::core::mem::MaybeUninit<::unions_golden::repr_rust_drop::U>,
 ) {
     unsafe { __self.assume_init_drop() };

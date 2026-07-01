@@ -109,16 +109,22 @@ static_assert(
     alignof(CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" ::pass_by_value_unmovable::CppMovable __crubit_thunk_default();
+extern "C" ::pass_by_value_unmovable::CppMovable
+__crubit_thunk_Default_udefault_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable();
 }
 inline ::pass_by_value_unmovable::CppMovable::CppMovable() {
-  *this = __crubit_internal::__crubit_thunk_default();
+  *this = __crubit_internal::
+      __crubit_thunk_Default_udefault_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable();
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::pass_by_value_unmovable::CppMovable&);
+extern "C" void
+__crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
+    ::pass_by_value_unmovable::CppMovable&);
 }
 inline CppMovable::~CppMovable() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
+          *this);
 }
 inline ::pass_by_value_unmovable::CppMovable::CppMovable(CppMovable&& other)
     : CppMovable() {
@@ -139,10 +145,14 @@ static_assert(
     alignof(NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::pass_by_value_unmovable::NotCppMovable&);
+extern "C" void
+__crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aNotCppMovable(
+    ::pass_by_value_unmovable::NotCppMovable&);
 }
 inline NotCppMovable::~NotCppMovable() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aNotCppMovable(
+          *this);
 }
 inline void NotCppMovable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotCppMovable, __field0));

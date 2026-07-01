@@ -813,33 +813,7 @@ pub fn generate_trait_thunks<'tcx>(
             tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from))
         };
 
-        let thunk_name = {
-            if db.is_golden_test() {
-                let print_types = type_args.iter().map(|ty| format!("{}", ty)).collect_vec();
-                let method_name = if print_types.is_empty() {
-                    escape_non_identifier_chars(method.name().as_str())
-                } else {
-                    escape_non_identifier_chars(&format!(
-                        "{}_{}",
-                        method.name().as_str(),
-                        print_types.join("_")
-                    ))
-                };
-                format!("__crubit_thunk_{}", method_name)
-            } else {
-                #[rustversion::any(since(1.94), since(2025-05-06))]
-                let instance = ty::Instance::new_raw(method.def_id, substs);
-                #[rustversion::all(before(1.94), before(2025-05-06))]
-                let instance = ty::Instance::new(method.def_id, substs);
-
-                let symbol = tcx.symbol_name(instance);
-                format!(
-                    "__crubit_thunk_{:x}_{}",
-                    tcx.stable_crate_id(db.source_crate_num()),
-                    &escape_non_identifier_chars(symbol.name)
-                )
-            }
-        };
+        let thunk_name = make_thunk_name(db, ThunkKind::TraitMethod { method, substs });
 
         // We normalize here to expand associated types to their underlying type.
         let sig_mid = try_normalize(
@@ -931,4 +905,51 @@ pub fn generate_trait_thunks<'tcx>(
     }
 
     Ok(TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls })
+}
+
+pub(crate) enum ThunkKind<'tcx> {
+    Function { def_id: DefId, export_name: Option<Symbol> },
+    TraitMethod { method: &'tcx ty::AssocItem, substs: ty::GenericArgsRef<'tcx> },
+}
+
+pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKind<'tcx>) -> String {
+    let tcx = db.tcx();
+    let is_golden_test = db.is_golden_test();
+    let target_path_mangled_hash = if is_golden_test {
+        "".to_string()
+    } else {
+        format!("{:x}_", tcx.stable_crate_id(db.source_crate_num()))
+    };
+
+    let details = match kind {
+        ThunkKind::Function { def_id, export_name } => {
+            crate::generate_function::function_symbol_name(db, def_id, export_name)
+        }
+        ThunkKind::TraitMethod { method, substs } => {
+            if is_golden_test {
+                let trait_id = tcx.parent(method.def_id);
+                let trait_name = db
+                    .symbol_unqualified_name(trait_id)
+                    .map(|name| name.rs_name)
+                    .unwrap_or_else(|| {
+                        panic!("Traits are assumed to always have a name {trait_id:?}")
+                    })
+                    .to_string();
+                let method_symbol = method.name();
+                let method_name = method_symbol.as_str();
+                let args = substs.iter().map(|arg| arg.to_string()).collect_vec();
+                format!("{}_{}_{}", trait_name, method_name, args.join("_"))
+            } else {
+                #[rustversion::any(since(1.94), since(2025-05-06))]
+                let instance = ty::Instance::new_raw(method.def_id, substs);
+                #[rustversion::all(before(1.94), before(2025-05-06))]
+                let instance = ty::Instance::new(method.def_id, substs);
+
+                let symbol = tcx.symbol_name(instance);
+                symbol.name.to_string()
+            }
+        }
+    };
+
+    format!("__crubit_thunk_{}{}", target_path_mangled_hash, escape_non_identifier_chars(&details))
 }

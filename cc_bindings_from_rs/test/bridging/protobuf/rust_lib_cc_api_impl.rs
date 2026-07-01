@@ -15,7 +15,9 @@ extern crate foo_rust_proto as foo_proto;
 const _: () = assert!(::std::mem::size_of::<::rust_lib_golden::FooService>() == 8);
 const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::FooService>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::rust_lib_golden::FooService as ::core::default::Default>::default();
@@ -23,7 +25,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
     __self: &'static mut ::core::mem::MaybeUninit<::rust_lib_golden::FooService>,
 ) {
     unsafe { __self.assume_init_drop() };

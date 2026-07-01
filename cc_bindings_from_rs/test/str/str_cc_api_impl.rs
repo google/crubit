@@ -14,7 +14,9 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::str_golden::TypeWithStr>() == 16);
 const _: () = assert!(::std::mem::align_of::<::str_golden::TypeWithStr>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustr_ugolden_x0000003a_x0000003aTypeWithStr(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <::str_golden::TypeWithStr as ::core::default::Default>::default();
         (__ret_ptr as *mut ::str_golden::TypeWithStr).write(__rs_return_value);

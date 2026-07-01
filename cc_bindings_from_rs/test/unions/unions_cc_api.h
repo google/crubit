@@ -340,20 +340,26 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::unions::repr_c_clone::U>);
 static_assert(::std::is_trivially_move_assignable_v<::unions::repr_c_clone::U>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(::unions::repr_c_clone::U const&,
-                                     ::unions::repr_c_clone::U* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
+    ::unions::repr_c_clone::U const&, ::unions::repr_c_clone::U* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(::unions::repr_c_clone::U&,
-                                           ::unions::repr_c_clone::U const&);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
+    ::unions::repr_c_clone::U&, ::unions::repr_c_clone::U const&);
 }
 inline ::unions::repr_c_clone::U::U(const U& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
+          other, this);
 }
 inline ::unions::repr_c_clone::U& ::unions::repr_c_clone::U::operator=(
     const U& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
+            *this, other);
   }
   return *this;
 }
@@ -381,15 +387,25 @@ static_assert(
     alignof(U) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::unions::repr_c_drop::U* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
+    ::unions::repr_c_drop::U* __ret_ptr);
 }
 inline ::unions::repr_c_drop::U::U() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::unions::repr_c_drop::U&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
+    ::unions::repr_c_drop::U&);
 }
-inline U::~U() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline U::~U() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
+          *this);
+}
 inline ::unions::repr_c_drop::U::U(U&& other) : U() {
   *this = ::std::move(other);
 }
@@ -504,20 +520,27 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::unions::repr_rust_clone::U>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(::unions::repr_rust_clone::U const&,
-                                     ::unions::repr_rust_clone::U* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
+    ::unions::repr_rust_clone::U const&,
+    ::unions::repr_rust_clone::U* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(::unions::repr_rust_clone::U&,
-                                           ::unions::repr_rust_clone::U const&);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
+    ::unions::repr_rust_clone::U&, ::unions::repr_rust_clone::U const&);
 }
 inline ::unions::repr_rust_clone::U::U(const U& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
+          other, this);
 }
 inline ::unions::repr_rust_clone::U& ::unions::repr_rust_clone::U::operator=(
     const U& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
+            *this, other);
   }
   return *this;
 }
@@ -562,15 +585,25 @@ static_assert(
     alignof(U) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::unions::repr_rust_drop::U* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
+    ::unions::repr_rust_drop::U* __ret_ptr);
 }
 inline ::unions::repr_rust_drop::U::U() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::unions::repr_rust_drop::U&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
+    ::unions::repr_rust_drop::U&);
 }
-inline U::~U() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline U::~U() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
+          *this);
+}
 inline ::unions::repr_rust_drop::U::U(U&& other) : U() {
   *this = ::std::move(other);
 }

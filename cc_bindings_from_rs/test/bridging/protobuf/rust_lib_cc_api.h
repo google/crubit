@@ -77,16 +77,24 @@ static_assert(
     alignof(FooService) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::rust_lib::FooService* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+    ::rust_lib::FooService* __ret_ptr);
 }
 inline ::rust_lib::FooService::FooService() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::rust_lib::FooService&);
+extern "C" void
+__crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+    ::rust_lib::FooService&);
 }
 inline FooService::~FooService() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+          *this);
 }
 inline ::rust_lib::FooService::FooService(FooService&& other) : FooService() {
   *this = ::std::move(other);

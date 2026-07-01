@@ -14,7 +14,9 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::move_golden::Copyable>() == 1);
 const _: () = assert!(::std::mem::align_of::<::move_golden::Copyable>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aCopyable(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <::move_golden::Copyable as ::core::default::Default>::default();
         (__ret_ptr as *mut ::move_golden::Copyable).write(__rs_return_value);
@@ -40,14 +42,16 @@ const _: () = assert!(::core::mem::offset_of!(::move_golden::Copyable, field) ==
 const _: () = assert!(::std::mem::size_of::<::move_golden::Foo>() == 8);
 const _: () = assert!(::std::mem::align_of::<::move_golden::Foo>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aFoo(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <::move_golden::Foo as ::core::default::Default>::default();
         (__ret_ptr as *mut ::move_golden::Foo).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(
     __self: &'static mut ::core::mem::MaybeUninit<::move_golden::Foo>,
 ) {
     unsafe { __self.assume_init_drop() };

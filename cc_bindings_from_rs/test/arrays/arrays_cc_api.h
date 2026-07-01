@@ -216,10 +216,14 @@ static_assert(
     alignof(ArrayStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::arrays::ArrayStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aArrayStruct(
+    ::arrays::ArrayStruct* __ret_ptr);
 }
 inline ::arrays::ArrayStruct::ArrayStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aArrayStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<ArrayStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
@@ -236,9 +240,15 @@ static_assert(
     alignof(HasDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::arrays::HasDrop&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDrop(
+    ::arrays::HasDrop&);
 }
-inline HasDrop::~HasDrop() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline HasDrop::~HasDrop() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDrop(
+          *this);
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::arrays::HasDrop* __ret_ptr);
@@ -259,16 +269,24 @@ static_assert(
     alignof(HasDropAndDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::arrays::HasDropAndDefault* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
+    ::arrays::HasDropAndDefault* __ret_ptr);
 }
 inline ::arrays::HasDropAndDefault::HasDropAndDefault() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::arrays::HasDropAndDefault&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
+    ::arrays::HasDropAndDefault&);
 }
 inline HasDropAndDefault::~HasDropAndDefault() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
+          *this);
 }
 inline ::arrays::HasDropAndDefault::HasDropAndDefault(HasDropAndDefault&& other)
     : HasDropAndDefault() {
@@ -470,11 +488,14 @@ function_with_tuple_array_id(
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
     rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
+          this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);

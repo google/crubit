@@ -616,7 +616,8 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyContainer>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_into_uiter(
+extern "C" void
+__crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     ::into_iterator_rust::MyContainer*,
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
 }
@@ -627,14 +628,16 @@ inline ::into_iterator_rust::MyContainerIntoIter MyContainer::into_iter() && {
     crubit::Slot<::into_iterator_rust::MyContainerIntoIter>
         __return_value_ret_val_holder;
     auto* __return_value_storage = __return_value_ret_val_holder.Get();
-    __crubit_internal::__crubit_thunk_into_uiter(&self_,
-                                                 __return_value_storage);
+    __crubit_internal::
+        __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
+            &self_, __return_value_storage);
     return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
   };
   return call_into_iter();
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_into_uiter(
+extern "C" void
+__crubit_thunk_IntoIterator_uinto_uiter_u_x00000026into_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     ::into_iterator_rust::MyContainer const&,
     ::into_iterator_rust::MyContainerIter* __ret_ptr);
 }
@@ -646,7 +649,9 @@ MyContainer::begin() const& {
     crubit::Slot<::into_iterator_rust::MyContainerIter>
         __return_value_ret_val_holder;
     auto* __return_value_storage = __return_value_ret_val_holder.Get();
-    __crubit_internal::__crubit_thunk_into_uiter(self_, __return_value_storage);
+    __crubit_internal::
+        __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026into_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
+            self_, __return_value_storage);
     return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
   };
   return rs::IteratorAdapter<::into_iterator_rust::MyContainerIter>(
@@ -657,7 +662,8 @@ inline rs::IteratorEnd MyContainer::end() const& {
   return rs::IteratorEnd();
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_into_uiter(
+extern "C" void
+__crubit_thunk_IntoIterator_uinto_uiter_u_x00000026mut_x00000020into_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     ::into_iterator_rust::MyContainer&,
     ::into_iterator_rust::MyContainerIterMut* __ret_ptr);
 }
@@ -669,7 +675,9 @@ MyContainer::begin() & {
     crubit::Slot<::into_iterator_rust::MyContainerIterMut>
         __return_value_ret_val_holder;
     auto* __return_value_storage = __return_value_ret_val_holder.Get();
-    __crubit_internal::__crubit_thunk_into_uiter(self_, __return_value_storage);
+    __crubit_internal::
+        __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026mut_x00000020into_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
+            self_, __return_value_storage);
     return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
   };
   return rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut>(

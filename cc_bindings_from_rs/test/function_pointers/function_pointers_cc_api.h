@@ -148,10 +148,14 @@ static_assert(
     alignof(CStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::function_pointers::CStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ufunction_upointers_ugolden_x0000003a_x0000003aCStruct(
+    ::function_pointers::CStruct* __ret_ptr);
 }
 inline ::function_pointers::CStruct::CStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ufunction_upointers_ugolden_x0000003a_x0000003aCStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<CStruct>);
 static_assert(

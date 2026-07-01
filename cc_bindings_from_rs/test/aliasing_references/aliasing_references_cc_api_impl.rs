@@ -14,7 +14,9 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::aliasing_references_golden::NonFreezeType>() == 4);
 const _: () = assert!(::std::mem::align_of::<::aliasing_references_golden::NonFreezeType>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aNonFreezeType(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::aliasing_references_golden::NonFreezeType as ::core::default::Default>::default();
@@ -41,7 +43,9 @@ unsafe extern "C" fn __crubit_thunk_shared_uself_umut_uref_uallows_ualias(
 const _: () = assert!(::std::mem::size_of::<::aliasing_references_golden::SomeStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::aliasing_references_golden::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aSomeStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::aliasing_references_golden::SomeStruct as ::core::default::Default>::default();

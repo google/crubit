@@ -241,14 +241,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   template <typename Sink, typename Str = rs::alloc::string::String>
   friend void AbslStringify(Sink& sink, const DisplayStruct& self) {
     crubit::Slot<Str> s;
-    __crubit_thunk_to_ustring(self, s.Get());
+    __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
+        self, s.Get());
     AbslStringify(sink, ::std::move(s).AssumeInitAndTakeValue().as_str());
   }
   template <typename Str = rs::alloc::string::String>
   friend ::std::ostream& operator<<(::std::ostream& os,
                                     const DisplayStruct& self) {
     crubit::Slot<Str> s;
-    __crubit_thunk_to_ustring(self, s.Get());
+    __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
+        self, s.Get());
     return os << ::std::string_view(
                ::std::move(s).AssumeInitAndTakeValue().as_str());
   }
@@ -904,7 +906,8 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::display::DisplayStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::display::DisplayStruct>);
-extern "C" void __crubit_thunk_to_ustring(
+extern "C" void
+__crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
     ::structs::display::DisplayStruct const&,
     ::rs::alloc::string::String* __ret_ptr);
 inline void DisplayStruct::__crubit_field_offset_assertions() {
@@ -932,11 +935,14 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003ainterior_umutability_x0000003a_x0000003aSomeStruct(
     ::structs::interior_mutability::SomeStruct* __ret_ptr);
 }
 inline ::structs::interior_mutability::SomeStruct::SomeStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003ainterior_umutability_x0000003a_x0000003aSomeStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -983,12 +989,15 @@ static_assert(
     alignof(SomeStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003anested_uptr_utype_umutability_uqualifiers_x0000003a_x0000003aSomeStruct(
     ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct* __ret_ptr);
 }
 inline ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct::
     SomeStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003anested_uptr_utype_umutability_uqualifiers_x0000003a_x0000003aSomeStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -1010,9 +1019,15 @@ static_assert(
     alignof(Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::structs::non_cpp_movable::Point&);
+extern "C" void
+__crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003anon_ucpp_umovable_x0000003a_x0000003aPoint(
+    ::structs::non_cpp_movable::Point&);
 }
-inline Point::~Point() { __crubit_internal::__crubit_thunk_drop(*this); }
+inline Point::~Point() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003anon_ucpp_umovable_x0000003a_x0000003aPoint(
+          *this);
+}
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
@@ -1157,24 +1172,30 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(
+extern "C" void
+__crubit_thunk_Clone_uclone_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&,
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat&,
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&);
 }
 inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat::
     StructFloat(const StructFloat& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
+          other, this);
 }
 inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat& ::
 structs::struct_by_float_passing_with_no_thunk::StructFloat::operator=(
     const StructFloat& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
+            *this, other);
   }
   return *this;
 }
@@ -1242,11 +1263,14 @@ static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003aunsupported_utypes_x0000003a_x0000003aSomeStruct(
     ::structs::unsupported_types::SomeStruct* __ret_ptr);
 }
 inline ::structs::unsupported_types::SomeStruct::SomeStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003aunsupported_utypes_x0000003a_x0000003aSomeStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<

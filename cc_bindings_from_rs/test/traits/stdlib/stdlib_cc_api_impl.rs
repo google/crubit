@@ -14,20 +14,22 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::stdlib_golden::MyStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::stdlib_golden::MyStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <::stdlib_golden::MyStruct as ::core::default::Default>::default();
         (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static mut ::core::mem::MaybeUninit<::stdlib_golden::MyStruct>,
 ) {
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::stdlib_golden::MyStruct,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -37,7 +39,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static mut ::stdlib_golden::MyStruct,
     source: &'static ::stdlib_golden::MyStruct,
 ) -> () {
@@ -51,7 +53,10 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ui32(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct_ui32(
+    value: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::stdlib_golden::MyStruct as ::core::convert::From<i32>>::from(value);

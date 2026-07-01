@@ -126,10 +126,14 @@ static_assert(
     alignof(NotImplemented) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::trait_impl::NotImplemented&);
+extern "C" void
+__crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
+    ::trait_impl::NotImplemented&);
 }
 inline NotImplemented::~NotImplemented() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
+          *this);
 }
 inline void NotImplemented::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotImplemented, foo));

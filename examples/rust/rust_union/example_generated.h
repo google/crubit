@@ -66,11 +66,14 @@ static_assert(
     alignof(ReprRustUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aReprRustUnion(
     ::example_crate::ReprRustUnion* __ret_ptr);
 }
 inline ::example_crate::ReprRustUnion::ReprRustUnion() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aReprRustUnion(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<ReprRustUnion>);
 static_assert(

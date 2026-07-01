@@ -66,10 +66,14 @@ static_assert(
     alignof(NeverStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::never::NeverStruct* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_unever_ugolden_x0000003a_x0000003aNeverStruct(
+    ::never::NeverStruct* __ret_ptr);
 }
 inline ::never::NeverStruct::NeverStruct() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_unever_ugolden_x0000003a_x0000003aNeverStruct(
+          this);
 }
 static_assert(::std::is_trivially_destructible_v<NeverStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::never::NeverStruct>);

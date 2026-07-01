@@ -152,10 +152,14 @@ static_assert(
     alignof(StructWithVec) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::vec::StructWithVec&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWithVec(
+    ::vec::StructWithVec&);
 }
 inline StructWithVec::~StructWithVec() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWithVec(
+          *this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
@@ -206,26 +210,36 @@ inline ::std::int32_t take_vec(rs_std::Vec<::std::int32_t> v) {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(rs_std::Vec<::std::int32_t>* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+    rs_std::Vec<::std::int32_t>* __ret_ptr);
 }
 inline rs_std::Vec<::std::int32_t>::Vec() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(rs_std::Vec<::std::int32_t> const&,
-                                     rs_std::Vec<::std::int32_t>* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+    rs_std::Vec<::std::int32_t> const&, rs_std::Vec<::std::int32_t>* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(rs_std::Vec<::std::int32_t>&,
-                                           rs_std::Vec<::std::int32_t> const&);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+    rs_std::Vec<::std::int32_t>&, rs_std::Vec<::std::int32_t> const&);
 }
 inline rs_std::Vec<::std::int32_t>::Vec(const Vec& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+          other, this);
 }
 inline rs_std::Vec<::std::int32_t>& rs_std::Vec<::std::int32_t>::operator=(
     const Vec& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+            *this, other);
   }
   return *this;
 }
@@ -285,26 +299,36 @@ inline const ::std::int32_t* rs_std::Vec<::std::int32_t>::end() const noexcept {
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(rs_std::Vec<::std::uint8_t>* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+    rs_std::Vec<::std::uint8_t>* __ret_ptr);
 }
 inline rs_std::Vec<::std::uint8_t>::Vec() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(rs_std::Vec<::std::uint8_t> const&,
-                                     rs_std::Vec<::std::uint8_t>* __ret_ptr);
+extern "C" void
+__crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+    rs_std::Vec<::std::uint8_t> const&, rs_std::Vec<::std::uint8_t>* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(rs_std::Vec<::std::uint8_t>&,
-                                           rs_std::Vec<::std::uint8_t> const&);
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+    rs_std::Vec<::std::uint8_t>&, rs_std::Vec<::std::uint8_t> const&);
 }
 inline rs_std::Vec<::std::uint8_t>::Vec(const Vec& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+          other, this);
 }
 inline rs_std::Vec<::std::uint8_t>& rs_std::Vec<::std::uint8_t>::operator=(
     const Vec& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+            *this, other);
   }
   return *this;
 }

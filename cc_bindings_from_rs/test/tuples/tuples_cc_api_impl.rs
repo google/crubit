@@ -16,7 +16,7 @@ const _: () = assert!(::std::mem::align_of::<::tuples_golden::AdtHoldingFiveAndS
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::CloneNoDefault>() == 1);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::CloneNoDefault>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
     __self: &'static ::tuples_golden::CloneNoDefault,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -27,7 +27,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
     __self: &'static mut ::tuples_golden::CloneNoDefault,
     source: &'static ::tuples_golden::CloneNoDefault,
 ) -> () {
@@ -88,7 +88,9 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::GetsTuple, value)
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefault>() == 24);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasDefault>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x0000003aHasDefault(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::tuples_golden::HasDefault as ::core::default::Default>::default();
@@ -96,7 +98,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefault(
     __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasDefault>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -121,7 +123,7 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefault, val) 
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefaultTuple>() == 64);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasDefaultTuple>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefaultTuple(
     __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasDefaultTuple>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -141,7 +143,7 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefaultTuple, 
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefault>() == 24);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefault>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefault(
     __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasNoDefault>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -156,7 +158,7 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasNoDefault, val
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefaultTuple>() == 64);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefaultTuple>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefaultTuple(
     __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasNoDefaultTuple>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -195,7 +197,7 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NestedTupleStruct
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::NonCppMovable>() == 1);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::NonCppMovable>() == 1);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNonCppMovable(
     __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::NonCppMovable>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -204,7 +206,9 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NonCppMovable, va
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::NontrivialDrop>() == 1);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::NontrivialDrop>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x0000003aNontrivialDrop(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <::tuples_golden::NontrivialDrop as ::core::default::Default>::default();
@@ -212,7 +216,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNontrivialDrop(
     __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -220,7 +224,7 @@ extern "C" fn __crubit_thunk_drop(
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::StructWithOptionTuple>() == 32);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::StructWithOptionTuple>() == 8);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
+extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aStructWithOptionTuple(
     __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::StructWithOptionTuple>,
 ) {
     unsafe { __self.assume_init_drop() };
@@ -514,7 +518,9 @@ unsafe extern "C" fn __crubit_thunk_take_utuple_uhas_udefault(
     unsafe { ::tuples_golden::take_tuple_has_default(r) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028_x00000028_x00000028u32_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(((u32, u32), u32), u32) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -532,7 +538,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028_x00000028u32_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <((u32, u32), u32) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -546,7 +554,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(i32,) as ::core::default::Default>::default();
         let (__rs_return_value_0,) = __rs_return_value;
@@ -555,7 +565,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i8_x0000002c_x00000020isize_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(i8, isize) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -565,7 +577,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028isize_x0000002c_x00000020i8_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(isize, i8) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -575,7 +589,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x00000029(
     __self: &'static (
         ::core::option::Option<i32>,
         ::core::result::Result<i32, ::alloc::string::String>,
@@ -601,7 +615,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x00000029(
     __self: &'static mut (
         ::core::option::Option<i32>,
         ::core::result::Result<i32, ::alloc::string::String>,
@@ -616,7 +630,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <(::core::option::Option<i32>,) as ::core::default::Default>::default();
@@ -632,7 +648,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_u_x00000028tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x00000029(
     __self: &'static (::tuples_golden::CloneNoDefault, u8),
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -646,7 +662,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_u_x00000028tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x00000029(
     __self: &'static mut (::tuples_golden::CloneNoDefault, u8),
     source: &'static (::tuples_golden::CloneNoDefault, u8),
 ) -> () {
@@ -655,7 +671,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028tuples_ugolden_x0000003a_x0000003aHasDefault_x0000002c_x00000020u8_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <(::tuples_golden::HasDefault, u8) as ::core::default::Default>::default();
@@ -666,7 +684,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020u32_x00000029_x00000029_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(u32, (u32, (u32, u32))) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -684,7 +704,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020u32_x00000029_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(u32, (u32, u32)) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -698,7 +720,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020u32_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(u32, u32) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -708,7 +732,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x00000029(
     __self: &'static (u8, ::tuples_golden::CloneNoDefault),
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -722,7 +746,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x00000029(
     __self: &'static mut (u8, ::tuples_golden::CloneNoDefault),
     source: &'static (u8, ::tuples_golden::CloneNoDefault),
 ) -> () {
@@ -731,7 +755,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aHasDefault_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value =
             <(u8, ::tuples_golden::HasDefault) as ::core::default::Default>::default();
@@ -742,7 +768,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020usize_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(u8, usize) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -752,7 +780,9 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020u8_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __rs_return_value = <(usize, u8) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
@@ -762,7 +792,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     __self: &'static ::core::result::Result<i32, ::alloc::string::String>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -776,7 +806,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     __self: &'static mut ::core::result::Result<i32, ::alloc::string::String>,
     source: &'static ::core::result::Result<i32, ::alloc::string::String>,
 ) -> () {

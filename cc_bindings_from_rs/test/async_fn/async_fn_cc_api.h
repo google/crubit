@@ -168,10 +168,14 @@ static_assert(
     alignof(NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::async_fn::NotCppMovable&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aNotCppMovable(
+    ::async_fn::NotCppMovable&);
 }
 inline NotCppMovable::~NotCppMovable() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aNotCppMovable(
+          *this);
 }
 inline void NotCppMovable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotCppMovable, __field0));
@@ -183,16 +187,24 @@ static_assert(
     alignof(StructWithDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::async_fn::StructWithDrop* __ret_ptr);
+extern "C" void
+__crubit_thunk_Default_udefault_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
+    ::async_fn::StructWithDrop* __ret_ptr);
 }
 inline ::async_fn::StructWithDrop::StructWithDrop() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::async_fn::StructWithDrop&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
+    ::async_fn::StructWithDrop&);
 }
 inline StructWithDrop::~StructWithDrop() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
+          *this);
 }
 inline ::async_fn::StructWithDrop::StructWithDrop(StructWithDrop&& other)
     : StructWithDrop() {

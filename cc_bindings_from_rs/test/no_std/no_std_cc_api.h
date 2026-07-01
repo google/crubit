@@ -68,10 +68,14 @@ static_assert(
     alignof(NoStdStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::no_std::NoStdStruct&);
+extern "C" void
+__crubit_thunk_Drop_udrop_uno_ustd_ugolden_x0000003a_x0000003aNoStdStruct(
+    ::no_std::NoStdStruct&);
 }
 inline NoStdStruct::~NoStdStruct() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uno_ustd_ugolden_x0000003a_x0000003aNoStdStruct(
+          *this);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, float,

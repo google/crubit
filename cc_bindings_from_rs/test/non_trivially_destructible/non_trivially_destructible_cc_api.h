@@ -71,19 +71,25 @@ static_assert(
     alignof(NonTriviallyDestructable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(
+extern "C" void
+__crubit_thunk_Default_udefault_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable() {
-  __crubit_internal::__crubit_thunk_default(this);
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
+          this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
+extern "C" void
+__crubit_thunk_Drop_udrop_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     ::non_trivially_destructible::NonTriviallyDestructable&);
 }
 inline NonTriviallyDestructable::~NonTriviallyDestructable() {
-  __crubit_internal::__crubit_thunk_drop(*this);
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
+          *this);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable(NonTriviallyDestructable&& other)
@@ -97,24 +103,30 @@ non_trivially_destructible::NonTriviallyDestructable::operator=(
   return *this;
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(
+extern "C" void
+__crubit_thunk_Clone_uclone_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     ::non_trivially_destructible::NonTriviallyDestructable const&,
     ::non_trivially_destructible::NonTriviallyDestructable* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     ::non_trivially_destructible::NonTriviallyDestructable&,
     ::non_trivially_destructible::NonTriviallyDestructable const&);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable::
     NonTriviallyDestructable(const NonTriviallyDestructable& other) {
-  __crubit_internal::__crubit_thunk_clone(other, this);
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
+          other, this);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable& ::
 non_trivially_destructible::NonTriviallyDestructable::operator=(
     const NonTriviallyDestructable& other) {
   if (this != &other) {
-    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
+            *this, other);
   }
   return *this;
 }
