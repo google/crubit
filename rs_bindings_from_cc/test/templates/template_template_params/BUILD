@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "template_template_params",
     hdrs = ["template_template_params.h"],
     aspect_hints = ["//features:experimental"],
+    deps = ["//support:annotations"],
 )
 
 crubit_rust_test(

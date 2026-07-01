@@ -25,7 +25,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
     let ir = {
         let dependency_src = r#" #pragma clang lifetime_elision
                 template <typename T>
-                struct MyTemplate {
+                struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                     ~MyTemplate();
                     T GetValue() { return field; }
                     T field;
@@ -98,7 +98,7 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
     let ir = ir_from_cc(
         r#"
             template <typename T>
-            class MyTemplate final {
+            class [[clang::annotate("crubit_always_instantiate")]] MyTemplate final {
              public:
               static MyTemplate Create(T value);
               const T& value() const;
@@ -1512,7 +1512,7 @@ fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result
     let bindings = generate_bindings_tokens_for_test(ir_from_cc(
         r#"
             template <typename T>
-            struct MyStruct {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
                 T getT();
             };
 

@@ -7,9 +7,10 @@
 
 #include <stdint.h>
 
+#include "support/annotations.h"
 
 template <int multiplier>
-class MyTemplate final {
+class CRUBIT_ALWAYS_INSTANTIATE MyTemplate final {
  public:
   static int Multiply(int value) { return value * multiplier; }
 };
@@ -18,7 +19,7 @@ using MyMultiplierX100 = MyTemplate<100>;
 using MyMultiplierX1000 = MyTemplate<1000>;
 
 template <uint64_t x>
-struct NumericConst {
+struct CRUBIT_ALWAYS_INSTANTIATE NumericConst {
   static uint64_t GetValue() { return x; }
 };
 

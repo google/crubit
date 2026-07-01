@@ -5,6 +5,7 @@
 #ifndef DEVTOOLS_RUST_CC_INTEROP_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_TEMPLATE_TEMPLATE_PARAMS_TEMPLATE_TEMPLATE_PARAMS_H_
 #define DEVTOOLS_RUST_CC_INTEROP_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_TEMPLATE_TEMPLATE_PARAMS_TEMPLATE_TEMPLATE_PARAMS_H_
 
+#include "support/annotations.h"
 
 template <typename TPolicyType>
 struct Policy {
@@ -17,7 +18,7 @@ struct Policy<int> {
 };
 
 template <template <class> class TPolicy>
-class MyTemplate {
+class CRUBIT_ALWAYS_INSTANTIATE MyTemplate {
  public:
   static int GetPolicy() { return TPolicy<int>::policy; }
 };

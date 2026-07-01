@@ -35,16 +35,6 @@ pub struct __CcTemplateInst2TSIiE {
 }
 impl !Send for __CcTemplateInst2TSIiE {}
 impl !Sync for __CcTemplateInst2TSIiE {}
-impl __CcTemplateInst2TSIiE {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    #[inline(always)]
-    pub unsafe fn f(__this: *mut Self) {
-        unsafe { self::cc_template_inst2_ts_ii_e::f(__this) }
-    }
-}
 
 impl Default for __CcTemplateInst2TSIiE {
     #[inline(always)]
@@ -57,19 +47,6 @@ impl Default for __CcTemplateInst2TSIiE {
     }
 }
 
-pub mod cc_template_inst2_ts_ii_e {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    #[inline(always)]
-    pub(crate) unsafe fn f(__this: *mut crate::__CcTemplateInst2TSIiE) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN2TSIiE1fEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplate_5finstantiation_5fcc(__this)
-        }
-    }
-}
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -77,9 +54,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z3RTSv(__return: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN2TSIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplate_5finstantiation_5fcc(
             __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN2TSIiE1fEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplate_5finstantiation_5fcc(
-            __this: *mut crate::__CcTemplateInst2TSIiE,
         );
     }
 }

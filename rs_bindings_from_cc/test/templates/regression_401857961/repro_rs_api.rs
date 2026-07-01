@@ -61,9 +61,6 @@ pub mod repro {
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_REGRESSION_401857961_REPRO_H_
 
-// error: struct `repro::optional<repro::Interval>` could not be bound
-//   template instantiation is not yet supported
-
 // error: struct `repro::Nullable<repro::Interval>` could not be bound
 //   template instantiation is not yet supported
 

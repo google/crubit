@@ -13,6 +13,7 @@ cc_library(
     name = "type_alias",
     hdrs = ["type_alias.h"],
     aspect_hints = ["//features:experimental"],
+    deps = ["//support:annotations"],
 )
 
 golden_test(

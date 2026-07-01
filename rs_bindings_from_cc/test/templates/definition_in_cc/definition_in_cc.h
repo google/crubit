@@ -5,9 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_DEFINITION_IN_CC_DEFINITION_IN_CC_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_DEFINITION_IN_CC_DEFINITION_IN_CC_H_
 
+#include "support/annotations.h"
 
 template <typename T>
-class MyTemplate final {
+class CRUBIT_ALWAYS_INSTANTIATE MyTemplate final {
  public:
   static MyTemplate Create(T value);
   const T& value() const;

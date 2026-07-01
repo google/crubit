@@ -28,3 +28,7 @@
 %enddef
 %define CRUBIT_THREAD_SAFE
 %enddef
+%define CRUBIT_BIND_INSTANTIATION(...)
+%enddef
+%define CRUBIT_ALWAYS_INSTANTIATE
+%enddef

@@ -35,6 +35,10 @@
 #define CRUBIT_INTERNAL_ANNOTATE_TYPE(...)
 #endif
 
+#define CRUBIT_INTERNAL_EXPAND_AND_CONCAT_IMPL(a, b) a##b
+#define CRUBIT_INTERNAL_EXPAND_AND_CONCAT(a, b) \
+  CRUBIT_INTERNAL_EXPAND_AND_CONCAT_IMPL(a, b)
+
 namespace crubit::rust_type {
 // Helper for CRUBIT_INTERNAL_RUST_TYPE. This type should never be used
 // directly.

@@ -7,8 +7,10 @@
 
 #pragma clang lifetime_elision
 
+#include "support/annotations.h"
+
 template <typename T>
-class MyTemplate final {
+class CRUBIT_ALWAYS_INSTANTIATE MyTemplate final {
  public:
   static MyTemplate Create(T value) {
     MyTemplate result;

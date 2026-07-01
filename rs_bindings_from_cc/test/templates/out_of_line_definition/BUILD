@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "out_of_line_definition",
     hdrs = ["out_of_line_definition.h"],
     aspect_hints = ["//features:experimental"],
+    deps = ["//support:annotations"],
 )
 
 crubit_rust_test(

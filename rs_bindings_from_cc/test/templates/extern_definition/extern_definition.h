@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_EXTERN_DEFINITION_EXTERN_DEFINITION_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_EXTERN_DEFINITION_EXTERN_DEFINITION_H_
 
+#include "support/annotations.h"
 
 // This is a regression test for b/245610602.  Note that to trigger the
 // regression:
@@ -34,7 +35,7 @@
 namespace extern_definition {
 
 template <typename T>
-class MyTemplate final {
+class CRUBIT_ALWAYS_INSTANTIATE MyTemplate final {
  public:
   static MyTemplate Create(T value) {
     MyTemplate result;

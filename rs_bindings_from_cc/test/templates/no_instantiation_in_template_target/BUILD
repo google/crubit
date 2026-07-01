@@ -11,6 +11,7 @@ crubit_test_cc_library(
     name = "template_without_instantiation",
     hdrs = ["template_without_instantiation.h"],
     aspect_hints = ["//features:experimental"],
+    deps = ["//support:annotations"],
 )
 
 crubit_test_cc_library(

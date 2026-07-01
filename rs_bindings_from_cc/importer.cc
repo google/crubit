@@ -369,7 +369,20 @@ class Importer::SourceLocationComparator {
 std::vector<clang::Decl*> Importer::GetCanonicalChildren(
     const clang::DeclContext* decl_context) const {
   std::vector<clang::Decl*> result;
+  const auto* spec_decl =
+      llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl_context);
+  bool is_always_instantiate =
+      spec_decl == nullptr || IsAlwaysInstantiate(spec_decl);
   for (clang::Decl* decl : decl_context->decls()) {
+    if (!is_always_instantiate) {
+      if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
+        if (!llvm::isa<clang::CXXConstructorDecl>(decl) &&
+            !llvm::isa<clang::CXXDestructorDecl>(decl) &&
+            method_decl->getOverloadedOperator() != clang::OO_Equal) {
+          continue;
+        }
+      }
+    }
     // Bubble anonymous enum constants up so that they are imported as if they
     // were top-level constants.
     if (const auto* enum_decl = llvm::dyn_cast<clang::EnumDecl>(decl)) {
@@ -713,7 +726,87 @@ void Importer::ImportFreeComments() {
   llvm::sort(comments_, SourceLocationComparator(sm));
 }
 
+void Importer::FindAlwaysInstantiateSpecs(
+    const clang::DeclContext* decl_context) {
+  for (const clang::Decl* decl : decl_context->decls()) {
+    if (const auto* alias_decl =
+            clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
+      if (auto status_or_bool = HasAnnotationWithoutArgs(
+              *alias_decl, "crubit_always_instantiate");
+          status_or_bool.ok() && *status_or_bool) {
+        if (const auto* record_decl =
+                alias_decl->getUnderlyingType()->getAsCXXRecordDecl()) {
+          if (const auto* spec =
+                  clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+                      record_decl)) {
+            if (const auto* canonical_spec =
+                    clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+                        spec->getCanonicalDecl())) {
+              always_instantiate_specs_.insert(canonical_spec);
+            }
+          }
+        }
+      }
+    } else if (const auto* namespace_decl =
+                   clang::dyn_cast<clang::NamespaceDecl>(decl)) {
+      FindAlwaysInstantiateSpecs(namespace_decl);
+    } else if (const auto* linkage_spec =
+                   clang::dyn_cast<clang::LinkageSpecDecl>(decl)) {
+      FindAlwaysInstantiateSpecs(linkage_spec);
+    }
+  }
+}
+
+static std::optional<llvm::StringRef> AsTopLevelNamespace(
+    const clang::DeclContext* context) {
+  if (!context->isNamespace()) {
+    return std::nullopt;
+  }
+
+  const auto* namespace_decl = clang::cast<clang::NamespaceDecl>(context);
+  if (namespace_decl->isInline()) {
+    return AsTopLevelNamespace(namespace_decl->getParent());
+  }
+
+  if (!context->getParent()->getRedeclContext()->isTranslationUnit()) {
+    return std::nullopt;
+  }
+
+  const clang::IdentifierInfo* identifier_info =
+      namespace_decl->getIdentifier();
+  if (!identifier_info) {
+    return std::nullopt;
+  }
+  return identifier_info->getName();
+}
+
+bool Importer::IsAlwaysInstantiate(
+    const clang::ClassTemplateSpecializationDecl* spec_decl) const {
+  if (always_instantiate_specs_.contains(
+          clang::cast<clang::ClassTemplateSpecializationDecl>(
+              spec_decl->getCanonicalDecl()))) {
+    return true;
+  }
+  if (auto* template_decl = spec_decl->getSpecializedTemplate()) {
+    if (auto* templated_decl = template_decl->getTemplatedDecl()) {
+      std::optional<llvm::StringRef> top_level_ns =
+          AsTopLevelNamespace(templated_decl->getDeclContext());
+      if (top_level_ns == "std" || top_level_ns == "absl" ||
+          top_level_ns == "c9" || top_level_ns == "rs_std") {
+        return true;
+      }
+      if (auto status_or_bool = HasAnnotationWithoutArgs(
+              *templated_decl, "crubit_always_instantiate");
+          status_or_bool.ok() && *status_or_bool) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
+  FindAlwaysInstantiateSpecs(translation_unit_decl);
   ImportFreeComments();
   clang::SourceManager& sm = ctx_.getSourceManager();
   std::vector<SourceLocationComparator::OrderedItem> ordered_items;

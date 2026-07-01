@@ -10,6 +10,9 @@ crubit_test_cc_library(
     srcs = ["func_return_and_param_types.cc"],
     hdrs = ["func_return_and_param_types.h"],
     aspect_hints = ["//features:experimental"],
+    deps = [
+        "//support:annotations",
+    ],
 )
 
 crubit_rust_test(

@@ -353,4 +353,26 @@
 // ```
 #define CRUBIT_THREAD_SAFE CRUBIT_INTERNAL_ANNOTATE("crubit_thread_safe")
 
+// Marks a template or template instance as always instantiated.
+//
+// Example:
+// ```c++
+//   using MyInst CRUBIT_ALWAYS_INSTANTIATE = MyTemplate<int>;
+// ```
+#define CRUBIT_ALWAYS_INSTANTIATE \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_always_instantiate")
+
+// Creates a uniquely-named using declaration that aliases `tp`, annotated with
+// `CRUBIT_ALWAYS_INSTANTIATE`.
+//
+// Example:
+// ```c++
+//   CRUBIT_BIND_INSTANTIATION(MyTemplate<int>);
+// ```
+#define CRUBIT_BIND_INSTANTIATION(tp...)                                       \
+  namespace {                                                                  \
+  using CRUBIT_INTERNAL_EXPAND_AND_CONCAT(                                     \
+      crubit_bind_instantiation_, __COUNTER__) CRUBIT_ALWAYS_INSTANTIATE = tp; \
+  }
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

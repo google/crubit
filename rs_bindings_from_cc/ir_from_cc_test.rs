@@ -1362,7 +1362,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
             namespace test_namespace_bindings {
                 // Doc comment of MyStruct template.
                 template <typename T>
-                struct MyStruct {
+                struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
                   // Doc comment of GetValue method.
                   const T& GetValue() const { return value; }
 
@@ -1457,7 +1457,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
         r#"
             namespace test_namespace_bindings {
                 template <typename T>
-                struct MyStruct final {};
+                struct [[clang::annotate("crubit_always_instantiate")]] MyStruct final {};
 
                 // Doc comment for template specialization for T=int.
                 template<>
@@ -1531,7 +1531,7 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     let ir = ir_from_cc(
         r#"
             template <typename T>
-            struct MyStruct {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
               void MyMethod() {}
             };
             using MyIntAlias = MyStruct<int>;
@@ -1568,7 +1568,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     let ir = ir_from_cc(
         r#"
             template <typename T>
-            struct MyStruct {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
               void MyMethod();
             };
             struct Str {};
@@ -1683,7 +1683,7 @@ fn test_aliased_class_template_instantiated_in_header() -> Result<()> {
     let ir = ir_from_cc(
         r#"
             template <typename T>
-            struct MyTemplate {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                 const T& GetValue() { return field; }
                 T field;
             };
@@ -1717,7 +1717,7 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
     let ir = ir_from_cc(
         r#"
             template <typename T>
-            struct MyTemplate {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                 const T& GetValue() { return field; }
                 T field;
             };
@@ -1748,7 +1748,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
     let ir = ir_from_cc(
         r#"
             template <typename... TArgs>
-            struct MyStruct {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
                 static int GetSum(TArgs... my_args) { return (0 + ... + my_args); }
             };
             using MyTypeAlias = MyStruct<int, int>; "#,
@@ -1995,7 +1995,7 @@ fn test_template_with_decltype_and_with_auto() -> Result<()> {
     let ir = ir_from_cc(
         r#"
             template <typename T1, typename T2>
-            struct MyTemplate {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                 static decltype(auto) TemplatedAdd(T1 a, T2 b) { return a + b; }
             };
             using MyAlias = MyTemplate<unsigned int, long long>; "#,
@@ -2025,7 +2025,7 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
     let ir = ir_from_assumed_lifetimes_cc(
         r#"
             template <typename T>
-            struct MyTemplate {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                 const T& GetConstRef() const { return value; }
                 T& GetRef() { return value; }
                 T value;
@@ -2090,7 +2090,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
     let ir = ir_from_assumed_lifetimes_cc(
         r#"
             template <typename T>
-            struct MyTemplate {
+            struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                 const T& GetConstRef() const { return value; }
                 T& GetRef() { return value; }
                 T value;
@@ -2149,7 +2149,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
     let ir = {
         let dependency_src = r#"
                 template <typename T>
-                struct MyTemplate {
+                struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                     T GetValue();
                     T field;
                 };
@@ -2260,7 +2260,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
     let ir = {
         let dependency_src = r#"
                 template <typename T>
-                struct MyTemplate {
+                struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                     T GetValue();
                     T field;
                 };

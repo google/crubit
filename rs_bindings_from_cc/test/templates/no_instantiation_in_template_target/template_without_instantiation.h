@@ -5,11 +5,12 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_NO_INSTANTIATION_IN_TEMPLATE_TARGET_TEMPLATE_WITHOUT_INSTANTIATION_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_NO_INSTANTIATION_IN_TEMPLATE_TARGET_TEMPLATE_WITHOUT_INSTANTIATION_H_
 
+#include "support/annotations.h"
 
 // This template is not instantiated anywhere in this header file
 // (this is what the test scenario exercised here cares about).
 template <typename T>
-class MyTemplate final {
+class CRUBIT_ALWAYS_INSTANTIATE MyTemplate final {
  public:
   static MyTemplate Create(T value) {
     MyTemplate result;

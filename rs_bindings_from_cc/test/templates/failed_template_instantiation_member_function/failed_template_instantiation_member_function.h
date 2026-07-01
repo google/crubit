@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_H_
 
+#include "support/annotations.h"
 
 struct NoMethod final {};
 
@@ -17,7 +18,7 @@ struct HasMethodReturningInt final {
 };
 
 template <typename T>
-struct A final {
+struct CRUBIT_ALWAYS_INSTANTIATE A final {
   void NoOp(){};
 
   // It's important that the return type is `auto`, to exercise the return type

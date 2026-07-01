@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "extern_definition",
     hdrs = ["extern_definition.h"],
     aspect_hints = ["//features:experimental"],
+    deps = ["//support:annotations"],
 )
 
 crubit_test_cc_library(
