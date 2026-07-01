@@ -7,6 +7,7 @@ use googletest::prelude::*;
 #[gtest]
 fn my_test() {
     let sv: simple_string_view::SV<'_> = simple_string_view::SV::default();
+    expect_eq!(format!("{}", sv), "");
     let _sv_id = simple_string_view::sv_ident(sv);
 
     let sv_raw = simple_string_view::sv_make_raw();

@@ -652,6 +652,13 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         api_snippets.cc_details.push(thunk_impl);
         operator_delete_impl = Some(delete);
     }
+    let stubbed_lifetime_params = if lifetime_params.is_empty() {
+        quote! {}
+    } else {
+        let anonymous_lifetime = quote! { '_ };
+        let stubs = lifetime_params.iter().map(|_| &anonymous_lifetime).collect::<Vec<_>>();
+        quote! { < #( #stubs ),* > }
+    };
     let display_impl = if record.detected_formatter {
         let fmt_fn_name = make_rs_ident(&format!(
             "__crubit_fmt__{type_name}_{odr_suffix}",
@@ -665,7 +672,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
             fmt_fn_name: fmt_fn_name.clone(),
             param_type: cpp_type_name_for_record(&record, db)?,
         });
-        Some(DisplayImpl { type_name: ident.clone(), fmt_fn_name })
+        Some(DisplayImpl { type_name: quote! { #ident #stubbed_lifetime_params }, fmt_fn_name })
     } else {
         None
     };
@@ -675,13 +682,6 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         } else {
             vec![]
         };
-    let stubbed_lifetime_params = if lifetime_params.is_empty() {
-        quote! {}
-    } else {
-        let anonymous_lifetime = quote! { '_ };
-        let stubs = lifetime_params.iter().map(|_| &anonymous_lifetime).collect::<Vec<_>>();
-        quote! { < #( #stubs ),* > }
-    };
     let incomplete_definition = if crubit_features.contains(crubit_feature::CrubitFeature::Wrapper)
     {
         Some(quote! {

@@ -1069,7 +1069,7 @@ pub enum UpcastImplBody {
 
 #[derive(Clone, Debug)]
 pub struct DisplayImpl {
-    pub type_name: Ident,
+    pub type_name: TokenStream,
     pub fmt_fn_name: Ident,
 }
 
