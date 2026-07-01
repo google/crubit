@@ -424,6 +424,7 @@ pub fn new_database<'db>(
         crubit_abi_type,
         has_bindings::type_target_restriction,
         has_bindings::resolve_names,
+        generate_function::mangled_name_counts,
     )
 }
 

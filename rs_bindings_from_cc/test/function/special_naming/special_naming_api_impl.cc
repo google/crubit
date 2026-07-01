@@ -7,7 +7,9 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
+#include <cstddef>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
@@ -19,5 +21,22 @@
 static_assert((int (*)()) & ::llvm_no_mangle_marker);
 
 static_assert((int (*)()) & ::asm_name_with_dollar_sign);
+
+static_assert(CRUBIT_SIZEOF(struct SimpleStruct) == 4);
+static_assert(alignof(struct SimpleStruct) == 4);
+static_assert(CRUBIT_OFFSET_OF(x, struct SimpleStruct) == 0);
+
+extern "C" void __rust_thunk___ZN12SimpleStructC1Ev(
+    struct SimpleStruct* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct OtherStruct) == 4);
+static_assert(alignof(struct OtherStruct) == 4);
+static_assert(CRUBIT_OFFSET_OF(y, struct OtherStruct) == 0);
+
+extern "C" void __rust_thunk___ZN11OtherStructC1Ev(struct OtherStruct* __this) {
+  crubit::construct_at(__this);
+}
 
 #pragma clang diagnostic pop

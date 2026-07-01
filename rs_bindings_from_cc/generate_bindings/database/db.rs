@@ -159,6 +159,16 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_names
         fn resolve_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>>;
+
+        /// Counts how many functions have the given mangled name.
+        /// Returns a map from a mangled name to the number of times it occurs in the IR.
+        ///
+        /// This is used to detect duplicate mangled names (which may currently
+        /// result in conflicting thunk names and build errors, unless such
+        /// bindings are skipped).
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:mangled_name_counts
+        fn mangled_name_counts(&self) -> Rc<HashMap<Rc<str>, usize>>;
     }
 }
 
@@ -204,6 +214,13 @@ impl<'db> BindingsGenerator<'db> {
             None => false,
             Some(id) => *id != Some(item_id),
         }
+    }
+
+    /// Returns true if `func` has a conflicting mangled name.
+    pub fn has_conflicting_mangled_name(&self, func: &ir::Func) -> bool {
+        let conflicts_counter =
+            self.mangled_name_counts().get(&func.mangled_name).copied().unwrap_or(0);
+        conflicts_counter > 1
     }
 
     /// Returns the `Visibility` of the `rs_type_kind` in the given `library`.

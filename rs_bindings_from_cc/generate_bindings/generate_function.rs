@@ -1853,6 +1853,12 @@ pub fn generate_function(
         bail!("Conversion operators are only supported when AssumeThisLifetimes is enabled");
     }
 
+    // TODO(b/528469099): Resolve / avoid thunk name conflicts instead of bailing.  See also
+    // a WIP CL at cl/940801048.
+    if db.has_conflicting_mangled_name(&func) {
+        bail!("Multiple functions use this same linkage name");
+    }
+
     let _scope = db.error_scope(func.id);
     db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
@@ -3387,4 +3393,10 @@ pub fn adjust_signature_for_indexing_traits(
     }
 
     Ok(Some(transformed_func))
+}
+
+/// This is an implementation of a method of `BindingsGenerator<'db>` - for more
+/// information please see the corresponding doc comment in `db.rs`.
+pub fn mangled_name_counts(db: &BindingsGenerator) -> Rc<HashMap<Rc<str>, usize>> {
+    Rc::new(db.ir().functions().map(|f| f.mangled_name.clone()).counts())
 }
