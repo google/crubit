@@ -58,6 +58,8 @@ flagset::flags! {
         /// when possible.
         AlwaysSpecializeGenericsInCppApiFromRust,
 
+        /// Enable custom Debug impls for records.
+        RecordImplDebug,
     }
 }
 
@@ -85,6 +87,7 @@ impl CrubitFeature {
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "always_specialize_generics_in_cpp_api_from_rust"
             }
+            Self::RecordImplDebug => "record_impl_debug",
         }
     }
 
@@ -113,6 +116,7 @@ impl CrubitFeature {
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "//features:always_specialize_generics_in_cpp_api_from_rust"
             }
+            Self::RecordImplDebug => "//features:record_impl_debug",
         }
     }
 }
@@ -144,6 +148,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"always_specialize_generics_in_cpp_api_from_rust" => {
             CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust.into()
         }
+        b"record_impl_debug" => CrubitFeature::RecordImplDebug.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -267,6 +272,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::RecordImplDebug
         );
     }
 
@@ -302,6 +308,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::RecordImplDebug
         );
     }
 
@@ -322,6 +329,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::RecordImplDebug
         );
     }
 
@@ -343,6 +351,7 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::RecordImplDebug
         );
     }
 }

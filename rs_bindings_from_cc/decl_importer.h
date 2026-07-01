@@ -235,6 +235,11 @@ class ImportContext {
   // `[[gsl::Pointer]]` as unsafe.
   virtual bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const = 0;
 
+  // Returns true iff `label` has opted in to generate `impl Debug` bindings for
+  // records.
+  virtual bool IsRecordImplDebugEnabledForTarget(
+      const BazelLabel& label) const = 0;
+
   virtual bool IsFeatureEnabledForTarget(const BazelLabel& label,
                                          absl::string_view feature) const = 0;
 

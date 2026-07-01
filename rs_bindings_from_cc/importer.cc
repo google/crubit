@@ -1079,6 +1079,9 @@ bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
 // LINT.IfChange
 bool Importer::AreAssumedLifetimesEnabledForTarget(
     const BazelLabel& label) const {
+  // TODO(b/530193579): After expanding features earlier, just check the
+  // specific feature without manually checking for "all" or
+  // "no_assume_lifetimes".
   return (IsFeatureEnabledForTarget(label, "assume_lifetimes") ||
           IsFeatureEnabledForTarget(label, "all")) &&
          !IsFeatureEnabledForTarget(label, "no_assume_lifetimes");
@@ -1088,6 +1091,14 @@ bool Importer::AreAssumedLifetimesEnabledForTarget(
 
 bool Importer::IsUnsafeViewEnabledForTarget(const BazelLabel& label) const {
   return IsFeatureEnabledForTarget(label, "unsafe_view");
+}
+
+bool Importer::IsRecordImplDebugEnabledForTarget(
+    const BazelLabel& label) const {
+  // TODO(b/530193579): After expanding features earlier, just check the
+  // specific feature without manually checking for "all".
+  return IsFeatureEnabledForTarget(label, "record_impl_debug") ||
+         IsFeatureEnabledForTarget(label, "all");
 }
 
 absl::StatusOr<bool> Importer::DetectFormatter(

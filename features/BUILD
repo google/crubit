@@ -169,6 +169,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling custom Debug impls for records.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "record_impl_debug",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["record_impl_debug"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
