@@ -1290,6 +1290,10 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
   // analyze destructors.
   if (isa<CXXDestructorDecl>(Method)) return;
 
+  // Running a &&-qualified method requires moving from the object, after which
+  // its invariants (including member nullability) may no longer be valid.
+  if (Method->getRefQualifier() == clang::RQ_RValue) return;
+
   RecordStorageLocation* RecordLoc =
       StateAtExit.Env.getThisPointeeStorageLocation();
   if (RecordLoc == nullptr) return;
