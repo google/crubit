@@ -374,6 +374,7 @@ message Record {
   bool is_explicit_class_template_instantiation_definition = 39;
   bool has_private_or_deleted_operator_delete = 40;
   repeated Item children = 41;
+  bool impl_debug = 42;
 }
 
 message IncompleteRecord {
@@ -517,6 +518,7 @@ message ExistingRustType {
   bool is_same_abi = 7;
   int64 id = 8;
   bool must_bind = 9;
+  bool impl_debug = 10;
 }
 
 message Item {

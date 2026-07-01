@@ -197,6 +197,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],
 )

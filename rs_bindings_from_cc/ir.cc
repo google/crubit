@@ -535,6 +535,7 @@ llvm::json::Value ExistingRustType::ToJson() const {
       {"is_same_abi", is_same_abi},
       {"id", id},
       {"must_bind", must_bind},
+      {"impl_debug", impl_debug},
   };
   if (size_align.has_value()) {
     override.insert({"size_align", size_align->ToJson()});
@@ -557,6 +558,7 @@ flat_proto::ExistingRustType ExistingRustType::ToFlatProto() const {
   proto.set_is_same_abi(is_same_abi);
   proto.set_id(id.value());
   proto.set_must_bind(must_bind);
+  proto.set_impl_debug(impl_debug);
   return proto;
 }
 
@@ -1236,6 +1238,7 @@ llvm::json::Value Record::ToJson() const {
       {"overloads_operator_delete", overloads_operator_delete},
       {"has_private_or_deleted_operator_delete",
        has_private_or_deleted_operator_delete},
+      {"impl_debug", impl_debug},
       {"detected_formatter", detected_formatter},
       {"is_thread_safe", is_thread_safe},
   };

@@ -24,8 +24,11 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
+#include "clang/Sema/Sema.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 
 namespace crubit {
@@ -296,6 +299,9 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
       .size_align = std::move(size_align),
       .is_same_abi = *is_same_abi,
       .id = ictx_.GenerateItemId(type_decl),
+      .impl_debug = ictx_.IsRecordImplDebugEnabledForTarget(
+                        ictx_.GetOwningTarget(type_decl)) &&
+                    ictx_.ImplementsCoreFmtDebug(*type_decl),
   };
 }
 

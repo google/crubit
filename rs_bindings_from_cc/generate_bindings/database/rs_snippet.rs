@@ -2216,6 +2216,7 @@ mod tests {
                 is_same_abi,
                 id: ItemId::new_for_testing(0),
                 must_bind: false,
+                impl_debug: false,
             }),
         )
         .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")

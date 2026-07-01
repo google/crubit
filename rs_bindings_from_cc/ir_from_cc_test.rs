@@ -65,6 +65,16 @@ fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
     )
 }
 
+fn ir_from_record_impl_debug_cc(header: &str) -> Result<IR> {
+    ir_testing::ir_from_cc_dependency(
+        multiplatform_testing::test_platform(),
+        header,
+        "// empty header",
+        Some("record_impl_debug"),
+        /*kythe_annotations=*/ false,
+    )
+}
+
 fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
     let mut full_program = with_full_lifetime_macros();
     full_program.push_str(program);
@@ -4954,4 +4964,11 @@ fn test_has_private_or_deleted_operator_delete() {
     assert!(!s3.has_private_or_deleted_operator_delete);
     let s4 = retrieve_record(&ir, "S4");
     assert!(s4.has_private_or_deleted_operator_delete);
+}
+
+#[gtest]
+fn test_impl_debug_default_true() {
+    let ir = ir_from_record_impl_debug_cc("struct S {};").unwrap();
+    let s = retrieve_record(&ir, "S");
+    assert!(s.impl_debug);
 }

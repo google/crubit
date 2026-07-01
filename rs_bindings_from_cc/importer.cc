@@ -24,11 +24,13 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
+#include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
 #include "common/annotation_reader.h"
@@ -38,6 +40,18 @@
 #include "rs_bindings_from_cc/annotations_consumer.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/decl_importer.h"
+#include "rs_bindings_from_cc/importers/class_template.h"
+#include "rs_bindings_from_cc/importers/cxx_record.h"
+#include "rs_bindings_from_cc/importers/enum.h"
+#include "rs_bindings_from_cc/importers/enum_constant.h"
+#include "rs_bindings_from_cc/importers/existing_rust_type.h"
+#include "rs_bindings_from_cc/importers/friend.h"
+#include "rs_bindings_from_cc/importers/function.h"
+#include "rs_bindings_from_cc/importers/function_template.h"
+#include "rs_bindings_from_cc/importers/namespace.h"
+#include "rs_bindings_from_cc/importers/type_alias.h"
+#include "rs_bindings_from_cc/importers/var.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "rs_bindings_from_cc/type_map.h"
@@ -54,6 +68,7 @@
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeBase.h"
+#include "clang/Basic/ABI.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
@@ -249,7 +264,103 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
                        clang::FunctionType::getNameForCallConv(cc_call_conv))));
 }
 
+template <typename T>
+const T* absl_nullable FindDecl(const clang::DeclContext* absl_nonnull context,
+                                absl::string_view name) {
+  if (const auto* absl_nullable ns =
+          llvm::dyn_cast<clang::NamespaceDecl>(context);
+      ns != nullptr) {
+    for (const auto* absl_nonnull redecl : ns->redecls()) {
+      for (const clang::Decl* absl_nonnull decl : redecl->decls()) {
+        if (const auto* absl_nullable type = llvm::dyn_cast<T>(decl);
+            type != nullptr) {
+          if (StringViewFromStringRef(type->getName()) == name) {
+            return type;
+          }
+        }
+      }
+    }
+  } else {
+    for (const clang::Decl* absl_nonnull decl : context->decls()) {
+      if (const auto* absl_nullable type = llvm::dyn_cast<T>(decl);
+          type != nullptr) {
+        if (StringViewFromStringRef(type->getName()) == name) {
+          return type;
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
+clang::QualType LookupRsCoreFmtDebug(
+    const clang::ASTContext* absl_nonnull context) {
+  const clang::TranslationUnitDecl* translation_unit =
+      context->getTranslationUnitDecl();
+  const clang::NamespaceDecl* rs =
+      FindDecl<clang::NamespaceDecl>(translation_unit, "rs");
+  if (rs == nullptr) {
+    LOG(WARNING) << "Could not find namespace rs";
+    return clang::QualType();
+  }
+  const clang::NamespaceDecl* core = FindDecl<clang::NamespaceDecl>(rs, "core");
+  if (core == nullptr) {
+    LOG(WARNING) << "Could not find namespace rs::core";
+    return clang::QualType();
+  }
+  const clang::NamespaceDecl* fmt = FindDecl<clang::NamespaceDecl>(core, "fmt");
+  if (fmt == nullptr) {
+    LOG(WARNING) << "Could not find namespace rs::core::fmt";
+    return clang::QualType();
+  }
+  const clang::TypeDecl* debug = FindDecl<clang::TypeDecl>(fmt, "Debug");
+  if (debug == nullptr) {
+    LOG(WARNING) << "Could not find rs::core::fmt::Debug";
+    return clang::QualType();
+  }
+  return context->getTypeDeclType(debug);
+}
+
+const clang::ClassTemplateDecl* absl_nullable LookupCanonicalRsStdImpl(
+    const clang::ASTContext* absl_nonnull context) {
+  const clang::TranslationUnitDecl* translation_unit =
+      context->getTranslationUnitDecl();
+  const clang::NamespaceDecl* rs_std =
+      FindDecl<clang::NamespaceDecl>(translation_unit, "rs_std");
+  if (rs_std == nullptr) {
+    LOG(WARNING) << "Could not find namespace rs_std";
+    return nullptr;
+  }
+  const clang::ClassTemplateDecl* impl =
+      FindDecl<clang::ClassTemplateDecl>(rs_std, "impl");
+  if (impl == nullptr) {
+    LOG(WARNING) << "Could not find rs_std::impl";
+    return nullptr;
+  }
+  return impl->getCanonicalDecl();
+}
+
 }  // namespace
+
+Importer::Importer(Invocation& invocation, clang::ASTContext& ctx,
+                   clang::Sema& sema)
+    : ImportContext(invocation, ctx, sema),
+      mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())),
+      rs_core_fmt_debug_(LookupRsCoreFmtDebug(&ctx)),
+      rs_std_impl_(LookupCanonicalRsStdImpl(&ctx)) {
+  decl_importers_.push_back(std::make_unique<ExistingRustTypeImporter>(*this));
+  decl_importers_.push_back(std::make_unique<ClassTemplateDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<EnumDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<EnumConstantDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<VarDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<FriendDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<FunctionDeclImporter>(*this));
+  decl_importers_.push_back(
+      std::make_unique<FunctionTemplateDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<NamespaceDeclImporter>(*this));
+  decl_importers_.push_back(std::make_unique<TypeAliasImporter>(*this));
+}
 
 // Multiple IR items can be associated with the same source location (e.g. the
 // implicitly defined constructors and assignment operators). To produce
@@ -1206,6 +1317,69 @@ absl::StatusOr<bool> Importer::DetectFormatter(
       std::optional<bool> found,
       DetectFormatterForType(/*lookup=*/type, /*target=*/type));
   return found.value_or(false);
+}
+
+bool Importer::ImplementsCoreFmtDebug(const clang::TypeDecl& type) const {
+  if (rs_core_fmt_debug_.isNull() || rs_std_impl_ == nullptr) {
+    return false;
+  }
+
+  for (const clang::ClassTemplateSpecializationDecl* absl_nonnull spec :
+       rs_std_impl_->specializations()) {
+    const clang::TemplateArgumentList& template_args = spec->getTemplateArgs();
+    if (template_args.size() != 2) {
+      continue;
+    }
+    if (!clang::ASTContext::hasSameType(template_args[0].getAsType(),
+                                        ctx_.getTypeDeclType(&type))) {
+      continue;
+    }
+    if (!clang::ASTContext::hasSameType(template_args[1].getAsType(),
+                                        rs_core_fmt_debug_)) {
+      continue;
+    }
+
+    const clang::CXXRecordDecl* absl_nullable def = spec->getDefinition();
+    if (def == nullptr) {
+      return false;
+    }
+
+    for (const clang::Decl* absl_nonnull decl : def->decls()) {
+      const auto* absl_nullable var = llvm::dyn_cast<clang::VarDecl>(decl);
+      if (var == nullptr || var->getName() != "kIsImplemented") {
+        continue;
+      }
+      const clang::Expr* absl_nullable initializer = var->getAnyInitializer();
+      if (initializer == nullptr) {
+        break;
+      }
+
+      clang::Expr::EvalResult result;
+      if (!initializer->EvaluateAsConstantExpr(result, ctx_) ||
+          !result.Val.isInt()) {
+        break;
+      }
+      return result.Val.getInt().getBoolValue();
+    }
+    return false;
+  }
+
+  return false;
+}
+
+absl::StatusOr<std::optional<bool>> Importer::GetCrubitOverrideDebugAnnotation(
+    const clang::TypeDecl& type) const {
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
+                          GetAnnotateAttrArgs(type, "crubit_override_debug"));
+  if (!args.has_value()) {
+    return std::nullopt;
+  }
+  if (args->size() != 1) {
+    return absl::InvalidArgumentError(
+        "crubit_override_debug annotation must have exactly one argument");
+  }
+  CRUBIT_ASSIGN_OR_RETURN(bool result, GetExprAsBool(*args->front(), ctx_));
+  return result;
 }
 
 absl::StatusOr<std::optional<bool>>

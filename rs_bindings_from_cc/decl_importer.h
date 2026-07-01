@@ -259,6 +259,21 @@ class ImportContext {
   virtual absl::StatusOr<bool> DetectFormatter(
       const clang::TypeDecl& decl) const = 0;
 
+  // Returns true if the given C++ type decl implements `rs::core::fmt::Debug`.
+  virtual bool ImplementsCoreFmtDebug(const clang::TypeDecl& type) const = 0;
+
+  // Returns the sole bool argument of the `crubit_override_debug` annotation on
+  // `decl`.
+  //
+  // Returns `std::nullopt` if the annotation is absent.
+  //
+  // Fails if `crubit_override_debug` is:
+  // * declared inconsistently.
+  // * declared with no or more than one argument.
+  // * declared with a non-bool value.
+  virtual absl::StatusOr<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
+      const clang::TypeDecl& type) const = 0;
+
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //
   // If the decl's name is an identifier, this returns that identifier as-is.

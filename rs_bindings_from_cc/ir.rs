@@ -1309,6 +1309,7 @@ pub struct Record {
     // Lifetime variable names bound by this record.
     #[serde(default)]
     pub lifetime_inputs: Vec<Rc<str>>,
+    pub impl_debug: bool,
     pub detected_formatter: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
@@ -2014,6 +2015,7 @@ pub struct ExistingRustType {
     pub is_same_abi: bool,
     pub id: ItemId,
     pub must_bind: bool,
+    pub impl_debug: bool,
 }
 
 impl GenericItem for ExistingRustType {
