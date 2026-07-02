@@ -1225,7 +1225,7 @@ impl RsTypeKind {
             // that `extern "C"` ABI thunks can pass such types by value.
             //
             // TODO(b/274177296): Return `true` for structs where bindings replicate the type of
-            // all the fields.
+            // all the fields. (This will have CFI implications: see b/526962187)
             RsTypeKind::Record { .. } => false,
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { .. } => unreachable!(),
@@ -2379,6 +2379,7 @@ mod tests {
                 cc_name: Identifier { identifier: "MyEnum".into() },
                 rs_name: Identifier { identifier: "MyEnum".into() },
                 unique_name: "MyEnum".into(),
+                mangled_cc_name: "6MyEnum".into(),
                 id: ItemId::new_for_testing(0),
                 owning_target: BazelLabel("//foo/bar".into()),
                 source_loc: "some_file.h:123".into(),

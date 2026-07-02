@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/namespace/nested_items:nested_items
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -117,6 +117,7 @@ pub mod same_items {
 
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+    #[cfi_encoding = "N4Same10NestedEnumE"]
     ///CRUBIT_ANNOTATE: cpp_type=Same :: NestedEnum
     pub struct NestedEnum(::ffi_11::c_int);
     impl NestedEnum {

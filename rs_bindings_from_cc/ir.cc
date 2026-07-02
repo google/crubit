@@ -1348,6 +1348,7 @@ llvm::json::Value Enum::ToJson() const {
       {"cc_name", cc_name},
       {"rs_name", rs_name},
       {"unique_name", unique_name},
+      {"mangled_cc_name", mangled_cc_name},
       {"id", id},
       {"owning_target", owning_target},
       {"source_loc", source_loc},
@@ -1381,6 +1382,7 @@ flat_proto::Enum Enum::ToFlatProto() const {
   *proto.mutable_cc_name() = cc_name.ToFlatProto();
   *proto.mutable_rs_name() = rs_name.ToFlatProto();
   proto.set_unique_name(unique_name);
+  proto.set_mangled_cc_name(mangled_cc_name);
   proto.set_id(id.value());
   proto.set_owning_target(owning_target.value());
   proto.set_source_loc(source_loc);

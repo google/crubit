@@ -7,10 +7,11 @@
 use arc_anyhow::Result;
 use code_gen_utils::{format_cc_ident, make_rs_ident};
 use database::code_snippet::{
-    integer_constant_to_token_stream, ApiSnippets, DeprecatedAttr, DisplayImpl, GeneratedItem,
-    MustUseAttr, Thunk, ThunkImpl,
+    integer_constant_to_token_stream, ApiSnippets, CfiEncodingAttr, DeprecatedAttr, DisplayImpl,
+    Feature, GeneratedItem, MustUseAttr, Thunk, ThunkImpl,
 };
 use database::BindingsGenerator;
+use flagset::FlagSet;
 use generate_comment::{generate_doc_comment, parse_extended_source_loc};
 use ir::Enum;
 use proc_macro2::TokenStream;
@@ -106,12 +107,14 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
     };
     let deprecated_attr = enum_.deprecated.clone().map(DeprecatedAttr);
     let must_use_attr = enum_.nodiscard.clone().map(MustUseAttr);
+    let cfi_encoding_attr = CfiEncodingAttr(enum_.mangled_cc_name.clone());
     let item = quote! {
         #capture_tags #doc_comment
         #[repr(transparent)]
         #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
         #deprecated_attr
         #must_use_attr
+        #cfi_encoding_attr
         #[doc=#annotation]
         pub struct #bracketed_enum_name(#underlying_type_tokens);
         impl #name {
@@ -133,6 +136,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
         generated_items: HashMap::from([(enum_.id, GeneratedItem::Enum(item))]),
         thunks,
         cc_details,
+        features: FlagSet::from(Feature::cfi_encoding),
         ..Default::default()
     })
 }

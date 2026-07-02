@@ -412,6 +412,7 @@ message Enum {
   string nodiscard = 13;
   string deprecated = 14;
   string doc_comment = 15;
+  string mangled_cc_name = 16;
 }
 
 message GlobalVar {

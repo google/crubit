@@ -1593,6 +1593,7 @@ pub struct Enum {
     pub cc_name: Identifier,
     pub rs_name: Identifier,
     pub unique_name: Rc<str>,
+    pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub source_loc: Rc<str>,

@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/constant:constant
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(cfi_encoding, custom_inner_attributes)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -16,6 +16,7 @@
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "3Foo"]
 ///CRUBIT_ANNOTATE: cpp_type=Foo
 pub struct Foo(::ffi_11::c_uint);
 impl Foo {

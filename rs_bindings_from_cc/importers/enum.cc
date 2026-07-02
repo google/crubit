@@ -191,6 +191,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .cc_name = (*enum_name).cc_identifier,
       .rs_name = (*enum_name).rs_identifier(),
       .unique_name = ictx_.GetUniqueName(*enum_decl),
+      .mangled_cc_name = ictx_.GetMangledName(enum_decl),
       .id = ictx_.GenerateItemId(enum_decl),
       .owning_target = std::move(owning_target),
       .source_loc =
