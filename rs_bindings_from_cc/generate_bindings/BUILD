@@ -310,6 +310,7 @@ rust_library(
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:flagset",  # v0_4
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
     ],

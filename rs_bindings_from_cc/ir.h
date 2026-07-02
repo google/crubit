@@ -927,6 +927,7 @@ struct Enum {
   Identifier cc_name;
   Identifier rs_name;
   std::string unique_name;
+  std::string mangled_cc_name;
   ItemId id;
   BazelLabel owning_target;
   std::string source_loc;

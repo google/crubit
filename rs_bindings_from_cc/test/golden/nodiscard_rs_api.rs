@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:nodiscard_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -67,6 +67,7 @@ impl Default for NoDiscardWithMessage {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[must_use]
+#[cfi_encoding = "13NoDiscardEnum"]
 ///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnum
 pub struct NoDiscardEnum(::ffi_11::c_uint);
 impl NoDiscardEnum {
@@ -86,6 +87,7 @@ impl From<NoDiscardEnum> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[must_use = "You really should use this"]
+#[cfi_encoding = "24NoDiscardEnumWithMessage"]
 ///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnumWithMessage
 pub struct NoDiscardEnumWithMessage(::ffi_11::c_uint);
 impl NoDiscardEnumWithMessage {

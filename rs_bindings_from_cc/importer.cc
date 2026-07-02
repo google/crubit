@@ -1857,13 +1857,13 @@ std::string Importer::GetUniqueName(const clang::Decl& decl) const {
 }
 
 std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
-  if (auto record_decl = clang::dyn_cast<clang::RecordDecl>(named_decl)) {
-    // Mangled record names are used to 1) provide valid Rust identifiers for
-    // C++ template specializations, and 2) help build unique names for virtual
-    // upcast thunks.
+  if (auto tag_decl = clang::dyn_cast<clang::TagDecl>(named_decl)) {
+    // Mangled tag names are used to 1) provide valid Rust identifiers for
+    // C++ template specializations, 2) help build unique names for virtual
+    // upcast thunks, and 3) provide cfi_encoding for structs and enums.
     llvm::SmallString<128> storage;
     llvm::raw_svector_ostream buffer(storage);
-    mangler_->mangleCanonicalTypeName(ctx_.getCanonicalTagType(record_decl),
+    mangler_->mangleCanonicalTypeName(ctx_.getCanonicalTagType(tag_decl),
                                       buffer);
 
     // The Itanium mangler does not provide a way to get the mangled
@@ -1872,16 +1872,17 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
     // prefix.
     constexpr llvm::StringRef kZtsPrefix = "_ZTS";
     CHECK(buffer.str().take_front(4) == kZtsPrefix);
-    llvm::StringRef mangled_record_name =
+    llvm::StringRef mangled_tag_name =
         buffer.str().drop_front(kZtsPrefix.size());
 
     if (clang::isa<clang::ClassTemplateSpecializationDecl>(named_decl)) {
       // We prepend __CcTemplateInst to reduce chances of conflict
       // with regular C and C++ structs.
+      // TODO(b/526962187): this will break if we use these for CFI.
       constexpr llvm::StringRef kCcTemplatePrefix = "__CcTemplateInst";
-      return llvm::formatv("{0}{1}", kCcTemplatePrefix, mangled_record_name);
+      return llvm::formatv("{0}{1}", kCcTemplatePrefix, mangled_tag_name);
     }
-    return std::string(mangled_record_name);
+    return std::string(mangled_tag_name);
   }
 
   if (!mangler_->shouldMangleDeclName(named_decl)) {

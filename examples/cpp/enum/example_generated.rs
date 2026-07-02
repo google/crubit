@@ -6,7 +6,7 @@
 // //examples/cpp/enum:example_lib
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(cfi_encoding, custom_inner_attributes)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -16,6 +16,7 @@
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "5Color"]
 ///CRUBIT_ANNOTATE: cpp_type=Color
 pub struct Color(::ffi_11::c_uint);
 impl Color {
