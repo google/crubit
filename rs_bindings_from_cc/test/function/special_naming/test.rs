@@ -15,3 +15,10 @@ fn asm_name_with_dollar_sign() {
     use special_naming::asm_name_with_dollar_sign;
     expect_eq!(asm_name_with_dollar_sign(), 42);
 }
+
+#[gtest]
+fn test_asm_conflict_funcs() {
+    use special_naming::{my_asm_conflict_func1, my_asm_conflict_func2};
+    expect_eq!(my_asm_conflict_func1().x, 42);
+    expect_eq!(my_asm_conflict_func2().y, 42);
+}

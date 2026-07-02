@@ -101,11 +101,27 @@ impl Default for OtherStruct {
     }
 }
 
-// error: function `my_asm_conflict_func1` could not be bound
-//   Multiple functions use this same linkage name
+#[inline(always)]
+pub fn my_asm_conflict_func1() -> crate::SimpleStruct {
+    unsafe {
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SimpleStruct>::uninit();
+        crate::detail::__rust_thunk__7a42e680_my_asm_conflict_func(
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
+        );
+        __crubit_return.assume_init()
+    }
+}
 
-// error: function `my_asm_conflict_func2` could not be bound
-//   Multiple functions use this same linkage name
+#[inline(always)]
+pub fn my_asm_conflict_func2() -> crate::OtherStruct {
+    unsafe {
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::OtherStruct>::uninit();
+        crate::detail::__rust_thunk__ec124d59_my_asm_conflict_func(
+            &raw mut __crubit_return as *mut ::core::ffi::c_void,
+        );
+        __crubit_return.assume_init()
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -118,6 +134,12 @@ mod detail {
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN12SimpleStructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN11OtherStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk__7a42e680_my_asm_conflict_func(
+            __return: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__ec124d59_my_asm_conflict_func(
+            __return: *mut ::core::ffi::c_void,
+        );
     }
 }
 

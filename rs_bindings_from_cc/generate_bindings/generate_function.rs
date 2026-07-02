@@ -1853,12 +1853,6 @@ pub fn generate_function(
         bail!("Conversion operators are only supported when AssumeThisLifetimes is enabled");
     }
 
-    // TODO(b/528469099): Resolve / avoid thunk name conflicts instead of bailing.  See also
-    // a WIP CL at cl/940801048.
-    if db.has_conflicting_mangled_name(&func) {
-        bail!("Multiple functions use this same linkage name");
-    }
-
     let _scope = db.error_scope(func.id);
     db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
@@ -1990,7 +1984,7 @@ pub fn generate_function(
                 &crate_root_path,
                 &return_type,
                 &param_value_adjustments,
-                thunk_ident(&func),
+                thunk_ident(db, &func),
                 thunk_prepare,
                 thunk_args,
             )
@@ -2144,7 +2138,7 @@ pub fn generate_function(
                     &crate_root_path,
                     &free_return_type,
                     &param_value_adjustments,
-                    thunk_ident(&func),
+                    thunk_ident(db, &func),
                     free_thunk_prepare,
                     free_thunk_args,
                 )?

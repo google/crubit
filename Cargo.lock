@@ -1312,6 +1312,7 @@ dependencies = [
  "rs_bindings_from_cc_database",
  "rs_bindings_from_cc_ir",
  "rs_bindings_from_cc_lifetime_defaults_transform",
+ "rustc-stable-hash",
  "syn",
  "unicode-ident",
 ]
@@ -1613,6 +1614,12 @@ dependencies = [
  "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
 ]
+
+[[package]]
+name = "rustc-stable-hash"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "781442f29170c5c93b7185ad559492601acdc71d5bb0706f5868094f45cfcd08"
 
 [[package]]
 name = "rustix"

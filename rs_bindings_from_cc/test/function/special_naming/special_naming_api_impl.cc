@@ -39,4 +39,18 @@ extern "C" void __rust_thunk___ZN11OtherStructC1Ev(struct OtherStruct* __this) {
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk__7a42e680_my_asm_conflict_func(
+    struct SimpleStruct* __return) {
+  new (__return) auto(my_asm_conflict_func1());
+}
+
+static_assert((struct SimpleStruct (*)()) & ::my_asm_conflict_func1);
+
+extern "C" void __rust_thunk__ec124d59_my_asm_conflict_func(
+    struct OtherStruct* __return) {
+  new (__return) auto(my_asm_conflict_func2());
+}
+
+static_assert((struct OtherStruct (*)()) & ::my_asm_conflict_func2);
+
 #pragma clang diagnostic pop

@@ -30,5 +30,6 @@ database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/dat
 itertools.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true
+rustc_stable_hash.workspace = true
 syn.workspace = true
 unicode-ident.workspace = true

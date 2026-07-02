@@ -194,7 +194,7 @@ pub fn generate_function_thunk(
         .filter(|lifetime| !lifetime.is_elided())
         .collect();
 
-    let thunk_ident = thunk_ident(func);
+    let thunk_ident = thunk_ident(db, func);
 
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents =
@@ -253,14 +253,44 @@ fn ident_fragment_from_mangled_name(mangled_name: &str) -> Cow<'_, str> {
     ident_name.into()
 }
 
-pub fn thunk_ident(func: &Func) -> Ident {
+/// Returns a string with a hash of the given function's mangled name and source location.
+/// Using only 32 bits of the hash improves the readability of the resulting identifiers,
+/// but should still keep collisions fairly unlikely.
+fn compute_disambiguator_hash(func: &Func) -> String {
+    use rustc_stable_hash::{FromStableHash, SipHasher128Hash, StableSipHasher128};
+    use std::hash::Hasher;
+
+    struct Hash64(u64);
+    impl FromStableHash for Hash64 {
+        type Hash = SipHasher128Hash;
+        fn from(SipHasher128Hash([low, high]): Self::Hash) -> Self {
+            Hash64(low ^ high)
+        }
+    }
+
+    let mut hasher = StableSipHasher128::new();
+    hasher.write(func.owning_target.0.as_bytes());
+    hasher.write(func.source_loc.as_bytes());
+    let hash: Hash64 = hasher.finish();
+    format!("{:08x}_", hash.0 as u32)
+}
+
+pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
+    let disambiguator = if db.has_conflicting_mangled_name(func) {
+        compute_disambiguator_hash(func)
+    } else {
+        "".to_string()
+    };
+
+    // TODO(b/528469099): Unify `odr_suffix` and `disambituator` (probably by
+    // removing `odr_suffix` and using `disambituator` for both conditions).
     let odr_suffix = if func.is_member_or_descendant_of_class_template {
         func.owning_target.convert_to_cc_identifier()
     } else {
         String::new()
     };
     format_ident!(
-        "__rust_thunk__{}{odr_suffix}",
+        "__rust_thunk__{disambiguator}{}{odr_suffix}",
         ident_fragment_from_mangled_name(func.mangled_name.as_ref())
     )
 }
@@ -388,7 +418,7 @@ pub fn generate_function_thunk_impl(
     if can_skip_cc_thunk(db, func) {
         return Ok(None);
     }
-    let thunk_ident = thunk_ident(func);
+    let thunk_ident = thunk_ident(db, func);
     let implementation_function = match &func.cc_name {
         UnqualifiedIdentifier::Operator(op) => {
             let name = syn::parse_str::<TokenStream>(&op.name)?;
