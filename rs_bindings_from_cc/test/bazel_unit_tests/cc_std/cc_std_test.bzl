@@ -62,6 +62,7 @@ def _cc_std_test_impl(ctx):
     bindings_toolchain = ctx.toolchains["//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
 
     ctx.actions.run(
+        mnemonic = "CcStdTest",
         inputs = depset(
             direct = [
                 dep[RustBindingsFromCcInfo].dep_variant_info.crate_info.output,
