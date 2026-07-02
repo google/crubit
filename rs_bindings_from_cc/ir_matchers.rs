@@ -166,7 +166,7 @@ mod tests {
     #[gtest]
     #[should_panic(expected = "input:\n\n```\nTreeIR {")]
     fn test_assert_ir_not_matches_panics_on_match() {
-        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {items});
+        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {current_target});
     }
 
     #[gtest]

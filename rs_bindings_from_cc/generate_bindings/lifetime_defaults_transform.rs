@@ -823,18 +823,6 @@ fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
     Ok(transformed)
 }
 
-/// Helper to flatten a reconstructed tree back into a flat vector.
-fn flatten_tree(items: &[Item], output: &mut Vec<Item>) {
-    for item in items {
-        output.push(item.clone());
-        match item {
-            Item::Record(r) => flatten_tree(&r.children, output),
-            Item::Namespace(ns) => flatten_tree(&ns.children, output),
-            _ => {}
-        }
-    }
-}
-
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
 pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
@@ -846,17 +834,9 @@ pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
         top_level_items.insert(target.clone(), transformed_roots);
     }
 
-    let mut items = vec![];
-    for ts in top_level_items.values() {
-        flatten_tree(ts, &mut items);
-    }
-
     Ok(make_ir(TreeIR {
         public_headers: ir.tree_ir().public_headers.clone(),
         current_target: ir.tree_ir().current_target.clone(),
-        items,
-        // TODO(b/523265360): Remove top_level_item_ids in follow-up CL.
-        top_level_item_ids: ir.tree_ir().top_level_item_ids.clone(),
         crate_root_path: ir.tree_ir().crate_root_path.clone(),
         crubit_features: ir.tree_ir().crubit_features.clone(),
         reexported_namespaces: ir.tree_ir().reexported_namespaces.clone(),
