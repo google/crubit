@@ -238,7 +238,7 @@ fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpec
                     Some(CppTypeSpecialization {
                         ty,
                         cpp_type: Rc::from(cpp_type.as_str()),
-                        include_path: attrs.include_path.map(|s| Rc::from(s.as_str())),
+                        include_paths: attrs.include_paths.iter().map(|s| Rc::from(s.as_str())).collect(),
                     })
                 }),
         );

@@ -14,22 +14,49 @@ use syn::parse::{Parse, ParseStream};
 use syn::token;
 use syn::{parse_macro_input, Ident, LitStr};
 
-/// A single `ident="string literal"` pair.
+enum KeyValueValue {
+    Single(LitStr),
+    List(Vec<LitStr>),
+}
+
+impl KeyValueValue {
+    fn single(&self) -> Option<&LitStr> {
+        match self {
+            KeyValueValue::Single(lit) => Some(lit),
+            _ => None,
+        }
+    }
+}
+
+/// A single `ident="string literal"` or `ident=["string literal", ...]` pair.
 struct KeyValue {
     key: Ident,
-    value: LitStr,
+    value: KeyValueValue,
 }
 
 impl Parse for KeyValue {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let key = Ident::parse(input)?;
         token::Eq::parse(input)?;
-        let value = <LitStr as Parse>::parse(input)?;
+        let value = if input.peek(syn::token::Bracket) {
+            let content;
+            syn::bracketed!(content in input);
+            let mut vec = Vec::new();
+            while !content.is_empty() {
+                vec.push(<LitStr as Parse>::parse(&content)?);
+                if !content.is_empty() {
+                    token::Comma::parse(&content)?;
+                }
+            }
+            KeyValueValue::List(vec)
+        } else {
+            KeyValueValue::Single(<LitStr as Parse>::parse(input)?)
+        };
         Ok(KeyValue { key, value })
     }
 }
 
-/// A comma-separated list of `ident="string literal"` pairs.
+/// A comma-separated list of `ident="string literal"` or `ident=["..."]` pairs.
 struct KeyValueList(Vec<KeyValue>);
 
 impl Parse for KeyValueList {
@@ -54,9 +81,13 @@ fn combine(a: &mut syn::Result<()>, b: syn::Error) {
 }
 
 impl KeyValueList {
-    /// Returns an error if any key is duplicated, if an expected key is not present,
+    /// Returns an error if any non-repeatable key is duplicated, if an expected key is not present,
     /// or if extra keys are present.
-    fn check_keys(&self, expected_keys: &[&str]) -> syn::Result<()> {
+    fn check_keys_allow_repeatable(
+        &self,
+        expected_keys: &[&str],
+        repeatable_keys: &[&str],
+    ) -> syn::Result<()> {
         let mut key_seen: HashMap<String, bool> =
             expected_keys.iter().map(|key| (key.to_string(), false)).collect();
         let mut maybe_error = syn::Result::Ok(());
@@ -76,7 +107,9 @@ impl KeyValueList {
                     );
                 }
                 Entry::Occupied(mut already_seen) => {
-                    if *already_seen.get() {
+                    if *already_seen.get()
+                        && !repeatable_keys.contains(&already_seen.key().as_str())
+                    {
                         combine(
                             &mut maybe_error,
                             syn::Error::new(
@@ -98,7 +131,7 @@ impl KeyValueList {
                     &mut maybe_error,
                     syn::Error::new(
                         Span::call_site(),
-                        format!("Expected key `{}` not provided to `crubit_annotate`", key),
+                        format!("Expected key `{}` not provided to `crubit_annotate`, expected one of {:?}", key, expected_keys),
                     ),
                 );
             }
@@ -106,19 +139,34 @@ impl KeyValueList {
         maybe_error
     }
 
-    /// Transforms the this `KeyValueList` into a doc comment before the token stream so that
+    fn check_keys(&self, expected_keys: &[&str]) -> syn::Result<()> {
+        self.check_keys_allow_repeatable(expected_keys, &[])
+    }
+
+    /// Transforms this `KeyValueList` into doc comments before the token stream so that
     /// it can be consumed by Crubit via the Rust HIR.
     ///
-    /// Rust HIR only has exposes user-defined attributes that are either doc comments or tool
+    /// Rust HIR only exposes user-defined attributes that are either doc comments or tool
     /// attributes, and tool attributes are unstable and require an additional crate level attribute
     /// to declare.
     ///
     /// The entries appear as `#[doc="CRUBIT_ANNOTATE: key=value"]`.
     fn to_doc_comments(&self) -> TokenStream {
-        self.0
-            .iter()
-            .map(|entry| key_value_to_doc_comment(&entry.key.to_string(), &entry.value.value()))
-            .collect()
+        let mut tokens = TokenStream::new();
+        for entry in &self.0 {
+            let key_str = entry.key.to_string();
+            match &entry.value {
+                KeyValueValue::Single(val) => {
+                    tokens.extend(key_value_to_doc_comment(&key_str, &val.value()));
+                }
+                KeyValueValue::List(vals) => {
+                    for val in vals {
+                        tokens.extend(key_value_to_doc_comment(&key_str, &val.value()));
+                    }
+                }
+            }
+        }
+        tokens
     }
 }
 
@@ -134,8 +182,16 @@ fn key_value_list_with_keys_to_doc_comment(
     attribute: TokenStream,
     expected_keys: &[&str],
 ) -> TokenStream {
+    key_value_list_with_keys_and_repeatable_to_doc_comment(attribute, expected_keys, &[])
+}
+
+fn key_value_list_with_keys_and_repeatable_to_doc_comment(
+    attribute: TokenStream,
+    expected_keys: &[&str],
+    repeatable_keys: &[&str],
+) -> TokenStream {
     let attribute_args = parse_macro_input!(attribute as KeyValueList);
-    if let Err(error) = attribute_args.check_keys(expected_keys) {
+    if let Err(error) = attribute_args.check_keys_allow_repeatable(expected_keys, repeatable_keys) {
         return TokenStream::from(error.into_compile_error());
     }
     attribute_args.to_doc_comments()
@@ -176,7 +232,11 @@ fn make_prefix_for(body: TokenStream, make_prefix_fn: impl FnOnce() -> TokenStre
 #[proc_macro_attribute]
 pub fn cpp_layout_equivalent(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        key_value_list_with_keys_to_doc_comment(attribute, &["cpp_type", "include_path"])
+        key_value_list_with_keys_and_repeatable_to_doc_comment(
+            attribute,
+            &["cpp_type", "include_path"],
+            &["include_path"],
+        )
     })
 }
 
@@ -198,7 +258,9 @@ pub fn cpp_layout_equivalent(attribute: TokenStream, input: TokenStream) -> Toke
 pub fn cpp_specialization(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
         let attribute_args = parse_macro_input!(attribute as KeyValueList);
-        if let Err(error) = attribute_args.check_keys(&["cpp_type", "include_path"]) {
+        if let Err(error) = attribute_args
+            .check_keys_allow_repeatable(&["cpp_type", "include_path"], &["include_path"])
+        {
             return TokenStream::from(error.into_compile_error());
         }
         let mut tokens = attribute_args.to_doc_comments();
@@ -249,9 +311,10 @@ pub fn cpp_specialization(attribute: TokenStream, input: TokenStream) -> TokenSt
 #[proc_macro_attribute]
 pub fn cpp_convertible(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        key_value_list_with_keys_to_doc_comment(
+        key_value_list_with_keys_and_repeatable_to_doc_comment(
             attribute,
             &["cpp_type", "include_path", "cpp_to_rust_converter", "rust_to_cpp_converter"],
+            &["include_path"],
         )
     })
 }
@@ -326,11 +389,17 @@ pub fn cpp_enum(attribute: TokenStream, input: TokenStream) -> TokenStream {
             return TokenStream::from(error.into_compile_error());
         }
         let [kind] = &attribute_args.0[..] else { unreachable!() };
-        let kind_str = kind.value.value();
+        let Some(lit) = kind.value.single() else {
+            return TokenStream::from(
+                syn::Error::new(kind.key.span(), "Expected a single string literal for `kind`")
+                    .into_compile_error(),
+            );
+        };
+        let kind_str = lit.value();
         if kind_str != "enum" && kind_str != "enum class" {
             return TokenStream::from(
                 syn::Error::new(
-                    kind.value.span(),
+                    lit.span(),
                     format!(
                         "Invalid `kind` value `{}` for `cpp_enum` annotation. \
                         Expected \"enum\" or \"enum class\".",

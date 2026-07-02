@@ -29,7 +29,7 @@ fn test_bridged_type() {
 
         let mut expected_attrs = CrubitAttrs::default();
         expected_attrs.cpp_type = Some(Symbol::intern("CppType"));
-        expected_attrs.include_path = Some(Symbol::intern("crubit/cpp_type.h"));
+        expected_attrs.include_paths = vec![Symbol::intern("crubit/cpp_type.h")];
         expected_attrs.cpp_to_rust_converter = Some(Symbol::intern("cpp_to_rust"));
         expected_attrs.rust_to_cpp_converter = Some(Symbol::intern("rust_to_cpp"));
 
@@ -95,5 +95,22 @@ fn test_cpp_type_multi() {
     run_compiler_for_testing(test_src, |tcx| {
         let attr = attrs_for_named_def(tcx, "SomeStruct");
         assert!(attr.is_err());
+    });
+}
+
+#[test]
+fn test_include_path_multi() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_type=CppType"]
+            #[doc="CRUBIT_ANNOTATE: include_path=crubit/header1.h"]
+            #[doc="CRUBIT_ANNOTATE: include_path=crubit/header2.h"]
+            pub struct SomeStruct;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let attrs = attrs_for_named_def(tcx, "SomeStruct").unwrap();
+        assert_eq!(
+            attrs.include_paths,
+            vec![Symbol::intern("crubit/header1.h"), Symbol::intern("crubit/header2.h")]
+        );
     });
 }

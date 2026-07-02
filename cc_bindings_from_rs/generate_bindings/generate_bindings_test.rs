@@ -649,6 +649,38 @@ fn test_format_bridged_type_pointer_like_errors() {
 }
 
 #[test]
+fn test_bridged_type_multiple_includes() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
+            #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/header1.h"]
+            #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/header2.h"]
+            #[repr(transparent)]
+            pub struct RustType(*const core::ffi::c_void);
+
+            #[unsafe(no_mangle)]
+            pub fn foo(_: RustType) {}
+    "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void foo(cpp_ns::CppType __param_0);
+            }
+        );
+        let includes: Vec<_> = result
+            .main_api
+            .prereqs
+            .includes
+            .iter()
+            .map(|inc| quote! { #inc }.to_string())
+            .collect();
+        assert!(includes.iter().any(|s| s.contains("cpp_ns/header1.h")));
+        assert!(includes.iter().any(|s| s.contains("cpp_ns/header2.h")));
+    });
+}
+
+#[test]
 fn test_format_brided_type_deduplicate_extern_c_decls() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]

@@ -12,6 +12,19 @@
 #[crubit_annotate::cpp_layout_equivalent(cpp_type = "some_str", include_path = "some/path.h")]
 struct LayoutEquivalent {}
 
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "some_str",
+    include_path = "some/path1.h",
+    include_path = "some/path2.h"
+)]
+struct LayoutEquivalentMultipleIncludesRepeated {}
+
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "some_str",
+    include_path = ["some/path1.h", "some/path2.h"]
+)]
+struct LayoutEquivalentMultipleIncludesArray {}
+
 #[crubit_annotate::cpp_convertible(
     cpp_type = "some_str",
     include_path = "some/path.h",

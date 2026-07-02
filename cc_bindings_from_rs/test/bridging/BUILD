@@ -147,7 +147,10 @@ rust_library(
 
 cc_bindings_from_rust_library_config(
     name = "mapped_cpp_type_hint",
-    extra_cc_hdrs = ["mapped_cpp_type_def.h"],
+    extra_cc_hdrs = [
+        "mapped_cpp_type_def.h",
+        "mapped_cpp_type_multiple_includes.h",
+    ],
 )
 
 cc_bindings_from_rust(

@@ -24,3 +24,19 @@ impl core::fmt::Debug for MappedCppType {
         write!(f, "MappedCppType({})", self.0)
     }
 }
+
+#[cpp_layout_equivalent(
+    cpp_type = "mapped_cpp_type::MultiHeaderType",
+    include_path = "cc_bindings_from_rs/test/bridging/mapped_cpp_type_def.h",
+    include_path = "cc_bindings_from_rs/test/bridging/mapped_cpp_type_multiple_includes.h"
+)]
+#[repr(C)]
+pub struct MultiHeaderType {
+    pub base: MappedCppType,
+    pub extra: i32,
+}
+
+#[unsafe(no_mangle)]
+pub fn take_multi_header(x: MultiHeaderType) -> MultiHeaderType {
+    x
+}

@@ -265,7 +265,7 @@ pub fn format_ty_for_cc<'tcx>(
                 quote! {}
             });
         let mut prereqs = CcPrerequisites::default();
-        if let Some(include_path) = &specialization.include_path {
+        for include_path in &specialization.include_paths {
             prereqs.includes.insert(CcInclude::from_path(include_path.as_ref()));
         }
         return Ok(CcSnippet { tokens, prereqs });
@@ -484,8 +484,10 @@ pub fn format_ty_for_cc<'tcx>(
                     "Bridged types must appear in a bridgeable type location"
                 );
                 match bridged_type {
-                    BridgedType::Legacy { include_path, cpp_type, .. } => {
-                        prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
+                    BridgedType::Legacy { include_paths, cpp_type, .. } => {
+                        for include_path in include_paths {
+                            prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
+                        }
 
                         let cpp_type_str = match &cpp_type {
                             CcType::Other(symbol) => symbol.as_str(),
@@ -1125,8 +1127,8 @@ pub enum BridgedType<'tcx> {
     Legacy {
         /// The spelling of the C++ type of the item.
         cpp_type: CcType,
-        /// Path to the header file that declares the type specified in `cpp_type`.
-        include_path: Symbol,
+        /// Paths to the header files that declare the type specified in `cpp_type`.
+        include_paths: Vec<Symbol>,
         conversion_info: BridgedTypeConversionInfo,
     },
     Composable(Box<BridgedTypeComposable<'tcx>>),
@@ -1230,12 +1232,12 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     BridgingAttrs::Composable { abi_rust, abi_cpp, .. } => {
                         return crubit_abi_type_from_bridged_adt(db, abi_rust, abi_cpp, substs);
                     }
-                    BridgingAttrs::JustCppType { include_path, cpp_type } => {
+                    BridgingAttrs::JustCppType { include_paths, cpp_type } => {
                         let fully_qualified_name = db.symbol_canonical_name(adt.did()).ok_or_else(|| {
                             anyhow!("Failed to get canonical name for {:?}", adt.did())
                         })?;
                         let mut prereqs = CcPrerequisites::default();
-                        if let Some(include_path) = include_path {
+                        for include_path in &include_paths {
                             prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
                         }
                         return Ok(CrubitAbiTypeWithCcPrereqs {
@@ -1457,8 +1459,8 @@ fn is_manually_annotated_bridged_adt<'tcx>(
     };
 
     match bridging_attrs {
-        BridgingAttrs::JustCppType { include_path, cpp_type } => {
-            let Some(include_path) = include_path else {
+        BridgingAttrs::JustCppType { include_paths, cpp_type } => {
+            if include_paths.is_empty() {
                 // NOTE: this branch is surprising, and the annotations should probably be rewritten
                 // to be more explicit.
                 //
@@ -1466,7 +1468,7 @@ fn is_manually_annotated_bridged_adt<'tcx>(
                 // a pointer-like transmute bridged type rather than a non-bridged type.
                 // When no include path is specified, we treat the type as non-bridged.
                 return Ok(None);
-            };
+            }
 
             let ts = cpp_type.as_str().parse::<TokenStream>().unwrap_or_else(|err| {
                 panic!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}: {err}")
@@ -1483,19 +1485,19 @@ fn is_manually_annotated_bridged_adt<'tcx>(
             let is_pointer = matches!(cpp_type_cc, CcType::Pointer { .. });
             Ok(Some(BridgedType::Legacy {
                 cpp_type: cpp_type_cc,
-                include_path,
+                include_paths,
                 conversion_info: BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer },
             }))
         }
         BridgingAttrs::ExternCFuncConverters {
-            include_path,
+            include_paths,
             cpp_type,
             cpp_to_rust_converter,
             rust_to_cpp_converter,
         } => {
-            let Some(include_path) = include_path else {
+            if include_paths.is_empty() {
                 panic!("Failed to parse CrubitAttrs.include_path for {ty} = {cpp_type}: missing include_path")
-            };
+            }
 
             let ts = cpp_type.as_str().parse::<TokenStream>().unwrap_or_else(|err| {
                 panic!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}: {err}")
@@ -1506,7 +1508,7 @@ fn is_manually_annotated_bridged_adt<'tcx>(
                     Some(cv) => CcType::Pointer { cpp_type, cv },
                     None => CcType::Other(cpp_type),
                 },
-                include_path,
+                include_paths,
                 conversion_info: BridgedTypeConversionInfo::ExternCFuncConverters {
                     cpp_to_rust_converter,
                     rust_to_cpp_converter,

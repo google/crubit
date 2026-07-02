@@ -8,7 +8,7 @@ use crate::generate_struct_and_union::{
     scalar_value_to_string,
 };
 use crate::generate_unsupported_def;
-use arc_anyhow::{bail, Error, Result};
+use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, EnumSpecializationKind, FormattedTy,
@@ -1616,12 +1616,8 @@ fn add_specialization_prereqs<'tcx>(
     // header. Instead, we must explicitly add the annotated `include_path` to prerequisites.
     if canonical_name.unqualified.cpp_type.is_some() {
         let attrs = crubit_attr::get_attrs(db.tcx(), def_id)?;
-        if let Some(path) = attrs.include_path {
+        for path in &attrs.include_paths {
             prereqs.includes.insert(CcInclude::from_path(path.as_str()));
-        } else {
-            // The C++ type is already available (e.g., a fundamental type or from a header
-            // injected globally via command-line flags). No additional #include, forward
-            // declaration, or def dependency is needed.
         }
     } else if canonical_name.krate_num == db.source_crate_num() {
         prereqs.fwd_decls.insert(def_id);

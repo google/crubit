@@ -41,9 +41,9 @@ pub struct CrubitAttrs {
     ///   #[doc="CRUBIT_ANNOTATE: cpp_type=std::basic_string<char>"]
     pub cpp_type: Option<Symbol>,
 
-    /// Path to the header file that declares the type specified in `cpp_type`.
+    /// Paths to the header files that declare the type specified in `cpp_type`.
     ///
-    /// If specified, the header file will be added as an #include directive to
+    /// If specified, the header files will be added as #include directives to
     /// the generated bindings.
     ///
     /// For example, the following annotation indicates that the C++ type of
@@ -52,7 +52,7 @@ pub struct CrubitAttrs {
     ///
     ///   #[doc="CRUBIT_ANNOTATE: cpp_type=std::basic_string<char>"]
     ///   #[doc="CRUBIT_ANNOTATE: include_path=<string>]`
-    pub include_path: Option<Symbol>,
+    pub include_paths: Vec<Symbol>,
 
     /// Whether the annotated item is a specialization of another generic
     /// layout-compatible type. For example, `StatusOr<()>` mapping to C++ `absl::Status`.
@@ -145,7 +145,7 @@ impl CrubitAttrs {
         Ok(match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type,
             CrubitAttrs::CPP_NAME => self.cpp_name,
-            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_path,
+            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_paths.first().copied(),
             CrubitAttrs::CPP_ENUM => self.cpp_enum,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
@@ -162,7 +162,11 @@ impl CrubitAttrs {
         match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type = symbol,
             CrubitAttrs::CPP_NAME => self.cpp_name = symbol,
-            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_path = symbol,
+            CrubitAttrs::CPP_TYPE_INCLUDE => {
+                if let Some(s) = symbol {
+                    self.include_paths.push(s);
+                }
+            }
             CrubitAttrs::CPP_ENUM => self.cpp_enum = symbol,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
@@ -184,7 +188,7 @@ impl CrubitAttrs {
         match self {
             Self {
                 cpp_type: Some(cpp_type),
-                include_path,
+                include_paths,
                 cpp_to_rust_converter,
                 rust_to_cpp_converter,
                 bridge_abi_rust: None,
@@ -193,14 +197,14 @@ impl CrubitAttrs {
             } => match (cpp_to_rust_converter, rust_to_cpp_converter) {
                 (Some(cpp_to_rust_converter), Some(rust_to_cpp_converter)) => {
                     Ok(Some(BridgingAttrs::ExternCFuncConverters {
-                        include_path: *include_path,
+                        include_paths: include_paths.clone(),
                         cpp_type: *cpp_type,
                         cpp_to_rust_converter: *cpp_to_rust_converter,
                         rust_to_cpp_converter: *rust_to_cpp_converter,
                     }))
                 }
                 (None, None) => Ok(Some(BridgingAttrs::JustCppType {
-                    include_path: *include_path,
+                    include_paths: include_paths.clone(),
                     cpp_type: *cpp_type,
                 })),
                 _ => bail!(
@@ -272,11 +276,11 @@ impl CrubitAttrs {
 #[derive(Debug)]
 pub enum BridgingAttrs {
     JustCppType {
-        include_path: Option<Symbol>,
+        include_paths: Vec<Symbol>,
         cpp_type: Symbol,
     },
     ExternCFuncConverters {
-        include_path: Option<Symbol>,
+        include_paths: Vec<Symbol>,
         cpp_type: Symbol,
         cpp_to_rust_converter: Symbol,
         rust_to_cpp_converter: Symbol,
@@ -366,11 +370,15 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
         // Remove optional whitespace (e.g. `key = "value"` vs. `key="value"`).
         let key = key.trim();
         let value = value.trim();
-        ensure!(
-            crubit_attrs.get_attr(key)?.is_none(),
-            format!("Unexpected duplicate Crubit attribute: {key}=...")
-        );
-        crubit_attrs.set_attr(key, Some(Symbol::intern(value)))?;
+        if key == CrubitAttrs::CPP_TYPE_INCLUDE {
+            crubit_attrs.include_paths.push(Symbol::intern(value));
+        } else {
+            ensure!(
+                crubit_attrs.get_attr(key)?.is_none(),
+                format!("Unexpected duplicate Crubit attribute: {key}=...")
+            );
+            crubit_attrs.set_attr(key, Some(Symbol::intern(value)))?;
+        }
     }
     Ok(crubit_attrs)
 }

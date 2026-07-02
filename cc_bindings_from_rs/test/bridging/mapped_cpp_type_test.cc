@@ -16,5 +16,15 @@ TEST(MappedCppTypeTest, EqTraitGenerated) {
   EXPECT_TRUE((rs_std::impl<MappedCppType, rs::core::cmp::Eq>::kIsImplemented));
 }
 
+TEST(MappedCppTypeTest, MultiHeaderTypeGenerated) {
+  // Verify that MultiHeaderType compiles cleanly when Crubit includes both
+  // mapped_cpp_type_def.h and mapped_cpp_type_multiple_includes.h into
+  // mapped_cpp_type.h.
+  MultiHeaderType val{.base = {.value = 123}, .extra = 456};
+  MultiHeaderType res = take_multi_header(val);
+  EXPECT_EQ(res.base.value, 123);
+  EXPECT_EQ(res.extra, 456);
+}
+
 }  // namespace
 }  // namespace mapped_cpp_type
