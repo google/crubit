@@ -58,14 +58,14 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   }
   ~Vec() noexcept;
   ::std::int32_t* data() noexcept;
-  const ::std::int32_t* data() const noexcept;
+  ::std::int32_t const* data() const noexcept;
   std::size_t size() const noexcept;
   ::std::int32_t& operator[](std::size_t index) noexcept;
-  const ::std::int32_t& operator[](std::size_t index) const noexcept;
+  ::std::int32_t const& operator[](std::size_t index) const noexcept;
   ::std::int32_t* begin() noexcept;
-  const ::std::int32_t* begin() const noexcept;
+  ::std::int32_t const* begin() const noexcept;
   ::std::int32_t* end() noexcept;
-  const ::std::int32_t* end() const noexcept;
+  ::std::int32_t const* end() const noexcept;
 
  private:
   unsigned char storage_[24];
@@ -129,14 +129,14 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   }
   ~Vec() noexcept;
   ::std::uint8_t* data() noexcept;
-  const ::std::uint8_t* data() const noexcept;
+  ::std::uint8_t const* data() const noexcept;
   std::size_t size() const noexcept;
   ::std::uint8_t& operator[](std::size_t index) noexcept;
-  const ::std::uint8_t& operator[](std::size_t index) const noexcept;
+  ::std::uint8_t const& operator[](std::size_t index) const noexcept;
   ::std::uint8_t* begin() noexcept;
-  const ::std::uint8_t* begin() const noexcept;
+  ::std::uint8_t const* begin() const noexcept;
   ::std::uint8_t* end() noexcept;
-  const ::std::uint8_t* end() const noexcept;
+  ::std::uint8_t const* end() const noexcept;
 
  private:
   unsigned char storage_[24];
@@ -262,7 +262,7 @@ inline ::std::int32_t* rs_std::Vec<::std::int32_t>::data() noexcept {
   return std::bit_cast<::std::int32_t*>(
       *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
 }
-inline const ::std::int32_t* rs_std::Vec<::std::int32_t>::data()
+inline ::std::int32_t const* rs_std::Vec<::std::int32_t>::data()
     const noexcept {
   return std::bit_cast<::std::int32_t*>(
       *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
@@ -276,7 +276,7 @@ inline ::std::int32_t& rs_std::Vec<::std::int32_t>::operator[](
   CRUBIT_CHECK(index < size());
   return data()[index];
 }
-inline const ::std::int32_t& rs_std::Vec<::std::int32_t>::operator[](
+inline ::std::int32_t const& rs_std::Vec<::std::int32_t>::operator[](
     std::size_t index) const noexcept {
   CRUBIT_CHECK(index < size());
   return data()[index];
@@ -284,14 +284,14 @@ inline const ::std::int32_t& rs_std::Vec<::std::int32_t>::operator[](
 inline ::std::int32_t* rs_std::Vec<::std::int32_t>::begin() noexcept {
   return data();
 }
-inline const ::std::int32_t* rs_std::Vec<::std::int32_t>::begin()
+inline ::std::int32_t const* rs_std::Vec<::std::int32_t>::begin()
     const noexcept {
   return data();
 }
 inline ::std::int32_t* rs_std::Vec<::std::int32_t>::end() noexcept {
   return data() + size();
 }
-inline const ::std::int32_t* rs_std::Vec<::std::int32_t>::end() const noexcept {
+inline ::std::int32_t const* rs_std::Vec<::std::int32_t>::end() const noexcept {
   return data() + size();
 }
 #endif
@@ -351,7 +351,7 @@ inline ::std::uint8_t* rs_std::Vec<::std::uint8_t>::data() noexcept {
   return std::bit_cast<::std::uint8_t*>(
       *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
 }
-inline const ::std::uint8_t* rs_std::Vec<::std::uint8_t>::data()
+inline ::std::uint8_t const* rs_std::Vec<::std::uint8_t>::data()
     const noexcept {
   return std::bit_cast<::std::uint8_t*>(
       *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
@@ -365,7 +365,7 @@ inline ::std::uint8_t& rs_std::Vec<::std::uint8_t>::operator[](
   CRUBIT_CHECK(index < size());
   return data()[index];
 }
-inline const ::std::uint8_t& rs_std::Vec<::std::uint8_t>::operator[](
+inline ::std::uint8_t const& rs_std::Vec<::std::uint8_t>::operator[](
     std::size_t index) const noexcept {
   CRUBIT_CHECK(index < size());
   return data()[index];
@@ -373,14 +373,14 @@ inline const ::std::uint8_t& rs_std::Vec<::std::uint8_t>::operator[](
 inline ::std::uint8_t* rs_std::Vec<::std::uint8_t>::begin() noexcept {
   return data();
 }
-inline const ::std::uint8_t* rs_std::Vec<::std::uint8_t>::begin()
+inline ::std::uint8_t const* rs_std::Vec<::std::uint8_t>::begin()
     const noexcept {
   return data();
 }
 inline ::std::uint8_t* rs_std::Vec<::std::uint8_t>::end() noexcept {
   return data() + size();
 }
-inline const ::std::uint8_t* rs_std::Vec<::std::uint8_t>::end() const noexcept {
+inline ::std::uint8_t const* rs_std::Vec<::std::uint8_t>::end() const noexcept {
   return data() + size();
 }
 #endif

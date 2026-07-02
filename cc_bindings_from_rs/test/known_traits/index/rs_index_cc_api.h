@@ -178,15 +178,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   }
   ~Vec() noexcept;
   ::rs::alloc::string::String* data() noexcept;
-  const ::rs::alloc::string::String* data() const noexcept;
+  ::rs::alloc::string::String const* data() const noexcept;
   std::size_t size() const noexcept;
   ::rs::alloc::string::String& operator[](std::size_t index) noexcept;
-  const ::rs::alloc::string::String& operator[](
+  ::rs::alloc::string::String const& operator[](
       std::size_t index) const noexcept;
   ::rs::alloc::string::String* begin() noexcept;
-  const ::rs::alloc::string::String* begin() const noexcept;
+  ::rs::alloc::string::String const* begin() const noexcept;
   ::rs::alloc::string::String* end() noexcept;
-  const ::rs::alloc::string::String* end() const noexcept;
+  ::rs::alloc::string::String const* end() const noexcept;
 
  private:
   unsigned char storage_[24];
@@ -492,7 +492,7 @@ rs_std::Vec<::rs::alloc::string::String>::data() noexcept {
   return std::bit_cast<::rs::alloc::string::String*>(
       *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
 }
-inline const ::rs::alloc::string::String*
+inline ::rs::alloc::string::String const*
 rs_std::Vec<::rs::alloc::string::String>::data() const noexcept {
   return std::bit_cast<::rs::alloc::string::String*>(
       *reinterpret_cast<const std::uintptr_t*>(&storage_[8]));
@@ -507,7 +507,7 @@ inline ::rs::alloc::string::String& rs_std::Vec<
   CRUBIT_CHECK(index < size());
   return data()[index];
 }
-inline const ::rs::alloc::string::String& rs_std::Vec<
+inline ::rs::alloc::string::String const& rs_std::Vec<
     ::rs::alloc::string::String>::operator[](std::size_t index) const noexcept {
   CRUBIT_CHECK(index < size());
   return data()[index];
@@ -516,7 +516,7 @@ inline ::rs::alloc::string::String*
 rs_std::Vec<::rs::alloc::string::String>::begin() noexcept {
   return data();
 }
-inline const ::rs::alloc::string::String*
+inline ::rs::alloc::string::String const*
 rs_std::Vec<::rs::alloc::string::String>::begin() const noexcept {
   return data();
 }
@@ -524,7 +524,7 @@ inline ::rs::alloc::string::String*
 rs_std::Vec<::rs::alloc::string::String>::end() noexcept {
   return data() + size();
 }
-inline const ::rs::alloc::string::String*
+inline ::rs::alloc::string::String const*
 rs_std::Vec<::rs::alloc::string::String>::end() const noexcept {
   return data() + size();
 }

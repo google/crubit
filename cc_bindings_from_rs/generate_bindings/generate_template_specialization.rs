@@ -940,14 +940,14 @@ fn specialize_vec<'tcx>(
 
     let accessors_decl = quote! {
         #inner_ty_cc* data() noexcept;
-        const #inner_ty_cc* data() const noexcept;
+        #inner_ty_cc const* data() const noexcept;
         std::size_t size() const noexcept;
         #inner_ty_cc& operator[](std::size_t index) noexcept;
-        const #inner_ty_cc& operator[](std::size_t index) const noexcept;
+        #inner_ty_cc const& operator[](std::size_t index) const noexcept;
         #inner_ty_cc* begin() noexcept;
-        const #inner_ty_cc* begin() const noexcept;
+        #inner_ty_cc const* begin() const noexcept;
         #inner_ty_cc* end() noexcept;
-        const #inner_ty_cc* end() const noexcept;
+        #inner_ty_cc const* end() const noexcept;
     };
 
     let full_self_ty = quote! { rs_std::Vec<#inner_ty_cc> };
@@ -956,7 +956,7 @@ fn specialize_vec<'tcx>(
             return std::bit_cast<#inner_ty_cc*>(
                 *reinterpret_cast<const std::uintptr_t*>(&storage_[#ptr_offset]));
         }
-        inline const #inner_ty_cc* #full_self_ty::data() const noexcept {
+        inline #inner_ty_cc const* #full_self_ty::data() const noexcept {
             return std::bit_cast<#inner_ty_cc*>(
                 *reinterpret_cast<const std::uintptr_t*>(&storage_[#ptr_offset]));
         }
@@ -968,14 +968,14 @@ fn specialize_vec<'tcx>(
             CRUBIT_CHECK(index < size());
             return data()[index];
         }
-        inline const #inner_ty_cc& #full_self_ty::operator[](std::size_t index) const noexcept {
+        inline #inner_ty_cc const& #full_self_ty::operator[](std::size_t index) const noexcept {
             CRUBIT_CHECK(index < size());
             return data()[index];
         }
         inline #inner_ty_cc* #full_self_ty::begin() noexcept { return data(); }
-        inline const #inner_ty_cc* #full_self_ty::begin() const noexcept { return data(); }
+        inline #inner_ty_cc const* #full_self_ty::begin() const noexcept { return data(); }
         inline #inner_ty_cc* #full_self_ty::end() noexcept { return data() + size(); }
-        inline const #inner_ty_cc* #full_self_ty::end() const noexcept { return data() + size(); }
+        inline #inner_ty_cc const* #full_self_ty::end() const noexcept { return data() + size(); }
     };
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
