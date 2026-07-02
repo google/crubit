@@ -953,3 +953,24 @@ pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKin
 
     format!("__crubit_thunk_{}{}", target_path_mangled_hash, escape_non_identifier_chars(&details))
 }
+
+pub(crate) fn trait_method_thunk_name<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_id: DefId,
+    method_name: &str,
+    self_ty: Ty<'tcx>,
+    type_args: &[Ty<'tcx>],
+) -> Result<String> {
+    let tcx = db.tcx();
+    let method = tcx
+        .associated_items(trait_id)
+        .in_definition_order()
+        .find(|item| {
+            item.name().as_str() == method_name && matches!(item.kind, ty::AssocKind::Fn { .. })
+        })
+        .ok_or_else(|| {
+            anyhow!("Trait `{}` missing method `{method_name}`", tcx.def_path_str(trait_id))
+        })?;
+    let substs = tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from));
+    Ok(make_thunk_name(db, ThunkKind::TraitMethod { method, substs }))
+}

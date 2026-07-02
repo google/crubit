@@ -25,6 +25,12 @@
 #define crubit_nonnull
 #endif
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#define CRUBIT_UNREACHABLE() __assume(false)
+#else
+#define CRUBIT_UNREACHABLE() __builtin_unreachable()
+#endif
+
 // Style waiver granted in crubit.rs-style-waiver-attribute-annotate
 #if defined(__clang__) && __has_cpp_attribute(clang::annotate) && \
     __has_cpp_attribute(clang::annotate_type)
