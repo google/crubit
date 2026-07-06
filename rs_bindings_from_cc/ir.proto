@@ -363,7 +363,6 @@ message Record {
   RecordType record_type = 28;
   bool is_aggregate = 29;
   bool is_canonical_alias = 30;
-  repeated int64 child_item_ids = 31;
   int64 enclosing_item_id = 32;
   bool must_bind = 33;
   bool overloads_operator_delete = 34;
@@ -491,7 +490,6 @@ message Namespace {
   int64 canonical_namespace_id = 5;
   string unknown_attr = 6;
   string owning_target = 7;
-  repeated int64 child_item_ids = 8;
   int64 enclosing_item_id = 9;
   bool is_inline = 10;
   bool must_bind = 11;

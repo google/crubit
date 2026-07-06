@@ -1300,7 +1300,6 @@ pub struct Record {
     pub record_type: RecordType,
     pub is_aggregate: bool,
     pub is_canonical_alias: bool,
-    pub child_item_ids: Vec<ItemId>,
     pub enclosing_item_id: Option<ItemId>,
     pub must_bind: bool,
     /// Whether this type has an overload of `operator delete`.
@@ -1921,8 +1920,6 @@ pub struct Namespace {
     /// A human-readable list of attributes that Crubit doesn't understand.
     pub unknown_attr: Option<Rc<str>>,
     pub owning_target: BazelLabel,
-    #[serde(default)]
-    pub child_item_ids: Vec<ItemId>,
     pub enclosing_item_id: Option<ItemId>,
     pub is_inline: bool,
     pub must_bind: bool,
@@ -2771,7 +2768,6 @@ mod tests {
                             owning_target: "//foo:bar",
                             is_inline: false,
                             must_bind: false,
-                            child_item_ids: [2],
                             children: [__ {
                                 namespace_decl: __ {
                                     cc_name: __ { identifier: "nsB" },
@@ -2782,7 +2778,6 @@ mod tests {
                                     owning_target: "//foo:bar",
                                     is_inline: false,
                                     must_bind: false,
-                                    child_item_ids: [3],
                                     children: [__ {
                                         comment: __ { text: "hello", id: 3, must_bind: false }
                                     }]
@@ -2817,7 +2812,6 @@ mod tests {
                                 owning_target: "//foo:bar",
                                 is_inline: false,
                                 must_bind: false,
-                                child_item_ids: [200],
                                 children: [__ {
                                     comment: __ { text: "hello", id: 200, must_bind: false }
                                 }]
@@ -2833,7 +2827,6 @@ mod tests {
                                 owning_target: "//foo:bar",
                                 is_inline: false,
                                 must_bind: false,
-                                child_item_ids: [200],
                                 children: [__ {
                                     comment: __ { text: "hello", id: 200, must_bind: false }
                                 }]

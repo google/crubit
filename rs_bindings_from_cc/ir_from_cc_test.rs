@@ -2803,10 +2803,10 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
     assert_eq!(1, ir.namespaces().count());
     let ns = ir.namespaces().next().unwrap();
     assert_eq!("MyNamespace", ns.rs_name.identifier.as_ref());
-    assert_eq!(1, ns.child_item_ids.len());
+    assert_eq!(1, ns.children.len());
 
     let ns_id = ns.id;
-    let child_id = ns.child_item_ids[0];
+    let child_id = ns.children[0].id();
     assert_ir_matches!(
         ir,
         quote! {
@@ -2818,7 +2818,6 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
                     cc_name: "MyNamespace",
                     rs_name: "MyNamespace" ...
                     id: ItemId(#ns_id) ...
-                    child_item_ids: [ItemId(#child_id)] ...
                     enclosing_item_id: None ...
                     children: [IncompleteRecord(IncompleteRecord {
                         cc_name: "FwdDeclared" ...
@@ -3563,8 +3562,7 @@ fn test_record_items() {
     .unwrap();
 
     let record = ir.records().find(|i| i.rs_name == "TopLevelStruct").unwrap();
-    let record_items =
-        record.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let record_items = record.children.iter().collect_vec();
 
     assert_items_match!(
         record_items,
@@ -3635,8 +3633,7 @@ fn test_namespaces() {
 
     let namespace =
         ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
-    let namespace_items =
-        namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let namespace_items = namespace.children.iter().collect_vec();
 
     assert_ir_matches!(
         ir,
@@ -3693,8 +3690,7 @@ fn test_nested_namespace_definition() {
 
     let namespace =
         ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
-    let namespace_items =
-        namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let namespace_items = namespace.children.iter().collect_vec();
 
     assert_items_match!(
         namespace_items,
@@ -3704,8 +3700,7 @@ fn test_nested_namespace_definition() {
     );
 
     let inner_namespace = ir.namespaces().find(|n| n.rs_name == ir_id("inner")).unwrap();
-    let inner_namespace_items =
-        inner_namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let inner_namespace_items = inner_namespace.children.iter().collect_vec();
 
     assert_items_match!(
         inner_namespace_items,
@@ -3741,23 +3736,20 @@ fn test_enclosing_item_ids() {
 
     let namespace =
         ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
-    let namespace_items: Vec<&Item> =
-        namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let namespace_items: Vec<&Item> = namespace.children.iter().collect_vec();
 
     assert_eq!(namespace.enclosing_item_id, None);
     assert!(namespace_items.iter().all(|item| item.enclosing_item_id() == Some(namespace.id)));
 
     let inner_namespace = ir.namespaces().find(|n| n.rs_name == ir_id("inner")).unwrap();
-    let inner_namespace_items: Vec<&Item> =
-        inner_namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let inner_namespace_items: Vec<&Item> = inner_namespace.children.iter().collect_vec();
 
     assert!(inner_namespace_items
         .iter()
         .all(|item| item.enclosing_item_id() == Some(inner_namespace.id)));
 
     let record = ir.records().find(|r| r.rs_name.identifier.as_ref() == "S").unwrap();
-    let record_items: Vec<&Item> =
-        record.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    let record_items: Vec<&Item> = record.children.iter().collect_vec();
     for item in record_items.iter() {
         match item {
             Item::UnsupportedItem(_) => {}
@@ -4080,11 +4072,8 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
         .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("f")))
         .collect_vec();
     assert_eq!(1, functions.len());
-    let function_id = functions[0].id;
 
-    // The function should appear only once.  This assert not only verifies that the
-    // `Func` item appears only once, but it also verifies that it also only
-    // appears once in `child_item_ids`.
+    // The function should appear only once.
     assert_ir_matches!(
         ir,
         quote! {
@@ -4097,7 +4086,6 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
                         cc_name: "ns",
                         rs_name: "ns",
                         ...
-                        child_item_ids: [ItemId(#function_id)],
                         enclosing_item_id: None,
                         ...
                         children: [Func(Func {
@@ -4112,8 +4100,6 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
                     Namespace(Namespace {
                         cc_name: "ns",
                         rs_name: "ns",
-                        ...
-                        child_item_ids: [],
                         ...
                         children: [],
                         ...

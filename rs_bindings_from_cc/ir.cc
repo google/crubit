@@ -1182,12 +1182,6 @@ flat_proto::OwnedPtrConfig OwnedPtrConfig::ToFlatProto() const {
 }
 
 llvm::json::Value Record::ToJson() const {
-  std::vector<llvm::json::Value> json_item_ids;
-  json_item_ids.reserve(child_item_ids.size());
-  for (const auto& id : child_item_ids) {
-    json_item_ids.push_back(id.value());
-  }
-
   llvm::json::Object record{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
@@ -1218,7 +1212,6 @@ llvm::json::Value Record::ToJson() const {
       {"record_type", RecordTypeToString(record_type)},
       {"is_aggregate", is_aggregate},
       {"is_canonical_alias", is_canonical_alias},
-      {"child_item_ids", std::move(json_item_ids)},
       // TODO(b/513299904): Should remove once protobuf IR rollout is complete.
       {"children",
        [&] {
@@ -1295,9 +1288,6 @@ flat_proto::Record Record::ToFlatProto() const {
   proto.set_record_type(crubit::ToFlatProto(record_type));
   proto.set_is_aggregate(is_aggregate);
   proto.set_is_canonical_alias(is_canonical_alias);
-  proto.mutable_child_item_ids()->Reserve(child_item_ids.size());
-  for (const auto& child : child_item_ids)
-    proto.add_child_item_ids(child.value());
   proto.mutable_children()->Reserve(children.size());
   for (const auto& child : children) {
     *proto.add_children() = crubit::ToFlatProto(*child);
@@ -1649,12 +1639,6 @@ flat_proto::Comment Comment::ToFlatProto() const {
 }
 
 llvm::json::Value Namespace::ToJson() const {
-  std::vector<llvm::json::Value> json_item_ids;
-  json_item_ids.reserve(child_item_ids.size());
-  for (const auto& id : child_item_ids) {
-    json_item_ids.push_back(id.value());
-  }
-
   llvm::json::Object ns{
       {"cc_name", cc_name},
       {"rs_name", rs_name},
@@ -1663,7 +1647,6 @@ llvm::json::Value Namespace::ToJson() const {
       {"canonical_namespace_id", canonical_namespace_id},
       {"unknown_attr", unknown_attr},
       {"owning_target", owning_target},
-      {"child_item_ids", std::move(json_item_ids)},
       // TODO(b/513299904): Should remove once protobuf IR rollout is complete.
       {"children",
        [&] {
@@ -1703,9 +1686,6 @@ flat_proto::Namespace Namespace::ToFlatProto() const {
   proto.set_canonical_namespace_id(canonical_namespace_id.value());
   if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
   proto.set_owning_target(owning_target.value());
-  proto.mutable_child_item_ids()->Reserve(child_item_ids.size());
-  for (const auto& child : child_item_ids)
-    proto.add_child_item_ids(child.value());
   proto.mutable_children()->Reserve(children.size());
   for (const auto& child : children) {
     *proto.add_children() = crubit::ToFlatProto(*child);
