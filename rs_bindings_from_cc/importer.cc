@@ -849,11 +849,10 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     auto* parent_item = std::get_if<Record>(&(parent_it->second.value()));
 
     auto child_id = GenerateItemId(decl);
+    auto& parent_child_ids = invocation_.child_item_ids_[parent_item->id];
     if (!IsUnsupportedAndAlien(child_id) &&
-        std::find(parent_item->child_item_ids.begin(),
-                  parent_item->child_item_ids.end(),
-                  child_id) == parent_item->child_item_ids.end()) {
-      parent_item->child_item_ids.push_back(child_id);
+        !absl::c_linear_search(parent_child_ids, child_id)) {
+      parent_child_ids.push_back(child_id);
     }
   }
 

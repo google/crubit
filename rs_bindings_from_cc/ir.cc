@@ -1832,11 +1832,30 @@ std::vector<ItemId> IR::top_level_item_ids(const BazelLabel& target) const {
   return ids;
 }
 
+std::vector<ItemId> Record::child_item_ids() const {
+  std::vector<ItemId> ids;
+  ids.reserve(children.size());
+  for (const auto& child : children) {
+    ids.push_back(child->id());
+  }
+  return ids;
+}
+
+std::vector<ItemId> Namespace::child_item_ids() const {
+  std::vector<ItemId> ids;
+  ids.reserve(children.size());
+  for (const auto& child : children) {
+    ids.push_back(child->id());
+  }
+  return ids;
+}
+
 // Produces a nested IR which inlines child items on namespaces and records to
 // replace the legacy representation (an array of item IDs).
 // See crubit.rs-better-ir for more context.
 void IR::BuildTree(
-    absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids) {
+    absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids,
+    absl::flat_hash_map<ItemId, std::vector<ItemId>> child_item_ids) {
   top_level_items.clear();
   absl::flat_hash_map<ItemId, std::shared_ptr<Item>> item_map;
   item_map.reserve(items.size());
@@ -1847,22 +1866,57 @@ void IR::BuildTree(
     item_map[id] = std::make_shared<Item>(item);
   }
 
-  for (auto& [id, shared_item] : item_map) {
+  for (auto& item : items) {
     std::visit(visitor{[&](Record& r) {
-                         r.children.reserve(r.child_item_ids.size());
-                         for (const auto& child_id : r.child_item_ids) {
-                           if (auto it = item_map.find(child_id);
-                               it != item_map.end()) {
-                             r.children.push_back(it->second);
+                         if (auto it = child_item_ids.find(r.id);
+                             it != child_item_ids.end()) {
+                           r.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               r.children.push_back(item_it->second);
+                             }
                            }
                          }
                        },
                        [&](Namespace& ns) {
-                         ns.children.reserve(ns.child_item_ids.size());
-                         for (const auto& child_id : ns.child_item_ids) {
-                           if (auto it = item_map.find(child_id);
-                               it != item_map.end()) {
-                             ns.children.push_back(it->second);
+                         if (auto it = child_item_ids.find(ns.id);
+                             it != child_item_ids.end()) {
+                           ns.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               ns.children.push_back(item_it->second);
+                             }
+                           }
+                         }
+                       },
+                       [](auto& other) {}},
+               item.as_variant());
+  }
+
+  for (auto& [id, shared_item] : item_map) {
+    std::visit(visitor{[&](Record& r) {
+                         if (auto it = child_item_ids.find(r.id);
+                             it != child_item_ids.end()) {
+                           r.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               r.children.push_back(item_it->second);
+                             }
+                           }
+                         }
+                       },
+                       [&](Namespace& ns) {
+                         if (auto it = child_item_ids.find(ns.id);
+                             it != child_item_ids.end()) {
+                           ns.children.reserve(it->second.size());
+                           for (const auto& child_id : it->second) {
+                             if (auto item_it = item_map.find(child_id);
+                                 item_it != item_map.end()) {
+                               ns.children.push_back(item_it->second);
+                             }
                            }
                          }
                        },

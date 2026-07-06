@@ -75,7 +75,7 @@ class NamespaceTrie {
       child_idx = parent->child_name_to_idx[name];
     }
 
-    for (auto ns_child_id : ns->child_item_ids) {
+    for (auto ns_child_id : ns->child_item_ids()) {
       if (id_to_namespace_.find(ns_child_id) == id_to_namespace_.end()) {
         continue;
       }
@@ -115,7 +115,7 @@ class NamespaceTrie {
       node_idx = top_level_name_to_idx_[name];
     }
 
-    for (auto ns_child_id : ns->child_item_ids) {
+    for (auto ns_child_id : ns->child_item_ids()) {
       if (id_to_namespace_.find(ns_child_id) == id_to_namespace_.end()) {
         continue;
       }

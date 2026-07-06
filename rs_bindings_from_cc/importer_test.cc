@@ -1004,7 +1004,7 @@ TEST(ImporterTest, RecordItemIds) {
   ASSERT_EQ(records.size(), 2);
 
   std::vector<IR::Item> items;
-  for (const auto& id : records[0]->child_item_ids) {
+  for (const auto& id : records[0]->child_item_ids()) {
     auto item = FindItemById(ir, id);
     ASSERT_TRUE(item.has_value());
     items.push_back(*item);
