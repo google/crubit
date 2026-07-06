@@ -2315,7 +2315,7 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<ExistingRustType> {
 // and transforming the json is strictly worse than transforming the ir itself.
 
 #[derive(PartialEq, Eq, Clone, Deserialize)]
-#[serde(rename(deserialize = "IR"))]
+#[serde(deny_unknown_fields, rename(deserialize = "IR"))]
 pub struct TreeIR {
     #[serde(default)]
     pub public_headers: Vec<HeaderName>,
