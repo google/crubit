@@ -9,6 +9,10 @@
 
 #include <type_traits>
 
+namespace rs::core::marker {
+struct Unpin;
+}  // namespace rs::core::marker
+
 namespace rs_std {
 
 // `impl<Self, Trait>` is a template that is specialized when `Trait` is
@@ -18,6 +22,14 @@ namespace rs_std {
 template <typename Self, typename Trait>
 struct impl {
   static constexpr bool kIsImplemented = false;
+};
+
+// By default, Rust types are `Unpin`. Types that are not `Unpin` explicitly
+// specialize `impl<Self, ::rs::core::marker::Unpin>` with `kIsImplemented =
+// false`.
+template <typename Self>
+struct impl<Self, ::rs::core::marker::Unpin> {
+  static constexpr bool kIsImplemented = true;
 };
 
 // `where<T, Trait1, Trait2, ...>` is a type trait that is true if

@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/traits.h"
 #include "support/rs_std/tuple.h"
 
 #include <array>
@@ -26,6 +27,8 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include "support/rs_std/rs_core.h"
 
 namespace tuple_structs {
 
@@ -739,6 +742,22 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  private:
   static void __crubit_field_offset_assertions();
 };
+
+}  // namespace tuple_structs
+
+template <>
+struct rs_std::impl<::tuple_structs::DefaultAndCloneNoUnpin,
+                    ::rs::core::marker::Unpin> {
+  static constexpr bool kIsImplemented = false;
+};
+
+template <>
+struct rs_std::impl<::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin,
+                    ::rs::core::marker::Unpin> {
+  static constexpr bool kIsImplemented = false;
+};
+
+namespace tuple_structs {
 
 static_assert(
     sizeof(CloneNoDefault) == 8,

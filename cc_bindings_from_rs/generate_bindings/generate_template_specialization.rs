@@ -8,23 +8,25 @@ use crate::generate_struct_and_union::{
     scalar_value_to_string,
 };
 use crate::generate_unsupported_def;
-use arc_anyhow::{bail, Error, Result};
+use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, EnumSpecializationKind, FormattedTy,
-    RsStdEnumSpecialization, RsStdSpecializationArgs, RsStdTemplateSpecialization,
-    TemplateSpecialization, TraitImplTemplateSpecialization,
+    NegativeAutoTraitImplTemplateSpecialization, RsStdEnumSpecialization, RsStdSpecializationArgs,
+    RsStdTemplateSpecialization, TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::anyhow;
 use itertools::Itertools;
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
-use query_compiler::{get_layout, post_analysis_typing_env};
+use query_compiler::{self, get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
 #[rustversion::nightly]
 use rustc_abi::LayoutData;
 use rustc_abi::{Layout, VariantIdx};
+use rustc_hir::def::DefKind;
+use rustc_middle::ty::fast_reject::SimplifiedType;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
@@ -1560,44 +1562,103 @@ pub(crate) fn append_trait_impls<'tcx>(
     // specialize. This prevents them from living in the same namespace as our other bindings, as
     // they may implement a trait that is not enclosed by that namespace.
     for &trait_def_id in db.supported_traits().iter() {
-        use rustc_middle::ty::fast_reject::SimplifiedType;
-        for (simple_ty, impl_def_ids) in tcx.trait_impls_of(trait_def_id).non_blanket_impls() {
-            let SimplifiedType::Adt(did) = simple_ty else {
-                // TODO: b/457803426 - Support trait implementations for non-adt types.
-                continue;
-            };
-            // Only bind implementations for supported ADTs.
-            let Some(canonical_name) = db.symbol_canonical_name(*did) else {
-                continue;
-            };
-            // We explicitly want to allow ADTs that specify cpp_type.
-            // These are typically C++ types that have generated Rust bindings.
-            if canonical_name.unqualified.cpp_type.is_none() && db.adt_needs_bindings(*did).is_err()
-            {
-                continue;
-            }
-            let Ok(adt_cc_name) = canonical_name.format_for_cc(db) else {
-                continue;
-            };
-            for &impl_def_id in impl_def_ids {
-                // TODO: b/458768435 - This is technically suboptimal. We could instead only
-                // query for the impls from this crate, but the logic is complicated by
-                // supporting LOCAL_CRATE. Revisit once we've migrated to rmetas.
-                if impl_def_id.krate != db.source_crate_num() {
-                    continue;
-                }
-                trait_impls.push(TemplateSpecialization::TraitImpl(
-                    TraitImplTemplateSpecialization {
-                        self_ty_cc_name: adt_cc_name.clone(),
-                        trait_impl: impl_def_id,
-                    },
-                ));
-            }
+        if tcx.trait_def(trait_def_id).has_auto_impl {
+            append_negative_auto_trait_impls(db, trait_def_id, trait_impls);
+        } else {
+            append_explicit_trait_impls(db, trait_def_id, trait_impls);
         }
     }
 }
 
-// Helper function for generate_trait_impl_specialization
+fn append_explicit_trait_impls<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_def_id: DefId,
+    trait_impls: &mut Vec<TemplateSpecialization<'tcx>>,
+) {
+    let tcx = db.tcx();
+    for (simple_ty, impl_def_ids) in tcx.trait_impls_of(trait_def_id).non_blanket_impls() {
+        let SimplifiedType::Adt(did) = simple_ty else {
+            // TODO: b/457803426 - Support trait implementations for non-adt types.
+            continue;
+        };
+        // Only bind implementations for supported ADTs.
+        let Some(canonical_name) = db.symbol_canonical_name(*did) else {
+            continue;
+        };
+        // We explicitly want to allow ADTs that specify cpp_type.
+        // These are typically C++ types that have generated Rust bindings.
+        if canonical_name.unqualified.cpp_type.is_none() && db.adt_needs_bindings(*did).is_err() {
+            continue;
+        }
+        let Ok(adt_cc_name) = canonical_name.format_for_cc(db) else {
+            continue;
+        };
+        for &impl_def_id in impl_def_ids {
+            // TODO: b/458768435 - This is technically suboptimal. We could instead only
+            // query for the impls from this crate, but the logic is complicated by
+            // supporting LOCAL_CRATE. Revisit once we've migrated to rmetas.
+            if impl_def_id.krate != db.source_crate_num() {
+                continue;
+            }
+            trait_impls.push(TemplateSpecialization::TraitImpl(TraitImplTemplateSpecialization {
+                self_ty_cc_name: adt_cc_name.clone(),
+                trait_impl: impl_def_id,
+            }));
+        }
+    }
+}
+
+fn append_negative_auto_trait_impls<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_id: DefId,
+    trait_impls: &mut Vec<TemplateSpecialization<'tcx>>,
+) {
+    let tcx = db.tcx();
+    for &self_def_id in db.public_paths_by_def_id(db.source_crate_num()).keys() {
+        let (DefKind::Struct | DefKind::Enum | DefKind::Union) = tcx.def_kind(self_def_id) else {
+            continue;
+        };
+
+        if tcx.generics_of(self_def_id).own_params.iter().any(|param| {
+            matches!(
+                param.kind,
+                ty::GenericParamDefKind::Type { .. } | ty::GenericParamDefKind::Const { .. }
+            )
+        }) {
+            continue;
+        }
+        let Some(canonical_name) = db.symbol_canonical_name(self_def_id) else {
+            continue;
+        };
+        if canonical_name.krate_num != db.source_crate_num() {
+            continue;
+        }
+        if canonical_name.unqualified.cpp_type.is_none()
+            && db.adt_needs_bindings(self_def_id).is_err()
+        {
+            continue;
+        }
+        let ty = crate::normalize_ty(
+            tcx,
+            tcx.param_env(self_def_id),
+            tcx.type_of(self_def_id).instantiate_identity(),
+        );
+        if query_compiler::does_type_implement_trait(tcx, ty, trait_id, []) {
+            // If we implement the trait, then there's no need to generate a negative auto trait
+            // impl.
+            continue;
+        }
+        let Ok(self_ty_cc_name) = canonical_name.format_for_cc(db) else {
+            continue;
+        };
+        trait_impls.push(TemplateSpecialization::NegativeAutoTraitImpl(
+            NegativeAutoTraitImplTemplateSpecialization { self_ty_cc_name, self_def_id, trait_id },
+        ));
+    }
+}
+
+// Helper function for generate_trait_impl_specialization and
+// generate_negative_auto_trait_impl_specialization.
 fn add_specialization_prereqs<'tcx>(
     db: &BindingsGenerator<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
@@ -1724,6 +1785,43 @@ fn generate_trait_impl_specialization<'tcx>(
     })
 }
 
+fn generate_negative_auto_trait_impl_specialization<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    negative_auto_trait_impl: &NegativeAutoTraitImplTemplateSpecialization,
+) -> Result<ApiSnippets<'tcx>> {
+    let def_id = negative_auto_trait_impl.self_def_id;
+    let trait_id = negative_auto_trait_impl.trait_id;
+
+    let canonical_trait_name = db.symbol_canonical_name(trait_id).expect(
+        "symbol_canonical_name was unexpectedly called on a trait without a canonical name",
+    );
+    let trait_name = canonical_trait_name.format_for_cc(db)?;
+
+    let mut prereqs = CcPrerequisites::default();
+    prereqs.depend_on_def(db, trait_id)?;
+
+    add_specialization_prereqs(db, &mut prereqs, def_id)?;
+
+    prereqs.includes.insert(db.support_header("rs_std/traits.h"));
+
+    let self_ty_cc_name = &negative_auto_trait_impl.self_ty_cc_name;
+    Ok(ApiSnippets {
+        main_api: CcSnippet {
+            tokens: quote! {
+                __NEWLINE__
+                template<>
+                struct rs_std::impl<#self_ty_cc_name, #trait_name> {
+                    static constexpr bool kIsImplemented = false;
+                };
+                __NEWLINE__
+            },
+            prereqs,
+        },
+        cc_details: Default::default(),
+        rs_details: Default::default(),
+    })
+}
+
 /// Generate a template specialization.
 pub fn generate_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1736,8 +1834,15 @@ pub fn generate_template_specialization<'tcx>(
                 generate_unsupported_def(db, trait_impl.trait_impl, err).into_main_api()
             })
         }
+        TemplateSpecialization::NegativeAutoTraitImpl(negative_auto_trait_impl) => {
+            generate_negative_auto_trait_impl_specialization(db, negative_auto_trait_impl)
+                .unwrap_or_else(|err| {
+                    generate_unsupported_def(db, negative_auto_trait_impl.self_def_id, err)
+                        .into_main_api()
+                })
+        }
     };
-    // Because we reuse logic from generate_struct_and_union here, we will add our `self_ty` as a template specialization of it's own specialization creating a depedency cycle.
+    // Because we reuse logic from generate_struct_and_union here, we will add our `self_ty` as a template specialization of its own specialization creating a dependency cycle.
     // We break that loop manually here to avoid that.
     snippets.main_api.prereqs.template_specializations.remove(&specialization);
     snippets
