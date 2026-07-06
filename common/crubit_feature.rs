@@ -60,6 +60,9 @@ flagset::flags! {
 
         /// Enable custom Debug impls for records.
         RecordImplDebug,
+
+        /// Converts `impl Ctor<Output=T>` parameters to plain `T` instead of `T&&` in the C++ API.
+        CtorPlainValues,
     }
 }
 
@@ -88,6 +91,7 @@ impl CrubitFeature {
                 "always_specialize_generics_in_cpp_api_from_rust"
             }
             Self::RecordImplDebug => "record_impl_debug",
+            Self::CtorPlainValues => "ctor_plain_values",
         }
     }
 
@@ -117,6 +121,7 @@ impl CrubitFeature {
                 "//features:always_specialize_generics_in_cpp_api_from_rust"
             }
             Self::RecordImplDebug => "//features:record_impl_debug",
+            Self::CtorPlainValues => "//features:ctor_plain_values",
         }
     }
 }
@@ -149,6 +154,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
             CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust.into()
         }
         b"record_impl_debug" => CrubitFeature::RecordImplDebug.into(),
+        b"ctor_plain_values" => CrubitFeature::CtorPlainValues.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -273,6 +279,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
+                | CrubitFeature::CtorPlainValues
         );
     }
 
@@ -309,6 +316,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
+                | CrubitFeature::CtorPlainValues
         );
     }
 
@@ -330,6 +338,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
+                | CrubitFeature::CtorPlainValues
         );
     }
 
@@ -352,6 +361,7 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
+                | CrubitFeature::CtorPlainValues
         );
     }
 }

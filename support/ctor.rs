@@ -879,8 +879,42 @@ where
     }
 }
 
-/// !Unpin to override the blanket `Ctor` impl.
+/// !SelfCtor to override the blanket `Ctor` impl.
 impl<'a, T: ?Sized> !SelfCtor for RvalueReference<'a, T> {}
+
+/// Represents the type `T` by value, but is passed by rvalue reference.
+///
+/// This is currently an implementation detail of the `impl Ctor` bindings, but
+/// it can also be used in trait implementations if `impl Ctor` is not available,
+/// due to "overlapping" impls that Rust doesn't recognize as disjoint due to different
+/// associated types. (Rust does not recognize `Ctor![i32]` and `Ctor![i64]` as disjoint,
+/// even though no type can implement both.)
+#[repr(transparent)]
+pub struct ByValue<'a, T: ?Sized>(pub RvalueReference<'a, T>);
+
+impl<T: ?Sized> Deref for ByValue<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+// SAFETY: forwards to `RvalueReference`'s `Ctor` impl, meets all requirements.
+unsafe impl<'a, T: ?Sized> Ctor for ByValue<'a, T>
+where
+    T: CtorNew<RvalueReference<'a, T>>,
+{
+    type Output = T;
+    type Error = <T as CtorNew<RvalueReference<'a, T>>>::Error;
+
+    unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
+        // SAFETY: forwards to `RvalueReference`'s `Ctor` impl, meets all requirements.
+        unsafe { T::ctor_new(self.0).ctor(dest) }
+    }
+}
+
+/// !SelfCtor to override the blanket `Ctor` impl.
+impl<'a, T: ?Sized> !SelfCtor for ByValue<'a, T> {}
 
 /// Const rvalue reference (move-reference) type. Usually not very helpful.
 ///

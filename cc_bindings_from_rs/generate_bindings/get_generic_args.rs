@@ -174,26 +174,25 @@ fn get_replacement_for_ctor_trait<'tcx>(
         })
         .next()?;
 
-    // 3. Find DefId for RvalueReference
+    // 3. Find DefId for ByValue
     let ctor_crate = trait_ref.def_id.krate;
-    let rvalue_ref_def_id = db.def_id_by_symbol(ctor_crate, Symbol::intern("RvalueReference"))?;
+    let by_value_def_id = db.def_id_by_symbol(ctor_crate, Symbol::intern("ByValue"))?;
 
-    // 4. Construct RvalueReference<'_, Output>
-    let anon_region = new_anon_lifetime();
-    let rvalue_ref_ty = Ty::new_adt(
+    // 4. Construct ByValue<'a, Output>
+    let by_value_ty = Ty::new_adt(
         tcx,
-        tcx.adt_def(rvalue_ref_def_id),
-        tcx.mk_args(&[anon_region.into(), output_ty.into()]),
+        tcx.adt_def(by_value_def_id),
+        tcx.mk_args(&[new_anon_lifetime().into(), output_ty.into()]),
     );
 
-    // Verification that `Output` can be constructed from `RvalueReference<'_, Output>`
-    // (i.e., `Output: CtorNew<RvalueReference<'_, Output>>`) is deferred to the caller.
+    // Verification that `Output` can be constructed from `ByValue<'_, Output>`
+    // (i.e., `Output: CtorNew<ByValue<'_, Output>>`) is deferred to the caller.
     // The caller (`get_replacement_for_generic_type_param`) will check if
-    // `RvalueReference<'_, Output>: Ctor` holds using the Rust trait solver.
-    // Due to how `Ctor` is implemented for `RvalueReference` in `ctor.rs`,
+    // `ByValue<'_, Output>: Ctor` holds using the Rust trait solver.
+    // Due to how `Ctor` is implemented for `ByValue` in `ctor.rs`,
     // this implicitly verifies the `CtorNew` constraint.
 
-    Some(rvalue_ref_ty)
+    Some(by_value_ty)
 }
 
 /// Returns `true` if `new_ty` can be used as a replacement for `generic_param`

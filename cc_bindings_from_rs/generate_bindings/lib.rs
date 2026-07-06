@@ -27,9 +27,10 @@ mod generate_template_specialization;
 mod get_generic_args;
 
 use crate::format_type::{
-    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol, format_param_types_for_cc,
-    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
-    is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
+    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol,
+    format_param_types_for_cc_api, format_param_types_for_cc_thunk, format_region_as_cc_lifetime,
+    format_ret_ty_for_cc, format_top_level_ns_for_crate, is_bridged_type, BridgedBuiltin,
+    BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};

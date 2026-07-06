@@ -216,8 +216,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 ::std::int32_t accept_ctor(
-    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c1,
-    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c2);
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c2);
 
 ::std::int32_t accept_ctor_array(
     ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
@@ -634,8 +634,8 @@ extern "C" ::std::int32_t __crubit_thunk_accept_uctor(
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
 }
 inline ::std::int32_t accept_ctor(
-    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c1,
-    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c2) {
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c2) {
   return __crubit_internal::__crubit_thunk_accept_uctor(::std::move(c1),
                                                         ::std::move(c2));
 }
