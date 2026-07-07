@@ -21,6 +21,7 @@ fn test_generate_enum_basic() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_uint);
             impl Color {
@@ -53,6 +54,7 @@ fn test_generate_enum_basic_with_annotations() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3[42,47]"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct __CAPTURE_BEGIN__ Color __CAPTURE_END__ (::ffi_11::c_uint);
             impl Color {
@@ -92,6 +94,7 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_int);
             impl Color {
@@ -131,6 +134,7 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_long);
             impl Color {
@@ -171,6 +175,7 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_ulong);
             impl Color {
@@ -205,6 +210,7 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_int);
             impl Color {
@@ -239,6 +245,7 @@ fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::ffi_11::c_uint);
             impl Color {
@@ -271,6 +278,7 @@ fn test_generate_enum_bool() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "4Bool"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Bool"]
             pub struct Bool(bool);
             impl Bool {
@@ -302,6 +310,7 @@ fn test_generate_enum_bool_alias() -> Result<()> {
             #[doc=" Generated from: ir_from_cc_virtual_header.h;l=3"]
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+            #[cfi_encoding = "4Bool"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Bool"]
             pub struct Bool(crate::MyBool);
             impl Bool {

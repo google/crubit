@@ -1156,6 +1156,18 @@ impl ToTokens for DeprecatedAttr {
 }
 
 #[derive(Clone, Debug)]
+pub struct CfiEncodingAttr(pub Rc<str>);
+
+impl ToTokens for CfiEncodingAttr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        if !self.0.is_empty() {
+            let encoding = self.0.as_ref();
+            quote! { #[cfi_encoding = #encoding] }.to_tokens(tokens);
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct CxxExternTypeImpl {
     pub id: Rc<str>,
     pub kind: CxxKind,
@@ -1369,6 +1381,7 @@ flagset::flags! {
         allocator_api,
         arbitrary_self_types,
         cfg_sanitize,
+        cfi_encoding,
         custom_inner_attributes,
         impl_trait_in_assoc_type,
         negative_impls,
@@ -1382,6 +1395,7 @@ impl ToTokens for Feature {
             Feature::allocator_api => quote! { allocator_api },
             Feature::arbitrary_self_types => quote! { arbitrary_self_types },
             Feature::cfg_sanitize => quote! { cfg_sanitize },
+            Feature::cfi_encoding => quote! { cfi_encoding },
             Feature::custom_inner_attributes => quote! { custom_inner_attributes },
             Feature::impl_trait_in_assoc_type => quote! { impl_trait_in_assoc_type },
             Feature::negative_impls => quote! { negative_impls },

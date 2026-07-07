@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -153,6 +153,7 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "11DefaultEnum"]
 ///CRUBIT_ANNOTATE: cpp_type=DefaultEnum
 pub struct DefaultEnum(::ffi_11::c_int);
 impl DefaultEnum {
@@ -180,6 +181,7 @@ pub fn ReturnsDefaultEnumInComposableBridgeType() -> crate::MyOption<crate::Defa
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "7I64Enum"]
 ///CRUBIT_ANNOTATE: cpp_type=I64Enum
 pub struct I64Enum(::ffi_11::c_long);
 impl I64Enum {
@@ -208,6 +210,7 @@ pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum>
 pub mod some_namespace {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+    #[cfi_encoding = "N14some_namespace15EnumInNamespaceE"]
     ///CRUBIT_ANNOTATE: cpp_type=some_namespace :: EnumInNamespace
     pub struct EnumInNamespace(::ffi_11::c_int);
     impl EnumInNamespace {

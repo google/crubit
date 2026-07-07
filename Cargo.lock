@@ -1250,6 +1250,7 @@ dependencies = [
  "code_gen_utils",
  "crubit_feature",
  "error_report",
+ "flagset",
  "googletest",
  "proc-macro2",
  "quote",

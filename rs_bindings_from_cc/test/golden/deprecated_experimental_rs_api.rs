@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:deprecated_experimental_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -89,6 +89,7 @@ impl Default for DeprecatedStructWithMessage {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[deprecated]
+#[cfi_encoding = "14DeprecatedEnum"]
 ///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedEnum
 pub struct DeprecatedEnum(::ffi_11::c_uint);
 impl DeprecatedEnum {}
@@ -106,6 +107,7 @@ impl From<DeprecatedEnum> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[deprecated = "old"]
+#[cfi_encoding = "25DeprecatedEnumWithMessage"]
 ///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedEnumWithMessage
 pub struct DeprecatedEnumWithMessage(::ffi_11::c_uint);
 impl DeprecatedEnumWithMessage {}
@@ -235,6 +237,7 @@ pub mod MergeDeprecatedWithDeprecatedNamespace {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "21DeprecatedEnumerators"]
 ///CRUBIT_ANNOTATE: cpp_type=:: DeprecatedEnumerators
 pub struct DeprecatedEnumerators(::ffi_11::c_uint);
 impl DeprecatedEnumerators {
