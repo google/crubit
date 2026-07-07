@@ -190,23 +190,23 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
                     missing_features.push("destructors".to_string());
                 }
             } else {
-                for param in &func.params {
-                    if let Some(missing) = missing_features_of_cc_type(param.type_.clone()) {
+                for param in func.params() {
+                    if let Some(missing) = missing_features_of_cc_type(param.type_().clone()) {
                         missing_features.push(join_missing_with_context(
                             &format!(
                                 "Unsupported parameter type `{} {}`",
-                                db.cc_type_debug_name(&param.type_),
-                                param.identifier
+                                db.cc_type_debug_name(param.type_()),
+                                param.identifier()
                             ),
                             &missing,
                         ));
                     }
                 }
-                if let Some(missing) = missing_features_of_cc_type(func.return_type.clone()) {
+                if let Some(missing) = missing_features_of_cc_type(func.return_type().clone()) {
                     missing_features.push(join_missing_with_context(
                         &format!(
                             "Unsupported return type `{}`",
-                            db.cc_type_debug_name(&func.return_type)
+                            db.cc_type_debug_name(func.return_type())
                         ),
                         &missing,
                     ));
@@ -221,11 +221,11 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
                     if func.is_noreturn {
                         missing_features.push("[[noreturn]] attribute".to_string());
                     }
-                    for param in &func.params {
-                        if let Some(unknown_attr) = &param.unknown_attr {
+                    for param in func.params() {
+                        if let Some(unknown_attr) = param.unknown_attr() {
                             missing_features.push(format!(
                                 "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
-                                param = &param.identifier.identifier
+                                param = param.identifier()
                             ));
                         }
                     }
@@ -467,7 +467,8 @@ pub fn integer_constant_to_token_stream(
             underlying_type.display(db),
         )
     };
-    let IntegerConstant { is_negative, wrapped_value } = integer_constant;
+    let is_negative = integer_constant.is_negative();
+    let wrapped_value = integer_constant.wrapped_value();
     Ok(if underlying_type.is_bool() {
         if wrapped_value == 0 {
             quote! {false}
@@ -803,7 +804,7 @@ pub fn generated_items_to_tokens<'db>(
                 let canonical_namespace: &Rc<ir::Namespace> = db
                     .find_decl(current_namespace.canonical_namespace_id)
                     .unwrap_or_else(|_| panic!("Namespace canonical_namespace_id {:?} not found as a valid Namespace item.", current_namespace.canonical_namespace_id));
-                let name = make_rs_ident(&canonical_namespace.rs_name.identifier);
+                let name = make_rs_ident(canonical_namespace.rs_name());
 
                 quote! {
                     #deprecated_attr
