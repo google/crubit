@@ -5,6 +5,37 @@ nontrivial type which is `[[clang::trivial_abi]]`). Any such type can be used by
 value or plain reference/pointer in interop, all non-`Unpin` types must instead
 be used behind pinned pointers and references.
 
+```dot
+digraph {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled", fillcolor="#f8f9fa", fontname="Arial", fontsize=11];
+    edge [fontname="Arial", fontsize=9, fontcolor="#555555"];
+
+    subgraph cluster_rust {
+        label="Rust Representation"; style=dashed; color="#aaaaaa"; fontname="Arial";
+        r_triv [label="Unpin,\n!needs_drop()"];
+        r_move [label="Unpin,\nneeds_drop()"];
+        r_pin  [label="!Unpin"];
+    }
+
+    subgraph cluster_cpp {
+        label="C++ Representation"; style=dashed; color="#aaaaaa"; fontname="Arial";
+        c_triv [label="trivial"];
+        c_move [label="[[clang::trivial_abi]],\nnontrivial"];
+        c_pin  [label="not [[clang::trivial_abi]],\nnontrivial"];
+    }
+
+    r_triv -> c_triv;
+    r_triv -> c_triv [dir=back];
+
+    r_move -> c_move;
+    r_move -> c_move [dir=back];
+
+    r_pin -> c_pin;
+    r_pin -> c_pin [dir=back, label="pinned type-state"];
+}
+```
+
 A C++ type `T` is `Unpin` if it is known to be a **Rust-movable type**
 (move+destroy is logically equivalent to `memcpy`+release).
 
