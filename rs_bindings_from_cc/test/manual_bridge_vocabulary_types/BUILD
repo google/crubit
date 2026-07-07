@@ -75,6 +75,25 @@ crubit_rust_test(
 )
 
 cc_library(
+    name = "atomic_lib",
+    hdrs = ["atomic_lib.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+)
+
+crubit_rust_test(
+    name = "atomic_test",
+    srcs = ["atomic_test.rs"],
+    cc_deps = [
+        ":atomic_lib",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
     name = "unique_ptr_experimental_lib",
     hdrs = ["unique_ptr_lib.h"],
     aspect_hints = [

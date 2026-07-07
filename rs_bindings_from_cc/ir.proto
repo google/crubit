@@ -297,8 +297,10 @@ message TemplateSpecialization {
   message C9Co {
     CcType element_type = 1;
   }
+  message StdAtomic {
+    CcType element_type = 1;
+  }
   message NonSpecial {}
-
   string defining_target = 1;
   oneof kind {
     StdStringView std_string_view = 2;
@@ -308,6 +310,7 @@ message TemplateSpecialization {
     AbslSpan absl_span = 6;
     C9Co c9_co = 7;
     NonSpecial non_special = 8;
+    StdAtomic std_atomic = 9;
   }
 }
 
