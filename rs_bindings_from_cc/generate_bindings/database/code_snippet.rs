@@ -182,7 +182,7 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
         | Item::UseMod { .. } => {}
 
         Item::Func(func) => {
-            if func.rs_name == UnqualifiedIdentifier::Destructor {
+            if func.rs_name() == &UnqualifiedIdentifier::Destructor {
                 // We support destructors in supported even though they use some features we
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.
@@ -190,42 +190,42 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
                     missing_features.push("destructors".to_string());
                 }
             } else {
-                for param in &func.params {
-                    if let Some(missing) = missing_features_of_cc_type(param.type_.clone()) {
+                for param in func.params() {
+                    if let Some(missing) = missing_features_of_cc_type(param.type_().clone()) {
                         missing_features.push(join_missing_with_context(
                             &format!(
                                 "Unsupported parameter type `{} {}`",
-                                db.cc_type_debug_name(&param.type_),
-                                param.identifier
+                                db.cc_type_debug_name(param.type_()),
+                                param.identifier()
                             ),
                             &missing,
                         ));
                     }
                 }
-                if let Some(missing) = missing_features_of_cc_type(func.return_type.clone()) {
+                if let Some(missing) = missing_features_of_cc_type(func.return_type().clone()) {
                     missing_features.push(join_missing_with_context(
                         &format!(
                             "Unsupported return type `{}`",
-                            db.cc_type_debug_name(&func.return_type)
+                            db.cc_type_debug_name(func.return_type())
                         ),
                         &missing,
                     ));
                 }
                 if !have_feature(CrubitFeature::Experimental) {
-                    if !func.has_c_calling_convention {
+                    if !func.has_c_calling_convention() {
                         missing_features.push("non-C calling convention".to_string());
                     }
-                    if func.is_variadic {
+                    if func.is_variadic() {
                         missing_features.push("variadic function".to_string());
                     }
-                    if func.is_noreturn {
+                    if func.is_noreturn() {
                         missing_features.push("[[noreturn]] attribute".to_string());
                     }
-                    for param in &func.params {
-                        if let Some(unknown_attr) = &param.unknown_attr {
+                    for param in func.params() {
+                        if let Some(unknown_attr) = param.unknown_attr() {
                             missing_features.push(format!(
                                 "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
-                                param = &param.identifier.identifier
+                                param = param.identifier()
                             ));
                         }
                     }
@@ -467,7 +467,8 @@ pub fn integer_constant_to_token_stream(
             underlying_type.display(db),
         )
     };
-    let IntegerConstant { is_negative, wrapped_value } = integer_constant;
+    let is_negative = integer_constant.is_negative();
+    let wrapped_value = integer_constant.wrapped_value();
     Ok(if underlying_type.is_bool() {
         if wrapped_value == 0 {
             quote! {false}
@@ -781,7 +782,7 @@ pub fn generated_items_to_tokens<'db>(
                     db.find_decl::<Rc<Namespace>>(id).expect("should always be a namespace");
                 let is_last_reopened_namespace_in_this_target = db
                     .ir()
-                    .is_last_reopened_namespace(id, current_namespace.canonical_namespace_id)
+                    .is_last_reopened_namespace(id, current_namespace.canonical_namespace_id())
                     .expect("should always be a namespace");
 
                 if !is_last_reopened_namespace_in_this_target {
@@ -793,7 +794,7 @@ pub fn generated_items_to_tokens<'db>(
                 // canonical namespace id.
 
                 let Some(GeneratedItem::CanonicalNamespace { items, deprecated_attr }) =
-                    generated_items.get(&current_namespace.canonical_namespace_id)
+                    generated_items.get(&current_namespace.canonical_namespace_id())
                 else {
                     panic!("the entry we generated for the canonical namespace should be a GeneratedItem::CanonicalNamespace");
                 };
@@ -801,9 +802,9 @@ pub fn generated_items_to_tokens<'db>(
                 let namespace_tokens = generated_items_to_token_stream(generated_items, db, items);
 
                 let canonical_namespace: &Rc<ir::Namespace> = db
-                    .find_decl(current_namespace.canonical_namespace_id)
-                    .unwrap_or_else(|_| panic!("Namespace canonical_namespace_id {:?} not found as a valid Namespace item.", current_namespace.canonical_namespace_id));
-                let name = make_rs_ident(&canonical_namespace.rs_name.identifier);
+                    .find_decl(current_namespace.canonical_namespace_id())
+                    .unwrap_or_else(|_| panic!("Namespace canonical_namespace_id {:?} not found as a valid Namespace item.", current_namespace.canonical_namespace_id()));
+                let name = make_rs_ident(canonical_namespace.rs_name());
 
                 quote! {
                     #deprecated_attr
@@ -814,7 +815,7 @@ pub fn generated_items_to_tokens<'db>(
                 }
                 .to_tokens(tokens);
 
-                if canonical_namespace.is_inline {
+                if canonical_namespace.is_inline() {
                     // TODO(b/308949532): Skip re-export if the canonical module is empty
                     // (transitively).
                     quote! {

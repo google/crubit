@@ -219,7 +219,7 @@ impl<'db> BindingsGenerator<'db> {
     /// Returns true if `func` has a conflicting mangled name.
     pub fn has_conflicting_mangled_name(&self, func: &ir::Func) -> bool {
         let conflicts_counter =
-            self.mangled_name_counts().get(&func.mangled_name).copied().unwrap_or(0);
+            self.mangled_name_counts().get(func.mangled_name()).copied().unwrap_or(0);
         conflicts_counter > 1
     }
 
@@ -257,17 +257,17 @@ impl<'db> BindingsGenerator<'db> {
         let item = self.find_untyped_decl(item_id);
         match item {
             ir::Item::Func(f) => {
-                if let Some(parent_id) = f.enclosing_item_id
+                if let Some(parent_id) = f.enclosing_item_id()
                     && let Ok(record) = self.find_decl::<std::rc::Rc<ir::Record>>(parent_id)
                 {
-                    return self.defining_target(record.id);
+                    return self.defining_target(record.id());
                 }
                 None
             }
             ir::Item::Record(r) => {
-                r.template_specialization.as_ref().map(|ts| ts.defining_target.clone())
+                r.template_specialization().map(|ts| ts.defining_target().clone())
             }
-            ir::Item::UnsupportedItem(ui) => ui.defining_target.clone(),
+            ir::Item::UnsupportedItem(ui) => ui.defining_target().cloned(),
             _ => None,
         }
     }
@@ -279,26 +279,24 @@ impl<'db> BindingsGenerator<'db> {
         let item = self.find_untyped_decl(item_id);
         let (id, name) = match item {
             ir::Item::Func(f) => {
-                let mut name = self.namespace_qualifier_from_id(f.id).format_for_cc_debug();
+                let mut name = self.namespace_qualifier_from_id(f.id()).format_for_cc_debug();
                 let record_name = || -> Option<std::rc::Rc<str>> {
-                    if let Some(parent_id) = f.enclosing_item_id {
+                    if let Some(parent_id) = f.enclosing_item_id() {
                         match self.find_untyped_decl(parent_id) {
                             ir::Item::ExistingRustType(existing_rust_type) => {
                                 Some(existing_rust_type.cc_name.clone())
                             }
-                            ir::Item::Record(record) => Some(record.cc_name.identifier.clone()),
-                            ir::Item::IncompleteRecord(record) => {
-                                Some(record.cc_name.identifier.clone())
-                            }
+                            ir::Item::Record(record) => Some(Rc::from(record.cc_name())),
+                            ir::Item::IncompleteRecord(record) => Some(Rc::from(record.cc_name())),
                             _ => None,
                         }
                     } else {
                         None
                     }
                 };
-                match &f.cc_name {
+                match f.cc_name() {
                     ir::UnqualifiedIdentifier::Identifier(id) => {
-                        name.push_str(&id.identifier);
+                        name.push_str(id.as_str());
                     }
                     ir::UnqualifiedIdentifier::Operator(op) => {
                         name.push_str(&op.cc_name());
@@ -328,24 +326,25 @@ impl<'db> BindingsGenerator<'db> {
                 .into()
             }
             ir::Item::UseMod(u) => {
-                return format!("<[internal] use mod {}::* = {}>", u.mod_name, u.path).into()
+                return format!("<[internal] use mod {}::* = {}>", u.mod_name(), u.path()).into()
             }
             ir::Item::UnsupportedItem(ui) => return ui.name.clone(),
-            ir::Item::ExistingRustType(e) => (e.id, e.cc_name.clone()),
-            ir::Item::Namespace(n) => (n.id, n.cc_name.identifier.clone()),
-            ir::Item::IncompleteRecord(r) => (r.id, r.cc_name.identifier.clone()),
-            ir::Item::Record(r) => (r.id, r.cc_name.identifier.clone()),
-            ir::Item::Enum(e) => (e.id, e.cc_name.identifier.clone()),
-            ir::Item::Constant(c) => (c.id, c.cc_name.identifier.clone()),
-            ir::Item::GlobalVar(g) => (g.id, g.cc_name.identifier.clone()),
-            ir::Item::TypeAlias(t) => (t.id, t.cc_name.identifier.clone()),
+            ir::Item::ExistingRustType(e) => (e.id(), <Rc<str>>::from(e.cc_name())),
+            ir::Item::Namespace(n) => (n.id(), <Rc<str>>::from(n.cc_name())),
+            ir::Item::IncompleteRecord(r) => (r.id(), Rc::from(r.cc_name())),
+            ir::Item::Record(r) => (r.id(), Rc::from(r.cc_name())),
+            // TODO(b/532184844): Remove conversion to Rc<str> as we migrate to &'a str on ProtoViews.
+            ir::Item::Enum(e) => (e.id(), Rc::from(e.cc_name())),
+            ir::Item::Constant(c) => (c.id(), <Rc<str>>::from(c.cc_name())),
+            ir::Item::GlobalVar(g) => (g.id(), <Rc<str>>::from(g.cc_name())),
+            ir::Item::TypeAlias(t) => (t.id(), <Rc<str>>::from(t.cc_name())),
         };
         let qualifier = self.namespace_qualifier_from_id(id).format_for_cc_debug();
         return format! {"{qualifier}{name}"}.into();
     }
 
     pub fn cc_type_debug_name(&self, cc_type: &CcType) -> String {
-        let base_name = match &cc_type.variant {
+        let base_name = match cc_type.variant() {
             ir::CcTypeVariant::Primitive(p) => match p {
                 ir::Primitive::Bool => "bool",
                 ir::Primitive::Void => "void",
@@ -391,14 +390,14 @@ impl<'db> BindingsGenerator<'db> {
             }
             .to_string(),
             ir::CcTypeVariant::Pointer(ptr) => {
-                let ptr_str = match ptr.kind {
+                let ptr_str = match ptr.kind() {
                     ir::PointerTypeKind::LValueRef => "&",
                     ir::PointerTypeKind::RValueRef => "&&",
                     ir::PointerTypeKind::Nullable
                     | ir::PointerTypeKind::NonNull
                     | ir::PointerTypeKind::Owned => "*",
                 };
-                let pointee_name = self.cc_type_debug_name(&ptr.pointee_type);
+                let pointee_name = self.cc_type_debug_name(ptr.pointee_type());
                 format!("{pointee_name}{ptr_str}")
             }
             ir::CcTypeVariant::FuncPointer { .. } => "function pointer".to_string(),
@@ -406,8 +405,8 @@ impl<'db> BindingsGenerator<'db> {
             ir::CcTypeVariant::Error(err) => format!("<error: {}>", err.message),
         };
 
-        if cc_type.is_const {
-            if matches!(cc_type.variant, ir::CcTypeVariant::Pointer(_)) {
+        if cc_type.is_const() {
+            if matches!(cc_type.variant(), ir::CcTypeVariant::Pointer(_)) {
                 format!("{} const", base_name)
             } else {
                 format!("const {}", base_name)
@@ -540,8 +539,8 @@ impl<'db> BindingsGenerator<'db> {
         while let Some(parent_id) = enclosing_item_id {
             match self.find_untyped_decl(parent_id) {
                 ir::Item::Namespace(ns) => {
-                    namespaces.push(ns.rs_name.identifier.clone());
-                    enclosing_item_id = ns.enclosing_item_id;
+                    namespaces.push(std::rc::Rc::from(ns.rs_name()));
+                    enclosing_item_id = ns.enclosing_item_id();
                 }
                 ir::Item::Record(parent_record) => {
                     assert!(
@@ -550,11 +549,9 @@ impl<'db> BindingsGenerator<'db> {
                     );
                     let module_name =
                         self.record_to_associated_module_name(parent_record.clone()).unwrap();
-                    nested_records.push((
-                        module_name.to_string().into(),
-                        parent_record.cc_name.identifier.clone(),
-                    ));
-                    enclosing_item_id = parent_record.enclosing_item_id;
+                    nested_records
+                        .push((module_name.to_string().into(), Rc::from(parent_record.cc_name())));
+                    enclosing_item_id = parent_record.enclosing_item_id();
                 }
                 ir::Item::ExistingRustType(rust_type) => {
                     assert!(
@@ -590,11 +587,10 @@ impl<'db> BindingsGenerator<'db> {
         &self,
         record: Rc<Record>,
     ) -> Result<proc_macro2::Ident> {
-        let record_name: &str = record.rs_name.as_str();
-        let snake_case_name = record_name.to_snake_case();
+        let snake_case_name = record.rs_name().to_snake_case();
         // Add an `_items` suffix to distinguish the module name if the record name is already snake-case,
         // then distinguish by adding `_` suffixes until we find a name that is not in use.
-        let mut name = if snake_case_name == record_name {
+        let mut name = if snake_case_name == record.rs_name() {
             format!("{}_items", snake_case_name)
         } else {
             snake_case_name
@@ -603,7 +599,7 @@ impl<'db> BindingsGenerator<'db> {
         let resolved_names = self.resolve_names(record.clone())?;
         let is_used = |n: &str| match resolved_names.get(n) {
             Some(ResolvedName::RecordNestedItems { parent_records_that_map_to_this_name }) => {
-                !parent_records_that_map_to_this_name.contains(&record.id)
+                !parent_records_that_map_to_this_name.contains(&record.id())
             }
             Some(_) => true,
             None => false,

@@ -608,28 +608,28 @@ fn test_copy_derives() {
 #[gtest]
 fn test_copy_derives_not_is_trivial_abi() {
     let mut record = ir_record("S");
-    record.is_trivial_abi = false;
+    record.set_is_trivial_abi(false);
     assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_deleted() {
     let mut record = ir_record("S");
-    record.copy_constructor = ir::SpecialMemberFunc::Unavailable;
+    record.set_copy_constructor(ir::SpecialMemberFunc::Unavailable);
     assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_members() {
     let mut record = ir_record("S");
-    record.copy_constructor = ir::SpecialMemberFunc::NontrivialMembers;
+    record.set_copy_constructor(ir::SpecialMemberFunc::NontrivialMembers);
     assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_self() {
     let mut record = ir_record("S");
-    record.copy_constructor = ir::SpecialMemberFunc::NontrivialUserDefined;
+    record.set_copy_constructor(ir::SpecialMemberFunc::NontrivialUserDefined);
     assert_derives(&record, &[]);
 }
 
@@ -640,7 +640,7 @@ fn test_copy_derives_dtor_nontrivial_self() {
     for definition in
         [ir::SpecialMemberFunc::NontrivialUserDefined, ir::SpecialMemberFunc::NontrivialMembers]
     {
-        record.destructor = definition;
+        record.set_destructor(definition);
         assert_derives(&record, &["Clone"]);
     }
 }

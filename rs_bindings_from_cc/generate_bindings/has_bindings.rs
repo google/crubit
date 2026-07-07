@@ -54,7 +54,7 @@ fn cc_type_has_bindings(
 
 /// Implementation of `BindingsGenerator::has_bindings`.
 pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, NoBindingsReason> {
-    if let Some(name) = item.cc_name_as_str() {
+    if let Some(name) = item.cc_name() {
         // Dunder namespaces are allowed for now.
         if name.starts_with("__") && !matches!(item, Item::Namespace(_)) {
             return Err(NoBindingsReason::LeadingDunder { name: name.to_string() });
@@ -83,7 +83,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             if item.is_type_definition()
                 // If we have an ancestor that is a template specialization, we can't generate bindings.
                 // The parent check ensures that all ancestors are checked as well.
-                && parent_record.template_specialization.is_some()
+                && parent_record.template_specialization().is_some()
             {
                 return Err(NoBindingsReason::Unsupported(anyhow!(
                     "b/485949049: type definitions nested inside templated records are not yet supported"
@@ -107,7 +107,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                         if let ResolvedName::RecordNestedItems {
                             parent_records_that_map_to_this_name,
                         } = resolved_name
-                            && parent_records_that_map_to_this_name.contains(&parent_record.id)
+                            && parent_records_that_map_to_this_name.contains(&parent_record.id())
                         {
                             return Some((
                                 name.clone(),
@@ -124,7 +124,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                         \n    for item: {item_name}\
                         \n    inside parent record {parent_name}",
                             item_name = db.debug_name(item.id()),
-                            parent_name = db.debug_name(parent_record.id),
+                            parent_name = db.debug_name(parent_record.id()),
                         ))
                     })?;
                 if parent_records_that_map_to_this_name.len() > 1 {
@@ -135,8 +135,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                             .map(|&parent_record_id| {
                                 db.find_decl::<Rc<Record>>(parent_record_id)
                                     .unwrap()
-                                    .rs_name
-                                    .identifier
+                                    .rs_name()
                                     .to_string()
                             })
                             .collect(),
@@ -147,7 +146,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
     }
 
     if let Item::Enum(enum_) = &item {
-        if enum_.enumerators.is_none() {
+        if enum_.enumerators().is_none() {
             return Err(NoBindingsReason::Unsupported(anyhow!(
                 "b/322391132: Forward-declared (opaque) enums are not implemented yet"
             )));
@@ -158,7 +157,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
         // underlying type is never going to be or refer to this type, because the current
         // enum is not defined at the time that the underlying type is evaluated.
         // Not even forward declarations help. You just can't do `enum Foo: Something<Foo>;`.
-        if let Err(error) = db.rs_type_kind(enum_.underlying_type.clone()) {
+        if let Err(error) = db.rs_type_kind(enum_.underlying_type().clone()) {
             return Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(enum_.id()).to_string(),
                 reason: error.to_string(),
@@ -167,7 +166,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
     }
     // Require that the underlying type exists. Otherwise, the constant can't.
     if let Item::Constant(constant) = &item
-        && let Err(error) = db.rs_type_kind(constant.type_.clone())
+        && let Err(error) = db.rs_type_kind(constant.type_().clone())
     {
         return Err(NoBindingsReason::DependencyFailed {
             type_name: db.debug_name(constant.id()).to_string(),
@@ -228,7 +227,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             }
         }
         // Global variables receive bindings if the underlying type is visible.
-        Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_.clone()) {
+        Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_().clone()) {
             Ok(rs_type_kind) => {
                 let visibility = type_visibility(db, &item, rs_type_kind)?;
                 Ok(BindingsInfo { visibility })
@@ -252,17 +251,17 @@ fn func_has_bindings(
     db: &BindingsGenerator,
     func: Rc<Func>,
 ) -> Result<BindingsInfo, NoBindingsReason> {
-    if func.is_consteval {
+    if func.is_consteval() {
         return Err(NoBindingsReason::Unsupported(anyhow!(
             "consteval functions are not supported"
         )));
     }
 
     let ir = db.ir();
-    let target = &func.owning_target;
+    let target = func.as_ref().owning_target();
     let enabled_features = ir.target_crubit_features(target);
 
-    if matches!(func.cc_name, ir::UnqualifiedIdentifier::ConversionOperator)
+    if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
         && !enabled_features.contains(CrubitFeature::AssumeThisLifetimes)
     {
         return Err(NoBindingsReason::Unsupported(anyhow!(
@@ -272,8 +271,8 @@ fn func_has_bindings(
 
     let mut missing_features = vec![];
 
-    if func.is_member_or_descendant_of_class_template
-        && func.rs_name != ir::UnqualifiedIdentifier::Destructor
+    if func.is_member_or_descendant_of_class_template()
+        && func.rs_name() != &ir::UnqualifiedIdentifier::Destructor
         && !enabled_features.contains(CrubitFeature::TemplateInstantiation)
     {
         missing_features.push(
@@ -283,7 +282,8 @@ fn func_has_bindings(
     }
 
     let mut visibility = Visibility::Public;
-    let sig_types = func.params.iter().map(|p| &p.type_).chain(std::iter::once(&func.return_type));
+    let sig_types =
+        func.params().iter().map(|p| p.type_()).chain(std::iter::once(func.return_type()));
     for sig_type in sig_types {
         let rs_type_kind = db.rs_type_kind(sig_type.clone()).unwrap();
         match type_visibility(db, &func, rs_type_kind) {
@@ -402,12 +402,12 @@ fn type_target_restriction_shallow(
         // All non-record types are `pub` if they receive bindings.
         return None;
     };
-    let target = &record.owning_target;
+    let target = record.owning_target()?;
     // Template types (except for the special-cased ones like `[w]string_view`)
     // are the only types whose bindings have restrictions, and they do not have
     // unique owning targets.
     if record.has_unique_owning_target()
-        || db.ir().target_crubit_features(target).contains(CrubitFeature::TemplateInstantiation)
+        || db.ir().target_crubit_features(&target).contains(CrubitFeature::TemplateInstantiation)
     {
         return None;
     }
@@ -416,7 +416,7 @@ fn type_target_restriction_shallow(
         return None;
     }
     // Targets with experimental features generate `pub` bindings (for now?), no matter what.
-    if db.ir().target_crubit_features(target).contains(CrubitFeature::Experimental) {
+    if db.ir().target_crubit_features(&target).contains(CrubitFeature::Experimental) {
         return None;
     }
     Some(TargetRestriction { target: target.clone(), exemplar_type: rs_type_kind.clone() })
@@ -473,10 +473,11 @@ pub fn resolve_names(
     db: &BindingsGenerator,
     parent: Rc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
-    let child_items = match parent.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
-        Some(Item::Namespace(ns)) => ns.children.iter(),
-        Some(Item::Record(record)) => record.children.iter(),
-        None => db.ir().top_level_items_in_target(&parent.owning_target).iter(),
+    let parent_owning_target = Record::owning_target(&parent);
+    let child_items = match parent.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
+        Some(Item::Namespace(ns)) => ns.children().iter(),
+        Some(Item::Record(record)) => record.children().iter(),
+        None => db.ir().top_level_items_in_target(parent_owning_target).iter(),
         _ => bail!("not a parent namespace or record"),
     };
 
@@ -514,44 +515,43 @@ pub fn resolve_names(
             let id = item.id();
             match item {
                 Item::IncompleteRecord(incomplete_record) => {
-                    insert(
-                        incomplete_record.rs_name.identifier.clone(),
-                        ResolvedName::ExplicitItem(id),
-                    );
+                    // TODO(b/532184844): Remove explicit Rc conversions as we migrate to &'a str on ProtoViews.
+                    insert(Rc::from(incomplete_record.rs_name()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Record(record) => {
-                    insert(record.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(record.rs_name()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Enum(enum_) => {
-                    insert(enum_.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id))
+                    // TODO(b/532184844): Remove conversions to Rc<str> as we migrate to &'a str on ProtoViews.
+                    insert(Rc::from(enum_.rs_name()), ResolvedName::ExplicitItem(id))
                 }
                 Item::TypeAlias(type_alias) => {
-                    insert(type_alias.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(type_alias.rs_name()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Namespace(ns) => {
                     insert(
-                        ns.rs_name.identifier.clone(),
+                        Rc::from(ns.rs_name()),
                         ResolvedName::Namespace {
-                            canonical_namespace_id: ns.canonical_namespace_id,
+                            canonical_namespace_id: ns.canonical_namespace_id(),
                         },
                     );
                 }
                 Item::UseMod(use_mod) => {
-                    insert(use_mod.mod_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(use_mod.mod_name().as_str()), ResolvedName::ExplicitItem(id));
                 }
                 Item::ExistingRustType(existing_rust_type) => {
                     insert(existing_rust_type.rs_name.clone(), ResolvedName::ExplicitItem(id));
                 }
                 Item::Func(func) => {
-                    if let ir::UnqualifiedIdentifier::Identifier(ident) = &func.rs_name {
-                        insert(ident.identifier.clone(), ResolvedName::ValueItem(id));
+                    if let ir::UnqualifiedIdentifier::Identifier(ident) = func.rs_name() {
+                        insert(Rc::from(ident.as_str()), ResolvedName::ValueItem(id));
                     }
                 }
                 Item::Constant(constant) => {
-                    insert(constant.rs_name.identifier.clone(), ResolvedName::ValueItem(id));
+                    insert(Rc::from(constant.rs_name()), ResolvedName::ValueItem(id));
                 }
                 Item::GlobalVar(global_var) => {
-                    insert(global_var.rs_name.identifier.clone(), ResolvedName::ValueItem(id));
+                    insert(Rc::from(global_var.rs_name()), ResolvedName::ValueItem(id));
                 }
                 Item::Comment(_) | Item::UnsupportedItem(_) => {}
             }
@@ -561,16 +561,16 @@ pub fn resolve_names(
     // Pass 2: Insert module names for records, checking for conflicts.
     for item in child_items {
         if let Item::Record(record) = item {
-            let id = record.id;
+            let id = record.id();
             let make_module_for_nested_items = record
-                .children
+                .children()
                 .iter()
                 .any(|child| child.place_in_nested_module_if_nested_in_record());
             if make_module_for_nested_items {
-                let mut name = record.rs_name.identifier.as_ref().to_snake_case();
+                let mut name = record.rs_name().to_snake_case();
 
                 // Disambiguation logic
-                if name == record.rs_name.identifier.as_ref() {
+                if name == record.rs_name() {
                     name = format!("{}_items", name);
                 }
 

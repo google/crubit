@@ -152,7 +152,7 @@ pub fn ir_from_cc_dependency(
 
 /// Creates an identifier
 pub fn ir_id(name: &str) -> Identifier {
-    Identifier { identifier: name.into() }
+    Identifier::new(name)
 }
 
 /// Creates a simple `Item::Record` with a given name.
@@ -161,8 +161,8 @@ pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Recor
     for item in ir.items() {
         if let Item::Record(record) = item {
             let mut record = (**record).clone();
-            record.rs_name = Identifier { identifier: name.into() };
-            record.cc_name = Identifier { identifier: name.into() };
+            record.set_rs_name(Identifier::new(name));
+            record.set_cc_name(Identifier::new(name));
             return record;
         }
     }
@@ -171,8 +171,8 @@ pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Recor
 
 pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> LifetimeId {
     for param in names {
-        if *param.name == *name {
-            return param.id;
+        if param.name() == name {
+            return param.id();
         }
     }
     panic!("Didn't find lifetime param with name {}", name);
@@ -182,7 +182,7 @@ pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> Lifetim
 /// Panics if no such function could be found.
 pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
     for func in ir.functions() {
-        if func.rs_name == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
+        if func.rs_name() == &ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
             return func;
         }
     }
@@ -193,7 +193,7 @@ pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
 /// Panics if no such record could be found.
 pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
     for record in ir.records() {
-        if record.cc_name == cc_name {
+        if record.cc_name() == cc_name {
             return record;
         }
     }
@@ -259,9 +259,9 @@ mod tests {
     #[should_panic(expected = "Duplicate decl_id found in")]
     fn test_duplicate_decl_ids_err() {
         let mut r1 = ir_record(Platform::X86Linux, "R1");
-        r1.id = ItemId::new_for_testing(42);
+        r1.set_id(ItemId::new_for_testing(42));
         let mut r2 = ir_record(Platform::X86Linux, "R2");
-        r2.id = ItemId::new_for_testing(42);
+        r2.set_id(ItemId::new_for_testing(42));
         let _ = make_ir_from_items([r1.into(), r2.into()]);
     }
 }
