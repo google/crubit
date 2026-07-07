@@ -406,15 +406,19 @@ pub fn generate_function_assertion(
 // constructor member function of `record_id`.
 // TODO(zarko): do we need to distinguish between non-const and const ctors? See b/436870965.
 fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
-    match &func.params[..] {
-    // We already know this is a constructor.
-    [FuncParam { type_: CcType { variant: CcTypeVariant::Pointer(_), ..}, .. },
+    if func.params.len() != 2 {
+        return false;
+    }
     // Match on any C([const] C&).
-     FuncParam { type_: CcType { variant: CcTypeVariant::Pointer(
-        PointerType {kind: PointerTypeKind::LValueRef, pointee_type: inner_type, ..}), ..}, .. }] =>
-        matches!(&**inner_type, CcType { variant: CcTypeVariant::Decl{ id, ..}, ..} if *id == record_id),
-    _ => false
-  }
+    match func.params[1].type_.variant {
+        CcTypeVariant::Pointer(ref p) if p.kind() == PointerTypeKind::LValueRef => {
+            match p.pointee_type().variant {
+                CcTypeVariant::Decl { id, .. } => id == record_id,
+                _ => false,
+            }
+        }
+        _ => false,
+    }
 }
 
 pub fn generate_function_thunk_impl(
@@ -506,7 +510,7 @@ pub fn generate_function_thunk_impl(
         .map(|p| {
             let ident = format_cc_ident(&p.identifier.identifier)?;
             match &p.type_.variant {
-                CcTypeVariant::Pointer(pointer) => match pointer.kind {
+                CcTypeVariant::Pointer(pointer) => match pointer.kind() {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
                     PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
                     PointerTypeKind::Nullable
@@ -630,14 +634,10 @@ pub fn generate_function_thunk_impl(
         PassingConvention::Void => return_expr,
         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
             match &func.return_type.variant {
-                CcTypeVariant::Pointer(PointerType {
-                    kind: PointerTypeKind::LValueRef, ..
-                }) => {
+                CcTypeVariant::Pointer(ptr) if ptr.kind() == PointerTypeKind::LValueRef => {
                     quote! { return std::addressof( #return_expr ) }
                 }
-                CcTypeVariant::Pointer(PointerType {
-                    kind: PointerTypeKind::RValueRef, ..
-                }) => {
+                CcTypeVariant::Pointer(ptr) if ptr.kind() == PointerTypeKind::RValueRef => {
                     let nested_type = cpp_type_name::format_cpp_type_with_references(
                         &db.rs_type_kind(func.return_type.clone())?,
                         db,

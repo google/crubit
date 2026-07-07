@@ -458,9 +458,9 @@ fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_n
     let ir = ir_from_cc("void f(int&& a) {};").unwrap();
     let function = ir.functions().find(|func| func.cc_name == "f").or_fail()?;
     let [param] = &function.params[..] else { return fail!("expected exactly one parameter") };
-    let &PointerType { kind, lifetime, .. } = param.type_.variant.as_pointer().or_fail()?;
-    expect_eq!(kind, PointerTypeKind::RValueRef);
-    expect_eq!(lifetime, None);
+    let ptr_type = param.type_.variant.as_pointer().or_fail()?;
+    expect_eq!(ptr_type.kind(), PointerTypeKind::RValueRef);
+    expect_eq!(ptr_type.lifetime(), None);
     Ok(())
 }
 
@@ -683,7 +683,7 @@ fn test_owned_ptr_as_return_type_annotation() -> googletest::Result<()> {
 
     let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
     let pointer_type = &function.return_type.variant.as_pointer().or_fail()?;
-    expect_eq!(pointer_type.kind, PointerTypeKind::Owned);
+    expect_eq!(pointer_type.kind(), PointerTypeKind::Owned);
     Ok(())
 }
 
@@ -701,7 +701,7 @@ fn test_owned_ptr_as_param_type_annotation() -> googletest::Result<()> {
 
     let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
     let first_param_pointer_type = &function.params[0].type_.variant.as_pointer().or_fail()?;
-    expect_eq!(first_param_pointer_type.kind, PointerTypeKind::Owned);
+    expect_eq!(first_param_pointer_type.kind(), PointerTypeKind::Owned);
     Ok(())
 }
 
@@ -3059,8 +3059,8 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
         })
         .unwrap();
     let this_param = &rvalue_ref_method.params[0].type_.variant.as_pointer().unwrap();
-    assert_eq!(this_param.kind, PointerTypeKind::RValueRef);
-    assert!(!this_param.pointee_type.is_const);
+    assert_eq!(this_param.kind(), PointerTypeKind::RValueRef);
+    assert!(!this_param.pointee_type().is_const);
 
     let rvalue_ref_const_method = ir
         .functions()
@@ -3070,8 +3070,8 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
         })
         .unwrap();
     let const_this_param = rvalue_ref_const_method.params[0].type_.variant.as_pointer().unwrap();
-    assert_eq!(const_this_param.kind, PointerTypeKind::RValueRef);
-    assert!(const_this_param.pointee_type.is_const);
+    assert_eq!(const_this_param.kind(), PointerTypeKind::RValueRef);
+    assert!(const_this_param.pointee_type().is_const);
 }
 
 #[gtest]
@@ -3229,20 +3229,21 @@ fn test_elided_lifetimes() {
     .unwrap();
     let func = retrieve_func(&ir, "f");
     let lifetime_params = &func.lifetime_params;
-    assert_eq!(lifetime_params.iter().map(|p| p.name.as_ref()).collect_vec(), vec!["a", "b"]);
-    let a_id = lifetime_params[0].id;
-    let b_id = lifetime_params[1].id;
-    assert_eq!(func.return_type.variant.as_pointer().unwrap().lifetime.unwrap(), a_id);
+    let mapped_names = lifetime_params.iter().map(|p| p.name()).collect_vec();
+    assert_eq!(mapped_names, vec!["a", "b"]);
+    let a_id = lifetime_params[0].id();
+    let b_id = lifetime_params[1].id();
+    assert_eq!(func.return_type.variant.as_pointer().unwrap().lifetime().unwrap(), a_id);
 
     assert_eq!(func.params[0].identifier, ir_id("__this"));
     let ptr = &func.params[0].type_.variant.as_pointer().unwrap();
-    assert!(!ptr.pointee_type.is_const);
-    assert_eq!(ptr.lifetime.unwrap(), a_id);
+    assert!(!ptr.pointee_type().is_const);
+    assert_eq!(ptr.lifetime().unwrap(), a_id);
 
     assert_eq!(func.params[1].identifier, ir_id("i"));
     let ptr = &func.params[1].type_.variant.as_pointer().unwrap();
-    assert!(!ptr.pointee_type.is_const);
-    assert_eq!(ptr.lifetime.unwrap(), b_id);
+    assert!(!ptr.pointee_type().is_const);
+    assert_eq!(ptr.lifetime().unwrap(), b_id);
 }
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
@@ -3260,8 +3261,8 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     assert_eq!(p.identifier, ir_id("__this"));
 
     let p_ptr = p.type_.variant.as_pointer().unwrap();
-    assert_eq!(p_ptr.lifetime.unwrap(), f.lifetime_params[0].id);
-    assert!(!p_ptr.pointee_type.is_const);
+    assert_eq!(p_ptr.lifetime().unwrap(), f.lifetime_params[0].id());
+    assert!(!p_ptr.pointee_type().is_const);
 }
 
 #[gtest]

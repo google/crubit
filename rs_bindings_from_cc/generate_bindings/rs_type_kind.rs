@@ -62,12 +62,12 @@ pub fn rs_type_kind_with_lifetime_elision(
             // Rust pointer (as opposed to the mutability of the C++ pointer to determine the
             // mutability of the Rust pointer, e.g. ty.is_const).
             let mutability =
-                if pointer.pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
+                if pointer.pointee_type().is_const { Mutability::Const } else { Mutability::Mut };
             let mut pointee = db.rs_type_kind_with_lifetime_elision(
-                pointer.pointee_type.as_ref().clone(),
+                pointer.pointee_type().as_ref().clone(),
                 LifetimeOptions {
                     assume_lifetimes: lifetime_options.assume_lifetimes
-                        && !pointee_is_string_view(db, &pointer.pointee_type),
+                        && !pointee_is_string_view(db, pointer.pointee_type()),
                     // is_return_type is used in !assume_lifetimes contexts for absl::span
                     // to determine whether lifetimes should be provided.
                     is_return_type: lifetime_options.is_return_type
@@ -101,7 +101,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                     _ => return Err(anyhow!("pointers may only have one lifetime")),
                 }
             } else {
-                match pointer.lifetime {
+                match pointer.lifetime() {
                     Some(lifetime_id) => db
                         .ir()
                         .get_lifetime(lifetime_id)
@@ -111,13 +111,13 @@ pub fn rs_type_kind_with_lifetime_elision(
                     None => {
                         return Ok(RsTypeKind::Pointer {
                             pointee,
-                            kind: RustPtrKind::CcPtr(pointer.kind),
+                            kind: RustPtrKind::CcPtr(pointer.kind()),
                             mutability,
                         })
                     }
                 }
             };
-            Ok(match pointer.kind {
+            Ok(match pointer.kind() {
                 PointerTypeKind::LValueRef => {
                     let is_cref = lifetime_options.assume_lifetimes
                         && (!pointee.is_complete()
@@ -141,7 +141,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 PointerTypeKind::NonNull | PointerTypeKind::Nullable | PointerTypeKind::Owned => {
                     RsTypeKind::Pointer {
                         pointee,
-                        kind: RustPtrKind::CcPtr(pointer.kind),
+                        kind: RustPtrKind::CcPtr(pointer.kind()),
                         mutability,
                     }
                 }

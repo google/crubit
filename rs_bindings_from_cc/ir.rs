@@ -256,7 +256,13 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HeaderName {
-    pub name: Rc<str>,
+    pub(crate) name: Rc<str>,
+}
+
+impl HeaderName {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
@@ -267,8 +273,18 @@ pub struct LifetimeId(pub i32);
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LifetimeName {
-    pub name: Rc<str>,
-    pub id: LifetimeId,
+    pub(crate) name: Rc<str>,
+    pub(crate) id: LifetimeId,
+}
+
+impl LifetimeName {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn id(&self) -> LifetimeId {
+        self.id
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -284,6 +300,43 @@ pub struct CcType {
 }
 
 impl CcType {
+    pub fn new(
+        variant: CcTypeVariant,
+        is_const: bool,
+        unknown_attr: impl Into<Rc<str>>,
+        explicit_lifetimes: Vec<Rc<str>>,
+    ) -> Self {
+        Self { variant, is_const, unknown_attr: unknown_attr.into(), explicit_lifetimes }
+    }
+
+    pub fn variant(&self) -> &CcTypeVariant {
+        &self.variant
+    }
+
+    pub fn variant_mut(&mut self) -> &mut CcTypeVariant {
+        &mut self.variant
+    }
+
+    pub fn is_const(&self) -> bool {
+        self.is_const
+    }
+
+    pub fn set_is_const(&mut self, is_const: bool) {
+        self.is_const = is_const;
+    }
+
+    pub fn unknown_attr(&self) -> &str {
+        &self.unknown_attr
+    }
+
+    pub fn explicit_lifetimes(&self) -> &[Rc<str>] {
+        &self.explicit_lifetimes
+    }
+
+    pub fn explicit_lifetimes_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.explicit_lifetimes
+    }
+
     pub fn is_unit_type(&self) -> bool {
         matches!(&self.variant, CcTypeVariant::Primitive(Primitive::Void))
     }
@@ -335,9 +388,39 @@ pub enum PointerTypeKind {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PointerType {
-    pub kind: PointerTypeKind,
-    pub lifetime: Option<LifetimeId>,
-    pub pointee_type: Rc<CcType>,
+    pub(crate) kind: PointerTypeKind,
+    pub(crate) lifetime: Option<LifetimeId>,
+    pub(crate) pointee_type: Rc<CcType>,
+}
+
+impl PointerType {
+    pub fn new(
+        kind: PointerTypeKind,
+        lifetime: Option<LifetimeId>,
+        pointee_type: Rc<CcType>,
+    ) -> Self {
+        Self { kind, lifetime, pointee_type }
+    }
+
+    pub fn kind(&self) -> PointerTypeKind {
+        self.kind
+    }
+
+    pub fn set_kind(&mut self, kind: PointerTypeKind) {
+        self.kind = kind;
+    }
+
+    pub fn pointee_type(&self) -> &Rc<CcType> {
+        &self.pointee_type
+    }
+
+    pub fn pointee_type_mut(&mut self) -> &mut Rc<CcType> {
+        &mut self.pointee_type
+    }
+
+    pub fn lifetime(&self) -> Option<LifetimeId> {
+        self.lifetime
+    }
 }
 
 /// Generates an enum type that implements `Deserialize`, which parses the stringified contents of

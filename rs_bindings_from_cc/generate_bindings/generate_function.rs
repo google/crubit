@@ -363,7 +363,7 @@ fn api_func_shape_for_operator_index(
             db.cc_type_debug_name(&func.return_type)
         )
     };
-    let return_val_is_const = pointee.pointee_type.is_const;
+    let return_val_is_const = pointee.pointee_type().is_const;
 
     let Some(instance_method_metadata) = &func.instance_method_metadata else {
         panic!("cannot tell whether operator[] is const or not, shouldn't happen")
@@ -426,17 +426,17 @@ fn generate_cc_operator_index_nonmut_impls(
     let func_name = make_rs_ident("cc_index");
     let output_pointee_cc_type = match &func.return_type.variant {
         CcTypeVariant::Pointer(pointer_data) => {
-            if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
+            if !matches!(pointer_data.kind(), PointerTypeKind::LValueRef) {
                 errors.add(anyhow!(
                     "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
-                    pointer_data.kind
+                    pointer_data.kind()
                 ));
             }
-            if !pointer_data.pointee_type.is_const {
+            if !pointer_data.pointee_type().is_const {
                 errors.add(anyhow!("operator[] must return a const value"));
             }
 
-            (*pointer_data.pointee_type).clone()
+            (**pointer_data.pointee_type()).clone()
         }
 
         _ => {
@@ -483,17 +483,17 @@ fn generate_cc_operator_index_mut_impls(
 
     let output_pointee_cc_type = match &func.return_type.variant {
         CcTypeVariant::Pointer(pointer_data) => {
-            if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
+            if !matches!(pointer_data.kind(), PointerTypeKind::LValueRef) {
                 errors.add(anyhow!(
                     "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
-                    pointer_data.kind
+                    pointer_data.kind()
                 ));
             }
-            if pointer_data.pointee_type.is_const {
+            if pointer_data.pointee_type().is_const {
                 errors.add(anyhow!("(mutable) operator[] must return a non-const value"));
             }
 
-            (*pointer_data.pointee_type).clone()
+            (**pointer_data.pointee_type()).clone()
         }
 
         _ => {
@@ -1713,34 +1713,33 @@ fn rs_type_kinds_for_func(
                     && let Some(Item::Record(record)) = func.enclosing_item_id.map(|id| db.find_untyped_decl(id))
                         && record.is_thread_safe
                             && let CcTypeVariant::Pointer(ptr) = &mut param_type.variant {
-                                let mut new_pointee = (*ptr.pointee_type).clone();
+                                let mut new_pointee = (**ptr.pointee_type()).clone();
                                 new_pointee.is_const = true;
-                                ptr.pointee_type = Rc::new(new_pointee);
-                                ptr.kind = PointerTypeKind::LValueRef;
+                                *ptr.pointee_type_mut() = Rc::new(new_pointee);
+                                ptr.set_kind(PointerTypeKind::LValueRef);
                                 infer_param_lifetimes = true;
                             }
 
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.
-                let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _ }) =
-                    &mut param_type.variant
-                else {
+                let CcTypeVariant::Pointer(ptr) = &mut param_type.variant else {
                     panic!(
                         "Expected first parameter of member function:\n`{func:?}`\n\
                         to be a `this` pointer, got:\n{param_type:?}",
                     )
                 };
+                let lifetime = ptr.lifetime();
                 if db.ir()
                     .target_crubit_features(&func.owning_target)
                     .contains(crubit_feature::CrubitFeature::AssumeThisLifetimes) {
                     infer_param_lifetimes = true;
                 }
                 if infer_param_lifetimes || lifetime.is_some() {
-                    match kind {
+                    match ptr.kind() {
                         PointerTypeKind::LValueRef | PointerTypeKind::RValueRef => {}
                         // Fixup pointer-like `this` values to instead be reference-like.
                         PointerTypeKind::Nullable | PointerTypeKind::NonNull => {
-                            *kind = PointerTypeKind::LValueRef;
+                            ptr.set_kind(PointerTypeKind::LValueRef);
                         }
                         PointerTypeKind::Owned => unreachable!("owned pointers require an annotation on the pointer, but there's nowhere to put an annotation for the `this` pointer")
                     }

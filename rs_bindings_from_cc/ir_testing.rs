@@ -171,8 +171,8 @@ pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Recor
 
 pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> LifetimeId {
     for param in names {
-        if *param.name == *name {
-            return param.id;
+        if param.name() == name {
+            return param.id();
         }
     }
     panic!("Didn't find lifetime param with name {}", name);
