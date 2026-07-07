@@ -40,7 +40,7 @@ pub fn cpp_tagless_type_name_for_record(
     record: &Record,
     db: &BindingsGenerator<'_>,
 ) -> Result<TokenStream> {
-    let ident = expect_format_cc_type_name(record.cc_name.identifier.as_ref());
+    let ident = expect_format_cc_type_name(record.cc_name());
     let namespace_qualifier = db.namespace_qualifier(record).format_for_cc()?;
     Ok(quote! { #namespace_qualifier #ident })
 }
@@ -151,18 +151,18 @@ pub fn tagless_cpp_type_name_for_item(
 ) -> Result<TokenStream> {
     match item {
         Item::IncompleteRecord(incomplete_record) => {
-            let ident = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
+            let ident = expect_format_cc_type_name(incomplete_record.cc_name());
             let namespace_qualifier = db.namespace_qualifier(incomplete_record).format_for_cc()?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::Record(record) => cpp_tagless_type_name_for_record(record, db),
         Item::Enum(enum_) => {
-            let ident = expect_format_cc_type_name(&enum_.rs_name.identifier);
+            let ident = expect_format_cc_type_name(enum_.rs_name());
             let namespace_qualifier = db.namespace_qualifier(item).format_for_cc()?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
-            let ident = expect_format_cc_type_name(&type_alias.cc_name.identifier);
+            let ident = expect_format_cc_type_name(type_alias.cc_name());
             let namespace_qualifier = db.namespace_qualifier(item).format_for_cc()?;
             Ok(quote! { #namespace_qualifier #ident })
         }
