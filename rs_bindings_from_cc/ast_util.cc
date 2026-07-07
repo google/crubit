@@ -272,8 +272,7 @@ bool IsProto2Message(const clang::Decl& decl) {
   // A forward-compatible way to check this is to see whether the record derives
   // from google::protobuf::MessageLite. (Note that because the record is a complete
   // definition, we have the full inheritance hierarchy available.)
-  bool found = false;
-  cxx_record_decl->forallBases([&found](const clang::CXXRecordDecl* base) {
+  return !cxx_record_decl->forallBases([](const clang::CXXRecordDecl* base) {
     std::string base_name_owned = base->getQualifiedNameAsString();
     absl::string_view base_name = base_name_owned;
     // It's not clear that the default formatting rules will give us an absolute
@@ -281,13 +280,8 @@ bool IsProto2Message(const clang::Decl& decl) {
     if (base_name.starts_with("::")) {
       base_name.remove_prefix(2);
     }
-    if (base_name == "google::protobuf::MessageLite") {
-      found = true;
-      return false;
-    }
-    return true;
+    return base_name != "google::protobuf::MessageLite";
   });
-  return found;
 }
 
 }  // namespace crubit
