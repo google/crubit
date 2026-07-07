@@ -301,7 +301,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
                     // uncallable function item.
                     db.errors().report(e);
                 }
-                if db.is_ambiguous_function(&generated_function.id, func.id) {
+                if db.is_ambiguous_function(&generated_function.id, func.id()) {
                     bail!("Cannot generate bindings for overloaded function")
                 } else {
                     (*generated_function.snippets).clone()
@@ -713,7 +713,7 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
             if !record.is_raw_string_view()
                 && db
                     .ir()
-                    .target_crubit_features(&record.owning_target)
+                    .target_crubit_features(record.as_ref().owning_target())
                     .contains(crubit_feature::CrubitFeature::AssumeLifetimes)
             {
                 match (db.codegen_functions().decl_lifetime_arity)(db, record.id()) {
@@ -721,14 +721,14 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
                         if arity != 0 && lifetimes.len() != arity {
                             return Some(UnsafeReason(format!(
                                 "type {} has {} lifetime parameter{}, but {} {} provided; callers must ensure that arguments have the appropriate lifetime",
-                                record.rs_name, arity, if arity == 1 { "" } else { "s" }, lifetimes.len(), if lifetimes.len() == 1 { "was" } else { "were" }
+                                record.rs_name(), arity, if arity == 1 { "" } else { "s" }, lifetimes.len(), if lifetimes.len() == 1 { "was" } else { "were" }
                             ).into()));
                         }
                     }
                     _ => {
                         return Some(UnsafeReason(format!(
                             "unable to determine lifetime how many lifetime parameters {} accepts; callers must ensure that arguments have the appropriate lifetime",
-                            record.rs_name
+                            record.rs_name()
                         ).into()));
                     }
                 }
@@ -783,10 +783,10 @@ fn callable_safety(
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
 fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
-    if field.access != AccessSpecifier::Public {
+    if field.access() != AccessSpecifier::Public {
         return None;
     }
-    let field_rs_type_kind = match db.rs_type_kind(field.type_.clone()) {
+    let field_rs_type_kind = match db.rs_type_kind(field.type_().clone()) {
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
@@ -802,7 +802,7 @@ fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeRea
 fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeReason> {
     let mut doc = String::new();
 
-    match record.safety_annotation {
+    match record.safety_annotation() {
         SafetyAnnotation::DisableUnsafe => {
             return None;
         }
@@ -818,15 +818,14 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeRea
     }
 
     let reasons: Vec<_> = record
-        .fields
+        .fields()
         .iter()
         .filter_map(|field| {
             let reason = db.record_field_safety(field.clone())?;
 
             // TODO(nicholasbishop): handle unnamed better.
             let mut name = field
-                .rust_identifier
-                .as_ref()
+                .rust_identifier()
                 .map(|i| format!("`{}`", i.as_str()))
                 .unwrap_or("unnamed field".to_owned());
             write!(name, ": {reason}").unwrap();
@@ -834,7 +833,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeRea
         })
         .collect();
 
-    if matches!(record.safety_annotation, SafetyAnnotation::Unannotated)
+    if matches!(record.safety_annotation(), SafetyAnnotation::Unannotated)
         && !record.is_union()
         && reasons.is_empty()
     {
@@ -928,7 +927,7 @@ fn generate_rs_api_impl_includes(
             }
         }
 
-        if record.detected_formatter {
+        if record.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
                 "rs_std/lossy_formatter_for_bindings.h".into(),
@@ -941,7 +940,7 @@ fn generate_rs_api_impl_includes(
     }
 
     for e in ir.enums() {
-        if e.detected_formatter {
+        if e.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
                 "rs_std/lossy_formatter_for_bindings.h".into(),
@@ -984,7 +983,7 @@ fn generate_rs_api_impl_includes(
     // original order (some libraries require certain headers to be included
     // first - e.g. `config.h`).
     let ir_includes =
-        ir.public_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
+        ir.public_headers().map(|hdr| CcInclude::user_header(Rc::from(hdr.name()))).collect_vec();
 
     CppIncludes { internal_includes, ir_includes }
 }
@@ -1198,8 +1197,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             })
         }
         RsTypeKind::Enum { ref enum_, .. } => {
-            let cpp_type =
-                make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name.identifier.as_ref(), db)?;
+            let cpp_type = make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name(), db)?;
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
@@ -1260,16 +1258,15 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 let ir = db.ir();
                 let target = db
                     .defining_target(original_type.id())
-                    .unwrap_or_else(|| original_type.owning_target.clone());
+                    .unwrap_or_else(|| original_type.as_ref().owning_target().clone());
                 let rust_abi_path =
                     make_rust_abi_path_from_str("ProtoMessageRustBridge", ir, &target);
 
                 let cpp_namespace_qualifier = db.namespace_qualifier(original_type.as_ref());
 
                 // Rust message types are exported to crate root, but we need the full namespace for the C++ ABI.
-                let merged_cpp_abi_path = cpp_namespace_qualifier.parts().join("::")
-                    + "::"
-                    + original_type.cc_name.identifier.as_ref();
+                let merged_cpp_abi_path =
+                    cpp_namespace_qualifier.parts().join("::") + "::" + original_type.cc_name();
 
                 Ok(CrubitAbiType::ProtoMessage {
                     proto_message_rust_bridge: rust_abi_path,
@@ -1281,7 +1278,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 let ir = db.ir();
                 let target = db
                     .defining_target(original_type.id())
-                    .unwrap_or_else(|| original_type.owning_target.clone());
+                    .unwrap_or_else(|| original_type.as_ref().owning_target().clone());
                 let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, ir, &target);
 
                 let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
@@ -1415,15 +1412,15 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             ensure!(
                 record.is_unpin(),
                 "Type `{}` must be Rust-movable in order to memcpy through a bridge buffer. See crubit.rs/cpp/classes_and_structs#rust_movable",
-                record.cc_name
+                record.cc_name()
             );
 
             // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
             // except that it creates an Ident instead of a TokenStream.
-            code_gen_utils::check_valid_cc_name(&record.cc_name.identifier)
+            code_gen_utils::check_valid_cc_name(record.cc_name())
                 .expect("IR should only contain valid C++ types");
 
-            let cpp_type = make_cpp_type_from_item(record, record.cc_name.identifier.as_ref(), db)?;
+            let cpp_type = make_cpp_type_from_item(record, record.cc_name(), db)?;
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }

@@ -286,11 +286,11 @@ fn test_unescapable_rust_keywords_in_anonymous_struct_type_alias() {
 #[gtest]
 fn test_unescapable_rust_keywords_in_field_name() {
     let ir = ir_from_cc("struct SomeStruct { int self; };").unwrap();
-    let record = ir.records().find(|record| record.rs_name == "SomeStruct").unwrap();
-    assert_eq!(record.fields.len(), 1);
-    let field = &record.fields[0];
-    assert_eq!(field.rust_identifier.as_ref().map(|x| x.as_str()), Some("__field_0"));
-    assert_eq!(field.cpp_identifier.as_ref().map(|x| x.as_str()), Some("self"));
+    let record = ir.records().find(|record| record.rs_name() == "SomeStruct").unwrap();
+    assert_eq!(record.fields().len(), 1);
+    let field = &record.fields()[0];
+    assert_eq!(field.rust_identifier().as_ref().map(|x| x.as_str()), Some("__field_0"));
+    assert_eq!(field.cpp_identifier().as_ref().map(|x| x.as_str()), Some("self"));
 }
 
 #[gtest]
@@ -456,11 +456,11 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
 fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_no_lifetime(
 ) -> googletest::Result<()> {
     let ir = ir_from_cc("void f(int&& a) {};").unwrap();
-    let function = ir.functions().find(|func| func.cc_name == "f").or_fail()?;
-    let [param] = &function.params[..] else { return fail!("expected exactly one parameter") };
-    let &PointerType { kind, lifetime, .. } = param.type_.variant.as_pointer().or_fail()?;
-    expect_eq!(kind, PointerTypeKind::RValueRef);
-    expect_eq!(lifetime, None);
+    let function = ir.functions().find(|func| func.cc_name() == "f").or_fail()?;
+    let [param] = &function.params()[..] else { return fail!("expected exactly one parameter") };
+    let ptr_type = param.type_().variant().as_pointer().or_fail()?;
+    expect_eq!(ptr_type.kind(), PointerTypeKind::RValueRef);
+    expect_eq!(ptr_type.lifetime(), None);
     Ok(())
 }
 
@@ -665,8 +665,8 @@ fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
     .expect("Failed to generate IR from CC");
 
     let record =
-        ir.records().find(|record| record.rs_name == "RecordWithOwnedPtrType").or_fail()?;
-    let owned_ptr_config = record.owned_ptr_config.as_ref().or_fail()?;
+        ir.records().find(|record| record.rs_name() == "RecordWithOwnedPtrType").or_fail()?;
+    let owned_ptr_config = record.owned_ptr_config().or_fail()?;
     expect_that!(&*owned_ptr_config.owned_ptr_type, eq("SomeOwnedPtrType"));
     Ok(())
 }
@@ -681,9 +681,9 @@ fn test_owned_ptr_as_return_type_annotation() -> googletest::Result<()> {
     )
     .expect("Failed to generate IR from CC");
 
-    let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
-    let pointer_type = &function.return_type.variant.as_pointer().or_fail()?;
-    expect_eq!(pointer_type.kind, PointerTypeKind::Owned);
+    let function = ir.functions().find(|f| f.cc_name() == "f").or_fail()?;
+    let pointer_type = &function.return_type().variant().as_pointer().or_fail()?;
+    expect_eq!(pointer_type.kind(), PointerTypeKind::Owned);
     Ok(())
 }
 
@@ -699,9 +699,10 @@ fn test_owned_ptr_as_param_type_annotation() -> googletest::Result<()> {
     )
     .expect("Failed to generate IR from CC");
 
-    let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
-    let first_param_pointer_type = &function.params[0].type_.variant.as_pointer().or_fail()?;
-    expect_eq!(first_param_pointer_type.kind, PointerTypeKind::Owned);
+    let function = ir.functions().find(|f| f.cc_name() == "f").or_fail()?;
+    let first_param_pointer_type =
+        &function.params()[0].type_().variant().as_pointer().or_fail()?;
+    expect_eq!(first_param_pointer_type.kind(), PointerTypeKind::Owned);
     Ok(())
 }
 
@@ -1144,10 +1145,8 @@ fn test_doc_comment() -> Result<()> {
             struct MultilineOneStar {};
         "#,
     )?;
-    let comments: HashMap<_, _> = ir
-        .records()
-        .map(|r| (r.rs_name.identifier.as_ref(), r.doc_comment.as_ref().unwrap().as_ref()))
-        .collect();
+    let comments: HashMap<_, _> =
+        ir.records().map(|r| (r.rs_name(), r.doc_comment().unwrap())).collect();
 
     assert_eq!(comments["DocCommentSlashes"], "Doc comment\n\n * with three slashes");
     assert_eq!(comments["DocCommentBang"], "Doc comment\n\n * with slashes and bang");
@@ -1197,8 +1196,8 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
     let comments: HashMap<&str, Option<&str>> = ir
         .functions()
         .map(|f| {
-            if let UnqualifiedIdentifier::Identifier(id) = &f.rs_name {
-                (id.identifier.as_ref(), f.doc_comment.as_deref())
+            if let UnqualifiedIdentifier::Identifier(id) = f.rs_name() {
+                (id.identifier.as_ref(), f.doc_comment())
             } else {
                 panic!("No constructors/destructors expected in this test.")
             }
@@ -1220,16 +1219,16 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
 #[gtest]
 fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
     let ir = ir_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
-    let record = ir.records().find(|record| record.rs_name == "S").or_fail()?;
-    expect_that!(&**record, field!(&Record.must_bind, eq(true)));
+    let record = ir.records().find(|record| record.rs_name() == "S").or_fail()?;
+    expect_that!(record.must_bind(), eq(true));
     Ok(())
 }
 
 #[gtest]
 fn test_must_bind_annotation_on_function() -> googletest::Result<()> {
     let ir = ir_from_cc(r#"[[clang::annotate("crubit_must_bind")]] void f() {}"#).or_fail()?;
-    let func = ir.functions().find(|func| func.rs_name == "f").or_fail()?;
-    expect_that!(&**func, field!(&Func.must_bind, eq(true)));
+    let func = ir.functions().find(|func| func.rs_name() == "f").or_fail()?;
+    expect_that!(func.must_bind(), eq(true));
     Ok(())
 }
 
@@ -1405,7 +1404,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id();
     // Make sure the instantiation of the class template appears exactly once in the
     // `top_level_items`.
     assert_eq!(1, ir.top_level_items().iter().filter(|item| item.id() == record_id).count());
@@ -1507,7 +1506,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id();
 
     // TODO(b/200067826) This assertion worked because the template specialization
     // was top level already.
@@ -1552,23 +1551,17 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     )?;
 
     // Verify that there is only 1 record for each specialization.
-    assert_eq!(
-        1,
-        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<int>").count()
-    );
-    assert_eq!(
-        1,
-        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<float>").count()
-    );
+    assert_eq!(1, ir.records().filter(|r| r.cc_name() == "MyStruct<int>").count());
+    assert_eq!(1, ir.records().filter(|r| r.cc_name() == "MyStruct<float>").count());
     let functions = ir
         .functions()
-        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
+        .filter(|f| f.rs_name() == &UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
         .collect_vec();
 
     // Verify that there is only 1 function per instantiation.
     assert_eq!(2, functions.len());
-    let rec_id1 = functions[0].enclosing_item_id.unwrap();
-    let rec_id2 = functions[1].enclosing_item_id.unwrap();
+    let rec_id1 = functions[0].enclosing_item_id().unwrap();
+    let rec_id2 = functions[1].enclosing_item_id().unwrap();
     assert_ne!(rec_id1, rec_id2);
     Ok(())
 }
@@ -1599,9 +1592,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
         .top_level_items()
         .iter()
         .filter_map(|item| match item {
-            ir::Item::Record(r) if r.rs_name.identifier.contains("__CcTemplateInst") => {
-                Some(r.rs_name.identifier.as_ref())
-            }
+            ir::Item::Record(r) if r.rs_name().contains("__CcTemplateInst") => Some(r.rs_name()),
             _ => None,
         })
         .collect_vec();
@@ -1618,9 +1609,9 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
 
     let method_mangled_names = ir
         .functions()
-        .filter_map(|f| match &f.rs_name {
+        .filter_map(|f| match f.rs_name() {
             UnqualifiedIdentifier::Identifier(id) if id.identifier.as_ref() == "MyMethod" => {
-                Some(f.mangled_name.as_ref())
+                Some(f.mangled_name())
             }
             _ => None,
         })
@@ -1674,14 +1665,14 @@ fn test_templates_inheritance() -> Result<()> {
     assert_eq!(
         1,
         ir.records()
-            .filter(|r| r.cc_name.identifier.contains("ClassTemplateDerivedFromClassTemplate"))
+            .filter(|r| r.cc_name().contains("ClassTemplateDerivedFromClassTemplate"))
             .count()
     );
 
     // BaseTemplate is *not* instantiated in the generated bindings/IR.  The derived
     // class's bindings work fine without the bindings for the base class (this
     // is also true for non-templated base/derived classes).
-    assert_eq!(0, ir.records().filter(|r| r.cc_name.identifier.contains("BaseTemplate")).count());
+    assert_eq!(0, ir.records().filter(|r| r.cc_name().contains("BaseTemplate")).count());
     Ok(())
 }
 
@@ -1819,7 +1810,7 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id();
     // Function that used the class template as a return type.
     assert_ir_matches!(
         ir,
@@ -1863,7 +1854,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id();
     // Function that used the class template as a param type:
     assert_ir_matches!(
         ir,
@@ -1921,7 +1912,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyTemplate<int>").id;
+    let record_id = retrieve_record(&ir, "MyTemplate<int>").id();
     // Struct that used the class template as a type of a public field:
     assert_ir_matches!(
         ir,
@@ -2703,8 +2694,7 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
 #[gtest]
 fn test_dont_import_injected_class_name() {
     let ir = ir_from_cc("struct SomeStruct {};").unwrap();
-    let names =
-        ir.records().map(|r| r.rs_name.identifier.as_ref()).filter(|n| n.contains("SomeStruct"));
+    let names = ir.records().map(|r| r.rs_name()).filter(|n| n.contains("SomeStruct"));
     // we support nested structs, so we should not emit record for injected class name
     assert_eq!(names.count(), 1);
 }
@@ -2797,7 +2787,7 @@ fn test_class() {
 #[gtest]
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
-    assert!(!ir.records().any(|r| r.rs_name.identifier.as_ref() == "Struct"));
+    assert!(!ir.records().any(|r| r.rs_name() == "Struct"));
 }
 
 #[gtest]
@@ -2925,10 +2915,9 @@ fn test_member_function_params() {
     .unwrap();
     let foo_func = ir
         .functions()
-        .find(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("Foo")))
+        .find(|f| f.rs_name() == &UnqualifiedIdentifier::Identifier(ir_id("Foo")))
         .unwrap();
-    let param_names: Vec<_> =
-        foo_func.params.iter().map(|p| p.identifier.identifier.as_ref()).collect();
+    let param_names: Vec<_> = foo_func.params().iter().map(|p| p.identifier()).collect();
     assert_eq!(param_names, vec!["__this", "x", "y"]);
 }
 
@@ -2938,13 +2927,10 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     mut func_predicate: F,
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
 ) {
-    let record = ir
-        .records()
-        .find(|r| r.rs_name.identifier.as_ref() == record_name)
-        .expect("Struct not found");
+    let record = ir.records().find(|r| r.rs_name() == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(f)).expect("Function not found");
-    assert_eq!(function.enclosing_item_id, Some(record.id));
-    assert_eq!(&function.instance_method_metadata, expected_metadata);
+    assert_eq!(function.enclosing_item_id(), Some(record.id()));
+    assert_eq!(function.instance_method_metadata(), expected_metadata.as_ref());
 }
 
 fn assert_member_function_has_instance_method_metadata(
@@ -2961,7 +2947,7 @@ fn assert_member_function_has_instance_method_metadata(
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "Struct",
-        |f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id(name)),
+        |f| f.rs_name() == &UnqualifiedIdentifier::Identifier(ir_id(name)),
         expected_metadata,
     );
 }
@@ -2980,11 +2966,11 @@ fn test_member_function() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function();",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: false,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new_for_testing(
+            ir::ReferenceQualification::Unqualified,
+            false,
+            false,
+        )),
     );
 }
 
@@ -2993,11 +2979,11 @@ fn test_member_function_const() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() const;",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: true,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new_for_testing(
+            ir::ReferenceQualification::Unqualified,
+            true,
+            false,
+        )),
     );
 }
 
@@ -3006,11 +2992,11 @@ fn test_member_function_virtual() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "virtual void Function();",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: false,
-            is_virtual: true,
-        }),
+        &Some(ir::InstanceMethodMetadata::new_for_testing(
+            ir::ReferenceQualification::Unqualified,
+            false,
+            true,
+        )),
     );
 }
 
@@ -3019,11 +3005,11 @@ fn test_member_function_lvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &;",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::LValue,
-            is_const: false,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new_for_testing(
+            ir::ReferenceQualification::LValue,
+            false,
+            false,
+        )),
     );
 }
 
@@ -3032,11 +3018,11 @@ fn test_member_function_rvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &&;",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::RValue,
-            is_const: false,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new_for_testing(
+            ir::ReferenceQualification::RValue,
+            false,
+            false,
+        )),
     );
 }
 
@@ -3055,23 +3041,24 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
     let rvalue_ref_method = ir
         .functions()
         .find(|f| {
-            f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method"))
+            f.rs_name() == &UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method"))
         })
         .unwrap();
-    let this_param = &rvalue_ref_method.params[0].type_.variant.as_pointer().unwrap();
-    assert_eq!(this_param.kind, PointerTypeKind::RValueRef);
-    assert!(!this_param.pointee_type.is_const);
+    let this_param = rvalue_ref_method.params()[0].type_().variant().as_pointer().unwrap();
+    assert_eq!(this_param.kind(), PointerTypeKind::RValueRef);
+    assert!(!this_param.pointee_type().is_const());
 
     let rvalue_ref_const_method = ir
         .functions()
         .find(|f| {
-            f.rs_name
-                == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
+            f.rs_name()
+                == &UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
         })
         .unwrap();
-    let const_this_param = rvalue_ref_const_method.params[0].type_.variant.as_pointer().unwrap();
-    assert_eq!(const_this_param.kind, PointerTypeKind::RValueRef);
-    assert!(const_this_param.pointee_type.is_const);
+    let const_this_param =
+        rvalue_ref_const_method.params()[0].type_().variant().as_pointer().unwrap();
+    assert_eq!(const_this_param.kind(), PointerTypeKind::RValueRef);
+    assert!(const_this_param.pointee_type().is_const());
 }
 
 #[gtest]
@@ -3088,12 +3075,12 @@ fn test_member_function_explicit_constructor() {
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "SomeStruct",
-        |f| f.rs_name == UnqualifiedIdentifier::Constructor,
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: false,
-            is_virtual: false,
-        }),
+        |f| f.rs_name() == &UnqualifiedIdentifier::Constructor,
+        &Some(ir::InstanceMethodMetadata::new_for_testing(
+            ir::ReferenceQualification::Unqualified,
+            false,
+            false,
+        )),
     );
 }
 
@@ -3110,19 +3097,19 @@ fn test_member_function_constructor() {
         assert_member_function_with_predicate_has_instance_method_metadata(
             &ir,
             "SomeStruct",
-            |f| f.rs_name == UnqualifiedIdentifier::Constructor,
-            &Some(ir::InstanceMethodMetadata {
-                reference: ir::ReferenceQualification::Unqualified,
-                is_const: false,
-                is_virtual: false,
-            }),
+            |f| f.rs_name() == &UnqualifiedIdentifier::Constructor,
+            &Some(ir::InstanceMethodMetadata::new_for_testing(
+                ir::ReferenceQualification::Unqualified,
+                false,
+                false,
+            )),
         );
     }
 }
 
 fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {
     let ir = ir_from_cc(definition).unwrap();
-    ir.functions().map(|f| f.rs_name.clone()).collect()
+    ir.functions().map(|f| f.rs_name().clone()).collect()
 }
 
 #[gtest]
@@ -3229,39 +3216,42 @@ fn test_elided_lifetimes() {
     .unwrap();
     let func = retrieve_func(&ir, "f");
     let lifetime_params = &func.lifetime_params;
-    assert_eq!(lifetime_params.iter().map(|p| p.name.as_ref()).collect_vec(), vec!["a", "b"]);
-    let a_id = lifetime_params[0].id;
-    let b_id = lifetime_params[1].id;
-    assert_eq!(func.return_type.variant.as_pointer().unwrap().lifetime.unwrap(), a_id);
+    let mapped_names = lifetime_params.iter().map(|p| p.name()).collect_vec();
+    assert_eq!(mapped_names, vec!["a", "b"]);
+    let a_id = lifetime_params[0].id();
+    let b_id = lifetime_params[1].id();
+    assert_eq!(func.return_type.variant.as_pointer().unwrap().lifetime().unwrap(), a_id);
 
-    assert_eq!(func.params[0].identifier, ir_id("__this"));
-    let ptr = &func.params[0].type_.variant.as_pointer().unwrap();
-    assert!(!ptr.pointee_type.is_const);
-    assert_eq!(ptr.lifetime.unwrap(), a_id);
+    assert_eq!(func.params()[0].identifier(), "__this");
+    let ptr = func.params()[0].type_().variant().as_pointer().unwrap();
+    assert!(!ptr.pointee_type().is_const());
+    assert_eq!(ptr.lifetime().unwrap(), a_id);
 
-    assert_eq!(func.params[1].identifier, ir_id("i"));
-    let ptr = &func.params[1].type_.variant.as_pointer().unwrap();
-    assert!(!ptr.pointee_type.is_const);
-    assert_eq!(ptr.lifetime.unwrap(), b_id);
+    assert_eq!(func.params()[1].identifier(), "i");
+    let ptr = func.params()[1].type_().variant().as_pointer().unwrap();
+    assert!(!ptr.pointee_type().is_const());
+    assert_eq!(ptr.lifetime().unwrap(), b_id);
 }
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let r = ir.records().next().expect("IR should contain `struct S`");
-    assert_eq!(r.rs_name.identifier.as_ref(), "S");
-    assert!(r.is_trivial_abi);
+    assert_eq!(r.rs_name(), "S");
+    assert!(r.is_trivial_abi());
 
     let f = ir
         .functions()
-        .find(|f| matches!(&f.rs_name, UnqualifiedIdentifier::Constructor) && f.params.len() == 1)
+        .find(|f| {
+            matches!(f.rs_name(), UnqualifiedIdentifier::Constructor) && f.params().len() == 1
+        })
         .expect("IR should contain the default constructor");
-    assert_eq!(f.lifetime_params.len(), 1);
+    assert_eq!(f.lifetime_params().len(), 1);
 
-    let p = f.params.first().expect("IR should contain `__this` parameter");
-    assert_eq!(p.identifier, ir_id("__this"));
+    let p = f.params().first().expect("IR should contain `__this` parameter");
+    assert_eq!(p.identifier(), "__this");
 
-    let p_ptr = p.type_.variant.as_pointer().unwrap();
-    assert_eq!(p_ptr.lifetime.unwrap(), f.lifetime_params[0].id);
-    assert!(!p_ptr.pointee_type.is_const);
+    let p_ptr = p.type_().variant().as_pointer().unwrap();
+    assert_eq!(p_ptr.lifetime().unwrap(), f.lifetime_params()[0].id());
+    assert!(!p_ptr.pointee_type().is_const());
 }
 
 #[gtest]
@@ -3283,13 +3273,13 @@ fn test_operator_names() {
         .functions()
         .filter_map(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
-            let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id?).ok()?;
-            if r.rs_name.identifier.as_ref() != "SomeStruct" {
+            let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id()?).ok()?;
+            if r.rs_name() != "SomeStruct" {
                 return None;
             }
 
-            match &f.rs_name {
-                UnqualifiedIdentifier::Operator(op) => Some(op.name.as_ref()),
+            match f.rs_name() {
+                UnqualifiedIdentifier::Operator(op) => Some(op.name()),
                 _ => None,
             }
         })
@@ -3490,9 +3480,9 @@ fn test_function_has_item_id() {
     let ir = ir_from_cc("int foo();").unwrap();
     let function = ir
         .functions()
-        .find(|i| i.rs_name == UnqualifiedIdentifier::Identifier(ir_id("foo")))
+        .find(|i| i.rs_name() == &UnqualifiedIdentifier::Identifier(ir_id("foo")))
         .unwrap();
-    assert_ne!(function.id, ItemId::new_for_testing(0));
+    assert_ne!(function.id(), ItemId::new_for_testing(0));
 }
 
 #[gtest]
@@ -3571,8 +3561,8 @@ fn test_record_items() {
     )
     .unwrap();
 
-    let record = ir.records().find(|i| i.rs_name == "TopLevelStruct").unwrap();
-    let record_items = record.children.iter().collect_vec();
+    let record = ir.records().find(|i| i.rs_name() == "TopLevelStruct").unwrap();
+    let record_items = record.children().iter().collect_vec();
 
     assert_items_match!(
         record_items,
@@ -3758,14 +3748,14 @@ fn test_enclosing_item_ids() {
         .iter()
         .all(|item| item.enclosing_item_id() == Some(inner_namespace.id)));
 
-    let record = ir.records().find(|r| r.rs_name.identifier.as_ref() == "S").unwrap();
-    let record_items: Vec<&Item> = record.children.iter().collect_vec();
+    let record = ir.records().find(|r| r.rs_name() == "S").unwrap();
+    let record_items: Vec<&Item> = record.children().iter().collect_vec();
     for item in record_items.iter() {
         match item {
             Item::UnsupportedItem(_) => {}
             Item::Comment(_) => {}
             _ => {
-                assert!(item.enclosing_item_id() == Some(record.id));
+                assert!(item.enclosing_item_id() == Some(record.id()));
             }
         }
     }
@@ -4059,7 +4049,7 @@ fn test_friend_not_definition_not_redeclared() {
 
     let functions = ir
         .functions()
-        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("some_friend_func")))
+        .filter(|f| f.rs_name() == &UnqualifiedIdentifier::Identifier(ir_id("some_friend_func")))
         .collect_vec();
     assert_eq!(1, functions.len());
 }
@@ -4079,7 +4069,7 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
     // item.)
     let functions = ir
         .functions()
-        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("f")))
+        .filter(|f| f.rs_name() == &UnqualifiedIdentifier::Identifier(ir_id("f")))
         .collect_vec();
     assert_eq!(1, functions.len());
 
@@ -4927,7 +4917,7 @@ fn test_anonymous_enum_in_record() {
     let ir = ir_from_cc("struct S { enum { kFoo = 1 }; };").unwrap();
     let record = retrieve_record(&ir, "S");
     let constant = ir.constants().find(|c| c.cc_name == "kFoo").unwrap();
-    assert_eq!(constant.enclosing_item_id, Some(record.id));
+    assert_eq!(constant.enclosing_item_id, Some(record.id()));
     assert_eq!(constant.value.wrapped_value, 1);
 }
 
@@ -4943,13 +4933,13 @@ fn test_has_private_or_deleted_operator_delete() {
     )
     .unwrap();
     let s1 = retrieve_record(&ir, "S1");
-    assert!(s1.has_private_or_deleted_operator_delete);
+    assert!(s1.has_private_or_deleted_operator_delete());
     let s2 = retrieve_record(&ir, "S2");
-    assert!(s2.has_private_or_deleted_operator_delete);
+    assert!(s2.has_private_or_deleted_operator_delete());
     let s3 = retrieve_record(&ir, "S3");
-    assert!(!s3.has_private_or_deleted_operator_delete);
+    assert!(!s3.has_private_or_deleted_operator_delete());
     let s4 = retrieve_record(&ir, "S4");
-    assert!(s4.has_private_or_deleted_operator_delete);
+    assert!(s4.has_private_or_deleted_operator_delete());
 }
 #[gtest]
 fn test_absl_container_template_specialization_kind() {
@@ -4972,35 +4962,31 @@ fn test_absl_container_template_specialization_kind() {
     .unwrap();
 
     let record = retrieve_type_alias_record(&ir, "IntFloatMap");
+    let ts = record.template_specialization().unwrap();
     expect_that!(
-        &record.template_specialization,
-        some(field!(
-            TemplateSpecialization.kind,
-            pat!(TemplateSpecializationKind::AbslFlatHashMap {
-                raw_key_type: field!(
-                    CcType.variant,
-                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))
-                ),
-                raw_value_type: field!(
-                    CcType.variant,
-                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Float)))
-                ),
-            })
-        )),
+        ts.kind(),
+        pat!(TemplateSpecializationKind::AbslFlatHashMap {
+            raw_key_type: field!(
+                CcType.variant,
+                pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))
+            ),
+            raw_value_type: field!(
+                CcType.variant,
+                pat!(CcTypeVariant::Primitive(eq(&Primitive::Float)))
+            ),
+        })
     );
 
     let record = retrieve_type_alias_record(&ir, "DoubleSet");
+    let ts = record.template_specialization().unwrap();
     expect_that!(
-        &record.template_specialization,
-        some(field!(
-            TemplateSpecialization.kind,
-            pat!(TemplateSpecializationKind::AbslFlatHashSet {
-                raw_element_type: field!(
-                    CcType.variant,
-                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Double)))
-                ),
-            })
-        )),
+        ts.kind(),
+        pat!(TemplateSpecializationKind::AbslFlatHashSet {
+            raw_element_type: field!(
+                CcType.variant,
+                pat!(CcTypeVariant::Primitive(eq(&Primitive::Double)))
+            ),
+        })
     );
 }
 

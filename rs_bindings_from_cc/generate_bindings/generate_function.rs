@@ -131,7 +131,7 @@ fn trait_name_to_token_stream(db: &BindingsGenerator, trait_name: &TraitName) ->
 /// Returns whether an argument of this type causes ADL to include the `record`.
 fn adl_expands_to(record: &Record, rs_type_kind: &RsTypeKind) -> bool {
     match rs_type_kind {
-        RsTypeKind::Record { record: nested_record, .. } => record.id == nested_record.id,
+        RsTypeKind::Record { record: nested_record, .. } => record.id() == nested_record.id(),
         RsTypeKind::Reference { referent, .. } => adl_expands_to(record, referent),
         RsTypeKind::RvalueReference { referent, .. } => adl_expands_to(record, referent),
         _ => false,
@@ -236,7 +236,7 @@ fn is_friend_of_record_not_visible_by_adl(
     func: &Func,
     param_types: &[RsTypeKind],
 ) -> bool {
-    let Some(decl_id) = func.adl_enclosing_record else { return false };
+    let Some(decl_id) = func.adl_enclosing_record() else { return false };
     let adl_enclosing_record = db
         .find_decl::<Rc<Record>>(decl_id)
         .with_context(|| format!("Failed to look up `adl_enclosing_record` of {:?}", func))
@@ -291,7 +291,7 @@ fn api_func_shape_for_operator_ne(
 ) -> ErrorsOr<Option<(Ident, ImplKind)>> {
     // If operator== is present, don't generate ne, rely on rust's default ne.
     let eq_binding = db.get_binding(
-        UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
+        UnqualifiedIdentifier::Operator(Operator::new(Rc::from("=="))),
         param_types.to_vec(),
     );
     if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = eq_binding {
@@ -356,19 +356,19 @@ fn api_func_shape_for_operator_index(
     param_types: &mut [RsTypeKind],
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind)> {
-    let CcTypeVariant::Pointer(pointee) = &func.return_type.variant else {
+    let CcTypeVariant::Pointer(pointee) = func.return_type().variant() else {
         bail_to_errors!(
             errors,
             "operator[] should return a reference, found {}",
-            db.cc_type_debug_name(&func.return_type)
+            db.cc_type_debug_name(func.return_type())
         )
     };
-    let return_val_is_const = pointee.pointee_type.is_const;
+    let return_val_is_const = pointee.pointee_type().is_const();
 
-    let Some(instance_method_metadata) = &func.instance_method_metadata else {
+    let Some(instance_method_metadata) = func.instance_method_metadata() else {
         panic!("cannot tell whether operator[] is const or not, shouldn't happen")
     };
-    let method_is_const = instance_method_metadata.is_const;
+    let method_is_const = instance_method_metadata.is_const();
 
     let [container_type, index_type] = param_types else {
         bail_to_errors!(
@@ -424,31 +424,31 @@ fn generate_cc_operator_index_nonmut_impls(
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind)> {
     let func_name = make_rs_ident("cc_index");
-    let output_pointee_cc_type = match &func.return_type.variant {
+    let output_pointee_cc_type = match func.return_type().variant() {
         CcTypeVariant::Pointer(pointer_data) => {
-            if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
+            if !matches!(pointer_data.kind(), PointerTypeKind::LValueRef) {
                 errors.add(anyhow!(
                     "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
-                    pointer_data.kind
+                    pointer_data.kind()
                 ));
             }
-            if !pointer_data.pointee_type.is_const {
+            if !pointer_data.pointee_type().is_const() {
                 errors.add(anyhow!("operator[] must return a const value"));
             }
 
-            (*pointer_data.pointee_type).clone()
+            pointer_data.pointee_type().clone()
         }
 
         _ => {
             bail_to_errors!(
                 errors,
                 "operator[] should return a reference (values are not yet supported), found {}",
-                db.cc_type_debug_name(&func.return_type)
+                db.cc_type_debug_name(func.return_type())
             )
         }
     };
 
-    let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
+    let output_type: Rc<RsTypeKind> = match db.rs_type_kind((*output_pointee_cc_type).clone()) {
         Ok(rs_kind) => Rc::new(rs_kind),
         Err(err) => {
             bail_to_errors!(
@@ -481,31 +481,31 @@ fn generate_cc_operator_index_mut_impls(
 ) -> ErrorsOr<(Ident, ImplKind)> {
     let func_name = make_rs_ident("cc_index_mut");
 
-    let output_pointee_cc_type = match &func.return_type.variant {
+    let output_pointee_cc_type = match func.return_type().variant() {
         CcTypeVariant::Pointer(pointer_data) => {
-            if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
+            if !matches!(pointer_data.kind(), PointerTypeKind::LValueRef) {
                 errors.add(anyhow!(
                     "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
-                    pointer_data.kind
+                    pointer_data.kind()
                 ));
             }
-            if pointer_data.pointee_type.is_const {
+            if pointer_data.pointee_type().is_const() {
                 errors.add(anyhow!("(mutable) operator[] must return a non-const value"));
             }
 
-            (*pointer_data.pointee_type).clone()
+            pointer_data.pointee_type().clone()
         }
 
         _ => {
             bail_to_errors!(
                 errors,
                 "(mutable) operator[] should return a reference (values are not yet supported), found {}",
-                db.cc_type_debug_name(&func.return_type)
+                db.cc_type_debug_name(func.return_type())
             )
         }
     };
 
-    let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
+    let output_type: Rc<RsTypeKind> = match db.rs_type_kind((*output_pointee_cc_type).clone()) {
         Ok(rs_kind) => Rc::new(rs_kind),
         Err(err) => {
             bail_to_errors!(
@@ -559,7 +559,7 @@ fn api_func_shape_for_operator_lt(
     // PartialOrd requires PartialEq, so we need to make sure operator== is
     // implemented for this Record type.
     let partialeq_binding = db.get_binding(
-        UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
+        UnqualifiedIdentifier::Operator(Operator::new(Rc::from("=="))),
         param_types.to_vec(),
     );
     match partialeq_binding {
@@ -657,7 +657,7 @@ fn extract_first_operator_parameter(
         RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
             bail_to_errors!(
                             errors,
-                            "Incomplete record types are not yet supported as first parameter of operator, found {cc_name}", cc_name=incomplete_record.cc_name,
+                            "Incomplete record types are not yet supported as first parameter of operator, found {cc_name}", cc_name=incomplete_record.cc_name(),
                         )
         }
         RsTypeKind::Reference { referent, .. } => Ok((
@@ -753,7 +753,7 @@ fn record_type_of_compound_assignment<'a>(
 /// Reports a fatal error generating bindings for a function.
 /// Fatal errors should only be reported
 fn report_fatal_func_error(db: &BindingsGenerator, func: &Func, msg: &str) {
-    db.fatal_errors().report(&format!("{}: {}", func.source_loc, msg));
+    db.fatal_errors().report(&format!("{}: {}", func.source_loc(), msg));
 }
 
 fn api_func_shape_for_operator(
@@ -764,10 +764,10 @@ fn api_func_shape_for_operator(
     op: &Operator,
     errors: &Errors,
 ) -> Option<(Ident, ImplKind)> {
-    if let SafetyAnnotation::Unsafe = func.safety_annotation {
+    if let SafetyAnnotation::Unsafe = func.safety_annotation() {
         report_fatal_func_error(db, func, "Unsafe annotations on operators are not supported");
     }
-    match op.name.as_ref() {
+    match op.name() {
         "==" => api_func_shape_for_operator_eq(db, func, param_types, errors).ok(),
         "!=" => api_func_shape_for_operator_ne(db, func, param_types, errors).ok().flatten(),
         "<=>" => {
@@ -782,11 +782,11 @@ fn api_func_shape_for_operator(
         "[]" => api_func_shape_for_operator_index(db, func, param_types, errors).ok(),
         _ => {
             let Some(op_metadata) =
-                OPERATOR_METADATA.by_cc_name_and_params.get(&(&op.name, param_types.len()))
+                OPERATOR_METADATA.by_cc_name_and_params.get(&(op.name(), param_types.len()))
             else {
                 errors.add(anyhow!(
                     "Bindings for this kind of operator (operator {op} with {n} parameter(s)) are not supported",
-                    op = &op.name,
+                    op = op.name(),
                     n = param_types.len(),
                 ));
                 return None;
@@ -843,10 +843,10 @@ fn api_func_shape_for_identifier(
     param_types: &mut [RsTypeKind],
     id: &Identifier,
 ) -> (Ident, ImplKind) {
-    let is_unsafe = match func.safety_annotation {
+    let is_unsafe = match func.safety_annotation() {
         SafetyAnnotation::Unannotated => {
             let mut param_type_iter = param_types.iter();
-            if func.cc_name.is_constructor() {
+            if func.cc_name().is_constructor() {
                 // This is a renamed constructor.
                 //
                 // Discard the `this` parameter, as constructors of unsafe types are not
@@ -860,9 +860,9 @@ fn api_func_shape_for_identifier(
         SafetyAnnotation::DisableUnsafe => false,
     };
 
-    let func_name = make_rs_ident(&id.identifier);
+    let func_name = make_rs_ident(id.as_str());
     let Some(record) = maybe_record else { return (func_name, ImplKind::None { is_unsafe }) };
-    let is_renamed_unpin_constructor = func.cc_name.is_constructor() && record.is_unpin();
+    let is_renamed_unpin_constructor = func.cc_name().is_constructor() && record.is_unpin();
     let format_first_param_as_self = if func.is_instance_method() {
         let Some(first_param) = param_types.first() else {
             panic!("Missing `__this` parameter in an instance method: {:?}", func);
@@ -888,7 +888,7 @@ fn api_func_shape_for_destructor(
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
 ) -> Option<(Ident, ImplKind)> {
-    if let SafetyAnnotation::Unsafe = func.safety_annotation {
+    if let SafetyAnnotation::Unsafe = func.safety_annotation() {
         report_fatal_func_error(db, func, "Unsafe annotations on destructors are not supported");
     }
     let Some(record) = maybe_record else {
@@ -948,7 +948,7 @@ fn issue_unsafe_constructor_errors(
     param_types: &[RsTypeKind],
     errors: &Errors,
 ) -> Option<String> {
-    match func.safety_annotation {
+    match func.safety_annotation() {
         SafetyAnnotation::DisableUnsafe => None,
         SafetyAnnotation::Unsafe => {
             errors.add(anyhow!(
@@ -966,7 +966,7 @@ fn issue_unsafe_constructor_errors(
 
             // We skip the first parameter because it's the implicit `this` parameter.
             // Constructors of unsafe types are not automatically considered unsafe.
-            let param_names = func.params.iter().map(|p| &p.identifier);
+            let param_names = func.params().iter().map(|p| p.identifier());
             let unsafe_params = param_names
                 .zip(param_types)
                 .skip(1)
@@ -1061,7 +1061,7 @@ fn api_func_shape_for_constructor(
         return Some((func_name, impl_kind));
     }
 
-    match func.params.len() {
+    match func.params().len() {
         0 => {
             errors.add(anyhow!(
                 "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {:?}",
@@ -1143,7 +1143,7 @@ fn api_func_shape_for_conversion_operator(
 
     let (trait_name, func_name) = match return_type.unalias() {
         RsTypeKind::Record { record: dst_record, .. } => {
-            let is_dst_local = db.ir().is_current_target(&dst_record.owning_target);
+            let is_dst_local = db.ir().is_current_target(Record::owning_target(dst_record));
             if !referent_type_kind.is_unpin() {
                 return None;
             }
@@ -1258,7 +1258,7 @@ fn api_func_shape(
     return_type: &RsTypeKind,
     errors: &Errors,
 ) -> Option<(Ident, ImplKind)> {
-    let maybe_record = match func.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
+    let maybe_record = match func.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         None => None,
         Some(ir::Item::Namespace(_)) => None,
         Some(ir::Item::Record(record)) => Some(record),
@@ -1274,7 +1274,7 @@ fn api_func_shape(
         return None;
     }
 
-    match &func.rs_name {
+    match func.rs_name() {
         UnqualifiedIdentifier::Operator(op) => {
             api_func_shape_for_operator(db, func, maybe_record, param_types, op, errors)
         }
@@ -1348,7 +1348,7 @@ pub fn is_record_clonable(db: &BindingsGenerator, record: Rc<Record>) -> bool {
             .get_functions_by_name(&UnqualifiedIdentifier::Constructor)
             .filter(|function| {
                 // __this is always the first parameter of constructors
-                function.params.len() == 2
+                function.params().len() == 2
             })
             .any(|function| {
                 let Ok((mut function_param_types, return_type)) =
@@ -1356,7 +1356,8 @@ pub fn is_record_clonable(db: &BindingsGenerator, record: Rc<Record>) -> bool {
                 else {
                     return false;
                 };
-                if function.params.len() != 2 || !function_param_types[1].is_shared_ref_to(&record)
+                if function.params().len() != 2
+                    || !function_param_types[1].is_shared_ref_to(&record)
                 {
                     return false;
                 }
@@ -1384,7 +1385,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
             next_suffix += 1;
         }
     };
-    for (func_param, param) in func.params.iter().zip(params.iter_mut()) {
+    for (func_param, param) in func.params().iter().zip(params.iter_mut()) {
         if param.is_unpin() {
             continue;
         }
@@ -1392,7 +1393,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
-            lifetime: new_lifetime_param(func_param.identifier.identifier.to_string()),
+            lifetime: new_lifetime_param(func_param.identifier().to_string()),
         };
     }
 }
@@ -1655,11 +1656,11 @@ fn errors_as_unsatisfied_trait_bound(
 /// - Operators with default / basic lifetime behavior.
 fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
     use ir::UnqualifiedIdentifier::*;
-    match &func.rs_name {
+    match func.rs_name() {
         Destructor | Identifier(_) => false,
         Constructor | ConversionOperator => true,
         Operator(op_name) => {
-            match &*op_name.name {
+            match op_name.name() {
                 "==" | "!=" | "<=>" | "<" | "=" | "[]" => true,
                 // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
                 // creates conflicting libc++ impls for `long` and `long long`.
@@ -1689,58 +1690,65 @@ fn rs_type_kinds_for_func(
     let infer_lifetimes = func_should_infer_lifetimes_of_references(func);
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(&func.owning_target)
+        .target_crubit_features(func.owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
     // We can only reliably generate conversion operators when `AssumeThisLifetimes` is enabled,
     // which allows the implicit `this` pointer to be mapped as a reference rather than a raw
     // pointer. We run the lifetime transform here to populate the lifetimes of `this`.
     let run_lifetime_transform =
-        assume_lifetimes || matches!(func.cc_name, ir::UnqualifiedIdentifier::ConversionOperator);
-    let is_operator = matches!(func.cc_name, ir::UnqualifiedIdentifier::Operator(_));
+        assume_lifetimes || matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator);
+    let is_operator = matches!(func.cc_name(), ir::UnqualifiedIdentifier::Operator(_));
 
     // TODO(b/454627672): is it worth caching this?
     let func =
         if run_lifetime_transform { &lifetime_defaults_transform_func(db, func)? } else { func };
     let param_types: Vec<RsTypeKind> = func
-        .params
+        .params()
         .iter()
         .enumerate()
         .filter_map(|(i, param)| {
-            let mut param_type = param.type_.clone();
+            let mut param_type = param.type_().clone();
             let mut infer_param_lifetimes = infer_lifetimes;
             if i == 0 && func.is_instance_method() {
-                if !func.cc_name.is_constructor() && !func.cc_name.is_destructor()
-                    && let Some(Item::Record(record)) = func.enclosing_item_id.map(|id| db.find_untyped_decl(id))
-                        && record.is_thread_safe
-                            && let CcTypeVariant::Pointer(ptr) = &mut param_type.variant {
-                                let mut new_pointee = (*ptr.pointee_type).clone();
-                                new_pointee.is_const = true;
-                                ptr.pointee_type = Rc::new(new_pointee);
-                                ptr.kind = PointerTypeKind::LValueRef;
+                if !func.cc_name().is_constructor() && !func.cc_name().is_destructor()
+                    && let Some(Item::Record(record)) = func.enclosing_item_id().map(|id| db.find_untyped_decl(id))
+                        && record.is_thread_safe()
+                            && let CcTypeVariant::Pointer(ptr) = param_type.variant() {
+                                let mut new_pointee = ptr.pointee_type().as_ref().clone();
+                                new_pointee.set_is_const(true);
+                                *param_type.variant_mut() = CcTypeVariant::Pointer(PointerType::new(
+                                    PointerTypeKind::LValueRef,
+                                    ptr.lifetime(),
+                                    Rc::new(new_pointee),
+                                ));
                                 infer_param_lifetimes = true;
                             }
 
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.
-                let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _ }) =
-                    &mut param_type.variant
-                else {
+                let CcTypeVariant::Pointer(ptr) = param_type.variant() else {
                     panic!(
                         "Expected first parameter of member function:\n`{func:?}`\n\
                         to be a `this` pointer, got:\n{param_type:?}",
-                    )
+                    );
                 };
+                let lifetime = ptr.lifetime();
+                let pointee_type = ptr.pointee_type().clone();
                 if db.ir()
-                    .target_crubit_features(&func.owning_target)
+                    .target_crubit_features(func.owning_target())
                     .contains(crubit_feature::CrubitFeature::AssumeThisLifetimes) {
                     infer_param_lifetimes = true;
                 }
                 if infer_param_lifetimes || lifetime.is_some() {
-                    match kind {
+                    match ptr.kind() {
                         PointerTypeKind::LValueRef | PointerTypeKind::RValueRef => {}
                         // Fixup pointer-like `this` values to instead be reference-like.
                         PointerTypeKind::Nullable | PointerTypeKind::NonNull => {
-                            *kind = PointerTypeKind::LValueRef;
+                            *param_type.variant_mut() = CcTypeVariant::Pointer(PointerType::new(
+                                PointerTypeKind::LValueRef,
+                                lifetime,
+                                pointee_type,
+                            ));
                         }
                         PointerTypeKind::Owned => unreachable!("owned pointers require an annotation on the pointer, but there's nowhere to put an annotation for the `this` pointer")
                     }
@@ -1774,7 +1782,7 @@ fn rs_type_kinds_for_func(
 
     let return_type = errors.consume_error(
         db.rs_type_kind_with_lifetime_elision(
-            func.return_type.clone(),
+            func.return_type().clone(),
             LifetimeOptions {
                 infer_lifetimes,
                 is_return_type: true,
@@ -1823,7 +1831,7 @@ fn generate_func_safety_doc(
         !matches!(impl_kind, ImplKind::Trait { .. })
     {
         let mut doc = String::new();
-        if let SafetyAnnotation::Unsafe = func.safety_annotation {
+        if let SafetyAnnotation::Unsafe = func.safety_annotation() {
             // TODO(nicholasbishop): allow C++ annotations to provide a specific reason.
             doc += "The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.\n\n";
         }
@@ -1844,16 +1852,16 @@ pub fn generate_function(
     func: Rc<Func>,
     derived_record: Option<Rc<Record>>,
 ) -> Result<Option<GeneratedFunction>> {
-    if matches!(func.cc_name, ir::UnqualifiedIdentifier::ConversionOperator)
+    if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
         && !db
             .ir()
-            .target_crubit_features(&func.owning_target)
+            .target_crubit_features(func.as_ref().owning_target())
             .contains(crubit_feature::CrubitFeature::AssumeThisLifetimes)
     {
         bail!("Conversion operators are only supported when AssumeThisLifetimes is enabled");
     }
 
-    let _scope = db.error_scope(func.id);
+    let _scope = db.error_scope(func.id());
     db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
@@ -1878,16 +1886,15 @@ pub fn generate_function(
         errors.add(err);
         errors.consolidate()?;
     }
-    let param_idents =
-        func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
+    let param_idents = func.params().iter().map(|p| make_rs_ident(p.identifier())).collect_vec();
 
     // Skip thunk generation if the function is a method on a public base class,
     // as the base class thunk will already have been generated.
     let skip_thunk_generation: bool = {
         || {
             let Some(derived) = &derived_record else { return false };
-            let Some(enclosing_id) = func.enclosing_item_id else { return false };
-            if enclosing_id == derived.id {
+            let Some(enclosing_id) = func.enclosing_item_id() else { return false };
+            if enclosing_id == derived.id() {
                 return false;
             };
             let Some(base_item) = db.ir().get_decl(enclosing_id) else { return false };
@@ -1937,13 +1944,13 @@ pub fn generate_function(
     if let ImplKind::Trait { drop_return: true, ref record, .. } = impl_kind {
         let assume_lifetimes = db
             .ir()
-            .target_crubit_features(&func.owning_target)
+            .target_crubit_features(func.as_ref().owning_target())
             .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
         let mut self_type = db.rs_type_kind((&**record).into())?;
         if assume_lifetimes {
             let record = lifetime_defaults_transform_record(db, record)?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
-                *lifetimes = record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                *lifetimes = record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
         }
         quoted_return_type = quote! {};
@@ -1973,14 +1980,14 @@ pub fn generate_function(
     let failed = reportable_status.is_err();
 
     let (derived_class_prefix, sep) = if let Some(ref derived_record) = derived_record {
-        (derived_record.mangled_cc_name.as_ref(), "_")
+        (derived_record.mangled_cc_name(), "_")
     } else {
         ("", "")
     };
     let ErrorsAsUnsatisfiedTraitBound { unsatisfied_where_clause, unimplemented_trait_def } =
         errors_as_unsatisfied_trait_bound(
             &reportable_status,
-            &format!("{sep}{derived_class_prefix}{sep}{}", &func.mangled_name),
+            &format!("{sep}{derived_class_prefix}{sep}{}", func.mangled_name()),
         );
 
     let create_func_body = || -> Result<TokenStream> {
@@ -2016,7 +2023,7 @@ pub fn generate_function(
     // Check to see if we can get precise location information. If it's not available, emit a stub
     // capture tag so we don't ascribe definitions to the wrong location.
     let capture_tags = if db.kythe_annotations()
-        && let Some((file_name, start, end)) = parse_extended_source_loc(&func.source_loc)
+        && let Some((file_name, start, end)) = parse_extended_source_loc(func.as_ref().source_loc())
     {
         quote! { __CAPTURE_TAG__ #file_name #start #end }
     } else if db.kythe_annotations() {
@@ -2026,15 +2033,15 @@ pub fn generate_function(
     };
 
     let doc_comment = generate_doc_comment(
-        func.doc_comment.as_deref(),
+        func.doc_comment().as_deref(),
         generate_func_safety_doc(db, &func, &impl_kind, &param_idents, &param_types).as_deref(),
-        Some(&func.source_loc),
+        Some(func.as_ref().source_loc()),
         db.is_golden_test(),
         db.kythe_annotations(),
     );
 
-    let deprecated_attr = func.deprecated.clone().map(DeprecatedAttr);
-    let must_use_attr = func.nodiscard.clone().map(MustUseAttr);
+    let deprecated_attr = func.deprecated().cloned().map(DeprecatedAttr);
+    let must_use_attr = func.nodiscard().cloned().map(MustUseAttr);
 
     // If there are no bindings, use `Public` for the sake of "keeping on going" when
     // collecting errors for items that will not actually be generated.
@@ -2092,9 +2099,8 @@ pub fn generate_function(
             is_renamed_unpin_constructor,
             is_unsafe,
         } => {
-            let record_name = make_rs_ident(
-                derived_record.as_deref().unwrap_or(record.as_ref()).rs_name.identifier.as_ref(),
-            );
+            let record_name =
+                make_rs_ident(derived_record.as_deref().unwrap_or(record.as_ref()).rs_name());
             let fn_generic_params =
                 format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
 
@@ -2160,7 +2166,7 @@ pub fn generate_function(
             // Add the free method to the mapping, which we will extract and put into
             // snippets inside db later.
             free_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                derived_record.as_deref().unwrap_or(record.as_ref()).id(),
                 vec![quote! {
                     #capture_tags
                     #doc_comment
@@ -2202,7 +2208,7 @@ pub fn generate_function(
             let mod_name = db.record_to_associated_module_name(target_record)?;
 
             member_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                derived_record.as_deref().unwrap_or(record.as_ref()).id(),
                 vec![quote! {
                     #capture_tags
                     #doc_comment
@@ -2267,7 +2273,7 @@ pub fn generate_function(
 
             let assume_lifetimes = db
                 .ir()
-                .target_crubit_features(&trait_record.owning_target)
+                .target_crubit_features(Record::owning_target(trait_record))
                 .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
             // TODO(b/454627672): is it worth caching this?
             let transformed_trait_record;
@@ -2281,11 +2287,11 @@ pub fn generate_function(
             let mut trait_lifetime_params: Vec<Lifetime> = vec![];
             if assume_lifetimes {
                 trait_lifetime_params =
-                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                    trait_record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
 
-            let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
-            let qualified_record_name = if Some(trait_record.id) == func.enclosing_item_id {
+            let record_name = make_rs_ident(trait_record.rs_name());
+            let qualified_record_name = if Some(trait_record.id()) == func.enclosing_item_id() {
                 quote! { #record_name }
             } else {
                 // If the trait is being implemented for a different record than its enclosing one
@@ -2297,8 +2303,8 @@ pub fn generate_function(
             let mut extra_body = if let Some(name) = associated_return_type {
                 let associated_type;
                 if matches!(trait_name, TraitName::CcIndex { .. } | TraitName::CcIndexMut { .. }) {
-                    let is_rvalue = match &func.instance_method_metadata {
-                        Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+                    let is_rvalue = match func.instance_method_metadata() {
+                        Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
                         None => false,
                     };
                     if is_rvalue {
@@ -2380,12 +2386,12 @@ pub fn generate_function(
             let mut trait_lifetime_params: Vec<Lifetime> = vec![];
             if assume_lifetimes {
                 assumed_lifetime_params = trait_record
-                    .lifetime_inputs
+                    .lifetime_inputs()
                     .iter()
                     .map(|id| make_rs_lifetime_ident(id))
                     .collect();
                 trait_lifetime_params =
-                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                    trait_record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
             let trait_record_param_tokens = if !assumed_lifetime_params.is_empty() {
                 quote! { < #( #assumed_lifetime_params ),* > }
@@ -2567,7 +2573,7 @@ pub fn generate_function(
     let cc_details = [thunk_impl, function_assertation].into_iter().flatten().collect();
 
     let generated_item = ApiSnippets {
-        generated_items: HashMap::from([(func.id, GeneratedItem::Func(api_func))]),
+        generated_items: HashMap::from([(func.id(), GeneratedItem::Func(api_func))]),
         thunks: match thunk {
             Some(thunk) if !failed => vec![thunk],
             _ => vec![],
@@ -2625,18 +2631,18 @@ fn collect_parent_lifetime_bindings(
     func: &Func,
 ) -> Result<HashSet<String>> {
     let mut unordered_lifetimes: HashSet<String> = HashSet::new();
-    let mut parent_id = func.enclosing_item_id;
+    let mut parent_id = func.enclosing_item_id();
     loop {
         if let Some(parent) = parent_id {
             let decl = db.find_untyped_decl(parent);
             if let Item::Record(r) = decl {
                 let assume_lifetimes = db
                     .ir()
-                    .target_crubit_features(&r.owning_target)
+                    .target_crubit_features(r.as_ref().owning_target())
                     .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
                 if assume_lifetimes {
                     let r = lifetime_defaults_transform_record(db, r)?;
-                    for lifetime in r.lifetime_inputs {
+                    for lifetime in r.lifetime_inputs() {
                         unordered_lifetimes.insert(lifetime.to_string());
                     }
                 }
@@ -2675,7 +2681,7 @@ fn function_signature(
     if let Some(derived_record) = derived_record.as_deref() {
         ensure!(
             db.ir()
-                .target_crubit_features(&derived_record.owning_target)
+                .target_crubit_features(derived_record.owning_target())
                 .contains(crubit_feature::CrubitFeature::Experimental),
             "upcasting is currently experimental, see b/216195042"
         );
@@ -2683,7 +2689,7 @@ fn function_signature(
 
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(&func.owning_target)
+        .target_crubit_features(func.owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
 
     // TODO(b/454627672): is it worth caching this?
@@ -2702,8 +2708,8 @@ fn function_signature(
     };
     let func = transformed_func.as_ref().unwrap_or(func);
 
-    let mut api_params = Vec::with_capacity(func.params.len());
-    let mut thunk_args = Vec::with_capacity(func.params.len());
+    let mut api_params = Vec::with_capacity(func.params().len());
+    let mut thunk_args = Vec::with_capacity(func.params().len());
     let mut thunk_prepare = quote! {};
     let impl_kind_record = match impl_kind {
         ImplKind::Struct { record, .. } | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => {
@@ -2716,7 +2722,7 @@ fn function_signature(
         if assume_lifetimes {
             let record = lifetime_defaults_transform_record(db, record)?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = t {
-                *lifetimes = record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                *lifetimes = record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
         }
         Some(t)
@@ -2792,15 +2798,15 @@ fn function_signature(
     // make sure that we don't rebind an existing lifetime.
     let parent_lifetimes = collect_parent_lifetime_bindings(db, func)?;
 
-    let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types, &func.lifetime_inputs)
+    let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types, func.lifetime_inputs())
         .into_iter()
         .filter(|lifetime| !parent_lifetimes.contains(lifetime.0.as_ref()))
         .collect();
 
     let mut lifetimes_including_impl: Vec<Lifetime> =
-        unique_lifetimes(&*param_types, &func.lifetime_inputs);
+        unique_lifetimes(&*param_types, func.lifetime_inputs());
 
-    let mut lifetime_inputs_and_parents = func.lifetime_inputs.clone();
+    let mut lifetime_inputs_and_parents = func.lifetime_inputs().clone();
     for lifetime in parent_lifetimes {
         lifetime_inputs_and_parents.push(lifetime.into());
     }
@@ -2860,7 +2866,7 @@ fn function_signature(
             | TraitName::UnsafeCtorNew(..)
             | TraitName::UnsafeFrom(..),
         ) => {
-            if func.cc_name.is_constructor() {
+            if func.cc_name().is_constructor() {
                 move_self_from_out_param_to_return_value(
                     db,
                     func,
@@ -2889,7 +2895,7 @@ fn function_signature(
                     )
                 };
                 api_params = vec![quote! {args: #args_type}];
-                let param_idents_for_unpack = if func.cc_name.is_constructor() {
+                let param_idents_for_unpack = if func.cc_name().is_constructor() {
                     param_idents.iter().skip(1).collect::<Vec<_>>()
                 } else {
                     param_idents.iter().collect::<Vec<_>>()
@@ -3032,8 +3038,8 @@ fn function_signature(
 
     // Unknown attributes could affect ABI and should suppress bindings by default. Note that these
     // can be annotated around with `CRUBIT_UNSAFE_IGNORE_ATTR()`
-    if let Some(unknown_attr) = func.unknown_attr.as_deref() {
-        let target = &func.owning_target;
+    if let Some(unknown_attr) = func.unknown_attr() {
+        let target = func.owning_target();
         let enabled_features = db.ir().target_crubit_features(target);
         ensure!(
             enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
@@ -3068,7 +3074,7 @@ fn move_self_from_out_param_to_return_value(
     // For constructors, we move the output parameter to be the return value.
     // The return value is "really" void.
     assert!(
-        func.return_type.is_unit_type(),
+        func.return_type().is_unit_type(),
         "Unexpectedly non-void return type of a constructor: {func:?}"
     );
 
@@ -3093,7 +3099,7 @@ fn move_self_from_out_param_to_return_value(
     param_types.remove(0);
     // TODO(b/475407556): The __this lifetime is at least still valid if there are [[lifetimebound]]
     // parameters.
-    if func.params.iter().any(|p| p.identifier != "__this" && p.clang_lifetimebound) {
+    if func.params().iter().any(|p| p.identifier() != "__this" && p.clang_lifetimebound()) {
         return Ok(());
     }
 
@@ -3169,31 +3175,31 @@ fn has_copy_assignment_operator_from_const_reference(
     db: &BindingsGenerator,
     copy_constructor: &Func,
 ) -> bool {
-    let [_self, first_param] = &copy_constructor.params[..] else {
+    let [_self, first_param] = &copy_constructor.params()[..] else {
         return false;
     };
-    let first_param_type = db.rs_type_kind(first_param.type_.clone());
+    let first_param_type = db.rs_type_kind(first_param.type_().clone());
     if first_param_type.is_err() {
         return false;
     };
-    let Some(parent_id) = copy_constructor.enclosing_item_id else {
+    let Some(parent_id) = copy_constructor.enclosing_item_id() else {
         return false;
     };
     let Ok(record) = db.find_decl::<Rc<Record>>(parent_id) else {
         return false;
     };
     record
-        .children
+        .children()
         .iter()
         .filter_map(|item| match item {
             Item::Func(func) => Some(func.clone()),
             _ => None,
         })
         .any(|func| {
-            let operator_equals = matches!(&func.cc_name,
-                    UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "=");
-            let same_as_self = matches!(&func.params[..],
-                    [_self, other] if db.rs_type_kind(other.type_.clone()) == first_param_type);
+            let operator_equals = matches!(func.cc_name(),
+                    UnqualifiedIdentifier::Operator(op) if op.name() == "=");
+            let same_as_self = matches!(&func.params()[..],
+                    [_self, other] if db.rs_type_kind(other.type_().clone()) == first_param_type);
             operator_equals && same_as_self
         })
 }
@@ -3225,7 +3231,7 @@ pub fn overload_sets(db: &BindingsGenerator) -> Rc<HashMap<Rc<FunctionId>, Optio
     let mut overload_sets = HashMap::new();
 
     fn rank(func: &Func) -> Rank {
-        if func.deprecated.is_some() {
+        if func.deprecated().is_some() {
             Rank::Deprecated
         } else {
             Rank::Default
@@ -3240,7 +3246,7 @@ pub fn overload_sets(db: &BindingsGenerator) -> Rc<HashMap<Rc<FunctionId>, Optio
         let Ok(Some(generated_function)) = db.generate_function(func.clone(), None) else {
             continue;
         };
-        let new = CandidateFunction { item_id: func.id, rank: rank(func), is_ambiguous: false };
+        let new = CandidateFunction { item_id: func.id(), rank: rank(func), is_ambiguous: false };
         let value = overload_sets.entry(generated_function.id.clone()).or_insert(new);
         if value.item_id == new.item_id {
             continue;
@@ -3282,8 +3288,8 @@ pub fn generate_standard_indexing_impl(
 ) -> Result<TokenStream> {
     Ok(match trait_name {
         TraitName::CcIndex { index_type, output_type } => {
-            let is_rvalue = match &func.instance_method_metadata {
-                Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+            let is_rvalue = match func.instance_method_metadata() {
+                Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
                 None => false,
             };
             if is_rvalue {
@@ -3315,8 +3321,8 @@ pub fn generate_standard_indexing_impl(
             }
         }
         TraitName::CcIndexMut { index_type, output_type } => {
-            let is_rvalue = match &func.instance_method_metadata {
-                Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+            let is_rvalue = match func.instance_method_metadata() {
+                Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
                 None => false,
             };
             let is_item_unpin = match output_type.as_ref() {
@@ -3364,8 +3370,8 @@ pub fn adjust_signature_for_indexing_traits(
     return_type: &mut RsTypeKind,
     param_types: &mut [RsTypeKind],
 ) -> Result<Option<Func>> {
-    let is_rvalue = match &func.instance_method_metadata {
-        Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+    let is_rvalue = match func.instance_method_metadata() {
+        Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
         None => false,
     };
     if is_rvalue {
@@ -3374,7 +3380,7 @@ pub fn adjust_signature_for_indexing_traits(
 
     let transformed_func = lifetime_defaults_transform_func(db, func)?;
 
-    let rs_return_type = db.rs_type_kind(transformed_func.return_type.clone()).ok();
+    let rs_return_type = db.rs_type_kind(transformed_func.return_type().clone()).ok();
 
     if let Some(rs_return_type) = rs_return_type {
         let rs_return_type = match rs_return_type {
@@ -3399,5 +3405,5 @@ pub fn adjust_signature_for_indexing_traits(
 /// This is an implementation of a method of `BindingsGenerator<'db>` - for more
 /// information please see the corresponding doc comment in `db.rs`.
 pub fn mangled_name_counts(db: &BindingsGenerator) -> Rc<HashMap<Rc<str>, usize>> {
-    Rc::new(db.ir().functions().map(|f| f.mangled_name.clone()).counts())
+    Rc::new(db.ir().functions().map(|f| Rc::from(f.mangled_name())).counts())
 }
