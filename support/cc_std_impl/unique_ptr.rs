@@ -15,9 +15,18 @@ pub use operator::Delete;
 /// If the class has a virtual destructor and is not the most-derived class, or if it overloads
 /// `operator delete`, it is UB to use `unique_ptr`. Instead, use [`virtual_unique_ptr`].
 ///
-/// Note that `unique_ptr` has "shallow" semantics: having a `&unique_ptr<T>` means that the
+/// Note that `unique_ptr` has "shallow" const semantics: having a `&unique_ptr<T>` means that the
 /// `unique_ptr` will not be mutated, but does not guarantee that the underlying `T` will not be
 /// mutated. Therefore, to get access to `T`, you must have exclusive access to the `unique_ptr`.
+///
+/// # Safety
+///
+/// Because `unique_ptr` implicitly pins the underlying object, direct accesses to the underlying
+/// object that would violate the pin guarantee are potentially UB.
+///
+/// Because `unique_ptr` has shallow const, it is not safe to construct Rust references from a
+/// `&unique_ptr`, even indirectly via a raw pointer, unless you can guarantee that the pointee will
+///  not be mutated.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
@@ -56,10 +65,23 @@ impl<T: Sized> unique_ptr<T> {
         Self { ptr }
     }
 
+    /// Returns a copy of the held raw pointer to the owned object.
+    ///
+    /// The returned pointer is null for moved-from `unique_ptr` objects. It is valid until
+    /// the underlying object is destroyed, such as by dropping the `unique_ptr`.
+    ///
+    /// It is not safe to form Rust references from this pointer, because the pointed-to `T` may be
+    /// mutated when a `&unique_ptr` is shared between C++ and Rust. You must ensure that no such
+    /// aliasing occurs before converting the pointer to a Rust reference.
     pub fn get(&self) -> *mut T {
         self.ptr
     }
 
+    /// Replaces `self` with null and returns the previously held pointer.
+    ///
+    /// The returned pointer is null for moved-from `unique_ptr` objects. Because the caller
+    /// has exclusive ownership over the `unique_ptr`, it is otherwise valid to dereference, or to
+    /// pass to `unique_ptr::new`.
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
     }
@@ -112,10 +134,20 @@ impl<T> Drop for unique_ptr<T> {
 /// This type is ABI-compatible with C++'s `std::unique_ptr<T>`, where `T` is a base class with a
 /// virtual destructor.
 ///
-/// Note that `virtual_unique_ptr` has "shallow" semantics: having a `&virtual_unique_ptr<T>` means that
-/// the `virtual_unique_ptr` will not be mutated, but does not guarantee that the underlying `T` will
-/// not be mutated. Therefore, to get access to `T`, you must have exclusive access to the
-/// `virtual_unique_ptr`.
+/// Note that `virtual_unique_ptr` has "shallow" const semantics: having a `&virtual_unique_ptr<T>`
+/// means that the `virtual_unique_ptr` will not be mutated, but does not guarantee that the
+/// underlying `T` will not be mutated. Therefore, to get access to `T`, you must have exclusive
+/// access to the `virtual_unique_ptr`.
+///
+/// # Safety
+///
+/// Because `virtual_unique_ptr` implicitly pins the underlying object, direct accesses to the
+/// underlying object that would violate the pin guarantee are potentially UB.
+///
+///
+/// Because `virtual_unique_ptr` has shallow const, it is not safe to construct Rust references from
+/// a `&virtual_unique_ptr`, even indirectly via a raw pointer, unless you can guarantee that the
+/// pointee will not be mutated.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
@@ -150,18 +182,32 @@ impl<T: Sized + Delete> virtual_unique_ptr<T> {
         Self { ptr }
     }
 
+    /// Returns a copy of the held raw pointer to the owned object.
+    ///
+    /// The returned pointer is null for null `virtual_unique_ptr` objects. It is valid until
+    /// the underlying object is destroyed, such as by dropping the `virtual_unique_ptr`.
+    ///
+    /// It is not safe to form a Rust reference from this pointer, because the pointed-to `T` may be
+    /// mutably aliased when a `&virtual_unique_ptr` is shared between C++ and Rust. You must ensure
+    /// that no such aliasing occurs before converting the pointer to a Rust reference.
     pub fn get(&self) -> *mut T {
         self.ptr
     }
 
+    /// Replaces `self` with null and returns the previously held pointer.
+    ///
+    /// The returned pointer is null for null `virtual_unique_ptr` objects. Because the caller has
+    /// exclusive ownership over the `virtual_unique_ptr`, it is otherwise valid to dereference, or
+    /// to pass to `virtual_unique_ptr::new`.
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
     }
 
     /// Returns an shared reference to the owned object, if-non-null, or None otherwise.
     ///
-    /// Note that it is not safe to obtain a `&T` from a `&unique_ptr`, because the pointed-to `T`
-    /// may be mutated when a `&unique_ptr` is shared between C++ and Rust.
+    /// Note that it is not safe to obtain a `&T` from a `&virtual_unique_ptr`, because the
+    /// pointed-to `T` may be mutably aliased when a `&virtual_unique_ptr` is shared between C++ and
+    /// Rust.
     pub fn as_ref(&mut self) -> Option<&T> {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
         unsafe { self.ptr.as_ref() }
