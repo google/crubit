@@ -1220,6 +1220,18 @@ pub enum TemplateSpecializationKind {
         #[serde(rename(deserialize = "element_type"))]
         raw_element_type: CcType,
     },
+    /// absl::flat_hash_map<K, V, ...>
+    AbslFlatHashMap {
+        #[serde(rename(deserialize = "key_type"))]
+        raw_key_type: CcType,
+        #[serde(rename(deserialize = "value_type"))]
+        raw_value_type: CcType,
+    },
+    /// absl::flat_hash_set<T, ...>
+    AbslFlatHashSet {
+        #[serde(rename(deserialize = "element_type"))]
+        raw_element_type: CcType,
+    },
     /// Some other template specialization.
     NonSpecial,
 }

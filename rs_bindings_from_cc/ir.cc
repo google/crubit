@@ -1069,6 +1069,19 @@ llvm::json::Value TemplateSpecialization::ToJson() const {
                       llvm::json::Object{
                           {"element_type", absl_span.element_type}}}};
                },
+               [&](const AbslFlatHashMap& absl_flat_hash_map) {
+                 return llvm::json::Object{
+                     {"AbslFlatHashMap",
+                      llvm::json::Object{
+                          {"key_type", absl_flat_hash_map.key_type},
+                          {"value_type", absl_flat_hash_map.value_type}}}};
+               },
+               [&](const AbslFlatHashSet& absl_flat_hash_set) {
+                 return llvm::json::Object{
+                     {"AbslFlatHashSet",
+                      llvm::json::Object{
+                          {"element_type", absl_flat_hash_set.element_type}}}};
+               },
                [&](const C9Co& c9_co) {
                  return llvm::json::Object{
                      {"C9Co", llvm::json::Object{
@@ -1100,6 +1113,18 @@ flat_proto::TemplateSpecialization TemplateSpecialization::ToFlatProto() const {
           [&](const AbslSpan& absl_span) {
             *proto.mutable_absl_span()->mutable_element_type() =
                 absl_span.element_type.ToFlatProto();
+          },
+          [&](const AbslFlatHashMap& absl_flat_hash_map) {
+            auto* msg = proto.mutable_absl_flat_hash_map();
+            *msg->mutable_key_type() =
+                absl_flat_hash_map.key_type.ToFlatProto();
+            *msg->mutable_value_type() =
+                absl_flat_hash_map.value_type.ToFlatProto();
+          },
+          [&](const AbslFlatHashSet& absl_flat_hash_set) {
+            auto* msg = proto.mutable_absl_flat_hash_set();
+            *msg->mutable_element_type() =
+                absl_flat_hash_set.element_type.ToFlatProto();
           },
           [&](const C9Co& c9_co) {
             *proto.mutable_c9_co()->mutable_element_type() =

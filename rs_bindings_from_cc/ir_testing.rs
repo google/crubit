@@ -9,7 +9,10 @@ use arc_anyhow::Result;
 use itertools::Itertools;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
-use ir::{self, make_ir_from_parts, Func, Identifier, Item, LifetimeId, LifetimeName, Record, IR};
+use ir::{
+    self, make_ir_from_parts, Func, Identifier, Item, LifetimeId, LifetimeName, Record,
+    TypeWithDeclId, IR,
+};
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str) -> Result<IR> {
@@ -195,6 +198,24 @@ pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
         }
     }
     panic!("Didn't find record with cc_name {}", cc_name);
+}
+
+/// Retrieves the `Record` underlying the type alias with the given name.
+/// Panics if no such type alias could be found or it did not refer to a record.
+pub fn retrieve_type_alias_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
+    for type_alias in ir.type_aliases() {
+        if type_alias.cc_name == cc_name {
+            let Some(item_id) = type_alias.underlying_type.decl_id() else {
+                panic!("Type alias with cc_name {cc_name} has an underlying type with no ItemId");
+            };
+            let Some(Item::Record(record)) = ir.get_decl(item_id) else {
+                panic!("Type alias with cc_name {cc_name} underlying type not found or is not a record");
+            };
+            return record;
+        }
+    }
+
+    panic!("Didn't find type alias with cc_name {}", cc_name);
 }
 
 #[cfg(test)]

@@ -661,6 +661,36 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
                                /*lifetimes=*/nullptr, /*nullable=*/true,
                                ictx.AreAssumedLifetimesEnabledForTarget(
                                    ictx.GetOwningTarget(specialization_decl))));
+    } else if (templated_decl->getName() == "flat_hash_map") {
+      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 2)
+          << "absl::flat_hash_map should have at least two template args";
+      clang::QualType k = specialization_decl->getTemplateArgs()[0].getAsType();
+      clang::QualType v = specialization_decl->getTemplateArgs()[1].getAsType();
+      // TODO(b/454627672): is specialization_decl the right decl to check for
+      // assumed_lifetimes?
+      return TemplateSpecialization::AbslFlatHashMap{
+          .key_type = ictx.ConvertQualType(
+              k,
+              /*lifetimes=*/nullptr, /*nullable=*/true,
+              ictx.AreAssumedLifetimesEnabledForTarget(
+                  ictx.GetOwningTarget(specialization_decl))),
+          .value_type = ictx.ConvertQualType(
+              v,
+              /*lifetimes=*/nullptr, /*nullable=*/true,
+              ictx.AreAssumedLifetimesEnabledForTarget(
+                  ictx.GetOwningTarget(specialization_decl)))};
+    } else if (templated_decl->getName() == "flat_hash_set") {
+      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 1)
+          << "absl::flat_hash_set should have at least one template arg";
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+      // TODO(b/454627672): is specialization_decl the right decl to check for
+      // assumed_lifetimes?
+      return TemplateSpecialization::AbslFlatHashSet{
+          .element_type = ictx.ConvertQualType(
+              t,
+              /*lifetimes=*/nullptr, /*nullable=*/true,
+              ictx.AreAssumedLifetimesEnabledForTarget(
+                  ictx.GetOwningTarget(specialization_decl)))};
     }
   } else if (top_level_namespace == "c9") {
     if (templated_decl->getName() == "Co") {

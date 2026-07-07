@@ -4,13 +4,13 @@
 #![cfg(test)]
 
 use arc_anyhow::Result;
-use googletest::matchers::{eq, field};
+use googletest::matchers::{eq, field, pat, some};
 use googletest::{expect_eq, expect_that, fail, gtest, OrFail};
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_testing::{
-    ir_id, retrieve_func, retrieve_record, with_full_lifetime_macros, DEPENDENCY_TARGET,
-    TESTING_TARGET,
+    ir_id, retrieve_func, retrieve_record, retrieve_type_alias_record, with_full_lifetime_macros,
+    DEPENDENCY_TARGET, TESTING_TARGET,
 };
 use itertools::Itertools;
 use quote::quote;
@@ -4940,4 +4940,57 @@ fn test_has_private_or_deleted_operator_delete() {
     assert!(!s3.has_private_or_deleted_operator_delete);
     let s4 = retrieve_record(&ir, "S4");
     assert!(s4.has_private_or_deleted_operator_delete);
+}
+
+#[gtest]
+fn test_absl_container_template_specialization_kind() {
+    let ir = ir_from_cc(
+        "
+        namespace absl {
+
+        template <typename K, typename V>
+        class flat_hash_map {};
+
+        template <typename T>
+        class flat_hash_set {};
+
+        }  // namespace absl
+
+        using IntFloatMap = absl::flat_hash_map<int, float>;
+        using DoubleSet = absl::flat_hash_set<double>;
+        ",
+    )
+    .unwrap();
+
+    let record = retrieve_type_alias_record(&ir, "IntFloatMap");
+    expect_that!(
+        &record.template_specialization,
+        some(field!(
+            TemplateSpecialization.kind,
+            pat!(TemplateSpecializationKind::AbslFlatHashMap {
+                raw_key_type: field!(
+                    CcType.variant,
+                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))
+                ),
+                raw_value_type: field!(
+                    CcType.variant,
+                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Float)))
+                ),
+            })
+        )),
+    );
+
+    let record = retrieve_type_alias_record(&ir, "DoubleSet");
+    expect_that!(
+        &record.template_specialization,
+        some(field!(
+            TemplateSpecialization.kind,
+            pat!(TemplateSpecializationKind::AbslFlatHashSet {
+                raw_element_type: field!(
+                    CcType.variant,
+                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Double)))
+                ),
+            })
+        )),
+    );
 }

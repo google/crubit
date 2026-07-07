@@ -728,13 +728,21 @@ struct TemplateSpecialization {
   struct AbslSpan {
     CcType element_type;
   };
+  struct AbslFlatHashMap {
+    CcType key_type;
+    CcType value_type;
+  };
+  struct AbslFlatHashSet {
+    CcType element_type;
+  };
   struct C9Co {
     CcType element_type;
   };
   struct NonSpecial {};
 
   using Kind = std::variant<StdStringView, StdWStringView, StdVector,
-                            StdUniquePtr, AbslSpan, C9Co, NonSpecial>;
+                            StdUniquePtr, AbslSpan, AbslFlatHashMap,
+                            AbslFlatHashSet, C9Co, NonSpecial>;
 
   BazelLabel defining_target;
   Kind kind = NonSpecial{};

@@ -297,6 +297,13 @@ message TemplateSpecialization {
   message C9Co {
     CcType element_type = 1;
   }
+  message AbslFlatHashMap {
+    CcType key_type = 1;
+    CcType value_type = 2;
+  }
+  message AbslFlatHashSet {
+    CcType element_type = 1;
+  }
   message NonSpecial {}
 
   string defining_target = 1;
@@ -306,6 +313,8 @@ message TemplateSpecialization {
     StdVector std_vector = 4;
     StdUniquePtr std_unique_ptr = 5;
     AbslSpan absl_span = 6;
+    AbslFlatHashMap absl_flat_hash_map = 9;
+    AbslFlatHashSet absl_flat_hash_set = 10;
     C9Co c9_co = 7;
     NonSpecial non_special = 8;
   }

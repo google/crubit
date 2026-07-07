@@ -417,6 +417,8 @@ impl UniformReprTemplateType {
                 TemplateSpecializationKind::StdStringView
                 | TemplateSpecializationKind::StdWStringView
                 | TemplateSpecializationKind::C9Co { .. }
+                | TemplateSpecializationKind::AbslFlatHashMap { .. }
+                | TemplateSpecializationKind::AbslFlatHashSet { .. }
                 | TemplateSpecializationKind::NonSpecial,
             )
             | None => Ok(None),
