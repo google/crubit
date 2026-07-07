@@ -123,6 +123,41 @@ pub fn my_asm_conflict_func2() -> crate::OtherStruct {
     }
 }
 
+// This test replicates a conflict that occurs when:
+// 1. Two C++ functions are declared with the same linkage symbol (due to
+//    `__asm__` redirection) but have different signatures.  This is the same as
+//    in the `my_asm_conflict_func` test above.
+// 2. Both functions are fully C-ABI compatible by value (e.g.
+//    primitives/pointers), meaning Crubit normally optimizes by skipping C++
+//    thunk generation and mapping Rust functions directly to the C++ symbol.
+//    This is what distinguishes this test from the `my_asm_conflict_func` test
+//    above.
+//
+// Because both functions skip C++ thunk generation, they both receive the
+// `#[link_name = "same_name"]` attribute in the generated Rust code, which
+// leads to build errors (via `clashing_extern_declarations` lint).
+//
+// This replicates the scenario from Android Bionic wherelibc conflict for
+// `strerror` (note the usage of the `__RENAME` macro):
+// https://github.com/aosp-mirror/platform_bionic/blob/731631f300090436d7f5df80d50b6275c8c60a93/libc/include/string.h#L127-L143
+
+#[inline(always)]
+pub fn name_conflict_when_thunk_normally_unnecessary(x: ::ffi_11::c_int) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk__f2a1262c_name_conflict_when_thunk_normally_unnecessary(x)
+    }
+}
+
+#[inline(always)]
+pub fn name_conflict_when_thunk_normally_unnecessary_l(
+    x: ::ffi_11::c_int,
+    y: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk__33de31e5_name_conflict_when_thunk_normally_unnecessary(x, y)
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -140,6 +175,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk__ec124d59_my_asm_conflict_func(
             __return: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk__f2a1262c_name_conflict_when_thunk_normally_unnecessary(
+            x: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk__33de31e5_name_conflict_when_thunk_normally_unnecessary(
+            x: ::ffi_11::c_int,
+            y: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
     }
 }
 

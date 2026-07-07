@@ -53,4 +53,20 @@ extern "C" void __rust_thunk__ec124d59_my_asm_conflict_func(
 
 static_assert((struct OtherStruct (*)()) & ::my_asm_conflict_func2);
 
+extern "C" int
+__rust_thunk__f2a1262c_name_conflict_when_thunk_normally_unnecessary(int x) {
+  return name_conflict_when_thunk_normally_unnecessary(x);
+}
+
+static_assert((int (*)(int)) & ::name_conflict_when_thunk_normally_unnecessary);
+
+extern "C" int
+__rust_thunk__33de31e5_name_conflict_when_thunk_normally_unnecessary(int x,
+                                                                     int y) {
+  return name_conflict_when_thunk_normally_unnecessary_l(x, y);
+}
+
+static_assert((int (*)(int, int)) &
+              ::name_conflict_when_thunk_normally_unnecessary_l);
+
 #pragma clang diagnostic pop

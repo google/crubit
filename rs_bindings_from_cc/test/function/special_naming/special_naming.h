@@ -58,4 +58,27 @@ SimpleStruct my_asm_conflict_func1() __asm__("my_asm_conflict_func");
 OtherStruct my_asm_conflict_func2() __asm__("my_asm_conflict_func");
 }
 
+// This test replicates a conflict that occurs when:
+// 1. Two C++ functions are declared with the same linkage symbol (due to
+//    `__asm__` redirection) but have different signatures.  This is the same as
+//    in the `my_asm_conflict_func` test above.
+// 2. Both functions are fully C-ABI compatible by value (e.g.
+//    primitives/pointers), meaning Crubit normally optimizes by skipping C++
+//    thunk generation and mapping Rust functions directly to the C++ symbol.
+//    This is what distinguishes this test from the `my_asm_conflict_func` test
+//    above.
+//
+// Because both functions skip C++ thunk generation, they both receive the
+// `#[link_name = "same_name"]` attribute in the generated Rust code, which
+// leads to build errors (via `clashing_extern_declarations` lint).
+//
+// This replicates the scenario from Android Bionic wherelibc conflict for
+// `strerror` (note the usage of the `__RENAME` macro):
+// https://github.com/aosp-mirror/platform_bionic/blob/731631f300090436d7f5df80d50b6275c8c60a93/libc/include/string.h#L127-L143
+extern "C" {
+int name_conflict_when_thunk_normally_unnecessary(int x);
+int name_conflict_when_thunk_normally_unnecessary_l(int x, int y) __asm__(
+    "name_conflict_when_thunk_normally_unnecessary");
+}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SPECIAL_NAMING_SPECIAL_NAMING_H_

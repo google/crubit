@@ -9,3 +9,7 @@ int llvm_no_mangle_marker() { return 42; }
 int asm_name_with_dollar_sign() { return 42; }
 
 extern "C" SimpleStruct my_asm_conflict_func() { return SimpleStruct{42}; }
+
+extern "C" int name_conflict_when_thunk_normally_unnecessary(int x) {
+  return x;
+}

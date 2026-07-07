@@ -114,6 +114,15 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
         }
     }
 
+    // ## Conflicting mangled names.
+    //
+    // If there is another function that maps to the same mangled name (linker symbol),
+    // we must generate a C++ thunk to avoid generating clashing Rust FFI declarations
+    // that share the same `link_name` attribute.
+    if db.has_conflicting_mangled_name(func) {
+        return false;
+    }
+
     true
 }
 

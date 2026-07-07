@@ -22,3 +22,14 @@ fn test_asm_conflict_funcs() {
     expect_eq!(my_asm_conflict_func1().x, 42);
     expect_eq!(my_asm_conflict_func2().y, 42);
 }
+
+#[gtest]
+fn test_name_conflict_when_thunk_normally_unnecessary() {
+    use special_naming::{
+        name_conflict_when_thunk_normally_unnecessary,
+        name_conflict_when_thunk_normally_unnecessary_l,
+    };
+    expect_eq!(name_conflict_when_thunk_normally_unnecessary(42), 42);
+    // The implementation redirects to the same symbol, so it only uses the first argument (42).
+    expect_eq!(name_conflict_when_thunk_normally_unnecessary_l(42, 24), 42);
+}
