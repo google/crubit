@@ -80,9 +80,9 @@ pub fn generate_incomplete_record(
 }
 
 fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
-    match field.rust_identifier.as_ref() {
+    match field.rust_identifier() {
         None => make_rs_ident(&format!("__unnamed_field{}", field_index)),
-        Some(Identifier { identifier }) => make_rs_ident(identifier),
+        Some(identifier) => make_rs_ident(identifier.as_str()),
     }
 }
 
@@ -105,11 +105,11 @@ fn get_field_rs_type_kind_for_layout(
     record: &Record,
     field: &Field,
 ) -> Result<RsTypeKind> {
-    if field.is_no_unique_address {
+    if field.is_no_unique_address() {
         bail!("`[[no_unique_address]]` attribute was present.");
     }
     let ir = db.ir();
-    match &field.unknown_attr {
+    match field.unknown_attr() {
         Err(e) => bail!("{e}"),
         Ok(None) => (),
         Ok(Some(unknown_attr)) => {
@@ -128,7 +128,7 @@ fn get_field_rs_type_kind_for_layout(
             }
         }
     }
-    let type_kind = db.rs_type_kind(field.type_.clone())?;
+    let type_kind = db.rs_type_kind(field.type_().clone())?;
 
     if let RsTypeKind::Error { error, .. } = type_kind {
         return Err(error.clone());
@@ -297,12 +297,12 @@ fn field_definition(
         });
     };
 
-    let deprecated_attr = field.deprecated.clone().map(DeprecatedAttr);
+    let deprecated_attr = field.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
     let doc_comment = match &field_rs_type_kind {
         Ok(_) => generate_doc_comment(
-            field.doc_comment.as_deref(),
+            field.doc_comment(),
             None,
             None,
             db.is_golden_test(),
@@ -312,8 +312,7 @@ fn field_definition(
             use std::fmt::Write;
 
             let mut new_text = field
-                .doc_comment
-                .as_deref()
+                .doc_comment()
                 .map(|doc_comment| format!("{doc_comment}\n\n"))
                 .unwrap_or_default();
             let _ = write!(
@@ -329,7 +328,7 @@ fn field_definition(
             )
         }
     };
-    let visibility = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
+    let visibility = if field.access() == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
         db.type_visibility(&record.owning_target, field_rs_type_kind.clone().unwrap())
             .unwrap_or_default()
     } else {
@@ -340,7 +339,7 @@ fn field_definition(
         Err(_) => {
             *override_alignment = true;
             FieldType::Erased(BitPadding {
-                size: NonZeroUsize::new(end - field.offset)
+                size: NonZeroUsize::new(end - field.offset())
                     .expect("Bit padding should always be greater than 0"),
                 internally_mutable: internally_mutable_unknown_fields,
             })
@@ -360,7 +359,7 @@ fn field_definition(
             };
             FieldType::Type {
                 needs_manually_drop: wrap_in_manually_drop,
-                needs_cell: field.is_mutable,
+                needs_cell: field.is_mutable(),
                 ty,
             }
         }
@@ -427,31 +426,31 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         .fields
         .iter()
         .filter_map(|field| {
-            let size = NonZeroUsize::new(field.size)?;
+            let size = NonZeroUsize::new(field.size())?;
 
             Some(FieldWithLayout {
                 // We don't represent bitfields directly in Rust. We drop the field itself here
                 // and only retain the offset information. Adjacent bitfields then get merged in
                 // the next step.
-                ir: if field.is_bitfield { None } else { Some(field) },
-                offset: field.offset,
+                ir: if field.is_bitfield() { None } else { Some(field) },
+                offset: field.offset(),
                 // We retain the end offset of fields only if we have a matching Rust type
                 // to represent them. Otherwise we'll fill up all the space to the next field.
                 // See: docs/design/struct_layout.md
                 end: match get_field_rs_type_kind_for_layout(db, &record, field) {
                     // Regular field
-                    Ok(_rs_type) => Some(field.offset + field.size),
+                    Ok(_rs_type) => Some(field.offset() + field.size()),
                     // Opaque field
                     Err(_error) => {
                         if record.is_union() {
-                            Some(field.size)
+                            Some(field.size())
                         } else {
                             None
                         }
                     }
                 },
                 description: vec![BitfieldComment {
-                    field_name: field.rust_identifier.as_ref().map(|i| i.identifier.clone()),
+                    field_name: field.rust_identifier().map(|i| i.identifier.clone()),
                     bits: size,
                 }],
             })
@@ -527,8 +526,8 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
                 // The assertion below reinforces that the division by 8 on the next line is
                 // justified (because the bitfields have been coallesced / filtered out
                 // earlier).
-                assert_eq!(field.offset % 8, 0);
-                let expected_offset = field.offset / 8;
+                assert_eq!(field.offset() % 8, 0);
+                let expected_offset = field.offset() / 8;
 
                 Some((field_ident, expected_offset))
             })
@@ -547,7 +546,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
 
     // Adjust the struct to also include base class subobjects, vtables, etc.
     let head_padding = if let Some(first_field) = record.fields.first() {
-        first_field.offset / 8
+        first_field.offset() / 8
     } else {
         record.size_align.size
     };
@@ -876,14 +875,14 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
         .fields
         .iter()
         .filter_map(|field| {
-            if field.access != AccessSpecifier::Public {
+            if field.access() != AccessSpecifier::Public {
                 return None;
             }
 
             // https://en.cppreference.com/w/cpp/types/offsetof points out that "if member is [...]
             // a bit-field [...] the behavior [of `offsetof` macro] is undefined.".  In such
             // scenario clang reports an error: cannot compute offset of bit-field 'field_name'.
-            if field.is_bitfield {
+            if field.is_bitfield() {
                 return None;
             }
 
@@ -891,10 +890,9 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
             // offset in bytes, so we need to convert.  We can assert that
             // `field.offset` is always at field boundaries, because the
             // bitfields have been filtered out earlier.
-            assert_eq!(field.offset % 8, 0);
-            let expected_offset = field.offset / 8;
-            let field_ident =
-                expect_format_cc_type_name(&field.cpp_identifier.as_ref()?.identifier);
+            assert_eq!(field.offset() % 8, 0);
+            let expected_offset = field.offset() / 8;
+            let field_ident = expect_format_cc_type_name(field.cpp_identifier()?.as_str());
             Some((field_ident, expected_offset))
         })
         .collect();
@@ -925,25 +923,25 @@ fn cc_struct_no_unique_address_impl(
 ) -> Result<Vec<NoUniqueAddressAccessor>> {
     let mut no_unique_address_accessors = vec![];
     for field in &record.fields {
-        if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
+        if field.access() != AccessSpecifier::Public || !field.is_no_unique_address() {
             continue;
         }
         // `[[no_unique_address]]` cannot be applied to a bitfield.
         // See e.g. https://en.cppreference.com/w/cpp/language/attributes/no_unique_address
         // Indeed, this is a compilation error in Clang.
-        assert_eq!(field.offset % 8, 0, "invalid subobject: [[no_unique_address]] on a bitfield");
+        assert_eq!(field.offset() % 8, 0, "invalid subobject: [[no_unique_address]] on a bitfield");
 
         // Can't use `get_field_rs_type_kind_for_layout` here, because we want to dig
         // into no_unique_address fields, despite laying them out as opaque
         // blobs of bytes.
-        let type_ident = db.rs_type_kind(field.type_.clone()).with_context(|| {
+        let type_ident = db.rs_type_kind(field.type_().clone()).with_context(|| {
             format!("Failed to format type for field {field:?} on record {record:?}")
         })?;
         no_unique_address_accessors.push(NoUniqueAddressAccessor {
-            doc_comment: if field.size == 0 {
+            doc_comment: if field.size() == 0 {
                 // These fields are not generated at all, so they need to be documented here.
                 generate_doc_comment(
-                    field.doc_comment.as_deref(),
+                    field.doc_comment(),
                     None,
                     None,
                     db.is_golden_test(),
@@ -954,14 +952,13 @@ fn cc_struct_no_unique_address_impl(
                 None
             },
             field: make_rs_ident(
-                &field
-                    .rust_identifier
-                    .as_ref()
+                field
+                    .rust_identifier()
                     .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
-                    .identifier,
+                    .as_str(),
             ),
             type_: type_ident.to_token_stream(db),
-            byte_offset: field.offset / 8,
+            byte_offset: field.offset() / 8,
         });
     }
     Ok(no_unique_address_accessors)

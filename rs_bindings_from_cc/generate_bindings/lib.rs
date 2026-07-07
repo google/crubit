@@ -783,10 +783,10 @@ fn callable_safety(
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
 fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
-    if field.access != AccessSpecifier::Public {
+    if field.access() != AccessSpecifier::Public {
         return None;
     }
-    let field_rs_type_kind = match db.rs_type_kind(field.type_.clone()) {
+    let field_rs_type_kind = match db.rs_type_kind(field.type_().clone()) {
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
@@ -825,8 +825,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeRea
 
             // TODO(nicholasbishop): handle unnamed better.
             let mut name = field
-                .rust_identifier
-                .as_ref()
+                .rust_identifier()
                 .map(|i| format!("`{}`", i.as_str()))
                 .unwrap_or("unnamed field".to_owned());
             write!(name, ": {reason}").unwrap();
@@ -941,7 +940,7 @@ fn generate_rs_api_impl_includes(
     }
 
     for e in ir.enums() {
-        if e.detected_formatter {
+        if e.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
                 "rs_std/lossy_formatter_for_bindings.h".into(),
@@ -984,7 +983,7 @@ fn generate_rs_api_impl_includes(
     // original order (some libraries require certain headers to be included
     // first - e.g. `config.h`).
     let ir_includes =
-        ir.public_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
+        ir.public_headers().map(|hdr| CcInclude::user_header(Rc::from(hdr.name()))).collect_vec();
 
     CppIncludes { internal_includes, ir_includes }
 }
@@ -1198,8 +1197,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             })
         }
         RsTypeKind::Enum { ref enum_, .. } => {
-            let cpp_type =
-                make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name.identifier.as_ref(), db)?;
+            let cpp_type = make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name(), db)?;
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }

@@ -335,7 +335,8 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::Namespace(n) => (n.id, n.cc_name.identifier.clone()),
             ir::Item::IncompleteRecord(r) => (r.id, r.cc_name.identifier.clone()),
             ir::Item::Record(r) => (r.id, r.cc_name.identifier.clone()),
-            ir::Item::Enum(e) => (e.id, e.cc_name.identifier.clone()),
+            // TODO(b/532184844): Remove conversion to Rc<str> as we migrate to &'a str on ProtoViews.
+            ir::Item::Enum(e) => (e.id(), Rc::from(e.cc_name())),
             ir::Item::Constant(c) => (c.id, c.cc_name.identifier.clone()),
             ir::Item::GlobalVar(g) => (g.id, g.cc_name.identifier.clone()),
             ir::Item::TypeAlias(t) => (t.id, t.cc_name.identifier.clone()),
@@ -391,14 +392,14 @@ impl<'db> BindingsGenerator<'db> {
             }
             .to_string(),
             ir::CcTypeVariant::Pointer(ptr) => {
-                let ptr_str = match ptr.kind {
+                let ptr_str = match ptr.kind() {
                     ir::PointerTypeKind::LValueRef => "&",
                     ir::PointerTypeKind::RValueRef => "&&",
                     ir::PointerTypeKind::Nullable
                     | ir::PointerTypeKind::NonNull
                     | ir::PointerTypeKind::Owned => "*",
                 };
-                let pointee_name = self.cc_type_debug_name(&ptr.pointee_type);
+                let pointee_name = self.cc_type_debug_name(ptr.pointee_type());
                 format!("{pointee_name}{ptr_str}")
             }
             ir::CcTypeVariant::FuncPointer { .. } => "function pointer".to_string(),

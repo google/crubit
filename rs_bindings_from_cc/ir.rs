@@ -256,7 +256,13 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HeaderName {
-    pub name: Rc<str>,
+    pub(crate) name: Rc<str>,
+}
+
+impl HeaderName {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
@@ -267,8 +273,18 @@ pub struct LifetimeId(pub i32);
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LifetimeName {
-    pub name: Rc<str>,
-    pub id: LifetimeId,
+    pub(crate) name: Rc<str>,
+    pub(crate) id: LifetimeId,
+}
+
+impl LifetimeName {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn id(&self) -> LifetimeId {
+        self.id
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -284,6 +300,43 @@ pub struct CcType {
 }
 
 impl CcType {
+    pub fn new(
+        variant: CcTypeVariant,
+        is_const: bool,
+        unknown_attr: impl Into<Rc<str>>,
+        explicit_lifetimes: Vec<Rc<str>>,
+    ) -> Self {
+        Self { variant, is_const, unknown_attr: unknown_attr.into(), explicit_lifetimes }
+    }
+
+    pub fn variant(&self) -> &CcTypeVariant {
+        &self.variant
+    }
+
+    pub fn variant_mut(&mut self) -> &mut CcTypeVariant {
+        &mut self.variant
+    }
+
+    pub fn is_const(&self) -> bool {
+        self.is_const
+    }
+
+    pub fn set_is_const(&mut self, is_const: bool) {
+        self.is_const = is_const;
+    }
+
+    pub fn unknown_attr(&self) -> &str {
+        &self.unknown_attr
+    }
+
+    pub fn explicit_lifetimes(&self) -> &[Rc<str>] {
+        &self.explicit_lifetimes
+    }
+
+    pub fn explicit_lifetimes_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.explicit_lifetimes
+    }
+
     pub fn is_unit_type(&self) -> bool {
         matches!(&self.variant, CcTypeVariant::Primitive(Primitive::Void))
     }
@@ -335,9 +388,39 @@ pub enum PointerTypeKind {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PointerType {
-    pub kind: PointerTypeKind,
-    pub lifetime: Option<LifetimeId>,
-    pub pointee_type: Rc<CcType>,
+    pub(crate) kind: PointerTypeKind,
+    pub(crate) lifetime: Option<LifetimeId>,
+    pub(crate) pointee_type: Rc<CcType>,
+}
+
+impl PointerType {
+    pub fn new(
+        kind: PointerTypeKind,
+        lifetime: Option<LifetimeId>,
+        pointee_type: Rc<CcType>,
+    ) -> Self {
+        Self { kind, lifetime, pointee_type }
+    }
+
+    pub fn kind(&self) -> PointerTypeKind {
+        self.kind
+    }
+
+    pub fn set_kind(&mut self, kind: PointerTypeKind) {
+        self.kind = kind;
+    }
+
+    pub fn pointee_type(&self) -> &Rc<CcType> {
+        &self.pointee_type
+    }
+
+    pub fn pointee_type_mut(&mut self) -> &mut Rc<CcType> {
+        &mut self.pointee_type
+    }
+
+    pub fn lifetime(&self) -> Option<LifetimeId> {
+        self.lifetime
+    }
 }
 
 /// Generates an enum type that implements `Deserialize`, which parses the stringified contents of
@@ -1019,30 +1102,88 @@ pub enum AccessSpecifier {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Field {
-    pub rust_identifier: Option<Identifier>,
-    pub cpp_identifier: Option<Identifier>,
-    pub doc_comment: Option<Rc<str>>,
+    pub(crate) rust_identifier: Option<Identifier>,
+    pub(crate) cpp_identifier: Option<Identifier>,
+    pub(crate) doc_comment: Option<Rc<str>>,
     #[serde(rename(deserialize = "type"))]
-    pub type_: CcType,
-    pub access: AccessSpecifier,
-    pub offset: usize,
-    pub size: usize,
+    pub(crate) type_: CcType,
+    pub(crate) access: AccessSpecifier,
+    pub(crate) offset: usize,
+    pub(crate) size: usize,
 
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub unknown_attr: Result<Option<Rc<str>>, String>,
+    pub(crate) unknown_attr: Result<Option<Rc<str>>, String>,
 
-    pub is_no_unique_address: bool,
-    pub is_bitfield: bool,
+    pub(crate) is_no_unique_address: bool,
+    pub(crate) is_bitfield: bool,
 
     // TODO(kinuko): Consider removing this, it is a duplicate of the same information
     // in `Record`.
-    pub is_inheritable: bool,
-    pub is_mutable: bool,
+    pub(crate) is_inheritable: bool,
+    pub(crate) is_mutable: bool,
 
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
+}
+
+impl Field {
+    pub fn rust_identifier(&self) -> Option<Identifier> {
+        self.rust_identifier.clone()
+    }
+
+    pub fn cpp_identifier(&self) -> Option<Identifier> {
+        self.cpp_identifier.clone()
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
+
+    pub fn type_(&self) -> &CcType {
+        &self.type_
+    }
+
+    pub fn type_mut(&mut self) -> &mut CcType {
+        &mut self.type_
+    }
+
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
+
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
+    pub fn is_bitfield(&self) -> bool {
+        self.is_bitfield
+    }
+
+    pub fn access(&self) -> AccessSpecifier {
+        self.access
+    }
+
+    pub fn is_no_unique_address(&self) -> bool {
+        self.is_no_unique_address
+    }
+
+    pub fn unknown_attr(&self) -> &Result<Option<Rc<str>>, String> {
+        &self.unknown_attr
+    }
+
+    pub fn is_inheritable(&self) -> bool {
+        self.is_inheritable
+    }
+
+    pub fn is_mutable(&self) -> bool {
+        self.is_mutable
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1602,35 +1743,35 @@ impl GenericItem for GlobalVar {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Enum {
-    pub cc_name: Identifier,
-    pub rs_name: Identifier,
-    pub unique_name: Rc<str>,
-    pub mangled_cc_name: Rc<str>,
-    pub id: ItemId,
-    pub owning_target: BazelLabel,
-    pub source_loc: Rc<str>,
-    pub underlying_type: CcType,
+    pub(crate) cc_name: Identifier,
+    pub(crate) rs_name: Identifier,
+    pub(crate) unique_name: Rc<str>,
+    pub(crate) mangled_cc_name: Rc<str>,
+    pub(crate) id: ItemId,
+    pub(crate) owning_target: BazelLabel,
+    pub(crate) source_loc: Rc<str>,
+    pub(crate) underlying_type: CcType,
     /// The enumerators. If None, this is a forward-declared (opaque) enum.
     ///
     /// That is, the difference between `enum X : int {};` and `enum X : int;`
     /// is that the former has `Some(vec![])` for the enumerators, while the
     /// latter has `None`.
-    pub enumerators: Option<Vec<Enumerator>>,
+    pub(crate) enumerators: Option<Vec<Enumerator>>,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub unknown_attr: Option<Rc<str>>,
-    pub enclosing_item_id: Option<ItemId>,
-    pub must_bind: bool,
-    pub detected_formatter: bool,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) enclosing_item_id: Option<ItemId>,
+    pub(crate) must_bind: bool,
+    pub(crate) detected_formatter: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub nodiscard: Option<Rc<str>>,
+    pub(crate) nodiscard: Option<Rc<str>>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
     #[serde(default)]
-    pub doc_comment: Option<Rc<str>>,
+    pub(crate) doc_comment: Option<Rc<str>>,
 }
 
 impl GenericItem for Enum {
@@ -1657,6 +1798,111 @@ impl GenericItem for Enum {
     }
 }
 
+impl Enum {
+    #[warn(clippy::too_many_arguments)]
+    pub fn new_for_testing(
+        cc_name: Identifier,
+        rs_name: Identifier,
+        unique_name: Rc<str>,
+        mangled_cc_name: Rc<str>,
+        id: ItemId,
+        owning_target: BazelLabel,
+        source_loc: Rc<str>,
+        underlying_type: CcType,
+        enumerators: Option<Vec<Enumerator>>,
+        unknown_attr: Option<Rc<str>>,
+        enclosing_item_id: Option<ItemId>,
+        must_bind: bool,
+        detected_formatter: bool,
+        deprecated: Option<Rc<str>>,
+        doc_comment: Option<Rc<str>>,
+        nodiscard: Option<Rc<str>>,
+    ) -> Self {
+        Self {
+            cc_name,
+            rs_name,
+            unique_name,
+            mangled_cc_name,
+            id,
+            owning_target,
+            source_loc,
+            underlying_type,
+            enumerators,
+            unknown_attr,
+            enclosing_item_id,
+            must_bind,
+            detected_formatter,
+            deprecated,
+            doc_comment,
+            nodiscard,
+        }
+    }
+
+    pub fn cc_name(&self) -> &str {
+        self.cc_name.as_str()
+    }
+
+    pub fn rs_name(&self) -> &str {
+        self.rs_name.as_str()
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn mangled_cc_name(&self) -> &str {
+        &self.mangled_cc_name
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn source_loc(&self) -> &str {
+        &self.source_loc
+    }
+
+    pub fn underlying_type(&self) -> &CcType {
+        &self.underlying_type
+    }
+
+    pub fn enumerators(&self) -> Option<&[Enumerator]> {
+        self.enumerators.as_deref()
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn detected_formatter(&self) -> bool {
+        self.detected_formatter
+    }
+
+    pub fn nodiscard(&self) -> Option<&str> {
+        self.nodiscard.as_deref()
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Enumerator {
@@ -1670,6 +1916,28 @@ pub struct Enumerator {
     pub deprecated: Option<Rc<str>>,
     #[serde(default)]
     pub doc_comment: Option<Rc<str>>,
+}
+
+impl Enumerator {
+    pub fn identifier(&self) -> &str {
+        self.identifier.as_str()
+    }
+
+    pub fn value(&self) -> IntegerConstant {
+        self.value
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn deprecated(&self) -> Option<Rc<str>> {
+        self.deprecated.clone()
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

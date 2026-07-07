@@ -97,7 +97,8 @@ pub struct Lifetime(pub Rc<str>);
 
 impl From<&ir::LifetimeName> for Lifetime {
     fn from(lifetime_name: &ir::LifetimeName) -> Self {
-        Lifetime(lifetime_name.name.clone())
+        let name = lifetime_name.name();
+        Lifetime(Rc::from(name))
     }
 }
 
@@ -974,7 +975,7 @@ impl RsTypeKind {
         let crate_path = Rc::new(CratePath::new(
             ir,
             db.namespace_qualifier(&enum_),
-            rs_imported_crate_name(&enum_.owning_target, ir),
+            rs_imported_crate_name((*enum_).owning_target(), ir),
         ));
         Ok(RsTypeKind::Enum { enum_, crate_path })
     }
@@ -1956,7 +1957,7 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::Enum { enum_, crate_path } => {
-                let ident = make_rs_ident(&enum_.rs_name.identifier);
+                let ident = make_rs_ident(enum_.rs_name());
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
@@ -2378,29 +2379,29 @@ mod tests {
         expect_that!(prim.allowed_behind_multi_element_ptr(), eq(true));
 
         let enum_ = RsTypeKind::Enum {
-            enum_: Rc::new(Enum {
-                cc_name: Identifier { identifier: "MyEnum".into() },
-                rs_name: Identifier { identifier: "MyEnum".into() },
-                unique_name: "MyEnum".into(),
-                mangled_cc_name: "6MyEnum".into(),
-                id: ItemId::new_for_testing(0),
-                owning_target: BazelLabel("//foo/bar".into()),
-                source_loc: "some_file.h:123".into(),
-                underlying_type: CcType {
+            enum_: Rc::new(Enum::new_for_testing(
+                Identifier { identifier: "MyEnum".into() },
+                Identifier { identifier: "MyEnum".into() },
+                "MyEnum".into(),
+                "6MyEnum".into(),
+                ItemId::new_for_testing(0),
+                BazelLabel("//foo/bar".into()),
+                "some_file.h:123".into(),
+                CcType {
                     variant: CcTypeVariant::Primitive(Primitive::Int32T),
                     is_const: false,
                     unknown_attr: "".into(),
                     explicit_lifetimes: vec![],
                 },
-                enumerators: Some(vec![]),
-                unknown_attr: None,
-                enclosing_item_id: None,
-                must_bind: false,
-                detected_formatter: false,
-                deprecated: None,
-                doc_comment: None,
-                nodiscard: None,
-            }),
+                Some(vec![]),
+                None,
+                None,
+                false,
+                false,
+                None,
+                None,
+                None,
+            )),
             crate_path: make_crate_path(),
         };
 

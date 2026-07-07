@@ -40,7 +40,7 @@ fn cc_type_has_bindings(
             }
         }
         CcTypeVariant::Pointer(ptr) => {
-            cc_type_has_bindings(db, &ptr.pointee_type, alias_id)?;
+            cc_type_has_bindings(db, ptr.pointee_type(), alias_id)?;
         }
         CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
             for t in &**param_and_return_types {
@@ -147,7 +147,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
     }
 
     if let Item::Enum(enum_) = &item {
-        if enum_.enumerators.is_none() {
+        if enum_.enumerators().is_none() {
             return Err(NoBindingsReason::Unsupported(anyhow!(
                 "b/322391132: Forward-declared (opaque) enums are not implemented yet"
             )));
@@ -158,7 +158,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
         // underlying type is never going to be or refer to this type, because the current
         // enum is not defined at the time that the underlying type is evaluated.
         // Not even forward declarations help. You just can't do `enum Foo: Something<Foo>;`.
-        if let Err(error) = db.rs_type_kind(enum_.underlying_type.clone()) {
+        if let Err(error) = db.rs_type_kind(enum_.underlying_type().clone()) {
             return Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(enum_.id()).to_string(),
                 reason: error.to_string(),
@@ -523,7 +523,8 @@ pub fn resolve_names(
                     insert(record.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
                 }
                 Item::Enum(enum_) => {
-                    insert(enum_.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id))
+                    // TODO(b/532184844): Remove conversions to Rc<str> as we migrate to &'a str on ProtoViews.
+                    insert(Rc::from(enum_.rs_name()), ResolvedName::ExplicitItem(id))
                 }
                 Item::TypeAlias(type_alias) => {
                     insert(type_alias.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
