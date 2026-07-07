@@ -11,9 +11,46 @@ use database::rs_snippet::{LifetimeOptions, RsTypeKind};
 use database::BindingsGenerator;
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
-use ir::{BazelLabel, Func, GenericItem, Item, ItemId, Record};
+use ir::{BazelLabel, CcType, CcTypeVariant, Func, GenericItem, Item, ItemId, Record};
 use std::collections::HashMap;
 use std::rc::Rc;
+
+/// Recursively checks whether all C++ declarations (`Decl`) directly or transitively
+/// referenced by `cc_type` have bindings.
+fn cc_type_has_bindings(
+    db: &BindingsGenerator,
+    cc_type: &CcType,
+    alias_id: ItemId,
+) -> Result<(), NoBindingsReason> {
+    match &cc_type.variant {
+        CcTypeVariant::Decl { id, template_args } => {
+            let underlying_item = db.find_untyped_decl(*id);
+            if let ir::Item::TypeAlias(inner_alias) = underlying_item {
+                cc_type_has_bindings(db, &inner_alias.underlying_type, alias_id)?;
+            } else if let Err(no_bindings) = db.has_bindings(underlying_item.clone()) {
+                return Err(NoBindingsReason::DependencyFailed {
+                    type_name: db.debug_name(alias_id).to_string(),
+                    reason: no_bindings.to_string(),
+                });
+            }
+            if let Some(args) = template_args {
+                for arg in &**args {
+                    cc_type_has_bindings(db, arg, alias_id)?;
+                }
+            }
+        }
+        CcTypeVariant::Pointer(ptr) => {
+            cc_type_has_bindings(db, &ptr.pointee_type, alias_id)?;
+        }
+        CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
+            for t in &**param_and_return_types {
+                cc_type_has_bindings(db, t, alias_id)?;
+            }
+        }
+        CcTypeVariant::Primitive(_) | CcTypeVariant::Error(_) => {}
+    }
+    Ok(())
+}
 
 /// Implementation of `BindingsGenerator::has_bindings`.
 pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, NoBindingsReason> {
@@ -160,6 +197,9 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                 {
                     return Err(NoBindingsReason::Unsupported(error));
                 }
+            }
+            if let Item::TypeAlias(alias) = &item {
+                cc_type_has_bindings(db, &alias.underlying_type, alias.id)?;
             }
             // has_bindings is called from `rs_type_kind()`, so we can't use
             // `BindingsGenerator::rs_type_kind()` here.

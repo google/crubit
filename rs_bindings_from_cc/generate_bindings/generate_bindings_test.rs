@@ -478,6 +478,19 @@ fn test_type_alias() -> Result<()> {
 }
 
 #[gtest]
+fn test_type_alias_skips_dunder() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+            struct __DunderStruct final { int x; };
+            using AliasToDunder = __DunderStruct;
+        "#,
+    )?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! { pub type AliasToDunder });
+    Ok(())
+}
+
+#[gtest]
 fn test_rs_type_kind_implements_copy() -> Result<()> {
     let template = r#" LIFETIMES
         struct [[clang::trivial_abi]] TrivialStruct final { int i; };

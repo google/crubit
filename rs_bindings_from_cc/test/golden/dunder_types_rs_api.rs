@@ -26,8 +26,8 @@
 // error: struct `__DunderTypedef` could not be bound
 //   Skipping generating bindings for '__DunderTypedef' because it has a leading `__`
 
-pub(crate) type AliasToDunderType =
-    ::forward_declare::Incomplete<::forward_declare::symbol!("__DunderType"), ()>;
+// error: type alias `AliasToDunderType` could not be bound
+//   depends on `AliasToDunderType` which cannot be bound because Skipping generating bindings for '__DunderType' because it has a leading `__`
 
 // error: type alias `AliasToDunderTypedef` could not be bound
 //   Unsupported type '__DunderTypedef': No generated bindings found for '__DunderTypedef'
@@ -35,7 +35,8 @@ pub(crate) type AliasToDunderType =
 // error: type alias `AliasToDunderAnonTypedef` could not be bound
 //   Unsupported type '__DunderAnonTypedef': No generated bindings found for '__DunderAnonTypedef'
 
-pub(crate) type AliasToAliasToDunderType = crate::AliasToDunderType;
+// error: type alias `AliasToAliasToDunderType` could not be bound
+//   depends on `AliasToAliasToDunderType` which cannot be bound because Skipping generating bindings for '__DunderType' because it has a leading `__`
 
 // error: type alias `AliasToAliasToDunderTypedef` could not be bound
 //   Unsupported type alias AliasToDunderTypedef
