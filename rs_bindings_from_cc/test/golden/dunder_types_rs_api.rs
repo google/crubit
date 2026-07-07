@@ -20,9 +20,6 @@
 // error: struct `__DunderAnonTypedef` could not be bound
 //   Skipping generating bindings for '__DunderAnonTypedef' because it has a leading `__`
 
-// error: type alias `__DunderTypedef` could not be bound
-//   Typedef only used to introduce a name in C. Not importing.
-
 // error: struct `__DunderTypedef` could not be bound
 //   Skipping generating bindings for '__DunderTypedef' because it has a leading `__`
 
@@ -30,16 +27,16 @@
 //   depends on `AliasToDunderType` which cannot be bound because Skipping generating bindings for '__DunderType' because it has a leading `__`
 
 // error: type alias `AliasToDunderTypedef` could not be bound
-//   Unsupported type '__DunderTypedef': No generated bindings found for '__DunderTypedef'
+//   depends on `AliasToDunderTypedef` which cannot be bound because Skipping generating bindings for '__DunderTypedef' because it has a leading `__`
 
 // error: type alias `AliasToDunderAnonTypedef` could not be bound
-//   Unsupported type '__DunderAnonTypedef': No generated bindings found for '__DunderAnonTypedef'
+//   depends on `AliasToDunderAnonTypedef` which cannot be bound because Skipping generating bindings for '__DunderAnonTypedef' because it has a leading `__`
 
 // error: type alias `AliasToAliasToDunderType` could not be bound
 //   depends on `AliasToAliasToDunderType` which cannot be bound because Skipping generating bindings for '__DunderType' because it has a leading `__`
 
 // error: type alias `AliasToAliasToDunderTypedef` could not be bound
-//   Unsupported type alias AliasToDunderTypedef
+//   depends on `AliasToAliasToDunderTypedef` which cannot be bound because Skipping generating bindings for '__DunderTypedef' because it has a leading `__`
 
 // error: type alias `AliasToAliasToDunderAnonTypedef` could not be bound
-//   Unsupported type alias AliasToDunderAnonTypedef
+//   depends on `AliasToAliasToDunderAnonTypedef` which cannot be bound because Skipping generating bindings for '__DunderAnonTypedef' because it has a leading `__`

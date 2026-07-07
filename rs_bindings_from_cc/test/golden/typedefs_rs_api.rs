@@ -42,9 +42,6 @@ pub mod some_struct {
     pub type nested_type = ::ffi_11::c_int;
 }
 
-// error: type alias `SomeStruct` could not be bound
-//   Typedef only used to introduce a name in C. Not importing.
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
@@ -97,9 +94,6 @@ impl Default for SomeUnion {
     }
 }
 
-// error: type alias `SomeUnion` could not be bound
-//   Typedef only used to introduce a name in C. Not importing.
-
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
@@ -132,9 +126,6 @@ impl Default for SomeOtherUnion {
 pub fn FunctionUsingNestedType() -> crate::some_struct::nested_type {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
 }
-
-// error: type alias `IncompleteExternC` could not be bound
-//   Typedef only used to introduce a name in C. Not importing.
 
 // error: struct `IncompleteExternC` could not be bound
 //   incomplete type

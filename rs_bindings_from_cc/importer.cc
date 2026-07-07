@@ -453,6 +453,12 @@ const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
         decl = record_decl;
       }
     }
+    if (const clang::TagDecl* tag_decl =
+            StripCStyleNameIntroducingTypedef(alias_decl)) {
+      if (!llvm::isa<clang::ClassTemplateSpecializationDecl>(tag_decl)) {
+        decl = const_cast<clang::TagDecl*>(tag_decl);
+      }
+    }
   }
 
   if (llvm::isa<clang::TagDecl>(decl)) {

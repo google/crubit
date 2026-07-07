@@ -14,13 +14,7 @@
 #![allow(deprecated)]
 #![deny(warnings)]
 
-// error: type alias `IncompleteExternC` could not be bound
-//   Typedef only used to introduce a name in C. Not importing.
-
 forward_declare::forward_declare!(pub IncompleteExternC = forward_declare::symbol!("IncompleteExternC"));
-
-// error: type alias `Incomplete` could not be bound
-//   Typedef only used to introduce a name in C. Not importing.
 
 forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Incomplete"));
 
@@ -28,18 +22,14 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `incomplete_extern_c`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'IncompleteExternC': No generated bindings found for 'IncompleteExternC'
-///   * `incomplete`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'Incomplete': No generated bindings found for 'Incomplete'
+///   * `incomplete_extern_c`: raw pointer
+///   * `incomplete`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C, align(8))]
+#[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasPointerToIncompleteTypedefs
 pub struct HasPointerToIncompleteTypedefs {
-    /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type 'IncompleteExternC': No generated bindings found for 'IncompleteExternC'
-    pub(crate) incomplete_extern_c: [::core::mem::MaybeUninit<u8>; 8],
-    /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type 'Incomplete': No generated bindings found for 'Incomplete'
-    pub(crate) incomplete: [::core::mem::MaybeUninit<u8>; 8],
+    pub incomplete_extern_c: *mut crate::IncompleteExternC,
+    pub incomplete: *mut crate::Incomplete,
 }
 impl !Send for HasPointerToIncompleteTypedefs {}
 impl !Sync for HasPointerToIncompleteTypedefs {}

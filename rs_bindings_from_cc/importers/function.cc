@@ -185,6 +185,25 @@ Identifier FunctionDeclImporter::GetTranslatedParamName(
 
 namespace {
 
+bool FunctionInStdOrSystemHeaderWithReservedName(
+    const clang::FunctionDecl& function_decl) {
+  bool is_in_system_hdr =
+      function_decl.getASTContext().getSourceManager().isInSystemHeader(
+          function_decl.getLocation());
+  if (IsInStdNamespace(&function_decl) || is_in_system_hdr) {
+    if (clang::IdentifierInfo* id = function_decl.getIdentifier()) {
+      llvm::StringRef name = id->getName();
+      bool underscore_underscore = name.starts_with("__");
+      bool underscore_capital = name.starts_with("_") && name.size() > 1 &&
+                                'A' <= name[1] && name[1] <= 'Z';
+      if (underscore_underscore || underscore_capital) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool FunctionNameIsIdentifier(clang::FunctionDecl& function_decl) {
   return function_decl.getDeclName().getNameKind() ==
          clang::DeclarationName::Identifier;
@@ -383,15 +402,12 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       FunctionNameIsIdentifier(*function_decl)) {
     return std::nullopt;
   }
-  if (IsInStdNamespace(function_decl)) {
-    if (clang::IdentifierInfo* id = function_decl->getIdentifier();
-        id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
-      return ictx_.ImportUnsupportedItem(
-          *function_decl, std::nullopt,
-          {FormattedError::Static("Internal functions from the standard "
-                                  "library are not supported")},
-          must_bind_);
-    }
+  if (FunctionInStdOrSystemHeaderWithReservedName(*function_decl)) {
+    return ictx_.ImportUnsupportedItem(
+        *function_decl, std::nullopt,
+        {FormattedError::Static("Internal functions from the standard "
+                                "library are not supported")},
+        must_bind_);
   }
   // Method is private, we don't need to import it.
   if (auto* method_decl =
