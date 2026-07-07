@@ -131,7 +131,7 @@ fn trait_name_to_token_stream(db: &BindingsGenerator, trait_name: &TraitName) ->
 /// Returns whether an argument of this type causes ADL to include the `record`.
 fn adl_expands_to(record: &Record, rs_type_kind: &RsTypeKind) -> bool {
     match rs_type_kind {
-        RsTypeKind::Record { record: nested_record, .. } => record.id == nested_record.id,
+        RsTypeKind::Record { record: nested_record, .. } => record.id() == nested_record.id(),
         RsTypeKind::Reference { referent, .. } => adl_expands_to(record, referent),
         RsTypeKind::RvalueReference { referent, .. } => adl_expands_to(record, referent),
         _ => false,
@@ -860,9 +860,9 @@ fn api_func_shape_for_identifier(
         SafetyAnnotation::DisableUnsafe => false,
     };
 
-    let func_name = make_rs_ident(&id.identifier);
+    let func_name = make_rs_ident(id.as_str());
     let Some(record) = maybe_record else { return (func_name, ImplKind::None { is_unsafe }) };
-    let is_renamed_unpin_constructor = func.cc_name.is_constructor() && record.is_unpin();
+    let is_renamed_unpin_constructor = func.cc_name().is_constructor() && record.is_unpin();
     let format_first_param_as_self = if func.is_instance_method() {
         let Some(first_param) = param_types.first() else {
             panic!("Missing `__this` parameter in an instance method: {:?}", func);
@@ -1143,7 +1143,7 @@ fn api_func_shape_for_conversion_operator(
 
     let (trait_name, func_name) = match return_type.unalias() {
         RsTypeKind::Record { record: dst_record, .. } => {
-            let is_dst_local = db.ir().is_current_target(&dst_record.owning_target);
+            let is_dst_local = db.ir().is_current_target(&(**dst_record).owning_target());
             if !referent_type_kind.is_unpin() {
                 return None;
             }
@@ -1384,7 +1384,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
             next_suffix += 1;
         }
     };
-    for (func_param, param) in func.params.iter().zip(params.iter_mut()) {
+    for (func_param, param) in func.params().iter().zip(params.iter_mut()) {
         if param.is_unpin() {
             continue;
         }
@@ -1392,7 +1392,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
-            lifetime: new_lifetime_param(func_param.identifier.identifier.to_string()),
+            lifetime: new_lifetime_param(func_param.identifier().as_str().to_string()),
         };
     }
 }
@@ -1711,7 +1711,7 @@ fn rs_type_kinds_for_func(
             if i == 0 && func.is_instance_method() {
                 if !func.cc_name.is_constructor() && !func.cc_name.is_destructor()
                     && let Some(Item::Record(record)) = func.enclosing_item_id.map(|id| db.find_untyped_decl(id))
-                        && record.is_thread_safe
+                        && record.is_thread_safe()
                             && let CcTypeVariant::Pointer(ptr) = &mut param_type.variant {
                                 let mut new_pointee = (*ptr.pointee_type).clone();
                                 new_pointee.is_const = true;
@@ -1879,7 +1879,7 @@ pub fn generate_function(
         errors.consolidate()?;
     }
     let param_idents =
-        func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
+        func.params().iter().map(|p| make_rs_ident(p.identifier().as_str())).collect_vec();
 
     // Skip thunk generation if the function is a method on a public base class,
     // as the base class thunk will already have been generated.
@@ -1887,7 +1887,7 @@ pub fn generate_function(
         || {
             let Some(derived) = &derived_record else { return false };
             let Some(enclosing_id) = func.enclosing_item_id else { return false };
-            if enclosing_id == derived.id {
+            if enclosing_id == derived.id() {
                 return false;
             };
             let Some(base_item) = db.ir().get_decl(enclosing_id) else { return false };
@@ -1943,7 +1943,7 @@ pub fn generate_function(
         if assume_lifetimes {
             let record = lifetime_defaults_transform_record(db, record)?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
-                *lifetimes = record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                *lifetimes = record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
         }
         quoted_return_type = quote! {};
@@ -1966,7 +1966,7 @@ pub fn generate_function(
     let failed = reportable_status.is_err();
 
     let (derived_class_prefix, sep) = if let Some(ref derived_record) = derived_record {
-        (derived_record.mangled_cc_name.as_ref(), "_")
+        (derived_record.mangled_cc_name(), "_")
     } else {
         ("", "")
     };
@@ -2086,7 +2086,7 @@ pub fn generate_function(
             is_unsafe,
         } => {
             let record_name = make_rs_ident(
-                derived_record.as_deref().unwrap_or(record.as_ref()).rs_name.identifier.as_ref(),
+                derived_record.as_deref().unwrap_or(record.as_ref()).rs_name().as_str(),
             );
             let fn_generic_params =
                 format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
@@ -2153,7 +2153,7 @@ pub fn generate_function(
             // Add the free method to the mapping, which we will extract and put into
             // snippets inside db later.
             free_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                derived_record.as_deref().unwrap_or(record.as_ref()).id(),
                 vec![quote! {
                     #capture_tags
                     #doc_comment
@@ -2195,7 +2195,7 @@ pub fn generate_function(
             let mod_name = db.record_to_associated_module_name(target_record)?;
 
             member_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                derived_record.as_deref().unwrap_or(record.as_ref()).id(),
                 vec![quote! {
                     #capture_tags
                     #doc_comment
@@ -2260,7 +2260,7 @@ pub fn generate_function(
 
             let assume_lifetimes = db
                 .ir()
-                .target_crubit_features(&trait_record.owning_target)
+                .target_crubit_features(&(**trait_record).owning_target())
                 .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
             // TODO(b/454627672): is it worth caching this?
             let transformed_trait_record;
@@ -2274,11 +2274,11 @@ pub fn generate_function(
             let mut trait_lifetime_params: Vec<Lifetime> = vec![];
             if assume_lifetimes {
                 trait_lifetime_params =
-                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                    trait_record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
 
-            let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
-            let qualified_record_name = if Some(trait_record.id) == func.enclosing_item_id {
+            let record_name = make_rs_ident(trait_record.rs_name().as_str());
+            let qualified_record_name = if Some(trait_record.id()) == func.enclosing_item_id {
                 quote! { #record_name }
             } else {
                 // If the trait is being implemented for a different record than its enclosing one
@@ -2373,12 +2373,12 @@ pub fn generate_function(
             let mut trait_lifetime_params: Vec<Lifetime> = vec![];
             if assume_lifetimes {
                 assumed_lifetime_params = trait_record
-                    .lifetime_inputs
+                    .lifetime_inputs()
                     .iter()
                     .map(|id| make_rs_lifetime_ident(id))
                     .collect();
                 trait_lifetime_params =
-                    trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                    trait_record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
             let trait_record_param_tokens = if !assumed_lifetime_params.is_empty() {
                 quote! { < #( #assumed_lifetime_params ),* > }
@@ -2625,11 +2625,11 @@ fn collect_parent_lifetime_bindings(
             if let Item::Record(r) = decl {
                 let assume_lifetimes = db
                     .ir()
-                    .target_crubit_features(&r.owning_target)
+                    .target_crubit_features(&(**r).owning_target())
                     .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
                 if assume_lifetimes {
                     let r = lifetime_defaults_transform_record(db, r)?;
-                    for lifetime in r.lifetime_inputs {
+                    for lifetime in r.lifetime_inputs() {
                         unordered_lifetimes.insert(lifetime.to_string());
                     }
                 }
@@ -2668,7 +2668,7 @@ fn function_signature(
     if let Some(derived_record) = derived_record.as_deref() {
         ensure!(
             db.ir()
-                .target_crubit_features(&derived_record.owning_target)
+                .target_crubit_features(&derived_record.owning_target())
                 .contains(crubit_feature::CrubitFeature::Experimental),
             "upcasting is currently experimental, see b/216195042"
         );
@@ -2709,7 +2709,7 @@ fn function_signature(
         if assume_lifetimes {
             let record = lifetime_defaults_transform_record(db, record)?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = t {
-                *lifetimes = record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
+                *lifetimes = record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
         }
         Some(t)
@@ -3176,7 +3176,7 @@ fn has_copy_assignment_operator_from_const_reference(
         return false;
     };
     record
-        .children
+        .children()
         .iter()
         .filter_map(|item| match item {
             Item::Func(func) => Some(func.clone()),

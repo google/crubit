@@ -300,7 +300,7 @@ fn generate_function_assertion_for_identifier(
     func: &Func,
     id: &Identifier,
 ) -> Result<ThunkImpl> {
-    let fn_ident = format_cc_ident(&id.identifier)?;
+    let fn_ident = format_cc_ident(id.as_str())?;
     let mut namespace_qualifier = db.namespace_qualifier(func);
     // Keep goldens the same.
     namespace_qualifier.use_leading_colons = true;
@@ -419,13 +419,13 @@ pub fn generate_function_thunk_impl(
         return Ok(None);
     }
     let thunk_ident = thunk_ident(db, func);
-    let implementation_function = match &func.cc_name {
+    let implementation_function = match func.cc_name() {
         UnqualifiedIdentifier::Operator(op) => {
             let name = syn::parse_str::<TokenStream>(&op.name)?;
             quote! { operator #name }
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            let fn_ident = format_cc_ident(&id.identifier)?;
+            let fn_ident = format_cc_ident(id.as_str())?;
             let namespace_qualifier = db.namespace_qualifier(func).format_for_cc()?;
             if func.instance_method_metadata.is_some() || func.adl_enclosing_record.is_some() {
                 quote! {#fn_ident}
@@ -442,12 +442,12 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Constructor => {
             if let Some(parent_id) = func.enclosing_item_id {
                 let record: &Rc<Record> = db.find_decl(parent_id)?;
-                if is_copy_constructor(func, record.id)
-                    && record.copy_constructor == SpecialMemberFunc::Unavailable
+                if is_copy_constructor(func, record.id())
+                    && record.copy_constructor() == SpecialMemberFunc::Unavailable
                 {
                     bail!(
                         "Would use an unavailable copy constructor for {}",
-                        record.cc_name.identifier.as_ref()
+                        record.cc_name().as_str()
                     );
                 }
             }
@@ -456,7 +456,7 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
         UnqualifiedIdentifier::ConversionOperator => {
             let target_type_cpp = cpp_type_name::format_cpp_type_with_references(
-                &db.rs_type_kind(func.return_type.clone())?,
+                &db.rs_type_kind(func.return_type().clone())?,
                 db,
             )?;
             quote! { operator #target_type_cpp }
@@ -464,20 +464,20 @@ pub fn generate_function_thunk_impl(
     };
 
     let mut param_idents = func
-        .params
+        .params()
         .iter()
-        .map(|p| format_cc_ident(&p.identifier.identifier))
+        .map(|p| format_cc_ident(p.identifier().as_str()))
         .collect::<Result<Vec<_>>>()?;
 
     let mut conversion_stmts = quote! {};
     let mut param_types = func
-        .params
+        .params()
         .iter()
         .map(|p| {
-            let arg_type = db.rs_type_kind(p.type_.clone())?;
+            let arg_type = db.rs_type_kind(p.type_().clone())?;
             let cpp_type = cpp_type_name::format_cpp_type(&arg_type, db)?;
             if arg_type.is_bridge_type() {
-                let ident = format_cc_ident(&p.identifier.identifier)?;
+                let ident = format_cc_ident(p.identifier().as_str())?;
                 let crubit_abi_type = db.crubit_abi_type(arg_type)?;
                 let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
                 let decoder = format_ident!("__{ident}_decoder");
@@ -495,11 +495,11 @@ pub fn generate_function_thunk_impl(
         .collect::<Result<Vec<_>>>()?;
 
     let arg_expressions = func
-        .params
+        .params()
         .iter()
         .map(|p| {
-            let ident = format_cc_ident(&p.identifier.identifier)?;
-            match &p.type_.variant {
+            let ident = format_cc_ident(p.identifier().as_str())?;
+            match &p.type_().variant {
                 CcTypeVariant::Pointer(pointer) => match pointer.kind {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
                     PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
@@ -579,17 +579,17 @@ pub fn generate_function_thunk_impl(
             func.instance_method_metadata.as_ref().map(|meta| meta.reference)
         }
     };
-    if func.cc_name.is_constructor() {
+    if func.cc_name().is_constructor() {
         this_ref_qualification = None;
     }
     let (implementation_function, arg_expressions) =
         if let Some(this_ref_qualification) = this_ref_qualification {
             let this_param = func
-                .params
+                .params()
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
 
-            let this_arg = format_cc_ident(&this_param.identifier.identifier)?;
+            let this_arg = format_cc_ident(this_param.identifier().as_str())?;
             let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
                 quote! {std::move(*#this_arg).}
             } else {

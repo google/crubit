@@ -221,11 +221,11 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
                     if func.is_noreturn {
                         missing_features.push("[[noreturn]] attribute".to_string());
                     }
-                    for param in &func.params {
+                    for param in func.params() {
                         if let Some(unknown_attr) = &param.unknown_attr {
                             missing_features.push(format!(
                                 "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
-                                param = &param.identifier.identifier
+                                param = param.identifier().as_str()
                             ));
                         }
                     }
@@ -803,7 +803,7 @@ pub fn generated_items_to_tokens<'db>(
                 let canonical_namespace: &Rc<ir::Namespace> = db
                     .find_decl(current_namespace.canonical_namespace_id)
                     .unwrap_or_else(|_| panic!("Namespace canonical_namespace_id {:?} not found as a valid Namespace item.", current_namespace.canonical_namespace_id));
-                let name = make_rs_ident(&canonical_namespace.rs_name.identifier);
+                let name = make_rs_ident(canonical_namespace.rs_name().as_str());
 
                 quote! {
                     #deprecated_attr
