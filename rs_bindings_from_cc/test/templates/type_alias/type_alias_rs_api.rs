@@ -52,7 +52,7 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut tmp as*mut _);
+            crate::detail::__rust_thunk__de4d35d3__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -64,7 +64,10 @@ pub mod cc_template_inst10_my_template_ii_e {
         unsafe {
             let mut __crubit_return =
                 ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
-            crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut __crubit_return as*mut::core::ffi::c_void,value);
+            crate::detail::__rust_thunk__5a9d55c6__ZN10MyTemplateIiE6CreateEi(
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                value,
+            );
             __crubit_return.assume_init()
         }
     }
@@ -72,9 +75,7 @@ pub mod cc_template_inst10_my_template_ii_e {
     pub(crate) fn value<'__this>(
         __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(__this)
-        }
+        unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(__this) }
     }
 }
 
@@ -82,16 +83,14 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(
+        pub(crate) unsafe fn __rust_thunk__de4d35d3__ZN10MyTemplateIiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(
+        pub(crate) unsafe fn __rust_thunk__5a9d55c6__ZN10MyTemplateIiE6CreateEi(
             __return: *mut ::core::ffi::c_void,
             value: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias<
-            '__this,
-        >(
+        pub(crate) unsafe fn __rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv<'__this>(
             __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
         ) -> ::cref::CRef<'__this, ::ffi_11::c_int>;
     }

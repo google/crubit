@@ -41,7 +41,7 @@ impl Default for __CcTemplateInst2TSIiE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN2TSIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplate_5finstantiation_5fcc(&raw mut tmp as*mut _);
+            crate::detail::__rust_thunk__20ba560a__ZN2TSIiEC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -52,9 +52,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z3RTSv(__return: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN2TSIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplate_5finstantiation_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
+        pub(crate) unsafe fn __rust_thunk__20ba560a__ZN2TSIiEC1Ev(__this: *mut ::core::ffi::c_void);
     }
 }
 

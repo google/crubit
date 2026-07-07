@@ -58,7 +58,9 @@ impl Default for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN4absl13flat_hash_mapIimLi42EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(&raw mut tmp as*mut _);
+            crate::detail::__rust_thunk__15b85ee3__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
+                &raw mut tmp as *mut _,
+            );
             tmp.assume_init()
         }
     }
@@ -73,7 +75,7 @@ pub mod cc_template_inst_n4absl13flat_hash_map_iim_li42_eee {
         __this: &'__this crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE,
     ) {
         unsafe {
-            crate::detail::__rust_thunk___ZNK4absl13flat_hash_mapIimLi42EE25FunctionRemovedByOverrideEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(__this)
+            crate::detail::__rust_thunk__25d7606d__ZNK4absl13flat_hash_mapIimLi42EE25FunctionRemovedByOverrideEv(__this)
         }
     }
 }
@@ -82,10 +84,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN4absl13flat_hash_mapIimLi42EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+        pub(crate) unsafe fn __rust_thunk__15b85ee3__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZNK4absl13flat_hash_mapIimLi42EE25FunctionRemovedByOverrideEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated<
+        pub(crate) unsafe fn __rust_thunk__25d7606d__ZNK4absl13flat_hash_mapIimLi42EE25FunctionRemovedByOverrideEv<
             '__this,
         >(
             __this: &'__this crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE,

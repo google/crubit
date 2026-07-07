@@ -35,14 +35,12 @@ static_assert((void (*)(struct Ts<short, double>)) & ::ShortDoubleCaller);
 static_assert(sizeof(struct Ts<int, float>) == 1);
 static_assert(alignof(struct Ts<int, float>) == 1);
 
-extern "C" void
-__rust_thunk___ZN2TsIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(
+extern "C" void __rust_thunk__ca694370__ZN2TsIifEC1Eif(
     struct Ts<int, float>* __this, int t, float s) {
   crubit::construct_at(__this, t, s);
 }
 
-extern "C" void
-__rust_thunk___ZN2TsIifE6MemberEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(
+extern "C" void __rust_thunk__f7010ef7__ZN2TsIifE6MemberEv(
     struct Ts<int, float>* __this) {
   __this->Member();
 }
@@ -52,8 +50,7 @@ static_assert((void (::Ts<int, float>::*)()) & ::Ts<int, float>::Member);
 static_assert(sizeof(struct Ts<short, double>) == 1);
 static_assert(alignof(struct Ts<short, double>) == 1);
 
-extern "C" void
-__rust_thunk___ZN2TsIsdEC1Esd__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(
+extern "C" void __rust_thunk__ca694370__ZN2TsIsdEC1Esd(
     struct Ts<short, double>* __this, short t, double s) {
   crubit::construct_at(__this, t, s);
 }

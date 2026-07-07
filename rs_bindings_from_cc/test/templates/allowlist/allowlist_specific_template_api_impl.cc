@@ -35,14 +35,12 @@ static_assert((void (*)(struct NotBoundTs<int, float>)) & ::NotBoundCaller);
 static_assert(sizeof(struct AlwaysBoundTs<int, float>) == 1);
 static_assert(alignof(struct AlwaysBoundTs<int, float>) == 1);
 
-extern "C" void
-__rust_thunk___ZN13AlwaysBoundTsIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5ftemplate(
+extern "C" void __rust_thunk__23bcdcc7__ZN13AlwaysBoundTsIifEC1Eif(
     struct AlwaysBoundTs<int, float>* __this, int t, float s) {
   crubit::construct_at(__this, t, s);
 }
 
-extern "C" void
-__rust_thunk___ZN13AlwaysBoundTsIifE6MemberEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5ftemplate(
+extern "C" void __rust_thunk__56d34d81__ZN13AlwaysBoundTsIifE6MemberEv(
     struct AlwaysBoundTs<int, float>* __this) {
   __this->Member();
 }
@@ -53,8 +51,7 @@ static_assert((void (::AlwaysBoundTs<int, float>::*)()) &
 static_assert(sizeof(struct NotBoundTs<int, float>) == 1);
 static_assert(alignof(struct NotBoundTs<int, float>) == 1);
 
-extern "C" void
-__rust_thunk___ZN10NotBoundTsIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5ftemplate(
+extern "C" void __rust_thunk__9053d357__ZN10NotBoundTsIifEC1Eif(
     struct NotBoundTs<int, float>* __this, int t, float s) {
   crubit::construct_at(__this, t, s);
 }

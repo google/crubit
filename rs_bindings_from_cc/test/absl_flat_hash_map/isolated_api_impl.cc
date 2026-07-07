@@ -22,14 +22,13 @@ static_assert(sizeof(class ::absl::flat_hash_map<int, unsigned long, 42>) == 1);
 static_assert(alignof(class ::absl::flat_hash_map<int, unsigned long, 42>) ==
               1);
 
-extern "C" void
-__rust_thunk___ZN4absl13flat_hash_mapIimLi42EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+extern "C" void __rust_thunk__15b85ee3__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
     class ::absl::flat_hash_map<int, unsigned long, 42>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk___ZNK4absl13flat_hash_mapIimLi42EE25FunctionRemovedByOverrideEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+__rust_thunk__25d7606d__ZNK4absl13flat_hash_mapIimLi42EE25FunctionRemovedByOverrideEv(
     class ::absl::flat_hash_map<int, unsigned long, 42> const* __this) {
   __this->FunctionRemovedByOverride();
 }

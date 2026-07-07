@@ -70,7 +70,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
             mod detail { ...  unsafe extern "C" {
                 ...
                 pub(crate) unsafe fn
-                __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget<'a>(
+                ...<'a>(
                     __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
                 ) -> ::ffi_11::c_int;
                 ...
@@ -81,7 +81,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         rs_api_impl,
         quote! {
             extern "C"
-            int __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
+            int ... (
                     struct MyTemplate<int>* __this) {
                 return __this->GetValue();
             }
@@ -128,7 +128,7 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
         rs_api_impl,
         quote! {
             extern "C" void
-            __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2ftest_3atesting_5ftarget(
+            ... (
                 class MyTemplate<int>* __return, int value) {
               new (__return) auto(MyTemplate<int>::Create(value));
             }
@@ -138,7 +138,7 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
         rs_api_impl,
         quote! {
             extern "C" int const*
-            __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2ftest_3atesting_5ftarget(
+            ... (
                     class MyTemplate<int> const * __this) {
                 return std::addressof(__this->value());
             }
@@ -1553,21 +1553,13 @@ fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result
         }
     );
 
-    // User defined methods in mangled name order
-    let my_struct_bool_method =
-        make_rs_ident("__rust_thunk___ZN8MyStructIbE4getTEv__2f_2ftest_3atesting_5ftarget");
-    let my_struct_double_method =
-        make_rs_ident("__rust_thunk___ZN8MyStructIdE4getTEv__2f_2ftest_3atesting_5ftarget");
-    let my_struct_int_method =
-        make_rs_ident("__rust_thunk___ZN8MyStructIiE4getTEv__2f_2ftest_3atesting_5ftarget");
-
     assert_cc_matches!(
         &bindings.rs_api_impl,
         quote! {
             ...
-            extern "C" bool #my_struct_bool_method(struct MyStruct<bool>*__this) {...} ...
-            extern "C" double #my_struct_double_method(struct MyStruct<double>*__this) {...} ...
-            extern "C" int #my_struct_int_method(struct MyStruct<int>*__this) {...} ...
+            extern "C" bool ...(struct MyStruct<bool>*__this) {...} ...
+            extern "C" double ...(struct MyStruct<double>*__this) {...} ...
+            extern "C" int ...(struct MyStruct<int>*__this) {...} ...
         }
     );
     Ok(())

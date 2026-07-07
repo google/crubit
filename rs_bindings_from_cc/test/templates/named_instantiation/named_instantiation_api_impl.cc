@@ -23,8 +23,7 @@ static_assert((void (*)(NiIF const&)) & ::SomeApi);
 static_assert(sizeof(struct Ni<int, float>) == 1);
 static_assert(alignof(struct Ni<int, float>) == 1);
 
-extern "C" void
-__rust_thunk___ZN2NiIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fnamed_5finstantiation_3anamed_5finstantiation(
+extern "C" void __rust_thunk__426ccee6__ZN2NiIifEC1Eif(
     struct Ni<int, float>* __this, int t, float s) {
   crubit::construct_at(__this, t, s);
 }

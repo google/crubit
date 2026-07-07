@@ -62,7 +62,7 @@ impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2TsIifE {
         let (mut t, mut s) = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN2TsIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(&raw mut tmp as*mut _,t,s);
+            crate::detail::__rust_thunk__ca694370__ZN2TsIifEC1Eif(&raw mut tmp as *mut _, t, s);
             tmp.assume_init()
         }
     }
@@ -83,9 +83,7 @@ pub mod cc_template_inst2_ts_iif_e {
     /// * `__this`: raw pointer
     #[inline(always)]
     pub(crate) unsafe fn Member(__this: *mut crate::__CcTemplateInst2TsIifE) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN2TsIifE6MemberEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(__this)
-        }
+        unsafe { crate::detail::__rust_thunk__f7010ef7__ZN2TsIifE6MemberEv(__this) }
     }
 }
 
@@ -104,7 +102,7 @@ impl From<(::ffi_11::c_short, f64)> for __CcTemplateInst2TsIsdE {
         let (mut t, mut s) = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN2TsIsdEC1Esd__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(&raw mut tmp as*mut _,t,s);
+            crate::detail::__rust_thunk__ca694370__ZN2TsIsdEC1Esd(&raw mut tmp as *mut _, t, s);
             tmp.assume_init()
         }
     }
@@ -128,15 +126,15 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z17ShortDoubleCaller2TsIsdE(
             i: &mut crate::__CcTemplateInst2TsIsdE,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN2TsIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(
+        pub(crate) unsafe fn __rust_thunk__ca694370__ZN2TsIifEC1Eif(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_int,
             s: f32,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN2TsIifE6MemberEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(
+        pub(crate) unsafe fn __rust_thunk__f7010ef7__ZN2TsIifE6MemberEv(
             __this: *mut crate::__CcTemplateInst2TsIifE,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN2TsIsdEC1Esd__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fallowlist_3aallowlist_5fspecific_5finstance(
+        pub(crate) unsafe fn __rust_thunk__ca694370__ZN2TsIsdEC1Esd(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_short,
             s: f64,

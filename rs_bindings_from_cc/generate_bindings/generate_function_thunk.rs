@@ -285,21 +285,18 @@ fn compute_disambiguator_hash(func: &Func) -> String {
 }
 
 pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
-    let disambiguator = if db.has_conflicting_mangled_name(func) {
-        compute_disambiguator_hash(func)
-    } else {
-        "".to_string()
+    let disambiguator = {
+        let need_disambiguation =
+            db.has_conflicting_mangled_name(func) || func.is_member_or_descendant_of_class_template;
+        if need_disambiguation {
+            compute_disambiguator_hash(func)
+        } else {
+            "".to_string()
+        }
     };
 
-    // TODO(b/528469099): Unify `odr_suffix` and `disambituator` (probably by
-    // removing `odr_suffix` and using `disambituator` for both conditions).
-    let odr_suffix = if func.is_member_or_descendant_of_class_template {
-        func.owning_target.convert_to_cc_identifier()
-    } else {
-        String::new()
-    };
     format_ident!(
-        "__rust_thunk__{disambiguator}{}{odr_suffix}",
+        "__rust_thunk__{disambiguator}{}",
         ident_fragment_from_mangled_name(func.mangled_name.as_ref())
     )
 }

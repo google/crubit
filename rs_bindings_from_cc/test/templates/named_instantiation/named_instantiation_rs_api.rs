@@ -46,7 +46,7 @@ impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2NiIifE {
         let (mut t, mut s) = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN2NiIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fnamed_5finstantiation_3anamed_5finstantiation(&raw mut tmp as*mut _,t,s);
+            crate::detail::__rust_thunk__426ccee6__ZN2NiIifEC1Eif(&raw mut tmp as *mut _, t, s);
             tmp.assume_init()
         }
     }
@@ -66,7 +66,7 @@ mod detail {
     unsafe extern "C" {
         #[link_name = "_Z7SomeApiRK2NiIifE"]
         pub(crate) unsafe fn __rust_thunk___Z7SomeApiRK2NiIifE(i: *const crate::NiIF);
-        pub(crate) unsafe fn __rust_thunk___ZN2NiIifEC1Eif__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2fnamed_5finstantiation_3anamed_5finstantiation(
+        pub(crate) unsafe fn __rust_thunk__426ccee6__ZN2NiIifEC1Eif(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_int,
             s: f32,

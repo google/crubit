@@ -27,9 +27,7 @@ static_assert((struct TS<int> (*)()) & ::RTS);
 static_assert(sizeof(struct TS<int>) == 1);
 static_assert(alignof(struct TS<int>) == 1);
 
-extern "C" void
-__rust_thunk___ZN2TSIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplate_5finstantiation_5fcc(
-    struct TS<int>* __this) {
+extern "C" void __rust_thunk__20ba560a__ZN2TSIiEC1Ev(struct TS<int>* __this) {
   crubit::construct_at(__this);
 }
 
