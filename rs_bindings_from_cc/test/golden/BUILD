@@ -86,6 +86,9 @@ ASPECT_HINTS = {
     "typedef_incomplete_types": [
         "//features:wrapper",
     ],
+    "dunder_types": [
+        "//features:wrapper",
+    ],
 }
 
 rust_bindings_from_cc_cli_flag(
