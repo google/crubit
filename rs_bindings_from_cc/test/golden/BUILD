@@ -83,6 +83,9 @@ ASPECT_HINTS = {
     "conversion_operators": [
         "//features:assume_this_lifetimes",
     ],
+    "typedef_incomplete_types": [
+        "//features:wrapper",
+    ],
 }
 
 rust_bindings_from_cc_cli_flag(
