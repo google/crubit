@@ -286,11 +286,11 @@ fn test_unescapable_rust_keywords_in_anonymous_struct_type_alias() {
 #[gtest]
 fn test_unescapable_rust_keywords_in_field_name() {
     let ir = ir_from_cc("struct SomeStruct { int self; };").unwrap();
-    let record = ir.records().find(|record| record.rs_name == "SomeStruct").unwrap();
-    assert_eq!(record.fields.len(), 1);
-    let field = &record.fields[0];
-    assert_eq!(field.rust_identifier.as_ref().map(|x| x.as_str()), Some("__field_0"));
-    assert_eq!(field.cpp_identifier.as_ref().map(|x| x.as_str()), Some("self"));
+    let record = ir.records().find(|record| record.rs_name() == "SomeStruct").unwrap();
+    assert_eq!(record.fields().len(), 1);
+    let field = &record.fields()[0];
+    assert_eq!(field.rust_identifier().as_ref().map(|x| x.as_str()), Some("__field_0"));
+    assert_eq!(field.cpp_identifier().as_ref().map(|x| x.as_str()), Some("self"));
 }
 
 #[gtest]
@@ -665,8 +665,8 @@ fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
     .expect("Failed to generate IR from CC");
 
     let record =
-        ir.records().find(|record| record.rs_name == "RecordWithOwnedPtrType").or_fail()?;
-    let owned_ptr_config = record.owned_ptr_config.as_ref().or_fail()?;
+        ir.records().find(|record| record.rs_name() == "RecordWithOwnedPtrType").or_fail()?;
+    let owned_ptr_config = record.owned_ptr_config().or_fail()?;
     expect_that!(&*owned_ptr_config.owned_ptr_type, eq("SomeOwnedPtrType"));
     Ok(())
 }
@@ -1144,10 +1144,8 @@ fn test_doc_comment() -> Result<()> {
             struct MultilineOneStar {};
         "#,
     )?;
-    let comments: HashMap<_, _> = ir
-        .records()
-        .map(|r| (r.rs_name.identifier.as_ref(), r.doc_comment.as_ref().unwrap().as_ref()))
-        .collect();
+    let comments: HashMap<_, _> =
+        ir.records().map(|r| (r.rs_name(), r.doc_comment().unwrap())).collect();
 
     assert_eq!(comments["DocCommentSlashes"], "Doc comment\n\n * with three slashes");
     assert_eq!(comments["DocCommentBang"], "Doc comment\n\n * with slashes and bang");
@@ -1220,8 +1218,8 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
 #[gtest]
 fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
     let ir = ir_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
-    let record = ir.records().find(|record| record.rs_name == "S").or_fail()?;
-    expect_that!(&**record, field!(&Record.must_bind, eq(true)));
+    let record = ir.records().find(|record| record.rs_name() == "S").or_fail()?;
+    expect_that!(record.must_bind(), eq(true));
     Ok(())
 }
 
@@ -1405,7 +1403,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id();
     // Make sure the instantiation of the class template appears exactly once in the
     // `top_level_items`.
     assert_eq!(1, ir.top_level_items().iter().filter(|item| item.id() == record_id).count());
@@ -1507,7 +1505,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id();
 
     // TODO(b/200067826) This assertion worked because the template specialization
     // was top level already.
@@ -1552,14 +1550,8 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     )?;
 
     // Verify that there is only 1 record for each specialization.
-    assert_eq!(
-        1,
-        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<int>").count()
-    );
-    assert_eq!(
-        1,
-        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<float>").count()
-    );
+    assert_eq!(1, ir.records().filter(|r| r.cc_name() == "MyStruct<int>").count());
+    assert_eq!(1, ir.records().filter(|r| r.cc_name() == "MyStruct<float>").count());
     let functions = ir
         .functions()
         .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
@@ -1599,9 +1591,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
         .top_level_items()
         .iter()
         .filter_map(|item| match item {
-            ir::Item::Record(r) if r.rs_name.identifier.contains("__CcTemplateInst") => {
-                Some(r.rs_name.identifier.as_ref())
-            }
+            ir::Item::Record(r) if r.rs_name().contains("__CcTemplateInst") => Some(r.rs_name()),
             _ => None,
         })
         .collect_vec();
@@ -1674,14 +1664,14 @@ fn test_templates_inheritance() -> Result<()> {
     assert_eq!(
         1,
         ir.records()
-            .filter(|r| r.cc_name.identifier.contains("ClassTemplateDerivedFromClassTemplate"))
+            .filter(|r| r.cc_name().contains("ClassTemplateDerivedFromClassTemplate"))
             .count()
     );
 
     // BaseTemplate is *not* instantiated in the generated bindings/IR.  The derived
     // class's bindings work fine without the bindings for the base class (this
     // is also true for non-templated base/derived classes).
-    assert_eq!(0, ir.records().filter(|r| r.cc_name.identifier.contains("BaseTemplate")).count());
+    assert_eq!(0, ir.records().filter(|r| r.cc_name().contains("BaseTemplate")).count());
     Ok(())
 }
 
@@ -1819,7 +1809,7 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id();
     // Function that used the class template as a return type.
     assert_ir_matches!(
         ir,
@@ -1863,7 +1853,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id();
     // Function that used the class template as a param type:
     assert_ir_matches!(
         ir,
@@ -1921,7 +1911,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyTemplate<int>").id;
+    let record_id = retrieve_record(&ir, "MyTemplate<int>").id();
     // Struct that used the class template as a type of a public field:
     assert_ir_matches!(
         ir,
@@ -2703,8 +2693,7 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
 #[gtest]
 fn test_dont_import_injected_class_name() {
     let ir = ir_from_cc("struct SomeStruct {};").unwrap();
-    let names =
-        ir.records().map(|r| r.rs_name.identifier.as_ref()).filter(|n| n.contains("SomeStruct"));
+    let names = ir.records().map(|r| r.rs_name()).filter(|n| n.contains("SomeStruct"));
     // we support nested structs, so we should not emit record for injected class name
     assert_eq!(names.count(), 1);
 }
@@ -2797,7 +2786,7 @@ fn test_class() {
 #[gtest]
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
-    assert!(!ir.records().any(|r| r.rs_name.identifier.as_ref() == "Struct"));
+    assert!(!ir.records().any(|r| r.rs_name() == "Struct"));
 }
 
 #[gtest]
@@ -2938,12 +2927,9 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     mut func_predicate: F,
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
 ) {
-    let record = ir
-        .records()
-        .find(|r| r.rs_name.identifier.as_ref() == record_name)
-        .expect("Struct not found");
+    let record = ir.records().find(|r| r.rs_name() == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(f)).expect("Function not found");
-    assert_eq!(function.enclosing_item_id, Some(record.id));
+    assert_eq!(function.enclosing_item_id, Some(record.id()));
     assert_eq!(&function.instance_method_metadata, expected_metadata);
 }
 
@@ -3229,9 +3215,10 @@ fn test_elided_lifetimes() {
     .unwrap();
     let func = retrieve_func(&ir, "f");
     let lifetime_params = &func.lifetime_params;
-    assert_eq!(lifetime_params.iter().map(|p| p.name.as_ref()).collect_vec(), vec!["a", "b"]);
-    let a_id = lifetime_params[0].id;
-    let b_id = lifetime_params[1].id;
+    let mapped_names = lifetime_params.iter().map(|p| p.name()).collect_vec();
+    assert_eq!(mapped_names, vec!["a", "b"]);
+    let a_id = lifetime_params[0].id();
+    let b_id = lifetime_params[1].id();
     assert_eq!(func.return_type.variant.as_pointer().unwrap().lifetime.unwrap(), a_id);
 
     assert_eq!(func.params[0].identifier, ir_id("__this"));
@@ -3247,8 +3234,8 @@ fn test_elided_lifetimes() {
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let r = ir.records().next().expect("IR should contain `struct S`");
-    assert_eq!(r.rs_name.identifier.as_ref(), "S");
-    assert!(r.is_trivial_abi);
+    assert_eq!(r.rs_name(), "S");
+    assert!(r.is_trivial_abi());
 
     let f = ir
         .functions()
@@ -3260,7 +3247,7 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     assert_eq!(p.identifier, ir_id("__this"));
 
     let p_ptr = p.type_.variant.as_pointer().unwrap();
-    assert_eq!(p_ptr.lifetime.unwrap(), f.lifetime_params[0].id);
+    assert_eq!(p_ptr.lifetime.unwrap(), f.lifetime_params[0].id());
     assert!(!p_ptr.pointee_type.is_const);
 }
 
@@ -3284,7 +3271,7 @@ fn test_operator_names() {
         .filter_map(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
             let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id?).ok()?;
-            if r.rs_name.identifier.as_ref() != "SomeStruct" {
+            if r.rs_name() != "SomeStruct" {
                 return None;
             }
 
@@ -3571,8 +3558,8 @@ fn test_record_items() {
     )
     .unwrap();
 
-    let record = ir.records().find(|i| i.rs_name == "TopLevelStruct").unwrap();
-    let record_items = record.children.iter().collect_vec();
+    let record = ir.records().find(|i| i.rs_name() == "TopLevelStruct").unwrap();
+    let record_items = record.children().iter().collect_vec();
 
     assert_items_match!(
         record_items,
@@ -3758,14 +3745,14 @@ fn test_enclosing_item_ids() {
         .iter()
         .all(|item| item.enclosing_item_id() == Some(inner_namespace.id)));
 
-    let record = ir.records().find(|r| r.rs_name.identifier.as_ref() == "S").unwrap();
-    let record_items: Vec<&Item> = record.children.iter().collect_vec();
+    let record = ir.records().find(|r| r.rs_name() == "S").unwrap();
+    let record_items: Vec<&Item> = record.children().iter().collect_vec();
     for item in record_items.iter() {
         match item {
             Item::UnsupportedItem(_) => {}
             Item::Comment(_) => {}
             _ => {
-                assert!(item.enclosing_item_id() == Some(record.id));
+                assert!(item.enclosing_item_id() == Some(record.id()));
             }
         }
     }
@@ -4927,7 +4914,7 @@ fn test_anonymous_enum_in_record() {
     let ir = ir_from_cc("struct S { enum { kFoo = 1 }; };").unwrap();
     let record = retrieve_record(&ir, "S");
     let constant = ir.constants().find(|c| c.cc_name == "kFoo").unwrap();
-    assert_eq!(constant.enclosing_item_id, Some(record.id));
+    assert_eq!(constant.enclosing_item_id, Some(record.id()));
     assert_eq!(constant.value.wrapped_value, 1);
 }
 
@@ -4943,13 +4930,13 @@ fn test_has_private_or_deleted_operator_delete() {
     )
     .unwrap();
     let s1 = retrieve_record(&ir, "S1");
-    assert!(s1.has_private_or_deleted_operator_delete);
+    assert!(s1.has_private_or_deleted_operator_delete());
     let s2 = retrieve_record(&ir, "S2");
-    assert!(s2.has_private_or_deleted_operator_delete);
+    assert!(s2.has_private_or_deleted_operator_delete());
     let s3 = retrieve_record(&ir, "S3");
-    assert!(!s3.has_private_or_deleted_operator_delete);
+    assert!(!s3.has_private_or_deleted_operator_delete());
     let s4 = retrieve_record(&ir, "S4");
-    assert!(s4.has_private_or_deleted_operator_delete);
+    assert!(s4.has_private_or_deleted_operator_delete());
 }
 #[gtest]
 fn test_absl_container_template_specialization_kind() {
@@ -4972,35 +4959,31 @@ fn test_absl_container_template_specialization_kind() {
     .unwrap();
 
     let record = retrieve_type_alias_record(&ir, "IntFloatMap");
+    let ts = record.template_specialization().unwrap();
     expect_that!(
-        &record.template_specialization,
-        some(field!(
-            TemplateSpecialization.kind,
-            pat!(TemplateSpecializationKind::AbslFlatHashMap {
-                raw_key_type: field!(
-                    CcType.variant,
-                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))
-                ),
-                raw_value_type: field!(
-                    CcType.variant,
-                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Float)))
-                ),
-            })
-        )),
+        ts.kind(),
+        pat!(TemplateSpecializationKind::AbslFlatHashMap {
+            raw_key_type: field!(
+                CcType.variant,
+                pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))
+            ),
+            raw_value_type: field!(
+                CcType.variant,
+                pat!(CcTypeVariant::Primitive(eq(&Primitive::Float)))
+            ),
+        })
     );
 
     let record = retrieve_type_alias_record(&ir, "DoubleSet");
+    let ts = record.template_specialization().unwrap();
     expect_that!(
-        &record.template_specialization,
-        some(field!(
-            TemplateSpecialization.kind,
-            pat!(TemplateSpecializationKind::AbslFlatHashSet {
-                raw_element_type: field!(
-                    CcType.variant,
-                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Double)))
-                ),
-            })
-        )),
+        ts.kind(),
+        pat!(TemplateSpecializationKind::AbslFlatHashSet {
+            raw_element_type: field!(
+                CcType.variant,
+                pat!(CcTypeVariant::Primitive(eq(&Primitive::Double)))
+            ),
+        })
     );
 }
 

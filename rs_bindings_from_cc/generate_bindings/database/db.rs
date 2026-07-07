@@ -260,12 +260,12 @@ impl<'db> BindingsGenerator<'db> {
                 if let Some(parent_id) = f.enclosing_item_id
                     && let Ok(record) = self.find_decl::<std::rc::Rc<ir::Record>>(parent_id)
                 {
-                    return self.defining_target(record.id);
+                    return self.defining_target(record.id());
                 }
                 None
             }
             ir::Item::Record(r) => {
-                r.template_specialization.as_ref().map(|ts| ts.defining_target.clone())
+                r.template_specialization().map(|ts| ts.defining_target().clone())
             }
             ir::Item::UnsupportedItem(ui) => ui.defining_target.clone(),
             _ => None,
@@ -286,10 +286,8 @@ impl<'db> BindingsGenerator<'db> {
                             ir::Item::ExistingRustType(existing_rust_type) => {
                                 Some(existing_rust_type.cc_name.clone())
                             }
-                            ir::Item::Record(record) => Some(record.cc_name.identifier.clone()),
-                            ir::Item::IncompleteRecord(record) => {
-                                Some(record.cc_name.identifier.clone())
-                            }
+                            ir::Item::Record(record) => Some(Rc::from(record.cc_name())),
+                            ir::Item::IncompleteRecord(record) => Some(Rc::from(record.cc_name())),
                             _ => None,
                         }
                     } else {
@@ -333,9 +331,10 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::UnsupportedItem(ui) => return ui.name.clone(),
             ir::Item::ExistingRustType(e) => (e.id, e.cc_name.clone()),
             ir::Item::Namespace(n) => (n.id, n.cc_name.identifier.clone()),
-            ir::Item::IncompleteRecord(r) => (r.id, r.cc_name.identifier.clone()),
-            ir::Item::Record(r) => (r.id, r.cc_name.identifier.clone()),
-            ir::Item::Enum(e) => (e.id, e.cc_name.identifier.clone()),
+            ir::Item::IncompleteRecord(r) => (r.id(), Rc::from(r.cc_name())),
+            ir::Item::Record(r) => (r.id(), Rc::from(r.cc_name())),
+            // TODO(b/532184844): Remove conversion to Rc<str> as we migrate to &'a str on ProtoViews.
+            ir::Item::Enum(e) => (e.id(), Rc::from(e.cc_name())),
             ir::Item::Constant(c) => (c.id, c.cc_name.identifier.clone()),
             ir::Item::GlobalVar(g) => (g.id, g.cc_name.identifier.clone()),
             ir::Item::TypeAlias(t) => (t.id, t.cc_name.identifier.clone()),
@@ -550,11 +549,9 @@ impl<'db> BindingsGenerator<'db> {
                     );
                     let module_name =
                         self.record_to_associated_module_name(parent_record.clone()).unwrap();
-                    nested_records.push((
-                        module_name.to_string().into(),
-                        parent_record.cc_name.identifier.clone(),
-                    ));
-                    enclosing_item_id = parent_record.enclosing_item_id;
+                    nested_records
+                        .push((module_name.to_string().into(), Rc::from(parent_record.cc_name())));
+                    enclosing_item_id = parent_record.enclosing_item_id();
                 }
                 ir::Item::ExistingRustType(rust_type) => {
                     assert!(
@@ -590,7 +587,7 @@ impl<'db> BindingsGenerator<'db> {
         &self,
         record: Rc<Record>,
     ) -> Result<proc_macro2::Ident> {
-        let record_name: &str = record.rs_name.as_str();
+        let record_name: &str = record.rs_name();
         let snake_case_name = record_name.to_snake_case();
         // Add an `_items` suffix to distinguish the module name if the record name is already snake-case,
         // then distinguish by adding `_` suffixes until we find a name that is not in use.
@@ -603,7 +600,7 @@ impl<'db> BindingsGenerator<'db> {
         let resolved_names = self.resolve_names(record.clone())?;
         let is_used = |n: &str| match resolved_names.get(n) {
             Some(ResolvedName::RecordNestedItems { parent_records_that_map_to_this_name }) => {
-                !parent_records_that_map_to_this_name.contains(&record.id)
+                !parent_records_that_map_to_this_name.contains(&record.id())
             }
             Some(_) => true,
             None => false,

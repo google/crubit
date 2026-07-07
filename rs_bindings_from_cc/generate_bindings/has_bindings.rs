@@ -83,7 +83,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             if item.is_type_definition()
                 // If we have an ancestor that is a template specialization, we can't generate bindings.
                 // The parent check ensures that all ancestors are checked as well.
-                && parent_record.template_specialization.is_some()
+                && parent_record.template_specialization().is_some()
             {
                 return Err(NoBindingsReason::Unsupported(anyhow!(
                     "b/485949049: type definitions nested inside templated records are not yet supported"
@@ -107,7 +107,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                         if let ResolvedName::RecordNestedItems {
                             parent_records_that_map_to_this_name,
                         } = resolved_name
-                            && parent_records_that_map_to_this_name.contains(&parent_record.id)
+                            && parent_records_that_map_to_this_name.contains(&parent_record.id())
                         {
                             return Some((
                                 name.clone(),
@@ -124,7 +124,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                         \n    for item: {item_name}\
                         \n    inside parent record {parent_name}",
                             item_name = db.debug_name(item.id()),
-                            parent_name = db.debug_name(parent_record.id),
+                            parent_name = db.debug_name(parent_record.id()),
                         ))
                     })?;
                 if parent_records_that_map_to_this_name.len() > 1 {
@@ -135,8 +135,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                             .map(|&parent_record_id| {
                                 db.find_decl::<Rc<Record>>(parent_record_id)
                                     .unwrap()
-                                    .rs_name
-                                    .identifier
+                                    .rs_name()
                                     .to_string()
                             })
                             .collect(),
@@ -147,7 +146,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
     }
 
     if let Item::Enum(enum_) = &item {
-        if enum_.enumerators.is_none() {
+        if enum_.enumerators().is_none() {
             return Err(NoBindingsReason::Unsupported(anyhow!(
                 "b/322391132: Forward-declared (opaque) enums are not implemented yet"
             )));
@@ -158,7 +157,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
         // underlying type is never going to be or refer to this type, because the current
         // enum is not defined at the time that the underlying type is evaluated.
         // Not even forward declarations help. You just can't do `enum Foo: Something<Foo>;`.
-        if let Err(error) = db.rs_type_kind(enum_.underlying_type.clone()) {
+        if let Err(error) = db.rs_type_kind(enum_.underlying_type().clone()) {
             return Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(enum_.id()).to_string(),
                 reason: error.to_string(),
@@ -402,7 +401,7 @@ fn type_target_restriction_shallow(
         // All non-record types are `pub` if they receive bindings.
         return None;
     };
-    let target = &record.owning_target;
+    let target = record.as_ref().owning_target();
     // Template types (except for the special-cased ones like `[w]string_view`)
     // are the only types whose bindings have restrictions, and they do not have
     // unique owning targets.
@@ -473,10 +472,10 @@ pub fn resolve_names(
     db: &BindingsGenerator,
     parent: Rc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
-    let child_items = match parent.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
+    let child_items = match parent.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         Some(Item::Namespace(ns)) => ns.children.iter(),
-        Some(Item::Record(record)) => record.children.iter(),
-        None => db.ir().top_level_items_in_target(&parent.owning_target).iter(),
+        Some(Item::Record(record)) => record.children().iter(),
+        None => db.ir().top_level_items_in_target(parent.as_ref().owning_target()).iter(),
         _ => bail!("not a parent namespace or record"),
     };
 
@@ -514,16 +513,14 @@ pub fn resolve_names(
             let id = item.id();
             match item {
                 Item::IncompleteRecord(incomplete_record) => {
-                    insert(
-                        incomplete_record.rs_name.identifier.clone(),
-                        ResolvedName::ExplicitItem(id),
-                    );
+                    insert(Rc::from(incomplete_record.rs_name()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Record(record) => {
-                    insert(record.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(record.rs_name()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Enum(enum_) => {
-                    insert(enum_.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id))
+                    // TODO(b/532184844): Remove conversions to Rc<str> as we migrate to &'a str on ProtoViews.
+                    insert(Rc::from(enum_.rs_name()), ResolvedName::ExplicitItem(id))
                 }
                 Item::TypeAlias(type_alias) => {
                     insert(type_alias.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
@@ -561,16 +558,16 @@ pub fn resolve_names(
     // Pass 2: Insert module names for records, checking for conflicts.
     for item in child_items {
         if let Item::Record(record) = item {
-            let id = record.id;
+            let id = record.id();
             let make_module_for_nested_items = record
-                .children
+                .children()
                 .iter()
                 .any(|child| child.place_in_nested_module_if_nested_in_record());
             if make_module_for_nested_items {
-                let mut name = record.rs_name.identifier.as_ref().to_snake_case();
+                let mut name = record.rs_name().to_snake_case();
 
                 // Disambiguation logic
-                if name == record.rs_name.identifier.as_ref() {
+                if name == record.rs_name() {
                     name = format!("{}_items", name);
                 }
 

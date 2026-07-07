@@ -33,16 +33,16 @@ fn test_record_proto() -> Result<()> {
     let ir = get_ir("struct MyStruct { int a; };")?;
     let record = ir
         .records()
-        .find(|r| r.cc_name == "MyStruct")
+        .find(|r| r.cc_name() == "MyStruct")
         .expect("should find struct MyStruct from the source code");
-    assert_eq!(record.cc_name.identifier.as_ref(), "MyStruct");
-    assert_eq!(record.fields.len(), 1);
+    assert_eq!(record.cc_name(), "MyStruct");
+    assert_eq!(record.fields().len(), 1);
     assert_eq!(
         record
-            .fields
+            .fields()
             .first()
             .expect("should have field 'a'")
-            .cpp_identifier
+            .cpp_identifier()
             .as_ref()
             .unwrap()
             .identifier
@@ -149,35 +149,35 @@ fn test_record_member_variable_access_specifiers_proto() -> Result<()> {
 
     let some_struct = ir
         .records()
-        .find(|r| r.cc_name == "SomeStruct")
+        .find(|r| r.cc_name() == "SomeStruct")
         .expect("should find struct SomeStruct from the source code");
 
-    assert_eq!(some_struct.fields.len(), 4);
+    assert_eq!(some_struct.fields().len(), 4);
 
-    let f0 = some_struct.fields.first().expect("should have field 'default_access_int'");
-    assert_eq!(f0.rust_identifier.as_ref().unwrap().identifier.as_ref(), "default_access_int");
-    assert_eq!(f0.access, ir::AccessSpecifier::Public);
+    let f0 = some_struct.fields().first().expect("should have field 'default_access_int'");
+    assert_eq!(f0.rust_identifier().as_ref().unwrap().identifier.as_ref(), "default_access_int");
+    assert_eq!(f0.access(), ir::AccessSpecifier::Public);
 
-    let f1 = some_struct.fields.get(1).expect("should have field 'public_int'");
-    assert_eq!(f1.rust_identifier.as_ref().unwrap().identifier.as_ref(), "public_int");
-    assert_eq!(f1.access, ir::AccessSpecifier::Public);
+    let f1 = some_struct.fields().get(1).expect("should have field 'public_int'");
+    assert_eq!(f1.rust_identifier().as_ref().unwrap().identifier.as_ref(), "public_int");
+    assert_eq!(f1.access(), ir::AccessSpecifier::Public);
 
-    let f2 = some_struct.fields.get(2).expect("should have field 'protected_int'");
-    assert_eq!(f2.rust_identifier.as_ref().unwrap().identifier.as_ref(), "protected_int");
-    assert_eq!(f2.access, ir::AccessSpecifier::Protected);
+    let f2 = some_struct.fields().get(2).expect("should have field 'protected_int'");
+    assert_eq!(f2.rust_identifier().as_ref().unwrap().identifier.as_ref(), "protected_int");
+    assert_eq!(f2.access(), ir::AccessSpecifier::Protected);
 
-    let f3 = some_struct.fields.get(3).expect("should have field 'private_int'");
-    assert_eq!(f3.rust_identifier.as_ref().unwrap().identifier.as_ref(), "private_int");
-    assert_eq!(f3.access, ir::AccessSpecifier::Private);
+    let f3 = some_struct.fields().get(3).expect("should have field 'private_int'");
+    assert_eq!(f3.rust_identifier().as_ref().unwrap().identifier.as_ref(), "private_int");
+    assert_eq!(f3.access(), ir::AccessSpecifier::Private);
 
     let some_class = ir
         .records()
-        .find(|r| r.cc_name == "SomeClass")
+        .find(|r| r.cc_name() == "SomeClass")
         .expect("should find class SomeClass from the source code");
-    assert_eq!(some_class.fields.len(), 1);
-    let cf0 = some_class.fields.first().expect("should have field 'default_access_int'");
-    assert_eq!(cf0.rust_identifier.as_ref().unwrap().identifier.as_ref(), "default_access_int");
-    assert_eq!(cf0.access, ir::AccessSpecifier::Private);
+    assert_eq!(some_class.fields().len(), 1);
+    let cf0 = some_class.fields().first().expect("should have field 'default_access_int'");
+    assert_eq!(cf0.rust_identifier().as_ref().unwrap().identifier.as_ref(), "default_access_int");
+    assert_eq!(cf0.access(), ir::AccessSpecifier::Private);
     Ok(())
 }
 
@@ -186,17 +186,17 @@ fn test_enum_proto() -> Result<()> {
     let ir = get_ir("enum MyEnum { kA = 42, kB = -1 };")?;
     let enum_decl = ir
         .enums()
-        .find(|r| r.cc_name == "MyEnum")
+        .find(|r| r.cc_name() == "MyEnum")
         .expect("should find enum MyEnum from the source code");
-    assert_eq!(enum_decl.cc_name.identifier.as_ref(), "MyEnum");
-    assert_eq!(enum_decl.rs_name.identifier.as_ref(), "MyEnum");
+    assert_eq!(enum_decl.cc_name(), "MyEnum");
+    assert_eq!(enum_decl.rs_name(), "MyEnum");
 
-    let k_a = enum_decl.enumerators.as_ref().unwrap().first().expect("should have enumerator 'kA'");
+    let k_a = enum_decl.enumerators().unwrap().first().expect("should have enumerator 'kA'");
     assert_eq!(k_a.identifier.identifier.as_ref(), "kA");
     assert_eq!(k_a.value.wrapped_value, 42);
     assert!(!k_a.value.is_negative);
 
-    let k_b = enum_decl.enumerators.as_ref().unwrap().get(1).expect("should have enumerator 'kB'");
+    let k_b = enum_decl.enumerators().unwrap().get(1).expect("should have enumerator 'kB'");
     assert_eq!(k_b.identifier.identifier.as_ref(), "kB");
     // In proto, wrapped_value is int64, so -1 cast to int64 is -1.
     assert_eq!(k_b.value.wrapped_value as i64, -1);
