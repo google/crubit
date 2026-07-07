@@ -15,8 +15,8 @@ use crate::generate_function::{
     cc_param_to_c_abi, format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
 };
 use crate::generate_function_thunk::{
-    generate_thunk_decl, generate_thunk_impl, replace_all_regions_with_static,
-    trait_method_thunk_name,
+    generate_thunk_decl, generate_thunk_impl, make_thunk_name, replace_all_regions_with_static,
+    trait_method_thunk_name, ThunkKind,
 };
 use crate::{
     does_type_implement_trait, generate_const, generate_deprecated_tag, generate_must_use_tag,
@@ -820,20 +820,10 @@ fn generate_constructor_impls<'tcx>(
                 .ok()?;
 
                 // Just a small unique name for the custom Into thunk
-                let thunk_name = if db.is_golden_test() {
-                    format!(
-                        "__crubit_thunk_into_{}_as_{}",
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", src_ty)),
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", core.self_ty))
-                    )
-                } else {
-                    format!(
-                        "__crubit_thunk_{:x}_into_{}_as_{}",
-                        tcx.stable_crate_id(db.source_crate_num()),
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", src_ty)),
-                        code_gen_utils::escape_non_identifier_chars(&format!("{}", core.self_ty))
-                    )
-                };
+                let thunk_name = make_thunk_name(
+                    db,
+                    ThunkKind::TraitMethod { method: into_trait_assoc_fn, substs: trait_args },
+                );
                 let thunk_name_cc_ident = format_cc_ident(db, &thunk_name).ok()?;
                 let cc_thunk_decls = generate_thunk_decl(
                     db,
@@ -845,21 +835,33 @@ fn generate_constructor_impls<'tcx>(
                     /*is_async=*/ false,
                 )
                 .ok()?;
-                let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
-                let src_rs = db.format_ty_for_rs(static_src_ty).ok()?;
-                let foo_rs = &core.rs_fully_qualified_name;
-                let fully_qualified_fn_name =
-                    quote! { <#src_rs as ::core::convert::Into<#foo_rs>>::into };
-                let rs_details = generate_thunk_impl(
-                    db,
-                    into_trait_assoc_fn.def_id,
-                    &sig,
-                    &thunk_name,
-                    fully_qualified_fn_name,
-                    /*is_constructor=*/ true,
-                    /*is_async=*/ false,
-                )
-                .ok()?;
+                let rs_details = {
+                    let is_src_local_adt = match src_ty.kind() {
+                        ty::TyKind::Adt(adt_def, _) => db
+                            .symbol_canonical_name(adt_def.did())
+                            .is_none_or(|name| name.krate_num == db.source_crate_num()),
+                        _ => false,
+                    };
+                    if is_src_local_adt {
+                        RsSnippet::default()
+                    } else {
+                        let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
+                        let src_rs = db.format_ty_for_rs(static_src_ty).ok()?;
+                        let foo_rs = &core.rs_fully_qualified_name;
+                        let fully_qualified_fn_name =
+                            quote! { <#src_rs as ::core::convert::Into<#foo_rs>>::into };
+                        generate_thunk_impl(
+                            db,
+                            into_trait_assoc_fn.def_id,
+                            &sig,
+                            &thunk_name,
+                            fully_qualified_fn_name,
+                            /*is_constructor=*/ true,
+                            /*is_async=*/ false,
+                        )
+                        .ok()?
+                    }
+                };
                 (thunk_name_cc_ident, cc_thunk_decls, rs_details)
             };
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
