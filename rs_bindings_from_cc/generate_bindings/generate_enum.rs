@@ -21,47 +21,47 @@ use std::rc::Rc;
 /// Implementation of `BindingsGenerator::generate_enum`.
 pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Type);
-    let ident = format_cc_ident(&enum_.cc_name.identifier)?;
+    let ident = format_cc_ident(enum_.cc_name().as_str())?;
     let namespace_qualifier = db.namespace_qualifier(&enum_).format_for_cc()?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident };
-    let name = make_rs_ident(&enum_.rs_name.identifier);
-    let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
+    let name = make_rs_ident(enum_.rs_name().as_str());
+    let underlying_type = db.rs_type_kind(enum_.underlying_type().clone())?;
 
     let enumerators: TokenStream = enum_
-        .enumerators
-        .iter()
+        .enumerators()
+        .into_iter()
         .flatten()
         .map(|enumerator| {
             let omitting_bindings_comment = |reason: String| {
                 let comment = format!(
                     "Omitting bindings for {ident}\nreason: {reason}",
-                    ident = &enumerator.identifier.identifier
+                    ident = enumerator.identifier().as_str()
                 );
                 quote! {
                     __COMMENT__ #comment
                 }
             };
-            if let Some(unknown_attr) = &enumerator.unknown_attr {
+            if let Some(unknown_attr) = enumerator.unknown_attr() {
                 return omitting_bindings_comment(format!("unknown attribute(s): {unknown_attr}"));
             }
-            let ident = make_rs_ident(&enumerator.identifier.identifier);
+            let ident = make_rs_ident(enumerator.identifier().as_str());
             let value =
-                match integer_constant_to_token_stream(db, enumerator.value, &underlying_type) {
+                match integer_constant_to_token_stream(db, enumerator.value(), &underlying_type) {
                     Ok(value) => value,
                     Err(err) => return omitting_bindings_comment(err.to_string()),
                 };
-            let deprecated_attr = enumerator.deprecated.clone().map(DeprecatedAttr);
+            let deprecated_attr = enumerator.deprecated().map(DeprecatedAttr);
             quote! { #deprecated_attr pub const #ident: #name = #name(#value); }
         })
         .collect();
     let underlying_type_tokens = underlying_type.to_token_stream(db);
     let mut thunks: Vec<Thunk> = vec![];
     let mut cc_details: Vec<ThunkImpl> = vec![];
-    let display_impl: TokenStream = if enum_.detected_formatter {
+    let display_impl: TokenStream = if enum_.detected_formatter() {
         let fmt_fn_name = make_rs_ident(&format!(
             "__crubit_fmt__{type_name}_{odr_suffix}",
-            type_name = enum_.cc_name,
-            odr_suffix = enum_.owning_target.convert_to_cc_identifier(),
+            type_name = enum_.cc_name().as_str(),
+            odr_suffix = enum_.owning_target().convert_to_cc_identifier(),
         ));
         let crate_root_path = db.ir().crate_root_path_tokens();
         let namespace_qualifier = db.namespace_qualifier(&enum_).format_for_rs();

@@ -148,7 +148,7 @@ impl<'a> Iterator for ItemsIterator<'a> {
             }
             match item {
                 Item::Record(record) => {
-                    self.stack.extend(record.children.iter().rev());
+                    self.stack.extend(record.children().iter().rev());
                 }
                 Item::Namespace(ns) => {
                     self.stack.extend(ns.children.iter().rev());
@@ -175,7 +175,7 @@ fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, I
     }
     match item {
         Item::Record(record) => {
-            for child in &record.children {
+            for child in record.children() {
                 populate_item_id_to_item(child, item_id_to_item);
             }
         }
@@ -208,7 +208,7 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
 
     for item in ordered_items {
         let lifetime_params = match item {
-            Item::Record(record) => &record.lifetime_params[..],
+            Item::Record(record) => record.lifetime_params(),
             Item::Func(func) => &func.lifetime_params[..],
             _ => &[],
         };
@@ -284,6 +284,14 @@ pub struct CcType {
 }
 
 impl CcType {
+    pub fn explicit_lifetimes(&self) -> &[Rc<str>] {
+        &self.explicit_lifetimes
+    }
+
+    pub fn explicit_lifetimes_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.explicit_lifetimes
+    }
+
     pub fn is_unit_type(&self) -> bool {
         matches!(&self.variant, CcTypeVariant::Primitive(Primitive::Void))
     }
@@ -292,7 +300,7 @@ impl CcType {
 impl From<&Record> for CcType {
     fn from(record: &Record) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl { id: record.id, template_args: None },
+            variant: CcTypeVariant::Decl { id: record.id(), template_args: None },
             is_const: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
@@ -588,33 +596,54 @@ impl TypeWithDeclId for CcType {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Identifier {
-    pub identifier: Rc<str>,
+#[derive(PartialEq, Eq, Hash, Clone)]
+pub enum Identifier {
+    Static(&'static str),
+    Owned(Rc<str>),
 }
 
 impl Identifier {
+    pub fn new(s: impl Into<Rc<str>>) -> Self {
+        Self::Owned(s.into())
+    }
+
     pub fn as_str(&self) -> &str {
-        &self.identifier
+        match self {
+            Self::Static(s) => s,
+            Self::Owned(rc) => rc,
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Identifier {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct IdentifierHelper {
+            identifier: Rc<str>,
+        }
+        let helper = IdentifierHelper::deserialize(deserializer)?;
+        Ok(Self::Owned(helper.identifier))
     }
 }
 
 impl Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.identifier)
+        write!(f, "{}", self.as_str())
     }
 }
 
 impl Debug for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "\"{}\"", self.identifier)
+        write!(f, "\"{}\"", self.as_str())
     }
 }
 
 impl PartialEq<str> for Identifier {
     fn eq(&self, other: &str) -> bool {
-        self.identifier.as_ref() == other
+        self.as_str() == other
     }
 }
 
@@ -834,7 +863,7 @@ impl UnqualifiedIdentifier {
         }
     }
     pub fn identifier_as_str(&self) -> Option<&str> {
-        self.as_identifier().map(|id| id.identifier.as_ref())
+        self.as_identifier().map(|id| id.as_str())
     }
 }
 
@@ -853,7 +882,7 @@ impl Debug for UnqualifiedIdentifier {
 impl PartialEq<str> for UnqualifiedIdentifier {
     fn eq(&self, other: &str) -> bool {
         if let UnqualifiedIdentifier::Identifier(identifier) = self {
-            &*identifier.identifier == other
+            identifier.as_str() == other
         } else {
             false
         }
@@ -906,7 +935,21 @@ pub struct FuncParam {
     pub unknown_attr: Option<Rc<str>>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+impl FuncParam {
+    pub fn type_(&self) -> &CcType {
+        &self.type_
+    }
+
+    pub fn type_mut(&mut self) -> &mut CcType {
+        &mut self.type_
+    }
+
+    pub fn identifier(&self) -> &Identifier {
+        &self.identifier
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SafetyAnnotation {
     DisableUnsafe,
@@ -1004,8 +1047,44 @@ impl GenericItem for Func {
 }
 
 impl Func {
+    pub fn cc_name(&self) -> &UnqualifiedIdentifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &UnqualifiedIdentifier {
+        &self.rs_name
+    }
+
+    pub fn params(&self) -> &[FuncParam] {
+        &self.params
+    }
+
+    pub fn params_mut(&mut self) -> &mut Vec<FuncParam> {
+        &mut self.params
+    }
+
+    pub fn lifetime_params(&self) -> &[LifetimeName] {
+        &self.lifetime_params
+    }
+
+    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+        &self.lifetime_inputs
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.lifetime_inputs
+    }
+
     pub fn is_instance_method(&self) -> bool {
         self.instance_method_metadata.is_some()
+    }
+
+    pub fn return_type(&self) -> &CcType {
+        &self.return_type
+    }
+
+    pub fn return_type_mut(&mut self) -> &mut CcType {
+        &mut self.return_type
     }
 }
 
@@ -1018,7 +1097,7 @@ pub enum AccessSpecifier {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Field {
+pub struct DeserializedField {
     pub rust_identifier: Option<Identifier>,
     pub cpp_identifier: Option<Identifier>,
     pub doc_comment: Option<Rc<str>>,
@@ -1027,25 +1106,186 @@ pub struct Field {
     pub access: AccessSpecifier,
     pub offset: usize,
     pub size: usize,
-
-    /// A human-readable list of attributes that Crubit doesn't understand.
     pub unknown_attr: Result<Option<Rc<str>>, String>,
-
     pub is_no_unique_address: bool,
     pub is_bitfield: bool,
-
-    // TODO(kinuko): Consider removing this, it is a duplicate of the same information
-    // in `Record`.
     pub is_inheritable: bool,
     pub is_mutable: bool,
-
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     #[serde(default)]
     pub deprecated: Option<Rc<str>>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, Clone)]
+pub struct ProtoField {
+    pub(crate) proto: ir_rust_proto::FieldView<'static>,
+    pub(crate) type_: CcType,
+    pub(crate) unknown_attr: Result<Option<Rc<str>>, String>,
+}
+
+impl PartialEq for ProtoField {
+    fn eq(&self, other: &Self) -> bool {
+        self.proto.offset() == other.proto.offset()
+            && self.proto.size() == other.proto.size()
+            && self.type_ == other.type_
+    }
+}
+impl Eq for ProtoField {}
+impl Hash for ProtoField {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.proto.offset().hash(state);
+        self.proto.size().hash(state);
+        self.type_.hash(state);
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum Field {
+    Owned(DeserializedField),
+    Proto(ProtoField),
+}
+
+impl<'de> Deserialize<'de> for Field {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let deserialized = DeserializedField::deserialize(deserializer)?;
+        Ok(Self::Owned(deserialized))
+    }
+}
+
+impl Field {
+    pub fn rust_identifier(&self) -> Option<Identifier> {
+        match self {
+            Self::Owned(f) => f.rust_identifier.clone(),
+            Self::Proto(f) => f
+                .proto
+                .rust_identifier_opt()
+                .map(|id| Identifier::Static(id.identifier().to_str().unwrap())),
+        }
+    }
+
+    pub fn cpp_identifier(&self) -> Option<Identifier> {
+        match self {
+            Self::Owned(f) => f.cpp_identifier.clone(),
+            Self::Proto(f) => f
+                .proto
+                .cpp_identifier_opt()
+                .map(|id| Identifier::Static(id.identifier().to_str().unwrap())),
+        }
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        match self {
+            Self::Owned(f) => f.doc_comment.as_deref(),
+            Self::Proto(f) => f.proto.doc_comment_opt().map(|s| s.to_str().unwrap()),
+        }
+    }
+
+    pub fn type_(&self) -> &CcType {
+        match self {
+            Self::Owned(f) => &f.type_,
+            Self::Proto(f) => &f.type_,
+        }
+    }
+
+    pub fn type_mut(&mut self) -> &mut CcType {
+        match self {
+            Self::Owned(f) => &mut f.type_,
+            Self::Proto(f) => &mut f.type_,
+        }
+    }
+
+    pub fn offset(&self) -> usize {
+        match self {
+            Self::Owned(f) => f.offset,
+            Self::Proto(f) => f.proto.offset() as usize,
+        }
+    }
+
+    pub fn size(&self) -> usize {
+        match self {
+            Self::Owned(f) => f.size,
+            Self::Proto(f) => f.proto.size() as usize,
+        }
+    }
+
+    pub fn is_bitfield(&self) -> bool {
+        match self {
+            Self::Owned(f) => f.is_bitfield,
+            Self::Proto(f) => f.proto.is_bitfield(),
+        }
+    }
+
+    pub fn is_no_unique_address(&self) -> bool {
+        match self {
+            Self::Owned(f) => f.is_no_unique_address,
+            Self::Proto(f) => f.proto.is_no_unique_address(),
+        }
+    }
+
+    pub fn access(&self) -> AccessSpecifier {
+        match self {
+            Self::Owned(f) => f.access,
+            Self::Proto(f) => match f.proto.access() {
+                ir_rust_proto::AccessSpecifier::Public => AccessSpecifier::Public,
+                ir_rust_proto::AccessSpecifier::Protected => AccessSpecifier::Protected,
+                ir_rust_proto::AccessSpecifier::Private => AccessSpecifier::Private,
+                _ => AccessSpecifier::Public,
+            },
+        }
+    }
+
+    pub fn is_mutable(&self) -> bool {
+        match self {
+            Self::Owned(f) => f.is_mutable,
+            Self::Proto(f) => f.proto.is_mutable(),
+        }
+    }
+
+    pub fn unknown_attr(&self) -> &Result<Option<Rc<str>>, String> {
+        match self {
+            Self::Owned(f) => &f.unknown_attr,
+            Self::Proto(f) => &f.unknown_attr,
+        }
+    }
+
+    pub fn deprecated(&self) -> Option<Rc<str>> {
+        match self {
+            Self::Owned(f) => f.deprecated.clone(),
+            Self::Proto(f) => f.proto.deprecated_opt().map(|s| Rc::from(s.to_str().unwrap())),
+        }
+    }
+
+    pub fn is_inheritable(&self) -> bool {
+        match self {
+            Self::Owned(f) => f.is_inheritable,
+            Self::Proto(f) => f.proto.is_inheritable(),
+        }
+    }
+}
+
+impl Debug for Field {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut debug_struct = f.debug_struct("Field");
+        debug_struct.field("rust_identifier", &self.rust_identifier());
+        debug_struct.field("cpp_identifier", &self.cpp_identifier());
+        debug_struct.field("doc_comment", &self.doc_comment());
+        debug_struct.field("type_", self.type_());
+        debug_struct.field("access", &self.access());
+        debug_struct.field("offset", &self.offset());
+        debug_struct.field("size", &self.size());
+        debug_struct.field("unknown_attr", self.unknown_attr());
+        debug_struct.field("is_no_unique_address", &self.is_no_unique_address());
+        debug_struct.field("is_bitfield", &self.is_bitfield());
+        debug_struct.field("is_inheritable", &self.is_inheritable());
+        debug_struct.field("is_mutable", &self.is_mutable());
+        debug_struct.field("deprecated", &self.deprecated());
+        debug_struct.finish()
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 pub enum SpecialMemberFunc {
     Trivial,
     NontrivialMembers,
@@ -1103,6 +1343,16 @@ impl GenericItem for IncompleteRecord {
     }
 }
 
+impl IncompleteRecord {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 pub enum RecordType {
     Struct,
@@ -1131,7 +1381,7 @@ impl ToTokens for RecordType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SizeAlign {
     pub size: usize,
@@ -1253,7 +1503,7 @@ pub struct OwnedPtrConfig {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Record {
+pub struct DeserializedRecord {
     pub rs_name: Identifier,
     /// The C++ name of the record. If the record is a template specialization, the fully qualified
     /// name is used. Otherwise, the only the name of the record is used.
@@ -1322,35 +1572,565 @@ pub struct Record {
     pub children: Vec<Item>,
 }
 
+#[derive(Clone)]
+pub struct ProtoRecord {
+    pub(crate) proto: ir_rust_proto::RecordView<'static>,
+    pub(crate) fields: Vec<Field>,
+    pub(crate) unambiguous_public_bases: Vec<BaseClass>,
+    pub(crate) lifetime_params: Vec<LifetimeName>,
+    pub(crate) children: Vec<Item>,
+    pub(crate) lifetime_inputs: Vec<Rc<str>>,
+    pub(crate) template_specialization: Option<TemplateSpecialization>,
+    pub(crate) bridge_type: Option<BridgeType>,
+    pub(crate) owned_ptr_config: Option<OwnedPtrConfig>,
+    pub(crate) trait_derives: TraitDerives,
+    pub(crate) size_align: SizeAlign,
+}
+
+#[derive(Clone)]
+pub enum Record {
+    Owned(DeserializedRecord),
+    Proto(ProtoRecord),
+}
+
+impl<'de> Deserialize<'de> for Record {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let deserialized = DeserializedRecord::deserialize(deserializer)?;
+        Ok(Self::Owned(deserialized))
+    }
+}
+
 impl GenericItem for Record {
     fn id(&self) -> ItemId {
-        self.id
+        self.id()
     }
     fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+        Some(Rc::from(self.unique_name()))
     }
     fn owning_target(&self) -> Option<BazelLabel> {
-        Some(self.owning_target.clone())
+        Some(self.owning_target())
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        self.record_type.unsupported_item_kind()
+        self.record_type().unsupported_item_kind()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
-        Some(self.source_loc.clone())
+        Some(Rc::from(self.source_loc()))
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+        self.unknown_attr().map(Rc::from)
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        self.must_bind()
+    }
+}
+
+impl PartialEq for Record {
+    fn eq(&self, other: &Self) -> bool {
+        self.id() == other.id()
+            && self.rs_name() == other.rs_name()
+            && self.cc_name() == other.cc_name()
+            && self.unique_name() == other.unique_name()
+            && self.mangled_cc_name() == other.mangled_cc_name()
+            && self.owning_target() == other.owning_target()
+            && self.template_specialization() == other.template_specialization()
+            && self.unknown_attr() == other.unknown_attr()
+            && self.doc_comment() == other.doc_comment()
+            && self.bridge_type() == other.bridge_type()
+            && self.owned_ptr_config() == other.owned_ptr_config()
+            && self.source_loc() == other.source_loc()
+            && self.unambiguous_public_bases() == other.unambiguous_public_bases()
+            && self.fields() == other.fields()
+            && self.lifetime_params() == other.lifetime_params()
+            && self.size_align() == other.size_align()
+            && self.trait_derives() == other.trait_derives()
+            && self.is_derived_class() == other.is_derived_class()
+            && self.override_alignment() == other.override_alignment()
+            && self.safety_annotation() == other.safety_annotation()
+            && self.copy_constructor() == other.copy_constructor()
+            && self.move_constructor() == other.move_constructor()
+            && self.destructor() == other.destructor()
+            && self.is_trivial_abi() == other.is_trivial_abi()
+            && self.is_inheritable() == other.is_inheritable()
+            && self.is_abstract() == other.is_abstract()
+            && self.nodiscard() == other.nodiscard()
+            && self.record_type() == other.record_type()
+            && self.is_aggregate() == other.is_aggregate()
+            && self.is_canonical_alias() == other.is_canonical_alias()
+            && self.enclosing_item_id() == other.enclosing_item_id()
+            && self.must_bind() == other.must_bind()
+            && self.overloads_operator_delete() == other.overloads_operator_delete()
+            && self.has_private_or_deleted_operator_delete()
+                == other.has_private_or_deleted_operator_delete()
+            && self.lifetime_inputs() == other.lifetime_inputs()
+            && self.detected_formatter() == other.detected_formatter()
+            && self.deprecated() == other.deprecated()
+            && self.is_thread_safe() == other.is_thread_safe()
+            && self.is_explicit_class_template_instantiation_definition()
+                == other.is_explicit_class_template_instantiation_definition()
+            && self.children() == other.children()
+    }
+}
+
+impl Eq for Record {}
+
+impl Hash for Record {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id().hash(state);
+    }
+}
+
+impl Debug for Record {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut debug_struct = f.debug_struct("Record");
+        debug_struct.field("rs_name", &self.rs_name());
+        debug_struct.field("cc_name", &self.cc_name());
+        debug_struct.field("unique_name", &self.unique_name());
+        debug_struct.field("mangled_cc_name", &self.mangled_cc_name());
+        debug_struct.field("id", &self.id());
+        debug_struct.field("owning_target", &self.owning_target());
+        debug_struct.field("template_specialization", &self.template_specialization());
+        debug_struct.field("unknown_attr", &self.unknown_attr());
+        debug_struct.field("doc_comment", &self.doc_comment());
+        debug_struct.field("bridge_type", &self.bridge_type());
+        debug_struct.field("owned_ptr_config", &self.owned_ptr_config());
+        debug_struct.field("source_loc", &self.source_loc());
+        debug_struct.field("unambiguous_public_bases", &self.unambiguous_public_bases());
+        debug_struct.field("fields", &self.fields());
+        debug_struct.field("lifetime_params", &self.lifetime_params());
+        debug_struct.field("size_align", &self.size_align());
+        debug_struct.field("trait_derives", &self.trait_derives());
+        debug_struct.field("is_derived_class", &self.is_derived_class());
+        debug_struct.field("override_alignment", &self.override_alignment());
+        debug_struct.field("safety_annotation", &self.safety_annotation());
+        debug_struct.field("copy_constructor", &self.copy_constructor());
+        debug_struct.field("move_constructor", &self.move_constructor());
+        debug_struct.field("destructor", &self.destructor());
+        debug_struct.field("is_trivial_abi", &self.is_trivial_abi());
+        debug_struct.field("is_inheritable", &self.is_inheritable());
+        debug_struct.field("is_abstract", &self.is_abstract());
+        debug_struct.field("nodiscard", &self.nodiscard());
+        debug_struct.field("record_type", &self.record_type());
+        debug_struct.field("is_aggregate", &self.is_aggregate());
+        debug_struct.field("is_canonical_alias", &self.is_canonical_alias());
+        debug_struct.field("enclosing_item_id", &self.enclosing_item_id());
+        debug_struct.field("must_bind", &self.must_bind());
+        debug_struct.field("overloads_operator_delete", &self.overloads_operator_delete());
+        debug_struct.field(
+            "has_private_or_deleted_operator_delete",
+            &self.has_private_or_deleted_operator_delete(),
+        );
+        debug_struct.field("lifetime_inputs", &self.lifetime_inputs());
+        debug_struct.field("detected_formatter", &self.detected_formatter());
+        debug_struct.field("deprecated", &self.deprecated());
+        debug_struct.field("is_thread_safe", &self.is_thread_safe());
+        debug_struct.field(
+            "is_explicit_class_template_instantiation_definition",
+            &self.is_explicit_class_template_instantiation_definition(),
+        );
+        debug_struct.field("children", &self.children());
+        debug_struct.finish()
     }
 }
 
 impl Record {
+    pub fn rs_name(&self) -> Identifier {
+        match self {
+            Self::Owned(r) => r.rs_name.clone(),
+            Self::Proto(r) => Identifier::Static(r.proto.rs_name().identifier().to_str().unwrap()),
+        }
+    }
+
+    pub fn rs_name_as_str(&self) -> &str {
+        match self {
+            Self::Owned(r) => r.rs_name.as_str(),
+            Self::Proto(r) => r.proto.rs_name().identifier().to_str().unwrap(),
+        }
+    }
+
+    pub fn cc_name(&self) -> Identifier {
+        match self {
+            Self::Owned(r) => r.cc_name.clone(),
+            Self::Proto(r) => Identifier::Static(r.proto.cc_name().identifier().to_str().unwrap()),
+        }
+    }
+
+    pub fn cc_name_as_str(&self) -> &str {
+        match self {
+            Self::Owned(r) => r.cc_name.as_str(),
+            Self::Proto(r) => r.proto.cc_name().identifier().to_str().unwrap(),
+        }
+    }
+
+    pub fn unique_name(&self) -> &str {
+        match self {
+            Self::Owned(r) => &r.unique_name,
+            Self::Proto(r) => r.proto.unique_name().to_str().unwrap(),
+        }
+    }
+
+    pub fn mangled_cc_name(&self) -> &str {
+        match self {
+            Self::Owned(r) => &r.mangled_cc_name,
+            Self::Proto(r) => r.proto.mangled_cc_name().to_str().unwrap(),
+        }
+    }
+
+    pub fn id(&self) -> ItemId {
+        match self {
+            Self::Owned(r) => r.id,
+            Self::Proto(r) => ItemId(r.proto.id() as usize),
+        }
+    }
+
+    pub fn owning_target(&self) -> BazelLabel {
+        match self {
+            Self::Owned(r) => r.owning_target.clone(),
+            Self::Proto(r) => BazelLabel::from(r.proto.owning_target().to_str().unwrap()),
+        }
+    }
+
+    pub fn template_specialization(&self) -> Option<&TemplateSpecialization> {
+        match self {
+            Self::Owned(r) => r.template_specialization.as_ref(),
+            Self::Proto(r) => r.template_specialization.as_ref(),
+        }
+    }
+
+    pub fn bridge_type(&self) -> Option<&BridgeType> {
+        match self {
+            Self::Owned(r) => r.bridge_type.as_ref(),
+            Self::Proto(r) => r.bridge_type.as_ref(),
+        }
+    }
+
+    pub fn is_thread_safe(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_thread_safe,
+            Self::Proto(r) => r.proto.is_thread_safe(),
+        }
+    }
+
+    pub fn trait_derives(&self) -> &TraitDerives {
+        match self {
+            Self::Owned(r) => &r.trait_derives,
+            Self::Proto(r) => &r.trait_derives,
+        }
+    }
+
+    pub fn safety_annotation(&self) -> SafetyAnnotation {
+        match self {
+            Self::Owned(r) => r.safety_annotation,
+            Self::Proto(r) => match r.proto.safety_annotation() {
+                ir_rust_proto::SafetyAnnotation::DisableUnsafe => SafetyAnnotation::DisableUnsafe,
+                ir_rust_proto::SafetyAnnotation::Unsafe => SafetyAnnotation::Unsafe,
+                ir_rust_proto::SafetyAnnotation::Unannotated => SafetyAnnotation::Unannotated,
+                _ => SafetyAnnotation::Unannotated,
+            },
+        }
+    }
+
+    pub fn fields(&self) -> &[Field] {
+        match self {
+            Self::Owned(r) => &r.fields,
+            Self::Proto(r) => &r.fields,
+        }
+    }
+
+    pub fn children(&self) -> &[Item] {
+        match self {
+            Self::Owned(r) => &r.children,
+            Self::Proto(r) => &r.children,
+        }
+    }
+
+    pub fn size_align(&self) -> &SizeAlign {
+        match self {
+            Self::Owned(r) => &r.size_align,
+            Self::Proto(r) => &r.size_align,
+        }
+    }
+
+    pub fn is_trivial_abi(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_trivial_abi,
+            Self::Proto(r) => r.proto.is_trivial_abi(),
+        }
+    }
+
+    pub fn is_inheritable(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_inheritable,
+            Self::Proto(r) => r.proto.is_inheritable(),
+        }
+    }
+
+    pub fn is_abstract(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_abstract,
+            Self::Proto(r) => r.proto.is_abstract(),
+        }
+    }
+
+    pub fn record_type(&self) -> RecordType {
+        match self {
+            Self::Owned(r) => r.record_type,
+            Self::Proto(r) => match r.proto.record_type() {
+                ir_rust_proto::RecordType::Struct => RecordType::Struct,
+                ir_rust_proto::RecordType::Union => RecordType::Union,
+                ir_rust_proto::RecordType::Class => RecordType::Class,
+                _ => RecordType::Struct,
+            },
+        }
+    }
+
+    pub fn is_canonical_alias(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_canonical_alias,
+            Self::Proto(r) => r.proto.is_canonical_alias(),
+        }
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        match self {
+            Self::Owned(r) => r.enclosing_item_id,
+            Self::Proto(r) => r.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize)),
+        }
+    }
+
+    pub fn must_bind(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.must_bind,
+            Self::Proto(r) => r.proto.must_bind(),
+        }
+    }
+
+    pub fn copy_constructor(&self) -> SpecialMemberFunc {
+        match self {
+            Self::Owned(r) => r.copy_constructor,
+            Self::Proto(r) => match r.proto.copy_constructor() {
+                ir_rust_proto::SpecialMemberFunc::Trivial => SpecialMemberFunc::Trivial,
+                ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
+                    SpecialMemberFunc::NontrivialMembers
+                }
+                ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
+                    SpecialMemberFunc::NontrivialUserDefined
+                }
+                ir_rust_proto::SpecialMemberFunc::Unavailable => SpecialMemberFunc::Unavailable,
+                _ => SpecialMemberFunc::Trivial,
+            },
+        }
+    }
+
+    pub fn move_constructor(&self) -> SpecialMemberFunc {
+        match self {
+            Self::Owned(r) => r.move_constructor,
+            Self::Proto(r) => match r.proto.move_constructor() {
+                ir_rust_proto::SpecialMemberFunc::Trivial => SpecialMemberFunc::Trivial,
+                ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
+                    SpecialMemberFunc::NontrivialMembers
+                }
+                ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
+                    SpecialMemberFunc::NontrivialUserDefined
+                }
+                ir_rust_proto::SpecialMemberFunc::Unavailable => SpecialMemberFunc::Unavailable,
+                _ => SpecialMemberFunc::Trivial,
+            },
+        }
+    }
+
+    pub fn destructor(&self) -> SpecialMemberFunc {
+        match self {
+            Self::Owned(r) => r.destructor,
+            Self::Proto(r) => match r.proto.destructor() {
+                ir_rust_proto::SpecialMemberFunc::Trivial => SpecialMemberFunc::Trivial,
+                ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
+                    SpecialMemberFunc::NontrivialMembers
+                }
+                ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
+                    SpecialMemberFunc::NontrivialUserDefined
+                }
+                ir_rust_proto::SpecialMemberFunc::Unavailable => SpecialMemberFunc::Unavailable,
+                _ => SpecialMemberFunc::Trivial,
+            },
+        }
+    }
+
+    pub fn is_derived_class(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_derived_class,
+            Self::Proto(r) => r.proto.is_derived_class(),
+        }
+    }
+
+    pub fn override_alignment(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.override_alignment,
+            Self::Proto(r) => r.proto.override_alignment(),
+        }
+    }
+
+    pub fn source_loc(&self) -> &str {
+        match self {
+            Self::Owned(r) => &r.source_loc,
+            Self::Proto(r) => r.proto.source_loc().to_str().unwrap(),
+        }
+    }
+
+    pub fn lifetime_params(&self) -> &[LifetimeName] {
+        match self {
+            Self::Owned(r) => &r.lifetime_params,
+            Self::Proto(r) => &r.lifetime_params,
+        }
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        match self {
+            Self::Owned(r) => r.doc_comment.as_deref(),
+            Self::Proto(r) => r.proto.doc_comment_opt().map(|s| s.to_str().unwrap()),
+        }
+    }
+
+    pub fn deprecated(&self) -> Option<Rc<str>> {
+        match self {
+            Self::Owned(r) => r.deprecated.clone(),
+            Self::Proto(r) => r.proto.deprecated_opt().map(|s| Rc::from(s.to_str().unwrap())),
+        }
+    }
+
+    // Setters for test mutation
+    pub fn set_is_trivial_abi(&mut self, val: bool) {
+        match self {
+            Self::Owned(r) => r.is_trivial_abi = val,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn set_copy_constructor(&mut self, val: SpecialMemberFunc) {
+        match self {
+            Self::Owned(r) => r.copy_constructor = val,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn set_destructor(&mut self, val: SpecialMemberFunc) {
+        match self {
+            Self::Owned(r) => r.destructor = val,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn set_rs_name(&mut self, val: Identifier) {
+        match self {
+            Self::Owned(r) => r.rs_name = val,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn set_cc_name(&mut self, val: Identifier) {
+        match self {
+            Self::Owned(r) => r.cc_name = val,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn set_id(&mut self, val: ItemId) {
+        match self {
+            Self::Owned(r) => r.id = val,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn children_mut(&mut self) -> &mut Vec<Item> {
+        match self {
+            Self::Owned(r) => &mut r.children,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        match self {
+            Self::Owned(r) => &mut r.lifetime_inputs,
+            Self::Proto(_) => panic!("Cannot mutate Proto-backed Record"),
+        }
+    }
+
+    pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
+        match self {
+            Self::Owned(r) => &r.unambiguous_public_bases,
+            Self::Proto(r) => &r.unambiguous_public_bases,
+        }
+    }
+
+    pub fn owned_ptr_config(&self) -> Option<&OwnedPtrConfig> {
+        match self {
+            Self::Owned(r) => r.owned_ptr_config.as_ref(),
+            Self::Proto(r) => r.owned_ptr_config.as_ref(),
+        }
+    }
+
+    pub fn overloads_operator_delete(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.overloads_operator_delete,
+            Self::Proto(r) => r.proto.overloads_operator_delete(),
+        }
+    }
+
+    pub fn has_private_or_deleted_operator_delete(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.has_private_or_deleted_operator_delete,
+            Self::Proto(r) => r.proto.has_private_or_deleted_operator_delete(),
+        }
+    }
+
+    pub fn detected_formatter(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.detected_formatter,
+            Self::Proto(r) => r.proto.detected_formatter(),
+        }
+    }
+
+    pub fn is_explicit_class_template_instantiation_definition(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_explicit_class_template_instantiation_definition,
+            Self::Proto(r) => r.proto.is_explicit_class_template_instantiation_definition(),
+        }
+    }
+
+    pub fn is_aggregate(&self) -> bool {
+        match self {
+            Self::Owned(r) => r.is_aggregate,
+            Self::Proto(r) => r.proto.is_aggregate(),
+        }
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        match self {
+            Self::Owned(r) => r.unknown_attr.as_deref(),
+            Self::Proto(r) => r.proto.unknown_attr_opt().map(|s| s.to_str().unwrap()),
+        }
+    }
+
+    pub fn nodiscard(&self) -> Option<&str> {
+        match self {
+            Self::Owned(r) => r.nodiscard.as_deref(),
+            Self::Proto(r) => r.proto.nodiscard_opt().map(|s| s.to_str().unwrap()),
+        }
+    }
+
+    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+        match self {
+            Self::Owned(r) => &r.lifetime_inputs,
+            Self::Proto(r) => &r.lifetime_inputs,
+        }
+    }
+
     /// Whether this type has Rust-like object semantics for mutating
     /// assignment, and can be passed by mut reference as a result.
     ///
-    /// If a type `T` is mut reference safe, it can be possed as a `&mut T`
+    /// If a type `T` is mut reference safe, it can be passed as a `&mut T`
     /// safely. Otherwise, mutable references must use `Pin<&mut T>`.
     ///
     /// In C++, this is called "trivially relocatable". Such types can be passed
@@ -1359,7 +2139,7 @@ impl Record {
     ///
     /// Described in more detail at: docs/design/unpin.md
     pub fn is_unpin(&self) -> bool {
-        self.is_trivial_abi
+        self.is_trivial_abi()
     }
 
     // TODO(b/498977848): The record with cc_name
@@ -1368,7 +2148,7 @@ impl Record {
     // TemplateSpecialization kind NonSpecial. This is unfortunate, since we want to exclude all
     // flavors of string_view because of our special-casing.
     pub fn is_string_view(&self) -> bool {
-        match &self.template_specialization {
+        match self.template_specialization() {
             Some(TemplateSpecialization { defining_target, kind, .. }) => {
                 let is_in_cc_std = *defining_target
                     == BazelLabel("//support/cc_std:cc_std".into())
@@ -1383,7 +2163,7 @@ impl Record {
                     if is_string_view {
                         return true;
                     };
-                    self.cc_name.as_str().starts_with("std::basic_string_view<")
+                    self.cc_name().as_str().starts_with("std::basic_string_view<")
                 } else {
                     false
                 }
@@ -1396,13 +2176,13 @@ impl Record {
     /// special-case this.
     pub fn is_raw_string_view(&self) -> bool {
         matches!(
-            self.template_specialization,
+            self.template_specialization(),
             Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
-        ) && self.rs_name.identifier.as_ref() == "raw_string_view"
+        ) && self.rs_name().as_str() == "raw_string_view"
     }
 
     pub fn is_union(&self) -> bool {
-        match self.record_type {
+        match self.record_type() {
             RecordType::Union => true,
             RecordType::Struct | RecordType::Class => false,
         }
@@ -1414,15 +2194,15 @@ impl Record {
     /// to a record type. (For example, typedefs to anonymous records, or template specializations
     /// with a `preferred_name`.)
     pub fn cc_tag_kind(&self) -> TokenStream {
-        if self.is_canonical_alias {
+        if self.is_canonical_alias() {
             quote! {}
         } else {
-            self.record_type.into_token_stream()
+            self.record_type().into_token_stream()
         }
     }
 
     pub fn should_implement_drop(&self) -> bool {
-        match self.destructor {
+        match self.destructor() {
             SpecialMemberFunc::Trivial => false,
 
             // TODO(jeanpierreda): b/212690698 - Avoid calling into the C++ destructor
@@ -1446,21 +2226,21 @@ impl Record {
     pub fn should_derive_copy(&self) -> bool {
         // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>,
         // which prevents them from deriving Copy.
-        if self.is_thread_safe {
+        if self.is_thread_safe() {
             return false;
         }
-        match self.trait_derives.copy {
+        match self.trait_derives().copy {
             TraitImplPolarity::Positive => true,
             TraitImplPolarity::Negative => false,
             TraitImplPolarity::None => {
                 self.is_unpin()
-                    && self.copy_constructor == SpecialMemberFunc::Trivial
-                    && self.destructor == SpecialMemberFunc::Trivial
+                    && self.copy_constructor() == SpecialMemberFunc::Trivial
+                    && self.destructor() == SpecialMemberFunc::Trivial
                     && self.check_by_value().is_ok()
-                    && self.trait_derives.clone != TraitImplPolarity::Negative
+                    && self.trait_derives().clone != TraitImplPolarity::Negative
                     // Mutable fields become `Cell<T>` in Rust, which prevents
                     // the struct from deriving `Copy`.
-                    && self.fields.iter().all(|f| !f.is_mutable)
+                    && self.fields().iter().all(|f| !f.is_mutable())
             }
         }
     }
@@ -1470,14 +2250,14 @@ impl Record {
     /// This does not necessarily imply that the type is Rust-movable, e.g. trivially relocatable.
     pub fn check_by_value(&self) -> Result<()> {
         ensure!(
-            self.destructor != SpecialMemberFunc::Unavailable,
+            self.destructor() != SpecialMemberFunc::Unavailable,
             "`{}` can't be used by-value because it has a non-public or deleted destructor",
-            self.cc_name
+            self.cc_name()
         );
         ensure!(
-            !self.is_abstract,
+            !self.is_abstract(),
             "`{}` can be used by-value because it has pure virtual functions that are not overridden",
-            self.cc_name
+            self.cc_name()
         );
         Ok(())
     }
@@ -1487,7 +2267,7 @@ impl Record {
     /// Notably, all records that have a unique owning target are supported, e.g. `std::string`, but
     /// not all supported records have a unique owning target, e.g. `std::vector<int>`.
     pub fn has_unique_owning_target(self: &Record) -> bool {
-        self.template_specialization.is_none() || self.is_canonical_alias
+        self.template_specialization().is_none() || self.is_canonical_alias()
     }
 }
 
@@ -1538,6 +2318,16 @@ impl GenericItem for Constant {
     }
 }
 
+impl Constant {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GlobalVar {
@@ -1583,6 +2373,16 @@ impl GenericItem for GlobalVar {
     }
     fn must_bind(&self) -> bool {
         self.must_bind
+    }
+}
+
+impl GlobalVar {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
     }
 }
 
@@ -1643,6 +2443,32 @@ impl GenericItem for Enum {
     }
 }
 
+impl Enum {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn enumerators(&self) -> Option<&[Enumerator]> {
+        self.enumerators.as_deref()
+    }
+
+    pub fn underlying_type(&self) -> &CcType {
+        &self.underlying_type
+    }
+
+    pub fn detected_formatter(&self) -> bool {
+        self.detected_formatter
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Enumerator {
@@ -1656,6 +2482,24 @@ pub struct Enumerator {
     pub deprecated: Option<Rc<str>>,
     #[serde(default)]
     pub doc_comment: Option<Rc<str>>,
+}
+
+impl Enumerator {
+    pub fn identifier(&self) -> &Identifier {
+        &self.identifier
+    }
+
+    pub fn value(&self) -> IntegerConstant {
+        self.value
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn deprecated(&self) -> Option<Rc<str>> {
+        self.deprecated.clone()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1703,6 +2547,32 @@ impl GenericItem for TypeAlias {
     }
     fn must_bind(&self) -> bool {
         self.must_bind
+    }
+}
+
+impl TypeAlias {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+        &self.lifetime_inputs
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.lifetime_inputs
+    }
+
+    pub fn underlying_type(&self) -> &CcType {
+        &self.underlying_type
+    }
+
+    pub fn underlying_type_mut(&mut self) -> &mut CcType {
+        &mut self.underlying_type
     }
 }
 
@@ -1957,6 +2827,24 @@ impl GenericItem for Namespace {
     }
 }
 
+impl Namespace {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn children(&self) -> &[Item] {
+        &self.children
+    }
+
+    pub fn children_mut(&mut self) -> &mut Vec<Item> {
+        &mut self.children
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UseMod {
@@ -1987,6 +2875,12 @@ impl GenericItem for UseMod {
     }
     fn must_bind(&self) -> bool {
         self.must_bind
+    }
+}
+
+impl UseMod {
+    pub fn mod_name(&self) -> &Identifier {
+        &self.mod_name
     }
 }
 
@@ -2127,7 +3021,7 @@ impl GenericItem for Item {
 impl Item {
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
         match self {
-            Item::Record(record) => record.enclosing_item_id,
+            Item::Record(record) => record.enclosing_item_id(),
             Item::IncompleteRecord(record) => record.enclosing_item_id,
             Item::Enum(enum_) => enum_.enclosing_item_id,
             Item::Constant(constant) => constant.enclosing_item_id,
@@ -2164,27 +3058,23 @@ impl Item {
     }
 
     /// Returns the C++ identifier for this item, if it has one.
-    pub fn cc_name_as_str(&self) -> Option<Rc<str>> {
+    pub fn cc_name_as_str(&self) -> Option<&str> {
         match self {
-            Item::Func(func) => match &func.cc_name {
-                UnqualifiedIdentifier::Identifier(identifier) => {
-                    Some(identifier.identifier.clone())
-                }
+            Item::Func(func) => match func.cc_name() {
+                UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.as_str()),
                 _ => None,
             },
-            Item::IncompleteRecord(incomplete_record) => {
-                Some(incomplete_record.cc_name.identifier.clone())
-            }
-            Item::Record(record) => Some(record.cc_name.identifier.clone()),
-            Item::Enum(enum_) => Some(enum_.cc_name.identifier.clone()),
-            Item::Constant(constant) => Some(constant.cc_name.identifier.clone()),
-            Item::GlobalVar(global_var) => Some(global_var.cc_name.identifier.clone()),
-            Item::TypeAlias(type_alias) => Some(type_alias.cc_name.identifier.clone()),
-            Item::Namespace(namespace) => Some(namespace.cc_name.identifier.clone()),
+            Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.cc_name().as_str()),
+            Item::Record(record) => Some(record.cc_name_as_str()),
+            Item::Enum(enum_) => Some(enum_.cc_name().as_str()),
+            Item::Constant(constant) => Some(constant.cc_name().as_str()),
+            Item::GlobalVar(global_var) => Some(global_var.cc_name().as_str()),
+            Item::TypeAlias(type_alias) => Some(type_alias.cc_name().as_str()),
+            Item::Namespace(namespace) => Some(namespace.cc_name().as_str()),
             Item::UnsupportedItem(_) => None,
             Item::Comment(_) => None,
             Item::UseMod(_) => None,
-            Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.cc_name.clone()),
+            Item::ExistingRustType(existing_rust_type) => Some(&*existing_rust_type.cc_name),
         }
     }
 
@@ -2590,16 +3480,13 @@ mod tests {
 
     #[gtest]
     fn test_identifier_debug_print() {
-        assert_eq!(format!("{:?}", Identifier { identifier: "hello".into() }), "\"hello\"");
+        assert_eq!(format!("{:?}", Identifier::new("hello")), "\"hello\"");
     }
 
     #[gtest]
     fn test_unqualified_identifier_debug_print() {
         assert_eq!(
-            format!(
-                "{:?}",
-                UnqualifiedIdentifier::Identifier(Identifier { identifier: "hello".into() })
-            ),
+            format!("{:?}", UnqualifiedIdentifier::Identifier(Identifier::new("hello"))),
             "\"hello\""
         );
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Constructor), "Constructor");

@@ -454,10 +454,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
         })
         .find(|f| {
             matches!(&f.rs_name, UnqualifiedIdentifier::Constructor)
-                && f.params
-                    .get(1)
-                    .map(|p| p.identifier.identifier.as_ref() == "i")
-                    .unwrap_or_default()
+                && f.params.get(1).map(|p| p.identifier.as_str() == "i").unwrap_or_default()
         })
         .unwrap();
     {
