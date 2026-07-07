@@ -90,7 +90,6 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     }
   }
 
-  clang::DeclContext* decl_context = decl->getDeclContext();
   clang::QualType underlying_qualtype;
   if (auto* typedef_name_decl = clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
     if (typedef_name_decl->getAnonDeclWithTypedefName()) {
@@ -100,14 +99,8 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       return std::nullopt;
     }
     underlying_qualtype = typedef_name_decl->getUnderlyingType();
-    clang::QualType type = decl->getASTContext().getTypedefType(
-        clang::ElaboratedTypeKeyword::None, /*Qualifier=*/std::nullopt,
-        typedef_name_decl);
-    if (const auto* tag_decl = type->getAsTagDecl();
-        tag_decl &&
-        tag_decl->getDeclContext()->getRedeclContext() ==
-            decl_context->getRedeclContext() &&
-        tag_decl->getName() == decl->getName()) {
+    if (const clang::TagDecl* tag_decl =
+            StripCStyleNameIntroducingTypedef(typedef_name_decl)) {
       return ictx_.ImportUnsupportedItem(
           *decl, std::nullopt,
           {FormattedError::Static(

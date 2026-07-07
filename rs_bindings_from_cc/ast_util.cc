@@ -20,6 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/DeclBase.h"
@@ -282,6 +283,53 @@ bool IsProto2Message(const clang::Decl& decl) {
     }
     return base_name != "google::protobuf::MessageLite";
   });
+}
+
+const clang::TagDecl* StripCStyleNameIntroducingTypedef(
+    const clang::TypedefNameDecl* alias_decl) {
+  if (alias_decl == nullptr) {
+    return nullptr;
+  }
+
+  // If the typedef is giving a name to an anonymous tag type, then we just
+  // return that anonymous tag type directly.
+  // Example: typedef struct { ... } Foo;
+  if (clang::TagDecl* anon_tag = alias_decl->getAnonDeclWithTypedefName()) {
+    return anon_tag;
+  }
+
+  clang::QualType aliased_type = alias_decl->getASTContext().getTypedefType(
+      clang::ElaboratedTypeKeyword::None, /*Qualifier=*/std::nullopt,
+      const_cast<clang::TypedefNameDecl*>(alias_decl));
+
+  if (aliased_type.isNull()) {
+    return nullptr;
+  }
+
+  const clang::TagDecl* tag_decl = aliased_type->getAsTagDecl();
+
+  if (tag_decl == nullptr) {
+    // Not aliasing a tag type, not interested.
+    return nullptr;
+  }
+
+  // Not interested in `typedef Bar Foo;`, so filter out cases where the alias
+  // name is different from the tag name.
+  if (tag_decl->getName() != alias_decl->getName()) {
+    return nullptr;
+  }
+
+  // Not interested in `typedef other_context::Foo Foo;`, so filter out cases
+  // where the tag decl is not in the same redecl context as the alias decl.
+  if (tag_decl->getDeclContext()->getRedeclContext() !=
+      alias_decl->getDeclContext()->getRedeclContext()) {
+    return nullptr;
+  }
+
+  // The aliased type is a tag decl that has the same name and is in the same
+  // redecl context as the alias decl, so we know it's shaped like
+  // `typedef struct Foo Foo;`.
+  return tag_decl;
 }
 
 }  // namespace crubit

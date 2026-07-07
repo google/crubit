@@ -74,6 +74,12 @@ absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
 // message.
 bool IsProto2Message(const clang::Decl& decl);
 
+// If `alias_decl` is a C-style name-introducing typedef (e.g.,
+// `typedef struct Foo Foo;` or `typedef struct { ... } Foo;`), returns the
+// underlying `TagDecl` representing the C type. Otherwise, returns `nullptr`.
+const clang::TagDecl* StripCStyleNameIntroducingTypedef(
+    const clang::TypedefNameDecl* alias_decl);
+
 // An RAII guard that sets a fake TU scope for the duration of its lifetime
 // and restores the previous TU scope when it goes out of scope.
 class FakeTUScope {
