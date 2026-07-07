@@ -187,8 +187,8 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
 pub fn generate_comment(comment: Rc<Comment>) -> ApiSnippets {
     ApiSnippets {
         generated_items: HashMap::from([(
-            comment.id,
-            GeneratedItem::Comment { message: comment.text.clone() },
+            comment.id(),
+            GeneratedItem::Comment { message: Rc::from(comment.text()) },
         )]),
         ..Default::default()
     }

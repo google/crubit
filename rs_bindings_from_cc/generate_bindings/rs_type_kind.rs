@@ -12,9 +12,9 @@ use lifetime_defaults_transform::lifetime_defaults_transform_item;
 use std::rc::Rc;
 
 fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
-    match ty.variant {
+    match ty.variant() {
         CcTypeVariant::Decl { id, .. } => {
-            let item = db.find_untyped_decl(id);
+            let item = db.find_untyped_decl(*id);
             if let ir::Item::Record(record) = item {
                 record.is_string_view()
             } else {
@@ -28,7 +28,7 @@ fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
 fn item_is_or_aliases_string_view(db: &BindingsGenerator, item: &ir::Item) -> bool {
     match item {
         ir::Item::Record(record) => record.is_string_view(),
-        ir::Item::TypeAlias(type_alias) => match &type_alias.underlying_type.variant {
+        ir::Item::TypeAlias(type_alias) => match type_alias.underlying_type.variant() {
             CcTypeVariant::Decl { id, .. } => {
                 item_is_or_aliases_string_view(db, db.find_untyped_decl(*id))
             }
@@ -45,11 +45,11 @@ pub fn rs_type_kind_with_lifetime_elision(
     lifetime_options: LifetimeOptions,
 ) -> Result<RsTypeKind> {
     ensure!(
-        ty.unknown_attr.is_empty(),
+        ty.unknown_attr().is_empty(),
         "crubit.rs/errors/unknown_attribute: unknown attribute(s): {}",
-        ty.unknown_attr
+        ty.unknown_attr()
     );
-    match &ty.variant {
+    match ty.variant() {
         CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive(*primitive)),
         CcTypeVariant::Pointer(pointer) => {
             // In Rust, we have no such concept of a "const" type. All types can be either
@@ -62,12 +62,12 @@ pub fn rs_type_kind_with_lifetime_elision(
             // Rust pointer (as opposed to the mutability of the C++ pointer to determine the
             // mutability of the Rust pointer, e.g. ty.is_const).
             let mutability =
-                if pointer.pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
+                if pointer.pointee_type().is_const() { Mutability::Const } else { Mutability::Mut };
             let mut pointee = db.rs_type_kind_with_lifetime_elision(
-                pointer.pointee_type.as_ref().clone(),
+                pointer.pointee_type().clone(),
                 LifetimeOptions {
                     assume_lifetimes: lifetime_options.assume_lifetimes
-                        && !pointee_is_string_view(db, &pointer.pointee_type),
+                        && !pointee_is_string_view(db, pointer.pointee_type()),
                     // is_return_type is used in !assume_lifetimes contexts for absl::span
                     // to determine whether lifetimes should be provided.
                     is_return_type: lifetime_options.is_return_type
@@ -95,13 +95,13 @@ pub fn rs_type_kind_with_lifetime_elision(
             let pointee = Rc::new(pointee);
 
             let lifetime = if lifetime_options.assume_lifetimes {
-                match &ty.explicit_lifetimes[..] {
+                match ty.explicit_lifetimes() {
                     [] => Lifetime::elided(),
                     [name] => Lifetime::new(name),
                     _ => return Err(anyhow!("pointers may only have one lifetime")),
                 }
             } else {
-                match pointer.lifetime {
+                match pointer.lifetime() {
                     Some(lifetime_id) => db
                         .ir()
                         .get_lifetime(lifetime_id)
@@ -111,13 +111,13 @@ pub fn rs_type_kind_with_lifetime_elision(
                     None => {
                         return Ok(RsTypeKind::Pointer {
                             pointee,
-                            kind: RustPtrKind::CcPtr(pointer.kind),
+                            kind: RustPtrKind::CcPtr(pointer.kind()),
                             mutability,
                         })
                     }
                 }
             };
-            Ok(match pointer.kind {
+            Ok(match pointer.kind() {
                 PointerTypeKind::LValueRef => {
                     let is_cref = lifetime_options.assume_lifetimes
                         && (!pointee.is_complete()
@@ -141,7 +141,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 PointerTypeKind::NonNull | PointerTypeKind::Nullable | PointerTypeKind::Owned => {
                     RsTypeKind::Pointer {
                         pointee,
-                        kind: RustPtrKind::CcPtr(pointer.kind),
+                        kind: RustPtrKind::CcPtr(pointer.kind()),
                         mutability,
                     }
                 }
@@ -210,8 +210,9 @@ pub fn rs_type_kind_with_lifetime_elision(
                         NoBindingsReason::MissingRequiredFeatures { .. }
                     ) {
                         let mut underlying_type = alias.underlying_type.clone();
-                        if underlying_type.explicit_lifetimes.is_empty() {
-                            underlying_type.explicit_lifetimes = ty.explicit_lifetimes.clone();
+                        if underlying_type.explicit_lifetimes().is_empty() {
+                            *underlying_type.explicit_lifetimes_mut() =
+                                ty.explicit_lifetimes().to_vec();
                         }
                         if let Ok(ty) =
                             db.rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
@@ -261,7 +262,7 @@ pub fn rs_type_kind_with_lifetime_elision(
 
             let lifetimes: Vec<Lifetime> =
                 if decl_assumes_lifetimes || lifetime_options.assume_lifetimes {
-                    ty.explicit_lifetimes.iter().map(|lt| Lifetime::new(lt)).collect()
+                    ty.explicit_lifetimes().iter().map(|lt| Lifetime::new(lt)).collect()
                 } else {
                     vec![]
                 };
