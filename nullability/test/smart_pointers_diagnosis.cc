@@ -681,5 +681,27 @@ TEST(SmartPointerTest, NullableSmartPointerFieldMovedFromAtExit) {
   )cc"));
 }
 
+TEST(SmartPointerTest, DerivedSmartPointerWithPointerTemplateArg) {
+  // b/484337262
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    template <typename T>
+    class _Nullable UniqueHandle
+        : public std::unique_ptr<std::remove_pointer_t<T>> {
+      using std::unique_ptr<std::remove_pointer_t<T>>::unique_ptr;
+    };
+
+    struct FooBar {
+      int x;
+    };
+
+    int target() {
+      UniqueHandle<FooBar*> p;
+      (void)p.get()->x;  // [[unsafe]]
+      (void)p->x;        // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

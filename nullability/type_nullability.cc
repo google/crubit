@@ -179,12 +179,8 @@ QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
       return ASTCtx.getPointerType(TND->getUnderlyingType());
   }
 
-  // If we don't have a `pointer` or `element_type` type alias, we deduce the
-  // underlying pointer type from the template argument if possible.
-  if (auto *SmartPointerCTSD =
-          dyn_cast<ClassTemplateSpecializationDecl>(SmartPtrDecl))
-    return underlyingPointerTypeFromTemplateArg(*SmartPointerCTSD, ASTCtx);
-
+  // If we don't have a `pointer` or `element_type` type alias, check for base
+  // types which provide the type.
   if (SmartPtrDecl->hasDefinition()) {
     for (const CXXBaseSpecifier& Base : SmartPtrDecl->bases()) {
       if (Base.getAccessSpecifier() <= BaseAccess) {
@@ -197,6 +193,14 @@ QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
       }
     }
   }
+
+  // Otherwise, deduce the underlying pointer type from the template argument if
+  // possible. This is risky, because we don't know the semantics of the smart
+  // pointer. Some smart pointer types use a pointer type as their argument. For
+  // example, `MySmartPointer<int*>` points to an `int`, not an `int *`.
+  if (auto* SmartPointerCTSD =
+          dyn_cast<ClassTemplateSpecializationDecl>(SmartPtrDecl))
+    return underlyingPointerTypeFromTemplateArg(*SmartPointerCTSD, ASTCtx);
 
   return QualType();
 }

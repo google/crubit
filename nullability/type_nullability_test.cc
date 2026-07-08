@@ -423,6 +423,42 @@ TEST_F(UnderlyingRawPointerTest, HiddenInSmartPointerBaseOfSmartPointer) {
       AST.context().getPointerType(AST.context().IntTy));
 }
 
+TEST_F(UnderlyingRawPointerTest, DerivedSmartPointerWithPointerTemplateArg) {
+  // b/484337262
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    struct remove_pointer {
+      using type = T;
+    };
+    template <typename T>
+    struct remove_pointer<T*> {
+      using type = T;
+    };
+    template <typename T>
+    using remove_pointer_t = typename remove_pointer<T>::type;
+
+    template <typename T>
+    class unique_ptr {
+      using pointer = T*;
+    };
+    }  // namespace std
+
+    template <typename T>
+    class _Nullable UniqueHandle
+        : public std::unique_ptr<std::remove_pointer_t<T>>{};
+
+    using Target = UniqueHandle<int*>;
+    Target var;
+  )cc");
+
+  const auto* Target = selectFirst<TypeAliasDecl>(
+      "T", match(typeAliasDecl(hasName("Target")).bind("T"), AST.context()));
+  EXPECT_EQ(
+      underlyingRawPointerType(Target->getUnderlyingType()).getCanonicalType(),
+      AST.context().getPointerType(AST.context().IntTy));
+}
+
 std::function<std::unique_ptr<FrontendAction>()> makeRegisterPragmasAction(
     NullabilityPragmas &Pragmas) {
   return [&Pragmas]() {
