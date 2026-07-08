@@ -168,6 +168,24 @@ rust_test(
 )
 
 rust_library(
+    name = "declval",
+    srcs = ["declval.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_test(
+    name = "declval_test",
+    srcs = ["declval_test.rs"],
+    deps = [
+        ":declval",
+        "@crate_index//:googletest",
+    ],
+)
+
+rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
