@@ -241,4 +241,20 @@ inline bool operator==(const OperandAlias&, const foreign::Alias) {
   return true;
 }
 
+struct OnlyLt {
+  int i;
+
+  friend bool operator<(const OnlyLt& lhs, const OnlyLt& rhs) {
+    return lhs.i < rhs.i;
+  }
+};
+
+struct OnlyEq {
+  int i;
+
+  friend bool operator==(const OnlyLt& lhs, const OnlyLt& rhs) {
+    return lhs.i == rhs.i;
+  }
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_

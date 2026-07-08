@@ -1949,17 +1949,24 @@ pub fn generate_function(
         quoted_return_type = quote! {};
     }
 
-    if !errors.is_empty()
-        && let ImplKind::Trait {
-            trait_name: TraitName::CtorNew(_) | TraitName::UnsafeCtorNew(_),
-            ..
-        } = impl_kind
-    {
-        // Generated CtorNew and UnsafeCtorNew functions return an `impl Trait` type which can't use
-        // the `errors_as_unsatisfied_trait_bound` reporting system because
-        // the `'error` lifetime causes an error when combined with `impl Trait due to
-        // https://github.com/rust-lang/rust/issues/134804
-        errors.consolidate()?;
+    if !errors.is_empty() {
+        if matches!(
+            impl_kind,
+            ImplKind::Trait { trait_name: TraitName::CtorNew(_) | TraitName::UnsafeCtorNew(_), .. }
+        ) {
+            // Generated CtorNew and UnsafeCtorNew functions return an `impl Trait` type which can't use
+            // the `errors_as_unsatisfied_trait_bound` reporting system because
+            // the `'error` lifetime causes an error when combined with `impl Trait due to
+            // https://github.com/rust-lang/rust/issues/134804
+            errors.consolidate()?;
+        }
+        if matches!(impl_kind, ImplKind::Trait { trait_name: TraitName::PartialOrd { .. }, .. }) {
+            // If the reason PartialOrd doesn't get bindings is that there's no `operator==`, then
+            // we can't use the `errors_as_unsatisfied_trait_bound` reporting system, as it will
+            // fail to satisfy the preconditions for implementing PartialOrd.
+            // TODO(jeanpierreda): implement the trait for all other cases.
+            errors.consolidate()?;
+        }
     }
 
     let reportable_status: Result<(), ErrorList> = errors.consolidate();
