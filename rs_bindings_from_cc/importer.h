@@ -11,26 +11,15 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
-#include "absl/log/die_if_null.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
-#include "rs_bindings_from_cc/importers/class_template.h"
-#include "rs_bindings_from_cc/importers/cxx_record.h"
-#include "rs_bindings_from_cc/importers/enum.h"
-#include "rs_bindings_from_cc/importers/enum_constant.h"
-#include "rs_bindings_from_cc/importers/existing_rust_type.h"
-#include "rs_bindings_from_cc/importers/friend.h"
-#include "rs_bindings_from_cc/importers/function.h"
-#include "rs_bindings_from_cc/importers/function_template.h"
-#include "rs_bindings_from_cc/importers/namespace.h"
-#include "rs_bindings_from_cc/importers/type_alias.h"
-#include "rs_bindings_from_cc/importers/var.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
@@ -49,25 +38,7 @@ namespace crubit {
 class Importer final : public ImportContext {
  public:
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
-                    clang::Sema& sema)
-      : ImportContext(invocation, ctx, sema),
-        mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())) {
-    decl_importers_.push_back(
-        std::make_unique<ExistingRustTypeImporter>(*this));
-    decl_importers_.push_back(
-        std::make_unique<ClassTemplateDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<EnumDeclImporter>(*this));
-    decl_importers_.push_back(
-        std::make_unique<EnumConstantDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<VarDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<FriendDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<FunctionDeclImporter>(*this));
-    decl_importers_.push_back(
-        std::make_unique<FunctionTemplateDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<NamespaceDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<TypeAliasImporter>(*this));
-  }
+                    clang::Sema& sema);
 
   // Import all visible declarations from a translation unit.
   void Import(clang::TranslationUnitDecl* decl);
@@ -122,6 +93,9 @@ class Importer final : public ImportContext {
       const BazelLabel& label) const override;
   absl::StatusOr<bool> DetectFormatter(
       const clang::TypeDecl& decl) const override;
+  bool ImplementsCoreFmtDebug(const clang::TypeDecl& type) const override;
+  absl::StatusOr<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
+      const clang::TypeDecl& type) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
@@ -229,6 +203,9 @@ class Importer final : public ImportContext {
   //
   // Note that this includes non-TypeDecls in the form of using decls.
   absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
+
+  clang::QualType rs_core_fmt_debug_;
+  const clang::ClassTemplateDecl* absl_nullable rs_std_impl_;
 };  // class Importer
 
 }  // namespace crubit

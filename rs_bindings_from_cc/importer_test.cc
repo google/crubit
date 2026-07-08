@@ -48,6 +48,14 @@ std::optional<ItemId> DeclIdForRecord(const IR& ir, absl::string_view rs_name) {
   return std::nullopt;
 }
 
+absl::StatusOr<IR> IrFromCcWithRecordImplDebug(
+    absl::string_view extra_source_code_for_testing) {
+  return IrFromCc(
+      {.extra_source_code_for_testing = extra_source_code_for_testing,
+       .crubit_features = {
+           {BazelLabel{"//test:testing_target"}, {"record_impl_debug"}}}});
+}
+
 std::optional<IR::Item> FindItemById(const IR& ir, ItemId id) {
   for (auto item : ir.items) {
     if (auto* record = std::get_if<Record>(&item); record && record->id == id) {
@@ -333,6 +341,8 @@ template <typename... Args>
 auto Destructor(const Args&... matchers) {
   return testing::Field("destructor", &Record::destructor, AllOf(matchers...));
 }
+
+MATCHER(ImplDebug, "") { return arg.impl_debug; }
 
 // Matches a Record which is trivial for calls.
 MATCHER(IsTrivialAbi, "") { return arg.is_trivial_abi; }
@@ -1449,6 +1459,112 @@ TEST(ImporterTest, AssumedLifetimesCapturesImplicitThisLifetimeRvalueRef) {
                     ParamType(AllOf(
                         ExplicitLifetimesAre("a"), Not(HasLifetimes()),
                         IsPointerWithKind(PointerTypeKind::kRValueRef)))))))));
+}
+
+TEST(ImporterTest, ImplDebugDefaultTrue) {
+  ASSERT_OK_AND_ASSIGN(const IR ir,
+                       IrFromCcWithRecordImplDebug("struct S {};"));
+  EXPECT_THAT(ir.get_items_if<Record>(),
+              ElementsAre(Pointee(AllOf(RsNameIs("S"), ImplDebug()))));
+}
+
+TEST(ImporterTest, ImplDebugOverrideFalseIsFalse) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+        struct [[clang::annotate("crubit_override_debug", false)]] S {};
+      )cc"));
+  EXPECT_THAT(ir.get_items_if<Record>(),
+              ElementsAre(Pointee(AllOf(RsNameIs("S"), Not(ImplDebug())))));
+}
+
+TEST(ImporterTest, ImplDebugOverrideTrueIsTrue) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+        struct [[clang::annotate("crubit_override_debug", true)]] S {};
+      )cc"));
+  EXPECT_THAT(ir.get_items_if<Record>(),
+              ElementsAre(Pointee(AllOf(RsNameIs("S"), ImplDebug()))));
+}
+
+TEST(ImporterTest, ImplDebugUnexpectedArgsMissing) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+                         struct [[clang::annotate("crubit_override_debug")]] S {
+                         };
+                       )cc"));
+  EXPECT_THAT(ir.get_items_if<Record>(), IsEmpty());
+  EXPECT_THAT(
+      ir.get_items_if<UnsupportedItem>(),
+      ElementsAre(Pointee(AllOf(
+          UnsupportedItemNameIs("S"),
+          Field(&UnsupportedItem::errors,
+                ElementsAre(Property(&FormattedError::message,
+                                     HasSubstr("crubit_override_debug"))))))));
+}
+
+TEST(ImporterTest, ImplDebugUnexpectedArgsTooMany) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+        struct [[clang::annotate("crubit_override_debug", true, false)]] S {};
+      )cc"));
+  EXPECT_THAT(ir.get_items_if<Record>(), IsEmpty());
+  EXPECT_THAT(
+      ir.get_items_if<UnsupportedItem>(),
+      ElementsAre(Pointee(AllOf(
+          UnsupportedItemNameIs("S"),
+          Field(&UnsupportedItem::errors,
+                ElementsAre(Property(&FormattedError::message,
+                                     HasSubstr("crubit_override_debug"))))))));
+}
+
+TEST(ImporterTest, ImplDebugUnexpectedArgsWrongType) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+        struct [[clang::annotate("crubit_override_debug", "true")]] S {};
+      )cc"));
+  EXPECT_THAT(ir.get_items_if<Record>(), IsEmpty());
+  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+              ElementsAre(Pointee(
+                  AllOf(UnsupportedItemNameIs("S"),
+                        Field(&UnsupportedItem::errors,
+                              ElementsAre(Property(
+                                  &FormattedError::message,
+                                  HasSubstr("must evaluate to a bool"))))))));
+}
+TEST(ImporterTest, ExistingRustTypeWithoutImplDebug) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+                         struct [[clang::annotate("crubit_internal_rust_type",
+                                                  "::my_crate::NoDebug")]] S {};
+                       )cc"));
+  EXPECT_THAT(ir.get_items_if<ExistingRustType>(),
+              ElementsAre(Pointee(AllOf(Field(&ExistingRustType::cc_name, "S"),
+                                        Not(ImplDebug())))));
+}
+
+TEST(ImporterTest, ExistingRustTypeWithImplDebug) {
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+                         namespace rs::core::fmt {
+                         struct Debug;
+                         }  // namespace rs::core::fmt
+
+                         namespace rs_std {
+                         template <typename T, typename Trait>
+                         struct impl;
+                         }  // namespace rs_std
+
+                         struct [[clang::annotate("crubit_internal_rust_type",
+                                                  "::my_crate::HasDebug")]] S {
+                         };
+
+                         namespace rs_std {
+                         template <>
+                         struct impl<S, ::rs::core::fmt::Debug> {
+                           static constexpr bool kIsImplemented = true;
+                         };
+                         }  // namespace rs_std
+                       )cc"));
+  EXPECT_THAT(ir.get_items_if<ExistingRustType>(),
+              ElementsAre(Pointee(
+                  AllOf(Field(&ExistingRustType::cc_name, "S"), ImplDebug()))));
 }
 }  // namespace
 }  // namespace crubit
