@@ -1218,16 +1218,30 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             Primitive::Float => CrubitAbiType::transmute("f32", "float"),
             Primitive::Double => CrubitAbiType::transmute("f64", "double"),
             Primitive::Char => CrubitAbiType::transmute("::core::ffi::c_char", "char"),
-            Primitive::SignedChar => CrubitAbiType::SignedChar,
-            Primitive::UnsignedChar => CrubitAbiType::UnsignedChar,
+            Primitive::SignedChar => {
+                CrubitAbiType::transmute("::core::ffi::c_schar", "signed char")
+            }
+            Primitive::UnsignedChar => {
+                CrubitAbiType::transmute("::core::ffi::c_uchar", "unsigned char")
+            }
             Primitive::Short => CrubitAbiType::transmute("::core::ffi::c_short", "short"),
             Primitive::Int => CrubitAbiType::transmute("::core::ffi::c_int", "int"),
             Primitive::Long => CrubitAbiType::transmute("::core::ffi::c_long", "long"),
-            Primitive::LongLong => CrubitAbiType::LongLong,
-            Primitive::UnsignedShort => CrubitAbiType::UnsignedShort,
-            Primitive::UnsignedInt => CrubitAbiType::UnsignedInt,
-            Primitive::UnsignedLong => CrubitAbiType::UnsignedLong,
-            Primitive::UnsignedLongLong => CrubitAbiType::UnsignedLongLong,
+            Primitive::LongLong => {
+                CrubitAbiType::transmute("::core::ffi::c_long_long", "long long")
+            }
+            Primitive::UnsignedShort => {
+                CrubitAbiType::transmute("::core::ffi::c_ushort", "unsigned short")
+            }
+            Primitive::UnsignedInt => {
+                CrubitAbiType::transmute("::core::ffi::c_uint", "unsigned int")
+            }
+            Primitive::UnsignedLong => {
+                CrubitAbiType::transmute("::core::ffi::c_ulong", "unsigned long")
+            }
+            Primitive::UnsignedLongLong => {
+                CrubitAbiType::transmute("::core::ffi::c_ulong_long", "unsigned long long")
+            }
             Primitive::Char16T => CrubitAbiType::transmute("u16", "char16_t"),
             Primitive::Char32T => CrubitAbiType::transmute("u32", "char32_t"),
             Primitive::PtrdiffT => CrubitAbiType::transmute("isize", "ptrdiff_t"),
