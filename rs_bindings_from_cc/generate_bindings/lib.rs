@@ -1230,6 +1230,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             Primitive::LongLong => {
                 CrubitAbiType::transmute("::core::ffi::c_long_long", "long long")
             }
+            Primitive::Int128 => CrubitAbiType::transmute("i128", "__int128"),
             Primitive::UnsignedShort => {
                 CrubitAbiType::transmute("::core::ffi::c_ushort", "unsigned short")
             }
@@ -1242,6 +1243,8 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             Primitive::UnsignedLongLong => {
                 CrubitAbiType::transmute("::core::ffi::c_ulong_long", "unsigned long long")
             }
+            Primitive::UnsignedInt128 => CrubitAbiType::transmute("u128", "unsigned __int128"),
+
             Primitive::Char16T => CrubitAbiType::transmute("u16", "char16_t"),
             Primitive::Char32T => CrubitAbiType::transmute("u32", "char32_t"),
             Primitive::PtrdiffT => CrubitAbiType::transmute("isize", "ptrdiff_t"),

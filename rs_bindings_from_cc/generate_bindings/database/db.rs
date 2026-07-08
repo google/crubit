@@ -358,10 +358,13 @@ impl<'db> BindingsGenerator<'db> {
                 ir::Primitive::Int => "int",
                 ir::Primitive::Long => "long",
                 ir::Primitive::LongLong => "long long",
+                ir::Primitive::Int128 => "__int128",
                 ir::Primitive::UnsignedShort => "unsigned short",
                 ir::Primitive::UnsignedInt => "unsigned int",
                 ir::Primitive::UnsignedLong => "unsigned long",
                 ir::Primitive::UnsignedLongLong => "unsigned long long",
+                ir::Primitive::UnsignedInt128 => "unsigned __int128",
+
                 ir::Primitive::Char16T => "char16_t",
                 ir::Primitive::Char32T => "char32_t",
                 ir::Primitive::PtrdiffT => "ptrdiff_t",

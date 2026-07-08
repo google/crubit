@@ -244,12 +244,13 @@ struct CcType {
 
   struct Primitive {
     // One of: bool, void, float, double, char, signed char, unsigned char,
-    // short, int, long, long long, unsigned short, unsigned int, unsigned long,
-    // unsigned long long, char16_t, char32_t, ptrdiff_t, intptr_t, size_t,
-    // uintptr_t, std::ptrdiff_t, std::intptr_t, std::size_t, std::uintptr_t,
-    // int8_t, int16_t, int32_t, int64_t, std::int8_t, std::int16_t,
-    // std::int32_t, std::int64_t, uint8_t, uint16_t, uint32_t, uint64_t,
-    // std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t.
+    // short, int, long, long long, __int128, unsigned short, unsigned int,
+    // unsigned long, unsigned long long, unsigned __int128, char16_t, char32_t,
+    // ptrdiff_t, intptr_t, size_t, uintptr_t, std::ptrdiff_t, std::intptr_t,
+    // std::size_t, std::uintptr_t, int8_t, int16_t, int32_t, int64_t,
+    // std::int8_t, std::int16_t, std::int32_t, std::int64_t, uint8_t, uint16_t,
+    // uint32_t, uint64_t, std::uint8_t, std::uint16_t, std::uint32_t,
+    // std::uint64_t.
     //
     // If we wanted to be really pedantic, this could be an enum. However,
     // this type is only read by Rust after serialization. So there's no reason

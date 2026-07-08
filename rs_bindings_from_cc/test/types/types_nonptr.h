@@ -39,6 +39,8 @@ TEST(UnsignedShort, unsigned short);
 TEST(UnsignedInt, unsigned int);
 TEST(UnsignedLong, unsigned long);
 TEST(UnsignedLongLong, unsigned long long);
+TEST(Int128, __int128);
+TEST(UnsignedInt128, unsigned __int128);
 
 TEST(SignedShort, signed short);
 TEST(SignedInt, signed int);

@@ -422,10 +422,13 @@ define_typed_tokens_enum! {
         Int = {int},
         Long = {long},
         LongLong = {long long},
+        Int128 = {__int128},
         UnsignedShort = {unsigned short},
         UnsignedInt = {unsigned int},
         UnsignedLong = {unsigned long},
         UnsignedLongLong = {unsigned long long},
+        UnsignedInt128 = {unsigned __int128},
+
         Char16T = {char16_t},
         Char32T = {char32_t},
         PtrdiffT = {ptrdiff_t},

@@ -1949,6 +1949,8 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         return CcType(CcType::Primitive{"long"});
       case clang::BuiltinType::LongLong:
         return CcType(CcType::Primitive{"long long"});
+      case clang::BuiltinType::Int128:
+        return CcType(CcType::Primitive{"__int128"});
 
       // Unsigned integers
       case clang::BuiltinType::UShort:
@@ -1959,6 +1961,8 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         return CcType(CcType::Primitive{"unsigned long"});
       case clang::BuiltinType::ULongLong:
         return CcType(CcType::Primitive{"unsigned long long"});
+      case clang::BuiltinType::UInt128:
+        return CcType(CcType::Primitive{"unsigned __int128"});
 
       case clang::BuiltinType::Char16:
         return CcType(CcType::Primitive{"char16_t"});

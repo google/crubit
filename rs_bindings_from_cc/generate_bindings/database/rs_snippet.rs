@@ -1825,10 +1825,12 @@ impl PrimitiveName {
             Primitive::Int => Ffi11Type("c_int"),
             Primitive::Long => Ffi11Type("c_long"),
             Primitive::LongLong => Ffi11Type("c_longlong"),
+            Primitive::Int128 => NativeType("i128"),
             Primitive::UnsignedShort => Ffi11Type("c_ushort"),
             Primitive::UnsignedInt => Ffi11Type("c_uint"),
             Primitive::UnsignedLong => Ffi11Type("c_ulong"),
             Primitive::UnsignedLongLong => Ffi11Type("c_ulonglong"),
+            Primitive::UnsignedInt128 => NativeType("u128"),
             Primitive::PtrdiffT
             | Primitive::StdPtrdiffT
             | Primitive::IntptrT
