@@ -22,8 +22,8 @@ load(
 
 def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli():
     rust_bindings_from_cc_cli_flag(
-        name = "disable_generate_source_location_in_doc_comment",
-        flags = "--generate_source_location_in_doc_comment=False",
+        name = "is_golden_test",
+        flags = "--is_golden_test=True",
         tags = ["manual"],
     )
     rust_bindings_from_cc_cli_flag(
@@ -35,7 +35,7 @@ def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli():
         name = "cc_library_with_rs_bindings_from_cc_cli_flags",
         hdrs = ["stub_lib.h"],
         aspect_hints = [
-            ":disable_generate_source_location_in_doc_comment",
+            ":is_golden_test",
             ":do_nothing",
             "//features:supported",
         ],
@@ -54,7 +54,7 @@ def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli():
 def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    expected_cli_flags = ["--generate_source_location_in_doc_comment=False", "--do_nothing"]
+    expected_cli_flags = ["--is_golden_test=True", "--do_nothing"]
     analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
     for expected_cli_flag in expected_cli_flags:
         asserts.true(
