@@ -56,3 +56,14 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_rust_test(
+    name = "int128_test",
+    srcs = ["int128_test.rs"],
+    cc_deps = [
+        "@abseil-cpp//absl/numeric:int128",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
