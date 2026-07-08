@@ -11,7 +11,7 @@ fn test_ctime() {
     let zone: Vec<u8> = "zone\0".into();
     // Tests of items from the `<ctime>` header.
     let _t = tm {
-        tm_gmtoff: 0,
+        tm_gmtoff: 0.into(),
         tm_hour: 1,
         tm_isdst: 2,
         tm_mday: 3,
@@ -29,9 +29,9 @@ fn test_ctime() {
 fn test_limits_inline() {
     // Tests of items from the `<limits>` header.
     // https://en.cppreference.com/w/cpp/types/numeric_limits/float_round_style:
-    assert_eq!(0, std::float_round_style::round_toward_zero.into());
-    assert_eq!(1, std::float_round_style::round_to_nearest.into());
-    assert_eq!(2, std::float_round_style::round_toward_infinity.into());
-    assert_eq!(3, std::float_round_style::round_toward_neg_infinity.into());
-    assert_eq!(-1, std::float_round_style::round_indeterminate.into());
+    assert_eq!(0, i32::from(std::float_round_style::round_toward_zero));
+    assert_eq!(1, i32::from(std::float_round_style::round_to_nearest));
+    assert_eq!(2, i32::from(std::float_round_style::round_toward_infinity));
+    assert_eq!(3, i32::from(std::float_round_style::round_toward_neg_infinity));
+    assert_eq!(-1, i32::from(std::float_round_style::round_indeterminate));
 }
