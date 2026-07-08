@@ -4,148 +4,18 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(auto_traits, negative_impls, allow_internal_unstable)]
 #![allow(internal_features)] // allow_internal_unstable 🤔
-//! Traits for memory management operations on wrapped C++ objects, inspired by
-//! moveit, pin-init, and the current in-place initialization proposal at
+
+//! Support for in-place construction and mutation of Rust types, especially those that were
+//! originally defined in C++.
+//!
+//! This draws from moveit, pin-init, and the current in-place initialization proposal at
 //! https://hackmd.io/@aliceryhl/BJutRcPblx.
 //!
-//! # Comparison with pin-init
+//! * Introductory documentation: crubit.rs/types/non_rust_movable/intro_short
+//! * Full documentation: crubit.rs/types/non_rust_movable/intro_advanced
+//! * Cheat sheet: crubit.rs/types/non_rust_movable/cheat_sheet
 //!
-//! TODO: fill this out. It's an open question whether all of the differences can be removed.
-//!
-//! Quick overview:
-//!
-//! * pin-init uses a type parameter for the output, `ctor.rs` uses an associated type.
-//!   * Associated type impls can't overlap, meaning someday we could do trait impls like
-//!     `impl<T: Ctor<Output=A>> X for Y {}` plus `impl<T: Ctor<Output=B>> X for Y {}`.
-//! * pin-init uses a type parameter for the error, `ctor.rs` uses an associated type.
-//!   * This results in fewer type inference issues, and is what the upstream proposal
-//!     for pin-init currently does.
-//! * (trivial) syntax and naming differences
-//! * pin-init allows direct-initialization, but `ctor.rs` only allows pinned initialization.
-//!   * The upstream proposal for pin-init may do something similar, only having in-place
-//!     initialization: https://hackmd.io/@aliceryhl/BJutRcPblx
-//! * pin-init uses `#[pin]` to decide if a field is pinned. This is common among other libraries
-//!   as well.
-//!
-//! # Comparison with moveit
-//!
-//! `ctor.rs` was initially based on `moveit`, taking the `Ctor` trait from there,
-//! but has since diverged. In places this is for reasons of C++ interop, and
-//! in other places it is to bring it closer to `pin-init` and the upstream
-//! proposal for in-place initialization.
-//!
-//! ## Non-destructive move
-//!
-//! Unlike moveit, C++ moves are never Rust moves.
-//!
-//! This is important because it dramatically simplifies the mental model and
-//! code involved. Everything to do with DerefMove can be removed. Furthermore,
-//! it makes it *more useful*.
-//!
-//! In particular, imagine trying to write a *Rust* implementation of the
-//! following C++ function:
-//!
-//! ```c++
-//! void Swap(CxxClass& x, CxxClass& y) {
-//!   CxxClass tmp = std::move(x);
-//!   x = std::move(y);
-//!   y = std::move(tmp);
-//! }
-//! ```
-//!
-//! With destructive moves we're in a bind: any move from x destroys its source,
-//! leaving us with nothing to assign to. C++ moves are non-destructive. Traits
-//! modeling C++ moves, therefore, in order to be most compatible, should also
-//! be non-destructive.
-//!
-//! Here is an implementation using the traits in this file, in pure Rust:
-//!
-//! ```
-//! fn swap(mut x: Pin<&mut CxxClass>, mut y: Pin<&mut CxxClass>) {
-//!  let mut tmp = emplace!(mov!(x.as_mut()));
-//!  x.assign(mov!(y.as_mut()));
-//!  y.assign(mov!(tmp));
-//! }
-//! ```
-//!
-//! ## Curried `Ctor` traits
-//!
-//! Rather than `CopyCtor::copy_ctor` and `MoveCtor::move_ctor`, this crate
-//! embraces `Ctor` itself as the single unique way to initialize everything.
-//! And so copy-constructible types are not things which implement `CopyCtor`,
-//! but rather, things which implement `CtorNew<&T>`. Similarly,
-//! move-constructible things implement `CtorNew<RvalueReference<'_, T>>`.
-//!
-//! ## Blanket impls
-//!
-//! So that Rust types can be used against C++ functions (even templated ones),
-//! the copy and move traits have blanket impls for all Rust types (except
-//! for dedicated construction types, like `FnCtor`.)
-//!
-//! All non-ctor-helper types are their own `Ctor`. This makes `Ctor`-based
-//! initialization nearly a perfect superset of normal initialization rules.
-//! If you have a type by value, initialization is performed by a Rust move.
-//! For C++-like types that require in-place initialization, and cannot be
-//! moved in Rust, we use custom `Ctor` values to initialize in-place.
-//!
-//! ### Compatible changes to types
-//!
-//! `ctor` is designed around the `Ctor` trait, allowing the following `impl Ctor` parameter type
-//!  for defining a function which accepts a type `MyType` by value, regardless of how it is
-//! constructed: (via Rust moves, C++ move construction, etc.):
-//!
-//! ```
-//! fn foo(x: impl Ctor<Output=MyType, Error=Infallible>) {}
-//! ```
-//!
-//! (Or, equivalently, `x: Ctor![MyType]`.)
-//!
-//! In order to make it as backwards-compatible as possible to "upgrade" a type
-//! from being non-Rust-movable to Rust-movable, this works whether `MyType` is Rust-movable or not.
-//! Functions which used to return an opaque `Ctor` object will now instead return the raw value
-//! itself. Since the blanket impls already automatically implement
-//! `Ctor<Output=Self, Error=Infallible>`, existing callers continue to work unchanged.
-//!
-//! This would also be possible if there were no blanket impl, and instead `Ctor` were manually
-//! implemented for every type. However, this would mean that a large number of types would not
-//! work with `ctor` at all (e.g. everything outside the Rust standard library which does not
-//! depend on `ctor`).
-//!
-//! ## Overload trait
-//!
-//! This module also includes a prototype alternative API which more directly
-//! models overloaded constructors: `T : CtorNew<(A, B, C)>` is roughly
-//! equivalent to the C++ "T has a constructor taking arguments of type A, B,
-//! and C".
-//!
-//! ## StackBox
-//!
-//! Moveit needs a StackBox type which is comparable to Box, except stored on
-//! the stack -- in particular, which implements OuterDrop and the like.
-//!
-//! Since DerefMove is not used here, we instead are able to export only a
-//! Pin<&mut T> to users.
-//!
-//! One still needs something similar to `Slot` or `StackBox`: a `MaybeUninit`
-//! type which will run drop. This isn't exposed to users directly if they are
-//! simply storing in a local variable.
-//!
-//! ## Structs and the `ctor!` macro
-//!
-//! `ctor` adds a `ctor!` macro to make it easy to initialize a struct
-//! that contains non-trivially-relocatable fields.
-//!
-//! ## Errors
-//!
-//! To support initialization which can fail, without requiring the use
-//! of panic `Ctor` also has an associated `Error` type, representing
-//! failure. Most of the macros/methods should, over time, gain `try_`
-//! variants which can support non-`Infallible` errors.
-//!
-//! (This particular change was taken from the upstream proposal for
-//! in-place initialization.)
-//!
-//! # Features
+//! # Unstable Rust Features
 //!
 //! This library requires the following unstable features enabled in users:
 //!
@@ -201,10 +71,26 @@ macro_rules! must_use_ctor_assign {
 // Core construction operations
 // ============================
 
-/// In-place initialization of a value.
+/// A trait for pinned in-place initialization of values.
 ///
-/// This is commonly used as `impl Ctor<Output=T, Error=Infallible>`, in function parameters or
-/// return types, and can be spelled `Ctor![T]`.
+/// A parameter or return value of type `impl Ctor<Output=T, Error=Infallible>` (commonly spelled
+/// `Ctor![T]`) is analogous to a parameter or return value of type `T`, except that it can be
+/// initialized in place and pinned. This means that the construction logic can assume that its
+/// address will never change, and can construct values directly into their final location.
+///
+/// The `Ctor` implementation doesn't represent the value itself, but deferred initialization for
+/// that value. To actually construct it, you must use `emplace!()` or methods like `Box::emplace`
+/// from the `Emplace` trait, which are analogous to `pin!()` and `Box::pin` respectively.
+///
+/// More generally, because passing or returning `Ctor` is analogous to passing or returning by
+/// value, there is a corresponding family of analogues for things you might do by value:
+///
+/// * `ctor!{MyStruct{a: b})` is analogous to `MyStruct {a: b}`, but constructs the field and the
+///   struct itself in-place. `b` is a `Ctor`, and the expression evaluates to a `Ctor`.
+/// * `CtorNew<T>` is analogous to `From<T>`, except it returns a `Ctor![Self]`.
+/// * `emplace!(ctor)` is analogous to `pin!(value)`, but it evaluates the `ctor` to construct
+///   the value in-place.
+/// * The `Emplace` trait is analogous to methods like `Box::pin`, but accepts a `Ctor![T]`.
 ///
 /// # Safety
 ///
@@ -587,7 +473,9 @@ where
     }
 }
 
-/// The type macro for an `impl Ctor<...>`, used as a parameter or return type.
+/// The type of a value that will be constructed in-place.
+///
+/// This expands to `impl Ctor<...>`, and is used as a parameter or return type.
 ///
 /// This exists for two reasons:
 ///
@@ -645,12 +533,12 @@ pub fn construct<T: Unpin>(ctor: impl Ctor<Output = T, Error = Infallible>) -> T
     unsafe { value.assume_init() }
 }
 
-/// Trait for smart pointer types which support initialization via `Ctor`.
+/// Trait for smart pointer types which support in-place initialization via `Ctor`.
 ///
 /// A typical example would be `Box<T>`, allows emplacing a `Ctor` into
 /// a `Pin<Box<T>>` by calling `{Box, Rc, Arc}::emplace`.
 pub trait Emplace<T>: Sized {
-    /// Materialize an unfailable `Ctor`.
+    /// Materialize an infallible `Ctor`.
     fn emplace<C: Ctor<Output = T, Error = Infallible>>(c: C) -> Pin<Self> {
         Self::try_emplace(c).unwrap()
     }
@@ -755,11 +643,10 @@ unsafe impl<Output, F: FnOnce(*mut Output)> Ctor for FnCtor<Output, F> {
 /// !SelfCtor to override the blanket Ctor impl.
 impl<Output, F> !SelfCtor for FnCtor<Output, F> {}
 
-/// Copy type.
+/// A `Ctor` for copying the pointee.
 ///
-/// This creates a new `P::Target` by copying -- either copy-construction
-/// (construction from `&*P`), or copy-assignment (assignment from &*P`). It can
-/// also be used directly as a `Ctor`.
+/// When used as a `Ctor` or `Assign` source, this initializes a `P::Target` by copying the
+/// underlying data, analogous to `Clone`.
 ///
 /// Note: this does not actually copy `P` until it is used.
 #[must_use = must_use_ctor_assign!("Copy")]
@@ -795,9 +682,10 @@ pub fn copy<T: ?Sized + for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) ->
 
 /// Rvalue Reference (move-reference) type.
 ///
-/// This creates a new `T` by moving -- either move-construction (construction
-/// from `RvalueReference(&*P)`), or move-assignment (assignment from
-/// `RvalueReference(&*P)`).
+/// When used as a `Ctor` or `Assign` source, this initializes a `T` by a mutating move operation.
+///
+/// All rvalue references are implicitly pinned, to avoid an explosion in the number of reference
+/// types.
 ///
 /// Note: this does not actually move until it is used.
 #[must_use = must_use_ctor_assign!("RvalueReference")]
@@ -805,14 +693,20 @@ pub fn copy<T: ?Sized + for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) ->
 pub struct RvalueReference<'a, T: ?Sized>(pub Pin<&'a mut T>);
 
 impl<T: ?Sized> RvalueReference<'_, T> {
+    /// Returns a const rvalue reference to the underlying data.
+    ///
+    /// This is usually not useful, but some C++ APIs do have `const` rvalue references due to
+    /// templated code.
     pub fn as_const(&self) -> ConstRvalueReference<'_, T> {
         ConstRvalueReference(&*self.0)
     }
 
+    /// Returns an ordinary pinned mutable reference to the underlying data.
     pub fn as_mut(&mut self) -> Pin<&mut T> {
         self.0.as_mut()
     }
 
+    /// Returns an ordinary reference to the underlying data.
     pub fn get_ref(&self) -> &T {
         // It would be nice to return &'a T, but that would not be sound, and as a
         // result Pin makes it impossible (in safe code). Consider:
@@ -849,10 +743,11 @@ where
     }
 }
 
-/// Converts to an RvalueReference.
+/// Converts to an `RvalueReference`.
 ///
-/// Do not use this trait directly, instead, cast to an RvalueReference using
+/// Do not use this trait directly, instead, cast to an `RvalueReference` using
 /// the `mov!()` macro.
+#[doc(hidden)]
 pub trait DerefRvalueReference: Deref
 where
     Self::Target: Sized,
@@ -954,12 +849,11 @@ where
 /// !SelfCtor to override the blanket `Ctor` impl.
 impl<'a, T: ?Sized> !SelfCtor for ConstRvalueReference<'a, T> {}
 
-/// Creates a "to-be-moved" pointer for `src`.
+/// Creates an `RvalueReference` from `p`, indicating that it is to be moved.
 ///
-/// In other words, this is analogous to C++ `std::move`, except that this can
-/// directly create an `RvalueReference<T>` out of e.g. a `Pin<Box<T>>`. The
-/// resulting `RvalueReference` has the lifetime of a temporary, after which the
-/// parameter is destroyed.
+/// This is analogous to C++ `std::move`, except that this can directly create an
+/// `RvalueReference<T>` out of e.g. a `Pin<Box<T>>`. The resulting `RvalueReference` has the
+/// lifetime of a temporary, after which the parameter is destroyed.
 ///
 /// The resulting `RvalueReference` can be used as a `CtorNew` or `Assign`
 /// source, or as a `Ctor` directly.
@@ -1091,18 +985,21 @@ impl<T: Clone> CtorNew<&T> for T {
 // ========
 // emplace!
 // ========
-//
-// The emplace!{} macro is now a little simpler, as it doesn't require StackBox
-// in the public interface: it can use &mut. It also uses `super_let` to avoid
-// the awkward sytnax otherwise required.
 
-/// Emplace a constructor into a local or temporary.
+/// In-place construct a `Ctor`.
 ///
-/// This can be used similarly to the `pin!()` macro: `let x = emplace!(some_ctor)`, where
-/// `some_ctor` evaluates to a `Ctor<Output=T>`. `x` will be a `Pin<&mut T>`.
+/// This is analoogus to the `pin!()` macro, except that it runs user-defined construction logic
+/// via the `Ctor` trait.
 ///
-/// `emplace!` only works with non-failable `Ctor`s. See `try_emplace` for
-/// failable `Ctor`s.
+/// Usage:
+///
+/// ```
+/// /// If some_ctor is a `Ctor<Output=T, Error=Infallible>`, then:
+/// let x: Pin<&mut T> = emplace!(some_ctor);
+/// ```
+///
+/// `emplace!` only works with infallible `Ctor`s. See `try_emplace` for
+/// initializing `Ctor` objects that can return an error.
 #[macro_export]
 #[allow_internal_unstable(super_let)]
 // `super` gets removed by rustfmt, apparently.
@@ -1116,7 +1013,7 @@ macro_rules! emplace {
     };
 }
 
-/// Attempt to emplace a constructor into a local or temporary.
+/// In-place construct a fallible `Ctor`.
 ///
 /// The resulting value will be a `Result<Pin<&mut C::Output>, C::Error>` where `C` is the type of
 /// the provided `Ctor`.
@@ -1457,11 +1354,11 @@ pub unsafe trait RecursivelyPinned {
 
 /// The drop trait for `#[recursively_pinned(PinnedDrop)]` types.
 ///
-/// It is never valid to implement `Drop` for a recursively-pinned type, as this
+/// It is not safe to implement `Drop` for a recursively-pinned type, as this
 /// would be unsound: the `&mut self` in `drop` would allow the pin guarantee to
 /// be violated.
 ///
-/// Instead, if such a struct is to implement drop, it must pass `PinnedDrop` to
+/// Instead, to implement `Drop`, users of `#[recursively_pinned]` must pass `PinnedDrop` to
 /// `recursively_pinned`, and implement the `PinnedDrop` trait.
 ///
 /// See also the [analogous `pin_project` feature](https://docs.rs/pin-project/latest/pin_project/attr.pinned_drop.html)
@@ -1482,14 +1379,16 @@ pub trait PinnedDrop {
 // ctor!
 // =====
 
-/// The `ctor!` macro evaluates to a `Ctor` for a Rust struct, with
-/// user-specified fields.
+/// Evaluates to a `Ctor` which initializes a struct in-place, field-by-field.
+///
+/// The `ctor!` macro evaluates to a `Ctor` for a Rust struct. Each field has its value provided
+/// using a `Ctor`, so that each is initialized in-place.
 ///
 /// Example use:
 ///
 /// ```
 /// fn new() -> impl Ctor<Output=MyStruct> {
-///   ctor!(MyStruct {field_1: default_ctor(), field_2: 42})
+///   ctor!(MyStruct {field_1: MyType::ctor_new(()), field_2: 42})
 /// }
 ///
 /// // Actually invoke the Ctor to create a new MyStruct:
@@ -1534,8 +1433,10 @@ macro_rules! ctor {
     ($t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr, $ctor_6:expr)) => {$crate::ctor!($t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5, 6: $ctor_6 })};
 }
 
+/// Unsafe in-place construction of a struct, field by field.
+///
 /// The `raw_ctor!` macro evaluates to a `Ctor` for a Rust struct, with
-/// user-specified fields.
+/// user-specified values for the fields, each also initialized in-place.
 ///
 /// This is identical in use to `ctor!`, but it does not enforce that the
 /// struct is `RecursivelyPinned`.
@@ -1678,10 +1579,8 @@ macro_rules! internal_hlist {
 }
 
 // ==========
-// CtorNew traits
+// Assignment
 // ==========
-//
-// Finally, we introduce some new traits for assignment.
 
 /// Destroy-then-reconstruct. Sidesteps `operator=`, instead reconstructing
 /// in-place.
@@ -1837,24 +1736,15 @@ pub trait UnsafeFrom<From> {
 // =======================
 // Constructor overloading
 // =======================
-//
-// Constructors are unique among C++ functions in that overloading is common,
-// *not avoidable*, and involves a nameless function best captured by a trait.
-// In other words, it is the ideal choice for having a more generic trait as
-// with From/Into.
-//
-// For exploration purposes, so that we can play with both approaches at the
-// same time, this is built on *top* of the traits above.
 
-/// Overloaded constructor trait.
+/// Overloadable constructor trait.
 ///
-/// `T : CtorNew<(A, B, C)>` is roughly equivalent to the C++ "T has a
-/// constructor taking arguments of type A, B, and C". As an obvious special
-/// case, for singleton tuples, you may use `CtorNew<A>`.
+/// This is analogous to `From<A>`, but it returns a `Ctor` instead of `Self` by value.
 pub trait CtorNew<ConstructorArgs> {
     type CtorType: Ctor<Output = Self, Error = Self::Error>;
     type Error;
 
+    /// Returns the `Ctor` for a new instance.
     fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
 }
 
@@ -1863,8 +1753,7 @@ pub trait CtorNew<ConstructorArgs> {
 /// This is used when the constructor accepts arguments that are unsafe to use,
 /// or when the constructor itself is marked unsafe in C++.
 ///
-/// `T : UnsafeCtorNew<(A, B, C)>` is roughly equivalent to the C++ "T has an
-/// unsafe constructor taking arguments of type A, B, and C".
+/// The safety conditions are documented on the `UnsafeCtorNew` implementation.
 pub trait UnsafeCtorNew<ConstructorArgs> {
     type CtorType: Ctor<Output = Self, Error = Self::Error>;
     type Error;
@@ -1873,7 +1762,8 @@ pub trait UnsafeCtorNew<ConstructorArgs> {
     ///
     /// # Safety
     ///
-    /// The caller must ensure that the arguments are safe to use for construction.
+    /// The caller must ensure that the arguments are safe to use for construction, as
+    /// documented by the implementation.
     unsafe fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
 }
 

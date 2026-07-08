@@ -519,8 +519,8 @@ fn forbid_initialization_fields(fields: &mut syn::Fields, ctor: &Ident) {
     }
 }
 
-/// `#[recursively_pinned]` pins every field, similar to `#[pin_project]`, and
-/// marks the struct `!Unpin`.
+/// `#[recursively_pinned]` pins every field, and marks the struct `!Unpin`. The fields are
+/// available via pin projection accessors, similar to `#[pin_project]`.
 ///
 /// Example:
 ///
