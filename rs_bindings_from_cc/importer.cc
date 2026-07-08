@@ -1128,12 +1128,19 @@ bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
 }
 
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
-  if (IsTransitivelyInPrivate(decl)) return std::nullopt;
-
   const absl::StatusOr<bool> must_bind =
       HasAnnotationWithoutArgs(*decl, "crubit_must_bind");
   if (!must_bind.ok()) {
     return HardError(*decl, FormattedError::FromStatus(must_bind.status()));
+  }
+
+  if (IsTransitivelyInPrivate(decl)) {
+    if (*must_bind) {
+      return HardError(*decl,
+                       FormattedError::Static(
+                           "Private declarations cannot receive bindings"));
+    }
+    return std::nullopt;
   }
 
   const absl::StatusOr<bool> do_not_bind =
@@ -1142,6 +1149,11 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
     return HardError(*decl, FormattedError::FromStatus(do_not_bind.status()));
   }
   if (*do_not_bind) {
+    if (*must_bind) {
+      return HardError(
+          *decl, FormattedError::Static("Conflicting CRUBIT_MUST_BIND and "
+                                        "CRUBIT_DO_NOT_BIND annotations"));
+    }
     const std::optional<absl::flat_hash_set<std::string>>&
         do_not_bind_allowlist = invocation_.do_not_bind_allowlist_;
     const clang::NamedDecl* named_decl =
