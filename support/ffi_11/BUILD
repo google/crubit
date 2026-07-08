@@ -7,5 +7,6 @@ rust_library(
     srcs = glob(["src/*.rs"]),
     compatible_with = ["//buildenv/target:non_prod"],
     crate_features = ["crubit"],
+    rustc_flags = ["-Zallow-features=cfi_encoding"],
     visibility = ["//visibility:public"],
 )

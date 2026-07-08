@@ -87,6 +87,7 @@
 //!
 //! * Discussion: ["Rust / C++ interop, and type collisions" in #t-lang/interop](https://rust-lang.zulipchat.com/#narrow/channel/427678-t-lang.2Finterop/topic/Rust.20.2F.20C.2B.2B.20interop.2C.20and.20type.20collisions)
 
+#![feature(cfi_encoding)]
 #![no_std]
 #![allow(nonstandard_style)]
 extern crate core;
@@ -124,6 +125,7 @@ pub const fn new_c_double(value: f64) -> c_double {
 // `core::ffi::c_char` if they need it.
 new_integer! {
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char(0))")]
+    #[cfi_encoding = "c"]
     pub struct c_char(u8);
     pub const fn new_c_char;
 }
@@ -285,11 +287,13 @@ mod long_integers {
 
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+      #[cfi_encoding = "x"]
       pub struct c_longlong(i64);
       pub const fn new_c_longlong;
     }
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+      #[cfi_encoding = "y"]
       pub struct c_ulonglong(u64);
       pub const fn new_c_ulonglong;
     }
@@ -301,11 +305,13 @@ mod long_integers {
     use super::*;
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+      #[cfi_encoding = "l"]
       pub struct c_long(i64);
       pub const fn new_c_long;
     }
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+      #[cfi_encoding = "m"]
       pub struct c_ulong(u64);
       pub const fn new_c_ulong;
     }
@@ -328,11 +334,13 @@ mod long_integers {
     use super::*;
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+      #[cfi_encoding = "l"]
       pub struct c_long(i32);
       pub const fn new_c_long;
     }
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+      #[cfi_encoding = "m"]
       pub struct c_ulong(u32);
       pub const fn new_c_ulong;
     }
@@ -368,11 +376,13 @@ mod long_integers {
     use super::*;
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+      #[cfi_encoding = "l"]
       pub struct c_long(i32);
       pub const fn new_c_long;
     }
     new_integer! {
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+      #[cfi_encoding = "m"]
       pub struct c_ulong(u32);
       pub const fn new_c_ulong;
     }
@@ -411,6 +421,7 @@ pub use long_integers::new_c_ulonglong;
 
 // NOTE: We could also force inclusion of `stddef.h` and use `nullptr_t`.
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(nullptr)")]
+#[cfi_encoding = "Dn"]
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct c_nullptr_t(*mut c_void);
@@ -428,16 +439,19 @@ unsafe impl Sync for c_nullptr_t {}
 // The C++ charN_t types
 new_integer! {
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char8_t(0))")]
+    #[cfi_encoding = "Du"]
     pub struct c_char8_t(u8);
     pub const fn new_c_char8_t;
 }
 new_integer! {
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char16_t(0))")]
+    #[cfi_encoding = "Ds"]
     pub struct c_char16_t(u16);
     pub const fn new_c_char16_t;
 }
 new_integer! {
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char32_t(0))")]
+    #[cfi_encoding = "Di"]
     pub struct c_char32_t(u32);
     pub const fn new_c_char32_t;
 }
@@ -457,6 +471,7 @@ mod wchar_type {
     use super::*;
     new_integer! {
         #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(wchar_t(0))")]
+        #[cfi_encoding = "w"]
         pub struct c_wchar_t(u32);
         pub const fn new_c_wchar_t;
     }
@@ -476,6 +491,7 @@ mod wchar_type {
     use super::*;
     new_integer! {
         #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(wchar_t(0))")]
+        #[cfi_encoding = "w"]
         pub struct c_wchar_t(u16);
         pub const fn new_c_wchar_t;
     }
