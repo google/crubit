@@ -1985,6 +1985,7 @@ fn test_trait_impl_for_mapped_cpp_type() {
             #![allow(unused)]
             #[doc = "CRUBIT_ANNOTATE: cpp_type=::some_ns::SomeCppStruct"]
             #[doc = "CRUBIT_ANNOTATE: include_path=some_ns/some_cpp_struct.h"]
+            #[doc = "CRUBIT_ANNOTATE: include_path=some_ns/another_header.h"]
             pub struct SomeCppStruct(i32);
 
             impl std::iter::Iterator for SomeCppStruct {
@@ -2002,6 +2003,7 @@ fn test_trait_impl_for_mapped_cpp_type() {
             bindings.cc_api,
             quote! {
                 ...
+                __HASH_TOKEN__ include "some_ns/another_header.h"
                 __HASH_TOKEN__ include "some_ns/some_cpp_struct.h"
                 ...
                 template <>

@@ -54,9 +54,9 @@ fn combine(a: &mut syn::Result<()>, b: syn::Error) {
 }
 
 impl KeyValueList {
-    /// Returns an error if any key is duplicated, if an expected key is not present,
-    /// or if extra keys are present.
-    fn check_keys(&self, expected_keys: &[&str]) -> syn::Result<()> {
+    /// Returns an error if any key is duplicated (unless it is in `allowed_duplicates`),
+    /// if an expected key is not present, or if extra keys are present.
+    fn check_keys(&self, expected_keys: &[&str], allowed_duplicates: &[&str]) -> syn::Result<()> {
         let mut key_seen: HashMap<String, bool> =
             expected_keys.iter().map(|key| (key.to_string(), false)).collect();
         let mut maybe_error = syn::Result::Ok(());
@@ -76,7 +76,9 @@ impl KeyValueList {
                     );
                 }
                 Entry::Occupied(mut already_seen) => {
-                    if *already_seen.get() {
+                    if *already_seen.get()
+                        && !allowed_duplicates.contains(&entry.key.to_string().as_str())
+                    {
                         combine(
                             &mut maybe_error,
                             syn::Error::new(
@@ -133,9 +135,10 @@ fn key_value_to_doc_comment(key: &str, value: &str) -> TokenStream {
 fn key_value_list_with_keys_to_doc_comment(
     attribute: TokenStream,
     expected_keys: &[&str],
+    allowed_duplicates: &[&str],
 ) -> TokenStream {
     let attribute_args = parse_macro_input!(attribute as KeyValueList);
-    if let Err(error) = attribute_args.check_keys(expected_keys) {
+    if let Err(error) = attribute_args.check_keys(expected_keys, allowed_duplicates) {
         return TokenStream::from(error.into_compile_error());
     }
     attribute_args.to_doc_comments()
@@ -176,7 +179,11 @@ fn make_prefix_for(body: TokenStream, make_prefix_fn: impl FnOnce() -> TokenStre
 #[proc_macro_attribute]
 pub fn cpp_layout_equivalent(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        key_value_list_with_keys_to_doc_comment(attribute, &["cpp_type", "include_path"])
+        key_value_list_with_keys_to_doc_comment(
+            attribute,
+            &["cpp_type", "include_path"],
+            &["include_path"],
+        )
     })
 }
 
@@ -198,7 +205,9 @@ pub fn cpp_layout_equivalent(attribute: TokenStream, input: TokenStream) -> Toke
 pub fn cpp_specialization(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
         let attribute_args = parse_macro_input!(attribute as KeyValueList);
-        if let Err(error) = attribute_args.check_keys(&["cpp_type", "include_path"]) {
+        if let Err(error) =
+            attribute_args.check_keys(&["cpp_type", "include_path"], &["include_path"])
+        {
             return TokenStream::from(error.into_compile_error());
         }
         let mut tokens = attribute_args.to_doc_comments();
@@ -252,6 +261,7 @@ pub fn cpp_convertible(attribute: TokenStream, input: TokenStream) -> TokenStrea
         key_value_list_with_keys_to_doc_comment(
             attribute,
             &["cpp_type", "include_path", "cpp_to_rust_converter", "rust_to_cpp_converter"],
+            &["include_path"],
         )
     })
 }
@@ -263,6 +273,7 @@ pub fn cpp_bridge(attribute: TokenStream, input: TokenStream) -> TokenStream {
         key_value_list_with_keys_to_doc_comment(
             attribute,
             &["cpp_type", "bridge_abi_cpp", "bridge_abi_rust"],
+            &[],
         )
     })
 }
@@ -322,7 +333,7 @@ pub fn cpp_name(attribute: TokenStream, input: TokenStream) -> TokenStream {
 pub fn cpp_enum(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
         let attribute_args = parse_macro_input!(attribute as KeyValueList);
-        if let Err(error) = attribute_args.check_keys(&["kind"]) {
+        if let Err(error) = attribute_args.check_keys(&["kind"], &[]) {
             return TokenStream::from(error.into_compile_error());
         }
         let [kind] = &attribute_args.0[..] else { unreachable!() };

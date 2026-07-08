@@ -35,8 +35,8 @@ pub struct CppTypeSpecialization<'tcx> {
     pub ty: Ty<'tcx>,
     /// The C++ spelling of the type.
     pub cpp_type: Rc<str>,
-    /// The include path of the type, if required.
-    pub include_path: Option<Rc<str>>,
+    /// The include paths of the type, if required.
+    pub include_paths: Vec<Rc<str>>,
 }
 
 memoized::query_group! {

@@ -41,18 +41,19 @@ pub struct CrubitAttrs {
     ///   #[doc="CRUBIT_ANNOTATE: cpp_type=std::basic_string<char>"]
     pub cpp_type: Option<Symbol>,
 
-    /// Path to the header file that declares the type specified in `cpp_type`.
+    /// Paths to the header files that declare the type(s) used in `cpp_type`.
     ///
-    /// If specified, the header file will be added as an #include directive to
+    /// If specified, these header files will be added as #include directives to
     /// the generated bindings.
     ///
     /// For example, the following annotation indicates that the C++ type of
-    /// this item is `std::basic_string<char>` and that the header for that type
-    /// is `<string>`:
+    /// this item is `std::vector<Status>` and that it needs the headers `<vector>` and
+    /// `status.h`:
     ///
-    ///   #[doc="CRUBIT_ANNOTATE: cpp_type=std::basic_string<char>"]
-    ///   #[doc="CRUBIT_ANNOTATE: include_path=<string>]`
-    pub include_path: Option<Symbol>,
+    ///   #[doc="CRUBIT_ANNOTATE: cpp_type=std::vector<Status>"]
+    ///   #[doc="CRUBIT_ANNOTATE: include_path=<vector>"]
+    ///   #[doc="CRUBIT_ANNOTATE: include_path=status.h"]
+    pub include_paths: Vec<Symbol>,
 
     /// Whether the annotated item is a specialization of another generic
     /// layout-compatible type. For example, `StatusOr<()>` mapping to C++ `absl::Status`.
@@ -123,12 +124,6 @@ pub struct CrubitAttrs {
     pub must_bind: bool,
 }
 
-#[rustversion::all(before(1.94), before(2025-05-26))]
-const EMPTY_SYMBOL: Symbol = kw::Empty;
-
-#[rustversion::any(since(1.94), since(2025-05-26))]
-const EMPTY_SYMBOL: Symbol = sym::empty;
-
 impl CrubitAttrs {
     pub const CPP_TYPE: &'static str = "cpp_type";
     pub const CPP_NAME: &'static str = "cpp_name";
@@ -141,35 +136,34 @@ impl CrubitAttrs {
     pub const MUST_BIND: &'static str = "must_bind";
     pub const SPECIALIZES_CPP_TYPE: &'static str = "specializes_cpp_type";
 
-    pub fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
-        Ok(match name {
-            CrubitAttrs::CPP_TYPE => self.cpp_type,
-            CrubitAttrs::CPP_NAME => self.cpp_name,
-            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_path,
-            CrubitAttrs::CPP_ENUM => self.cpp_enum,
-            CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
-            CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
-            CrubitAttrs::BRIDGE_ABI_RUST => self.bridge_abi_rust,
-            CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp,
-            // MUST_BIND is a boolean attribute, so it does not have a Symbol value.
-            CrubitAttrs::MUST_BIND => self.must_bind.then_some(EMPTY_SYMBOL),
-            CrubitAttrs::SPECIALIZES_CPP_TYPE => self.specializes_cpp_type.then_some(EMPTY_SYMBOL),
-            _ => bail!("Invalid attribute name: \"{name}\""),
-        })
-    }
+    fn add_attr(&mut self, name: &str, symbol: Symbol) -> Result<()> {
+        let set_opt_once = |slot: &mut Option<Symbol>, symbol: Symbol| -> Result<()> {
+            ensure!(slot.is_none(), "Attribute {name} is specified more than once");
+            *slot = Some(symbol);
+            Ok(())
+        };
 
-    fn set_attr(&mut self, name: &str, symbol: Option<Symbol>) -> Result<()> {
+        let set_bool_once = |slot: &mut bool| -> Result<()> {
+            ensure!(!*slot, "Attribute {name} is specified more than once");
+            *slot = true;
+            Ok(())
+        };
+
         match name {
-            CrubitAttrs::CPP_TYPE => self.cpp_type = symbol,
-            CrubitAttrs::CPP_NAME => self.cpp_name = symbol,
-            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_path = symbol,
-            CrubitAttrs::CPP_ENUM => self.cpp_enum = symbol,
-            CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
-            CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
-            CrubitAttrs::BRIDGE_ABI_RUST => self.bridge_abi_rust = symbol,
-            CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp = symbol,
-            CrubitAttrs::MUST_BIND => self.must_bind = true,
-            CrubitAttrs::SPECIALIZES_CPP_TYPE => self.specializes_cpp_type = true,
+            CrubitAttrs::CPP_TYPE => set_opt_once(&mut self.cpp_type, symbol)?,
+            CrubitAttrs::CPP_NAME => set_opt_once(&mut self.cpp_name, symbol)?,
+            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_paths.push(symbol),
+            CrubitAttrs::CPP_ENUM => set_opt_once(&mut self.cpp_enum, symbol)?,
+            CrubitAttrs::RUST_TO_CPP_CONVERTER => {
+                set_opt_once(&mut self.rust_to_cpp_converter, symbol)?
+            }
+            CrubitAttrs::CPP_TO_RUST_CONVERTER => {
+                set_opt_once(&mut self.cpp_to_rust_converter, symbol)?
+            }
+            CrubitAttrs::BRIDGE_ABI_RUST => set_opt_once(&mut self.bridge_abi_rust, symbol)?,
+            CrubitAttrs::BRIDGE_ABI_CPP => set_opt_once(&mut self.bridge_abi_cpp, symbol)?,
+            CrubitAttrs::MUST_BIND => set_bool_once(&mut self.must_bind)?,
+            CrubitAttrs::SPECIALIZES_CPP_TYPE => set_bool_once(&mut self.specializes_cpp_type)?,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())
@@ -184,7 +178,7 @@ impl CrubitAttrs {
         match self {
             Self {
                 cpp_type: Some(cpp_type),
-                include_path,
+                include_paths,
                 cpp_to_rust_converter,
                 rust_to_cpp_converter,
                 bridge_abi_rust: None,
@@ -193,14 +187,14 @@ impl CrubitAttrs {
             } => match (cpp_to_rust_converter, rust_to_cpp_converter) {
                 (Some(cpp_to_rust_converter), Some(rust_to_cpp_converter)) => {
                     Ok(Some(BridgingAttrs::ExternCFuncConverters {
-                        include_path: *include_path,
+                        include_paths: include_paths.clone(),
                         cpp_type: *cpp_type,
                         cpp_to_rust_converter: *cpp_to_rust_converter,
                         rust_to_cpp_converter: *rust_to_cpp_converter,
                     }))
                 }
                 (None, None) => Ok(Some(BridgingAttrs::JustCppType {
-                    include_path: *include_path,
+                    include_paths: include_paths.clone(),
                     cpp_type: *cpp_type,
                 })),
                 _ => bail!(
@@ -272,11 +266,11 @@ impl CrubitAttrs {
 #[derive(Debug)]
 pub enum BridgingAttrs {
     JustCppType {
-        include_path: Option<Symbol>,
+        include_paths: Vec<Symbol>,
         cpp_type: Symbol,
     },
     ExternCFuncConverters {
-        include_path: Option<Symbol>,
+        include_paths: Vec<Symbol>,
         cpp_type: Symbol,
         cpp_to_rust_converter: Symbol,
         rust_to_cpp_converter: Symbol,
@@ -366,11 +360,7 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
         // Remove optional whitespace (e.g. `key = "value"` vs. `key="value"`).
         let key = key.trim();
         let value = value.trim();
-        ensure!(
-            crubit_attrs.get_attr(key)?.is_none(),
-            format!("Unexpected duplicate Crubit attribute: {key}=...")
-        );
-        crubit_attrs.set_attr(key, Some(Symbol::intern(value)))?;
+        crubit_attrs.add_attr(key, Symbol::intern(value))?;
     }
     Ok(crubit_attrs)
 }
