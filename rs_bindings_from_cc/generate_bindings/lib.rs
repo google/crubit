@@ -223,18 +223,18 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
 
 fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Variable);
-    let type_ = db.rs_type_kind(var.type_.clone())?;
+    let type_ = db.rs_type_kind(var.type_().clone())?;
 
     Ok(ApiSnippets {
         generated_items: HashMap::from([(
-            var.id,
+            var.id(),
             GeneratedItem::GlobalVar {
-                link_name: var.mangled_name.clone(),
-                is_mut: !var.type_.is_const(),
-                ident: make_rs_ident(&var.rs_name.identifier),
+                link_name: var.mangled_name().map(Rc::from),
+                is_mut: !var.type_().is_const(),
+                ident: make_rs_ident(var.rs_name().as_str()),
                 type_tokens: type_.to_token_stream(db),
-                visibility: db.type_visibility(&var.owning_target, type_).unwrap_or_default(),
-                deprecated_attr: var.deprecated.clone().map(DeprecatedAttr),
+                visibility: db.type_visibility(var.owning_target(), type_).unwrap_or_default(),
+                deprecated_attr: var.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
             },
         )]),
         ..Default::default()

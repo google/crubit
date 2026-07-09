@@ -417,7 +417,7 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::Record(r) => (r.id, r.cc_name.identifier.clone()),
             ir::Item::Enum(e) => (e.id, e.cc_name.identifier.clone()),
             ir::Item::Constant(c) => (c.id, c.cc_name.identifier.clone()),
-            ir::Item::GlobalVar(g) => (g.id, g.cc_name.identifier.clone()),
+            ir::Item::GlobalVar(g) => (g.id(), g.cc_name().identifier.clone()),
             ir::Item::TypeAlias(t) => (t.id, t.cc_name.identifier.clone()),
         };
         let qualifier = self.namespace_qualifier_from_id(id).format_for_cc_debug();

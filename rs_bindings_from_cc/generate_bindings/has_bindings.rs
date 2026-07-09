@@ -228,7 +228,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
             }
         }
         // Global variables receive bindings if the underlying type is visible.
-        Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_.clone()) {
+        Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_().clone()) {
             Ok(rs_type_kind) => {
                 let visibility = type_visibility(db, &item, rs_type_kind)?;
                 Ok(BindingsInfo { visibility })
@@ -551,7 +551,7 @@ pub fn resolve_names(
                     insert(constant.rs_name.identifier.clone(), ResolvedName::ValueItem(id));
                 }
                 Item::GlobalVar(global_var) => {
-                    insert(global_var.rs_name.identifier.clone(), ResolvedName::ValueItem(id));
+                    insert(global_var.rs_name().identifier.clone(), ResolvedName::ValueItem(id));
                 }
                 Item::Comment(_) | Item::UnsupportedItem(_) => {}
             }
