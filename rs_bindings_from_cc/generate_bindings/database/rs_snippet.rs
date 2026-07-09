@@ -97,7 +97,8 @@ pub struct Lifetime(pub Rc<str>);
 
 impl From<&ir::LifetimeName> for Lifetime {
     fn from(lifetime_name: &ir::LifetimeName) -> Self {
-        Lifetime(lifetime_name.name.clone())
+        let name = lifetime_name.name();
+        Lifetime(Rc::from(name))
     }
 }
 

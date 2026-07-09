@@ -3229,9 +3229,9 @@ fn test_elided_lifetimes() {
     .unwrap();
     let func = retrieve_func(&ir, "f");
     let lifetime_params = &func.lifetime_params;
-    assert_eq!(lifetime_params.iter().map(|p| p.name.as_ref()).collect_vec(), vec!["a", "b"]);
-    let a_id = lifetime_params[0].id;
-    let b_id = lifetime_params[1].id;
+    assert_eq!(lifetime_params.iter().map(|p| p.name()).collect_vec(), vec!["a", "b"]);
+    let a_id = lifetime_params[0].id();
+    let b_id = lifetime_params[1].id();
     assert_eq!(func.return_type.variant.as_pointer().unwrap().lifetime.unwrap(), a_id);
 
     assert_eq!(func.params[0].identifier, ir_id("__this"));
@@ -3260,7 +3260,7 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     assert_eq!(p.identifier, ir_id("__this"));
 
     let p_ptr = p.type_.variant.as_pointer().unwrap();
-    assert_eq!(p_ptr.lifetime.unwrap(), f.lifetime_params[0].id);
+    assert_eq!(p_ptr.lifetime.unwrap(), f.lifetime_params[0].id());
     assert!(!p_ptr.pointee_type.is_const);
 }
 

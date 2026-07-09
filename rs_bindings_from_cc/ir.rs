@@ -257,7 +257,13 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HeaderName {
-    pub name: Rc<str>,
+    pub(crate) name: Rc<str>,
+}
+
+impl HeaderName {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
@@ -268,8 +274,18 @@ pub struct LifetimeId(pub i32);
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LifetimeName {
-    pub name: Rc<str>,
-    pub id: LifetimeId,
+    pub(crate) name: Rc<str>,
+    pub(crate) id: LifetimeId,
+}
+
+impl LifetimeName {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn id(&self) -> LifetimeId {
+        self.id
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

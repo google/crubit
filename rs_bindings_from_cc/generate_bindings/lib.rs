@@ -984,7 +984,7 @@ fn generate_rs_api_impl_includes(
     // original order (some libraries require certain headers to be included
     // first - e.g. `config.h`).
     let ir_includes =
-        ir.public_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
+        ir.public_headers().map(|hdr| CcInclude::user_header(Rc::from(hdr.name()))).collect_vec();
 
     CppIncludes { internal_includes, ir_includes }
 }
