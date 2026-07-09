@@ -8,6 +8,7 @@
 
 package(default_applicable_licenses = ["//:license"])
 
+# LINT.IfChange
 _PROD_PLATFORMS = {
     "linux": [
         "@platforms//os:linux",
@@ -51,6 +52,7 @@ _NON_PROD_PLATFORMS = {
         "@platforms//os:android",
     ],
 }
+# LINT.ThenChange(//depot/BUILD)
 
 # cc_bindings_from_rs
 # ====================
