@@ -48,7 +48,8 @@ absl::StatusOr<Bindings> GenerateBindings(
   request.set_kythe_annotations(kythe_annotations);
   request.set_kythe_default_corpus(kythe_default_corpus);
 
-  GenerateBindingsResponse response = GenerateBindingsProtoCall(request);
+  GenerateBindingsResponse response =
+      GenerateBindingsProtoCall(std::move(request));
 
   if (!response.fatal_errors().empty()) {
     return absl::InvalidArgumentError(response.fatal_errors());

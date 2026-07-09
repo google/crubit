@@ -4,13 +4,15 @@
 
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
 
+#include <utility>
+
 namespace crubit {
 
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest;
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
 
 GenerateBindingsResponse GenerateBindingsProtoCall(
-    const GenerateBindingsRequest& request) {
+    GenerateBindingsRequest&& request) {
   return GenerateBindingsProtoCallSerialized(request);
 }
 

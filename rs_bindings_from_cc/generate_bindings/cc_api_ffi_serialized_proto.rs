@@ -28,7 +28,7 @@ pub unsafe extern "C" fn GenerateBindingsImplFromSerializedProto(
     let request = GenerateBindingsRequest::parse(request_slice)
         .expect("serialized_request should be a valid, serialized GenerateBindingsRequest proto");
     let mut response = GenerateBindingsResponse::new();
-    cc_api::generate_bindings(request.as_view(), response.as_mut());
+    cc_api::generate_bindings(request, response.as_mut());
     let response_bytes =
         response.serialize().expect("GenerateBindingsResponse serialization should never fail");
     FfiU8SliceBox::from_boxed_slice(response_bytes.into_boxed_slice())

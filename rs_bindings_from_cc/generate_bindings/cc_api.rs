@@ -6,22 +6,23 @@ use arc_anyhow::Context;
 use database::code_snippet::Bindings;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
 use generate_bindings::generate_bindings as inner_generate_bindings;
-use generate_bindings_rust_proto::{GenerateBindingsRequestView, GenerateBindingsResponseMut};
+use generate_bindings_rust_proto::{GenerateBindingsRequest, GenerateBindingsResponseMut};
 use ir::deserialize_ir;
 use std::ffi::OsString;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::process;
 
 pub fn generate_bindings(
-    request: GenerateBindingsRequestView<'_>,
+    request: GenerateBindingsRequest,
     mut response: GenerateBindingsResponseMut<'_>,
 ) {
-    let ir = if request.has_ir_proto() {
-        ir::proto_to_ir(request.ir_proto())
+    let request_view = request.as_view();
+    let ir = if request_view.has_ir_proto() {
+        ir::proto_to_ir(request_view.ir_proto())
             .with_context(|| "Failed to deserialize IRProto".to_string())
             .unwrap()
     } else {
-        let json: &[u8] = request.json().as_bytes();
+        let json: &[u8] = request_view.json().as_bytes();
         deserialize_ir(json)
             .with_context(|| {
                 let ir_string = String::from_utf8_lossy(json);
@@ -29,27 +30,32 @@ pub fn generate_bindings(
             })
             .unwrap()
     };
-    let crubit_support_path_format: &str = request
+    let crubit_support_path_format: &str = request_view
         .crubit_support_path_format()
         .to_str()
         .expect("crubit_support_path_format is not valid UTF-8");
-    let clang_format_exe_path: OsString = request
+    let clang_format_exe_path: OsString = request_view
         .clang_format_exe_path()
         .to_str()
         .expect("clang_format_exe_path is not valid UTF-8")
         .into();
-    let rustfmt_exe_path: OsString =
-        request.rustfmt_exe_path().to_str().expect("rustfmt_exe_path is not valid UTF-8").into();
-    let rustfmt_config_path: OsString = request
+    let rustfmt_exe_path: OsString = request_view
+        .rustfmt_exe_path()
+        .to_str()
+        .expect("rustfmt_exe_path is not valid UTF-8")
+        .into();
+    let rustfmt_config_path: OsString = request_view
         .rustfmt_config_path()
         .to_str()
         .expect("rustfmt_config_path is not valid UTF-8")
         .into();
-    let kythe_default_corpus: &str =
-        request.kythe_default_corpus().to_str().expect("kythe_default_corpus is not valid UTF-8");
-    let generate_error_report = request.generate_error_report();
-    let is_golden_test = request.is_golden_test();
-    let kythe_annotations = request.kythe_annotations();
+    let kythe_default_corpus: &str = request_view
+        .kythe_default_corpus()
+        .to_str()
+        .expect("kythe_default_corpus is not valid UTF-8");
+    let generate_error_report = request_view.generate_error_report();
+    let is_golden_test = request_view.is_golden_test();
+    let kythe_annotations = request_view.kythe_annotations();
 
     // The `ir::IR` tree from the outer scope is not unwind safe. However, since we abort on
     // panic anyways, it is safe to bypass this check.

@@ -12,8 +12,7 @@ namespace crubit {
 // The public interface called by the rest of the generator.
 rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse
 GenerateBindingsProtoCall(
-    const rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest&
-        request);
+    rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest&& request);
 
 // Helper that passes serialized protobufs.
 rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse
