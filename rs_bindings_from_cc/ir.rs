@@ -389,9 +389,43 @@ pub enum PointerTypeKind {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PointerType {
-    pub kind: PointerTypeKind,
-    pub lifetime: Option<LifetimeId>,
-    pub pointee_type: Rc<CcType>,
+    pub(crate) kind: PointerTypeKind,
+    pub(crate) lifetime: Option<LifetimeId>,
+    pub(crate) pointee_type: Rc<CcType>,
+}
+
+impl PointerType {
+    pub fn new(
+        kind: PointerTypeKind,
+        lifetime: Option<LifetimeId>,
+        pointee_type: Rc<CcType>,
+    ) -> Self {
+        Self { kind, lifetime, pointee_type }
+    }
+
+    pub fn kind(&self) -> PointerTypeKind {
+        self.kind
+    }
+
+    pub fn pointee_type(&self) -> &CcType {
+        &self.pointee_type
+    }
+
+    pub fn lifetime(&self) -> Option<LifetimeId> {
+        self.lifetime
+    }
+
+    pub fn set_kind(&mut self, kind: PointerTypeKind) {
+        self.kind = kind;
+    }
+
+    pub fn set_pointee_type(&mut self, pointee_type: Rc<CcType>) {
+        self.pointee_type = pointee_type;
+    }
+
+    pub fn set_lifetime(&mut self, lifetime: Option<LifetimeId>) {
+        self.lifetime = lifetime;
+    }
 }
 
 /// Generates an enum type that implements `Deserialize`, which parses the stringified contents of

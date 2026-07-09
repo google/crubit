@@ -413,10 +413,10 @@ fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
     let CcTypeVariant::Pointer(ptr) = other.type_.variant() else {
         return false;
     };
-    if ptr.kind != PointerTypeKind::LValueRef {
+    if ptr.kind() != PointerTypeKind::LValueRef {
         return false;
     }
-    let CcTypeVariant::Decl { id, .. } = ptr.pointee_type.variant() else {
+    let CcTypeVariant::Decl { id, .. } = ptr.pointee_type().variant() else {
         return false;
     };
     *id == record_id
@@ -513,7 +513,7 @@ pub fn generate_function_thunk_impl(
         .map(|p| {
             let ident = format_nonportable_cc_ident(&p.identifier.identifier)?;
             match p.type_.variant() {
-                CcTypeVariant::Pointer(pointer) => match pointer.kind {
+                CcTypeVariant::Pointer(pointer) => match pointer.kind() {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
                     PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
                     PointerTypeKind::Nullable
@@ -637,14 +637,10 @@ pub fn generate_function_thunk_impl(
         PassingConvention::Void => return_expr,
         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
             match func.return_type.variant() {
-                CcTypeVariant::Pointer(PointerType {
-                    kind: PointerTypeKind::LValueRef, ..
-                }) => {
+                CcTypeVariant::Pointer(pointer) if pointer.kind() == PointerTypeKind::LValueRef => {
                     quote! { return std::addressof( #return_expr ) }
                 }
-                CcTypeVariant::Pointer(PointerType {
-                    kind: PointerTypeKind::RValueRef, ..
-                }) => {
+                CcTypeVariant::Pointer(pointer) if pointer.kind() == PointerTypeKind::RValueRef => {
                     let nested_type = cpp_type_name::format_cpp_type_with_references(
                         &db.rs_type_kind(func.return_type.clone())?,
                         db,

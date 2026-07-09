@@ -40,7 +40,7 @@ fn cc_type_has_bindings(
             }
         }
         CcTypeVariant::Pointer(ptr) => {
-            cc_type_has_bindings(db, &ptr.pointee_type, alias_id)?;
+            cc_type_has_bindings(db, ptr.pointee_type(), alias_id)?;
         }
         CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
             for t in param_and_return_types.iter() {

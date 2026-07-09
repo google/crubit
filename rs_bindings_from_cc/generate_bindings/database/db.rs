@@ -474,14 +474,14 @@ impl<'db> BindingsGenerator<'db> {
             }
             .to_string(),
             ir::CcTypeVariant::Pointer(ptr) => {
-                let ptr_str = match ptr.kind {
+                let ptr_str = match ptr.kind() {
                     ir::PointerTypeKind::LValueRef => "&",
                     ir::PointerTypeKind::RValueRef => "&&",
                     ir::PointerTypeKind::Nullable
                     | ir::PointerTypeKind::NonNull
                     | ir::PointerTypeKind::Owned => "*",
                 };
-                let pointee_name = self.cc_type_debug_name(&ptr.pointee_type);
+                let pointee_name = self.cc_type_debug_name(ptr.pointee_type());
                 format!("{pointee_name}{ptr_str}")
             }
             ir::CcTypeVariant::FuncPointer { .. } => "function pointer".to_string(),

@@ -357,12 +357,12 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
                 Ok(LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen })
             }
-            CcTypeVariant::Pointer(pty) if is_this || pty.kind == PointerTypeKind::LValueRef => {
+            CcTypeVariant::Pointer(pty) if is_this || pty.kind() == PointerTypeKind::LValueRef => {
                 let LifetimeResult { ty: pointee_type, .. } = self.add_lifetime_to_input_type(
                     false,
                     name_hint,
                     new_bindings,
-                    &pty.pointee_type,
+                    pty.pointee_type(),
                 )?;
                 let mut state =
                     self.get_state_for_annotated_lifetime(ty.explicit_lifetimes(), new_bindings);
@@ -372,10 +372,11 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     state = LifetimeState::Single(lifetime);
                 }
                 let mut new_ty = ty.clone();
-                *new_ty.variant_mut() = CcTypeVariant::Pointer(PointerType {
-                    pointee_type: pointee_type.into(),
-                    ..pty.clone()
-                });
+                *new_ty.variant_mut() = CcTypeVariant::Pointer(PointerType::new(
+                    pty.kind(),
+                    pty.lifetime(),
+                    Rc::new(pointee_type),
+                ));
                 *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
                 if is_this {
                     Ok(LifetimeResult {
@@ -461,7 +462,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 };
                 Ok(new_ty)
             }
-            CcTypeVariant::Pointer(pty) if pty.kind == PointerTypeKind::LValueRef => {
+            CcTypeVariant::Pointer(pty) if pty.kind() == PointerTypeKind::LValueRef => {
                 let mut new_ty = ty.clone();
                 // If there's a previously-annotated lifetime, use that.
                 if !ty.explicit_lifetimes().is_empty() {
@@ -481,17 +482,17 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 // doing this later on provided we have a fuller treatement of safe/unsafe types
                 // selected by the presence of lifetime inputs.)
                 let kind =
-                    if lifetime_hint.is_empty() { PointerTypeKind::NonNull } else { pty.kind };
+                    if lifetime_hint.is_empty() { PointerTypeKind::NonNull } else { pty.kind() };
                 let pointee_type = self.add_lifetime_to_output_type(
                     lifetime_hint,
                     new_bindings,
-                    &pty.pointee_type,
+                    pty.pointee_type(),
                 )?;
-                *new_ty.variant_mut() = CcTypeVariant::Pointer(PointerType {
-                    pointee_type: pointee_type.into(),
+                *new_ty.variant_mut() = CcTypeVariant::Pointer(PointerType::new(
                     kind,
-                    ..pty.clone()
-                });
+                    pty.lifetime(),
+                    Rc::new(pointee_type),
+                ));
                 *new_ty.explicit_lifetimes_mut() = lifetime_hint.clone();
                 Ok(new_ty)
             }
@@ -510,22 +511,18 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         param: &mut ir::FuncParam,
         lifetimes: &[Rc<str>],
     ) -> Result<()> {
-        match param.type_.variant_mut() {
-            CcTypeVariant::Pointer(pty) => {
-                if !pty.pointee_type.explicit_lifetimes().is_empty()
-                    && pty.pointee_type.explicit_lifetimes() != lifetimes
-                {
-                    bail!("lifetime mismatch on implicit `this`: provided in code: {:#?} vs expected by inference: {:#?}", pty.pointee_type.explicit_lifetimes(), lifetimes);
-                }
-                let mut pointee_type = pty.pointee_type.as_ref().clone();
-                *pointee_type.explicit_lifetimes_mut() = lifetimes.to_vec();
-                pty.pointee_type = Rc::new(pointee_type);
-                Ok(())
-            }
-            _ => {
-                bail!("the implicit `this` parameter did not have pointer type");
-            }
+        let CcTypeVariant::Pointer(pty) = param.type_.variant_mut() else {
+            bail!("the implicit `this` parameter did not have pointer type");
+        };
+        if !pty.pointee_type().explicit_lifetimes().is_empty()
+            && pty.pointee_type().explicit_lifetimes() != lifetimes
+        {
+            bail!("lifetime mismatch on implicit `this`: provided in code: {:#?} vs expected by inference: {:#?}", pty.pointee_type().explicit_lifetimes(), lifetimes);
         }
+        let mut pointee_type = pty.pointee_type().clone();
+        *pointee_type.explicit_lifetimes_mut() = lifetimes.to_vec();
+        pty.set_pointee_type(Rc::new(pointee_type));
+        Ok(())
     }
 
     /// Transforms a function with Clang lifetime annotations into a function with Crubit-style
@@ -698,7 +695,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             if !this.type_.explicit_lifetimes().is_empty()
                 && let CcTypeVariant::Pointer(pty) = this.type_.variant_mut()
             {
-                pty.kind = PointerTypeKind::LValueRef;
+                pty.set_kind(PointerTypeKind::LValueRef);
             }
         }
         Ok(new_func)
