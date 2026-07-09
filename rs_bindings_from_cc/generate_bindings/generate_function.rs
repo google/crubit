@@ -2094,9 +2094,16 @@ pub fn generate_function(
             is_renamed_unpin_constructor,
             is_unsafe,
         } => {
-            let record_name = make_rs_ident(
-                derived_record.as_deref().unwrap_or(record.as_ref()).rs_name.identifier.as_ref(),
-            );
+            let target_record = derived_record.as_ref().unwrap_or(record);
+            // Skip all inherent methods when the type's methods are customized. The replacements
+            // are emitted in `generate_record`.
+            if let RsTypeKind::Record { customize_methods: Some(_), .. } =
+                db.rs_type_kind((&**target_record).into())?
+            {
+                return Ok(None);
+            }
+
+            let record_name = make_rs_ident(target_record.rs_name.identifier.as_ref());
             let fn_generic_params =
                 format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
 
@@ -2162,7 +2169,7 @@ pub fn generate_function(
             // Add the free method to the mapping, which we will extract and put into
             // snippets inside db later.
             free_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                target_record.id,
                 vec![quote! {
                     #capture_tags
                     #doc_comment
@@ -2200,11 +2207,10 @@ pub fn generate_function(
                 method_delegation_args.next();
             }
 
-            let target_record = derived_record.clone().unwrap_or_else(|| record.clone());
-            let mod_name = db.record_to_associated_module_name(target_record)?;
+            let mod_name = db.record_to_associated_module_name(target_record.clone())?;
 
             member_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                target_record.id,
                 vec![quote! {
                     #capture_tags
                     #doc_comment

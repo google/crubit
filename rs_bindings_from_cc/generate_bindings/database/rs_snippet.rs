@@ -326,6 +326,24 @@ fn choose_one_type(t: &CcType, ts: &Option<Rc<[CcType]>>) -> Result<CcType> {
     }
 }
 
+/// Chooses `N` `CcTypes` from successive elements of `fallback` and `preferred`. Each element is
+/// taken from the `preferred` slice if within bounds, or from the `fallback` array otherwise.
+///
+/// It is not an error for `preferred` to have a length greater than `fallback`. Concretely, the
+/// class template `absl::flat_hash_map` accepts more than two parameters, but we only track the
+/// first two in the corresponding `TemplateSpecializationKind`, so `fallback` may be short.
+fn choose_types<const N: usize>(
+    fallback: &[&CcType; N],
+    preferred: &Option<Rc<[CcType]>>,
+) -> [CcType; N] {
+    std::array::from_fn(|i| {
+        preferred
+            .as_ref()
+            .and_then(|preferred| preferred.get(i).cloned())
+            .unwrap_or_else(|| fallback[i].clone())
+    })
+}
+
 impl UniformReprTemplateType {
     /// Returns the `UniformReprTemplateType` for a `TemplateSpecialization`.
     /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
@@ -536,6 +554,7 @@ pub enum RsTypeKind {
         uniform_repr_template_type: Option<Rc<UniformReprTemplateType>>,
         owned_ptr_type: Option<Rc<str>>,
         lifetimes: Vec<Lifetime>,
+        customize_methods: Option<Rc<CustomizeMethodsKind>>,
     },
     Enum {
         enum_: Rc<Enum>,
@@ -563,6 +582,83 @@ pub enum RsTypeKind {
         /// This is the stringified TokenStream because TokenStream is not PartialEq + Eq + Hash.
         rust_type: Rc<str>,
     },
+}
+
+/// Ways of customizing a type's methods rather than directly binding its C++ methods.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum CustomizeMethodsKind {
+    AbslFlatHashMap { key_type: RsTypeKind, value_type: RsTypeKind },
+}
+
+impl CustomizeMethodsKind {
+    /// Returns the `CustomizeMethodsKind` for a `TemplateSpecialization`.
+    /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
+    /// Returns none if the template specialization is not for a known type corresponding with one
+    /// of `CustomizeMethodsKind`s variants.
+    fn new(
+        db: &BindingsGenerator,
+        template_specialization_kind: Option<&TemplateSpecializationKind>,
+        options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
+    ) -> Result<Option<Rc<Self>>> {
+        let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
+            // Importantly, `is_return_type` is not propagated through inner types.
+            let arg_type_kind = db.rs_type_kind_with_lifetime_elision(
+                template_arg.clone(),
+                LifetimeOptions { is_return_type: false, ..*options },
+            )?;
+            ensure!(
+                !arg_type_kind.is_bridge_type(),
+                "`{}` cannot be used as a template argument because it is a bridged type\nSee crubit.rs/types.",
+                arg_type_kind.display(db),
+            );
+            // We don't do this in required_crubit_features() because it doesn't know which
+            // template arguments actually need to be free of errors. (For example,
+            // allocator/deleter do not.)
+            if let RsTypeKind::Error { error, .. } = arg_type_kind {
+                return Err(error);
+            }
+            Ok(arg_type_kind)
+        };
+        match template_specialization_kind {
+            Some(TemplateSpecializationKind::AbslFlatHashMap { raw_key_type, raw_value_type }) => {
+                let [key_type, value_type] =
+                    choose_types(&[raw_key_type, raw_value_type], template_args);
+                let key_type = type_arg(&key_type)?;
+                let value_type = type_arg(&value_type)?;
+                ensure!(key_type.is_complete(),
+                    "`{}` can't be used in a Rust absl::flat_hash_map<K, _> because it is an incomplete type",
+                    key_type.display(db));
+                ensure!(key_type.is_destructible(),
+                    "`{}` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor",
+                    key_type.display(db));
+                ensure!(!key_type.has_private_or_deleted_operator_delete(),
+                    "`{}` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete",
+                    key_type.display(db));
+                ensure!(value_type.is_complete(),
+                    "`{}` can't be used in a Rust absl::flat_hash_map<_, V> because it is an incomplete type",
+                    value_type.display(db));
+                ensure!(value_type.is_destructible(),
+                    "`{}` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor",
+                    value_type.display(db));
+                ensure!(!value_type.has_private_or_deleted_operator_delete(),
+                    "`{}` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete",
+                    value_type.display(db));
+                Ok(Some(Rc::new(CustomizeMethodsKind::AbslFlatHashMap { key_type, value_type })))
+            }
+            Some(
+                TemplateSpecializationKind::StdStringView
+                | TemplateSpecializationKind::StdWStringView
+                | TemplateSpecializationKind::StdVector { .. }
+                | TemplateSpecializationKind::StdUniquePtr { .. }
+                | TemplateSpecializationKind::C9Co { .. }
+                | TemplateSpecializationKind::AbslFlatHashSet { .. }
+                | TemplateSpecializationKind::AbslSpan { .. }
+                | TemplateSpecializationKind::NonSpecial,
+            )
+            | None => Ok(None),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -941,19 +1037,28 @@ impl RsTypeKind {
         let in_cc_std = db.ir().is_current_target(&record.owning_target)
             && record.owning_target.target_name_escaped() == "cc_std";
 
+        let uniform_repr_template_type = UniformReprTemplateType::new(
+            db,
+            record.template_specialization.as_ref().map(|ts| &ts.kind),
+            options,
+            template_args,
+            lifetimes,
+            in_cc_std,
+        )?;
+        let customize_methods = CustomizeMethodsKind::new(
+            db,
+            record.template_specialization.as_ref().map(|ts| &ts.kind),
+            options,
+            template_args,
+        )?;
+
         Ok(RsTypeKind::Record {
-            uniform_repr_template_type: UniformReprTemplateType::new(
-                db,
-                record.template_specialization.as_ref().map(|ts| &ts.kind),
-                options,
-                template_args,
-                lifetimes,
-                in_cc_std,
-            )?,
+            uniform_repr_template_type,
             owned_ptr_type: record.owned_ptr_config.as_ref().map(|cfg| cfg.owned_ptr_type.clone()),
             record,
             crate_path,
             lifetimes: lifetimes.to_vec(),
+            customize_methods,
         })
     }
 
@@ -1936,6 +2041,7 @@ impl RsTypeKind {
                 uniform_repr_template_type,
                 owned_ptr_type: _,
                 lifetimes,
+                customize_methods: _,
             } => {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(&db);

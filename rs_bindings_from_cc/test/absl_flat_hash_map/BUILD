@@ -12,6 +12,9 @@ crubit_test_cc_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    deps = [
+        "//support:annotations",
+    ],
 )
 
 golden_test(

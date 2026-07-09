@@ -17,8 +17,8 @@ use database::code_snippet::{
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::rs_snippet::{
-    BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions, Mutability,
-    PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
+    BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind, FnTrait, LifetimeOptions,
+    Mutability, PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -1044,6 +1044,7 @@ fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
             uniform_repr_template_type,
             owned_ptr_type,
             lifetimes,
+            customize_methods,
         } => Rc::new(RsTypeKind::Record {
             record: record.clone(),
             crate_path: crate_path.clone(),
@@ -1095,6 +1096,20 @@ fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
                 .iter()
                 .map(|_| database::rs_snippet::Lifetime::new("static"))
                 .collect(),
+            customize_methods: customize_methods.as_ref().map(|customize_methods| {
+                Rc::new(match customize_methods.as_ref() {
+                    CustomizeMethodsKind::AbslFlatHashMap { key_type, value_type } => {
+                        CustomizeMethodsKind::AbslFlatHashMap {
+                            key_type: all_static_lifetimes_internal(Rc::new(key_type.clone()))
+                                .as_ref()
+                                .clone(),
+                            value_type: all_static_lifetimes_internal(Rc::new(value_type.clone()))
+                                .as_ref()
+                                .clone(),
+                        }
+                    }
+                })
+            }),
         }),
         RsTypeKind::Enum { .. } => t,
         RsTypeKind::TypeAlias { type_alias, underlying_type, crate_path, lifetimes } => {

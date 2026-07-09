@@ -5,9 +5,11 @@
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/absl_flat_hash_map:isolated
 
+#include "support/bridge.h"
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -18,23 +20,31 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+static_assert(sizeof(class ::crubit::test::NoDestructor) == 1);
+static_assert(alignof(class ::crubit::test::NoDestructor) == 1);
+
+extern "C" class ::crubit::test::NoDestructor*
+__rust_thunk___ZN6crubit4test12NoDestructoraSERKS1_(
+    class ::crubit::test::NoDestructor* __this,
+    class ::crubit::test::NoDestructor const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+static_assert(sizeof(class ::crubit::test::NoDelete) == 1);
+static_assert(alignof(class ::crubit::test::NoDelete) == 1);
+
+extern "C" void __rust_thunk___ZN6crubit4test8NoDeleteC1Ev(
+    class ::crubit::test::NoDelete* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(class ::absl::flat_hash_map<int, unsigned long, 42>) == 1);
 static_assert(alignof(class ::absl::flat_hash_map<int, unsigned long, 42>) ==
               1);
 
-extern "C" void __rust_thunk__15b85ee3__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
+extern "C" void __rust_thunk__25d7606d__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
     class ::absl::flat_hash_map<int, unsigned long, 42>* __this) {
   crubit::construct_at(__this);
 }
-
-extern "C" void
-__rust_thunk__25d7606d__ZNK4absl13flat_hash_mapIimLi42EE25FunctionRemovedByOverrideEv(
-    class ::absl::flat_hash_map<int, unsigned long, 42> const* __this) {
-  __this->FunctionRemovedByOverride();
-}
-
-static_assert(
-    (void (::absl::flat_hash_map<int, unsigned long, 42>::*)() const) &
-    ::absl::flat_hash_map<int, unsigned long, 42>::FunctionRemovedByOverride);
 
 #pragma clang diagnostic pop
