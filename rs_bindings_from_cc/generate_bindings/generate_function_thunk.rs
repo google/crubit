@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use code_gen_utils::{format_cc_ident, make_rs_ident};
+use code_gen_utils::{format_cc_ident, format_nonportable_cc_ident, make_rs_ident};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
@@ -306,11 +306,12 @@ fn generate_function_assertion_for_identifier(
     func: &Func,
     id: &Identifier,
 ) -> Result<ThunkImpl> {
-    let fn_ident = format_cc_ident(&id.identifier)?;
+    let features = db.ir().target_crubit_features(&func.owning_target);
+    let fn_ident = format_nonportable_cc_ident(&id.identifier)?;
     let mut namespace_qualifier = db.namespace_qualifier(func);
     // Keep goldens the same.
     namespace_qualifier.use_leading_colons = true;
-    let path_to_func = namespace_qualifier.format_for_cc()?;
+    let path_to_func = namespace_qualifier.format_for_cc(features)?;
     let implementation_function = quote! { #path_to_func #fn_ident };
     let method_qualification;
     let member_function_prefix;
@@ -431,8 +432,9 @@ pub fn generate_function_thunk_impl(
             quote! { operator #name }
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            let fn_ident = format_cc_ident(&id.identifier)?;
-            let namespace_qualifier = db.namespace_qualifier(func).format_for_cc()?;
+            let features = db.ir().target_crubit_features(&func.owning_target);
+            let fn_ident = format_nonportable_cc_ident(&id.identifier)?;
+            let namespace_qualifier = db.namespace_qualifier(func).format_for_cc(features)?;
             if func.instance_method_metadata.is_some() || func.adl_enclosing_record.is_some() {
                 quote! {#fn_ident}
             } else {
@@ -469,10 +471,11 @@ pub fn generate_function_thunk_impl(
         }
     };
 
+    let features = db.ir().target_crubit_features(&func.owning_target);
     let mut param_idents = func
         .params
         .iter()
-        .map(|p| format_cc_ident(&p.identifier.identifier))
+        .map(|p| format_nonportable_cc_ident(&p.identifier.identifier))
         .collect::<Result<Vec<_>>>()?;
 
     let mut conversion_stmts = quote! {};
@@ -483,7 +486,7 @@ pub fn generate_function_thunk_impl(
             let arg_type = db.rs_type_kind(p.type_.clone())?;
             let cpp_type = cpp_type_name::format_cpp_type(&arg_type, db)?;
             if arg_type.is_bridge_type() {
-                let ident = format_cc_ident(&p.identifier.identifier)?;
+                let ident = format_nonportable_cc_ident(&p.identifier.identifier)?;
                 let crubit_abi_type = db.crubit_abi_type(arg_type)?;
                 let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
                 let decoder = format_ident!("__{ident}_decoder");
@@ -504,7 +507,7 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let ident = format_cc_ident(&p.identifier.identifier)?;
+            let ident = format_nonportable_cc_ident(&p.identifier.identifier)?;
             match &p.type_.variant {
                 CcTypeVariant::Pointer(pointer) => match pointer.kind {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
@@ -563,12 +566,12 @@ pub fn generate_function_thunk_impl(
 
     let return_type_name = match return_type_kind.passing_convention() {
         PassingConvention::ComposablyBridged => {
-            param_idents.insert(0, format_cc_ident("__return_abi_buffer")?);
+            param_idents.insert(0, format_cc_ident("__return_abi_buffer", features)?);
             param_types.insert(0, quote! {unsigned char *});
             quote! { void }
         }
         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
-            param_idents.insert(0, format_cc_ident("__return")?);
+            param_idents.insert(0, format_cc_ident("__return", features)?);
             param_types.insert(0, quote! {#return_type_cpp_spelling *});
             quote! {void}
         }
@@ -595,7 +598,7 @@ pub fn generate_function_thunk_impl(
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
 
-            let this_arg = format_cc_ident(&this_param.identifier.identifier)?;
+            let this_arg = format_nonportable_cc_ident(&this_param.identifier.identifier)?;
             let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
                 quote! {std::move(*#this_arg).}
             } else {

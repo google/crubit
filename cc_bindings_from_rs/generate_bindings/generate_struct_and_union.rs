@@ -26,7 +26,7 @@ use crate::{
 };
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
+use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, TemplateSpecialization,
     TraitImplTemplateSpecialization,
@@ -2329,7 +2329,8 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         let tcx = self.db.tcx();
         let type_info = self.prepare_field_type(field_def);
         let name = field_def.ident(tcx).to_string();
-        let cc_name = code_gen_utils::unkeyword_cpp_ident(&name).to_string();
+        let features = self.db.crate_features(self.db.source_crate_num());
+        let cc_name = code_gen_utils::unkeyword_cpp_ident(&name, features).to_string();
         let cc_name = if self.member_function_names.contains(&cc_name) {
             format!("{cc_name}_")
         } else {
@@ -2667,7 +2668,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                             let variant_def = self.adt_def.variant(VariantIdx::from_usize(variant_index));
                             let cc_variant = variant_def.ident(tcx);
                             let qualified_struct_name =
-                                expect_format_cc_type_name(&format!("{}::__crubit_{}_struct", adt_cc_name, cc_variant));
+                                format_nonportable_cc_type_name(&format!("{}::__crubit_{}_struct", adt_cc_name, cc_variant)).expect("generated invalid C++ identifier");
                             if variant_def.fields.is_empty() {
                                 quote! {}
                             } else {

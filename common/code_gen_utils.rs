@@ -11,7 +11,9 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::rc::Rc;
 
+use crubit_feature::CrubitFeature;
 use dyn_format::Format;
+use flagset::FlagSet;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum CcConstQualifier {
@@ -154,20 +156,502 @@ pub fn is_cpp_reserved_keyword(ident: &str) -> bool {
     RESERVED_CC_KEYWORDS.contains(ident)
 }
 
-/// If `ident` is a reserved C++ keyword, returns a string with an underscore appended to it.
-/// Otherwise, returns `ident`.
-pub fn unkeyword_cpp_ident(ident: &str) -> Cow<'_, str> {
+/// Returns true if the given identifier is reserved in C++, either as a keyword
+/// or as a standard macro that should not be shadowed.
+pub fn is_cpp_nonportable_word(ident: &str, features: FlagSet<CrubitFeature>) -> bool {
     if is_cpp_reserved_keyword(ident) {
+        return true;
+    }
+
+    if !features.contains(CrubitFeature::ReserveStandardMacros) {
+        return false;
+    }
+
+    // Keep in sync with https://en.cppreference.com/cpp/symbol_index/macro
+    static RESERVED_CC_MACROS: phf::Set<&'static str> = phf::phf_set! {
+        "__alignas_is_defined",
+        "__bool_true_false_are_defined",
+        "__STDC_ENDIAN_BIG__",
+        "__STDC_ENDIAN_LITTLE__",
+        "__STDC_ENDIAN_NATIVE__",
+        "__STDC_VERSION_STDBIT_H__",
+        "__STDC_VERSION_STDCKDINT_H__",
+        "_Atomic",
+        "_IOFBF",
+        "_IOLBF",
+        "_IONBF",
+        "assert",
+        "ATOMIC_BOOL_LOCK_FREE",
+        "ATOMIC_CHAR_LOCK_FREE",
+        "ATOMIC_CHAR16_T_LOCK_FREE",
+        "ATOMIC_CHAR32_T_LOCK_FREE",
+        "ATOMIC_CHAR8_T_LOCK_FREE",
+        "ATOMIC_FLAG_INIT",
+        "ATOMIC_INT_LOCK_FREE",
+        "ATOMIC_LLONG_LOCK_FREE",
+        "ATOMIC_LONG_LOCK_FREE",
+        "ATOMIC_POINTER_LOCK_FREE",
+        "ATOMIC_SHORT_LOCK_FREE",
+        "ATOMIC_VAR_INIT",
+        "ATOMIC_WCHAR_T_LOCK_FREE",
+        "BOOL_WIDTH",
+        "BUFSIZ",
+        "CHAR_BIT",
+        "CHAR_MAX",
+        "CHAR_MIN",
+        "CHAR_WIDTH",
+        "CLOCKS_PER_SEC",
+        "DBL_DECIMAL_DIG",
+        "DBL_DIG",
+        "DBL_EPSILON",
+        "DBL_HAS_SUBNORM",
+        "DBL_MANT_DIG",
+        "DBL_MAX",
+        "DBL_MAX_10_EXP",
+        "DBL_MAX_EXP",
+        "DBL_MIN",
+        "DBL_MIN_10_EXP",
+        "DBL_MIN_EXP",
+        "DBL_TRUE_MIN",
+        "DECIMAL_DIG",
+        "E2BIG",
+        "EACCES",
+        "EADDRINUSE",
+        "EADDRNOTAVAIL",
+        "EAFNOSUPPORT",
+        "EAGAIN",
+        "EALREADY",
+        "EBADF",
+        "EBADMSG",
+        "EBUSY",
+        "ECANCELED",
+        "ECHILD",
+        "ECONNABORTED",
+        "ECONNREFUSED",
+        "ECONNRESET",
+        "EDEADLK",
+        "EDESTADDRREQ",
+        "EDOM",
+        "EEXIST",
+        "EFAULT",
+        "EFBIG",
+        "EHOSTUNREACH",
+        "EIDRM",
+        "EILSEQ",
+        "EINPROGRESS",
+        "EINTR",
+        "EINVAL",
+        "EIO",
+        "EISCONN",
+        "EISDIR",
+        "ELOOP",
+        "EMFILE",
+        "EMLINK",
+        "EMSGSIZE",
+        "ENAMETOOLONG",
+        "ENETDOWN",
+        "ENETRESET",
+        "ENETUNREACH",
+        "ENFILE",
+        "ENOBUFS",
+        "ENODATA",
+        "ENODEV",
+        "ENOENT",
+        "ENOEXEC",
+        "ENOLCK",
+        "ENOLINK",
+        "ENOMEM",
+        "ENOMSG",
+        "ENOPROTOOPT",
+        "ENOSPC",
+        "ENOSR",
+        "ENOSTR",
+        "ENOSYS",
+        "ENOTCONN",
+        "ENOTDIR",
+        "ENOTEMPTY",
+        "ENOTRECOVERABLE",
+        "ENOTSOCK",
+        "ENOTSUP",
+        "ENOTTY",
+        "ENXIO",
+        "EOF",
+        "EOPNOTSUPP",
+        "EOVERFLOW",
+        "EOWNERDEAD",
+        "EPERM",
+        "EPIPE",
+        "EPROTO",
+        "EPROTONOSUPPORT",
+        "EPROTOTYPE",
+        "ERANGE",
+        "EROFS",
+        "errno",
+        "ESPIPE",
+        "ESRCH",
+        "ETIME",
+        "ETIMEDOUT",
+        "ETXTBSY",
+        "EWOULDBLOCK",
+        "EXDEV",
+        "EXIT_FAILURE",
+        "EXIT_SUCCESS",
+        "FE_ALL_EXCEPT",
+        "FE_DFL_ENV",
+        "FE_DIVBYZERO",
+        "FE_DOWNWARD",
+        "FE_INEXACT",
+        "FE_INVALID",
+        "FE_OVERFLOW",
+        "FE_TONEAREST",
+        "FE_TOWARDZERO",
+        "FE_UNDERFLOW",
+        "FE_UPWARD",
+        "FILENAME_MAX",
+        "FLT_DECIMAL_DIG",
+        "FLT_DIG",
+        "FLT_EPSILON",
+        "FLT_EVAL_METHOD",
+        "FLT_HAS_SUBNORM",
+        "FLT_MANT_DIG",
+        "FLT_MAX",
+        "FLT_MAX_10_EXP",
+        "FLT_MAX_EXP",
+        "FLT_MIN",
+        "FLT_MIN_10_EXP",
+        "FLT_MIN_EXP",
+        "FLT_RADIX",
+        "FLT_ROUNDS",
+        "FLT_TRUE_MIN",
+        "FOPEN_MAX",
+        "FP_FAST_FMA",
+        "FP_FAST_FMAF",
+        "FP_FAST_FMAL",
+        "FP_ILOGB0",
+        "FP_ILOGBNAN",
+        "FP_SUBNORMAL",
+        "FP_ZERO",
+        "FP_INFINITE",
+        "FP_NAN",
+        "FP_NORMAL",
+        "HUGE_VAL",
+        "HUGE_VALF",
+        "HUGE_VALL",
+        "INFINITY",
+        "INT_FAST16_MAX",
+        "INT_FAST16_MIN",
+        "INT_FAST32_MAX",
+        "INT_FAST32_MIN",
+        "INT_FAST64_MAX",
+        "INT_FAST64_MIN",
+        "INT_FAST8_MAX",
+        "INT_FAST8_MIN",
+        "INT_LEAST16_MAX",
+        "INT_LEAST16_MIN",
+        "INT_LEAST32_MAX",
+        "INT_LEAST32_MIN",
+        "INT_LEAST64_MAX",
+        "INT_LEAST64_MIN",
+        "INT_LEAST8_MAX",
+        "INT_LEAST8_MIN",
+        "INT_MAX",
+        "INT_MIN",
+        "INT_WIDTH",
+        "INT16_C",
+        "INT16_MAX",
+        "INT16_MIN",
+        "INT32_C",
+        "INT32_MAX",
+        "INT32_MIN",
+        "INT64_C",
+        "INT64_MAX",
+        "INT64_MIN",
+        "INT8_C",
+        "INT8_MAX",
+        "INT8_MIN",
+        "INTMAX_C",
+        "INTMAX_MAX",
+        "INTMAX_MIN",
+        "INTPTR_MAX",
+        "INTPTR_MIN",
+        "L_tmpnam",
+        "LC_ALL",
+        "LC_COLLATE",
+        "LC_CTYPE",
+        "LC_MONETARY",
+        "LC_NUMERIC",
+        "LC_TIME",
+        "LDBL_DECIMAL_DIG",
+        "LDBL_DIG",
+        "LDBL_EPSILON",
+        "LDBL_HAS_SUBNORM",
+        "LDBL_MANT_DIG",
+        "LDBL_MAX",
+        "LDBL_MAX_10_EXP",
+        "LDBL_MAX_EXP",
+        "LDBL_MIN",
+        "LDBL_MIN_10_EXP",
+        "LDBL_MIN_EXP",
+        "LDBL_TRUE_MIN",
+        "LLONG_MAX",
+        "LLONG_MIN",
+        "LLONG_WIDTH",
+        "LONG_MAX",
+        "LONG_MIN",
+        "LONG_WIDTH",
+        "MATH_ERREXCEPT",
+        "math_errhandling",
+        "MATH_ERRNO",
+        "MB_CUR_MAX",
+        "MB_LEN_MAX",
+        "NAN",
+        "NULL",
+        "offsetof",
+        "ONCE_FLAG_INIT",
+        "PRId16",
+        "PRId32",
+        "PRId64",
+        "PRId8",
+        "PRIdFAST16",
+        "PRIdFAST32",
+        "PRIdFAST64",
+        "PRIdFAST8",
+        "PRIdLEAST16",
+        "PRIdLEAST32",
+        "PRIdLEAST64",
+        "PRIdLEAST8",
+        "PRIdMAX",
+        "PRIdPTR",
+        "PRIi16",
+        "PRIi32",
+        "PRIi64",
+        "PRIi8",
+        "PRIiFAST16",
+        "PRIiFAST32",
+        "PRIiFAST64",
+        "PRIiFAST8",
+        "PRIiLEAST16",
+        "PRIiLEAST32",
+        "PRIiLEAST64",
+        "PRIiLEAST8",
+        "PRIiMAX",
+        "PRIiPTR",
+        "PRIo16",
+        "PRIo32",
+        "PRIo64",
+        "PRIo8",
+        "PRIoFAST16",
+        "PRIoFAST32",
+        "PRIoFAST64",
+        "PRIoFAST8",
+        "PRIoLEAST16",
+        "PRIoLEAST32",
+        "PRIoLEAST64",
+        "PRIoLEAST8",
+        "PRIoMAX",
+        "PRIoPTR",
+        "PRIu16",
+        "PRIu32",
+        "PRIu64",
+        "PRIu8",
+        "PRIuFAST16",
+        "PRIuFAST32",
+        "PRIuFAST64",
+        "PRIuFAST8",
+        "PRIuLEAST16",
+        "PRIuLEAST32",
+        "PRIuLEAST64",
+        "PRIuLEAST8",
+        "PRIuMAX",
+        "PRIuPTR",
+        "PRIx16",
+        "PRIX16",
+        "PRIx32",
+        "PRIX32",
+        "PRIx64",
+        "PRIX64",
+        "PRIx8",
+        "PRIX8",
+        "PRIxFAST16",
+        "PRIXFAST16",
+        "PRIxFAST32",
+        "PRIXFAST32",
+        "PRIxFAST64",
+        "PRIXFAST64",
+        "PRIxFAST8",
+        "PRIXFAST8",
+        "PRIxLEAST16",
+        "PRIXLEAST16",
+        "PRIxLEAST32",
+        "PRIXLEAST32",
+        "PRIxLEAST64",
+        "PRIXLEAST64",
+        "PRIxLEAST8",
+        "PRIXLEAST8",
+        "PRIxMAX",
+        "PRIXMAX",
+        "PRIxPTR",
+        "PRIXPTR",
+        "PTRDIFF_MAX",
+        "PTRDIFF_MIN",
+        "RAND_MAX",
+        "SCHAR_MAX",
+        "SCHAR_MIN",
+        "SCHAR_WIDTH",
+        "SCNd16",
+        "SCNd32",
+        "SCNd64",
+        "SCNd8",
+        "SCNdFAST16",
+        "SCNdFAST32",
+        "SCNdFAST64",
+        "SCNdFAST8",
+        "SCNdLEAST16",
+        "SCNdLEAST32",
+        "SCNdLEAST64",
+        "SCNdLEAST8",
+        "SCNdMAX",
+        "SCNdPTR",
+        "SCNi16",
+        "SCNi32",
+        "SCNi64",
+        "SCNi8",
+        "SCNiFAST16",
+        "SCNiFAST32",
+        "SCNiFAST64",
+        "SCNiFAST8",
+        "SCNiLEAST16",
+        "SCNiLEAST32",
+        "SCNiLEAST64",
+        "SCNiLEAST8",
+        "SCNiMAX",
+        "SCNiPTR",
+        "SCNo16",
+        "SCNo32",
+        "SCNo64",
+        "SCNo8",
+        "SCNoFAST16",
+        "SCNoFAST32",
+        "SCNoFAST64",
+        "SCNoFAST8",
+        "SCNoLEAST16",
+        "SCNoLEAST32",
+        "SCNoLEAST64",
+        "SCNoLEAST8",
+        "SCNoMAX",
+        "SCNoPTR",
+        "SCNu16",
+        "SCNu32",
+        "SCNu64",
+        "SCNu8",
+        "SCNuFAST16",
+        "SCNuFAST32",
+        "SCNuFAST64",
+        "SCNuFAST8",
+        "SCNuLEAST16",
+        "SCNuLEAST32",
+        "SCNuLEAST64",
+        "SCNuLEAST8",
+        "SCNuMAX",
+        "SCNuPTR",
+        "SCNx16",
+        "SCNx32",
+        "SCNx64",
+        "SCNx8",
+        "SCNxFAST16",
+        "SCNxFAST32",
+        "SCNxFAST64",
+        "SCNxFAST8",
+        "SCNxLEAST16",
+        "SCNxLEAST32",
+        "SCNxLEAST64",
+        "SCNxLEAST8",
+        "SCNxMAX",
+        "SCNxPTR",
+        "SEEK_CUR",
+        "SEEK_END",
+        "SEEK_SET",
+        "setjmp",
+        "SHRT_MAX",
+        "SHRT_MIN",
+        "SHRT_WIDTH",
+        "SIG_ATOMIC_MAX",
+        "SIG_ATOMIC_MIN",
+        "SIG_DFL",
+        "SIG_ERR",
+        "SIG_IGN",
+        "SIGABRT",
+        "SIGFPE",
+        "SIGILL",
+        "SIGINT",
+        "SIGSEGV",
+        "SIGTERM",
+        "SIZE_MAX",
+        "stderr",
+        "stdin",
+        "stdout",
+        "TIME_UTC",
+        "TMP_MAX",
+        "UCHAR_MAX",
+        "UCHAR_WIDTH",
+        "UINT_FAST16_MAX",
+        "UINT_FAST32_MAX",
+        "UINT_FAST64_MAX",
+        "UINT_FAST8_MAX",
+        "UINT_LEAST16_MAX",
+        "UINT_LEAST32_MAX",
+        "UINT_LEAST64_MAX",
+        "UINT_LEAST8_MAX",
+        "UINT_MAX",
+        "UINT_WIDTH",
+        "UINT16_C",
+        "UINT16_MAX",
+        "UINT32_C",
+        "UINT32_MAX",
+        "UINT64_MAX",
+        "UINT64_C",
+        "UINT8_C",
+        "UINT8_MAX",
+        "UINTMAX_C",
+        "UINTMAX_MAX",
+        "UINTPTR_MAX",
+        "ULLONG_MAX",
+        "ULLONG_WIDTH",
+        "ULONG_MAX",
+        "ULONG_WIDTH",
+        "USHRT_MAX",
+        "USHRT_WIDTH",
+        "va_arg",
+        "va_copy",
+        "va_end",
+        "va_start",
+        "WCHAR_MAX",
+        "WCHAR_MIN",
+        "WEOF",
+        "WINT_MAX",
+        "WINT_MIN",
+    };
+
+    RESERVED_CC_MACROS.contains(ident)
+}
+
+/// If `ident` is reserved in C++, returns a string with an underscore appended to it.
+/// Otherwise, returns `ident`.
+pub fn unkeyword_cpp_ident(ident: &str, features: FlagSet<CrubitFeature>) -> Cow<'_, str> {
+    if is_cpp_nonportable_word(ident, features) {
         Cow::Owned(format!("{ident}_"))
     } else {
         Cow::Borrowed(ident)
     }
 }
 
-/// Formats a C++ identifier. Panics if `ident` is a C++ reserved keyword.
+/// Formats a C++ identifier. Panics if `ident` is a C++ reserved word.
+///
+/// This should only be used for generated identifiers that we control, and can guarantee do not
+/// collide with reserved words in the standard.
 #[track_caller]
 pub fn expect_format_cc_ident(ident: &str) -> Ident {
-    format_cc_ident(ident)
+    format_cc_ident(ident, FlagSet::<CrubitFeature>::full())
         .unwrap_or_else(|err| panic!("Can't format `{ident}` as a C++ identifier: {err}"))
 }
 
@@ -182,12 +666,29 @@ fn parse_any(ident: &str) -> syn::Result<Ident> {
 
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
-pub fn format_cc_ident(ident: &str) -> Result<Ident> {
-    ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
+pub fn format_cc_ident(ident: &str, features: FlagSet<CrubitFeature>) -> Result<Ident> {
+    ensure!(
+        !is_cpp_nonportable_word(ident, features),
+        "`{ident}` is a C++ reserved word and can't be used as a C++ identifier",
+    );
+    unchecked_format_cc_ident(ident)
+}
+
+/// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
+/// an invalid identifier.
+///
+/// Use this function when the identifier originally came from C++, otherwise, use
+/// `format_cc_ident`.
+pub fn format_nonportable_cc_ident(ident: &str) -> Result<Ident> {
     ensure!(
         !is_cpp_reserved_keyword(ident),
-        "`{ident}` is a C++ reserved keyword and can't be used as a C++ identifier",
+        "`{ident}` is a C++ reserved word and can't be used as a C++ identifier",
     );
+    unchecked_format_cc_ident(ident)
+}
+
+fn unchecked_format_cc_ident(ident: &str) -> Result<Ident> {
+    ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
     // Explicitly mapping the error via `anyhow!`, because `LexError` is not `Sync`
     // (required for `anyhow::Error` to implement `From<LexError>`) and
     // therefore we can't just use `?`.
@@ -195,16 +696,19 @@ pub fn format_cc_ident(ident: &str) -> Result<Ident> {
         .map_err(|lex_error| anyhow!("Can't format `{ident}` as a C++ identifier: {lex_error}"))
 }
 
-/// Formats a C++ type name. Panics if `name` is not a valid type name in C++.
-#[track_caller]
-pub fn expect_format_cc_type_name(name: &str) -> TokenStream {
-    format_cc_type_name(name).expect("IR should only contain valid C++ types")
-}
-
 /// Formats a C++ type name. Returns an error when `name` is a C++
 /// reserved keyword or otherwise an invalid type name.
-pub fn format_cc_type_name(name: &str) -> Result<TokenStream> {
+pub fn format_cc_type_name(name: &str, features: FlagSet<CrubitFeature>) -> Result<TokenStream> {
+    check_portable_cc_name(name, features)?;
+    unchecked_format_cc_type_name(name)
+}
+
+pub fn format_nonportable_cc_type_name(name: &str) -> Result<TokenStream> {
     check_valid_cc_name(name)?;
+    unchecked_format_cc_type_name(name)
+}
+
+fn unchecked_format_cc_type_name(name: &str) -> Result<TokenStream> {
     match name.parse() {
         Ok(name) => Ok(name),
         Err(_) => {
@@ -279,16 +783,7 @@ pub fn make_rs_lifetime_ident(ident: &str) -> syn::Lifetime {
     syn::Lifetime { apostrophe: proc_macro2::Span::call_site(), ident: make_rs_ident(ident) }
 }
 
-pub fn check_valid_cc_name(name: &str) -> Result<()> {
-    // C++ doesn't have an equivalent of
-    // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
-    // an error is returned when `ident` is a C++ reserved keyword.
-    ensure!(
-        !is_cpp_reserved_keyword(name),
-        "`{}` is a C++ reserved keyword and can't be used as a C++ identifier",
-        name
-    );
-
+fn check_valid_cc_name_impl(name: &str) -> Result<()> {
     // https://en.cppreference.com/w/cpp/language/identifiers says that "A valid identifier must
     // begin with a non-digit character (Latin letter, underscore, or Unicode
     // character of class XID_Start)".  One motivation for this check is to
@@ -301,6 +796,26 @@ pub fn check_valid_cc_name(name: &str) -> Result<()> {
     );
 
     Ok(())
+}
+
+/// Checks that `name` is a valid C++ identifier.
+pub fn check_valid_cc_name(name: &str) -> Result<()> {
+    ensure!(
+        !is_cpp_reserved_keyword(name),
+        "`{name}` is a C++ reserved keyword and can't be used as a C++ identifier",
+    );
+    check_valid_cc_name_impl(name)
+}
+
+/// Checks that `name` is a valid C++ identifier on typical platforms.
+///
+/// This also rejects names that collide with macros defined in the C++ standard library.
+pub fn check_portable_cc_name(name: &str, features: FlagSet<CrubitFeature>) -> Result<()> {
+    ensure!(
+        !is_cpp_nonportable_word(name, features),
+        "`{name}` is a C++ reserved word and can't be used as a C++ identifier",
+    );
+    check_valid_cc_name_impl(name)
 }
 
 /// Escapes characters that may not appear in a C++ or Rust identifier.
@@ -404,18 +919,18 @@ impl NamespaceQualifier {
     }
 
     /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
-    pub fn format_for_cc(&self) -> Result<TokenStream> {
+    pub fn format_for_cc(&self, features: FlagSet<CrubitFeature>) -> Result<TokenStream> {
         let mut path = if self.use_leading_colons {
             quote! { :: }
         } else {
             quote! {}
         };
         for namespace in &self.namespaces {
-            let namespace = format_cc_ident(namespace)?;
+            let namespace = format_cc_ident(namespace, features)?;
             path.extend(quote! { #namespace :: });
         }
         for (_rs_name, cc_name) in &self.nested_records {
-            let cc_name = format_cc_type_name(cc_name)?;
+            let cc_name = format_cc_type_name(cc_name, features)?;
             path.extend(quote! { #cc_name ::});
         }
         Ok(path)
@@ -599,30 +1114,56 @@ pub mod tests {
 
     #[gtest]
     fn test_format_cc_ident_basic() {
-        assert_cc_matches!(format_cc_ident("foo").unwrap().to_token_stream(), quote! { foo });
+        assert_cc_matches!(
+            format_cc_ident("foo", FlagSet::default()).unwrap().to_token_stream(),
+            quote! { foo }
+        );
     }
 
     #[gtest]
     fn test_format_cc_ident_exotic_xid_start() {
-        assert_cc_matches!(format_cc_ident("Łukasz").unwrap().to_token_stream(), quote! { Łukasz });
+        assert_cc_matches!(
+            format_cc_ident("Łukasz", FlagSet::default()).unwrap().to_token_stream(),
+            quote! { Łukasz }
+        );
     }
 
     #[gtest]
     fn test_format_cc_ident_underscore() {
-        assert_cc_matches!(format_cc_ident("_").unwrap().to_token_stream(), quote! { _ });
+        assert_cc_matches!(
+            format_cc_ident("_", FlagSet::default()).unwrap().to_token_stream(),
+            quote! { _ }
+        );
     }
 
     #[gtest]
     fn test_format_cc_ident_reserved_rust_keyword() {
-        assert_cc_matches!(format_cc_ident("impl").unwrap().to_token_stream(), quote! { impl });
+        assert_cc_matches!(
+            format_cc_ident("impl", FlagSet::default()).unwrap().to_token_stream(),
+            quote! { impl }
+        );
     }
 
     #[gtest]
     fn test_format_cc_ident_reserved_cc_keyword() {
-        let err = format_cc_ident("reinterpret_cast").unwrap_err();
+        let err = format_cc_ident("reinterpret_cast", FlagSet::default()).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
-        assert!(msg.contains("C++ reserved keyword"));
+        assert!(msg.contains("C++ reserved word"));
+    }
+
+    #[gtest]
+    fn test_format_cc_ident_reserved_standard_macros() {
+        assert_cc_matches!(
+            format_cc_ident("stdin", FlagSet::default()).unwrap().to_token_stream(),
+            quote! { stdin }
+        );
+
+        let err =
+            format_cc_ident("stdin", CrubitFeature::ReserveStandardMacros.into()).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("`stdin`"));
+        assert!(msg.contains("C++ reserved word"));
     }
 
     #[gtest]
@@ -630,13 +1171,19 @@ pub mod tests {
         // https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
 
         // These may appear in `IR::Func::name`.
-        assert_cc_matches!(format_cc_type_name("operator==").unwrap(), quote! { operator== });
-        assert_cc_matches!(format_cc_type_name("operator new").unwrap(), quote! { operator new });
+        assert_cc_matches!(
+            format_cc_type_name("operator==", FlagSet::default()).unwrap(),
+            quote! { operator== }
+        );
+        assert_cc_matches!(
+            format_cc_type_name("operator new", FlagSet::default()).unwrap(),
+            quote! { operator new }
+        );
 
         // This may appear in `IR::Record::cc_name` (although in practice these will
         // be namespace-qualified most of the time).
         assert_cc_matches!(
-            format_cc_type_name("MyTemplate<int>").unwrap(),
+            format_cc_type_name("MyTemplate<int>", FlagSet::default()).unwrap(),
             quote! { MyTemplate<int> }
         );
     }
@@ -648,18 +1195,18 @@ pub mod tests {
     #[gtest]
     fn test_format_cc_ident_qualified_identifiers() {
         assert_cc_matches!(
-            format_cc_type_name("std::vector<int>").unwrap(),
+            format_cc_type_name("std::vector<int>", FlagSet::default()).unwrap(),
             quote! { std::vector<int> }
         );
         assert_cc_matches!(
-            format_cc_type_name("::std::vector<int>").unwrap(),
+            format_cc_type_name("::std::vector<int>", FlagSet::default()).unwrap(),
             quote! { ::std::vector<int> }
         );
     }
 
     #[gtest]
     fn test_format_cc_ident_empty() {
-        let err = format_cc_ident("").unwrap_err();
+        let err = format_cc_ident("", FlagSet::default()).unwrap_err();
         let msg = err.to_string();
         assert_eq!(msg, "Empty string is not a valid C++ identifier");
     }
@@ -681,7 +1228,7 @@ pub mod tests {
             "(foo)",
         ];
         for test in tests.into_iter() {
-            let err = format_cc_ident(test).unwrap_err();
+            let err = format_cc_ident(test, FlagSet::default()).unwrap_err();
             let actual_msg = err.to_string();
             let expected_msg = format!("Can't format `{test}` as a C++ identifier: ");
             expect_that!(actual_msg, starts_with(expected_msg));
@@ -795,7 +1342,7 @@ pub mod tests {
         let ns = NamespaceQualifier::new::<&str>([], true);
         let actual_rs = ns.format_for_rs();
         assert!(actual_rs.is_empty());
-        let actual_cc = ns.format_for_cc().unwrap();
+        let actual_cc = ns.format_for_cc(FlagSet::default()).unwrap();
         assert_cc_matches!(actual_cc, quote! { :: });
     }
 
@@ -804,7 +1351,7 @@ pub mod tests {
         let ns = NamespaceQualifier::new(["foo", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo::bar:: });
-        let actual_cc = ns.format_for_cc().unwrap();
+        let actual_cc = ns.format_for_cc(FlagSet::default()).unwrap();
         assert_cc_matches!(actual_cc, quote! { :: foo::bar:: });
     }
 
@@ -813,7 +1360,7 @@ pub mod tests {
         let ns = NamespaceQualifier::new(["foo", "impl", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: r#impl :: bar :: });
-        let actual_cc = ns.format_for_cc().unwrap();
+        let actual_cc = ns.format_for_cc(FlagSet::default()).unwrap();
         assert_cc_matches!(actual_cc, quote! { :: foo::impl::bar:: });
     }
 
@@ -822,10 +1369,10 @@ pub mod tests {
         let ns = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: reinterpret_cast :: bar :: });
-        let cc_error = ns.format_for_cc().unwrap_err();
+        let cc_error = ns.format_for_cc(FlagSet::default()).unwrap_err();
         let msg = cc_error.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
-        assert!(msg.contains("C++ reserved keyword"));
+        assert!(msg.contains("C++ reserved word"));
     }
 
     #[gtest]

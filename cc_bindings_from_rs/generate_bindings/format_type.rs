@@ -101,11 +101,15 @@ pub fn format_cc_ident(db: &BindingsGenerator, ident: &str) -> Result<Ident> {
     // enabled for the feature. Right now if the dep enables the feature but the
     // current crate doesn't, we will escape the identifier in the dep but
     // consider it failed in the current crate.
+    let features = db.crate_features(db.source_crate_num());
     if check_feature_enabled_on_self_and_all_deps(db, FineGrainedFeature::EscapeCppReservedKeyword)
     {
-        code_gen_utils::format_cc_ident(code_gen_utils::unkeyword_cpp_ident(ident).as_ref())
+        code_gen_utils::format_cc_ident(
+            code_gen_utils::unkeyword_cpp_ident(ident, features).as_ref(),
+            features,
+        )
     } else {
-        code_gen_utils::format_cc_ident(ident)
+        code_gen_utils::format_cc_ident(ident, features)
     }
 }
 

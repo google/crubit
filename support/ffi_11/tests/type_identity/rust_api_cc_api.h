@@ -60,7 +60,7 @@ unsigned long long c_ulonglong();
 // Error formatting function return type `ffi_11::wchar_type::c_wchar_t`: Failed
 // to format type for the definition of `ffi_11::wchar_type::c_wchar_t`: Error
 // formatting the fully-qualified C++ name of `c_wchar_t`: `wchar_t` is a C++
-// reserved keyword and can't be used as a C++ identifier
+// reserved word and can't be used as a C++ identifier
 
 namespace __crubit_internal {
 extern "C" decltype(char(0)) __crubit_thunk_c_uchar();

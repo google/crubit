@@ -731,7 +731,10 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
         // we should _not_ implicitly change it, and should instead given them an error.
         // Hence, this unkeywording behavior only happens in the case where we implicitly
         // delegate to the Rust name.
-        Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
+        Symbol::intern(
+            code_gen_utils::unkeyword_cpp_ident(rs_name.as_str(), db.crate_features(def_id.krate))
+                .as_ref(),
+        )
     });
     let cpp_type = attributes.cpp_type;
     Some(UnqualifiedName { cpp_name, rs_name, cpp_type })

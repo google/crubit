@@ -7,7 +7,7 @@
 use crate::db::BindingsGenerator;
 use crate::rs_snippet::{LifetimeOptions, PrimitiveName, RsTypeKind};
 use arc_anyhow::{Error, Result};
-use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
+use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
 use crubit_feature::CrubitFeature;
 use error_report::{anyhow, bail, ensure};
 use ffi_types::FfiU8SliceBox;
@@ -1652,7 +1652,8 @@ impl ToTokens for ThunkImpl {
                 let size = Literal::usize_unsuffixed(*size);
                 let alignment = Literal::usize_unsuffixed(*alignment);
 
-                let record_ident = expect_format_cc_type_name(record_ident.as_ref());
+                let record_ident = format_nonportable_cc_type_name(record_ident.as_ref())
+                    .expect("parsed Record has invalid type name");
                 quote! {
                     static_assert(#sizeof_impl(#tag_kind #namespace_qualifier #record_ident) == #size);
                     static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);

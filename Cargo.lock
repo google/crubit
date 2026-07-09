@@ -383,7 +383,9 @@ name = "code_gen_utils"
 version = "0.0.0"
 dependencies = [
  "arc_anyhow",
+ "crubit_feature",
  "dyn_format",
+ "flagset",
  "googletest",
  "heck",
  "itertools",

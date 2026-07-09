@@ -78,6 +78,7 @@ fn format_ns_path_for_cc(
 
 impl FullyQualifiedName {
     pub fn format_for_cc(&self, db: &BindingsGenerator<'_>) -> Result<TokenStream> {
+        let features = db.crate_features(self.krate_num);
         if let Some(path) = self.unqualified.cpp_type {
             // TODO(b/502939407): Until this bug is fixed and cpp_type comes pre-prefixed with `::`,
             // we use this hack here to add the prefix on to generated code manually. This should
@@ -101,7 +102,7 @@ impl FullyQualifiedName {
                 | "decltype(char16_t(0))"
                 | "decltype(char32_t(0))"
                 | "decltype(wchar_t(0))"
-                | "wchar_t" => format_cc_type_name(path.as_str()),
+                | "wchar_t" => format_cc_type_name(path.as_str(), features),
                 path => {
                     let (maybe_const_prefix, path) = if let Some(path) = path.strip_prefix("const ")
                     {
@@ -111,7 +112,10 @@ impl FullyQualifiedName {
                     };
                     let (universal_qualifier, path) =
                         if path.trim_start().starts_with("::") { ("", path) } else { ("::", path) };
-                    format_cc_type_name(&format!("{maybe_const_prefix}{universal_qualifier}{path}"))
+                    format_cc_type_name(
+                        &format!("{maybe_const_prefix}{universal_qualifier}{path}"),
+                        features,
+                    )
                 }
             };
         }
@@ -124,7 +128,7 @@ impl FullyQualifiedName {
             .map(|ns| db.format_cc_ident(*ns))
             .collect::<Result<Vec<_>>>()?;
         let ns_path = format_ns_path_for_cc(db, &self.cpp_ns_path)?;
-        let name = format_cc_type_name(name.as_str())?;
+        let name = format_cc_type_name(name.as_str(), features)?;
         Ok(quote! { :: #(#cpp_top_level_ns::)* #ns_path #name })
     }
 

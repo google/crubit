@@ -75,7 +75,9 @@ rust_library(
     srcs = ["code_gen_utils.rs"],
     deps = [
         ":arc_anyhow",
+        ":crubit_feature",
         "//common:dyn_format",
+        "@crate_index//:flagset",  # v0_4
         "@crate_index//:heck",  # v0_5
         "@crate_index//:phf",  # v0_11
         "@crate_index//:proc-macro2",

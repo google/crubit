@@ -13,7 +13,7 @@ flagset::flags! {
     /// deserialize it, and an `aspect_hint`, which is presented to users in error messages. If
     /// a function requires a feature flag, the users will be told to add the corresponding
     /// `aspect_hint`.
-    pub enum CrubitFeature : u16 {
+    pub enum CrubitFeature : u32 {
         Supported,
 
         Wrapper,
@@ -63,6 +63,9 @@ flagset::flags! {
 
         /// Converts `impl Ctor<Output=T>` parameters to plain `T` instead of `T&&` in the C++ API.
         CtorPlainValues,
+
+        /// Reserve standard macros like stdin, stdout, stderr as keywords.
+        ReserveStandardMacros,
     }
 }
 
@@ -92,6 +95,7 @@ impl CrubitFeature {
             }
             Self::RecordImplDebug => "record_impl_debug",
             Self::CtorPlainValues => "ctor_plain_values",
+            Self::ReserveStandardMacros => "reserve_standard_macros",
         }
     }
 
@@ -122,6 +126,7 @@ impl CrubitFeature {
             }
             Self::RecordImplDebug => "//features:record_impl_debug",
             Self::CtorPlainValues => "//features:ctor_plain_values",
+            Self::ReserveStandardMacros => "//features:reserve_standard_macros",
         }
     }
 }
@@ -155,6 +160,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         }
         b"record_impl_debug" => CrubitFeature::RecordImplDebug.into(),
         b"ctor_plain_values" => CrubitFeature::CtorPlainValues.into(),
+        b"reserve_standard_macros" => CrubitFeature::ReserveStandardMacros.into(),
         _ => return None,
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
@@ -280,6 +286,7 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
+                | CrubitFeature::ReserveStandardMacros
         );
     }
 
@@ -317,6 +324,7 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
+                | CrubitFeature::ReserveStandardMacros
         );
     }
 
@@ -339,6 +347,7 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
+                | CrubitFeature::ReserveStandardMacros
         );
     }
 
@@ -362,6 +371,7 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
+                | CrubitFeature::ReserveStandardMacros
         );
     }
 }

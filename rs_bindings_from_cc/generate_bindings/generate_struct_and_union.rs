@@ -4,7 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, make_rs_lifetime_ident};
+use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, make_rs_lifetime_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
     ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeleteImpl,
@@ -64,8 +64,10 @@ pub fn generate_incomplete_record(
         .has_bindings(ir::Item::IncompleteRecord(incomplete_record.clone()))
         .unwrap_or_default()
         .visibility;
-    let cc_type = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
-    let namespace_qualifier = db.namespace_qualifier(&incomplete_record).format_for_cc()?;
+    let features = db.ir().target_crubit_features(&incomplete_record.owning_target);
+    let cc_type = format_nonportable_cc_type_name(incomplete_record.cc_name.identifier.as_ref())
+        .expect("IncompleteRecord has invalid type name");
+    let namespace_qualifier = db.namespace_qualifier(&incomplete_record).format_for_cc(features)?;
     Ok(ApiSnippets {
         generated_items: HashMap::from([(
             incomplete_record.id,
@@ -871,7 +873,8 @@ pub fn generate_derives(record: &Record) -> DeriveAttr {
 }
 
 fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result<ThunkImpl> {
-    let namespace_qualifier = db.namespace_qualifier(record).format_for_cc()?;
+    let features = db.ir().target_crubit_features(&record.owning_target);
+    let namespace_qualifier = db.namespace_qualifier(record).format_for_cc(features)?;
     let fields_and_expected_offsets: Vec<(TokenStream, usize)> = record
         .fields
         .iter()
@@ -894,7 +897,8 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
             assert_eq!(field.offset % 8, 0);
             let expected_offset = field.offset / 8;
             let field_ident =
-                expect_format_cc_type_name(&field.cpp_identifier.as_ref()?.identifier);
+                format_nonportable_cc_type_name(&field.cpp_identifier.as_ref()?.identifier)
+                    .expect("field has invalid type name");
             Some((field_ident, expected_offset))
         })
         .collect();

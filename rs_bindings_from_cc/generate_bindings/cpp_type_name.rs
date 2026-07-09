@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use code_gen_utils::expect_format_cc_type_name;
+use code_gen_utils::format_nonportable_cc_type_name;
 use database::rs_snippet::{RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
 use error_report::{anyhow, bail};
-use ir::{CcCallingConv, Item, PointerTypeKind, Record};
+use ir::{CcCallingConv, GenericItem, Item, PointerTypeKind, Record};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::rc::Rc;
@@ -40,8 +40,9 @@ pub fn cpp_tagless_type_name_for_record(
     record: &Record,
     db: &BindingsGenerator<'_>,
 ) -> Result<TokenStream> {
-    let ident = expect_format_cc_type_name(record.cc_name.identifier.as_ref());
-    let namespace_qualifier = db.namespace_qualifier(record).format_for_cc()?;
+    let features = db.ir().target_crubit_features(&record.owning_target);
+    let ident = format_nonportable_cc_type_name(record.cc_name.identifier.as_ref())?;
+    let namespace_qualifier = db.namespace_qualifier(record).format_for_cc(features)?;
     Ok(quote! { #namespace_qualifier #ident })
 }
 
@@ -149,21 +150,25 @@ pub fn tagless_cpp_type_name_for_item(
     item: &ir::Item,
     db: &BindingsGenerator<'_>,
 ) -> Result<TokenStream> {
+    let features =
+        item.owning_target().map(|t| db.ir().target_crubit_features(&t)).unwrap_or_default();
     match item {
         Item::IncompleteRecord(incomplete_record) => {
-            let ident = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
-            let namespace_qualifier = db.namespace_qualifier(incomplete_record).format_for_cc()?;
+            let ident =
+                format_nonportable_cc_type_name(incomplete_record.cc_name.identifier.as_ref())?;
+            let namespace_qualifier =
+                db.namespace_qualifier(incomplete_record).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::Record(record) => cpp_tagless_type_name_for_record(record, db),
         Item::Enum(enum_) => {
-            let ident = expect_format_cc_type_name(&enum_.rs_name.identifier);
-            let namespace_qualifier = db.namespace_qualifier(item).format_for_cc()?;
+            let ident = format_nonportable_cc_type_name(&enum_.rs_name.identifier)?;
+            let namespace_qualifier = db.namespace_qualifier(item).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
-            let ident = expect_format_cc_type_name(&type_alias.cc_name.identifier);
-            let namespace_qualifier = db.namespace_qualifier(item).format_for_cc()?;
+            let ident = format_nonportable_cc_type_name(&type_alias.cc_name.identifier)?;
+            let namespace_qualifier = db.namespace_qualifier(item).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::ExistingRustType(existing_rust_type) => existing_rust_type

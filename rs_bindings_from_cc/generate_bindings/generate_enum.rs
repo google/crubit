@@ -5,7 +5,7 @@
 //! Generates Rust bindings for C++ enums.
 
 use arc_anyhow::Result;
-use code_gen_utils::{format_cc_ident, make_rs_ident};
+use code_gen_utils::{format_nonportable_cc_ident, make_rs_ident};
 use database::code_snippet::{
     integer_constant_to_token_stream, ApiSnippets, CfiEncodingAttr, DeprecatedAttr, DisplayImpl,
     Feature, GeneratedItem, MustUseAttr, Thunk, ThunkImpl,
@@ -22,8 +22,9 @@ use std::rc::Rc;
 /// Implementation of `BindingsGenerator::generate_enum`.
 pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Type);
-    let ident = format_cc_ident(&enum_.cc_name.identifier)?;
-    let namespace_qualifier = db.namespace_qualifier(&enum_).format_for_cc()?;
+    let features = db.ir().target_crubit_features(&enum_.owning_target);
+    let ident = format_nonportable_cc_ident(&enum_.cc_name.identifier)?;
+    let namespace_qualifier = db.namespace_qualifier(&enum_).format_for_cc(features)?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident };
     let name = make_rs_ident(&enum_.rs_name.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
