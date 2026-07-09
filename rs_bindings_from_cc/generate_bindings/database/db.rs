@@ -49,6 +49,8 @@ impl InternerImpl {
 ///
 /// Note that this type is just a big memory leak until it drops, but since Crubit builds up
 /// everything once before finishing, this is to be expected.
+///
+/// To intern a string, use `intern!(interner, "string {}", args)`.
 #[derive(Default)]
 pub struct Interner {
     imp: RefCell<InternerImpl>,
@@ -61,20 +63,28 @@ impl Interner {
 
     /// Interns a `format_args!()` value and hands it back as an `Rc<str>`.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// let interner = Interner::default();
-    /// for i in 0..10 {
-    ///     process(interner.intern(format_args!("thing_{}", i % 2)));
-    ///     //                      ^^^^^^^^^^^
-    ///     //                      unlike format!(), format_args!() doesn't allocate
-    /// }
-    /// // only "thing_0" and "thing_1" will be allocated.
-    /// ```
+    /// Don't call this function directly, use `intern!(interner, ...)` instead.
     pub fn intern(&self, args: Arguments<'_>) -> Rc<str> {
         self.imp.borrow_mut().intern(args)
     }
+}
+
+/// Interns a `format_args!()` value and hands it back as an `Rc<str>`.
+///
+/// # Examples
+///
+/// ```
+/// let interner = Interner::new();
+/// for i in 0..10 {
+///     process(intern!(interner, "thing_{}", i % 2));
+/// }
+/// // "thing_0" and "thing_1" will be allocated once each.
+/// ```
+#[macro_export]
+macro_rules! intern {
+    ($interner:expr, $($args:tt)*) => {
+        $interner.intern(::core::format_args!($($args)*))
+    };
 }
 
 #[derive(Clone)]
@@ -383,17 +393,22 @@ impl<'db> BindingsGenerator<'db> {
                         name.push_str("operator [conversion]");
                     }
                 }
-                return name.into();
+                return intern!(self.interner(), "{name}");
             }
             ir::Item::Comment(c) => {
-                return format!(
+                return intern!(
+                    self.interner(),
                     "<[internal] comment at {}>",
                     c.source_loc().as_deref().unwrap_or("<unknown loc>")
-                )
-                .into()
+                );
             }
             ir::Item::UseMod(u) => {
-                return format!("<[internal] use mod {}::* = {}>", u.mod_name, u.path).into()
+                return intern!(
+                    self.interner(),
+                    "<[internal] use mod {}::* = {}>",
+                    u.mod_name,
+                    u.path
+                );
             }
             ir::Item::UnsupportedItem(ui) => return ui.name.clone(),
             ir::Item::ExistingRustType(e) => (e.id, e.cc_name.clone()),
@@ -406,7 +421,7 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::TypeAlias(t) => (t.id, t.cc_name.identifier.clone()),
         };
         let qualifier = self.namespace_qualifier_from_id(id).format_for_cc_debug();
-        return format! {"{qualifier}{name}"}.into();
+        return intern!(self.interner(), "{qualifier}{name}");
     }
 
     pub fn cc_type_debug_name(&self, cc_type: &CcType) -> String {
@@ -513,10 +528,11 @@ impl<'db> BindingsGenerator<'db> {
         path: Option<ir::UnsupportedItemPath>,
         message: &'static str,
     ) -> ir::UnsupportedItem {
+        let message = intern!(self.interner(), "{message}");
         self.new_unsupported_item(
             item,
             path,
-            Some(Rc::new(ir::FormattedError { fmt: message.into(), message: message.into() })),
+            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message })),
             None,
             item.must_bind(),
         )
@@ -619,7 +635,7 @@ impl<'db> BindingsGenerator<'db> {
                     let module_name =
                         self.record_to_associated_module_name(parent_record.clone()).unwrap();
                     nested_records.push((
-                        module_name.to_string().into(),
+                        intern!(self.interner(), "{module_name}"),
                         parent_record.cc_name.identifier.clone(),
                     ));
                     enclosing_item_id = parent_record.enclosing_item_id;
