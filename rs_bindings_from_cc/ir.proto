@@ -563,4 +563,5 @@ message IRProto {
   repeated string unstable_rust_features = 7;
   repeated string reexported_namespaces = 8;
   map<string, ItemList> top_level_items = 9;
+  map<string, string> crate_names = 10;
 }

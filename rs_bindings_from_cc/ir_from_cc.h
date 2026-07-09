@@ -45,6 +45,7 @@ struct IrFromCcOptions final {
   absl::Span<const std::string> extra_instantiations = {};
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       crubit_features = {};
+  absl::flat_hash_map<BazelLabel, std::string> crate_names = {};
   absl::string_view driver_path = "rs_bindings_from_cc_driver";
 
   // Note: an empty allowlist disables the allowlist, allowing usage of

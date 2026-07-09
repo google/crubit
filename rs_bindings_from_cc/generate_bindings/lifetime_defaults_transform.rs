@@ -839,6 +839,7 @@ pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
         current_target: ir.tree_ir().current_target.clone(),
         crate_root_path: ir.tree_ir().crate_root_path.clone(),
         crubit_features: ir.tree_ir().crubit_features.clone(),
+        crate_names: ir.tree_ir().crate_names.clone(),
         reexported_namespaces: ir.tree_ir().reexported_namespaces.clone(),
         unstable_rust_features: ir.tree_ir().unstable_rust_features.clone(),
         top_level_items,

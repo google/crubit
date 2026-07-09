@@ -83,7 +83,8 @@ TEST(CmdlineTest, BasicCorrectInput) {
   absl::SetFlag(&FLAGS_rustfmt_config_path, "rustfmt_config_path");
   absl::SetFlag(&FLAGS_public_headers, {"h1"});
   absl::SetFlag(&FLAGS_target, "//:t1");
-  absl::SetFlag(&FLAGS_target_args, R"([{"t": "//:t1", "h": ["h1", "h2"]}])");
+  absl::SetFlag(&FLAGS_target_args,
+                R"([{"t": "//:t1", "h": ["h1", "h2"], "c": "custom_crate"}])");
   absl::SetFlag(&FLAGS_extra_rs_srcs, {"extra_file.rs"});
   absl::SetFlag(&FLAGS_reexported_namespaces, {"absl"});
   absl::SetFlag(&FLAGS_srcs_to_scan_for_instantiations,
@@ -115,6 +116,8 @@ TEST(CmdlineTest, BasicCorrectInput) {
       args.headers_to_targets,
       UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("//:t1")),
                            Pair(HeaderName("h2"), BazelLabel("//:t1"))));
+  EXPECT_THAT(args.target_to_crate_name,
+              UnorderedElementsAre(Pair(BazelLabel("//:t1"), "custom_crate")));
   EXPECT_EQ(args.is_golden_test, true);
 }
 

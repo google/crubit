@@ -108,6 +108,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
           .clang_args = clang_args_view,
           .extra_instantiations = requested_instantiations,
           .crubit_features = args.target_to_features,
+          .crate_names = args.target_to_crate_name,
           .driver_path = args.driver_path,
           .do_not_bind_allowlist = std::move(do_not_bind_allowlist),
           .kythe_annotations = args.kythe_annotations,

@@ -75,7 +75,7 @@ def generate_bindings(
       header_includes: A list of flags to be passed to the command line with "-include".
       action_inputs: A depset of inputs to the bindings generating action.
       target_args: A depset of strings, each one representing mapping of target to
-                        its per-target arguments (headers, features) in json format.
+                        its per-target arguments (headers, features, crate name) in json format.
       extra_rs_srcs: A list of extra source file and module path pairs to add.
       unstable_rust_features: A list of unstable rustc features to enable.
       extra_rs_bindings_from_cc_cli_flags: CLI flags to be passed to `rs_bindings_from_cc`.
