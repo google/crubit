@@ -717,6 +717,36 @@ pub fn format_ty_for_cc<'tcx>(
     })
 }
 
+/// Returns the `AliasTy` if `ty` is a type alias, or `None` otherwise.
+pub(crate) fn ty_as_alias_ty<'tcx>(ty: Ty<'tcx>) -> Option<&'tcx ty::AliasTy<'tcx>> {
+    #[rustversion::any(all(nightly, since(2026-06-25)), stable(1.95))]
+    let ty::TyKind::Alias(_, alias_ty) = ty.kind() else {
+        return None;
+    };
+    #[rustversion::any(all(nightly, before(2026-06-25)), stable(1.96))]
+    let ty::TyKind::Alias(alias_ty) = ty.kind() else {
+        return None;
+    };
+
+    Some(alias_ty)
+}
+
+/// Returns `Some(def_id)` if `alias_ty` represents an `Opaque` alias
+/// (`-> impl Trait` / `async fn`).
+pub(crate) fn alias_ty_as_opaque_def_id<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    alias_ty: &ty::AliasTy<'tcx>,
+) -> Option<DefId> {
+    #[rustversion::stable(1.95)]
+    let def_id = alias_ty.def_id;
+    #[rustversion::any(all(nightly, before(2026-06-23)), stable(1.96))]
+    let def_id = alias_ty.kind.def_id();
+    #[rustversion::all(nightly, since(2026-06-23))]
+    let def_id: DefId = alias_ty.kind.try_to_opaque()?;
+
+    (tcx.def_kind(def_id) == rustc_hir::def::DefKind::OpaqueTy).then_some(def_id)
+}
+
 enum RefConvert {
     ToPtr { is_lifetime_bound: bool },
     ToRef,
