@@ -192,7 +192,7 @@ fn collect_unqualified_member_functions_from_all_bases(
 
 /// Implementation of `BindingsGenerator::collect_unqualified_member_functions`.
 pub fn collect_unqualified_member_functions(
-    db: &BindingsGenerator,
+    _db: &BindingsGenerator,
     record: Rc<Record>,
 ) -> Rc<[Rc<Func>]> {
     record
