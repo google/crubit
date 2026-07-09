@@ -1143,7 +1143,7 @@ fn test_default_crubit_features_disabled_dependency_supported_function_parameter
         "void Func(NotPresent);",
         /*dependency=*/ "struct NotPresent {};",
     )?;
-    ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {Func});
@@ -1157,7 +1157,7 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_parameter()
         "void Func(NotPresent);",
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;",
     )?;
-    ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {Func});
@@ -1168,7 +1168,7 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_parameter()
 #[gtest]
 fn test_default_crubit_features_disabled_dependency_supported_function_return_type() -> Result<()> {
     let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
-    ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {Func});
@@ -1181,7 +1181,7 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_return_type
     let mut ir = ir_from_cc_dependency(
         "NotPresent Func();",
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;")?;
-    ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {Func});
@@ -1193,7 +1193,7 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_return_type
 fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
     for dependency in ["struct NotPresent {signed char x;};", "using NotPresent = signed char;"] {
         let mut ir = ir_from_cc_dependency("struct Present {NotPresent field;};", dependency)?;
-        ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+        ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
         enable_supported(&mut ir);
         let BindingsTokens { rs_api, rs_api_impl: _ } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_matches!(

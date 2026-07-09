@@ -554,9 +554,7 @@ impl<'db> BindingsGenerator<'db> {
             name,
             id: item.id().as_u64(),
             unique_name: item.unique_name(),
-            defining_target: self
-                .defining_target(item.id())
-                .map(|ir::BazelLabel(label)| std::rc::Rc::clone(&label)),
+            defining_target: self.defining_target(item.id()).map(|label| label.as_str().into()),
         }
     }
 

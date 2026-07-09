@@ -77,11 +77,11 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
 /// `make_ir_from_items` and `ir_from_cc_dependency`.
 fn update_test_ir(ir: &mut IR, extra_feature: Option<&str>) {
     *ir.target_crubit_features_mut(&ir.current_target().clone()) = *TESTING_FEATURES;
-    *ir.target_crubit_features_mut(&ir::BazelLabel(DEPENDENCY_TARGET.into())) = *TESTING_FEATURES;
+    *ir.target_crubit_features_mut(&ir::BazelLabel::from(DEPENDENCY_TARGET)) = *TESTING_FEATURES;
     if let Some(s) = extra_feature {
         let feature = crubit_feature::named_features(s.as_bytes()).unwrap();
         *ir.target_crubit_features_mut(&ir.current_target().clone()) |= feature;
-        *ir.target_crubit_features_mut(&ir::BazelLabel(DEPENDENCY_TARGET.into())) |= feature;
+        *ir.target_crubit_features_mut(&ir::BazelLabel::from(DEPENDENCY_TARGET)) |= feature;
     }
 }
 
@@ -230,7 +230,7 @@ mod tests {
     #[gtest]
     fn test_features_ir_from_cc() -> Result<()> {
         let ir = ir_from_cc(multiplatform_testing::Platform::X86Linux, "")?;
-        let enabled_features = ir.target_crubit_features(&ir::BazelLabel(TESTING_TARGET.into()));
+        let enabled_features = ir.target_crubit_features(&ir::BazelLabel::from(TESTING_TARGET));
         expect_eq!(
             enabled_features,
             CrubitFeature::Experimental
@@ -244,7 +244,7 @@ mod tests {
     #[gtest]
     fn test_features_ir_from_items() -> Result<()> {
         let ir = make_ir_from_items([]);
-        let enabled_features = ir.target_crubit_features(&ir::BazelLabel(TESTING_TARGET.into()));
+        let enabled_features = ir.target_crubit_features(&ir::BazelLabel::from(TESTING_TARGET));
         expect_eq!(
             enabled_features,
             CrubitFeature::Experimental

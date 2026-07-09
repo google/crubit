@@ -278,7 +278,7 @@ fn compute_disambiguator_hash(func: &Func) -> String {
     }
 
     let mut hasher = StableSipHasher128::new();
-    hasher.write(func.owning_target.0.as_bytes());
+    hasher.write(func.owning_target.as_str().as_bytes());
     hasher.write(func.source_loc.as_bytes());
     let hash: Hash64 = hasher.finish();
     format!("{:08x}_", hash.0 as u32)

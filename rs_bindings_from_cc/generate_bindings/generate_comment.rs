@@ -29,7 +29,7 @@ pub fn generate_top_level_comment(ir: &IR, is_golden_test: bool) -> String {
     // current build environment returns a guid-like path... :-/
     //
     // TODO(b/255784681): Consider including cmdline arguments.
-    let target = &ir.current_target().0;
+    let target = ir.current_target().as_str();
 
     let mut result = format!(
         "// Automatically @generated Rust bindings for the following C++ target:\n\

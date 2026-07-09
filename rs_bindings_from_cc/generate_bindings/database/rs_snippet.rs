@@ -2322,7 +2322,7 @@ mod tests {
                 cc_name: "".into(),
                 unique_name: name.clone(),
                 template_args: Vec::new(),
-                owning_target: BazelLabel("//new/for/testing".into()),
+                owning_target: BazelLabel::from("//new/for/testing"),
                 size_align: None,
                 is_same_abi,
                 id: ItemId::new_for_testing(0),
@@ -2452,7 +2452,7 @@ mod tests {
             },
         ] {
             let reasons = func_ptr.missing_feature_descriptions_of_type(
-                &BazelLabel("//fake".into()),
+                &BazelLabel::from("//fake"),
                 CrubitFeature::Types.into(),
             );
             assert_eq!(reasons, vec!["references are not yet supported"]);
@@ -2493,7 +2493,7 @@ mod tests {
                 unique_name: "MyEnum".into(),
                 mangled_cc_name: "6MyEnum".into(),
                 id: ItemId::new_for_testing(0),
-                owning_target: BazelLabel("//foo/bar".into()),
+                owning_target: BazelLabel::from("//foo/bar"),
                 source_loc: "some_file.h:123".into(),
                 underlying_type: CcType::new(
                     CcTypeVariant::Primitive(Primitive::Int32T),
@@ -2524,7 +2524,7 @@ mod tests {
                 rs_name: Identifier { identifier: "MyStruct".into() },
                 unique_name: "MyStruct".into(),
                 id: ItemId::new_for_testing(0),
-                owning_target: BazelLabel("//foo/bar".into()),
+                owning_target: BazelLabel::from("//foo/bar"),
                 unknown_attr: None,
                 record_type: RecordType::Class,
                 enclosing_item_id: None,
@@ -2549,7 +2549,7 @@ mod tests {
                 rs_name: Identifier { identifier: "MyAlias".into() },
                 unique_name: "MyAlias".into(),
                 id: ItemId::new_for_testing(1),
-                owning_target: BazelLabel("//foo/bar".into()),
+                owning_target: BazelLabel::from("//foo/bar"),
                 doc_comment: None,
                 unknown_attr: None,
                 underlying_type: CcType::new(

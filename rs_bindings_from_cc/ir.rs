@@ -780,9 +780,13 @@ impl ToTokens for LifetimeId {
 /// A Bazel label, e.g. `//foo:bar`.
 #[derive(Debug, Eq, Clone, Deserialize)]
 #[serde(transparent)]
-pub struct BazelLabel(pub Rc<str>);
+pub struct BazelLabel(pub(crate) Rc<str>);
 
 impl BazelLabel {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
     /// Returns the target name. E.g. `bar` for `//foo:bar`.
     pub fn target_name(&self) -> &str {
         if let Some((_package, target_name)) = self.0.split_once(':') {
