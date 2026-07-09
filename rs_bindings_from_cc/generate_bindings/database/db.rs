@@ -14,7 +14,7 @@ use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, Unqualified
 use proc_macro2::Ident;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Display;
+use std::fmt::{Arguments, Display};
 use std::rc::Rc;
 
 #[derive(Default)]
@@ -24,9 +24,9 @@ struct InternerImpl {
 }
 
 impl InternerImpl {
-    fn intern(&mut self, f: &dyn Display) -> Rc<str> {
+    fn intern(&mut self, args: Arguments<'_>) -> Rc<str> {
         use std::fmt::Write as _;
-        write!(self.buf, "{f}").unwrap();
+        self.buf.write_fmt(args).unwrap();
         let rc = if let Some(interned) = self.interned.get(self.buf.as_str()) {
             Rc::clone(interned)
         } else {
@@ -59,10 +59,7 @@ impl Interner {
         Self::default()
     }
 
-    /// Interns a `Display` value and hands it back as an `Rc<str>`.
-    ///
-    /// Note that `Interner` reuses an internal buffer to reduce allocator load, allowing users to
-    /// pass in not-yet-formatted `Display` values to be interned.
+    /// Interns a `format_args!()` value and hands it back as an `Rc<str>`.
     ///
     /// # Examples
     ///
@@ -75,10 +72,8 @@ impl Interner {
     /// }
     /// // only "thing_0" and "thing_1" will be allocated.
     /// ```
-    pub fn intern(&self, f: impl Display) -> Rc<str> {
-        // Takes impl Display for user ergonomics, but type erases to &dyn Display to avoid
-        // many monomorphizations of the actual business logic of interning.
-        self.imp.borrow_mut().intern(&f)
+    pub fn intern(&self, args: Arguments<'_>) -> Rc<str> {
+        self.imp.borrow_mut().intern(args)
     }
 }
 
