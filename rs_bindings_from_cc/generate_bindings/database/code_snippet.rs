@@ -467,7 +467,8 @@ pub fn integer_constant_to_token_stream(
             underlying_type.display(db),
         )
     };
-    let IntegerConstant { is_negative, wrapped_value } = integer_constant;
+    let is_negative = integer_constant.is_negative();
+    let wrapped_value = integer_constant.wrapped_value();
     Ok(if underlying_type.is_bool() {
         if wrapped_value == 0 {
             quote! {false}

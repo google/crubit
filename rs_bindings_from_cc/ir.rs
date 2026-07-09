@@ -718,8 +718,18 @@ impl PartialEq<&str> for Identifier {
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IntegerConstant {
-    pub is_negative: bool,
-    pub wrapped_value: u64,
+    pub(crate) is_negative: bool,
+    pub(crate) wrapped_value: u64,
+}
+
+impl IntegerConstant {
+    pub fn is_negative(&self) -> bool {
+        self.is_negative
+    }
+
+    pub fn wrapped_value(&self) -> u64 {
+        self.wrapped_value
+    }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]

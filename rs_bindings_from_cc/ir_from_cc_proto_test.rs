@@ -193,14 +193,14 @@ fn test_enum_proto() -> Result<()> {
 
     let k_a = enum_decl.enumerators.as_ref().unwrap().first().expect("should have enumerator 'kA'");
     assert_eq!(k_a.identifier.identifier.as_ref(), "kA");
-    assert_eq!(k_a.value.wrapped_value, 42);
-    assert!(!k_a.value.is_negative);
+    assert_eq!(k_a.value.wrapped_value(), 42);
+    assert!(!k_a.value.is_negative());
 
     let k_b = enum_decl.enumerators.as_ref().unwrap().get(1).expect("should have enumerator 'kB'");
     assert_eq!(k_b.identifier.identifier.as_ref(), "kB");
     // In proto, wrapped_value is int64, so -1 cast to int64 is -1.
-    assert_eq!(k_b.value.wrapped_value as i64, -1);
-    assert!(k_b.value.is_negative);
+    assert_eq!(k_b.value.wrapped_value() as i64, -1);
+    assert!(k_b.value.is_negative());
     Ok(())
 }
 
