@@ -15,7 +15,7 @@ use database::code_snippet::{
     self, integer_constant_to_token_stream, ApiSnippets, Bindings, BindingsTokens, CppDetails,
     CppIncludes, DeprecatedAttr, Feature, GeneratedItem,
 };
-use database::db::{BindingsGenerator, CodegenFunctions};
+use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::rs_snippet::{
     BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions, Mutability,
     PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
@@ -398,6 +398,7 @@ pub fn new_database<'db>(
     fatal_errors: &'db dyn ReportFatalError,
     is_golden_test: bool,
     kythe_annotations: bool,
+    interner: &'db Interner,
 ) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         ir,
@@ -411,6 +412,7 @@ pub fn new_database<'db>(
             generate_record: generate_struct_and_union::generate_record,
             decl_lifetime_arity: lifetime_defaults_transform::decl_lifetime_arity,
         },
+        interner,
         rs_type_kind_safety,
         record_field_safety,
         record_safety,
@@ -440,7 +442,8 @@ pub fn generate_bindings_tokens(
     is_golden_test: bool,
     kythe_annotations: bool,
 ) -> Result<BindingsTokens> {
-    let db = new_database(ir, errors, fatal_errors, is_golden_test, kythe_annotations);
+    let interner = Interner::default();
+    let db = new_database(ir, errors, fatal_errors, is_golden_test, kythe_annotations, &interner);
     let mut snippets = ApiSnippets::default();
 
     // For #![rustfmt::skip].

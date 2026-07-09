@@ -5,6 +5,7 @@
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use database::code_snippet::BindingsTokens;
+use database::db::Interner;
 use database::rs_snippet::{format_generic_params, Lifetime};
 use error_report::{ErrorReport, FatalErrors, SourceLanguage};
 use generate_bindings::new_database;
@@ -1209,7 +1210,8 @@ fn test_thunk_ident_function() -> Result<()> {
     let func = retrieve_func(&ir, "foo");
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
-    let db = new_database(&ir, &errors, &fatal_errors, false, false);
+    let interner = Interner::new();
+    let db = new_database(&ir, &errors, &fatal_errors, false, false, &interner);
     assert_eq!(thunk_ident(&db, func), make_rs_ident("__rust_thunk___Z3foov"));
     Ok(())
 }
@@ -1219,7 +1221,8 @@ fn test_thunk_ident_special_names() -> Result<()> {
     let ir = ir_from_cc("struct Class {};")?;
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
-    let db = new_database(&ir, &errors, &fatal_errors, false, false);
+    let interner = Interner::new();
+    let db = new_database(&ir, &errors, &fatal_errors, false, false, &interner);
 
     let destructor = ir.get_functions_by_name(&UnqualifiedIdentifier::Destructor).next().unwrap();
     assert_eq!(thunk_ident(&db, destructor), make_rs_ident("__rust_thunk___ZN5ClassD1Ev"));

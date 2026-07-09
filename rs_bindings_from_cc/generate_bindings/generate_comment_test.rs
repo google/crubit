@@ -6,7 +6,7 @@
 
 use arc_anyhow::Result;
 use database::code_snippet;
-use database::BindingsGenerator;
+use database::db::{BindingsGenerator, Interner};
 use error_report::{ErrorReport, FatalErrors, SourceLanguage};
 use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
@@ -119,6 +119,7 @@ struct TestDbFactory {
     ir: IR,
     errors: ErrorReport,
     fatal_errors: FatalErrors,
+    interner: Interner,
 }
 impl TestDbFactory {
     fn new() -> Self {
@@ -141,6 +142,7 @@ impl TestDbFactory {
             ir: make_ir_from_items([test_item.into()]),
             errors: ErrorReport::new(SourceLanguage::Cpp),
             fatal_errors: FatalErrors::new(),
+            interner: Interner::new(),
         }
     }
     fn make_db(&self, is_golden_test: bool) -> BindingsGenerator {
@@ -150,6 +152,7 @@ impl TestDbFactory {
             &self.fatal_errors,
             is_golden_test,
             /*kythe_annotations=*/ false,
+            &self.interner,
         )
     }
 }

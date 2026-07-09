@@ -492,6 +492,7 @@ multiplatform_rust_test(
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc:ir_matchers",
         "//rs_bindings_from_cc:ir_testing",
+        "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:googletest",
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",

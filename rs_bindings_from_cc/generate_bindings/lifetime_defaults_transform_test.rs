@@ -4,6 +4,7 @@
 #![cfg(test)]
 
 use arc_anyhow::Result;
+use database::db::Interner;
 use error_report::{ErrorReport, FatalErrors, SourceLanguage};
 use generate_bindings::new_database;
 use googletest::matchers::contains_substring;
@@ -20,7 +21,8 @@ use std::rc::Rc;
 fn lifetime_defaults_transform_ir(ir: &ir::IR) -> Result<ir::IR> {
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
-    let db = new_database(ir, &errors, &fatal_errors, false, false);
+    let interner = Interner::new();
+    let db = new_database(ir, &errors, &fatal_errors, false, false, &interner);
     lifetime_defaults_transform(&db)
 }
 
@@ -1284,7 +1286,8 @@ fn arity_of_record(ir: &ir::IR, record_name: &str) -> Result<usize> {
     let record = retrieve_record(ir, record_name);
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
-    let db = new_database(ir, &errors, &fatal_errors, false, false);
+    let interner = Interner::new();
+    let db = new_database(ir, &errors, &fatal_errors, false, false, &interner);
     record_lifetime_arity(&db, record)
 }
 

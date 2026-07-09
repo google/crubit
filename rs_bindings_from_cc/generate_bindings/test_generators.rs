@@ -6,7 +6,7 @@
 
 use arc_anyhow::Result;
 use database::code_snippet::BindingsTokens;
-use database::db::BindingsGenerator;
+use database::db::{BindingsGenerator, Interner};
 use error_report::{bail, ErrorReport, FatalErrors, SourceLanguage};
 use generate_bindings::{generate_bindings_tokens, new_database};
 use ir::IR;
@@ -50,6 +50,7 @@ pub struct TestDbFactory {
     ir: IR,
     errors: ErrorReport,
     fatal_errors: FatalErrors,
+    interner: Interner,
 }
 
 impl TestDbFactory {
@@ -58,6 +59,7 @@ impl TestDbFactory {
             ir: ir_from_cc(cc_str)?,
             errors: ErrorReport::new(SourceLanguage::Cpp),
             fatal_errors: FatalErrors::new(),
+            interner: Interner::default(),
         })
     }
     pub fn make_db(&self) -> BindingsGenerator {
@@ -67,6 +69,7 @@ impl TestDbFactory {
             &self.fatal_errors,
             false,
             /*kythe_annotations=*/ false,
+            &self.interner,
         )
     }
 }

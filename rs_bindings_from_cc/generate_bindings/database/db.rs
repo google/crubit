@@ -12,8 +12,75 @@ use error_report::{ErrorReporting, ReportFatalError};
 use heck::ToSnakeCase;
 use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
-use std::collections::HashMap;
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 use std::rc::Rc;
+
+#[derive(Default)]
+struct InternerImpl {
+    buf: String,
+    interned: HashSet<Rc<str>>,
+}
+
+impl InternerImpl {
+    fn intern(&mut self, f: &dyn Display) -> Rc<str> {
+        use std::fmt::Write as _;
+        write!(self.buf, "{f}").unwrap();
+        let rc = if let Some(interned) = self.interned.get(self.buf.as_str()) {
+            Rc::clone(interned)
+        } else {
+            let rc = Rc::from(self.buf.as_str());
+            self.interned.insert(Rc::clone(&rc));
+            rc
+        };
+
+        // If we just allocated something massive, free up the memory.
+        self.buf.truncate(1024);
+        self.buf.shrink_to_fit();
+
+        // And then clear for next use.
+        self.buf.clear();
+        rc
+    }
+}
+
+/// A basic string interner that hands out `Rc<str>` handles to keep lifetimes simple.
+///
+/// Note that this type is just a big memory leak until it drops, but since Crubit builds up
+/// everything once before finishing, this is to be expected.
+#[derive(Default)]
+pub struct Interner {
+    imp: RefCell<InternerImpl>,
+}
+
+impl Interner {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Interns a `Display` value and hands it back as an `Rc<str>`.
+    ///
+    /// Note that `Interner` reuses an internal buffer to reduce allocator load, allowing users to
+    /// pass in not-yet-formatted `Display` values to be interned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let interner = Interner::default();
+    /// for i in 0..10 {
+    ///     process(interner.intern(format_args!("thing_{}", i % 2)));
+    ///     //                      ^^^^^^^^^^^
+    ///     //                      unlike format!(), format_args!() doesn't allocate
+    /// }
+    /// // only "thing_0" and "thing_1" will be allocated.
+    /// ```
+    pub fn intern(&self, f: impl Display) -> Rc<str> {
+        // Takes impl Display for user ergonomics, but type erases to &dyn Display to avoid
+        // many monomorphizations of the actual business logic of interning.
+        self.imp.borrow_mut().intern(&f)
+    }
+}
 
 #[derive(Clone)]
 pub struct CodegenFunctions {
@@ -47,6 +114,9 @@ memoized::query_group! {
 
         #[input]
         fn codegen_functions(&self) -> CodegenFunctions;
+
+        #[input]
+        fn interner(&self) -> &'db Interner;
 
         #[break_cycles_with = None]
         /// Returns whether the given Rust type is an unsafe type, such as a raw pointer.
