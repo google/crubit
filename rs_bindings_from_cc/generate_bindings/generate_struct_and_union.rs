@@ -176,7 +176,7 @@ fn collect_unqualified_member_functions_from_all_bases(
         .unambiguous_public_bases
         .iter()
         .flat_map(|base_class| {
-            let Ok(item) = db.find_decl::<Item>(base_class.base_record_id) else {
+            let Ok(item) = db.find_decl::<Item>(base_class.base_record_id()) else {
                 return vec![];
             };
 
@@ -987,7 +987,7 @@ fn cc_struct_upcast_impl(
     let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
     for base in &record.unambiguous_public_bases {
         let base_record: &Rc<Record> = db
-            .find_decl(base.base_record_id)
+            .find_decl(base.base_record_id())
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
         let Ok(base_type) = db.rs_type_kind(base_record.as_ref().into()) else {
             // The base type is unknown to Crubit, so don't generate upcast code for it.
@@ -1006,7 +1006,7 @@ fn cc_struct_upcast_impl(
             continue;
         }
         let base_name = base_type.to_token_stream(db);
-        let body = if let Some(offset) = base.offset {
+        let body = if let Some(offset) = base.offset() {
             UpcastImplBody::PointerOffset { offset }
         } else {
             let cast_fn_name = make_rs_ident(&format!(

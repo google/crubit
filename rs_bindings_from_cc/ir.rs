@@ -1147,8 +1147,18 @@ pub enum SpecialMemberFunc {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BaseClass {
-    pub base_record_id: ItemId,
-    pub offset: Option<i64>,
+    pub(crate) base_record_id: ItemId,
+    pub(crate) offset: Option<i64>,
+}
+
+impl BaseClass {
+    pub fn base_record_id(&self) -> ItemId {
+        self.base_record_id
+    }
+
+    pub fn offset(&self) -> Option<i64> {
+        self.offset
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
