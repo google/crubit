@@ -158,4 +158,4 @@ jobs:
           gh issue create \
             --title "$TITLE" \
             --body "$BODY" \
-            --label "p1,bug,automated-report"
+            --label "p2,bug,automated-report"
