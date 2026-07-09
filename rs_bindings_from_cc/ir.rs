@@ -1225,8 +1225,18 @@ impl ToTokens for RecordType {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SizeAlign {
-    pub size: usize,
-    pub alignment: usize,
+    pub(crate) size: usize,
+    pub(crate) alignment: usize,
+}
+
+impl SizeAlign {
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
+    pub fn alignment(&self) -> usize {
+        self.alignment
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]

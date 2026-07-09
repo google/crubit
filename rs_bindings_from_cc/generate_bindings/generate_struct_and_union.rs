@@ -492,7 +492,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
             let cur = cur.unwrap();
             let prev_end = prev.and_then(|p| p.end).unwrap_or(cur.offset);
             let next_offset = next.map(|n| n.offset);
-            let end = cur.end.or(next_offset).unwrap_or(record.size_align.size * 8);
+            let end = cur.end.or(next_offset).unwrap_or(record.size_align.size() * 8);
 
             if let Some(&FieldWithLayout { ir: Some(prev_ir), end: Some(prev_end), .. }) = prev {
                 assert!(
@@ -551,7 +551,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     let head_padding = if let Some(first_field) = record.fields.first() {
         first_field.offset / 8
     } else {
-        record.size_align.size
+        record.size_align.size()
     };
     // Prevent direct initialization for non-aggregate structs.
     //
@@ -730,8 +730,9 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         deprecated_attr: record.deprecated.clone().map(DeprecatedAttr),
         // Thread-safe types always need explicit alignment because the opaque
         // UnsafeCell<[MaybeUninit<u8>; N]> body has alignment 1.
-        align: if (override_alignment || record.is_thread_safe) && record.size_align.alignment > 1 {
-            Some(record.size_align.alignment)
+        align: if (override_alignment || record.is_thread_safe) && record.size_align.alignment() > 1
+        {
+            Some(record.size_align.alignment())
         } else {
             None
         },
@@ -769,7 +770,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         delete: operator_delete_impl,
         lifetime_params,
         is_thread_safe: record.is_thread_safe,
-        size: record.size_align.size,
+        size: record.size_align.size(),
     };
 
     api_snippets.features |= Feature::negative_impls;
@@ -840,7 +841,7 @@ pub struct ChildItem {
 }
 
 pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> Assertion {
-    Assertion::SizeAlign { type_name, size: size_align.size, alignment: size_align.alignment }
+    Assertion::SizeAlign { type_name, size: size_align.size(), alignment: size_align.alignment() }
 }
 
 pub fn generate_derives(record: &Record) -> DeriveAttr {
@@ -905,7 +906,7 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
 
     // only use CRUBIT_SIZEOF for alignment > 1, so as to simplify the generated
     // code.
-    let sizeof_impl = if record.size_align.alignment > 1 {
+    let sizeof_impl = if record.size_align.alignment() > 1 {
         SizeofImpl::RoundUpToAlignment
     } else {
         SizeofImpl::Builtin
@@ -916,8 +917,8 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
         namespace_qualifier,
         record_ident: record.cc_name.identifier.clone(),
         sizeof_impl,
-        size: record.size_align.size,
-        alignment: record.size_align.alignment,
+        size: record.size_align.size(),
+        alignment: record.size_align.alignment(),
         fields_and_expected_offsets,
     })
 }
