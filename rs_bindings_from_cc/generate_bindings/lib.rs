@@ -230,7 +230,7 @@ fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSni
             var.id,
             GeneratedItem::GlobalVar {
                 link_name: var.mangled_name.clone(),
-                is_mut: !var.type_.is_const,
+                is_mut: !var.type_.is_const(),
                 ident: make_rs_ident(&var.rs_name.identifier),
                 type_tokens: type_.to_token_stream(db),
                 visibility: db.type_visibility(&var.owning_target, type_).unwrap_or_default(),

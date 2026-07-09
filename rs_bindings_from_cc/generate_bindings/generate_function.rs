@@ -356,14 +356,14 @@ fn api_func_shape_for_operator_index(
     param_types: &mut [RsTypeKind],
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind)> {
-    let CcTypeVariant::Pointer(pointee) = &func.return_type.variant else {
+    let CcTypeVariant::Pointer(pointee) = func.return_type.variant() else {
         bail_to_errors!(
             errors,
             "operator[] should return a reference, found {}",
             db.cc_type_debug_name(&func.return_type)
         )
     };
-    let return_val_is_const = pointee.pointee_type.is_const;
+    let return_val_is_const = pointee.pointee_type.is_const();
 
     let Some(instance_method_metadata) = &func.instance_method_metadata else {
         panic!("cannot tell whether operator[] is const or not, shouldn't happen")
@@ -424,7 +424,7 @@ fn generate_cc_operator_index_nonmut_impls(
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind)> {
     let func_name = make_rs_ident("cc_index");
-    let output_pointee_cc_type = match &func.return_type.variant {
+    let output_pointee_cc_type = match func.return_type.variant() {
         CcTypeVariant::Pointer(pointer_data) => {
             if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
                 errors.add(anyhow!(
@@ -432,7 +432,7 @@ fn generate_cc_operator_index_nonmut_impls(
                     pointer_data.kind
                 ));
             }
-            if !pointer_data.pointee_type.is_const {
+            if !pointer_data.pointee_type.is_const() {
                 errors.add(anyhow!("operator[] must return a const value"));
             }
 
@@ -481,7 +481,7 @@ fn generate_cc_operator_index_mut_impls(
 ) -> ErrorsOr<(Ident, ImplKind)> {
     let func_name = make_rs_ident("cc_index_mut");
 
-    let output_pointee_cc_type = match &func.return_type.variant {
+    let output_pointee_cc_type = match func.return_type.variant() {
         CcTypeVariant::Pointer(pointer_data) => {
             if !matches!(pointer_data.kind, PointerTypeKind::LValueRef) {
                 errors.add(anyhow!(
@@ -489,7 +489,7 @@ fn generate_cc_operator_index_mut_impls(
                     pointer_data.kind
                 ));
             }
-            if pointer_data.pointee_type.is_const {
+            if pointer_data.pointee_type.is_const() {
                 errors.add(anyhow!("(mutable) operator[] must return a non-const value"));
             }
 
@@ -1712,9 +1712,9 @@ fn rs_type_kinds_for_func(
                 if !func.cc_name.is_constructor() && !func.cc_name.is_destructor()
                     && let Some(Item::Record(record)) = func.enclosing_item_id.map(|id| db.find_untyped_decl(id))
                         && record.is_thread_safe
-                            && let CcTypeVariant::Pointer(ptr) = &mut param_type.variant {
+                            && let CcTypeVariant::Pointer(ptr) = param_type.variant_mut() {
                                 let mut new_pointee = (*ptr.pointee_type).clone();
-                                new_pointee.is_const = true;
+                                new_pointee.set_is_const(true);
                                 ptr.pointee_type = Rc::new(new_pointee);
                                 ptr.kind = PointerTypeKind::LValueRef;
                                 infer_param_lifetimes = true;
@@ -1723,7 +1723,7 @@ fn rs_type_kinds_for_func(
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.
                 let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _ }) =
-                    &mut param_type.variant
+                    param_type.variant_mut()
                 else {
                     panic!(
                         "Expected first parameter of member function:\n`{func:?}`\n\

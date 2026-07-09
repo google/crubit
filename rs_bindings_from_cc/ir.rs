@@ -291,16 +291,53 @@ impl LifetimeName {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CcType {
-    pub variant: CcTypeVariant,
-    pub is_const: bool,
-    pub unknown_attr: Rc<str>,
+    pub(crate) variant: CcTypeVariant,
+    pub(crate) is_const: bool,
+    pub(crate) unknown_attr: Rc<str>,
     // An ordered list of lifetime variable names applied to this type. It is valid for the same
     // name to appear multiple times.
     #[serde(default)]
-    pub explicit_lifetimes: Vec<Rc<str>>,
+    pub(crate) explicit_lifetimes: Vec<Rc<str>>,
 }
 
 impl CcType {
+    pub fn new(
+        variant: CcTypeVariant,
+        is_const: bool,
+        unknown_attr: impl Into<Rc<str>>,
+        explicit_lifetimes: Vec<Rc<str>>,
+    ) -> Self {
+        Self { variant, is_const, unknown_attr: unknown_attr.into(), explicit_lifetimes }
+    }
+
+    pub fn variant(&self) -> &CcTypeVariant {
+        &self.variant
+    }
+
+    pub fn variant_mut(&mut self) -> &mut CcTypeVariant {
+        &mut self.variant
+    }
+
+    pub fn is_const(&self) -> bool {
+        self.is_const
+    }
+
+    pub fn set_is_const(&mut self, is_const: bool) {
+        self.is_const = is_const;
+    }
+
+    pub fn unknown_attr(&self) -> &str {
+        &self.unknown_attr
+    }
+
+    pub fn explicit_lifetimes(&self) -> &[Rc<str>] {
+        &self.explicit_lifetimes
+    }
+
+    pub fn explicit_lifetimes_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.explicit_lifetimes
+    }
+
     pub fn is_unit_type(&self) -> bool {
         matches!(&self.variant, CcTypeVariant::Primitive(Primitive::Void))
     }

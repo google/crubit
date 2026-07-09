@@ -415,7 +415,7 @@ impl<'db> BindingsGenerator<'db> {
     }
 
     pub fn cc_type_debug_name(&self, cc_type: &CcType) -> String {
-        let base_name = match &cc_type.variant {
+        let base_name = match cc_type.variant() {
             ir::CcTypeVariant::Primitive(p) => match p {
                 ir::Primitive::Bool => "bool",
                 ir::Primitive::Void => "void",
@@ -479,8 +479,8 @@ impl<'db> BindingsGenerator<'db> {
             ir::CcTypeVariant::Error(err) => format!("<error: {}>", err.message),
         };
 
-        if cc_type.is_const {
-            if matches!(cc_type.variant, ir::CcTypeVariant::Pointer(_)) {
+        if cc_type.is_const() {
+            if matches!(cc_type.variant(), ir::CcTypeVariant::Pointer(_)) {
                 format!("{} const", base_name)
             } else {
                 format!("const {}", base_name)

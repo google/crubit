@@ -348,7 +348,7 @@ fn generate_function_assertion_for_identifier(
                 &db.rs_type_kind(p.type_.clone())?,
                 db,
             )?;
-            if p.type_.is_const {
+            if p.type_.is_const() {
                 tt = quote! { #tt const };
             }
             Ok(tt)
@@ -363,7 +363,7 @@ fn generate_function_assertion_for_identifier(
         db,
     )?;
 
-    if func.return_type.is_const {
+    if func.return_type.is_const() {
         return_type_name = quote! { #return_type_name const };
     }
 
@@ -407,15 +407,19 @@ pub fn generate_function_assertion(
 // constructor member function of `record_id`.
 // TODO(zarko): do we need to distinguish between non-const and const ctors? See b/436870965.
 fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
-    match &func.params[..] {
-    // We already know this is a constructor.
-    [FuncParam { type_: CcType { variant: CcTypeVariant::Pointer(_), ..}, .. },
-    // Match on any C([const] C&).
-     FuncParam { type_: CcType { variant: CcTypeVariant::Pointer(
-        PointerType {kind: PointerTypeKind::LValueRef, pointee_type: inner_type, ..}), ..}, .. }] =>
-        matches!(&**inner_type, CcType { variant: CcTypeVariant::Decl{ id, ..}, ..} if *id == record_id),
-    _ => false
-  }
+    let [_, other] = &func.params[..] else {
+        return false;
+    };
+    let CcTypeVariant::Pointer(ptr) = other.type_.variant() else {
+        return false;
+    };
+    if ptr.kind != PointerTypeKind::LValueRef {
+        return false;
+    }
+    let CcTypeVariant::Decl { id, .. } = ptr.pointee_type.variant() else {
+        return false;
+    };
+    *id == record_id
 }
 
 pub fn generate_function_thunk_impl(
@@ -508,7 +512,7 @@ pub fn generate_function_thunk_impl(
         .iter()
         .map(|p| {
             let ident = format_nonportable_cc_ident(&p.identifier.identifier)?;
-            match &p.type_.variant {
+            match p.type_.variant() {
                 CcTypeVariant::Pointer(pointer) => match pointer.kind {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
                     PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
@@ -632,7 +636,7 @@ pub fn generate_function_thunk_impl(
         }
         PassingConvention::Void => return_expr,
         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
-            match &func.return_type.variant {
+            match func.return_type.variant() {
                 CcTypeVariant::Pointer(PointerType {
                     kind: PointerTypeKind::LValueRef, ..
                 }) => {

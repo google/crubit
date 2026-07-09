@@ -22,7 +22,7 @@ fn cc_type_has_bindings(
     cc_type: &CcType,
     alias_id: ItemId,
 ) -> Result<(), NoBindingsReason> {
-    match &cc_type.variant {
+    match cc_type.variant() {
         CcTypeVariant::Decl { id, template_args } => {
             let underlying_item = db.find_untyped_decl(*id);
             if let ir::Item::TypeAlias(inner_alias) = underlying_item {
@@ -34,7 +34,7 @@ fn cc_type_has_bindings(
                 });
             }
             if let Some(args) = template_args {
-                for arg in &**args {
+                for arg in args.iter() {
                     cc_type_has_bindings(db, arg, alias_id)?;
                 }
             }
@@ -43,7 +43,7 @@ fn cc_type_has_bindings(
             cc_type_has_bindings(db, &ptr.pointee_type, alias_id)?;
         }
         CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
-            for t in &**param_and_return_types {
+            for t in param_and_return_types.iter() {
                 cc_type_has_bindings(db, t, alias_id)?;
             }
         }

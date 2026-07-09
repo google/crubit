@@ -391,7 +391,7 @@ impl UniformReprTemplateType {
             Some(TemplateSpecializationKind::AbslSpan { raw_element_type }) => {
                 let element_type = choose_one_type(raw_element_type, template_args)?;
                 let element_type_kind = type_arg(&element_type)?;
-                let is_const = element_type.is_const;
+                let is_const = element_type.is_const();
                 if lifetimes.len() > 1 {
                     bail!("Internal error: span was given too many lifetimes.")
                 }
@@ -881,8 +881,8 @@ impl RsTypeKind {
     ) -> Result<Self> {
         let ir = db.ir();
         let mut underlying_cc_type = type_alias.underlying_type.clone();
-        if underlying_cc_type.explicit_lifetimes.is_empty() {
-            underlying_cc_type.explicit_lifetimes =
+        if underlying_cc_type.explicit_lifetimes().is_empty() {
+            *underlying_cc_type.explicit_lifetimes_mut() =
                 lifetimes.iter().map(|lt| lt.0.clone()).collect();
         }
         let underlying_type =
@@ -1005,7 +1005,7 @@ impl RsTypeKind {
             return Ok(RsTypeKind::Pointer {
                 pointee: Rc::new(inner_rs_type_kind),
                 kind: RustPtrKind::Slice,
-                mutability: if inner_cc_type.is_const {
+                mutability: if inner_cc_type.is_const() {
                     Mutability::Const
                 } else {
                     Mutability::Mut
@@ -2389,12 +2389,12 @@ mod tests {
                 id: ItemId::new_for_testing(0),
                 owning_target: BazelLabel("//foo/bar".into()),
                 source_loc: "some_file.h:123".into(),
-                underlying_type: CcType {
-                    variant: CcTypeVariant::Primitive(Primitive::Int32T),
-                    is_const: false,
-                    unknown_attr: "".into(),
-                    explicit_lifetimes: vec![],
-                },
+                underlying_type: CcType::new(
+                    CcTypeVariant::Primitive(Primitive::Int32T),
+                    false,
+                    "",
+                    vec![],
+                ),
                 enumerators: Some(vec![]),
                 unknown_attr: None,
                 enclosing_item_id: None,
@@ -2446,15 +2446,12 @@ mod tests {
                 owning_target: BazelLabel("//foo/bar".into()),
                 doc_comment: None,
                 unknown_attr: None,
-                underlying_type: CcType {
-                    variant: CcTypeVariant::Decl {
-                        id: ItemId::new_for_testing(0),
-                        template_args: None,
-                    },
-                    is_const: false,
-                    unknown_attr: "".into(),
-                    explicit_lifetimes: vec![],
-                },
+                underlying_type: CcType::new(
+                    CcTypeVariant::Decl { id: ItemId::new_for_testing(0), template_args: None },
+                    false,
+                    "",
+                    vec![],
+                ),
                 source_loc: "some_file.h:123".into(),
                 enclosing_item_id: None,
                 must_bind: false,
