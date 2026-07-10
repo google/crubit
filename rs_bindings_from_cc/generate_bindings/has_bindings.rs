@@ -537,7 +537,7 @@ pub fn resolve_names(
                     );
                 }
                 Item::UseMod(use_mod) => {
-                    insert(use_mod.mod_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(use_mod.mod_name().identifier.clone(), ResolvedName::ExplicitItem(id));
                 }
                 Item::ExistingRustType(existing_rust_type) => {
                     insert(existing_rust_type.rs_name.clone(), ResolvedName::ExplicitItem(id));

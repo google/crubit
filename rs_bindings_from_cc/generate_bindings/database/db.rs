@@ -406,8 +406,8 @@ impl<'db> BindingsGenerator<'db> {
                 return intern!(
                     self.interner(),
                     "<[internal] use mod {}::* = {}>",
-                    u.mod_name,
-                    u.path
+                    u.mod_name(),
+                    u.path()
                 );
             }
             ir::Item::UnsupportedItem(ui) => return ui.name.clone(),

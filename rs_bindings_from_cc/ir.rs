@@ -2221,10 +2221,28 @@ impl GenericItem for Namespace {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UseMod {
-    pub path: Rc<str>,
-    pub mod_name: Identifier,
-    pub id: ItemId,
-    pub must_bind: bool,
+    pub(crate) path: Rc<str>,
+    pub(crate) mod_name: Identifier,
+    pub(crate) id: ItemId,
+    pub(crate) must_bind: bool,
+}
+
+impl UseMod {
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+
+    pub fn mod_name(&self) -> &Identifier {
+        &self.mod_name
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
 }
 
 impl GenericItem for UseMod {

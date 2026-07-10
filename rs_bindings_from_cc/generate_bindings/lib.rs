@@ -342,14 +342,11 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
         Item::Comment(comment) => generate_comment(comment.clone()),
         Item::Namespace(namespace) => generate_namespace(db, namespace.clone())?,
         Item::UseMod(use_mod) => {
-            let UseMod { path, mod_name, .. } = &**use_mod;
-            let mod_name = make_rs_ident(&mod_name.identifier);
-            // TODO(b/308949532): Skip re-export if the module being used is empty
-            // (transitively).
+            let mod_name = make_rs_ident(use_mod.mod_name().as_str());
             ApiSnippets {
                 generated_items: HashMap::from([(
-                    use_mod.id,
-                    GeneratedItem::UseMod { path: path.clone(), mod_name },
+                    use_mod.id(),
+                    GeneratedItem::UseMod { path: Rc::from(use_mod.path()), mod_name },
                 )]),
                 ..Default::default()
             }
