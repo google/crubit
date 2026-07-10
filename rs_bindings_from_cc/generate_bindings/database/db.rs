@@ -363,7 +363,7 @@ impl<'db> BindingsGenerator<'db> {
                             }
                             ir::Item::Record(record) => Some(Rc::from(record.cc_name.as_str())),
                             ir::Item::IncompleteRecord(record) => {
-                                Some(Rc::from(record.cc_name.as_str()))
+                                Some(Rc::from(record.cc_name().as_str()))
                             }
                             _ => None,
                         }
@@ -413,7 +413,7 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::UnsupportedItem(ui) => return Rc::from(ui.name()),
             ir::Item::ExistingRustType(e) => (e.id(), Rc::from(e.cc_name())),
             ir::Item::Namespace(n) => (n.id(), Rc::from(n.cc_name().as_str())),
-            ir::Item::IncompleteRecord(r) => (r.id, Rc::from(r.cc_name.as_str())),
+            ir::Item::IncompleteRecord(r) => (r.id(), Rc::from(r.cc_name().as_str())),
             ir::Item::Record(r) => (r.id, Rc::from(r.cc_name.as_str())),
             ir::Item::Enum(e) => (e.id(), Rc::from(e.cc_name().as_str())),
             ir::Item::Constant(c) => (c.id(), Rc::from(c.cc_name().as_str())),

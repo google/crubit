@@ -653,7 +653,7 @@ fn extract_first_operator_parameter(
         RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
             bail_to_errors!(
                             errors,
-                            "Incomplete record types are not yet supported as first parameter of operator, found {cc_name}", cc_name=incomplete_record.cc_name,
+                            "Incomplete record types are not yet supported as first parameter of operator, found {cc_name}", cc_name=incomplete_record.cc_name(),
                         )
         }
         RsTypeKind::Reference { referent, .. } => Ok((

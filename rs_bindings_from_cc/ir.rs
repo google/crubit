@@ -1527,20 +1527,83 @@ impl BaseClass {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IncompleteRecord {
-    pub cc_name: Identifier,
-    pub rs_name: Identifier,
-    pub unique_name: Rc<str>,
-    pub id: ItemId,
-    pub owning_target: BazelLabel,
+    pub(crate) cc_name: Identifier,
+    pub(crate) rs_name: Identifier,
+    pub(crate) unique_name: Rc<str>,
+    pub(crate) id: ItemId,
+    pub(crate) owning_target: BazelLabel,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
     /// Because attributes can change the behavior or semantics of types in
     /// fairly significant ways, and in ways that may affect interop, we
     /// default-closed and do not expose functions with unknown attributes.
-    pub unknown_attr: Option<Rc<str>>,
-    pub record_type: RecordType,
-    pub enclosing_item_id: Option<ItemId>,
-    pub must_bind: bool,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) record_type: RecordType,
+    pub(crate) enclosing_item_id: Option<ItemId>,
+    pub(crate) must_bind: bool,
+}
+
+impl IncompleteRecord {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn record_type(&self) -> RecordType {
+        self.record_type
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_for_testing(
+        cc_name: Identifier,
+        rs_name: Identifier,
+        unique_name: Rc<str>,
+        id: ItemId,
+        owning_target: BazelLabel,
+        unknown_attr: Option<Rc<str>>,
+        record_type: RecordType,
+        enclosing_item_id: Option<ItemId>,
+        must_bind: bool,
+    ) -> Self {
+        Self {
+            cc_name,
+            rs_name,
+            unique_name,
+            id,
+            owning_target,
+            unknown_attr,
+            record_type,
+            enclosing_item_id,
+            must_bind,
+        }
+    }
 }
 
 impl GenericItem for IncompleteRecord {

@@ -1069,7 +1069,7 @@ impl RsTypeKind {
         let crate_path = Rc::new(CratePath::new(
             ir,
             db.namespace_qualifier(&incomplete_record),
-            rs_imported_crate_name(&incomplete_record.owning_target, ir),
+            rs_imported_crate_name(incomplete_record.as_ref().owning_target(), ir),
         ));
         Ok(RsTypeKind::IncompleteRecord { incomplete_record, crate_path })
     }
@@ -1372,7 +1372,7 @@ impl RsTypeKind {
             RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
                 bail!(
                     "`{}` cannot be passed by-value because it is an incomplete type",
-                    incomplete_record.cc_name
+                    incomplete_record.cc_name()
                 )
             }
             _ => Ok(()),
@@ -2031,7 +2031,7 @@ impl RsTypeKind {
                 tokens
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
-                let record_ident = make_rs_ident(incomplete_record.rs_name.as_str());
+                let record_ident = make_rs_ident(incomplete_record.rs_name().as_str());
                 quote! { #crate_path #record_ident }
             }
             RsTypeKind::Record {
@@ -2509,17 +2509,17 @@ mod tests {
 
     fn make_incomplete_record() -> RsTypeKind {
         RsTypeKind::IncompleteRecord {
-            incomplete_record: Rc::new(IncompleteRecord {
-                cc_name: Identifier::new("MyStruct"),
-                rs_name: Identifier::new("MyStruct"),
-                unique_name: "MyStruct".into(),
-                id: ItemId::new_for_testing(0),
-                owning_target: BazelLabel::from("//foo/bar"),
-                unknown_attr: None,
-                record_type: RecordType::Class,
-                enclosing_item_id: None,
-                must_bind: false,
-            }),
+            incomplete_record: Rc::new(IncompleteRecord::new_for_testing(
+                Identifier::new("MyStruct"),
+                Identifier::new("MyStruct"),
+                "MyStruct".into(),
+                ItemId::new_for_testing(0),
+                BazelLabel::from("//foo/bar"),
+                None,
+                RecordType::Class,
+                None,
+                false,
+            )),
             crate_path: make_crate_path(),
         }
     }

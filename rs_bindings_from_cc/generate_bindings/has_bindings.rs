@@ -516,7 +516,7 @@ pub fn resolve_names(
             match item {
                 Item::IncompleteRecord(incomplete_record) => {
                     insert(
-                        Rc::from(incomplete_record.rs_name.as_str()),
+                        Rc::from(incomplete_record.rs_name().as_str()),
                         ResolvedName::ExplicitItem(id),
                     );
                 }

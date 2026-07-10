@@ -64,16 +64,16 @@ pub fn generate_incomplete_record(
         .has_bindings(ir::Item::IncompleteRecord(incomplete_record.clone()))
         .unwrap_or_default()
         .visibility;
-    let features = db.ir().target_crubit_features(&incomplete_record.owning_target);
-    let cc_type = format_nonportable_cc_type_name(incomplete_record.cc_name.as_str())
+    let features = db.ir().target_crubit_features(&incomplete_record.owning_target().unwrap());
+    let cc_type = format_nonportable_cc_type_name(incomplete_record.cc_name().as_str())
         .expect("IncompleteRecord has invalid type name");
     let namespace_qualifier = db.namespace_qualifier(&incomplete_record).format_for_cc(features)?;
     Ok(ApiSnippets {
         generated_items: HashMap::from([(
-            incomplete_record.id,
+            incomplete_record.id(),
             GeneratedItem::ForwardDeclare {
                 visibility,
-                ident: make_rs_ident(incomplete_record.rs_name.as_str()),
+                ident: make_rs_ident(incomplete_record.rs_name().as_str()),
                 symbol: quote! {#namespace_qualifier #cc_type}.to_string(),
             },
         )]),
