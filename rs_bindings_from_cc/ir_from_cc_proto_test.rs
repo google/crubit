@@ -32,13 +32,13 @@ fn test_record_proto() -> Result<()> {
     let ir = get_ir("struct MyStruct { int a; };")?;
     let record = ir
         .records()
-        .find(|r| r.cc_name == "MyStruct")
+        .find(|r| *r.cc_name() == "MyStruct")
         .expect("should find struct MyStruct from the source code");
-    assert_eq!(record.cc_name.as_str(), "MyStruct");
-    assert_eq!(record.fields.len(), 1);
+    assert_eq!(record.cc_name().as_str(), "MyStruct");
+    assert_eq!(record.fields().len(), 1);
     assert_eq!(
         record
-            .fields
+            .fields()
             .first()
             .expect("should have field 'a'")
             .cpp_identifier()
@@ -153,33 +153,33 @@ fn test_record_member_variable_access_specifiers_proto() -> Result<()> {
 
     let some_struct = ir
         .records()
-        .find(|r| r.cc_name == "SomeStruct")
+        .find(|r| *r.cc_name() == "SomeStruct")
         .expect("should find struct SomeStruct from the source code");
 
-    assert_eq!(some_struct.fields.len(), 4);
+    assert_eq!(some_struct.fields().len(), 4);
 
-    let f0 = some_struct.fields.first().expect("should have field 'default_access_int'");
+    let f0 = some_struct.fields().first().expect("should have field 'default_access_int'");
     assert_eq!(f0.rust_identifier().as_ref().unwrap().as_str(), "default_access_int");
     assert_eq!(f0.access(), ir::AccessSpecifier::Public);
 
-    let f1 = some_struct.fields.get(1).expect("should have field 'public_int'");
+    let f1 = some_struct.fields().get(1).expect("should have field 'public_int'");
     assert_eq!(f1.rust_identifier().as_ref().unwrap().as_str(), "public_int");
     assert_eq!(f1.access(), ir::AccessSpecifier::Public);
 
-    let f2 = some_struct.fields.get(2).expect("should have field 'protected_int'");
+    let f2 = some_struct.fields().get(2).expect("should have field 'protected_int'");
     assert_eq!(f2.rust_identifier().as_ref().unwrap().as_str(), "protected_int");
     assert_eq!(f2.access(), ir::AccessSpecifier::Protected);
 
-    let f3 = some_struct.fields.get(3).expect("should have field 'private_int'");
+    let f3 = some_struct.fields().get(3).expect("should have field 'private_int'");
     assert_eq!(f3.rust_identifier().as_ref().unwrap().as_str(), "private_int");
     assert_eq!(f3.access(), ir::AccessSpecifier::Private);
 
     let some_class = ir
         .records()
-        .find(|r| r.cc_name == "SomeClass")
+        .find(|r| *r.cc_name() == "SomeClass")
         .expect("should find class SomeClass from the source code");
-    assert_eq!(some_class.fields.len(), 1);
-    let cf0 = some_class.fields.first().expect("should have field 'default_access_int'");
+    assert_eq!(some_class.fields().len(), 1);
+    let cf0 = some_class.fields().first().expect("should have field 'default_access_int'");
     assert_eq!(cf0.rust_identifier().as_ref().unwrap().as_str(), "default_access_int");
     assert_eq!(cf0.access(), ir::AccessSpecifier::Private);
     Ok(())

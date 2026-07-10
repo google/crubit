@@ -454,12 +454,12 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Constructor => {
             if let Some(parent_id) = func.enclosing_item_id() {
                 let record: &Rc<Record> = db.find_decl(parent_id)?;
-                if is_copy_constructor(func, record.id)
-                    && record.copy_constructor == SpecialMemberFunc::Unavailable
+                if is_copy_constructor(func, record.id())
+                    && record.copy_constructor() == SpecialMemberFunc::Unavailable
                 {
                     bail!(
                         "Would use an unavailable copy constructor for {}",
-                        record.cc_name.as_str()
+                        record.cc_name().as_str()
                     );
                 }
             }

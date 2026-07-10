@@ -40,8 +40,8 @@ pub fn cpp_tagless_type_name_for_record(
     record: &Record,
     db: &BindingsGenerator<'_>,
 ) -> Result<TokenStream> {
-    let features = db.ir().target_crubit_features(&record.owning_target);
-    let ident = format_nonportable_cc_type_name(record.cc_name.as_str())?;
+    let features = db.ir().target_crubit_features(record.owning_target());
+    let ident = format_nonportable_cc_type_name(record.cc_name().as_str())?;
     let namespace_qualifier = db.namespace_qualifier(record).format_for_cc(features)?;
     Ok(quote! { #namespace_qualifier #ident })
 }

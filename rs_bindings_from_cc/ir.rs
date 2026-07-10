@@ -1499,7 +1499,7 @@ impl Field {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
 pub enum SpecialMemberFunc {
     Trivial,
     NontrivialMembers,
@@ -1658,7 +1658,7 @@ impl ToTokens for RecordType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SizeAlign {
     pub(crate) size: usize,
@@ -1817,73 +1817,376 @@ pub struct OwnedPtrConfig {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Record {
-    pub rs_name: Identifier,
+    pub(crate) rs_name: Identifier,
     /// The C++ name of the record. If the record is a template specialization, the fully qualified
     /// name is used. Otherwise, the only the name of the record is used.
     /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
     /// parent modules for nested items which are disallowed for template specializations in Crubit.
-    pub cc_name: Identifier,
-    pub unique_name: Rc<str>,
+    pub(crate) cc_name: Identifier,
+    pub(crate) unique_name: Rc<str>,
 
     /// Mangled record names are used to 1) provide valid Rust identifiers for
     /// C++ template specializations, and 2) help build unique names for virtual
     /// upcast thunks.
-    pub mangled_cc_name: Rc<str>,
-    pub id: ItemId,
-    pub owning_target: BazelLabel,
-    pub template_specialization: Option<TemplateSpecialization>,
+    pub(crate) mangled_cc_name: Rc<str>,
+    pub(crate) id: ItemId,
+    pub(crate) owning_target: BazelLabel,
+    pub(crate) template_specialization: Option<TemplateSpecialization>,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
     /// Because attributes can change the behavior or semantics of types in
     /// fairly significant ways, and in ways that may affect interop, we
     /// default-closed and do not expose functions with unknown attributes.
-    pub unknown_attr: Option<Rc<str>>,
-    pub doc_comment: Option<Rc<str>>,
-    pub bridge_type: Option<BridgeType>,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) bridge_type: Option<BridgeType>,
     #[serde(default)]
-    pub owned_ptr_config: Option<OwnedPtrConfig>,
-    pub source_loc: Rc<str>,
-    pub unambiguous_public_bases: Vec<BaseClass>,
-    pub fields: Vec<Field>,
-    pub lifetime_params: Vec<LifetimeName>,
-    pub size_align: SizeAlign,
-    pub trait_derives: TraitDerives,
-    pub is_derived_class: bool,
-    pub override_alignment: bool,
-    pub safety_annotation: SafetyAnnotation,
-    pub copy_constructor: SpecialMemberFunc,
-    pub move_constructor: SpecialMemberFunc,
-    pub destructor: SpecialMemberFunc,
-    pub is_trivial_abi: bool,
-    pub is_inheritable: bool,
-    pub is_abstract: bool,
+    pub(crate) owned_ptr_config: Option<OwnedPtrConfig>,
+    pub(crate) source_loc: Rc<str>,
+    pub(crate) unambiguous_public_bases: Vec<BaseClass>,
+    pub(crate) fields: Vec<Field>,
+    pub(crate) lifetime_params: Vec<LifetimeName>,
+    pub(crate) size_align: SizeAlign,
+    pub(crate) trait_derives: TraitDerives,
+    pub(crate) is_derived_class: bool,
+    pub(crate) override_alignment: bool,
+    pub(crate) safety_annotation: SafetyAnnotation,
+    pub(crate) copy_constructor: SpecialMemberFunc,
+    pub(crate) move_constructor: SpecialMemberFunc,
+    pub(crate) destructor: SpecialMemberFunc,
+    pub(crate) is_trivial_abi: bool,
+    pub(crate) is_inheritable: bool,
+    pub(crate) is_abstract: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
-    pub nodiscard: Option<Rc<str>>,
-    pub record_type: RecordType,
-    pub is_aggregate: bool,
-    pub is_canonical_alias: bool,
-    pub enclosing_item_id: Option<ItemId>,
-    pub must_bind: bool,
+    pub(crate) nodiscard: Option<Rc<str>>,
+    pub(crate) record_type: RecordType,
+    pub(crate) is_aggregate: bool,
+    pub(crate) is_canonical_alias: bool,
+    pub(crate) enclosing_item_id: Option<ItemId>,
+    pub(crate) must_bind: bool,
     /// Whether this type has an overload of `operator delete`.
-    pub overloads_operator_delete: bool,
-    pub has_private_or_deleted_operator_delete: bool,
+    pub(crate) overloads_operator_delete: bool,
+    pub(crate) has_private_or_deleted_operator_delete: bool,
     // Lifetime variable names bound by this record.
     #[serde(default)]
-    pub lifetime_inputs: Vec<Rc<str>>,
-    pub impl_debug: bool,
-    pub detected_formatter: bool,
+    pub(crate) lifetime_inputs: Vec<Rc<str>>,
+    pub(crate) impl_debug: bool,
+    pub(crate) detected_formatter: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     #[serde(default)]
-    pub is_thread_safe: bool,
+    pub(crate) is_thread_safe: bool,
     #[serde(default)]
-    pub is_explicit_class_template_instantiation_definition: bool,
+    pub(crate) is_explicit_class_template_instantiation_definition: bool,
     #[serde(default)]
-    pub children: Vec<Item>,
+    pub(crate) children: Vec<Item>,
+}
+
+impl Record {
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn set_rs_name(&mut self, rs_name: Identifier) {
+        self.rs_name = rs_name;
+    }
+
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn set_cc_name(&mut self, cc_name: Identifier) {
+        self.cc_name = cc_name;
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn mangled_cc_name(&self) -> &str {
+        &self.mangled_cc_name
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn template_specialization(&self) -> Option<&TemplateSpecialization> {
+        self.template_specialization.as_ref()
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
+
+    pub fn bridge_type(&self) -> Option<&BridgeType> {
+        self.bridge_type.as_ref()
+    }
+
+    pub fn owned_ptr_config(&self) -> Option<&OwnedPtrConfig> {
+        self.owned_ptr_config.as_ref()
+    }
+
+    pub fn source_loc(&self) -> &str {
+        &self.source_loc
+    }
+
+    pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
+        &self.unambiguous_public_bases
+    }
+
+    pub fn fields(&self) -> &[Field] {
+        &self.fields
+    }
+
+    pub fn fields_mut(&mut self) -> &mut Vec<Field> {
+        &mut self.fields
+    }
+
+    pub fn lifetime_params(&self) -> &[LifetimeName] {
+        &self.lifetime_params
+    }
+
+    pub fn size_align(&self) -> SizeAlign {
+        self.size_align
+    }
+
+    pub fn trait_derives(&self) -> &TraitDerives {
+        &self.trait_derives
+    }
+
+    pub fn is_derived_class(&self) -> bool {
+        self.is_derived_class
+    }
+
+    pub fn override_alignment(&self) -> bool {
+        self.override_alignment
+    }
+
+    pub fn override_alignment_mut(&mut self) -> &mut bool {
+        &mut self.override_alignment
+    }
+
+    pub fn safety_annotation(&self) -> SafetyAnnotation {
+        self.safety_annotation
+    }
+
+    pub fn copy_constructor(&self) -> SpecialMemberFunc {
+        self.copy_constructor
+    }
+
+    pub fn move_constructor(&self) -> SpecialMemberFunc {
+        self.move_constructor
+    }
+
+    pub fn destructor(&self) -> SpecialMemberFunc {
+        self.destructor
+    }
+
+    pub fn is_trivial_abi(&self) -> bool {
+        self.is_trivial_abi
+    }
+
+    pub fn is_inheritable(&self) -> bool {
+        self.is_inheritable
+    }
+
+    pub fn is_abstract(&self) -> bool {
+        self.is_abstract
+    }
+
+    pub fn nodiscard(&self) -> Option<&str> {
+        self.nodiscard.as_deref()
+    }
+
+    pub fn record_type(&self) -> RecordType {
+        self.record_type
+    }
+
+    pub fn is_aggregate(&self) -> bool {
+        self.is_aggregate
+    }
+
+    pub fn is_canonical_alias(&self) -> bool {
+        self.is_canonical_alias
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn overloads_operator_delete(&self) -> bool {
+        self.overloads_operator_delete
+    }
+
+    pub fn has_private_or_deleted_operator_delete(&self) -> bool {
+        self.has_private_or_deleted_operator_delete
+    }
+
+    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+        &self.lifetime_inputs
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.lifetime_inputs
+    }
+
+    pub fn impl_debug(&self) -> bool {
+        self.impl_debug
+    }
+
+    pub fn impl_debug_mut(&mut self) -> &mut bool {
+        &mut self.impl_debug
+    }
+
+    pub fn detected_formatter(&self) -> bool {
+        self.detected_formatter
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
+
+    pub fn is_thread_safe(&self) -> bool {
+        self.is_thread_safe
+    }
+
+    pub fn is_explicit_class_template_instantiation_definition(&self) -> bool {
+        self.is_explicit_class_template_instantiation_definition
+    }
+
+    pub fn children(&self) -> &[Item] {
+        &self.children
+    }
+
+    pub fn children_mut(&mut self) -> &mut Vec<Item> {
+        &mut self.children
+    }
+
+    pub fn set_children(&mut self, children: Vec<Item>) {
+        self.children = children;
+    }
+
+    pub fn set_is_trivial_abi(&mut self, is_trivial_abi: bool) {
+        self.is_trivial_abi = is_trivial_abi;
+    }
+
+    pub fn set_copy_constructor(&mut self, copy_constructor: SpecialMemberFunc) {
+        self.copy_constructor = copy_constructor;
+    }
+
+    pub fn set_destructor(&mut self, destructor: SpecialMemberFunc) {
+        self.destructor = destructor;
+    }
+
+    pub fn set_id(&mut self, id: ItemId) {
+        self.id = id;
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_for_testing(
+        rs_name: Identifier,
+        cc_name: Identifier,
+        unique_name: Rc<str>,
+        mangled_cc_name: Rc<str>,
+        id: ItemId,
+        owning_target: BazelLabel,
+        template_specialization: Option<TemplateSpecialization>,
+        unknown_attr: Option<Rc<str>>,
+        doc_comment: Option<Rc<str>>,
+        bridge_type: Option<BridgeType>,
+        owned_ptr_config: Option<OwnedPtrConfig>,
+        source_loc: Rc<str>,
+        unambiguous_public_bases: Vec<BaseClass>,
+        fields: Vec<Field>,
+        lifetime_params: Vec<LifetimeName>,
+        size_align: SizeAlign,
+        trait_derives: TraitDerives,
+        is_derived_class: bool,
+        override_alignment: bool,
+        safety_annotation: SafetyAnnotation,
+        copy_constructor: SpecialMemberFunc,
+        move_constructor: SpecialMemberFunc,
+        destructor: SpecialMemberFunc,
+        is_trivial_abi: bool,
+        is_inheritable: bool,
+        is_abstract: bool,
+        nodiscard: Option<Rc<str>>,
+        record_type: RecordType,
+        is_aggregate: bool,
+        is_canonical_alias: bool,
+        enclosing_item_id: Option<ItemId>,
+        must_bind: bool,
+        overloads_operator_delete: bool,
+        has_private_or_deleted_operator_delete: bool,
+        lifetime_inputs: Vec<Rc<str>>,
+        impl_debug: bool,
+        detected_formatter: bool,
+        deprecated: Option<Rc<str>>,
+        is_thread_safe: bool,
+        is_explicit_class_template_instantiation_definition: bool,
+        children: Vec<Item>,
+    ) -> Self {
+        Self {
+            rs_name,
+            cc_name,
+            unique_name,
+            mangled_cc_name,
+            id,
+            owning_target,
+            template_specialization,
+            unknown_attr,
+            doc_comment,
+            bridge_type,
+            owned_ptr_config,
+            source_loc,
+            unambiguous_public_bases,
+            fields,
+            lifetime_params,
+            size_align,
+            trait_derives,
+            is_derived_class,
+            override_alignment,
+            safety_annotation,
+            copy_constructor,
+            move_constructor,
+            destructor,
+            is_trivial_abi,
+            is_inheritable,
+            is_abstract,
+            nodiscard,
+            record_type,
+            is_aggregate,
+            is_canonical_alias,
+            enclosing_item_id,
+            must_bind,
+            overloads_operator_delete,
+            has_private_or_deleted_operator_delete,
+            lifetime_inputs,
+            impl_debug,
+            detected_formatter,
+            deprecated,
+            is_thread_safe,
+            is_explicit_class_template_instantiation_definition,
+            children,
+        }
+    }
 }
 
 impl GenericItem for Record {

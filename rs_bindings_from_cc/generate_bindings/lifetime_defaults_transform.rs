@@ -49,15 +49,15 @@ pub fn record_lifetime_arity(
     // Do nothing if this record isn't opted into assumed lifetimes.
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(&rc.owning_target)
+        .target_crubit_features(rc.owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
     if !assume_lifetimes {
         return Ok(0);
     }
 
     // If the record has explicit lifetime inputs set, use those.
-    if !rc.lifetime_inputs.is_empty() {
-        return Ok(rc.lifetime_inputs.len());
+    if !rc.lifetime_inputs().is_empty() {
+        return Ok(rc.lifetime_inputs().len());
     }
 
     // TODO(b/498977848): string_view shouldn't be special.
@@ -66,7 +66,7 @@ pub fn record_lifetime_arity(
     }
 
     // Otherwise, we need to handle the various ways that a lifetime parameter may be implied.
-    for child in &rc.children {
+    for child in rc.children() {
         if let Item::Func(f) = child {
             // There are three cases for [[lifetimebound]] on a member function f. (We're loose
             // here in that "the arity of X" means "the lifetime arity of the type of X".)
@@ -113,7 +113,7 @@ fn decl_lifetime_arity_impl(
         // explicitly only need to check for StdStringView here (and not the more general
         // rc.is_string_view()).
         Item::Record(rc) => {
-            if let Some(ts) = &rc.template_specialization
+            if let Some(ts) = &rc.template_specialization()
                 && matches!(
                     ts.kind(),
                     ir::TemplateSpecializationKind::StdStringView
@@ -397,7 +397,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     fn type_arg_from_decl_id(&mut self, id: ItemId) -> Option<CcType> {
         match self.db.find_untyped_decl(id) {
             Item::Record(record) => {
-                let ts = record.template_specialization.as_ref()?;
+                let ts = record.template_specialization()?;
                 match ts.kind() {
                     ir::TemplateSpecializationKind::StdVector { raw_element_type, .. }
                     | ir::TemplateSpecializationKind::StdUniquePtr { raw_element_type, .. }
@@ -620,13 +620,13 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             }
             Item::Record(record) => {
                 let arity = record_lifetime_arity(self.db, record)?;
-                if arity != record.lifetime_inputs.len() {
+                if arity != record.lifetime_inputs().len() {
                     for _ in 0..arity {
                         this_lifetimebound_names
                             .push(self.bindings.push_new_binding(&Rc::from("__implicit")));
                     }
                 } else {
-                    record.lifetime_inputs.iter().for_each(|name| {
+                    record.lifetime_inputs().iter().for_each(|name| {
                         this_lifetimebound_names.push(self.bindings.push_new_binding(name));
                     });
                 }
@@ -699,20 +699,20 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// Transforms a record to use default lifetime rules.
     fn add_lifetime_to_record(&mut self, record: &Record) -> Result<Record> {
         let mut new_record = record.clone();
-        self.bind_lifetime_inputs(record.enclosing_item_id)?;
-        if new_record.lifetime_inputs.is_empty() {
+        self.bind_lifetime_inputs(record.enclosing_item_id())?;
+        if new_record.lifetime_inputs().is_empty() {
             // Record any implicit lifetime parameters.
             let arity = record_lifetime_arity(self.db, record)?;
             for _ in 0..arity {
                 new_record
-                    .lifetime_inputs
+                    .lifetime_inputs_mut()
                     .push(self.bindings.push_new_binding(&Rc::from("__implicit")));
             }
         } else {
-            new_record.lifetime_inputs.clear();
+            new_record.lifetime_inputs_mut().clear();
             // Rename local bindings (and remember how we've renamed them).
-            record.lifetime_inputs.iter().for_each(|name| {
-                new_record.lifetime_inputs.push(self.bindings.push_new_binding(name))
+            record.lifetime_inputs().iter().for_each(|name| {
+                new_record.lifetime_inputs_mut().push(self.bindings.push_new_binding(name))
             });
         }
         Ok(new_record)
@@ -804,7 +804,8 @@ fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
     match &mut transformed {
         Item::Record(record) => {
             let mut record = Rc::as_ref(record).clone();
-            record.children = transform_children(db, &record.children)?;
+            let children = transform_children(db, record.children())?;
+            record.set_children(children);
             transformed = Item::Record(Rc::new(record));
         }
         Item::Namespace(ns) => {
