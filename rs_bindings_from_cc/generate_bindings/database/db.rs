@@ -294,7 +294,7 @@ impl<'db> BindingsGenerator<'db> {
     /// Returns true if `func` has a conflicting mangled name.
     pub fn has_conflicting_mangled_name(&self, func: &ir::Func) -> bool {
         let conflicts_counter =
-            self.mangled_name_counts().get(&func.mangled_name).copied().unwrap_or(0);
+            self.mangled_name_counts().get(func.mangled_name()).copied().unwrap_or(0);
         conflicts_counter > 1
     }
 
@@ -332,7 +332,7 @@ impl<'db> BindingsGenerator<'db> {
         let item = self.find_untyped_decl(item_id);
         match item {
             ir::Item::Func(f) => {
-                if let Some(parent_id) = f.enclosing_item_id
+                if let Some(parent_id) = f.enclosing_item_id()
                     && let Ok(record) = self.find_decl::<Rc<ir::Record>>(parent_id)
                 {
                     return self.defining_target(record.id);
@@ -354,9 +354,9 @@ impl<'db> BindingsGenerator<'db> {
         let item = self.find_untyped_decl(item_id);
         let (id, name): (ir::ItemId, Rc<str>) = match item {
             ir::Item::Func(f) => {
-                let mut name = self.namespace_qualifier_from_id(f.id).format_for_cc_debug();
+                let mut name = self.namespace_qualifier_from_id(f.id()).format_for_cc_debug();
                 let record_name = || -> Option<Rc<str>> {
-                    if let Some(parent_id) = f.enclosing_item_id {
+                    if let Some(parent_id) = f.enclosing_item_id() {
                         match self.find_untyped_decl(parent_id) {
                             ir::Item::ExistingRustType(existing_rust_type) => {
                                 Some(Rc::from(existing_rust_type.cc_name()))
@@ -371,7 +371,7 @@ impl<'db> BindingsGenerator<'db> {
                         None
                     }
                 };
-                match &f.cc_name {
+                match f.cc_name() {
                     ir::UnqualifiedIdentifier::Identifier(id) => {
                         name.push_str(id.as_str());
                     }

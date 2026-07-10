@@ -13,12 +13,17 @@ fn get_ir(header: &str) -> Result<ir::IR> {
 #[gtest]
 fn test_func_proto() -> Result<()> {
     let ir = get_ir("int f(int a, int b);")?;
-    let func =
-        ir.functions().find(|f| f.rs_name == "f").expect("should find func f from the source code");
-    assert_eq!(func.cc_name.as_identifier().unwrap().as_str(), "f");
-    assert_eq!(func.params.len(), 2);
-    assert_eq!(func.params.first().expect("should have parameter 'a'").identifier().as_str(), "a");
-    assert_eq!(func.params.get(1).expect("should have parameter 'b'").identifier().as_str(), "b");
+    let func = ir
+        .functions()
+        .find(|f| f.rs_name() == "f")
+        .expect("should find func f from the source code");
+    assert_eq!(func.cc_name().as_identifier().unwrap().as_str(), "f");
+    assert_eq!(func.params().len(), 2);
+    assert_eq!(
+        func.params().first().expect("should have parameter 'a'").identifier().as_str(),
+        "a"
+    );
+    assert_eq!(func.params().get(1).expect("should have parameter 'b'").identifier().as_str(), "b");
     Ok(())
 }
 
@@ -48,17 +53,19 @@ fn test_record_proto() -> Result<()> {
 #[gtest]
 fn test_function_with_asm_label_proto() -> Result<()> {
     let ir = get_ir("int f(int a, int b) asm(\"foo\");")?;
-    let func =
-        ir.functions().find(|f| f.rs_name == "f").expect("should find func f from the source code");
-    assert_eq!(func.cc_name.as_identifier().unwrap().as_str(), "f");
-    assert_eq!(func.rs_name.as_identifier().unwrap().as_str(), "f");
+    let func = ir
+        .functions()
+        .find(|f| f.rs_name() == "f")
+        .expect("should find func f from the source code");
+    assert_eq!(func.cc_name().as_identifier().unwrap().as_str(), "f");
+    assert_eq!(func.rs_name().as_identifier().unwrap().as_str(), "f");
 
     match multiplatform_testing::test_platform() {
         multiplatform_testing::Platform::ArmMacOS | multiplatform_testing::Platform::X86MacOS => {
-            assert_eq!(func.mangled_name.as_ref(), "\u{1}foo");
+            assert_eq!(func.mangled_name(), "\u{1}foo");
         }
         _ => {
-            assert_eq!(func.mangled_name.as_ref(), "foo");
+            assert_eq!(func.mangled_name(), "foo");
         }
     }
     Ok(())
@@ -67,15 +74,17 @@ fn test_function_with_asm_label_proto() -> Result<()> {
 #[gtest]
 fn test_function_with_unnamed_parameters_proto() -> Result<()> {
     let ir = get_ir("int f(int, int);")?;
-    let func =
-        ir.functions().find(|f| f.rs_name == "f").expect("should find func f from the source code");
-    assert_eq!(func.params.len(), 2);
+    let func = ir
+        .functions()
+        .find(|f| f.rs_name() == "f")
+        .expect("should find func f from the source code");
+    assert_eq!(func.params().len(), 2);
     assert_eq!(
-        func.params.first().expect("should have parameter 0").identifier().as_str(),
+        func.params().first().expect("should have parameter 0").identifier().as_str(),
         "__param_0"
     );
     assert_eq!(
-        func.params.get(1).expect("should have parameter 1").identifier().as_str(),
+        func.params().get(1).expect("should have parameter 1").identifier().as_str(),
         "__param_1"
     );
     Ok(())
@@ -84,19 +93,21 @@ fn test_function_with_unnamed_parameters_proto() -> Result<()> {
 #[gtest]
 fn test_unescapable_rust_keywords_in_function_parameters_proto() -> Result<()> {
     let ir = get_ir("int f(int self, int crate, int super);")?;
-    let func =
-        ir.functions().find(|f| f.rs_name == "f").expect("should find func f from the source code");
-    assert_eq!(func.params.len(), 3);
+    let func = ir
+        .functions()
+        .find(|f| f.rs_name() == "f")
+        .expect("should find func f from the source code");
+    assert_eq!(func.params().len(), 3);
     assert_eq!(
-        func.params.first().expect("should have parameter 0").identifier().as_str(),
+        func.params().first().expect("should have parameter 0").identifier().as_str(),
         "__param_0"
     );
     assert_eq!(
-        func.params.get(1).expect("should have parameter 1").identifier().as_str(),
+        func.params().get(1).expect("should have parameter 1").identifier().as_str(),
         "__param_1"
     );
     assert_eq!(
-        func.params.get(2).expect("should have parameter 2").identifier().as_str(),
+        func.params().get(2).expect("should have parameter 2").identifier().as_str(),
         "__param_2"
     );
     Ok(())

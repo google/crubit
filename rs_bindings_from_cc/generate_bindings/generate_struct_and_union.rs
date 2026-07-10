@@ -200,7 +200,7 @@ pub fn collect_unqualified_member_functions(
         .iter()
         .filter_map(|child_item| {
             if let Item::Func(member_function) = child_item
-                && let UnqualifiedIdentifier::Identifier(_) = &member_function.rs_name
+                && let UnqualifiedIdentifier::Identifier(_) = member_function.rs_name()
             {
                 Some(member_function.clone())
             } else {
@@ -222,14 +222,14 @@ fn filter_out_ambiguous_member_functions(
     let derived_member_functions = db
         .collect_unqualified_member_functions(derived_record.clone())
         .iter()
-        .map(|func| (func.rs_name.clone(), func.clone()))
+        .map(|func| (func.rs_name().clone(), func.clone()))
         .collect::<HashMap<_, _>>();
     let mut func_counter = HashMap::<_, (&Rc<Func>, u32)>::new();
     for func in inherited_functions.iter() {
         let Ok(Some(_)) = db.generate_function(func.clone(), None) else {
             continue;
         };
-        let unqualified_name = &func.rs_name;
+        let unqualified_name = func.rs_name();
         if derived_member_functions.contains_key(unqualified_name) {
             continue;
         }
@@ -242,7 +242,7 @@ fn filter_out_ambiguous_member_functions(
         .values()
         .filter_map(|(func, count)| if *count == 1 { Some((*func).clone()) } else { None })
         // Sort by name to make the output deterministic.
-        .sorted_by_key(|func| func.rs_name.identifier_as_str().unwrap().to_string())
+        .sorted_by_key(|func| func.rs_name().identifier_as_str().unwrap().to_string())
         .collect()
 }
 
@@ -597,7 +597,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
     )
     .iter()
     .filter_map(|unambiguous_base_class_member_function| -> Option<ApiSnippets> {
-        let item = db.find_untyped_decl(unambiguous_base_class_member_function.id);
+        let item = db.find_untyped_decl(unambiguous_base_class_member_function.id());
         let _scope = db.error_scope(item.id());
         let Item::Func(ir_func) = item else { panic!("Unexpected item type: {:?}", item) };
         let generated_func =

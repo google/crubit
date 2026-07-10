@@ -303,7 +303,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
                     // uncallable function item.
                     db.errors().report(e);
                 }
-                if db.is_ambiguous_function(&generated_function.id, func.id) {
+                if db.is_ambiguous_function(&generated_function.id, func.id()) {
                     bail!("Cannot generate bindings for overloaded function")
                 } else {
                     (*generated_function.snippets).clone()

@@ -1081,7 +1081,7 @@ impl FuncParam {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SafetyAnnotation {
     DisableUnsafe,
@@ -1092,49 +1092,49 @@ pub enum SafetyAnnotation {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Func {
-    pub cc_name: UnqualifiedIdentifier,
-    pub rs_name: UnqualifiedIdentifier,
-    pub unique_name: Rc<str>,
-    pub owning_target: BazelLabel,
-    pub mangled_name: Rc<str>,
-    pub doc_comment: Option<Rc<str>>,
-    pub return_type: CcType,
-    pub params: Vec<FuncParam>,
+    pub(crate) cc_name: UnqualifiedIdentifier,
+    pub(crate) rs_name: UnqualifiedIdentifier,
+    pub(crate) unique_name: Rc<str>,
+    pub(crate) owning_target: BazelLabel,
+    pub(crate) mangled_name: Rc<str>,
+    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) return_type: CcType,
+    pub(crate) params: Vec<FuncParam>,
     /// For tests and internal use only.
     ///
     /// Prefer to reconstruct the lifetime params from the parameter types, as
     /// needed. This allows new parameters and lifetimes to be added that were
     /// not originally part of the IR.
-    pub lifetime_params: Vec<LifetimeName>,
-    pub is_inline: bool,
-    pub instance_method_metadata: Option<InstanceMethodMetadata>,
-    pub is_extern_c: bool,
-    pub is_noreturn: bool,
-    pub is_variadic: bool,
-    pub is_consteval: bool,
+    pub(crate) lifetime_params: Vec<LifetimeName>,
+    pub(crate) is_inline: bool,
+    pub(crate) instance_method_metadata: Option<InstanceMethodMetadata>,
+    pub(crate) is_extern_c: bool,
+    pub(crate) is_noreturn: bool,
+    pub(crate) is_variadic: bool,
+    pub(crate) is_consteval: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
-    pub nodiscard: Option<Rc<str>>,
+    pub(crate) nodiscard: Option<Rc<str>>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
     /// Because attributes can change the behavior or semantics of functions in
     /// fairly significant ways, and in ways that may affect interop, we
     /// default-closed and do not expose functions with unknown attributes.
-    pub unknown_attr: Option<Rc<str>>,
-    pub has_c_calling_convention: bool,
-    pub is_member_or_descendant_of_class_template: bool,
-    pub safety_annotation: SafetyAnnotation,
-    pub source_loc: Rc<str>,
-    pub id: ItemId,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) has_c_calling_convention: bool,
+    pub(crate) is_member_or_descendant_of_class_template: bool,
+    pub(crate) safety_annotation: SafetyAnnotation,
+    pub(crate) source_loc: Rc<str>,
+    pub(crate) id: ItemId,
     /// The enclosing item ID.
     ///
     /// If this is a free function, then this will be None or a namespace. If this is
     /// a member function, it will be a record type in C++, but might be an
     /// `ExistingRustType` if it was renamed.
-    pub enclosing_item_id: Option<ItemId>,
+    pub(crate) enclosing_item_id: Option<ItemId>,
 
     /// If this function was declared as a `friend` inside of a record
     /// definition, this ItemId refers to the record containing the `friend`
@@ -1142,12 +1142,203 @@ pub struct Func {
     ///
     /// The record pointed to by `ItemId` must then be ADL-visible in order to
     /// invoke this function.
-    pub adl_enclosing_record: Option<ItemId>,
-    pub must_bind: bool,
+    pub(crate) adl_enclosing_record: Option<ItemId>,
+    pub(crate) must_bind: bool,
 
     // Lifetime variable names bound by this function.
     #[serde(default)]
-    pub lifetime_inputs: Vec<Rc<str>>,
+    pub(crate) lifetime_inputs: Vec<Rc<str>>,
+}
+
+impl Func {
+    pub fn cc_name(&self) -> &UnqualifiedIdentifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &UnqualifiedIdentifier {
+        &self.rs_name
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn mangled_name(&self) -> &str {
+        &self.mangled_name
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
+
+    pub fn return_type(&self) -> &CcType {
+        &self.return_type
+    }
+
+    pub fn return_type_mut(&mut self) -> &mut CcType {
+        &mut self.return_type
+    }
+
+    pub fn set_return_type(&mut self, return_type: CcType) {
+        self.return_type = return_type;
+    }
+
+    pub fn params(&self) -> &[FuncParam] {
+        &self.params
+    }
+
+    pub fn params_mut(&mut self) -> &mut Vec<FuncParam> {
+        &mut self.params
+    }
+
+    pub fn lifetime_params(&self) -> &[LifetimeName] {
+        &self.lifetime_params
+    }
+
+    pub fn is_inline(&self) -> bool {
+        self.is_inline
+    }
+
+    pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata> {
+        self.instance_method_metadata.as_ref()
+    }
+
+    pub fn is_instance_method(&self) -> bool {
+        self.instance_method_metadata.is_some()
+    }
+
+    pub fn is_extern_c(&self) -> bool {
+        self.is_extern_c
+    }
+
+    pub fn is_noreturn(&self) -> bool {
+        self.is_noreturn
+    }
+
+    pub fn is_variadic(&self) -> bool {
+        self.is_variadic
+    }
+
+    pub fn is_consteval(&self) -> bool {
+        self.is_consteval
+    }
+
+    pub fn nodiscard(&self) -> Option<&str> {
+        self.nodiscard.as_deref()
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn has_c_calling_convention(&self) -> bool {
+        self.has_c_calling_convention
+    }
+
+    pub fn is_member_or_descendant_of_class_template(&self) -> bool {
+        self.is_member_or_descendant_of_class_template
+    }
+
+    pub fn safety_annotation(&self) -> SafetyAnnotation {
+        self.safety_annotation
+    }
+
+    pub fn source_loc(&self) -> &str {
+        &self.source_loc
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
+
+    pub fn adl_enclosing_record(&self) -> Option<ItemId> {
+        self.adl_enclosing_record
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+        &self.lifetime_inputs
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.lifetime_inputs
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_for_testing(
+        cc_name: UnqualifiedIdentifier,
+        rs_name: UnqualifiedIdentifier,
+        unique_name: Rc<str>,
+        owning_target: BazelLabel,
+        mangled_name: Rc<str>,
+        doc_comment: Option<Rc<str>>,
+        return_type: CcType,
+        params: Vec<FuncParam>,
+        lifetime_params: Vec<LifetimeName>,
+        is_inline: bool,
+        instance_method_metadata: Option<InstanceMethodMetadata>,
+        is_extern_c: bool,
+        is_noreturn: bool,
+        is_variadic: bool,
+        is_consteval: bool,
+        nodiscard: Option<Rc<str>>,
+        deprecated: Option<Rc<str>>,
+        unknown_attr: Option<Rc<str>>,
+        has_c_calling_convention: bool,
+        is_member_or_descendant_of_class_template: bool,
+        safety_annotation: SafetyAnnotation,
+        source_loc: Rc<str>,
+        id: ItemId,
+        enclosing_item_id: Option<ItemId>,
+        adl_enclosing_record: Option<ItemId>,
+        must_bind: bool,
+        lifetime_inputs: Vec<Rc<str>>,
+    ) -> Self {
+        Self {
+            cc_name,
+            rs_name,
+            unique_name,
+            owning_target,
+            mangled_name,
+            doc_comment,
+            return_type,
+            params,
+            lifetime_params,
+            is_inline,
+            instance_method_metadata,
+            is_extern_c,
+            is_noreturn,
+            is_variadic,
+            is_consteval,
+            nodiscard,
+            deprecated,
+            unknown_attr,
+            has_c_calling_convention,
+            is_member_or_descendant_of_class_template,
+            safety_annotation,
+            source_loc,
+            id,
+            enclosing_item_id,
+            adl_enclosing_record,
+            must_bind,
+            lifetime_inputs,
+        }
+    }
 }
 
 impl GenericItem for Func {
@@ -1175,12 +1366,6 @@ impl GenericItem for Func {
     }
     fn must_bind(&self) -> bool {
         self.must_bind
-    }
-}
-
-impl Func {
-    pub fn is_instance_method(&self) -> bool {
-        self.instance_method_metadata.is_some()
     }
 }
 

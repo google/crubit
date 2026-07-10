@@ -456,8 +456,8 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
 fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_no_lifetime(
 ) -> googletest::Result<()> {
     let ir = ir_from_cc("void f(int&& a) {};").unwrap();
-    let function = ir.functions().find(|func| func.cc_name == "f").or_fail()?;
-    let [param] = &function.params[..] else { return fail!("expected exactly one parameter") };
+    let function = ir.functions().find(|func| *func.cc_name() == "f").or_fail()?;
+    let [param] = function.params() else { return fail!("expected exactly one parameter") };
     let ptr = param.type_().variant().as_pointer().or_fail()?;
     expect_eq!(ptr.kind(), PointerTypeKind::RValueRef);
     expect_eq!(ptr.lifetime(), None);
@@ -681,8 +681,8 @@ fn test_owned_ptr_as_return_type_annotation() -> googletest::Result<()> {
     )
     .expect("Failed to generate IR from CC");
 
-    let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
-    let pointer_type = &function.return_type.variant().as_pointer().or_fail()?;
+    let function = ir.functions().find(|f| *f.cc_name() == "f").or_fail()?;
+    let pointer_type = &function.return_type().variant().as_pointer().or_fail()?;
     expect_eq!(pointer_type.kind(), PointerTypeKind::Owned);
     Ok(())
 }
@@ -699,8 +699,9 @@ fn test_owned_ptr_as_param_type_annotation() -> googletest::Result<()> {
     )
     .expect("Failed to generate IR from CC");
 
-    let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
-    let first_param_pointer_type = &function.params[0].type_().variant().as_pointer().or_fail()?;
+    let function = ir.functions().find(|f| *f.cc_name() == "f").or_fail()?;
+    let first_param_pointer_type =
+        &function.params()[0].type_().variant().as_pointer().or_fail()?;
     expect_eq!(first_param_pointer_type.kind(), PointerTypeKind::Owned);
     Ok(())
 }
@@ -1197,8 +1198,8 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
     let comments: HashMap<&str, Option<&str>> = ir
         .functions()
         .map(|f| {
-            if let UnqualifiedIdentifier::Identifier(id) = &f.rs_name {
-                (id.as_str(), f.doc_comment.as_deref())
+            if let UnqualifiedIdentifier::Identifier(id) = f.rs_name() {
+                (id.as_str(), f.doc_comment())
             } else {
                 panic!("No constructors/destructors expected in this test.")
             }
@@ -1228,8 +1229,8 @@ fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
 #[gtest]
 fn test_must_bind_annotation_on_function() -> googletest::Result<()> {
     let ir = ir_from_cc(r#"[[clang::annotate("crubit_must_bind")]] void f() {}"#).or_fail()?;
-    let func = ir.functions().find(|func| func.rs_name == "f").or_fail()?;
-    expect_that!(&**func, field!(&Func.must_bind, eq(true)));
+    let func = ir.functions().find(|func| *func.rs_name() == "f").or_fail()?;
+    expect_eq!(func.must_bind(), true);
     Ok(())
 }
 
@@ -1556,13 +1557,13 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     assert_eq!(1, ir.records().filter(|r| r.cc_name.as_str() == "MyStruct<float>").count());
     let functions = ir
         .functions()
-        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
+        .filter(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
         .collect_vec();
 
     // Verify that there is only 1 function per instantiation.
     assert_eq!(2, functions.len());
-    let rec_id1 = functions[0].enclosing_item_id.unwrap();
-    let rec_id2 = functions[1].enclosing_item_id.unwrap();
+    let rec_id1 = functions[0].enclosing_item_id().unwrap();
+    let rec_id2 = functions[1].enclosing_item_id().unwrap();
     assert_ne!(rec_id1, rec_id2);
     Ok(())
 }
@@ -1612,9 +1613,9 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
 
     let method_mangled_names = ir
         .functions()
-        .filter_map(|f| match &f.rs_name {
+        .filter_map(|f| match f.rs_name() {
             UnqualifiedIdentifier::Identifier(id) if id.as_str() == "MyMethod" => {
-                Some(f.mangled_name.as_ref())
+                Some(f.mangled_name())
             }
             _ => None,
         })
@@ -2918,9 +2919,9 @@ fn test_member_function_params() {
     .unwrap();
     let foo_func = ir
         .functions()
-        .find(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("Foo")))
+        .find(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("Foo")))
         .unwrap();
-    let param_names: Vec<_> = foo_func.params.iter().map(|p| p.identifier().as_str()).collect();
+    let param_names: Vec<_> = foo_func.params().iter().map(|p| p.identifier().as_str()).collect();
     assert_eq!(param_names, vec!["__this", "x", "y"]);
 }
 
@@ -2933,8 +2934,8 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     let record =
         ir.records().find(|r| r.rs_name.as_str() == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(f)).expect("Function not found");
-    assert_eq!(function.enclosing_item_id, Some(record.id));
-    assert_eq!(&function.instance_method_metadata, expected_metadata);
+    assert_eq!(function.enclosing_item_id(), Some(record.id));
+    assert_eq!(function.instance_method_metadata(), expected_metadata.as_ref());
 }
 
 fn assert_member_function_has_instance_method_metadata(
@@ -2951,7 +2952,7 @@ fn assert_member_function_has_instance_method_metadata(
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "Struct",
-        |f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id(name)),
+        |f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id(name)),
         expected_metadata,
     );
 }
@@ -3037,22 +3038,22 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
     let rvalue_ref_method = ir
         .functions()
         .find(|f| {
-            f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method"))
+            *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method"))
         })
         .unwrap();
-    let this_param = &rvalue_ref_method.params[0].type_().variant().as_pointer().unwrap();
+    let this_param = &rvalue_ref_method.params()[0].type_().variant().as_pointer().unwrap();
     assert_eq!(this_param.kind(), PointerTypeKind::RValueRef);
     assert!(!this_param.pointee_type().is_const());
 
     let rvalue_ref_const_method = ir
         .functions()
         .find(|f| {
-            f.rs_name
+            *f.rs_name()
                 == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
         })
         .unwrap();
     let const_this_param =
-        rvalue_ref_const_method.params[0].type_().variant().as_pointer().unwrap();
+        rvalue_ref_const_method.params()[0].type_().variant().as_pointer().unwrap();
     assert_eq!(const_this_param.kind(), PointerTypeKind::RValueRef);
     assert!(const_this_param.pointee_type().is_const());
 }
@@ -3071,7 +3072,7 @@ fn test_member_function_explicit_constructor() {
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "SomeStruct",
-        |f| f.rs_name == UnqualifiedIdentifier::Constructor,
+        |f| *f.rs_name() == UnqualifiedIdentifier::Constructor,
         &Some(ir::InstanceMethodMetadata::new(
             ir::ReferenceQualification::Unqualified,
             false,
@@ -3093,7 +3094,7 @@ fn test_member_function_constructor() {
         assert_member_function_with_predicate_has_instance_method_metadata(
             &ir,
             "SomeStruct",
-            |f| f.rs_name == UnqualifiedIdentifier::Constructor,
+            |f| *f.rs_name() == UnqualifiedIdentifier::Constructor,
             &Some(ir::InstanceMethodMetadata::new(
                 ir::ReferenceQualification::Unqualified,
                 false,
@@ -3105,7 +3106,7 @@ fn test_member_function_constructor() {
 
 fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {
     let ir = ir_from_cc(definition).unwrap();
-    ir.functions().map(|f| f.rs_name.clone()).collect()
+    ir.functions().map(|f| f.rs_name().clone()).collect()
 }
 
 #[gtest]
@@ -3209,19 +3210,19 @@ fn test_elided_lifetimes() {
     )
     .unwrap();
     let func = retrieve_func(&ir, "f");
-    let lifetime_params = &func.lifetime_params;
+    let lifetime_params = func.lifetime_params();
     assert_eq!(lifetime_params.iter().map(|p| p.name()).collect_vec(), vec!["a", "b"]);
     let a_id = lifetime_params[0].id();
     let b_id = lifetime_params[1].id();
-    assert_eq!(func.return_type.variant().as_pointer().unwrap().lifetime().unwrap(), a_id);
+    assert_eq!(func.return_type().variant().as_pointer().unwrap().lifetime().unwrap(), a_id);
 
-    assert_eq!(*func.params[0].identifier(), ir_id("__this"));
-    let ptr = &func.params[0].type_().variant().as_pointer().unwrap();
+    assert_eq!(*func.params()[0].identifier(), ir_id("__this"));
+    let ptr = &func.params()[0].type_().variant().as_pointer().unwrap();
     assert!(!ptr.pointee_type().is_const());
     assert_eq!(ptr.lifetime().unwrap(), a_id);
 
-    assert_eq!(*func.params[1].identifier(), ir_id("i"));
-    let ptr = &func.params[1].type_().variant().as_pointer().unwrap();
+    assert_eq!(*func.params()[1].identifier(), ir_id("i"));
+    let ptr = &func.params()[1].type_().variant().as_pointer().unwrap();
     assert!(!ptr.pointee_type().is_const());
     assert_eq!(ptr.lifetime().unwrap(), b_id);
 }
@@ -3233,15 +3234,17 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
 
     let f = ir
         .functions()
-        .find(|f| matches!(&f.rs_name, UnqualifiedIdentifier::Constructor) && f.params.len() == 1)
+        .find(|f| {
+            matches!(f.rs_name(), UnqualifiedIdentifier::Constructor) && f.params().len() == 1
+        })
         .expect("IR should contain the default constructor");
-    assert_eq!(f.lifetime_params.len(), 1);
+    assert_eq!(f.lifetime_params().len(), 1);
 
-    let p = f.params.first().expect("IR should contain `__this` parameter");
+    let p = f.params().first().expect("IR should contain `__this` parameter");
     assert_eq!(*p.identifier(), ir_id("__this"));
 
     let p_ptr = p.type_().variant().as_pointer().unwrap();
-    assert_eq!(p_ptr.lifetime().unwrap(), f.lifetime_params[0].id());
+    assert_eq!(p_ptr.lifetime().unwrap(), f.lifetime_params()[0].id());
     assert!(!p_ptr.pointee_type().is_const());
 }
 
@@ -3264,12 +3267,12 @@ fn test_operator_names() {
         .functions()
         .filter_map(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
-            let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id?).ok()?;
+            let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id()?).ok()?;
             if r.rs_name.as_str() != "SomeStruct" {
                 return None;
             }
 
-            match &f.rs_name {
+            match f.rs_name() {
                 UnqualifiedIdentifier::Operator(op) => Some(op.name()),
                 _ => None,
             }
@@ -3471,9 +3474,9 @@ fn test_function_has_item_id() {
     let ir = ir_from_cc("int foo();").unwrap();
     let function = ir
         .functions()
-        .find(|i| i.rs_name == UnqualifiedIdentifier::Identifier(ir_id("foo")))
+        .find(|i| *i.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("foo")))
         .unwrap();
-    assert_ne!(function.id, ItemId::new_for_testing(0));
+    assert_ne!(function.id(), ItemId::new_for_testing(0));
 }
 
 #[gtest]
@@ -4043,7 +4046,7 @@ fn test_friend_not_definition_not_redeclared() {
 
     let functions = ir
         .functions()
-        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("some_friend_func")))
+        .filter(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("some_friend_func")))
         .collect_vec();
     assert_eq!(1, functions.len());
 }
@@ -4063,7 +4066,7 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
     // item.)
     let functions = ir
         .functions()
-        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("f")))
+        .filter(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("f")))
         .collect_vec();
     assert_eq!(1, functions.len());
 

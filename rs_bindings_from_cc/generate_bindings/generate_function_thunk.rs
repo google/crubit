@@ -39,13 +39,13 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // correct. ThinLTO builds will be able to see through the thunk and inline
     // code across the language boundary. For non-ThinLTO builds we plan to
     // implement <internal link> which removes the runtime performance overhead.
-    if func.is_inline {
+    if func.is_inline() {
         return false;
     }
     // ## Member functions (or descendants) of class templates
     //
     // A thunk is required to force/guarantee template instantiation.
-    if func.is_member_or_descendant_of_class_template {
+    if func.is_member_or_descendant_of_class_template() {
         return false;
     }
     // ## Virtual functions
@@ -62,7 +62,7 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // In terms of runtime performance, since this only occurs for virtual function
     // calls, which are already slow, it may not be such a big deal. We can
     // benchmark it later. :)
-    if let Some(inst_meta) = &func.instance_method_metadata
+    if let Some(inst_meta) = func.instance_method_metadata()
         && inst_meta.is_virtual()
     {
         return false;
@@ -74,7 +74,7 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // compiler (which might not always match the set supported by Rust - e.g.,
     // abi.rs doesn't contain "swiftcall" from
     // clang::FunctionType::getNameForCallConv)
-    if !func.has_c_calling_convention {
+    if !func.has_c_calling_convention() {
         return false;
     }
 
@@ -87,7 +87,7 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // Note: if the RsTypeKind cannot be parsed / rs_type_kind returns Err, then
     // bindings generation will fail for this function, so it doesn't really matter
     // what we do here.
-    if let Ok(return_type) = db.rs_type_kind(func.return_type.clone())
+    if let Ok(return_type) = db.rs_type_kind(func.return_type().clone())
         && !return_type.is_c_abi_compatible_by_value()
     {
         return false;
@@ -106,7 +106,7 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     //
     // (As a side effect, this, like return values, means that support is
     // ABI-agnostic.)
-    for param in &func.params {
+    for param in func.params() {
         if let Ok(param_type) = db.rs_type_kind(param.type_().clone())
             && !param_type.is_c_abi_compatible_by_value()
         {
@@ -135,7 +135,7 @@ pub fn generate_function_thunk(
 ) -> Result<Thunk> {
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(&func.owning_target)
+        .target_crubit_features(func.owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
 
     // TODO(b/454627672): is it worth caching this?
@@ -164,7 +164,7 @@ pub fn generate_function_thunk(
     };
 
     let mut return_type_fragment = return_type.format_as_return_type_fragment(db, None);
-    if func.rs_name == UnqualifiedIdentifier::Constructor {
+    if *func.rs_name() == UnqualifiedIdentifier::Constructor {
         // For constructors, inject MaybeUninit into the type of `__this_` parameter.
         let Some(first_param) = param_types.next() else {
             bail!("Constructors should have at least one parameter (__this), but none were found.")
@@ -197,7 +197,7 @@ pub fn generate_function_thunk(
     }
 
     // Of the remaining lifetimes, put them in the generic parameters.
-    let lifetimes: Vec<_> = unique_lifetimes(param_types.clone(), &func.lifetime_inputs)
+    let lifetimes: Vec<_> = unique_lifetimes(param_types.clone(), func.lifetime_inputs())
         .into_iter()
         .chain(extra_return_lifetime)
         .filter(|lifetime| !lifetime.is_elided())
@@ -223,7 +223,7 @@ pub fn generate_function_thunk(
         .collect_vec();
 
     Ok(Thunk::Function {
-        mangled_name: can_skip_cc_thunk(db, func).then(|| func.mangled_name.clone()),
+        mangled_name: can_skip_cc_thunk(db, func).then(|| Rc::from(func.mangled_name())),
         thunk_ident,
         generic_params,
         param_idents,
@@ -278,16 +278,16 @@ fn compute_disambiguator_hash(func: &Func) -> String {
     }
 
     let mut hasher = StableSipHasher128::new();
-    hasher.write(func.owning_target.as_str().as_bytes());
-    hasher.write(func.source_loc.as_bytes());
+    hasher.write(func.owning_target().as_str().as_bytes());
+    hasher.write(func.source_loc().as_bytes());
     let hash: Hash64 = hasher.finish();
     format!("{:08x}_", hash.0 as u32)
 }
 
 pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
     let disambiguator = {
-        let need_disambiguation =
-            db.has_conflicting_mangled_name(func) || func.is_member_or_descendant_of_class_template;
+        let need_disambiguation = db.has_conflicting_mangled_name(func)
+            || func.is_member_or_descendant_of_class_template();
         if need_disambiguation {
             compute_disambiguator_hash(func)
         } else {
@@ -297,7 +297,7 @@ pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
 
     format_ident!(
         "__rust_thunk__{disambiguator}{}",
-        ident_fragment_from_mangled_name(func.mangled_name.as_ref())
+        ident_fragment_from_mangled_name(func.mangled_name())
     )
 }
 
@@ -306,7 +306,7 @@ fn generate_function_assertion_for_identifier(
     func: &Func,
     id: &Identifier,
 ) -> Result<ThunkImpl> {
-    let features = db.ir().target_crubit_features(&func.owning_target);
+    let features = db.ir().target_crubit_features(func.owning_target());
     let fn_ident = format_nonportable_cc_ident(id.as_str())?;
     let mut namespace_qualifier = db.namespace_qualifier(func);
     // Keep goldens the same.
@@ -316,7 +316,7 @@ fn generate_function_assertion_for_identifier(
     let method_qualification;
     let member_function_prefix;
     let func_params;
-    if let Some(instance_method_metadata) = &func.instance_method_metadata {
+    if let Some(instance_method_metadata) = func.instance_method_metadata() {
         let const_qualifier = if instance_method_metadata.is_const() {
             quote! {const}
         } else {
@@ -334,11 +334,11 @@ fn generate_function_assertion_for_identifier(
         };
         member_function_prefix = path_to_func;
         // The first parameter of instance methods is `this`.
-        func_params = &func.params[1..];
+        func_params = &func.params()[1..];
     } else {
         method_qualification = quote! {};
         member_function_prefix = quote! {};
-        func_params = &func.params[..];
+        func_params = func.params();
     }
 
     let mut cc_param_types = func_params
@@ -354,16 +354,16 @@ fn generate_function_assertion_for_identifier(
             Ok(tt)
         })
         .collect::<Result<Vec<_>>>()?;
-    if func.is_variadic {
+    if func.is_variadic() {
         cc_param_types.push(quote! { ... });
     }
 
     let mut return_type_name = cpp_type_name::format_cpp_type_with_references(
-        &db.rs_type_kind(func.return_type.clone())?,
+        &db.rs_type_kind(func.return_type().clone())?,
         db,
     )?;
 
-    if func.return_type.is_const() {
+    if func.return_type().is_const() {
         return_type_name = quote! { #return_type_name const };
     }
 
@@ -381,17 +381,17 @@ pub fn generate_function_assertion(
     db: &BindingsGenerator,
     func: &Func,
 ) -> Result<Option<ThunkImpl>> {
-    if func.adl_enclosing_record.is_some() {
+    if func.adl_enclosing_record().is_some() {
         // This is a friend function that is only reachable with ADL. We can't take the address.
         return Ok(None);
     }
 
     // TODO: b/393169953 - support functions with non-standard calling conventions
-    if !func.has_c_calling_convention {
+    if !func.has_c_calling_convention() {
         return Ok(None);
     }
 
-    match &func.cc_name {
+    match func.cc_name() {
         UnqualifiedIdentifier::Identifier(id) => {
             Ok(Some(generate_function_assertion_for_identifier(db, func, id)?))
         }
@@ -407,7 +407,7 @@ pub fn generate_function_assertion(
 // constructor member function of `record_id`.
 // TODO(zarko): do we need to distinguish between non-const and const ctors? See b/436870965.
 fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
-    let [_, other] = &func.params[..] else {
+    let [_, other] = func.params() else {
         return false;
     };
     let CcTypeVariant::Pointer(ptr) = other.type_().variant() else {
@@ -430,16 +430,16 @@ pub fn generate_function_thunk_impl(
         return Ok(None);
     }
     let thunk_ident = thunk_ident(db, func);
-    let implementation_function = match &func.cc_name {
+    let implementation_function = match func.cc_name() {
         UnqualifiedIdentifier::Operator(op) => {
             let name = syn::parse_str::<TokenStream>(op.name())?;
             quote! { operator #name }
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            let features = db.ir().target_crubit_features(&func.owning_target);
+            let features = db.ir().target_crubit_features(func.owning_target());
             let fn_ident = format_nonportable_cc_ident(id.as_str())?;
             let namespace_qualifier = db.namespace_qualifier(func).format_for_cc(features)?;
-            if func.instance_method_metadata.is_some() || func.adl_enclosing_record.is_some() {
+            if func.instance_method_metadata().is_some() || func.adl_enclosing_record().is_some() {
                 quote! {#fn_ident}
             } else {
                 quote! { #namespace_qualifier #fn_ident }
@@ -452,7 +452,7 @@ pub fn generate_function_thunk_impl(
         // using destroy_at, we avoid needing to determine or remember what the correct spelling
         // is. Similar arguments apply to `construct_at`.
         UnqualifiedIdentifier::Constructor => {
-            if let Some(parent_id) = func.enclosing_item_id {
+            if let Some(parent_id) = func.enclosing_item_id() {
                 let record: &Rc<Record> = db.find_decl(parent_id)?;
                 if is_copy_constructor(func, record.id)
                     && record.copy_constructor == SpecialMemberFunc::Unavailable
@@ -468,23 +468,23 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
         UnqualifiedIdentifier::ConversionOperator => {
             let target_type_cpp = cpp_type_name::format_cpp_type_with_references(
-                &db.rs_type_kind(func.return_type.clone())?,
+                &db.rs_type_kind(func.return_type().clone())?,
                 db,
             )?;
             quote! { operator #target_type_cpp }
         }
     };
 
-    let features = db.ir().target_crubit_features(&func.owning_target);
+    let features = db.ir().target_crubit_features(func.owning_target());
     let mut param_idents = func
-        .params
+        .params()
         .iter()
         .map(|p| format_nonportable_cc_ident(p.identifier().as_str()))
         .collect::<Result<Vec<_>>>()?;
 
     let mut conversion_stmts = quote! {};
     let mut param_types = func
-        .params
+        .params()
         .iter()
         .map(|p| {
             let arg_type = db.rs_type_kind(p.type_().clone())?;
@@ -508,7 +508,7 @@ pub fn generate_function_thunk_impl(
         .collect::<Result<Vec<_>>>()?;
 
     let arg_expressions = func
-        .params
+        .params()
         .iter()
         .map(|p| {
             let ident = format_nonportable_cc_ident(p.identifier().as_str())?;
@@ -565,7 +565,7 @@ pub fn generate_function_thunk_impl(
     // value across `extern "C"` ABI.  (We do this after the arg_expressions
     // computation, so that it's only in the parameter list, not the argument
     // list.)
-    let return_type_kind = db.rs_type_kind(func.return_type.clone())?;
+    let return_type_kind = db.rs_type_kind(func.return_type().clone())?;
     let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&return_type_kind, db)?;
 
     let return_type_name = match return_type_kind.passing_convention() {
@@ -584,21 +584,21 @@ pub fn generate_function_thunk_impl(
         | PassingConvention::Void => return_type_cpp_spelling.clone(),
     };
 
-    let mut this_ref_qualification = match &func.rs_name {
+    let mut this_ref_qualification = match func.rs_name() {
         UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
         UnqualifiedIdentifier::Identifier(_)
         | UnqualifiedIdentifier::Operator(_)
         | UnqualifiedIdentifier::ConversionOperator => {
-            func.instance_method_metadata.as_ref().map(|meta| meta.reference())
+            func.instance_method_metadata().as_ref().map(|meta| meta.reference())
         }
     };
-    if func.cc_name.is_constructor() {
+    if func.cc_name().is_constructor() {
         this_ref_qualification = None;
     }
     let (implementation_function, arg_expressions) =
         if let Some(this_ref_qualification) = this_ref_qualification {
             let this_param = func
-                .params
+                .params()
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
 
@@ -636,13 +636,13 @@ pub fn generate_function_thunk_impl(
         }
         PassingConvention::Void => return_expr,
         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
-            match func.return_type.variant() {
+            match func.return_type().variant() {
                 CcTypeVariant::Pointer(pointer) if pointer.kind() == PointerTypeKind::LValueRef => {
                     quote! { return std::addressof( #return_expr ) }
                 }
                 CcTypeVariant::Pointer(pointer) if pointer.kind() == PointerTypeKind::RValueRef => {
                     let nested_type = cpp_type_name::format_cpp_type_with_references(
-                        &db.rs_type_kind(func.return_type.clone())?,
+                        &db.rs_type_kind(func.return_type().clone())?,
                         db,
                     )?;
                     quote! {

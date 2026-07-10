@@ -252,17 +252,17 @@ fn func_has_bindings(
     db: &BindingsGenerator,
     func: Rc<Func>,
 ) -> Result<BindingsInfo, NoBindingsReason> {
-    if func.is_consteval {
+    if func.is_consteval() {
         return Err(NoBindingsReason::Unsupported(anyhow!(
             "consteval functions are not supported"
         )));
     }
 
     let ir = db.ir();
-    let target = &func.owning_target;
+    let target = func.as_ref().owning_target();
     let enabled_features = ir.target_crubit_features(target);
 
-    if matches!(func.cc_name, ir::UnqualifiedIdentifier::ConversionOperator)
+    if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
         && !enabled_features.contains(CrubitFeature::AssumeThisLifetimes)
     {
         return Err(NoBindingsReason::Unsupported(anyhow!(
@@ -272,8 +272,8 @@ fn func_has_bindings(
 
     let mut missing_features = vec![];
 
-    if func.is_member_or_descendant_of_class_template
-        && func.rs_name != ir::UnqualifiedIdentifier::Destructor
+    if func.is_member_or_descendant_of_class_template()
+        && *func.rs_name() != ir::UnqualifiedIdentifier::Destructor
         && !enabled_features.contains(CrubitFeature::TemplateInstantiation)
     {
         missing_features.push(
@@ -283,7 +283,8 @@ fn func_has_bindings(
     }
 
     let mut visibility = Visibility::Public;
-    let sig_types = func.params.iter().map(|p| p.type_()).chain(std::iter::once(&func.return_type));
+    let sig_types =
+        func.params().iter().map(|p| p.type_()).chain(std::iter::once(func.return_type()));
     for sig_type in sig_types {
         let rs_type_kind = db.rs_type_kind(sig_type.clone()).unwrap();
         match type_visibility(db, &func, rs_type_kind) {
@@ -543,7 +544,7 @@ pub fn resolve_names(
                     insert(Rc::from(existing_rust_type.rs_name()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Func(func) => {
-                    if let ir::UnqualifiedIdentifier::Identifier(ident) = &func.rs_name {
+                    if let ir::UnqualifiedIdentifier::Identifier(ident) = func.rs_name() {
                         insert(Rc::from(ident.as_str()), ResolvedName::ValueItem(id));
                     }
                 }

@@ -81,21 +81,21 @@ pub fn record_lifetime_arity(
             // We'll pick the first [[lifetimebound]] we can find an arity for. (Even if we
             // chose the type with the highest arity, we wouldn't be able to find a suitable
             // assignment for those parameters later on; users need to annotate their code.)
-            if f.params.is_empty() {
+            if f.params().is_empty() {
                 continue;
             }
-            let this_param = &f.params[0];
+            let this_param = &f.params()[0];
             if this_param.identifier() != "__this" {
                 continue;
             }
-            if f.cc_name == ir::UnqualifiedIdentifier::Constructor {
-                for param in &f.params[1..] {
+            if *f.cc_name() == ir::UnqualifiedIdentifier::Constructor {
+                for param in &f.params()[1..] {
                     if param.clang_lifetimebound() {
                         return lifetime_arity(db, param.type_());
                     }
                 }
             } else if this_param.clang_lifetimebound() {
-                return lifetime_arity(db, &f.return_type);
+                return lifetime_arity(db, f.return_type());
             }
         }
     }
@@ -535,12 +535,12 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         this_lifetimebound_names: &[Rc<str>],
     ) -> Result<()> {
         // TODO(b/475407556): Support lifetime_capture_by.
-        let mut return_lifetime: Vec<Rc<str>> = func.return_type.explicit_lifetimes().to_vec();
+        let mut return_lifetime: Vec<Rc<str>> = func.return_type().explicit_lifetimes().to_vec();
         let mut has_lifetimebound = false;
-        let is_constructor = func.cc_name == ir::UnqualifiedIdentifier::Constructor;
+        let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
         // First, check to see if there are any existing lifetime annotations that we need to
         // respect.
-        for (ix, param) in func.params.iter().enumerate() {
+        for (ix, param) in func.params().iter().enumerate() {
             if param.clang_lifetimebound() || (is_constructor && ix == 0) {
                 has_lifetimebound |= param.clang_lifetimebound();
                 if return_lifetime.is_empty() {
@@ -555,7 +555,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     // lifetime and the one annotated on a parameter, return a diagnostic.
                     bail!(
                         "lifetimebound: lifetime mismatch in function {:#?} between parameter {:#?} with lifetime {:#?} and return with lifetime {:#?}",
-                        &func.cc_name,
+                        func.cc_name(),
                         param.identifier().as_str(),
                         param.type_().explicit_lifetimes(),
                         &return_lifetime
@@ -568,7 +568,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             return Ok(());
         }
         // We have at least one parameter because `has_lifetimebound`.
-        let is_member_function = func.params[0].identifier() == "__this";
+        let is_member_function = func.params()[0].identifier() == "__this";
         if return_lifetime.is_empty() {
             // We still don't have any explicit annotations.
             // Below, `L(v)` returns the ordered list of lifetimes for the type of value `v`.
@@ -578,18 +578,18 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             if is_constructor {
                 // Forall lifetimebound parameters P, L(P) : L(*this).
                 return_lifetime = this_lifetimebound_names.to_vec();
-            } else if is_member_function && func.params[0].clang_lifetimebound() {
+            } else if is_member_function && func.params()[0].clang_lifetimebound() {
                 // Here, the implicit object parameter was annotated with [[lifetimebound]].
                 // In this case, forall lifetimebound parameters P, L(*this) : L(P)
                 return_lifetime = this_lifetimebound_names.to_vec();
             } else {
                 // Otherwise, for return value R and forall lifetimebound parameters P, L(P) : L(R).
-                for _ in 0..self.get_lifetime_arity(&func.return_type)? {
+                for _ in 0..self.get_lifetime_arity(func.return_type())? {
                     return_lifetime.push(self.bindings.fresh_name_for(&Rc::from("__rv")))
                 }
             }
         }
-        for (ix, param) in func.params.iter_mut().enumerate() {
+        for (ix, param) in func.params_mut().iter_mut().enumerate() {
             if param.clang_lifetimebound() || (is_constructor && ix == 0) {
                 if is_member_function && ix == 0 {
                     self.inject_lifetimes_into_this(param, &return_lifetime)?;
@@ -603,11 +603,11 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             // return type doesn't bind |return_lifetime| lifetimes. Don't reject the program.
             // Instead, if we can detect the arity mismatch, clear out the return type's lifetimes
             // (effectively treating the return type as a raw type).
-            let return_arity = self.get_lifetime_arity(&func.return_type)?;
+            let return_arity = self.get_lifetime_arity(func.return_type())?;
             if return_arity != return_lifetime.len() {
-                func.return_type.explicit_lifetimes_mut().clear();
+                func.return_type_mut().explicit_lifetimes_mut().clear();
             } else {
-                *func.return_type.explicit_lifetimes_mut() = return_lifetime;
+                *func.return_type_mut().explicit_lifetimes_mut() = return_lifetime;
             }
         }
         Ok(())
@@ -624,7 +624,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         self.bind_lifetime_inputs(item.enclosing_item_id())?;
         match item {
             Item::Func(func) => {
-                func.lifetime_inputs.iter().for_each(|name| {
+                func.lifetime_inputs().iter().for_each(|name| {
                     self.bindings.push_new_binding(name);
                 });
             }
@@ -652,18 +652,19 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         let mut state = LifetimeState::Unseen;
         let mut this_state = LifetimeState::Unseen;
         let mut had_this = false;
-        new_func.lifetime_inputs.clear();
-        // Note that we generate a new LifetimeDefaults per Item that we're importing, so we don't
+        new_func.lifetime_inputs_mut().clear();
+        // Option that we generate a new LifetimeDefaults per Item that we're importing, so we don't
         // need to pop these bindings. (We *do* need to worry about unbinding names for internal
         // binders, like function types.)
-        let this_lifetimebound_names = self.bind_lifetime_inputs(func.enclosing_item_id)?;
+        let this_lifetimebound_names = self.bind_lifetime_inputs(func.enclosing_item_id())?;
         // Rename local bindings (and remember how we've renamed them).
-        func.lifetime_inputs
-            .iter()
-            .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
+        func.lifetime_inputs().iter().for_each(|name| {
+            new_func.lifetime_inputs_mut().push(self.bindings.push_new_binding(name))
+        });
         self.lower_clang_annotations(&mut new_func, &this_lifetimebound_names)?;
-        for (ix, param) in new_func.params.iter_mut().enumerate() {
-            let is_constructor = func.cc_name == ir::UnqualifiedIdentifier::Constructor;
+        let mut lifetime_inputs = std::mem::take(new_func.lifetime_inputs_mut());
+        for (ix, param) in new_func.params_mut().iter_mut().enumerate() {
+            let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
             // `this` in a constructor is strange. The !is_constructor restriction fixes some
             // situations where we would bind a `'__this` in a constructor and then not use it
             // (because the actual `__this` is a void*).
@@ -674,25 +675,28 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 self.add_lifetime_to_input_type(
                     is_this,
                     Some(&name_hint),
-                    &mut new_func.lifetime_inputs,
+                    &mut lifetime_inputs,
                     param.type_(),
                 )?;
             state.update(&new_state);
             this_state.update(&new_this_state);
             param.set_type(new_type);
         }
+        *new_func.lifetime_inputs_mut() = lifetime_inputs;
         let lifetime = match this_state {
             LifetimeState::Unseen => self.get_lifetime_for_state(&state),
             _ => self.get_lifetime_for_state(&this_state),
         };
-        new_func.return_type = self.add_lifetime_to_output_type(
+        let return_type_val = new_func.return_type().clone();
+        let return_type = self.add_lifetime_to_output_type(
             &lifetime,
-            &mut new_func.lifetime_inputs,
-            &new_func.return_type,
+            new_func.lifetime_inputs_mut(),
+            &return_type_val,
         )?;
+        new_func.set_return_type(return_type);
         if had_this {
             // See if we can promote the type of `this` to a reference.
-            let this = new_func.params.get_mut(0).unwrap();
+            let this = new_func.params_mut().get_mut(0).unwrap();
             if !this.type_().explicit_lifetimes().is_empty()
                 && let CcTypeVariant::Pointer(pty) = this.type_mut().variant_mut()
             {
