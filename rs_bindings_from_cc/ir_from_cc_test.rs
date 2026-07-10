@@ -2970,11 +2970,11 @@ fn test_member_function() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function();",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: false,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new(
+            ir::ReferenceQualification::Unqualified,
+            false,
+            false,
+        )),
     );
 }
 
@@ -2983,11 +2983,11 @@ fn test_member_function_const() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() const;",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: true,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new(
+            ir::ReferenceQualification::Unqualified,
+            true,
+            false,
+        )),
     );
 }
 
@@ -2996,11 +2996,11 @@ fn test_member_function_virtual() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "virtual void Function();",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: false,
-            is_virtual: true,
-        }),
+        &Some(ir::InstanceMethodMetadata::new(
+            ir::ReferenceQualification::Unqualified,
+            false,
+            true,
+        )),
     );
 }
 
@@ -3009,11 +3009,7 @@ fn test_member_function_lvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &;",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::LValue,
-            is_const: false,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new(ir::ReferenceQualification::LValue, false, false)),
     );
 }
 
@@ -3022,11 +3018,7 @@ fn test_member_function_rvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &&;",
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::RValue,
-            is_const: false,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new(ir::ReferenceQualification::RValue, false, false)),
     );
 }
 
@@ -3079,11 +3071,11 @@ fn test_member_function_explicit_constructor() {
         &ir,
         "SomeStruct",
         |f| f.rs_name == UnqualifiedIdentifier::Constructor,
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: false,
-            is_virtual: false,
-        }),
+        &Some(ir::InstanceMethodMetadata::new(
+            ir::ReferenceQualification::Unqualified,
+            false,
+            false,
+        )),
     );
 }
 
@@ -3101,11 +3093,11 @@ fn test_member_function_constructor() {
             &ir,
             "SomeStruct",
             |f| f.rs_name == UnqualifiedIdentifier::Constructor,
-            &Some(ir::InstanceMethodMetadata {
-                reference: ir::ReferenceQualification::Unqualified,
-                is_const: false,
-                is_virtual: false,
-            }),
+            &Some(ir::InstanceMethodMetadata::new(
+                ir::ReferenceQualification::Unqualified,
+                false,
+                false,
+            )),
         );
     }
 }

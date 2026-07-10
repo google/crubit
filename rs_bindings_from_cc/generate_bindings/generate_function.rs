@@ -366,7 +366,7 @@ fn api_func_shape_for_operator_index(
     let Some(instance_method_metadata) = &func.instance_method_metadata else {
         panic!("cannot tell whether operator[] is const or not, shouldn't happen")
     };
-    let method_is_const = instance_method_metadata.is_const;
+    let method_is_const = instance_method_metadata.is_const();
 
     let [container_type, index_type] = param_types else {
         bail_to_errors!(
@@ -2302,7 +2302,7 @@ pub fn generate_function(
                 let associated_type;
                 if matches!(trait_name, TraitName::CcIndex { .. } | TraitName::CcIndexMut { .. }) {
                     let is_rvalue = match &func.instance_method_metadata {
-                        Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+                        Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
                         None => false,
                     };
                     if is_rvalue {
@@ -3287,7 +3287,7 @@ pub fn generate_standard_indexing_impl(
     Ok(match trait_name {
         TraitName::CcIndex { index_type, output_type } => {
             let is_rvalue = match &func.instance_method_metadata {
-                Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+                Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
                 None => false,
             };
             if is_rvalue {
@@ -3320,7 +3320,7 @@ pub fn generate_standard_indexing_impl(
         }
         TraitName::CcIndexMut { index_type, output_type } => {
             let is_rvalue = match &func.instance_method_metadata {
-                Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+                Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
                 None => false,
             };
             let is_item_unpin = match output_type.as_ref() {
@@ -3369,7 +3369,7 @@ pub fn adjust_signature_for_indexing_traits(
     param_types: &mut [RsTypeKind],
 ) -> Result<Option<Func>> {
     let is_rvalue = match &func.instance_method_metadata {
-        Some(metadata) => metadata.reference == ReferenceQualification::RValue,
+        Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
         None => false,
     };
     if is_rvalue {

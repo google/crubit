@@ -63,7 +63,7 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // calls, which are already slow, it may not be such a big deal. We can
     // benchmark it later. :)
     if let Some(inst_meta) = &func.instance_method_metadata
-        && inst_meta.is_virtual
+        && inst_meta.is_virtual()
     {
         return false;
     }
@@ -317,13 +317,13 @@ fn generate_function_assertion_for_identifier(
     let member_function_prefix;
     let func_params;
     if let Some(instance_method_metadata) = &func.instance_method_metadata {
-        let const_qualifier = if instance_method_metadata.is_const {
+        let const_qualifier = if instance_method_metadata.is_const() {
             quote! {const}
         } else {
             quote! {}
         };
 
-        method_qualification = match instance_method_metadata.reference {
+        method_qualification = match instance_method_metadata.reference() {
             ir::ReferenceQualification::Unqualified => const_qualifier,
             ir::ReferenceQualification::LValue => {
                 quote! { #const_qualifier & }
@@ -589,7 +589,7 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Identifier(_)
         | UnqualifiedIdentifier::Operator(_)
         | UnqualifiedIdentifier::ConversionOperator => {
-            func.instance_method_metadata.as_ref().map(|meta| meta.reference)
+            func.instance_method_metadata.as_ref().map(|meta| meta.reference())
         }
     };
     if func.cc_name.is_constructor() {

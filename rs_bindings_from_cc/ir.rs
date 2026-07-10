@@ -993,9 +993,27 @@ pub enum ReferenceQualification {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InstanceMethodMetadata {
-    pub reference: ReferenceQualification,
-    pub is_const: bool,
-    pub is_virtual: bool,
+    pub(crate) reference: ReferenceQualification,
+    pub(crate) is_const: bool,
+    pub(crate) is_virtual: bool,
+}
+
+impl InstanceMethodMetadata {
+    pub fn new(reference: ReferenceQualification, is_const: bool, is_virtual: bool) -> Self {
+        Self { reference, is_const, is_virtual }
+    }
+
+    pub fn reference(&self) -> ReferenceQualification {
+        self.reference
+    }
+
+    pub fn is_const(&self) -> bool {
+        self.is_const
+    }
+
+    pub fn is_virtual(&self) -> bool {
+        self.is_virtual
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
