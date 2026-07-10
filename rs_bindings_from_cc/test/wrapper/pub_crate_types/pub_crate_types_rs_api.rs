@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -20,6 +20,7 @@
 pub(crate) type TemplateIntAlias = crate::__CcTemplateInst8TemplateIiE;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "16CompoundDataType"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CompoundDataType
 pub struct CompoundDataType {
@@ -106,6 +107,7 @@ pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template
 // Template2<int>*>) {}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst9Template2IiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template2 < int >
 pub(crate) struct __CcTemplateInst9Template2IiE {
@@ -134,6 +136,7 @@ forward_declare::unsafe_define!(
 //   b/248542210: template instantiation of member function cannot reliably get bindings
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst8TemplateIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template < int >
 pub(crate) struct __CcTemplateInst8TemplateIiE {

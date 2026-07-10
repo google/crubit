@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:templates_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "14DifferentScope"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DifferentScope
 pub struct DifferentScope {
@@ -49,6 +50,7 @@ pub mod test_namespace_bindings {
     //   template instantiation is not yet supported
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N23test_namespace_bindings13TemplateParamE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateParam
     pub struct TemplateParam {
@@ -140,6 +142,7 @@ pub mod forward_declared_template { // error: class `forward_declared_template::
 
 pub mod private_classes {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N15private_classes14HasPrivateTypeE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=private_classes :: HasPrivateType
     pub struct HasPrivateType {

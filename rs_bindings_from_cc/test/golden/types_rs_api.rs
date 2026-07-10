@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:types_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -21,6 +21,7 @@
 //   Unsupported type 'decltype(sizeof (0))': Unsupported type '__size_t': Unsupported clang::Type class 'PredefinedSugar'
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "10SomeStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
@@ -85,6 +86,7 @@ impl Default for SomeStruct {
 ///   * `forward_declared_ptr_field`: raw pointer
 ///   * `cyclic_ptr_field`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "19FieldTypeTestStruct"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct
 pub struct FieldTypeTestStruct {

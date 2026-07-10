@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:c_abi_compatible_type_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -17,6 +17,7 @@
 // Type bindings for MyI8 suppressed due to being mapped to an existing Rust type (i8)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "1X"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=X
 pub struct X {

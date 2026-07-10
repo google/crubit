@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:unions_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -19,6 +19,7 @@
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "10EmptyUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
 pub union EmptyUnion {
@@ -63,6 +64,7 @@ impl Default for EmptyUnion {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
@@ -101,6 +103,7 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13UnionToRename"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionToRename
 pub union RenamedUnion {
@@ -145,6 +148,7 @@ impl Default for RenamedUnion {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "44TriviallyCopyableButNontriviallyDestructible"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
@@ -181,6 +185,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13NonEmptyUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion
 pub union NonEmptyUnion {
@@ -232,6 +237,7 @@ impl Default for NonEmptyUnion {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "12NonCopyUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion
 pub union NonCopyUnion {
@@ -249,6 +255,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion {
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
+#[cfi_encoding = "13NonCopyUnion2"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion2
 pub union NonCopyUnion2 {
@@ -290,6 +297,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `constant_array_field_not_yet_supported`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "20UnionWithOpaqueField"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField
 pub union UnionWithOpaqueField {
@@ -336,6 +344,7 @@ impl Default for UnionWithOpaqueField {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "21TrivialButInheritable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable
 pub struct TrivialButInheritable {
@@ -384,6 +393,7 @@ impl Default for TrivialButInheritable {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "20UnionWithInheritable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable
 pub union UnionWithInheritable {
@@ -432,6 +442,7 @@ impl Default for UnionWithInheritable {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "12TypedefUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnion
 pub union TypedefUnion {
@@ -480,6 +491,7 @@ impl Default for TypedefUnion {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "27TypedefUnionWithInheritable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable
 pub union TypedefUnionWithInheritable {

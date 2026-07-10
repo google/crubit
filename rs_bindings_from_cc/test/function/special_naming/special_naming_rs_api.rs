@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/function/special_naming:special_naming
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -54,6 +54,7 @@ pub fn asm_name_with_dollar_sign() -> ::ffi_11::c_int {
 /// to generate thunks with the same name, which may lead to "conflicting types
 /// for '__rust_thunk__/*...*/'" compile errors in the generated C++ implementation.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "12SimpleStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SimpleStruct
 pub struct SimpleStruct {
@@ -78,6 +79,7 @@ impl Default for SimpleStruct {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11OtherStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=OtherStruct
 pub struct OtherStruct {

@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/references:references
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "22TypeWithPtrConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithPtrConstructor
 pub struct TypeWithPtrConstructor {
@@ -51,6 +52,7 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "29TypeWithNonNullPtrConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithNonNullPtrConstructor
 pub struct TypeWithNonNullPtrConstructor {
@@ -87,6 +89,7 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstruct
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "28TypeWithReferenceConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeWithReferenceConstructor
 pub struct TypeWithReferenceConstructor {

@@ -167,6 +167,7 @@ fn test_simple_struct() -> Result<()> {
         rs_api,
         quote! {
             #[::ctor::recursively_pinned(PinnedDrop)]
+            #[cfi_encoding = "10SomeStruct"]
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
@@ -995,6 +996,7 @@ fn test_doc_comment_record() -> Result<()> {
         quote! {
             #[doc = " Doc Comment\n \n  * with bullet\n \n Generated from: ir_from_cc_virtual_header.h;l=6"]
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            #[cfi_encoding = "10SomeStruct"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
@@ -1022,6 +1024,7 @@ fn test_basic_union() -> Result<()> {
         rs_api,
         quote! {
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            #[cfi_encoding = "9SomeUnion"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnion"]
             pub union SomeUnion {
@@ -1133,6 +1136,7 @@ fn test_union_with_private_fields() -> Result<()> {
         rs_api,
         quote! {
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            #[cfi_encoding = "26SomeUnionWithPrivateFields"]
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnionWithPrivateFields"]
             pub union SomeUnionWithPrivateFields {
@@ -1181,6 +1185,7 @@ fn test_nontrivial_unions() -> Result<()> {
         rs_api,
         quote! {
             #[::ctor::recursively_pinned]
+            #[cfi_encoding = "24UnionWithNontrivialField"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithNontrivialField"]
             pub union UnionWithNontrivialField { ... }
@@ -1202,6 +1207,7 @@ fn test_empty_struct() -> Result<()> {
         rs_api,
         quote! {
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            #[cfi_encoding = "11EmptyStruct"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyStruct"]
             pub struct EmptyStruct {
@@ -1239,6 +1245,7 @@ fn test_empty_union() -> Result<()> {
         rs_api,
         quote! {
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            #[cfi_encoding = "10EmptyUnion"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyUnion"]
             pub union EmptyUnion {
@@ -1317,6 +1324,7 @@ fn test_union_with_constructors() -> Result<()> {
         rs_api,
         quote! {
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            #[cfi_encoding = "28UnionWithDefaultConstructors"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithDefaultConstructors"]
             pub union UnionWithDefaultConstructors {

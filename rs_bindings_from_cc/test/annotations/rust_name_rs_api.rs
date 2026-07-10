@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/annotations:rust_name
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -22,6 +22,7 @@ pub mod crubit {
         }
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test13StructOldNameE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName
         pub struct StructNewName {
@@ -48,6 +49,7 @@ pub mod crubit {
         }
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test10SomeStructE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct
         pub struct SomeStruct {

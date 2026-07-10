@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/assume_lifetimes:simple_string_view
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy)]
+#[cfi_encoding = "2SV"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: SV
 pub struct SV<'a> {

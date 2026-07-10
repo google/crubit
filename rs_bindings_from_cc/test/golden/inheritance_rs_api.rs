@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:inheritance_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -18,6 +18,7 @@
 /// In the Itanium ABI, the tail padding of POD types cannot be reused by other
 /// objects, even if the POD type is potentially-overlapping.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "5Base0"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Base0
 pub struct Base0 {
@@ -62,6 +63,7 @@ impl Default for Base0 {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "5Base1"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Base1
 pub struct Base1 {
@@ -112,6 +114,7 @@ impl Default for Base1 {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "5Base2"]
 #[repr(C, align(2))]
 ///CRUBIT_ANNOTATE: cpp_type=Base2
 pub struct Base2 {
@@ -159,6 +162,7 @@ impl Default for Base2 {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "7Derived"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Derived
 pub struct Derived {
@@ -204,6 +208,7 @@ impl Default for Derived {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "12VirtualBase1"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
 pub struct VirtualBase1 {
@@ -253,6 +258,7 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "12VirtualBase2"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
 pub struct VirtualBase2 {
@@ -302,6 +308,7 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "14VirtualDerived"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
 pub struct VirtualDerived {
@@ -351,6 +358,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "15MyAbstractClass"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=MyAbstractClass
 pub struct MyAbstractClass {
@@ -377,6 +385,7 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 
 /// Method inheritance
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11MethodBase1"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase1
 pub struct MethodBase1 {
@@ -469,6 +478,7 @@ pub mod method_base1 {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11MethodBase2"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase2
 pub struct MethodBase2 {
@@ -534,6 +544,7 @@ pub mod method_base2 {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13MethodDerived"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodDerived
 pub struct MethodDerived {

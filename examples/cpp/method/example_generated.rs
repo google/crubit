@@ -6,7 +6,7 @@
 // //examples/cpp/method:example_lib
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -16,6 +16,7 @@
 #![deny(warnings)]
 pub mod foo {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N3foo3BarE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Bar
     pub struct Bar {

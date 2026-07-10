@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/templates/type_alias:type_alias
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -22,6 +22,7 @@ pub type MyTypeAlias = crate::__CcTemplateInst10MyTemplateIiE;
 pub type OtherTypeAliasInSameTarget = crate::__CcTemplateInst10MyTemplateIiE;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=:: MyTemplate < int >
 pub struct __CcTemplateInst10MyTemplateIiE {

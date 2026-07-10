@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:doc_comment_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -18,6 +18,7 @@
 ///
 ///  * with three slashes
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "17DocCommentSlashes"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DocCommentSlashes
 pub struct DocCommentSlashes {
@@ -136,6 +137,7 @@ pub mod doc_comment_slashes {
 ///
 ///  * with slashes and bang
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "14DocCommentBang"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DocCommentBang
 pub struct DocCommentBang {
@@ -184,6 +186,7 @@ impl Default for DocCommentBang {
 ///
 ///  with two stars
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "24MultilineCommentTwoStars"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MultilineCommentTwoStars
 pub struct MultilineCommentTwoStars {
@@ -232,6 +235,7 @@ impl Default for MultilineCommentTwoStars {
 ///
 ///  * with two slashes
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11LineComment"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=LineComment
 pub struct LineComment {
@@ -280,6 +284,7 @@ impl Default for LineComment {
 ///
 ///  with one star
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "16MultilineOneStar"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MultilineOneStar
 pub struct MultilineOneStar {

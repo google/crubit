@@ -19,6 +19,7 @@
 // illustrate what the generated code will look like.
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "21StructWithBridgeField"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithBridgeField
 pub struct StructWithBridgeField {
@@ -65,6 +66,7 @@ pub fn TakeCppStruct(__param_0: crate::RustStruct) {
 //   Class templates are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "4Vec3"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Vec3
 pub struct Vec3 {

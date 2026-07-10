@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -24,6 +24,7 @@ pub mod repro {
     /// * Document why the following public unsafe fields of this type cannot be misused by callee:
     ///   * `nanos`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N5repro8IntervalE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=repro :: Interval
     pub struct Interval {

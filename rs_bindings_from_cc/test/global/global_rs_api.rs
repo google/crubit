@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/global:global
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -88,6 +88,7 @@ pub mod foo {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "18StructWithAnonEnum"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum
 pub struct StructWithAnonEnum {

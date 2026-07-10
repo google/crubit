@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "10Uncopyable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Uncopyable
 pub struct Uncopyable {
@@ -44,6 +45,7 @@ impl ::ctor::CtorNew<()> for Uncopyable {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "21UncopyableDespiteDecl"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl
 pub struct UncopyableDespiteDecl {

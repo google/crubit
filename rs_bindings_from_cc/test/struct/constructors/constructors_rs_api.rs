@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/struct/constructors:constructors
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -18,6 +18,7 @@
 /// generating bindings for constructors, even though the presence of a
 /// user-defined copy constructor technically means that the struct below
 /// is non-trivial.
+#[cfi_encoding = "34StructWithUserProvidedConstructors"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithUserProvidedConstructors
 pub struct StructWithUserProvidedConstructors {
@@ -80,6 +81,7 @@ impl Clone for StructWithUserProvidedConstructors {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "39StructWithExplicitConversionConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitConversionConstructor
 pub struct StructWithExplicitConversionConstructor {
@@ -122,6 +124,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "30StructWithMultipleConstructors"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithMultipleConstructors
 pub struct StructWithMultipleConstructors {
@@ -214,6 +217,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "39StructWithImplicitConversionConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionConstructor
 pub struct StructWithImplicitConversionConstructor {
@@ -256,6 +260,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "17OtherSimpleStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: OtherSimpleStruct
 pub struct OtherSimpleStruct {
@@ -284,6 +289,7 @@ impl Default for OtherSimpleStruct {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "41StructWithImplicitConversionFromReference"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionFromReference
 pub struct StructWithImplicitConversionFromReference {
@@ -326,6 +332,7 @@ impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
 
 /// Inline-defined constructors test that thunks are properly implemented by
 /// `generate_rs_api_impl`.
+#[cfi_encoding = "28StructWithInlineConstructors"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithInlineConstructors
 pub struct StructWithInlineConstructors {
@@ -407,6 +414,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
 }
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "29StructWithDeletedConstructors"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithDeletedConstructors
 pub struct StructWithDeletedConstructors {
@@ -434,6 +442,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstruct
 }
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "29StructWithPrivateConstructors"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithPrivateConstructors
 pub struct StructWithPrivateConstructors {
@@ -463,6 +472,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstruct
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "41StructWithExplicitlyDefaultedConstructors"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitlyDefaultedConstructors
 pub struct StructWithExplicitlyDefaultedConstructors {
@@ -497,6 +507,7 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 /// TODO(lukasza): Add StructWithImplicitlyDefaultedConstructor test (or is
 ///                that just testing the compiler and therefore not useful?).
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "32NonTrivialStructWithConstructors"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: NonTrivialStructWithConstructors
 pub struct NonTrivialStructWithConstructors {
@@ -607,6 +618,7 @@ impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `ptr_field`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "27StructWithUnsafeConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithUnsafeConstructor
 pub struct StructWithUnsafeConstructor {

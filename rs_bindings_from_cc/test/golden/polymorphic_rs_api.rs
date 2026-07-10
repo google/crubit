@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:polymorphic_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "15PolymorphicBase"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase
 pub struct PolymorphicBase {
@@ -70,6 +71,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "16PolymorphicBase2"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2
 pub struct PolymorphicBase2 {
@@ -138,6 +140,7 @@ pub mod polymorphic_base2 {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "18PolymorphicDerived"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicDerived
 pub struct PolymorphicDerived {

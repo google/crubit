@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -20,6 +20,7 @@
 //       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "20CannotUpcastInCrubit"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=CannotUpcastInCrubit
 pub struct CannotUpcastInCrubit {

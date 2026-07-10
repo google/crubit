@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "18HasCustomAlignment"]
 #[repr(C, align(64))]
 ///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignment
 pub struct HasCustomAlignment {
@@ -39,6 +40,7 @@ impl Default for HasCustomAlignment {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "27HasFieldWithCustomAlignment"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasFieldWithCustomAlignment
 pub struct HasFieldWithCustomAlignment {
@@ -65,6 +67,7 @@ impl Default for HasFieldWithCustomAlignment {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "35InheritsFromBaseWithCustomAlignment"]
 #[repr(C, align(64))]
 ///CRUBIT_ANNOTATE: cpp_type=InheritsFromBaseWithCustomAlignment
 pub struct InheritsFromBaseWithCustomAlignment {
@@ -91,6 +94,7 @@ impl Default for InheritsFromBaseWithCustomAlignment {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "29HasCustomAlignmentWithGnuAttr"]
 #[repr(C, align(64))]
 ///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr
 pub struct HasCustomAlignmentWithGnuAttr {

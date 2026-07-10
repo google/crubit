@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/struct/destructors:destructors
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+#[cfi_encoding = "24DestructionOrderRecorder"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
 pub struct DestructionOrderRecorder {
@@ -128,6 +129,7 @@ pub mod destruction_order_recorder {
     }
 }
 
+#[cfi_encoding = "27FieldDestructionOrderTester"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
 pub struct FieldDestructionOrderTester {
@@ -262,6 +264,7 @@ pub mod field_destruction_order_tester {
 }
 
 #[derive(Clone)]
+#[cfi_encoding = "21PrivateOperatorDelete"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=PrivateOperatorDelete
 pub struct PrivateOperatorDelete {

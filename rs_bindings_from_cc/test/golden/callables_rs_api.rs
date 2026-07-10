@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:callables_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -80,6 +80,7 @@ pub fn map_bridged(
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13ABICompatible"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ABICompatible
 pub struct ABICompatible {
@@ -121,6 +122,7 @@ pub fn map_abi_compatible(
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "16LayoutCompatible"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=LayoutCompatible
 pub struct LayoutCompatible {

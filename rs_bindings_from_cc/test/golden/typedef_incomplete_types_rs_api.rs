@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:typedef_incomplete_types_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -25,6 +25,7 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 ///   * `incomplete_extern_c`: raw pointer
 ///   * `incomplete`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "30HasPointerToIncompleteTypedefs"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasPointerToIncompleteTypedefs
 pub struct HasPointerToIncompleteTypedefs {

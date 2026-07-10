@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:compatibility_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -19,6 +19,7 @@
 /// that are forward-compatible, as described in
 /// additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "14CompatibleType"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CompatibleType
 pub struct CompatibleType {

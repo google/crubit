@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/struct/methods_qualifiers:methods_qualifiers
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "34UnpinStructWithRefQualifiedMethods"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: UnpinStructWithRefQualifiedMethods
 pub struct UnpinStructWithRefQualifiedMethods {

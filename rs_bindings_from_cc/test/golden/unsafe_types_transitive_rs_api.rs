@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:unsafe_types_transitive_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -20,6 +20,7 @@
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `p`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13PublicPointer"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PublicPointer
 pub struct PublicPointer {
@@ -44,6 +45,7 @@ impl Default for PublicPointer {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "14PrivatePointer"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PrivatePointer
 pub struct PrivatePointer {
@@ -76,6 +78,7 @@ impl Default for PrivatePointer {
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `pub`: unsafe struct or union
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "23TransitivePublicPointer"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TransitivePublicPointer
 pub struct TransitivePublicPointer {
@@ -105,6 +108,7 @@ impl Default for TransitivePublicPointer {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "5Union"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Union
 pub union Union {

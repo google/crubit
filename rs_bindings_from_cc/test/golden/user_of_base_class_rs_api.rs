@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -20,6 +20,7 @@
 ///
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "8Derived2"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Derived2
 pub struct Derived2 {
@@ -70,6 +71,7 @@ impl ::ctor::CtorNew<()> for Derived2 {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "15VirtualDerived2"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived2
 pub struct VirtualDerived2 {

@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/templates/allowlist:allowlist_specific_template
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -34,6 +34,7 @@ pub fn NotBoundCaller(mut i: crate::__CcTemplateInst10NotBoundTsIifE) {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst13AlwaysBoundTsIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AlwaysBoundTs < int , float >
 pub struct __CcTemplateInst13AlwaysBoundTsIifE {
@@ -88,6 +89,7 @@ pub mod cc_template_inst13_always_bound_ts_iif_e {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst10NotBoundTsIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NotBoundTs < int , float >
 pub struct __CcTemplateInst10NotBoundTsIifE {

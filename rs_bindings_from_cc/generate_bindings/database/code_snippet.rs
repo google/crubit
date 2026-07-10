@@ -522,6 +522,7 @@ pub fn generated_items_to_tokens<'db>(
                     recursively_pinned_attr,
                     must_use_attr,
                     deprecated_attr,
+                    cfi_encoding_attr,
                     align,
                     internally_mutable_unknown_fields,
                     crubit_annotation,
@@ -671,6 +672,7 @@ pub fn generated_items_to_tokens<'db>(
                     #recursively_pinned_attr
                     #must_use_attr
                     #deprecated_attr
+                    #cfi_encoding_attr
                     #[repr(#(#repr_attrs),*)]
                     #crubit_annotation
                     #visibility #struct_or_union #ident #type_param_tokens {
@@ -1016,6 +1018,7 @@ pub struct Record {
     pub recursively_pinned_attr: Option<RecursivelyPinnedAttr>,
     pub must_use_attr: Option<MustUseAttr>,
     pub deprecated_attr: Option<DeprecatedAttr>,
+    pub cfi_encoding_attr: CfiEncodingAttr,
     pub align: Option<usize>,
     pub internally_mutable_unknown_fields: bool,
     pub crubit_annotation: DocCommentAttr,

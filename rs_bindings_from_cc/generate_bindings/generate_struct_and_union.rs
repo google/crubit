@@ -7,10 +7,10 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, make_rs_lifetime_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
-    ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeleteImpl,
-    DeprecatedAttr, DeriveAttr, DisplayImpl, DocCommentAttr, Feature, FieldDefinition, FieldType,
-    GeneratedItem, MustUseAttr, NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl,
-    StructOrUnion, Thunk, ThunkImpl, UpcastImpl, UpcastImplBody, Visibility,
+    ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, CfiEncodingAttr,
+    DeleteImpl, DeprecatedAttr, DeriveAttr, DisplayImpl, DocCommentAttr, Feature, FieldDefinition,
+    FieldType, GeneratedItem, MustUseAttr, NoUniqueAddressAccessor, RecursivelyPinnedAttr,
+    SizeofImpl, StructOrUnion, Thunk, ThunkImpl, UpcastImpl, UpcastImplBody, Visibility,
 };
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::{intern, BindingsGenerator};
@@ -727,6 +727,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         recursively_pinned_attr,
         must_use_attr: record.nodiscard().map(|s| MustUseAttr(Rc::from(s))),
         deprecated_attr: record.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
+        cfi_encoding_attr: CfiEncodingAttr(record.mangled_cc_name().into()),
         // Thread-safe types always need explicit alignment because the opaque
         // UnsafeCell<[MaybeUninit<u8>; N]> body has alignment 1.
         align: if (override_alignment || record.is_thread_safe())
@@ -774,7 +775,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         size: record.size_align().size(),
     };
 
-    api_snippets.features |= Feature::negative_impls;
+    api_snippets.features |= Feature::negative_impls | Feature::cfi_encoding;
     let record_trait_assertions = {
         let mut assert_impls = FlagSet::empty();
         let mut assert_not_impls = FlagSet::empty();

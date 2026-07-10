@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -20,6 +20,7 @@
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
@@ -208,6 +209,7 @@ pub mod nontrivial {
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "16NontrivialInline"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
 pub struct NontrivialInline {
@@ -331,6 +333,7 @@ pub mod nontrivial_inline {
 /// the destructor for NontrivialMembers, it just calls the destructors for
 /// each field.
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "17NontrivialMembers"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialMembers
 pub struct NontrivialMembers {
@@ -389,6 +392,7 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 //     references are not yet supported
 
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
+#[cfi_encoding = "15NontrivialUnpin"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
 pub struct NontrivialUnpin {
@@ -595,6 +599,7 @@ pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::Nontr
 
 /// Finally, testing for strange by-value APIs.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "17NontrivialByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
 pub struct NontrivialByValue {
@@ -663,6 +668,7 @@ where
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "10Nonmovable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {

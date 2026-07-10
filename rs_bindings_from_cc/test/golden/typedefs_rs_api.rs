@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:typedefs_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "10SomeStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
@@ -43,6 +44,7 @@ pub mod some_struct {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "15SomeOtherStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
 pub struct SomeOtherStruct {
@@ -71,6 +73,7 @@ impl Default for SomeOtherStruct {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "9SomeUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeUnion
 pub union SomeUnion {
@@ -99,6 +102,7 @@ impl Default for SomeUnion {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "14SomeOtherUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion
 pub union SomeOtherUnion {

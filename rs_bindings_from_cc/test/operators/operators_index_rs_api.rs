@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/operators:operators_index
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -17,6 +17,7 @@
 pub mod crubit {
     pub mod test {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test9ItemUnpinE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemUnpin
         pub struct ItemUnpin {
@@ -43,6 +44,7 @@ pub mod crubit {
         }
 
         #[::ctor::recursively_pinned(PinnedDrop)]
+        #[cfi_encoding = "N6crubit4test12ItemNonUnpinE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemNonUnpin
         pub struct ItemNonUnpin {
@@ -118,6 +120,7 @@ pub mod crubit {
         }
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test23ContainerUnpinItemUnpinE"]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemUnpin
         pub struct ContainerUnpinItemUnpin {
@@ -194,6 +197,7 @@ pub mod crubit {
         ///   * `items_storage_`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'crubit::test::ItemNonUnpin[10]': Unsupported clang::Type class 'ConstantArray'
         ///   * `items_`: raw pointer
         #[::ctor::recursively_pinned(PinnedDrop)]
+        #[cfi_encoding = "N6crubit4test26ContainerUnpinItemNonUnpinE"]
         #[repr(C, align(8))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemNonUnpin
         pub struct ContainerUnpinItemNonUnpin {
@@ -376,6 +380,7 @@ pub mod crubit {
         }
 
         #[::ctor::recursively_pinned(PinnedDrop)]
+        #[cfi_encoding = "N6crubit4test26ContainerNonUnpinItemUnpinE"]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemUnpin
         pub struct ContainerNonUnpinItemUnpin {
@@ -495,6 +500,7 @@ pub mod crubit {
         }
 
         #[::ctor::recursively_pinned(PinnedDrop)]
+        #[cfi_encoding = "N6crubit4test29ContainerNonUnpinItemNonUnpinE"]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemNonUnpin
         pub struct ContainerNonUnpinItemNonUnpin {
@@ -606,6 +612,7 @@ pub mod crubit {
         }
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test14ContainerValueE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerValue
         pub struct ContainerValue {
@@ -636,6 +643,7 @@ pub mod crubit {
 
         /// R-value qualified overloads are not supported.
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test15ContainerRvalueE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerRvalue
         pub struct ContainerRvalue {
@@ -669,6 +677,7 @@ pub mod crubit {
         /// - const references returned from non-const indexing
         /// are invalid overload signatures and should not generate bindings.
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test24ContainerMutRefFromConstE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerMutRefFromConst
         pub struct ContainerMutRefFromConst {
@@ -701,6 +710,7 @@ pub mod crubit {
         //   Instead found a method: (which is const?)=true, and (whose return value is const?)=false
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test24ContainerConstRefFromMutE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerConstRefFromMut
         pub struct ContainerConstRefFromMut {

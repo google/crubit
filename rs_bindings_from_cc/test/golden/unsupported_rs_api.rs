@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:unsupported_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "17TrivialCustomType"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialCustomType
 pub struct TrivialCustomType {
@@ -62,6 +63,7 @@ impl Default for TrivialCustomType {
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
 #[::ctor::recursively_pinned]
+#[cfi_encoding = "20NontrivialCustomType"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType
 pub struct NontrivialCustomType {

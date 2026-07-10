@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:comment_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -21,6 +21,7 @@ pub mod ns {
 
     /// Foo
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N2ns3FooE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: Foo
     pub struct Foo {
@@ -71,6 +72,7 @@ pub fn foo() {
 
 /// Bar
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "3Bar"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Bar
 pub struct Bar {
@@ -96,6 +98,7 @@ impl Default for Bar {
 
 /// d
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13HasNoComments"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasNoComments
 pub struct HasNoComments {

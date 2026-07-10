@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:no_elided_lifetimes_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -24,6 +24,7 @@ pub unsafe fn free_function(p1: *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "1S"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=S
 pub struct S {
@@ -109,6 +110,7 @@ pub mod s {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "44TriviallyCopyableButNontriviallyDestructible"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
@@ -178,6 +180,7 @@ pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "12WrappedValue"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WrappedValue
 pub struct WrappedValue {

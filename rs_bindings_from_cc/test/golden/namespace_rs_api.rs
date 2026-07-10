@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:namespace_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -16,6 +16,7 @@
 #![deny(warnings)]
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N23test_namespace_bindings1SE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: S
     pub struct S {
@@ -94,6 +95,7 @@ pub mod test_namespace_bindings_reopened {
 
     pub mod inner {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N32test_namespace_bindings_reopened5inner1SE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_reopened :: inner :: S
         pub struct S {
@@ -137,6 +139,7 @@ pub mod test_namespace_bindings_reopened {
 pub mod test_namespace_bindings_inline {
     pub mod inner {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N30test_namespace_bindings_inline5inner23StructInInlineNamespaceE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: inner :: StructInInlineNamespace
         pub struct StructInInlineNamespace {

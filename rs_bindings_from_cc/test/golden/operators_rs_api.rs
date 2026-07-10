@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:operators_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "18AddableConstMember"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableConstMember
 pub struct AddableConstMember {
@@ -66,6 +67,7 @@ impl Default for AddableConstMember {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "21AddableNonConstMember"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableNonConstMember
 pub struct AddableNonConstMember {
@@ -117,6 +119,7 @@ impl Default for AddableNonConstMember {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13AddableFriend"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFriend
 pub struct AddableFriend {
@@ -170,6 +173,7 @@ impl Default for AddableFriend {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "21AddableFreeByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByConstRef
 pub struct AddableFreeByConstRef {
@@ -214,6 +218,7 @@ impl Default for AddableFreeByConstRef {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "19AddableFreeByMutRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByMutRef
 pub struct AddableFreeByMutRef {
@@ -258,6 +263,7 @@ impl Default for AddableFreeByMutRef {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "18AddableFreeByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByValue
 pub struct AddableFreeByValue {
@@ -302,6 +308,7 @@ impl Default for AddableFreeByValue {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "22AddableFreeByRValueRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByRValueRef
 pub struct AddableFreeByRValueRef {
@@ -377,6 +384,7 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
 //   Rvalue reference types are not yet supported as first parameter of operators (b/219826128)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "10Overloaded"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Overloaded
 pub struct Overloaded {
@@ -429,6 +437,7 @@ impl Default for Overloaded {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "15IncompatibleLHS"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=IncompatibleLHS
 pub struct IncompatibleLHS {
@@ -479,6 +488,7 @@ impl Default for IncompatibleLHS {
 //   Expected first operator parameter to be a record or incomplete record, found ::ffi_11::c_int
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "18AddableReturnsVoid"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableReturnsVoid
 pub struct AddableReturnsVoid {
@@ -530,6 +540,7 @@ impl Default for AddableReturnsVoid {
 //     references are not yet supported
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "26AddableConstMemberNonunpin"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableConstMemberNonunpin
 pub struct AddableConstMemberNonunpin {
@@ -583,6 +594,7 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "18AddAssignMemberInt"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberInt
 pub struct AddAssignMemberInt {
@@ -636,6 +648,7 @@ impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "25AddAssignMemberByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberByConstRef
 pub struct AddAssignMemberByConstRef {
@@ -686,6 +699,7 @@ impl Default for AddAssignMemberByConstRef {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "23AddAssignFreeByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByConstRef
 pub struct AddAssignFreeByConstRef {
@@ -739,6 +753,7 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "20AddAssignFreeByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByValue
 pub struct AddAssignFreeByValue {
@@ -789,6 +804,7 @@ impl Default for AddAssignFreeByValue {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "25AddAssignFriendByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByConstRef
 pub struct AddAssignFriendByConstRef {
@@ -842,6 +858,7 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "22AddAssignFriendByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByValue
 pub struct AddAssignFriendByValue {
@@ -892,6 +909,7 @@ impl Default for AddAssignFriendByValue {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "30AddAssignProhibitedConstMember"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedConstMember
 pub struct AddAssignProhibitedConstMember {
@@ -956,6 +974,7 @@ where
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "33AddAssignProhibitedFriendConstLhs"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedFriendConstLhs
 pub struct AddAssignProhibitedFriendConstLhs {
@@ -1006,6 +1025,7 @@ impl Default for AddAssignProhibitedFriendConstLhs {
 //     references are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13ManyOperators"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ManyOperators
 pub struct ManyOperators {

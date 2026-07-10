@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:definition_of_forward_declaration_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "21ForwardDeclaredStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ForwardDeclaredStruct
 pub struct ForwardDeclaredStruct {

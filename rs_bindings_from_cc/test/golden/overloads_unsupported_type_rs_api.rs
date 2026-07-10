@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:overloads_unsupported_type_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -19,6 +19,7 @@
 ///
 /// See http://b/251045039
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "9SomeClass"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeClass
 pub struct SomeClass {

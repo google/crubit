@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:template_instantiation_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -28,6 +28,7 @@ pub fn RTS() -> crate::__CcTemplateInst2TSIiE {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst2TSIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TS < int >
 pub struct __CcTemplateInst2TSIiE {

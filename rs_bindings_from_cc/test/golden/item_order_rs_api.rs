@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:item_order_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11FirstStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=FirstStruct
 pub struct FirstStruct {
@@ -44,6 +45,7 @@ pub fn first_func() -> ::ffi_11::c_int {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "12SecondStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SecondStruct
 pub struct SecondStruct {

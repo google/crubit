@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "17DisplayableStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DisplayableStruct
 pub struct DisplayableStruct {

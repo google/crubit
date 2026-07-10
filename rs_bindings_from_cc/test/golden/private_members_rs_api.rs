@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:private_members_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -16,6 +16,7 @@
 #![deny(warnings)]
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N23test_namespace_bindings9SomeClassE"]
     #[repr(C, align(4))]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: SomeClass
     pub struct SomeClass {

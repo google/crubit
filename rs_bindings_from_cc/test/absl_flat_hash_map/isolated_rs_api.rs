@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/absl_flat_hash_map:isolated
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -43,6 +43,7 @@ pub mod crubit {
         //   depends on `crubit::test::MapWithIncompleteValue` which cannot be bound because `crate::crubit::test::Incomplete` can't be used in a Rust absl::flat_hash_map<_, V> because it is an incomplete type
 
         #[::ctor::recursively_pinned]
+        #[cfi_encoding = "N6crubit4test12NoDestructorE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: NoDestructor
         pub struct NoDestructor {
@@ -86,6 +87,7 @@ pub mod crubit {
         //   depends on `crubit::test::MapWithNoDestructorValue` which cannot be bound because `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test8NoDeleteE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: NoDelete
         pub struct NoDelete {
@@ -154,6 +156,7 @@ pub mod crubit {
 /// An empty implementation of absl::flat_hash_map to test code generation
 /// without the absl dependency.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: absl :: flat_hash_map < int , unsigned long , 42 >
 pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {

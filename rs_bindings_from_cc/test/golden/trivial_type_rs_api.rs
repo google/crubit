@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:trivial_type_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -18,6 +18,7 @@ pub mod ns {
     /// Implicitly defined special member functions are trivial on a struct with
     /// only trivial members.
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N2ns7TrivialE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: Trivial
     pub struct Trivial {

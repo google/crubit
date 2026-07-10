@@ -6,7 +6,7 @@
 // //examples/cpp/trivial_abi_struct:example_lib
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -17,6 +17,7 @@
 /// Because this class has a destructor, it will not receive Rust bindings
 /// without ABSL_ATTRIBUTE_TRIVIAL_ABI.
 #[derive(Clone)]
+#[cfi_encoding = "8Position"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Position
 pub struct Position {

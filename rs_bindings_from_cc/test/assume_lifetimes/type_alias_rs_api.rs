@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/assume_lifetimes:type_alias
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "13TypeAliasCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeAliasCtor
 pub struct TypeAliasCtor {

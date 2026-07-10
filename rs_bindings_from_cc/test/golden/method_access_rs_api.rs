@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:method_access_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "6Struct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Struct
 pub struct Struct {
@@ -76,6 +77,7 @@ pub mod r#struct {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "5Class"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Class
 pub struct Class {

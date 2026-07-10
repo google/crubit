@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -20,6 +20,7 @@
 /// coverage for working accessor functions, while the latter helps manually
 /// inspect and verify the expected layout of the generated Rust struct.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "6Struct"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Struct
 pub struct Struct {
@@ -98,6 +99,7 @@ pub mod r#struct {
 /// compile-time assertions of field offsets in the generated Rust code.  Before
 /// cl/448287893 `field2` would be incorrectly placed at offset 1.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "20PaddingBetweenFields"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=PaddingBetweenFields
 pub struct PaddingBetweenFields {
@@ -176,6 +178,7 @@ pub mod padding_between_fields {
 ///   (4 bytes for `inner_int_field`, 1 byte for `inner_char_field`)
 /// - size: 8 (dsize adjusted up to account for alignment)
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "30FieldInTailPadding_InnerStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding_InnerStruct
 pub struct FieldInTailPadding_InnerStruct {
@@ -235,6 +238,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 /// code.  The initial alignment-based fix idea for b/232418721 would incorrectly
 /// put `char_in_tail_padding_of_prev_field` at offset 8.
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "18FieldInTailPadding"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding
 pub struct FieldInTailPadding {

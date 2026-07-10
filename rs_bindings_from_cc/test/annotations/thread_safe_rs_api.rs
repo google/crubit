@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/annotations:thread_safe
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -18,6 +18,7 @@ pub mod crubit {
     pub mod test {
         /// A simple thread-safe struct.
         #[::ctor::recursively_pinned]
+        #[cfi_encoding = "N6crubit4test16ThreadSafeStructE"]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeStruct
         pub struct ThreadSafeStruct {
@@ -87,6 +88,7 @@ pub mod crubit {
 
         /// A regular (non-thread-safe) struct for comparison.
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test13RegularStructE"]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: RegularStruct
         pub struct RegularStruct {

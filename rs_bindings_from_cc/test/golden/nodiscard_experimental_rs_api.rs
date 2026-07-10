@@ -16,6 +16,7 @@
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[must_use]
+#[cfi_encoding = "9NoDiscard"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: NoDiscard
 pub struct NoDiscard {
@@ -42,6 +43,7 @@ impl Default for NoDiscard {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[must_use = "You really should use this"]
+#[cfi_encoding = "20NoDiscardWithMessage"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: NoDiscardWithMessage
 pub struct NoDiscardWithMessage {
@@ -123,6 +125,7 @@ pub fn crubit_nodiscard_message() -> *mut ::ffi_11::c_void {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13NodiscardCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: NodiscardCtor
 pub struct NodiscardCtor {
@@ -157,6 +160,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "24NodiscardCtorWithMessage"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: NodiscardCtorWithMessage
 pub struct NodiscardCtorWithMessage {

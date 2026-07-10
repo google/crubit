@@ -24,6 +24,7 @@ pub mod same {
 // namespace same
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "4Same"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Same
 pub struct Same {
@@ -67,6 +68,7 @@ pub mod same_items {
         unsafe { crate::detail::__rust_thunk___ZN4Same6MethodEv(__this) }
     }
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N4Same10NestedItemE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=Same :: NestedItem
     pub struct NestedItem {
@@ -138,6 +140,7 @@ pub mod same_items {
 
 pub mod foo {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N3foo3FooE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo
     pub struct Foo {
@@ -163,6 +166,7 @@ pub mod foo {
 
     pub mod foo {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N3foo3Foo3fooE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo
         pub struct foo {
@@ -198,6 +202,7 @@ pub mod foo {
                 unsafe { crate::detail::__rust_thunk___ZN3foo3Foo3foo9BFunctionEv() }
             }
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            #[cfi_encoding = "N3foo3Foo3foo4ItemE"]
             #[repr(C)]
             ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo :: Item
             pub struct Item {
@@ -229,6 +234,7 @@ pub mod foo {
 // namespace foo
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "8OuterCpp"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=OuterCpp
 pub struct OuterRustName {
@@ -254,6 +260,7 @@ impl Default for OuterRustName {
 
 pub mod outer_rust_name {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N8OuterCpp5InnerE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=OuterCpp :: Inner
     pub struct Inner {

@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/assume_lifetimes:struct_with_lifetimebound
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11PlainStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PlainStruct
 pub struct PlainStruct {
@@ -39,6 +40,7 @@ impl Default for PlainStruct {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "37StructWithLifetimeboundMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundMemberFunction
 pub struct StructWithLifetimeboundMemberFunction {
@@ -87,6 +89,7 @@ pub mod struct_with_lifetimebound_member_function {
 }
 
 #[derive(Clone, Copy)]
+#[cfi_encoding = "40StructWithLifetimeboundRefMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefMemberFunction
 pub struct StructWithLifetimeboundRefMemberFunction<'__implicit> {
@@ -133,6 +136,7 @@ pub mod struct_with_lifetimebound_ref_member_function {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "40DropClassWithLifetimeboundMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundMemberFunction
 pub struct DropClassWithLifetimeboundMemberFunction {
@@ -230,6 +234,7 @@ pub mod drop_class_with_lifetimebound_member_function {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "43DropClassWithLifetimeboundRefMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundRefMemberFunction
 pub struct DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
@@ -344,6 +349,7 @@ pub mod drop_class_with_lifetimebound_ref_member_function {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "27StructWithLifetimeboundCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundCtor
 pub struct StructWithLifetimeboundCtor {
@@ -380,6 +386,7 @@ impl ::ctor::CtorNew<crate::PlainStruct> for StructWithLifetimeboundCtor {
 }
 
 #[derive(Clone, Copy)]
+#[cfi_encoding = "30StructWithLifetimeboundRefCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefCtor
 pub struct StructWithLifetimeboundRefCtor<'__implicit> {
@@ -423,6 +430,7 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "31DropStructWithLifetimeboundCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundCtor
 pub struct DropStructWithLifetimeboundCtor {
@@ -506,6 +514,7 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "34DropStructWithLifetimeboundRefCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundRefCtor
 pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
@@ -615,6 +624,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor<'__i
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "41DropStructWithRefCtorAndRefMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndRefMemberFunction
 pub struct DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
@@ -745,6 +755,7 @@ pub mod drop_struct_with_ref_ctor_and_ref_member_function {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "35DropStructWithCtorAndMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndMemberFunction
 pub struct DropStructWithCtorAndMemberFunction {
@@ -847,6 +858,7 @@ pub mod drop_struct_with_ctor_and_member_function {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "38DropStructWithCtorAndRefMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndRefMemberFunction
 pub struct DropStructWithCtorAndRefMemberFunction {
@@ -946,6 +958,7 @@ pub mod drop_struct_with_ctor_and_ref_member_function {
 }
 
 #[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "38DropStructWithRefCtorAndMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndMemberFunction
 pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {

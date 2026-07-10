@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:overloads_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -53,6 +53,7 @@ pub fn AlsoTemplateOverload() {
 //   Function templates are not yet supported
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "3Foo"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Foo
 pub struct Foo {

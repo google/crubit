@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:bitfields_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -15,6 +15,7 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13WithBitfields"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WithBitfields
 pub struct WithBitfields {
@@ -61,6 +62,7 @@ impl Default for WithBitfields {
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `status`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'enum AlignmentRegressionTest::(unnamed at ./rs_bindings_from_cc/test/golden/bitfields.h:25:3)': No generated bindings found for ''
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "23AlignmentRegressionTest"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AlignmentRegressionTest
 pub struct AlignmentRegressionTest {

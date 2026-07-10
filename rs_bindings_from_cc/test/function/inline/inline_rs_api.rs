@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/function/inline:inline
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -22,6 +22,7 @@ pub fn hello_world_inline() -> ::ffi_11::c_int {
 /// This testcase helps verify that thunks correctly work with const-ref
 /// parameters. Using an 'inline' method forces generation of a C++ thunk.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "10SomeStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {

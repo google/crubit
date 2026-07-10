@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/templates/allowlist:allowlist_specific_instance
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -38,6 +38,7 @@ pub fn ShortDoubleCaller(mut i: crate::__CcTemplateInst2TsIsdE) {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst2TsIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ts < int , float >
 pub struct __CcTemplateInst2TsIifE {
@@ -88,6 +89,7 @@ pub mod cc_template_inst2_ts_iif_e {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst2TsIsdE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ts < short , double >
 pub struct __CcTemplateInst2TsIsdE {

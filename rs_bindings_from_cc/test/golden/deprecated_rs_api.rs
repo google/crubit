@@ -28,6 +28,7 @@ pub fn deprecated_function_with_message() {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[deprecated]
+#[cfi_encoding = "16DeprecatedStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedStruct
 pub struct DeprecatedStruct {
@@ -53,6 +54,7 @@ impl Default for DeprecatedStruct {
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[deprecated = "old"]
+#[cfi_encoding = "27DeprecatedStructWithMessage"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedStructWithMessage
 pub struct DeprecatedStructWithMessage {
@@ -165,6 +167,7 @@ pub type DeprecatedUsing = ::ffi_11::c_int;
 pub type DeprecatedUsingWithMessage = ::ffi_11::c_int;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "16DeprecatedFields"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedFields
 pub struct DeprecatedFields {
