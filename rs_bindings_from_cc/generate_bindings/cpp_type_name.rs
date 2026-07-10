@@ -161,7 +161,7 @@ pub fn tagless_cpp_type_name_for_item(
         }
         Item::Record(record) => cpp_tagless_type_name_for_record(record, db),
         Item::Enum(enum_) => {
-            let ident = format_nonportable_cc_type_name(enum_.rs_name.as_str())?;
+            let ident = format_nonportable_cc_type_name(enum_.rs_name().as_str())?;
             let namespace_qualifier = db.namespace_qualifier(item).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }

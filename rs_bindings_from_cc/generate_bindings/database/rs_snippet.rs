@@ -1079,8 +1079,8 @@ impl RsTypeKind {
         let ir = db.ir();
         let crate_path = Rc::new(CratePath::new(
             ir,
-            db.namespace_qualifier(&enum_),
-            rs_imported_crate_name(&enum_.owning_target, ir),
+            db.namespace_qualifier(enum_.as_ref()),
+            rs_imported_crate_name(enum_.as_ref().owning_target(), ir),
         ));
         Ok(RsTypeKind::Enum { enum_, crate_path })
     }
@@ -2065,7 +2065,7 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::Enum { enum_, crate_path } => {
-                let ident = make_rs_ident(enum_.rs_name.as_str());
+                let ident = make_rs_ident(enum_.rs_name().as_str());
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
@@ -2487,29 +2487,24 @@ mod tests {
         expect_that!(prim.allowed_behind_multi_element_ptr(), eq(true));
 
         let enum_ = RsTypeKind::Enum {
-            enum_: Rc::new(Enum {
-                cc_name: Identifier::new("MyEnum"),
-                rs_name: Identifier::new("MyEnum"),
-                unique_name: "MyEnum".into(),
-                mangled_cc_name: "6MyEnum".into(),
-                id: ItemId::new_for_testing(0),
-                owning_target: BazelLabel::from("//foo/bar"),
-                source_loc: "some_file.h:123".into(),
-                underlying_type: CcType::new(
-                    CcTypeVariant::Primitive(Primitive::Int32T),
-                    false,
-                    "",
-                    vec![],
-                ),
-                enumerators: Some(vec![]),
-                unknown_attr: None,
-                enclosing_item_id: None,
-                must_bind: false,
-                detected_formatter: false,
-                deprecated: None,
-                doc_comment: None,
-                nodiscard: None,
-            }),
+            enum_: Rc::new(ir::Enum::new_for_testing(
+                Identifier::new("MyEnum"),
+                Identifier::new("MyEnum"),
+                "MyEnum".into(),
+                "6MyEnum".into(),
+                ItemId::new_for_testing(0),
+                BazelLabel::from("//foo/bar"),
+                "some_file.h:123".into(),
+                CcType::new(CcTypeVariant::Primitive(Primitive::Int32T), false, "", vec![]),
+                Some(vec![]),
+                None,
+                None,
+                false,
+                false,
+                None,
+                None,
+                None,
+            )),
             crate_path: make_crate_path(),
         };
 

@@ -179,21 +179,21 @@ fn test_enum_proto() -> Result<()> {
     let ir = get_ir("enum MyEnum { kA = 42, kB = -1 };")?;
     let enum_decl = ir
         .enums()
-        .find(|r| r.cc_name == "MyEnum")
+        .find(|r| r.cc_name() == "MyEnum")
         .expect("should find enum MyEnum from the source code");
-    assert_eq!(enum_decl.cc_name.as_str(), "MyEnum");
-    assert_eq!(enum_decl.rs_name.as_str(), "MyEnum");
+    assert_eq!(enum_decl.cc_name().as_str(), "MyEnum");
+    assert_eq!(enum_decl.rs_name().as_str(), "MyEnum");
 
-    let k_a = enum_decl.enumerators.as_ref().unwrap().first().expect("should have enumerator 'kA'");
-    assert_eq!(k_a.identifier.as_str(), "kA");
-    assert_eq!(k_a.value.wrapped_value(), 42);
-    assert!(!k_a.value.is_negative());
+    let k_a = enum_decl.enumerators().unwrap().first().expect("should have enumerator 'kA'");
+    assert_eq!(k_a.identifier().as_str(), "kA");
+    assert_eq!(k_a.value().wrapped_value(), 42);
+    assert!(!k_a.value().is_negative());
 
-    let k_b = enum_decl.enumerators.as_ref().unwrap().get(1).expect("should have enumerator 'kB'");
-    assert_eq!(k_b.identifier.as_str(), "kB");
+    let k_b = enum_decl.enumerators().unwrap().get(1).expect("should have enumerator 'kB'");
+    assert_eq!(k_b.identifier().as_str(), "kB");
     // In proto, wrapped_value is int64, so -1 cast to int64 is -1.
-    assert_eq!(k_b.value.wrapped_value() as i64, -1);
-    assert!(k_b.value.is_negative());
+    assert_eq!(k_b.value().wrapped_value() as i64, -1);
+    assert!(k_b.value().is_negative());
     Ok(())
 }
 

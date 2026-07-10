@@ -415,7 +415,7 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::Namespace(n) => (n.id(), Rc::from(n.cc_name().as_str())),
             ir::Item::IncompleteRecord(r) => (r.id, Rc::from(r.cc_name.as_str())),
             ir::Item::Record(r) => (r.id, Rc::from(r.cc_name.as_str())),
-            ir::Item::Enum(e) => (e.id, Rc::from(e.cc_name.as_str())),
+            ir::Item::Enum(e) => (e.id(), Rc::from(e.cc_name().as_str())),
             ir::Item::Constant(c) => (c.id(), Rc::from(c.cc_name().as_str())),
             ir::Item::GlobalVar(g) => (g.id(), Rc::from(g.cc_name().as_str())),
             ir::Item::TypeAlias(t) => (t.id(), Rc::from(t.cc_name().as_str())),

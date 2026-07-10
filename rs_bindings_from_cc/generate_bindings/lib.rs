@@ -942,7 +942,7 @@ fn generate_rs_api_impl_includes(
     }
 
     for e in ir.enums() {
-        if e.detected_formatter {
+        if e.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
                 "rs_std/lossy_formatter_for_bindings.h".into(),
@@ -1214,7 +1214,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             })
         }
         RsTypeKind::Enum { ref enum_, .. } => {
-            let cpp_type = make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name.as_str(), db)?;
+            let cpp_type = make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name().as_str(), db)?;
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
