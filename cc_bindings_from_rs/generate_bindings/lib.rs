@@ -867,6 +867,7 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
 
     assert_eq!(ptr_align, layout.align().abi.bytes());
     assert_eq!(2 * ptr_size, layout.size().bytes());
+    #[rustversion::before(2026-07-09)]
     assert!(matches!(
         layout.backend_repr(),
         BackendRepr::ScalarPair(
@@ -874,8 +875,20 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
             Scalar::Initialized {
                 value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
                 ..
-            }
+            },
         )
+    ));
+    #[rustversion::since(2026-07-09)]
+    assert!(matches!(
+        layout.backend_repr(),
+        BackendRepr::ScalarPair {
+            a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+            b: Scalar::Initialized {
+                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                ..
+            },
+            ..
+        }
     ));
 }
 
