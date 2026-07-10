@@ -31,6 +31,14 @@ fn test_ctor_struct_hygiene() {
     }
     unsafe impl ::ctor::RecursivelyPinned for Struct {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
     let _ = ::ctor::ctor! {Struct { x: 0 }};
 }
@@ -41,6 +49,14 @@ fn test_ctor_tuple_struct_hygiene() {
     struct TupleStruct(i32);
     unsafe impl ::ctor::RecursivelyPinned for TupleStruct {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
     let _ = ::ctor::ctor! {TupleStruct(0)};
 }

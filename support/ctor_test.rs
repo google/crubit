@@ -152,15 +152,29 @@ fn test_emplace_type_syntax() {
     assert_eq!(*bar, 42);
 }
 
+macro_rules! unsafe_fake_recursively_pinned {
+    ($type_name:ty) => {
+        unsafe impl ::ctor::RecursivelyPinned for $type_name {
+            type CtorInitializedFields = Self;
+            type ProjectedPin<'a>
+                = Self
+            where
+                Self: 'a;
+            type ProjectedRef<'a>
+                = Self
+            where
+                Self: 'a;
+        }
+    };
+}
+
 #[gtest]
 fn test_ctor_macro() {
     struct MyStruct {
         x: u32,
         y: u32,
     }
-    unsafe impl RecursivelyPinned for MyStruct {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyStruct);
     let my_struct = emplace!(ctor!(MyStruct { x: 4, y: copy(&2) }));
     assert_eq!(my_struct.x, 4);
     assert_eq!(my_struct.y, 2);
@@ -179,11 +193,17 @@ fn test_ctor_macro_generic_struct() {
         x: T,
         y: T,
     }
-
     unsafe impl<T> RecursivelyPinned for MyStruct<T> {
         type CtorInitializedFields = Self;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
-
     let my_struct = emplace!(ctor!(MyStruct::<u32> { x: 4, y: 2 }));
 
     assert_eq!(my_struct.x, 4);
@@ -193,9 +213,7 @@ fn test_ctor_macro_generic_struct() {
 #[gtest]
 fn test_ctor_macro_unit_struct() {
     struct MyStruct;
-    unsafe impl RecursivelyPinned for MyStruct {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyStruct);
     let _my_struct = emplace!(ctor!(MyStruct));
     let _my_struct = emplace!(ctor!(MyStruct {}));
 }
@@ -203,9 +221,7 @@ fn test_ctor_macro_unit_struct() {
 #[gtest]
 fn test_ctor_macro_named_tuple_struct() {
     struct MyStruct(u32, u32);
-    unsafe impl RecursivelyPinned for MyStruct {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyStruct);
     let my_struct = emplace!(ctor!(MyStruct { 0: 4, 1: copy(&2) }));
     assert_eq!(my_struct.0, 4);
     assert_eq!(my_struct.1, 2);
@@ -214,9 +230,7 @@ fn test_ctor_macro_named_tuple_struct() {
 #[gtest]
 fn test_ctor_macro_tuple_struct() {
     struct MyStruct(u32, u32);
-    unsafe impl RecursivelyPinned for MyStruct {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyStruct);
     let my_struct = emplace!(ctor!(MyStruct(4, copy(&2))));
     assert_eq!(my_struct.0, 4);
     assert_eq!(my_struct.1, 2);
@@ -237,9 +251,7 @@ fn test_ctor_macro_manuallydrop_struct() {
         }
     }
 
-    unsafe impl RecursivelyPinned for MyStruct {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyStruct);
     let my_struct =
         emplace!(ctor!(MyStruct { x: unsafe { ManuallyDropCtor::new(vec![42]) }, y: 0 }));
     assert_eq!(&*my_struct.x, &vec![42]);
@@ -252,9 +264,7 @@ fn test_ctor_macro_union() {
         x: ManuallyDrop<Vec<u32>>,
         y: u64,
     }
-    unsafe impl RecursivelyPinned for MyUnion {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyUnion);
     let mut my_union = emplace!(ctor!(MyUnion { x: unsafe { ManuallyDropCtor::new(vec![42]) } }));
     assert_eq!(unsafe { &*my_union.x }, &vec![42]);
 
@@ -276,9 +286,7 @@ fn test_ctor_macro_nested_struct() {
             pub x: u32,
             pub y: u32,
         }
-        unsafe impl crate::RecursivelyPinned for MyStruct {
-            type CtorInitializedFields = Self;
-        }
+        unsafe_fake_recursively_pinned!(MyStruct);
     }
     let my_struct = emplace!(ctor!(nested::MyStruct { x: 4, y: copy(&2) }));
     assert_eq!(my_struct.x, 4);
@@ -289,9 +297,7 @@ fn test_ctor_macro_nested_struct() {
 fn test_ctor_macro_nested_tuple_struct() {
     mod nested {
         pub struct MyStruct(pub u32, pub u32);
-        unsafe impl crate::RecursivelyPinned for MyStruct {
-            type CtorInitializedFields = Self;
-        }
+        unsafe_fake_recursively_pinned!(MyStruct);
     }
     let my_struct = emplace!(ctor!(nested::MyStruct(4, copy(&2))));
     assert_eq!(my_struct.0, 4);
@@ -305,9 +311,7 @@ fn test_ctor_macro_drop_struct() {
     struct MyStruct {
         x: String,
     }
-    unsafe impl RecursivelyPinned for MyStruct {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyStruct);
     impl Drop for MyStruct {
         fn drop(&mut self) {}
     }
@@ -381,9 +385,7 @@ fn test_ctor_macro_drop() {
         x: DropNotify<'a>,
         y: DropNotify<'a>,
     }
-    unsafe impl RecursivelyPinned for MyStruct<'_> {
-        type CtorInitializedFields = Self;
-    }
+    unsafe_fake_recursively_pinned!(MyStruct<'_>);
 
     let x_dropped = Mutex::new(false);
     let y_dropped = Mutex::new(false);
@@ -412,6 +414,14 @@ fn test_ctor_initialized_fields_struct() {
 
     unsafe impl RecursivelyPinned for CtorOnly {
         type CtorInitializedFields = CtorOnlyPubFields;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
 
     // Fails to compile: did not specify _must_construct_using_ctor, and cannot
@@ -429,6 +439,14 @@ fn ctor_initialized_fields_tuple_struct() {
 
     unsafe impl RecursivelyPinned for CtorOnly {
         type CtorInitializedFields = CtorOnlyPubFields;
+        type ProjectedPin<'a>
+            = Self
+        where
+            Self: 'a;
+        type ProjectedRef<'a>
+            = Self
+        where
+            Self: 'a;
     }
 
     // Fails to compile: did not specify field 1, and cannot (outside this crate)
