@@ -260,12 +260,12 @@ fn project_method_impl(
     method_name: proc_macro2::TokenStream,
     mut_: proc_macro2::TokenStream,
     project_ident: fn(&Ident) -> Ident,
-) -> syn::Result<proc_macro2::TokenStream> {
+) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
     let is_fieldless = match &input.data {
         syn::Data::Struct(data) => data.fields.is_empty(),
         syn::Data::Enum(e) => e.variants.iter().all(|variant| variant.fields.is_empty()),
         syn::Data::Union(_) => {
-            return Ok(quote! {});
+            return Ok((quote! {}, quote! {}));
         }
     };
 
@@ -349,23 +349,19 @@ fn project_method_impl(
         }
     }
 
-    let (input_impl_generics, input_type_generics, input_where_clause) =
-        input.generics.split_for_impl();
     let (_, projected_generics, _) = projected.generics.split_for_impl();
 
-    Ok(quote! {
-        #projected
-
-        impl #input_impl_generics #input_ident #input_type_generics #input_where_clause {
-            #[must_use]
-            pub fn #method_name<#lifetime>(self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
-                unsafe {
-                    let from = ::core::pin::Pin::into_inner_unchecked(self);
-                    #project_body
-                }
+    let method = quote! {
+        #[must_use]
+        pub fn #method_name<#lifetime>(self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
+            unsafe {
+                let from = ::core::pin::Pin::into_inner_unchecked(self);
+                #project_body
             }
         }
-    })
+    };
+
+    Ok((quote! {#projected}, method))
 }
 
 /// Adds a new lifetime to `generics`, returning the quoted lifetime name.
@@ -698,9 +694,9 @@ fn recursively_pinned_impl(
     let ctor = args.renamed_crate.unwrap_or(Ident::new("ctor", Span::call_site()));
     let mut input = syn::parse2::<syn::DeriveInput>(item)?;
 
-    let project_pin_impl =
+    let (project_pin_type, project_pin_method) =
         project_method_impl(&input, quote! {project_pin}, quote! {mut}, project_pin_ident)?;
-    let project_ref_impl =
+    let (project_ref_type, project_ref_method) =
         project_method_impl(&input, quote! {project_ref}, quote! {}, project_ref_ident)?;
     let name = input.ident.clone();
 
@@ -749,10 +745,22 @@ fn recursively_pinned_impl(
         }
     };
 
+    let project_methods_impl = if project_pin_method.is_empty() && project_ref_method.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            impl #input_impl_generics #name #input_type_generics #input_where_clause {
+                #project_pin_method
+                #project_ref_method
+            }
+        }
+    };
+
     Ok(quote! {
         #input
-        #project_pin_impl
-        #project_ref_impl
+        #project_pin_type
+        #project_ref_type
+        #project_methods_impl
 
         #drop_impl
         #unpin_impl
