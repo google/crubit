@@ -290,10 +290,8 @@ fn api_func_shape_for_operator_ne(
     errors: &Errors,
 ) -> ErrorsOr<Option<(Ident, ImplKind)>> {
     // If operator== is present, don't generate ne, rely on rust's default ne.
-    let eq_binding = db.get_binding(
-        UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
-        param_types.to_vec(),
-    );
+    let eq_binding =
+        db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.to_vec());
     if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = eq_binding {
         // operator== is present, skipping bindings for operator!=
         return Ok(None);
@@ -558,10 +556,8 @@ fn api_func_shape_for_operator_lt(
     let lhs_record = lhs_record.clone();
     // PartialOrd requires PartialEq, so we need to make sure operator== is
     // implemented for this Record type.
-    let partialeq_binding = db.get_binding(
-        UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
-        param_types.to_vec(),
-    );
+    let partialeq_binding =
+        db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.to_vec());
     match partialeq_binding {
         Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {}
         _ => errors.add(anyhow!("operator< where operator== is missing.")),
@@ -767,7 +763,7 @@ fn api_func_shape_for_operator(
     if let SafetyAnnotation::Unsafe = func.safety_annotation {
         report_fatal_func_error(db, func, "Unsafe annotations on operators are not supported");
     }
-    match op.name.as_ref() {
+    match op.name() {
         "==" => api_func_shape_for_operator_eq(db, func, param_types, errors).ok(),
         "!=" => api_func_shape_for_operator_ne(db, func, param_types, errors).ok().flatten(),
         "<=>" => {
@@ -782,11 +778,11 @@ fn api_func_shape_for_operator(
         "[]" => api_func_shape_for_operator_index(db, func, param_types, errors).ok(),
         _ => {
             let Some(op_metadata) =
-                OPERATOR_METADATA.by_cc_name_and_params.get(&(&op.name, param_types.len()))
+                OPERATOR_METADATA.by_cc_name_and_params.get(&(op.name(), param_types.len()))
             else {
                 errors.add(anyhow!(
                     "Bindings for this kind of operator (operator {op} with {n} parameter(s)) are not supported",
-                    op = &op.name,
+                    op = op.name(),
                     n = param_types.len(),
                 ));
                 return None;
@@ -1659,7 +1655,7 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
         Destructor | Identifier(_) => false,
         Constructor | ConversionOperator => true,
         Operator(op_name) => {
-            match &*op_name.name {
+            match op_name.name() {
                 "==" | "!=" | "<=>" | "<" | "=" | "[]" => true,
                 // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
                 // creates conflicting libc++ impls for `long` and `long long`.
@@ -3199,7 +3195,7 @@ fn has_copy_assignment_operator_from_const_reference(
         })
         .any(|func| {
             let operator_equals = matches!(&func.cc_name,
-                    UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "=");
+                    UnqualifiedIdentifier::Operator(op) if op.name() == "=");
             let same_as_self = matches!(&func.params[..],
                     [_self, other] if db.rs_type_kind(other.type_.clone()) == first_param_type);
             operator_equals && same_as_self

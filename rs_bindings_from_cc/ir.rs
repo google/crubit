@@ -739,10 +739,18 @@ impl IntegerConstant {
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Operator {
-    pub name: Rc<str>,
+    pub(crate) name: Rc<str>,
 }
 
 impl Operator {
+    pub fn new(name: impl Into<Rc<str>>) -> Self {
+        Self { name: name.into() }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
     pub fn cc_name(&self) -> String {
         let separator = match self.name.chars().next() {
             Some(c) if c.is_alphabetic() => " ",

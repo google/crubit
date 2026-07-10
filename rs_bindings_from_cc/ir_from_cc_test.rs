@@ -3277,7 +3277,7 @@ fn test_operator_names() {
             }
 
             match &f.rs_name {
-                UnqualifiedIdentifier::Operator(op) => Some(op.name.as_ref()),
+                UnqualifiedIdentifier::Operator(op) => Some(op.name()),
                 _ => None,
             }
         })
