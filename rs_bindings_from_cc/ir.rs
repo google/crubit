@@ -1567,10 +1567,24 @@ pub enum TemplateArg {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TemplateSpecialization {
     /// The target containing the template definition
-    pub defining_target: BazelLabel,
+    pub(crate) defining_target: BazelLabel,
 
     /// The kind of template specialization.
-    pub kind: TemplateSpecializationKind,
+    pub(crate) kind: TemplateSpecializationKind,
+}
+
+impl TemplateSpecialization {
+    pub fn defining_target(&self) -> &BazelLabel {
+        &self.defining_target
+    }
+
+    pub fn kind(&self) -> &TemplateSpecializationKind {
+        &self.kind
+    }
+
+    pub fn new_for_testing(defining_target: BazelLabel, kind: TemplateSpecializationKind) -> Self {
+        Self { defining_target, kind }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

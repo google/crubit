@@ -340,7 +340,7 @@ impl<'db> BindingsGenerator<'db> {
                 None
             }
             ir::Item::Record(r) => {
-                r.template_specialization.as_ref().map(|ts| ts.defining_target.clone())
+                r.template_specialization.as_ref().map(|ts| ts.defining_target().clone())
             }
             ir::Item::UnsupportedItem(ui) => ui.defining_target().cloned(),
             _ => None,

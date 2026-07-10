@@ -4,7 +4,7 @@
 #![cfg(test)]
 
 use arc_anyhow::Result;
-use googletest::matchers::{eq, field, pat, some};
+use googletest::matchers::{eq, field, pat, property, some};
 use googletest::{expect_eq, expect_that, fail, gtest, OrFail};
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
@@ -4961,8 +4961,8 @@ fn test_absl_container_template_specialization_kind() {
     let record = retrieve_type_alias_record(&ir, "IntFloatMap");
     expect_that!(
         &record.template_specialization,
-        some(field!(
-            TemplateSpecialization.kind,
+        some(property!(
+            &TemplateSpecialization.kind(),
             pat!(TemplateSpecializationKind::AbslFlatHashMap {
                 raw_key_type: property!(
                     &CcType.variant(),
@@ -4979,8 +4979,8 @@ fn test_absl_container_template_specialization_kind() {
     let record = retrieve_type_alias_record(&ir, "DoubleSet");
     expect_that!(
         &record.template_specialization,
-        some(field!(
-            TemplateSpecialization.kind,
+        some(property!(
+            &TemplateSpecialization.kind(),
             pat!(TemplateSpecializationKind::AbslFlatHashSet {
                 raw_element_type: property!(
                     &CcType.variant(),

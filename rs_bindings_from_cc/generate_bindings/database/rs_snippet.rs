@@ -897,11 +897,10 @@ fn new_c9_co_record(
     lifetimes: &[Lifetime],
     db: &BindingsGenerator,
 ) -> Result<Option<BridgeRsTypeKind>> {
-    let Some(TemplateSpecialization {
-        kind: TemplateSpecializationKind::C9Co { raw_element_type },
-        ..
-    }) = record.template_specialization.as_ref()
-    else {
+    let Some(ts) = record.template_specialization.as_ref() else {
+        return Ok(None);
+    };
+    let TemplateSpecializationKind::C9Co { raw_element_type } = ts.kind() else {
         return Ok(None);
     };
     let element_type = choose_one_type(raw_element_type, template_args)?;
@@ -1039,7 +1038,7 @@ impl RsTypeKind {
 
         let uniform_repr_template_type = UniformReprTemplateType::new(
             db,
-            record.template_specialization.as_ref().map(|ts| &ts.kind),
+            record.template_specialization.as_ref().map(|ts| ts.kind()),
             options,
             template_args,
             lifetimes,
@@ -1047,7 +1046,7 @@ impl RsTypeKind {
         )?;
         let customize_methods = CustomizeMethodsKind::new(
             db,
-            record.template_specialization.as_ref().map(|ts| &ts.kind),
+            record.template_specialization.as_ref().map(|ts| ts.kind()),
             options,
             template_args,
         )?;
@@ -2075,13 +2074,9 @@ impl RsTypeKind {
                 // that we need to use an alternate name for if lifetimes are provided.
                 if !lifetimes.is_empty()
                     && let RsTypeKind::Record { record, .. } = self.unalias()
-                    && matches!(
-                        record.template_specialization,
-                        Some(TemplateSpecialization {
-                            kind: TemplateSpecializationKind::StdStringView,
-                            ..
-                        })
-                    )
+                    && record.template_specialization.as_ref().is_some_and(|ts| {
+                        matches!(ts.kind(), TemplateSpecializationKind::StdStringView)
+                    })
                 {
                     // Use the custom `string_view` implementation.
                     ident = make_rs_ident("string_view");

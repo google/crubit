@@ -112,23 +112,20 @@ fn decl_lifetime_arity_impl(
         // TODO(b/498977848): We seem to lose the typedef sugar if it's annotated. Note that we
         // explicitly only need to check for StdStringView here (and not the more general
         // rc.is_string_view()).
-        Item::Record(rc) => match rc.template_specialization {
-            Some(
-                ir::TemplateSpecialization {
-                    kind: ir::TemplateSpecializationKind::StdStringView,
-                    ..
-                }
-                | ir::TemplateSpecialization {
-                    kind: ir::TemplateSpecializationKind::AbslSpan { .. },
-                    ..
-                }
-                | ir::TemplateSpecialization {
-                    kind: ir::TemplateSpecializationKind::C9Co { .. },
-                    ..
-                },
-            ) => Ok(1),
-            _ => record_lifetime_arity(db, rc),
-        },
+        Item::Record(rc) => {
+            if let Some(ts) = &rc.template_specialization
+                && matches!(
+                    ts.kind(),
+                    ir::TemplateSpecializationKind::StdStringView
+                        | ir::TemplateSpecializationKind::AbslSpan { .. }
+                        | ir::TemplateSpecializationKind::C9Co { .. }
+                )
+            {
+                Ok(1)
+            } else {
+                record_lifetime_arity(db, rc)
+            }
+        }
         Item::TypeAlias(ta) => {
             // Here and elsewhere in this function: change has_bindings.rs to check for additional
             // Item kinds when they are supported.
@@ -399,25 +396,18 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// Returns the (raw) type argument applied to the decl `id`.
     fn type_arg_from_decl_id(&mut self, id: ItemId) -> Option<CcType> {
         match self.db.find_untyped_decl(id) {
-            Item::Record(record) => match &record.template_specialization {
-                Some(ir::TemplateSpecialization {
-                    kind: ir::TemplateSpecializationKind::StdVector { raw_element_type, .. },
-                    ..
-                }) => Some(raw_element_type.clone()),
-                Some(ir::TemplateSpecialization {
-                    kind: ir::TemplateSpecializationKind::StdUniquePtr { raw_element_type, .. },
-                    ..
-                }) => Some(raw_element_type.clone()),
-                Some(ir::TemplateSpecialization {
-                    kind: ir::TemplateSpecializationKind::C9Co { raw_element_type, .. },
-                    ..
-                }) => Some(raw_element_type.clone()),
-                Some(ir::TemplateSpecialization {
-                    kind: ir::TemplateSpecializationKind::AbslSpan { raw_element_type, .. },
-                    ..
-                }) => Some(raw_element_type.clone()),
-                _ => None,
-            },
+            Item::Record(record) => {
+                let ts = record.template_specialization.as_ref()?;
+                match ts.kind() {
+                    ir::TemplateSpecializationKind::StdVector { raw_element_type, .. }
+                    | ir::TemplateSpecializationKind::StdUniquePtr { raw_element_type, .. }
+                    | ir::TemplateSpecializationKind::C9Co { raw_element_type, .. }
+                    | ir::TemplateSpecializationKind::AbslSpan { raw_element_type, .. } => {
+                        Some(raw_element_type.clone())
+                    }
+                    _ => None,
+                }
+            }
             _ => None,
         }
     }
