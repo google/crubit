@@ -118,7 +118,9 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") CRUBIT_TRIVIAL_ABI StrRef final {
   constexpr size_t len() const noexcept { return slice_.size(); }
   constexpr bool empty() const noexcept { return slice_.size() == 0; }
 
-  constexpr const char* data() const noexcept { return slice_.data(); }
+  constexpr const char* crubit_nullable data() const noexcept {
+    return slice_.data();
+  }
   constexpr size_t size() const noexcept { return slice_.size(); }
 
   constexpr std::string_view to_string_view() const noexcept {
@@ -158,11 +160,11 @@ constexpr bool operator==(std::string_view lhs, StrRef rhs) noexcept {
   return rhs == lhs;
 }
 
-constexpr bool operator==(StrRef lhs, const char* rhs) noexcept {
+constexpr bool operator==(StrRef lhs, const char* crubit_nonnull rhs) noexcept {
   return lhs.to_string_view() == std::string_view(rhs);
 }
 
-constexpr bool operator==(const char* lhs, StrRef rhs) noexcept {
+constexpr bool operator==(const char* crubit_nonnull lhs, StrRef rhs) noexcept {
   return rhs == lhs;
 }
 
@@ -178,11 +180,13 @@ constexpr auto operator<=>(std::string_view lhs, StrRef rhs) noexcept {
   return lhs <=> rhs.to_string_view();
 }
 
-constexpr auto operator<=>(StrRef lhs, const char* rhs) noexcept {
+constexpr auto operator<=>(StrRef lhs,
+                           const char* crubit_nonnull rhs) noexcept {
   return lhs.to_string_view() <=> std::string_view(rhs);
 }
 
-constexpr auto operator<=>(const char* lhs, StrRef rhs) noexcept {
+constexpr auto operator<=>(const char* crubit_nonnull lhs,
+                           StrRef rhs) noexcept {
   return std::string_view(lhs) <=> rhs.to_string_view();
 }
 

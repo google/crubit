@@ -18,11 +18,13 @@
 #define CRUBIT_LIFETIME_BOUND
 #endif
 #define crubit_nonnull _Nonnull
+#define crubit_nullable _Nullable
 #else
 #define CRUBIT_TRIVIAL_ABI
 #define CRUBIT_VIEW
 #define CRUBIT_LIFETIME_BOUND
 #define crubit_nonnull
+#define crubit_nullable
 #endif
 
 #if defined(_MSC_VER) && !defined(__clang__)
