@@ -1632,24 +1632,78 @@ impl Record {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Constant {
-    pub value: IntegerConstant,
-    pub cc_name: Identifier,
-    pub rs_name: Identifier,
-    pub unique_name: Rc<str>,
-    pub id: ItemId,
-    pub owning_target: BazelLabel,
-    pub source_loc: Rc<str>,
-    pub unknown_attr: Option<Rc<str>>,
-    pub enclosing_item_id: Option<ItemId>,
+    pub(crate) value: IntegerConstant,
+    pub(crate) cc_name: Identifier,
+    pub(crate) rs_name: Identifier,
+    pub(crate) unique_name: Rc<str>,
+    pub(crate) id: ItemId,
+    pub(crate) owning_target: BazelLabel,
+    pub(crate) source_loc: Rc<str>,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) enclosing_item_id: Option<ItemId>,
     #[serde(rename(deserialize = "type"))]
-    pub type_: CcType,
-    pub must_bind: bool,
+    pub(crate) type_: CcType,
+    pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
     #[serde(default)]
-    pub doc_comment: Option<Rc<str>>,
+    pub(crate) doc_comment: Option<Rc<str>>,
+}
+
+impl Constant {
+    pub fn value(&self) -> IntegerConstant {
+        self.value
+    }
+
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn source_loc(&self) -> &str {
+        &self.source_loc
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
+
+    pub fn type_(&self) -> &CcType {
+        &self.type_
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
 }
 
 impl GenericItem for Constant {

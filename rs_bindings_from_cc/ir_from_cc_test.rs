@@ -4901,34 +4901,34 @@ fn expect_constant(ir: &ir::IR) -> &ir::Constant {
 fn test_top_level_constexpr_int() {
     let ir = ir_from_cc("constexpr int x = 1;").unwrap();
     let constant = expect_constant(&ir);
-    expect_eq!(constant.cc_name, "x");
-    expect_eq!(constant.value.wrapped_value(), 1);
+    expect_eq!(constant.cc_name(), "x");
+    expect_eq!(constant.value().wrapped_value(), 1);
 }
 
 #[gtest]
 fn test_top_level_constexpr_bool() {
     let ir = ir_from_cc("constexpr bool x = false;").unwrap();
     let constant = expect_constant(&ir);
-    expect_eq!(constant.cc_name, "x");
-    expect_eq!(constant.value.wrapped_value(), 0);
+    expect_eq!(constant.cc_name(), "x");
+    expect_eq!(constant.value().wrapped_value(), 0);
 }
 
 #[gtest]
 fn test_anonymous_enum() {
     let ir = ir_from_cc("enum { kFoo = 1, kBar = 2 };").unwrap();
-    let kfoo = ir.constants().find(|c| c.cc_name == "kFoo").unwrap();
-    assert_eq!(kfoo.value.wrapped_value(), 1);
-    let kbar = ir.constants().find(|c| c.cc_name == "kBar").unwrap();
-    assert_eq!(kbar.value.wrapped_value(), 2);
+    let kfoo = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
+    assert_eq!(kfoo.value().wrapped_value(), 1);
+    let kbar = ir.constants().find(|c| c.cc_name() == "kBar").unwrap();
+    assert_eq!(kbar.value().wrapped_value(), 2);
 }
 
 #[gtest]
 fn test_anonymous_enum_in_record() {
     let ir = ir_from_cc("struct S { enum { kFoo = 1 }; };").unwrap();
     let record = retrieve_record(&ir, "S");
-    let constant = ir.constants().find(|c| c.cc_name == "kFoo").unwrap();
-    assert_eq!(constant.enclosing_item_id, Some(record.id));
-    assert_eq!(constant.value.wrapped_value(), 1);
+    let constant = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
+    assert_eq!(constant.enclosing_item_id(), Some(record.id));
+    assert_eq!(constant.value().wrapped_value(), 1);
 }
 
 #[gtest]

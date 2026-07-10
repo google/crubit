@@ -416,7 +416,7 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::IncompleteRecord(r) => (r.id, r.cc_name.identifier.clone()),
             ir::Item::Record(r) => (r.id, r.cc_name.identifier.clone()),
             ir::Item::Enum(e) => (e.id, e.cc_name.identifier.clone()),
-            ir::Item::Constant(c) => (c.id, c.cc_name.identifier.clone()),
+            ir::Item::Constant(c) => (c.id(), c.cc_name().identifier.clone()),
             ir::Item::GlobalVar(g) => (g.id(), g.cc_name().identifier.clone()),
             ir::Item::TypeAlias(t) => (t.id, t.cc_name.identifier.clone()),
         };
