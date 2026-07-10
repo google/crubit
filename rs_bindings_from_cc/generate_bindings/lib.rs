@@ -345,6 +345,8 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
         Item::Namespace(namespace) => generate_namespace(db, namespace.clone())?,
         Item::UseMod(use_mod) => {
             let mod_name = make_rs_ident(use_mod.mod_name().as_str());
+            // TODO(b/308949532): Skip re-export if the module being used is empty
+            // (transitively).
             ApiSnippets {
                 generated_items: HashMap::from([(
                     use_mod.id(),
@@ -784,10 +786,10 @@ fn callable_safety(
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
 fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
-    if field.access != AccessSpecifier::Public {
+    if field.access() != AccessSpecifier::Public {
         return None;
     }
-    let field_rs_type_kind = match db.rs_type_kind(field.type_.clone()) {
+    let field_rs_type_kind = match db.rs_type_kind(field.type_().clone()) {
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
@@ -826,7 +828,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeRea
 
             // TODO(nicholasbishop): handle unnamed better.
             let mut name = field
-                .rust_identifier
+                .rust_identifier()
                 .as_ref()
                 .map(|i| format!("`{}`", i.as_str()))
                 .unwrap_or("unnamed field".to_owned());

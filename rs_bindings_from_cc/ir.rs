@@ -5,7 +5,6 @@
 //! Types and deserialization logic for IR. See docs in
 //! `rs_bindings_from_cc/ir.h` for more
 //! information.
-
 use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
@@ -1379,30 +1378,125 @@ pub enum AccessSpecifier {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Field {
-    pub rust_identifier: Option<Identifier>,
-    pub cpp_identifier: Option<Identifier>,
-    pub doc_comment: Option<Rc<str>>,
+    pub(crate) rust_identifier: Option<Identifier>,
+    pub(crate) cpp_identifier: Option<Identifier>,
+    pub(crate) doc_comment: Option<Rc<str>>,
     #[serde(rename(deserialize = "type"))]
-    pub type_: CcType,
-    pub access: AccessSpecifier,
-    pub offset: usize,
-    pub size: usize,
+    pub(crate) type_: CcType,
+    pub(crate) access: AccessSpecifier,
+    pub(crate) offset: usize,
+    pub(crate) size: usize,
 
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub unknown_attr: Result<Option<Rc<str>>, String>,
+    pub(crate) unknown_attr: Result<Option<Rc<str>>, String>,
 
-    pub is_no_unique_address: bool,
-    pub is_bitfield: bool,
+    pub(crate) is_no_unique_address: bool,
+    pub(crate) is_bitfield: bool,
 
     // TODO(kinuko): Consider removing this, it is a duplicate of the same information
     // in `Record`.
-    pub is_inheritable: bool,
-    pub is_mutable: bool,
+    pub(crate) is_inheritable: bool,
+    pub(crate) is_mutable: bool,
 
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
+}
+
+impl Field {
+    pub fn rust_identifier(&self) -> Option<&Identifier> {
+        self.rust_identifier.as_ref()
+    }
+
+    pub fn cpp_identifier(&self) -> Option<&Identifier> {
+        self.cpp_identifier.as_ref()
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
+
+    pub fn type_(&self) -> &CcType {
+        &self.type_
+    }
+
+    pub fn type_mut(&mut self) -> &mut CcType {
+        &mut self.type_
+    }
+
+    pub fn set_type(&mut self, type_: CcType) {
+        self.type_ = type_;
+    }
+
+    pub fn access(&self) -> AccessSpecifier {
+        self.access
+    }
+
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
+
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
+    pub fn unknown_attr(&self) -> &Result<Option<Rc<str>>, String> {
+        &self.unknown_attr
+    }
+
+    pub fn is_no_unique_address(&self) -> bool {
+        self.is_no_unique_address
+    }
+
+    pub fn is_bitfield(&self) -> bool {
+        self.is_bitfield
+    }
+
+    pub fn is_inheritable(&self) -> bool {
+        self.is_inheritable
+    }
+
+    pub fn is_mutable(&self) -> bool {
+        self.is_mutable
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_for_testing(
+        rust_identifier: Option<Identifier>,
+        cpp_identifier: Option<Identifier>,
+        doc_comment: Option<Rc<str>>,
+        type_: CcType,
+        access: AccessSpecifier,
+        offset: usize,
+        size: usize,
+        unknown_attr: Result<Option<Rc<str>>, String>,
+        is_no_unique_address: bool,
+        is_bitfield: bool,
+        is_inheritable: bool,
+        is_mutable: bool,
+        deprecated: Option<Rc<str>>,
+    ) -> Self {
+        Self {
+            rust_identifier,
+            cpp_identifier,
+            doc_comment,
+            type_,
+            access,
+            offset,
+            size,
+            unknown_attr,
+            is_no_unique_address,
+            is_bitfield,
+            is_inheritable,
+            is_mutable,
+            deprecated,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

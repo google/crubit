@@ -289,8 +289,8 @@ fn test_unescapable_rust_keywords_in_field_name() {
     let record = ir.records().find(|record| record.rs_name == "SomeStruct").unwrap();
     assert_eq!(record.fields.len(), 1);
     let field = &record.fields[0];
-    assert_eq!(field.rust_identifier.as_ref().map(|x| x.as_str()), Some("__field_0"));
-    assert_eq!(field.cpp_identifier.as_ref().map(|x| x.as_str()), Some("self"));
+    assert_eq!(field.rust_identifier().as_ref().map(|x| x.as_str()), Some("__field_0"));
+    assert_eq!(field.cpp_identifier().as_ref().map(|x| x.as_str()), Some("self"));
 }
 
 #[gtest]
