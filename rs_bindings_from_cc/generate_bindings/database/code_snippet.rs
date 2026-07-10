@@ -782,7 +782,7 @@ pub fn generated_items_to_tokens<'db>(
                     db.find_decl::<Rc<Namespace>>(id).expect("should always be a namespace");
                 let is_last_reopened_namespace_in_this_target = db
                     .ir()
-                    .is_last_reopened_namespace(id, current_namespace.canonical_namespace_id)
+                    .is_last_reopened_namespace(id, current_namespace.canonical_namespace_id())
                     .expect("should always be a namespace");
 
                 if !is_last_reopened_namespace_in_this_target {
@@ -794,7 +794,7 @@ pub fn generated_items_to_tokens<'db>(
                 // canonical namespace id.
 
                 let Some(GeneratedItem::CanonicalNamespace { items, deprecated_attr }) =
-                    generated_items.get(&current_namespace.canonical_namespace_id)
+                    generated_items.get(&current_namespace.canonical_namespace_id())
                 else {
                     panic!("the entry we generated for the canonical namespace should be a GeneratedItem::CanonicalNamespace");
                 };
@@ -802,9 +802,9 @@ pub fn generated_items_to_tokens<'db>(
                 let namespace_tokens = generated_items_to_token_stream(generated_items, db, items);
 
                 let canonical_namespace: &Rc<ir::Namespace> = db
-                    .find_decl(current_namespace.canonical_namespace_id)
-                    .unwrap_or_else(|_| panic!("Namespace canonical_namespace_id {:?} not found as a valid Namespace item.", current_namespace.canonical_namespace_id));
-                let name = make_rs_ident(canonical_namespace.rs_name.as_str());
+                    .find_decl(current_namespace.canonical_namespace_id())
+                    .unwrap_or_else(|_| panic!("Namespace canonical_namespace_id {:?} not found as a valid Namespace item.", current_namespace.canonical_namespace_id()));
+                let name = make_rs_ident(canonical_namespace.rs_name().as_str());
 
                 quote! {
                     #deprecated_attr
@@ -815,7 +815,7 @@ pub fn generated_items_to_tokens<'db>(
                 }
                 .to_tokens(tokens);
 
-                if canonical_namespace.is_inline {
+                if canonical_namespace.is_inline() {
                     // TODO(b/308949532): Skip re-export if the canonical module is empty
                     // (transitively).
                     quote! {

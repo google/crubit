@@ -474,7 +474,7 @@ pub fn resolve_names(
     parent: Rc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
     let child_items = match parent.enclosing_item_id.map(|id| db.find_untyped_decl(id)) {
-        Some(Item::Namespace(ns)) => ns.children.iter(),
+        Some(Item::Namespace(ns)) => ns.children().iter(),
         Some(Item::Record(record)) => record.children.iter(),
         None => db.ir().top_level_items_in_target(&parent.owning_target).iter(),
         _ => bail!("not a parent namespace or record"),
@@ -530,9 +530,9 @@ pub fn resolve_names(
                 }
                 Item::Namespace(ns) => {
                     insert(
-                        Rc::from(ns.rs_name.as_str()),
+                        Rc::from(ns.rs_name().as_str()),
                         ResolvedName::Namespace {
-                            canonical_namespace_id: ns.canonical_namespace_id,
+                            canonical_namespace_id: ns.canonical_namespace_id(),
                         },
                     );
                 }

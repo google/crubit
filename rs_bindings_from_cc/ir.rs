@@ -2221,25 +2221,83 @@ impl GenericItem for Comment {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Namespace {
-    pub cc_name: Identifier,
-    pub rs_name: Identifier,
-    pub unique_name: Rc<str>,
-    pub id: ItemId,
-    pub canonical_namespace_id: ItemId,
+    pub(crate) cc_name: Identifier,
+    pub(crate) rs_name: Identifier,
+    pub(crate) unique_name: Rc<str>,
+    pub(crate) id: ItemId,
+    pub(crate) canonical_namespace_id: ItemId,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub unknown_attr: Option<Rc<str>>,
-    pub owning_target: BazelLabel,
-    pub enclosing_item_id: Option<ItemId>,
-    pub is_inline: bool,
-    pub must_bind: bool,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) owning_target: BazelLabel,
+    pub(crate) enclosing_item_id: Option<ItemId>,
+    pub(crate) is_inline: bool,
+    pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
     #[serde(default)]
-    pub doc_comment: Option<Rc<str>>,
+    pub(crate) doc_comment: Option<Rc<str>>,
     #[serde(default)]
-    pub children: Vec<Item>,
+    pub(crate) children: Vec<Item>,
+}
+
+impl Namespace {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn canonical_namespace_id(&self) -> ItemId {
+        self.canonical_namespace_id
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
+
+    pub fn is_inline(&self) -> bool {
+        self.is_inline
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
+
+    pub fn children(&self) -> &[Item] {
+        &self.children
+    }
+
+    pub fn set_children(&mut self, children: Vec<Item>) {
+        self.children = children;
+    }
 }
 
 impl GenericItem for Namespace {

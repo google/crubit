@@ -246,16 +246,16 @@ fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Resul
 
     let mut api_snippets = ApiSnippets::default();
 
-    for item in &namespace.children {
+    for item in namespace.children() {
         api_snippets.append(db.generate_item(item.clone())?);
     }
 
-    api_snippets.generated_items.insert(namespace.id, GeneratedItem::NonCanonicalNamespace);
+    api_snippets.generated_items.insert(namespace.id(), GeneratedItem::NonCanonicalNamespace);
     api_snippets.generated_items.insert(
-        namespace.canonical_namespace_id,
+        namespace.canonical_namespace_id(),
         GeneratedItem::CanonicalNamespace {
-            items: namespace.children.iter().map(|c| c.id()).collect(),
-            deprecated_attr: namespace.deprecated.clone().map(DeprecatedAttr),
+            items: namespace.children().iter().map(|c| c.id()).collect(),
+            deprecated_attr: namespace.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
         },
     );
     Ok(api_snippets)

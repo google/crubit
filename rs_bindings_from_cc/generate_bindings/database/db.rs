@@ -412,7 +412,7 @@ impl<'db> BindingsGenerator<'db> {
             }
             ir::Item::UnsupportedItem(ui) => return Rc::from(ui.name()),
             ir::Item::ExistingRustType(e) => (e.id, e.cc_name.clone()),
-            ir::Item::Namespace(n) => (n.id, Rc::from(n.cc_name.as_str())),
+            ir::Item::Namespace(n) => (n.id(), Rc::from(n.cc_name().as_str())),
             ir::Item::IncompleteRecord(r) => (r.id, Rc::from(r.cc_name.as_str())),
             ir::Item::Record(r) => (r.id, Rc::from(r.cc_name.as_str())),
             ir::Item::Enum(e) => (e.id, Rc::from(e.cc_name.as_str())),
@@ -622,8 +622,8 @@ impl<'db> BindingsGenerator<'db> {
         while let Some(parent_id) = enclosing_item_id {
             match self.find_untyped_decl(parent_id) {
                 ir::Item::Namespace(ns) => {
-                    namespaces.push(Rc::from(ns.rs_name.as_str()));
-                    enclosing_item_id = ns.enclosing_item_id;
+                    namespaces.push(Rc::from(ns.rs_name().as_str()));
+                    enclosing_item_id = ns.enclosing_item_id();
                 }
                 ir::Item::Record(parent_record) => {
                     assert!(

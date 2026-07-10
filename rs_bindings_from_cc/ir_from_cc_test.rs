@@ -2805,11 +2805,11 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
 
     assert_eq!(1, ir.namespaces().count());
     let ns = ir.namespaces().next().unwrap();
-    assert_eq!("MyNamespace", ns.rs_name.as_str());
-    assert_eq!(1, ns.children.len());
+    assert_eq!("MyNamespace", ns.rs_name().as_str());
+    assert_eq!(1, ns.children().len());
 
-    let ns_id = ns.id;
-    let child_id = ns.children[0].id();
+    let ns_id = ns.id();
+    let child_id = ns.children()[0].id();
     assert_ir_matches!(
         ir,
         quote! {
@@ -3630,8 +3630,8 @@ fn test_namespaces() {
     .unwrap();
 
     let namespace =
-        ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
-    let namespace_items = namespace.children.iter().collect_vec();
+        ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
+    let namespace_items = namespace.children().iter().collect_vec();
 
     assert_ir_matches!(
         ir,
@@ -3687,8 +3687,8 @@ fn test_nested_namespace_definition() {
     .unwrap();
 
     let namespace =
-        ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
-    let namespace_items = namespace.children.iter().collect_vec();
+        ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
+    let namespace_items = namespace.children().iter().collect_vec();
 
     assert_items_match!(
         namespace_items,
@@ -3697,8 +3697,8 @@ fn test_nested_namespace_definition() {
         },]
     );
 
-    let inner_namespace = ir.namespaces().find(|n| n.rs_name == ir_id("inner")).unwrap();
-    let inner_namespace_items = inner_namespace.children.iter().collect_vec();
+    let inner_namespace = ir.namespaces().find(|n| n.rs_name() == &ir_id("inner")).unwrap();
+    let inner_namespace_items = inner_namespace.children().iter().collect_vec();
 
     assert_items_match!(
         inner_namespace_items,
@@ -3733,18 +3733,18 @@ fn test_enclosing_item_ids() {
     .unwrap();
 
     let namespace =
-        ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
-    let namespace_items: Vec<&Item> = namespace.children.iter().collect_vec();
+        ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
+    let namespace_items: Vec<&Item> = namespace.children().iter().collect_vec();
 
-    assert_eq!(namespace.enclosing_item_id, None);
-    assert!(namespace_items.iter().all(|item| item.enclosing_item_id() == Some(namespace.id)));
+    assert_eq!(namespace.enclosing_item_id(), None);
+    assert!(namespace_items.iter().all(|item| item.enclosing_item_id() == Some(namespace.id())));
 
-    let inner_namespace = ir.namespaces().find(|n| n.rs_name == ir_id("inner")).unwrap();
-    let inner_namespace_items: Vec<&Item> = inner_namespace.children.iter().collect_vec();
+    let inner_namespace = ir.namespaces().find(|n| n.rs_name() == &ir_id("inner")).unwrap();
+    let inner_namespace_items: Vec<&Item> = inner_namespace.children().iter().collect_vec();
 
     assert!(inner_namespace_items
         .iter()
-        .all(|item| item.enclosing_item_id() == Some(inner_namespace.id)));
+        .all(|item| item.enclosing_item_id() == Some(inner_namespace.id())));
 
     let record = ir.records().find(|r| r.rs_name.as_str() == "S").unwrap();
     let record_items: Vec<&Item> = record.children.iter().collect_vec();
@@ -3789,8 +3789,8 @@ fn test_namespace_canonical_id() {
 
     let namespaces = ir.namespaces().collect_vec();
     assert_eq!(namespaces.len(), 2);
-    assert_eq!(namespaces[0].id, namespaces[0].canonical_namespace_id);
-    assert_eq!(namespaces[0].canonical_namespace_id, namespaces[1].canonical_namespace_id);
+    assert_eq!(namespaces[0].id(), namespaces[0].canonical_namespace_id());
+    assert_eq!(namespaces[0].canonical_namespace_id(), namespaces[1].canonical_namespace_id());
 }
 
 #[gtest]
@@ -3853,49 +3853,52 @@ fn test_namespace_stored_data_in_ir() {
     )
     .unwrap();
 
-    let outer_namespaces =
-        ir.namespaces().filter(|ns| ns.rs_name == ir_id("test_namespace_bindings")).collect_vec();
+    let outer_namespaces = ir
+        .namespaces()
+        .filter(|ns| ns.rs_name() == &ir_id("test_namespace_bindings"))
+        .collect_vec();
     assert_eq!(outer_namespaces.len(), 2);
 
-    assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id).unwrap(), 0);
-    assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[1].id).unwrap(), 1);
+    assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id()).unwrap(), 0);
+    assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[1].id()).unwrap(), 1);
 
     assert!(!ir
         .is_last_reopened_namespace(
-            outer_namespaces[0].id,
-            outer_namespaces[0].canonical_namespace_id
+            outer_namespaces[0].id(),
+            outer_namespaces[0].canonical_namespace_id()
         )
         .unwrap());
     assert!(ir
         .is_last_reopened_namespace(
-            outer_namespaces[1].id,
-            outer_namespaces[1].canonical_namespace_id
+            outer_namespaces[1].id(),
+            outer_namespaces[1].canonical_namespace_id()
         )
         .unwrap());
 
-    let inner_namespaces = ir.namespaces().filter(|ns| ns.rs_name == ir_id("inner")).collect_vec();
+    let inner_namespaces =
+        ir.namespaces().filter(|ns| ns.rs_name() == &ir_id("inner")).collect_vec();
     assert_eq!(inner_namespaces.len(), 3);
 
-    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[0].id).unwrap(), 0);
-    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[1].id).unwrap(), 1);
-    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[2].id).unwrap(), 2);
+    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[0].id()).unwrap(), 0);
+    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[1].id()).unwrap(), 1);
+    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[2].id()).unwrap(), 2);
 
     assert!(!ir
         .is_last_reopened_namespace(
-            inner_namespaces[0].id,
-            inner_namespaces[0].canonical_namespace_id
+            inner_namespaces[0].id(),
+            inner_namespaces[0].canonical_namespace_id()
         )
         .unwrap());
     assert!(!ir
         .is_last_reopened_namespace(
-            inner_namespaces[1].id,
-            inner_namespaces[1].canonical_namespace_id
+            inner_namespaces[1].id(),
+            inner_namespaces[1].canonical_namespace_id()
         )
         .unwrap());
     assert!(ir
         .is_last_reopened_namespace(
-            inner_namespaces[2].id,
-            inner_namespaces[2].canonical_namespace_id
+            inner_namespaces[2].id(),
+            inner_namespaces[2].canonical_namespace_id()
         )
         .unwrap());
 }

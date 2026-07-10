@@ -812,7 +812,7 @@ fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
         }
         Item::Namespace(ns) => {
             let mut ns = Rc::as_ref(ns).clone();
-            ns.children = transform_children(db, &ns.children)?;
+            ns.set_children(transform_children(db, ns.children())?);
             transformed = Item::Namespace(Rc::new(ns));
         }
         _ => {}
