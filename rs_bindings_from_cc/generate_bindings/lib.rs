@@ -360,8 +360,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
                 rs_type_kind = rs_type_kind.display(db),
             );
             let assertions = existing_rust_type
-                .size_align
-                .as_ref()
+                .size_align()
                 .map(|size_align| {
                     generate_struct_and_union::rs_size_align_assertions(
                         rs_type_kind.to_token_stream(db),
@@ -373,7 +372,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
 
             ApiSnippets {
                 generated_items: HashMap::from([(
-                    existing_rust_type.id,
+                    existing_rust_type.id(),
                     GeneratedItem::Comment { message: disable_comment.into() },
                 )]),
                 assertions,
@@ -1220,7 +1219,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
         RsTypeKind::ExistingRustType { ref existing_rust_type, .. } => {
             let cpp_type = make_cpp_type_from_item(
                 existing_rust_type.as_ref(),
-                existing_rust_type.cc_name.as_ref(),
+                existing_rust_type.cc_name(),
                 db,
             )?;
 

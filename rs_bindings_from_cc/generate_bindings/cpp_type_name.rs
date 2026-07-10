@@ -171,9 +171,9 @@ pub fn tagless_cpp_type_name_for_item(
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::ExistingRustType(existing_rust_type) => existing_rust_type
-            .cc_name
+            .cc_name()
             .parse::<TokenStream>()
-            .map_err(|_| anyhow!("malformed type name: {:?}", existing_rust_type.cc_name)),
+            .map_err(|_| anyhow!("malformed type name: {:?}", existing_rust_type.cc_name())),
         _ => bail!("Item does not define a type: {:?}", item),
     }
 }

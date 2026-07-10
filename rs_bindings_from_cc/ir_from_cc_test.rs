@@ -804,8 +804,8 @@ fn test_crubit_internal_rust_type_annotation_with_const_generic() {
     )
     .unwrap();
 
-    let ty = ir.existing_rust_types().find(|t| t.rs_name.as_ref() == "MyType").unwrap();
-    let template_args = &ty.template_args;
+    let ty = ir.existing_rust_types().find(|t| t.rs_name() == "MyType").unwrap();
+    let template_args = ty.template_args();
     assert!(matches!(
         &template_args[..],
         [

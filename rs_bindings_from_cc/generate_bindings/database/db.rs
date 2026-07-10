@@ -352,14 +352,14 @@ impl<'db> BindingsGenerator<'db> {
     /// For example, `void Foo();` should have name `Foo`.
     pub fn debug_name(&self, item_id: ir::ItemId) -> Rc<str> {
         let item = self.find_untyped_decl(item_id);
-        let (id, name) = match item {
+        let (id, name): (ir::ItemId, Rc<str>) = match item {
             ir::Item::Func(f) => {
                 let mut name = self.namespace_qualifier_from_id(f.id).format_for_cc_debug();
                 let record_name = || -> Option<Rc<str>> {
                     if let Some(parent_id) = f.enclosing_item_id {
                         match self.find_untyped_decl(parent_id) {
                             ir::Item::ExistingRustType(existing_rust_type) => {
-                                Some(existing_rust_type.cc_name.clone())
+                                Some(Rc::from(existing_rust_type.cc_name()))
                             }
                             ir::Item::Record(record) => Some(Rc::from(record.cc_name.as_str())),
                             ir::Item::IncompleteRecord(record) => {
@@ -411,7 +411,7 @@ impl<'db> BindingsGenerator<'db> {
                 );
             }
             ir::Item::UnsupportedItem(ui) => return Rc::from(ui.name()),
-            ir::Item::ExistingRustType(e) => (e.id, e.cc_name.clone()),
+            ir::Item::ExistingRustType(e) => (e.id(), Rc::from(e.cc_name())),
             ir::Item::Namespace(n) => (n.id(), Rc::from(n.cc_name().as_str())),
             ir::Item::IncompleteRecord(r) => (r.id, Rc::from(r.cc_name.as_str())),
             ir::Item::Record(r) => (r.id, Rc::from(r.cc_name.as_str())),
@@ -643,7 +643,8 @@ impl<'db> BindingsGenerator<'db> {
                         namespaces.is_empty(),
                         "An existing rust type was listed as the enclosing item for a namespace, this is a bug."
                     );
-                    nested_records.push((rust_type.rs_name.clone(), rust_type.cc_name.clone()));
+                    nested_records
+                        .push((Rc::from(rust_type.rs_name()), Rc::from(rust_type.cc_name())));
                     // The cc_name and rs_name are fully qualified already.
                     enclosing_item_id = None;
                 }

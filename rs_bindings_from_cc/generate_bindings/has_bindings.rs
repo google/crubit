@@ -454,7 +454,7 @@ fn determine_name_conflict_action(
     let new_item = db.find_untyped_decl(*new_id);
     match (old_item, new_item) {
         (Item::ExistingRustType(old_ert), Item::ExistingRustType(new_ert)) => {
-            if old_ert.rs_name == new_ert.rs_name {
+            if old_ert.rs_name() == new_ert.rs_name() {
                 NameConflictAction::DoNotUpdate
             } else {
                 NameConflictAction::Coalesce
@@ -540,7 +540,7 @@ pub fn resolve_names(
                     insert(Rc::from(use_mod.mod_name().as_str()), ResolvedName::ExplicitItem(id));
                 }
                 Item::ExistingRustType(existing_rust_type) => {
-                    insert(existing_rust_type.rs_name.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(existing_rust_type.rs_name()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Func(func) => {
                     if let ir::UnqualifiedIdentifier::Identifier(ident) = &func.rs_name {

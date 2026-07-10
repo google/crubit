@@ -1089,11 +1089,11 @@ impl RsTypeKind {
         db: impl Deref<Target = BindingsGenerator<'db>> + Copy,
         existing_rust_type: Rc<ExistingRustType>,
     ) -> Result<Self> {
-        if existing_rust_type.rs_name.as_ref() == SLICE_REF_NAME_RS {
-            let [template_arg] = &existing_rust_type.template_args[..] else {
+        if existing_rust_type.rs_name() == SLICE_REF_NAME_RS {
+            let [template_arg] = &existing_rust_type.template_args() else {
                 bail!(
                     "SliceRef has {} template parameters, expected 1",
-                    existing_rust_type.template_args.len()
+                    existing_rust_type.template_args().len()
                 );
             };
             let TemplateArg::Type(inner_cc_type) = template_arg else {
@@ -1121,10 +1121,10 @@ impl RsTypeKind {
         let uninterpolated_rust_type = fully_qualify_type(
             db,
             ir::Item::ExistingRustType(existing_rust_type.clone()),
-            &existing_rust_type.rs_name,
+            existing_rust_type.rs_name(),
         );
 
-        let mut iter = existing_rust_type.template_args.iter().map(|subst| {
+        let mut iter = existing_rust_type.template_args().iter().map(|subst| {
             Ok(match subst {
                 TemplateArg::Type(type_param) => {
                     let rs_type_kind = db.rs_type_kind(type_param.clone())?;
@@ -1142,7 +1142,7 @@ impl RsTypeKind {
 
         let rust_type = interpolate_spelled_rust_type(uninterpolated_rust_type, &mut iter)
             .map_err(|e| {
-                anyhow!("Failed to interpolate rust type {}: {e}", existing_rust_type.rs_name)
+                anyhow!("Failed to interpolate rust type {}: {e}", existing_rust_type.rs_name())
             })?;
 
         let remaining_template_args = iter.collect::<Vec<_>>();
@@ -1340,7 +1340,7 @@ impl RsTypeKind {
             RsTypeKind::Primitive(_) => true,
             RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
-                existing_rust_type.is_same_abi
+                existing_rust_type.is_same_abi()
             }
         }
     }
@@ -2317,18 +2317,18 @@ mod tests {
     fn make_existing_rust_type(name: Rc<str>, is_same_abi: bool) -> RsTypeKind {
         RsTypeKind::new_existing_rust_type(
             EmptyDatabase,
-            Rc::new(ExistingRustType {
-                rs_name: name.clone(),
-                cc_name: "".into(),
-                unique_name: name.clone(),
-                template_args: Vec::new(),
-                owning_target: BazelLabel::from("//new/for/testing"),
-                size_align: None,
+            Rc::new(ExistingRustType::new_for_testing(
+                name.clone(),
+                "".into(),
+                name.clone(),
+                Vec::new(),
+                BazelLabel::from("//new/for/testing"),
+                None,
                 is_same_abi,
-                id: ItemId::new_for_testing(0),
-                must_bind: false,
-                impl_debug: false,
-            }),
+                ItemId::new_for_testing(0),
+                false,
+                false,
+            )),
         )
         .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
     }
@@ -2352,7 +2352,7 @@ mod tests {
             .map(|t| match t {
                 RsTypeKind::FuncPtr { .. } => "fn".to_string(),
                 RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
-                    existing_rust_type.rs_name.to_string()
+                    existing_rust_type.rs_name().to_string()
                 }
                 _ => unreachable!("Only FuncPtr and ExistingRustType kinds are used in this test"),
             })

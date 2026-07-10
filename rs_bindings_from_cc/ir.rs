@@ -2385,18 +2385,87 @@ pub struct ExistingRustType {
     /// The name of the existing Rust type.
     /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
     /// This means that it's incorrect to directly parse as an Ident.
-    pub rs_name: Rc<str>,
-    pub cc_name: Rc<str>,
-    pub unique_name: Rc<str>,
+    pub(crate) rs_name: Rc<str>,
+    pub(crate) cc_name: Rc<str>,
+    pub(crate) unique_name: Rc<str>,
     /// The template arguments on this instance of the type instantiation (empty is no template
     /// arguments). This list parallels `template_arg_names`.
-    pub template_args: Vec<TemplateArg>,
-    pub owning_target: BazelLabel,
-    pub size_align: Option<SizeAlign>,
-    pub is_same_abi: bool,
-    pub id: ItemId,
-    pub must_bind: bool,
-    pub impl_debug: bool,
+    pub(crate) template_args: Vec<TemplateArg>,
+    pub(crate) owning_target: BazelLabel,
+    pub(crate) size_align: Option<SizeAlign>,
+    pub(crate) is_same_abi: bool,
+    pub(crate) id: ItemId,
+    pub(crate) must_bind: bool,
+    pub(crate) impl_debug: bool,
+}
+
+impl ExistingRustType {
+    pub fn rs_name(&self) -> &str {
+        &self.rs_name
+    }
+
+    pub fn cc_name(&self) -> &str {
+        &self.cc_name
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn template_args(&self) -> &[TemplateArg] {
+        &self.template_args
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn size_align(&self) -> Option<&SizeAlign> {
+        self.size_align.as_ref()
+    }
+
+    pub fn is_same_abi(&self) -> bool {
+        self.is_same_abi
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn impl_debug(&self) -> bool {
+        self.impl_debug
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_for_testing(
+        rs_name: Rc<str>,
+        cc_name: Rc<str>,
+        unique_name: Rc<str>,
+        template_args: Vec<TemplateArg>,
+        owning_target: BazelLabel,
+        size_align: Option<SizeAlign>,
+        is_same_abi: bool,
+        id: ItemId,
+        must_bind: bool,
+        impl_debug: bool,
+    ) -> Self {
+        Self {
+            rs_name,
+            cc_name,
+            unique_name,
+            template_args,
+            owning_target,
+            size_align,
+            is_same_abi,
+            id,
+            must_bind,
+            impl_debug,
+        }
+    }
 }
 
 impl GenericItem for ExistingRustType {
