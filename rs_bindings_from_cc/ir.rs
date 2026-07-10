@@ -76,7 +76,7 @@ where
 }
 
 /// Deserialize `IR` from JSON bytes.
-pub fn deserialize_ir(bytes: &[u8]) -> Result<IR> {
+pub fn deserialize_ir(bytes: &[u8]) -> Result<IR<'static>> {
     let tree_ir = serde_json::from_slice(bytes)?;
     Ok(make_ir(tree_ir))
 }
@@ -90,7 +90,7 @@ pub fn make_ir_from_parts<CrubitFeatures>(
     crate_root_path: Option<Rc<str>>,
     crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
     reexported_namespaces: Vec<Rc<str>>,
-) -> IR
+) -> IR<'static>
 where
     CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
 {
@@ -188,7 +188,7 @@ fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, I
     }
 }
 
-pub fn make_ir(tree_ir: TreeIR) -> IR {
+pub fn make_ir<'a>(tree_ir: TreeIR) -> IR<'a> {
     let mut item_id_to_item = HashMap::new();
 
     for items in tree_ir.top_level_items.values() {
@@ -244,6 +244,7 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
     }
 
     IR {
+        proto_view: None,
         tree_ir,
         item_id_to_item,
         lifetimes,
@@ -3791,8 +3792,9 @@ impl Debug for TreeIR {
 /// Struct providing the necessary information about the API of a C++ target to
 /// enable generation of Rust bindings source code (both `rs_api.rs` and
 /// `rs_api_impl.cc` files).
-#[derive(PartialEq, Debug)]
-pub struct IR {
+pub struct IR<'a> {
+    #[allow(dead_code)]
+    pub(crate) proto_view: Option<ir_rust_proto::IRProtoView<'a>>,
     tree_ir: TreeIR,
     item_id_to_item: HashMap<ItemId, Item>,
     lifetimes: HashMap<LifetimeId, LifetimeName>,
@@ -3801,7 +3803,41 @@ pub struct IR {
     function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>>,
 }
 
-impl IR {
+impl<'a> PartialEq for IR<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.tree_ir == other.tree_ir
+            && self.item_id_to_item == other.item_id_to_item
+            && self.lifetimes == other.lifetimes
+            && self.namespace_id_to_number_of_reopened_namespaces
+                == other.namespace_id_to_number_of_reopened_namespaces
+            && self.reopened_namespace_id_to_idx == other.reopened_namespace_id_to_idx
+            && self.function_name_to_functions == other.function_name_to_functions
+    }
+}
+
+impl<'a> std::fmt::Debug for IR<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("IR")
+            .field("tree_ir", &self.tree_ir)
+            .field("item_id_to_item", &self.item_id_to_item)
+            .field("lifetimes", &self.lifetimes)
+            .field(
+                "namespace_id_to_number_of_reopened_namespaces",
+                &self.namespace_id_to_number_of_reopened_namespaces,
+            )
+            .field("reopened_namespace_id_to_idx", &self.reopened_namespace_id_to_idx)
+            .field("function_name_to_functions", &self.function_name_to_functions)
+            .finish()
+    }
+}
+
+impl<'a> IR<'a> {
+    pub fn from_view(proto_view: ir_rust_proto::IRProtoView<'a>) -> Self {
+        let mut ir: IR<'a> = proto_to_ir(proto_view).expect("Failed to convert view to IR");
+        ir.proto_view = Some(proto_view);
+        ir
+    }
+
     pub fn tree_ir(&self) -> &TreeIR {
         &self.tree_ir
     }
@@ -3999,7 +4035,7 @@ impl IR {
 // and returning the crate name, or similar.
 
 /// Returns Some(crate_ident) if this is an imported crate.
-pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> {
+pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR<'_>) -> Option<Ident> {
     if ir.is_current_target(owning_target) {
         None
     } else {

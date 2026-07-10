@@ -820,7 +820,7 @@ fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
 
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
-pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
+pub fn lifetime_defaults_transform(db: &BindingsGenerator<'_>) -> Result<IR<'static>> {
     let ir = db.ir();
 
     let mut top_level_items: BTreeMap<BazelLabel, Vec<Item>> = BTreeMap::new();

@@ -47,7 +47,7 @@ mod generate_dyn_callable;
 /// Generates bindings source code from an `IR` instance.
 #[allow(clippy::too_many_arguments)]
 pub fn generate_bindings(
-    ir: &IR,
+    ir: &IR<'_>,
     crubit_support_path_format: &str,
     clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
@@ -393,7 +393,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
 
 /// Creates a new database. Public for testing.
 pub fn new_database<'db>(
-    ir: &'db IR,
+    ir: &'db IR<'db>,
     errors: &'db dyn ErrorReporting,
     fatal_errors: &'db dyn ReportFatalError,
     is_golden_test: bool,
@@ -435,7 +435,7 @@ pub fn new_database<'db>(
 //
 /// Public for use in `generate_bindings_tokens_for_test`.
 pub fn generate_bindings_tokens(
-    ir: &IR,
+    ir: &IR<'_>,
     crubit_support_path_format: Format<1>,
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
@@ -1993,7 +1993,7 @@ fn any_invocable_sig_spelling(callable: &Callable, db: &BindingsGenerator) -> Re
 /// * else, it is prepended with the "::" and the crate name.
 fn make_rust_abi_path_from_str(
     mut rust_path: &str,
-    ir: &IR,
+    ir: &IR<'_>,
     target: &BazelLabel,
 ) -> FullyQualifiedPath {
     let mut start_with_colon2 = strip_leading_colon2(&mut rust_path);

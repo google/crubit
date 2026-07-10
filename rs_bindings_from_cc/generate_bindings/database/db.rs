@@ -98,7 +98,7 @@ pub struct CodegenFunctions {
 memoized::query_group! {
     pub struct BindingsGenerator<'db> {
         #[input]
-        fn ir(&self) -> &'db IR;
+        fn ir(&self) -> &'db IR<'db>;
 
         #[input]
         fn errors(&self) -> &'db dyn ErrorReporting;

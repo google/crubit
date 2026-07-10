@@ -27,7 +27,7 @@ trait IrTestingExt {
         &'a T: TryFrom<&'a ir::Item>;
 }
 
-impl IrTestingExt for IR {
+impl<'a> IrTestingExt for IR<'a> {
     #[track_caller]
     fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item {
         let Some(item) = self.get_decl(decl_id) else {
@@ -37,9 +37,9 @@ impl IrTestingExt for IR {
     }
 
     #[track_caller]
-    fn find_decl<'a, T>(&'a self, decl_id: ir::ItemId) -> Result<&'a T>
+    fn find_decl<'b, T>(&'b self, decl_id: ir::ItemId) -> Result<&'b T>
     where
-        &'a T: TryFrom<&'a ir::Item>,
+        &'b T: TryFrom<&'b ir::Item>,
     {
         self.find_untyped_decl(decl_id).try_into().map_err(|_| {
             arc_anyhow::anyhow!(
@@ -51,11 +51,11 @@ impl IrTestingExt for IR {
     }
 }
 
-fn ir_from_cc(header: &str) -> Result<IR> {
+fn ir_from_cc(header: &str) -> Result<IR<'static>> {
     ir_testing::ir_from_cc(multiplatform_testing::test_platform(), header)
 }
 
-fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
+fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR<'static>> {
     ir_testing::ir_from_cc_dependency(
         multiplatform_testing::test_platform(),
         header,
@@ -65,7 +65,7 @@ fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
     )
 }
 
-fn ir_from_record_impl_debug_cc(header: &str) -> Result<IR> {
+fn ir_from_record_impl_debug_cc(header: &str) -> Result<IR<'static>> {
     ir_testing::ir_from_cc_dependency(
         multiplatform_testing::test_platform(),
         header,
@@ -75,7 +75,7 @@ fn ir_from_record_impl_debug_cc(header: &str) -> Result<IR> {
     )
 }
 
-fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
+fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR<'static>> {
     let mut full_program = with_full_lifetime_macros();
     full_program.push_str(program);
     ir_testing::ir_from_cc_dependency(
@@ -4871,7 +4871,7 @@ fn test_assumed_lifetimes_struct_with_explicit_binding() {
     );
 }
 
-fn expect_constant(ir: &ir::IR) -> &ir::Constant {
+fn expect_constant<'b>(ir: &'b ir::IR<'_>) -> &'b ir::Constant {
     let constant = ir.items().find_map(|item| match item {
         Item::Constant(constant) => Some(constant),
         _ => None,
