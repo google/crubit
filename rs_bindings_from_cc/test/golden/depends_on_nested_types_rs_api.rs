@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// This should have bindings because Bar is a nested item of Foo, and the module
 /// "foo" can be generated because it wouldn't conflict with anything else.
 pub type FooBar = ::nested_types_cc::foo::Bar;

@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// This library reproduces the issue in b/458678348.
 #[inline(always)]
 pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {

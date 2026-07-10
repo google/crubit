@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// This type renames the special member functions so that they can be
 /// overridden in Rust instead -- this is proof that you can write bindings
 /// that are forward-compatible, as described in

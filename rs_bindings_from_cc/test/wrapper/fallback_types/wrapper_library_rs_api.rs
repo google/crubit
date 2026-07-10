@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 #[inline(always)]
 pub(crate) fn GetGlobalUnsupportedType(
 ) -> *mut ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()> {

@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// The same as Derived from inheritance.h, but in a different build target.
 ///
 /// This tests inheritance across library boundaries.

@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 // LLVM identifiers use the `\\01` prefix to suppress mangling:
 // https://llvm.org/docs/LangRef.html#identifiers
 // Test that we can import functions that have such names.

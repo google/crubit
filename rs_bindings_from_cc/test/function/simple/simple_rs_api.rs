@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 #[inline(always)]
 pub fn return_value() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z12return_valuev() }

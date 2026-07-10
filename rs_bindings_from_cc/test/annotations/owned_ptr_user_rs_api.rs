@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// An example of a C++ file that defines functions that create a
 /// CRUBIT_OWNED_PTR type as well as consume it.
 #[inline(always)]

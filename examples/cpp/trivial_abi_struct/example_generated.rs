@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// Because this class has a destructor, it will not receive Rust bindings
 /// without ABSL_ATTRIBUTE_TRIVIAL_ABI.
 #[derive(Clone)]

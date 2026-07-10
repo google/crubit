@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 forward_declare::forward_declare!(pub A = forward_declare::symbol!(":: A"));
 
 #[inline(always)]

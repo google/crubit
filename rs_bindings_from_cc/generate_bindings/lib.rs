@@ -641,7 +641,11 @@ pub fn generate_bindings_tokens(
             // (b/349776381).
             #![allow(unused)] __NEWLINE__
             #![allow(deprecated)] __NEWLINE__
-            #![deny(warnings)] __NEWLINE__ __NEWLINE__
+            // We emit bindings to symbols like strlen that trigger suspicious_runtime_symbol_definitions.
+            // The lint is triggered because we give them a Crubit compatible signature, instead of the expected Rust standard library signature.
+            // But this is the intended behavior, so we allow the warning.
+            #![allow(unknown_lints, suspicious_runtime_symbol_definitions)] __NEWLINE__ __NEWLINE__
+            #![deny(warnings)] __NEWLINE__
 
             #extern_crate_alloc
 

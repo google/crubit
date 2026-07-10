@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 pub mod crubit {
     pub mod rust_type { // error: class `crubit::rust_type::Args` could not be bound
                         //   Class templates are not yet supported

@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 // error: struct `__DunderType` could not be bound
 //   Skipping generating bindings for '__DunderType' because it has a leading `__`
 

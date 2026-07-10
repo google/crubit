@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 // error: function `UseNotCrubitExposed` could not be bound
 //   Unsupported parameter type `NotCrubitExposed not_crubit_exposed`:
 //     Crubit is not enabled on defining target:

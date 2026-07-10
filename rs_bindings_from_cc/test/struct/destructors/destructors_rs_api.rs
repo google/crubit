@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
 pub struct DestructionOrderRecorder {

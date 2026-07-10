@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 pub mod gshoe {
     #[inline(always)]
     pub fn add_two_integers(x: i32, y: i32) -> i32 {

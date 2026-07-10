@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 // Note: a real example would require that Crubit implements CrubitAbiTrait in
 // order for the generated code to properly compile. This example just serves to
 // illustrate what the generated code will look like.

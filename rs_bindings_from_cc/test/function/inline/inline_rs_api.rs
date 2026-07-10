@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 #[inline(always)]
 pub fn hello_world_inline() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z18hello_world_inlinev() }

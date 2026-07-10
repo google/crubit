@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent
 /// generating bindings for constructors, even though the presence of a
 /// user-defined copy constructor technically means that the struct below

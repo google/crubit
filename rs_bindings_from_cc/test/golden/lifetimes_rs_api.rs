@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 #[inline(always)]
 pub fn AddHook(__param_0: Option<extern "C" fn()>) {
     unsafe { crate::detail::__rust_thunk___Z7AddHookPFvvE(__param_0) }

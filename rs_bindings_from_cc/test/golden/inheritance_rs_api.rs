@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// Using classes to force these to be non-POD.
 /// In the Itanium ABI, the tail padding of POD types cannot be reused by other
 /// objects, even if the POD type is potentially-overlapping.

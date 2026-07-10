@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 /// The no_unique_address.h header is present both in
 /// rs_bindings_from_cc/test/struct/no_unique_address/ and in
 /// rs_bindings_from_cc/test/golden/ because the format provides end-to-end

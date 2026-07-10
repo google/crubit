@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 #[inline(always)]
 pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type_cc::ns::Trivial {
     unsafe {

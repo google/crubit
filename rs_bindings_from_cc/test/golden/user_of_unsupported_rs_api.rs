@@ -12,8 +12,8 @@
 #![allow(nonstandard_style)]
 #![allow(unused)]
 #![allow(deprecated)]
+#![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-
 #[inline(always)]
 pub fn UseNontrivialCustomType(
     non_trivial_custom_type: ::ctor::Ctor![::unsupported_cc::NontrivialCustomType],
