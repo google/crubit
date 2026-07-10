@@ -2034,27 +2034,71 @@ impl Display for UnsupportedItemKind {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UnsupportedItemPath {
-    pub ident: UnqualifiedIdentifier,
-    pub enclosing_item_id: Option<ItemId>,
+    pub(crate) ident: UnqualifiedIdentifier,
+    pub(crate) enclosing_item_id: Option<ItemId>,
+}
+
+impl UnsupportedItemPath {
+    pub fn ident(&self) -> &UnqualifiedIdentifier {
+        &self.ident
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UnsupportedItem {
-    pub name: Rc<str>,
-    pub unique_name: Option<Rc<str>>,
-    pub kind: UnsupportedItemKind,
-    pub path: Option<UnsupportedItemPath>,
+    pub(crate) name: Rc<str>,
+    pub(crate) unique_name: Option<Rc<str>>,
+    pub(crate) kind: UnsupportedItemKind,
+    pub(crate) path: Option<UnsupportedItemPath>,
     errors: Vec<Rc<FormattedError>>,
-    pub source_loc: Option<Rc<str>>,
-    pub id: ItemId,
-    pub must_bind: bool,
-    pub defining_target: Option<BazelLabel>,
+    pub(crate) source_loc: Option<Rc<str>>,
+    pub(crate) id: ItemId,
+    pub(crate) must_bind: bool,
+    pub(crate) defining_target: Option<BazelLabel>,
 
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
     /// memoized result of converting `errors`.
     #[serde(skip)]
     cause: IgnoredField<OnceCell<Vec<Error>>>,
+}
+
+impl UnsupportedItem {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn unique_name(&self) -> Option<&str> {
+        self.unique_name.as_deref()
+    }
+
+    pub fn kind(&self) -> UnsupportedItemKind {
+        self.kind
+    }
+
+    pub fn path(&self) -> Option<&UnsupportedItemPath> {
+        self.path.as_ref()
+    }
+
+    pub fn source_loc(&self) -> Option<&str> {
+        self.source_loc.as_deref()
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn defining_target(&self) -> Option<&BazelLabel> {
+        self.defining_target.as_ref()
+    }
 }
 
 impl GenericItem for UnsupportedItem {

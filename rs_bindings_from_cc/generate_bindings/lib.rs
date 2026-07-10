@@ -322,7 +322,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
             // had a more specific type, which is why this categorization goes here, and not
             // in generate_unsupported.
             use UnsupportedItemKind::*;
-            match unsupported.kind {
+            match unsupported.kind() {
                 Func | Constructor => {
                     db.errors().add_category(error_report::Category::Function);
                 }

@@ -405,22 +405,22 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
     )
     .unwrap();
     assert_ir_not_matches!(ir, quote! { Record });
-    let unsupported_item = ir.unsupported_items().find(|item| &*item.name == "MyTemplate").unwrap();
-    expect_eq!(unsupported_item.kind, UnsupportedItemKind::Class);
-    let path = unsupported_item.path.as_ref().unwrap();
-    expect_eq!(path.ident, "MyTemplate");
-    expect_eq!(path.enclosing_item_id, None);
+    let unsupported_item = ir.unsupported_items().find(|item| item.name() == "MyTemplate").unwrap();
+    expect_eq!(unsupported_item.kind(), UnsupportedItemKind::Class);
+    let path = unsupported_item.path().unwrap();
+    expect_eq!(path.ident(), "MyTemplate");
+    expect_eq!(path.enclosing_item_id(), None);
 }
 
 #[gtest]
 fn test_function_template_not_supported_yet() {
     let ir = ir_from_cc("template<typename SomeParam> void SomeFunctionTemplate() {};").unwrap();
     let unsupported_item =
-        ir.unsupported_items().find(|item| &*item.name == "SomeFunctionTemplate").unwrap();
-    expect_eq!(unsupported_item.kind, UnsupportedItemKind::Func);
-    let path = unsupported_item.path.as_ref().unwrap();
-    expect_eq!(path.ident, "SomeFunctionTemplate");
-    expect_eq!(path.enclosing_item_id, None);
+        ir.unsupported_items().find(|item| item.name() == "SomeFunctionTemplate").unwrap();
+    expect_eq!(unsupported_item.kind(), UnsupportedItemKind::Func);
+    let path = unsupported_item.path().unwrap();
+    expect_eq!(path.ident(), "SomeFunctionTemplate");
+    expect_eq!(path.enclosing_item_id(), None);
 }
 
 #[gtest]
@@ -444,12 +444,12 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
     // We should only generate bindings for the class template, not the deduction guide.
     let unsupported_item = ir
         .unsupported_items()
-        .find(|item| &*item.name == "SomeFunctionTemplateWithDeductionGuide")
+        .find(|item| item.name() == "SomeFunctionTemplateWithDeductionGuide")
         .unwrap();
-    expect_eq!(unsupported_item.kind, UnsupportedItemKind::Class);
-    let path = unsupported_item.path.as_ref().unwrap();
-    expect_eq!(path.ident, "SomeFunctionTemplateWithDeductionGuide");
-    expect_eq!(path.enclosing_item_id, None);
+    expect_eq!(unsupported_item.kind(), UnsupportedItemKind::Class);
+    let path = unsupported_item.path().unwrap();
+    expect_eq!(path.ident(), "SomeFunctionTemplateWithDeductionGuide");
+    expect_eq!(path.enclosing_item_id(), None);
 }
 
 #[gtest]
@@ -1240,8 +1240,8 @@ fn test_must_bind_annotation_on_unbindable_type_produces_must_bind_error() -> go
         r#"template<typename T> struct [[clang::annotate("crubit_must_bind", 7)]] S {};"#,
     )
     .or_fail()?;
-    let record = ir.unsupported_items().find(|item| &*item.name == "S").or_fail()?;
-    expect_that!(&**record, field!(&UnsupportedItem.must_bind, eq(true)));
+    let record = ir.unsupported_items().find(|item| item.name() == "S").or_fail()?;
+    expect_eq!(record.must_bind(), true);
     Ok(())
 }
 
@@ -1249,8 +1249,8 @@ fn test_must_bind_annotation_on_unbindable_type_produces_must_bind_error() -> go
 fn test_must_bind_annotation_on_unbindable_function_produces_must_bind_error(
 ) -> googletest::Result<()> {
     let ir = ir_from_cc(r#"[[clang::annotate("crubit_must_bind")]] inline void f();"#).or_fail()?;
-    let func = ir.unsupported_items().find(|item| &*item.name == "f").or_fail()?;
-    expect_that!(&**func, field!(&UnsupportedItem.must_bind, eq(true)));
+    let func = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
+    expect_eq!(func.must_bind(), true);
     Ok(())
 }
 
@@ -3153,7 +3153,7 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
     // once we start importing nested structs.
     let ir = ir_from_cc("struct __attribute__((packed)) PackedStruct {};")?;
     assert_strings_contain(
-        ir.unsupported_items().map(|i| i.name.as_ref()).collect_vec().as_slice(),
+        ir.unsupported_items().map(|i| i.name()).collect_vec().as_slice(),
         "PackedStruct",
     );
     Ok(())
@@ -3165,7 +3165,7 @@ fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
         "struct MyOtherStruct { ImportantLibaryTypeThatsUnsupported my_field; };",
         "struct __attribute__((packed)) ImportantLibaryTypeThatsUnsupported {};",
     )?;
-    let names = ir.unsupported_items().map(|i| i.name.as_ref()).collect_vec();
+    let names = ir.unsupported_items().map(|i| i.name()).collect_vec();
     assert_strings_dont_contain(names.as_slice(), "ImportantLibaryTypeThatsUnsupported");
     Ok(())
 }
@@ -3474,8 +3474,8 @@ fn test_literal_operator_unsupported() {
 #[gtest]
 fn test_unsupported_item_has_item_id() {
     let ir = ir_from_cc("struct __attribute__((packed)) SomeStruct {};").unwrap();
-    let unsupported = ir.unsupported_items().find(|i| i.name.as_ref() == "SomeStruct").unwrap();
-    assert_ne!(unsupported.id, ItemId::new_for_testing(0));
+    let unsupported = ir.unsupported_items().find(|i| i.name() == "SomeStruct").unwrap();
+    assert_ne!(unsupported.id(), ItemId::new_for_testing(0));
 }
 
 #[gtest]

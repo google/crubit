@@ -342,7 +342,7 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::Record(r) => {
                 r.template_specialization.as_ref().map(|ts| ts.defining_target.clone())
             }
-            ir::Item::UnsupportedItem(ui) => ui.defining_target.clone(),
+            ir::Item::UnsupportedItem(ui) => ui.defining_target().cloned(),
             _ => None,
         }
     }
@@ -410,7 +410,7 @@ impl<'db> BindingsGenerator<'db> {
                     u.path()
                 );
             }
-            ir::Item::UnsupportedItem(ui) => return ui.name.clone(),
+            ir::Item::UnsupportedItem(ui) => return Rc::from(ui.name()),
             ir::Item::ExistingRustType(e) => (e.id, e.cc_name.clone()),
             ir::Item::Namespace(n) => (n.id, n.cc_name.identifier.clone()),
             ir::Item::IncompleteRecord(r) => (r.id, r.cc_name.identifier.clone()),

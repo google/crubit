@@ -114,9 +114,9 @@ fn test_unescapable_rust_keywords_in_struct_name_proto() -> Result<()> {
     let ir = get_ir("struct Self{ int field; };")?;
     let unsupported = ir
         .unsupported_items()
-        .find(|i| i.name.as_ref() == "Self")
+        .find(|i| i.name() == "Self")
         .expect("should find an unsupported item due to keyword collision from the source code");
-    assert_eq!(unsupported.name.as_ref(), "Self");
+    assert_eq!(unsupported.name(), "Self");
     assert_eq!(unsupported.errors().len(), 1);
     assert!(unsupported
         .errors()
