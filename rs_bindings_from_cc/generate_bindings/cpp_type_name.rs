@@ -166,7 +166,7 @@ pub fn tagless_cpp_type_name_for_item(
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
-            let ident = format_nonportable_cc_type_name(type_alias.cc_name.as_str())?;
+            let ident = format_nonportable_cc_type_name(type_alias.cc_name().as_str())?;
             let namespace_qualifier = db.namespace_qualifier(item).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }

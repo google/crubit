@@ -202,10 +202,10 @@ fn test_type_alias_proto() -> Result<()> {
     let ir = get_ir("typedef int MyInt;")?;
     let type_alias = ir
         .type_aliases()
-        .find(|t| t.cc_name == "MyInt")
+        .find(|t| t.cc_name() == "MyInt")
         .expect("should find type alias MyInt from the source code");
-    assert_eq!(type_alias.cc_name.as_str(), "MyInt");
-    assert_eq!(type_alias.rs_name.as_str(), "MyInt");
+    assert_eq!(type_alias.cc_name().as_str(), "MyInt");
+    assert_eq!(type_alias.rs_name().as_str(), "MyInt");
 
     Ok(())
 }

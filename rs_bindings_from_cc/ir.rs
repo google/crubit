@@ -1912,25 +1912,120 @@ pub struct Enumerator {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TypeAlias {
-    pub cc_name: Identifier,
-    pub rs_name: Identifier,
-    pub unique_name: Rc<str>,
-    pub id: ItemId,
-    pub owning_target: BazelLabel,
-    pub doc_comment: Option<Rc<str>>,
+    pub(crate) cc_name: Identifier,
+    pub(crate) rs_name: Identifier,
+    pub(crate) unique_name: Rc<str>,
+    pub(crate) id: ItemId,
+    pub(crate) owning_target: BazelLabel,
+    pub(crate) doc_comment: Option<Rc<str>>,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub unknown_attr: Option<Rc<str>>,
-    pub underlying_type: CcType,
-    pub source_loc: Rc<str>,
-    pub enclosing_item_id: Option<ItemId>,
-    pub must_bind: bool,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) underlying_type: CcType,
+    pub(crate) source_loc: Rc<str>,
+    pub(crate) enclosing_item_id: Option<ItemId>,
+    pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     #[serde(default)]
-    pub deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<Rc<str>>,
     // Lifetime variable names bound by this type alias.
     #[serde(default)]
-    pub lifetime_inputs: Vec<Rc<str>>,
+    pub(crate) lifetime_inputs: Vec<Rc<str>>,
+}
+
+impl TypeAlias {
+    pub fn cc_name(&self) -> &Identifier {
+        &self.cc_name
+    }
+
+    pub fn rs_name(&self) -> &Identifier {
+        &self.rs_name
+    }
+
+    pub fn unique_name(&self) -> &str {
+        &self.unique_name
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn owning_target(&self) -> &BazelLabel {
+        &self.owning_target
+    }
+
+    pub fn doc_comment(&self) -> Option<&str> {
+        self.doc_comment.as_deref()
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
+
+    pub fn underlying_type(&self) -> &CcType {
+        &self.underlying_type
+    }
+
+    pub fn underlying_type_mut(&mut self) -> &mut CcType {
+        &mut self.underlying_type
+    }
+
+    pub fn source_loc(&self) -> &str {
+        &self.source_loc
+    }
+
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
+        self.enclosing_item_id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
+
+    pub fn deprecated(&self) -> Option<&str> {
+        self.deprecated.as_deref()
+    }
+
+    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+        &self.lifetime_inputs
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.lifetime_inputs
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_for_testing(
+        cc_name: Identifier,
+        rs_name: Identifier,
+        unique_name: Rc<str>,
+        id: ItemId,
+        owning_target: BazelLabel,
+        doc_comment: Option<Rc<str>>,
+        unknown_attr: Option<Rc<str>>,
+        underlying_type: CcType,
+        source_loc: Rc<str>,
+        enclosing_item_id: Option<ItemId>,
+        must_bind: bool,
+        deprecated: Option<Rc<str>>,
+        lifetime_inputs: Vec<Rc<str>>,
+    ) -> Self {
+        Self {
+            cc_name,
+            rs_name,
+            unique_name,
+            id,
+            owning_target,
+            doc_comment,
+            unknown_attr,
+            underlying_type,
+            source_loc,
+            enclosing_item_id,
+            must_bind,
+            deprecated,
+            lifetime_inputs,
+        }
+    }
 }
 
 impl GenericItem for TypeAlias {

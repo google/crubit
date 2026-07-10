@@ -976,7 +976,7 @@ impl RsTypeKind {
         lifetimes: &[Lifetime],
     ) -> Result<Self> {
         let ir = db.ir();
-        let mut underlying_cc_type = type_alias.underlying_type.clone();
+        let mut underlying_cc_type = type_alias.underlying_type().clone();
         if underlying_cc_type.explicit_lifetimes().is_empty() {
             *underlying_cc_type.explicit_lifetimes_mut() =
                 lifetimes.iter().map(|lt| lt.0.clone()).collect();
@@ -996,15 +996,15 @@ impl RsTypeKind {
         // For example, perhaps the alias is to a forward declaration, and then later, we completed
         // the forward declaration.
         if let RsTypeKind::Record { record, .. } = &underlying_type
-            && record.owning_target != type_alias.owning_target
-            && db.defining_target(record.id()).as_ref() != Some(&type_alias.owning_target)
+            && &record.owning_target != type_alias.as_ref().owning_target()
+            && db.defining_target(record.id()).as_ref() != Some(type_alias.as_ref().owning_target())
         {
             return Ok(underlying_type);
         }
         let crate_path = Rc::new(CratePath::new(
             ir,
             db.namespace_qualifier(&type_alias),
-            rs_imported_crate_name(&type_alias.owning_target, ir),
+            rs_imported_crate_name(type_alias.as_ref().owning_target(), ir),
         ));
         Ok(RsTypeKind::TypeAlias {
             type_alias,
@@ -2069,7 +2069,7 @@ impl RsTypeKind {
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
-                let mut ident = make_rs_ident(type_alias.rs_name.as_str());
+                let mut ident = make_rs_ident(type_alias.rs_name().as_str());
                 let mut crate_path = crate_path.clone();
                 // Check to see if the underlying type is a special template specialization kind
                 // that we need to use an alternate name for if lifetimes are provided.
@@ -2544,26 +2544,26 @@ mod tests {
     #[gtest]
     fn test_alias_incomplete_record_only_allowed_behind_single_element_ptr() {
         let alias_incomplete_record = RsTypeKind::TypeAlias {
-            type_alias: Rc::new(TypeAlias {
-                cc_name: Identifier::new("MyAlias"),
-                rs_name: Identifier::new("MyAlias"),
-                unique_name: "MyAlias".into(),
-                id: ItemId::new_for_testing(1),
-                owning_target: BazelLabel::from("//foo/bar"),
-                doc_comment: None,
-                unknown_attr: None,
-                underlying_type: CcType::new(
+            type_alias: Rc::new(TypeAlias::new_for_testing(
+                Identifier::new("MyAlias"),
+                Identifier::new("MyAlias"),
+                "MyAlias".into(),
+                ItemId::new_for_testing(1),
+                BazelLabel::from("//foo/bar"),
+                None,
+                None,
+                CcType::new(
                     CcTypeVariant::Decl { id: ItemId::new_for_testing(0), template_args: None },
                     false,
                     "",
                     vec![],
                 ),
-                source_loc: "some_file.h:123".into(),
-                enclosing_item_id: None,
-                must_bind: false,
-                deprecated: None,
-                lifetime_inputs: vec![],
-            }),
+                "some_file.h:123".into(),
+                None,
+                false,
+                None,
+                vec![],
+            )),
             underlying_type: Rc::new(make_incomplete_record()),
             crate_path: make_crate_path(),
             lifetimes: vec![],

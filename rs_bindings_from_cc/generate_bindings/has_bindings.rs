@@ -26,7 +26,7 @@ fn cc_type_has_bindings(
         CcTypeVariant::Decl { id, template_args } => {
             let underlying_item = db.find_untyped_decl(*id);
             if let ir::Item::TypeAlias(inner_alias) = underlying_item {
-                cc_type_has_bindings(db, &inner_alias.underlying_type, alias_id)?;
+                cc_type_has_bindings(db, inner_alias.underlying_type(), alias_id)?;
             } else if let Err(no_bindings) = db.has_bindings(underlying_item.clone()) {
                 return Err(NoBindingsReason::DependencyFailed {
                     type_name: db.debug_name(alias_id).to_string(),
@@ -199,7 +199,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                 }
             }
             if let Item::TypeAlias(alias) = &item {
-                cc_type_has_bindings(db, &alias.underlying_type, alias.id)?;
+                cc_type_has_bindings(db, alias.underlying_type(), alias.id())?;
             }
             // has_bindings is called from `rs_type_kind()`, so we can't use
             // `BindingsGenerator::rs_type_kind()` here.
@@ -526,7 +526,7 @@ pub fn resolve_names(
                     insert(Rc::from(enum_.rs_name.as_str()), ResolvedName::ExplicitItem(id))
                 }
                 Item::TypeAlias(type_alias) => {
-                    insert(Rc::from(type_alias.rs_name.as_str()), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(type_alias.rs_name().as_str()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Namespace(ns) => {
                     insert(

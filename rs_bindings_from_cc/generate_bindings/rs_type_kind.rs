@@ -28,7 +28,7 @@ fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
 fn item_is_or_aliases_string_view(db: &BindingsGenerator, item: &ir::Item) -> bool {
     match item {
         ir::Item::Record(record) => record.is_string_view(),
-        ir::Item::TypeAlias(type_alias) => match type_alias.underlying_type.variant() {
+        ir::Item::TypeAlias(type_alias) => match type_alias.underlying_type().variant() {
             CcTypeVariant::Decl { id, .. } => {
                 item_is_or_aliases_string_view(db, db.find_untyped_decl(*id))
             }
@@ -209,7 +209,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                         no_bindings_reason,
                         NoBindingsReason::MissingRequiredFeatures { .. }
                     ) {
-                        let mut underlying_type = alias.underlying_type.clone();
+                        let mut underlying_type = alias.underlying_type().clone();
                         if underlying_type.explicit_lifetimes().is_empty() {
                             *underlying_type.explicit_lifetimes_mut() =
                                 ty.explicit_lifetimes().to_vec();

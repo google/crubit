@@ -121,7 +121,7 @@ fn generate_type_alias(
 ) -> Result<ApiSnippets> {
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(&raw_type_alias.owning_target)
+        .target_crubit_features(raw_type_alias.as_ref().owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
     let type_alias = if assume_lifetimes {
         &lifetime_defaults_transform_type_alias(db, raw_type_alias.as_ref())?
@@ -151,14 +151,14 @@ fn generate_type_alias(
 
     let underlying_type = db
         .rs_type_kind_with_lifetime_elision(
-            type_alias.underlying_type.clone(),
+            type_alias.underlying_type().clone(),
             LifetimeOptions { assume_lifetimes, ..Default::default() },
         )
         .with_context(|| format!("Failed to format underlying type for {type_alias}"))?;
     let mut lifetime_params = vec![];
     if assume_lifetimes {
         lifetime_params =
-            type_alias.lifetime_inputs.iter().map(|id| make_rs_lifetime_ident(id)).collect();
+            type_alias.lifetime_inputs().iter().map(|id| make_rs_lifetime_ident(id)).collect();
     }
 
     // If this type alias refers to a record with nested types,
@@ -173,21 +173,23 @@ fn generate_type_alias(
 
     let generated_item = GeneratedItem::TypeAlias {
         doc_comment: generate_doc_comment(
-            type_alias.doc_comment.as_deref(),
+            type_alias.doc_comment(),
             None,
-            Some(&type_alias.source_loc),
+            Some(type_alias.source_loc()),
             db.is_golden_test(),
             db.kythe_annotations(),
         ),
-        visibility: db.type_visibility(&type_alias.owning_target, rs_type_kind).unwrap_or_default(),
-        ident: make_rs_ident(type_alias.rs_name.as_str()),
+        visibility: db
+            .type_visibility(type_alias.owning_target(), rs_type_kind)
+            .unwrap_or_default(),
+        ident: make_rs_ident(type_alias.rs_name().as_str()),
         underlying_type: underlying_type.to_token_stream(db),
         underlying_nested_module_path,
-        deprecated_attr: type_alias.deprecated.clone().map(DeprecatedAttr),
+        deprecated_attr: type_alias.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
         lifetime_params,
     };
     Ok(ApiSnippets {
-        generated_items: HashMap::from([(type_alias.id, generated_item)]),
+        generated_items: HashMap::from([(type_alias.id(), generated_item)]),
         ..Default::default()
     })
 }

@@ -204,8 +204,8 @@ pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
 /// Panics if no such type alias could be found or it did not refer to a record.
 pub fn retrieve_type_alias_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
     for type_alias in ir.type_aliases() {
-        if type_alias.cc_name == cc_name {
-            let Some(item_id) = type_alias.underlying_type.decl_id() else {
+        if type_alias.cc_name().as_str() == cc_name {
+            let Some(item_id) = type_alias.underlying_type().decl_id() else {
                 panic!("Type alias with cc_name {cc_name} has an underlying type with no ItemId");
             };
             let Some(Item::Record(record)) = ir.get_decl(item_id) else {
