@@ -2127,9 +2127,23 @@ impl UnsupportedItem {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Comment {
-    pub text: Rc<str>,
-    pub id: ItemId,
-    pub must_bind: bool,
+    pub(crate) text: Rc<str>,
+    pub(crate) id: ItemId,
+    pub(crate) must_bind: bool,
+}
+
+impl Comment {
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+
+    pub fn id(&self) -> ItemId {
+        self.id
+    }
+
+    pub fn must_bind(&self) -> bool {
+        self.must_bind
+    }
 }
 
 impl GenericItem for Comment {

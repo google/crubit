@@ -3481,8 +3481,8 @@ fn test_unsupported_item_has_item_id() {
 #[gtest]
 fn test_comment_has_item_id() {
     let ir = ir_from_cc("// Comment").unwrap();
-    let comment = ir.comments().find(|i| i.text.as_ref() == "Comment").unwrap();
-    assert_ne!(comment.id, ItemId::new_for_testing(0));
+    let comment = ir.comments().find(|i| i.text() == "Comment").unwrap();
+    assert_ne!(comment.id(), ItemId::new_for_testing(0));
 }
 
 #[gtest]
