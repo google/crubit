@@ -85,16 +85,16 @@ pub fn record_lifetime_arity(
                 continue;
             }
             let this_param = &f.params[0];
-            if this_param.identifier != "__this" {
+            if this_param.identifier() != "__this" {
                 continue;
             }
             if f.cc_name == ir::UnqualifiedIdentifier::Constructor {
                 for param in &f.params[1..] {
-                    if param.clang_lifetimebound {
-                        return lifetime_arity(db, &param.type_);
+                    if param.clang_lifetimebound() {
+                        return lifetime_arity(db, param.type_());
                     }
                 }
-            } else if this_param.clang_lifetimebound {
+            } else if this_param.clang_lifetimebound() {
                 return lifetime_arity(db, &f.return_type);
             }
         }
@@ -511,7 +511,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         param: &mut ir::FuncParam,
         lifetimes: &[Rc<str>],
     ) -> Result<()> {
-        let CcTypeVariant::Pointer(pty) = param.type_.variant_mut() else {
+        let CcTypeVariant::Pointer(pty) = param.type_mut().variant_mut() else {
             bail!("the implicit `this` parameter did not have pointer type");
         };
         if !pty.pointee_type().explicit_lifetimes().is_empty()
@@ -541,23 +541,23 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         // First, check to see if there are any existing lifetime annotations that we need to
         // respect.
         for (ix, param) in func.params.iter().enumerate() {
-            if param.clang_lifetimebound || (is_constructor && ix == 0) {
-                has_lifetimebound |= param.clang_lifetimebound;
+            if param.clang_lifetimebound() || (is_constructor && ix == 0) {
+                has_lifetimebound |= param.clang_lifetimebound();
                 if return_lifetime.is_empty() {
                     // If a [[lifetimebound]] parameter already has a lifetime annotation and we
                     // don't have a lifetime for the return value yet, use the parameter's
                     // annotation.
-                    return_lifetime = param.type_.explicit_lifetimes().to_vec();
-                } else if !param.type_.explicit_lifetimes().is_empty()
-                    && param.type_.explicit_lifetimes() != return_lifetime
+                    return_lifetime = param.type_().explicit_lifetimes().to_vec();
+                } else if !param.type_().explicit_lifetimes().is_empty()
+                    && param.type_().explicit_lifetimes() != return_lifetime
                 {
                     // If there's a conflict between what we believe is the [[lifetimebound]]
                     // lifetime and the one annotated on a parameter, return a diagnostic.
                     bail!(
                         "lifetimebound: lifetime mismatch in function {:#?} between parameter {:#?} with lifetime {:#?} and return with lifetime {:#?}",
                         &func.cc_name,
-                        param.identifier.as_str(),
-                        param.type_.explicit_lifetimes(),
+                        param.identifier().as_str(),
+                        param.type_().explicit_lifetimes(),
                         &return_lifetime
                     );
                 }
@@ -568,7 +568,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             return Ok(());
         }
         // We have at least one parameter because `has_lifetimebound`.
-        let is_member_function = &func.params[0].identifier == "__this";
+        let is_member_function = func.params[0].identifier() == "__this";
         if return_lifetime.is_empty() {
             // We still don't have any explicit annotations.
             // Below, `L(v)` returns the ordered list of lifetimes for the type of value `v`.
@@ -578,7 +578,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             if is_constructor {
                 // Forall lifetimebound parameters P, L(P) : L(*this).
                 return_lifetime = this_lifetimebound_names.to_vec();
-            } else if is_member_function && func.params[0].clang_lifetimebound {
+            } else if is_member_function && func.params[0].clang_lifetimebound() {
                 // Here, the implicit object parameter was annotated with [[lifetimebound]].
                 // In this case, forall lifetimebound parameters P, L(*this) : L(P)
                 return_lifetime = this_lifetimebound_names.to_vec();
@@ -590,11 +590,11 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             }
         }
         for (ix, param) in func.params.iter_mut().enumerate() {
-            if param.clang_lifetimebound || (is_constructor && ix == 0) {
+            if param.clang_lifetimebound() || (is_constructor && ix == 0) {
                 if is_member_function && ix == 0 {
                     self.inject_lifetimes_into_this(param, &return_lifetime)?;
                 } else {
-                    *param.type_.explicit_lifetimes_mut() = return_lifetime.clone();
+                    *param.type_mut().explicit_lifetimes_mut() = return_lifetime.clone();
                 }
             }
         }
@@ -667,19 +667,19 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             // `this` in a constructor is strange. The !is_constructor restriction fixes some
             // situations where we would bind a `'__this` in a constructor and then not use it
             // (because the actual `__this` is a void*).
-            let is_this = ix == 0 && param.identifier.as_str() == "__this" && !is_constructor;
+            let is_this = ix == 0 && param.identifier().as_str() == "__this" && !is_constructor;
             had_this |= is_this;
-            let name_hint = Rc::from(param.identifier.as_str());
+            let name_hint = Rc::from(param.identifier().as_str());
             let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
                 self.add_lifetime_to_input_type(
                     is_this,
                     Some(&name_hint),
                     &mut new_func.lifetime_inputs,
-                    &param.type_,
+                    param.type_(),
                 )?;
             state.update(&new_state);
             this_state.update(&new_this_state);
-            param.type_ = new_type;
+            param.set_type(new_type);
         }
         let lifetime = match this_state {
             LifetimeState::Unseen => self.get_lifetime_for_state(&state),
@@ -693,8 +693,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         if had_this {
             // See if we can promote the type of `this` to a reference.
             let this = new_func.params.get_mut(0).unwrap();
-            if !this.type_.explicit_lifetimes().is_empty()
-                && let CcTypeVariant::Pointer(pty) = this.type_.variant_mut()
+            if !this.type_().explicit_lifetimes().is_empty()
+                && let CcTypeVariant::Pointer(pty) = this.type_mut().variant_mut()
             {
                 pty.set_kind(PointerTypeKind::LValueRef);
             }

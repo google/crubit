@@ -455,7 +455,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
         })
         .find(|f| {
             matches!(&f.rs_name, UnqualifiedIdentifier::Constructor)
-                && f.params.get(1).map(|p| p.identifier.as_str() == "i").unwrap_or_default()
+                && f.params.get(1).map(|p| p.identifier().as_str() == "i").unwrap_or_default()
         })
         .unwrap();
     {
@@ -463,8 +463,8 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
         // for both of the constructor's parameters: `__this` and `i`.
         assert_eq!(ctor.params.len(), 2);
         let this_lifetime =
-            ctor.params[0].type_.variant().as_pointer().unwrap().lifetime().unwrap();
-        let i_lifetime = ctor.params[1].type_.variant().as_pointer().unwrap().lifetime().unwrap();
+            ctor.params[0].type_().variant().as_pointer().unwrap().lifetime().unwrap();
+        let i_lifetime = ctor.params[1].type_().variant().as_pointer().unwrap().lifetime().unwrap();
         assert_eq!(i_lifetime, this_lifetime);
     }
 

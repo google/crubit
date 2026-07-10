@@ -191,12 +191,12 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
                 }
             } else {
                 for param in &func.params {
-                    if let Some(missing) = missing_features_of_cc_type(param.type_.clone()) {
+                    if let Some(missing) = missing_features_of_cc_type(param.type_().clone()) {
                         missing_features.push(join_missing_with_context(
                             &format!(
                                 "Unsupported parameter type `{} {}`",
-                                db.cc_type_debug_name(&param.type_),
-                                param.identifier
+                                db.cc_type_debug_name(param.type_()),
+                                param.identifier()
                             ),
                             &missing,
                         ));
@@ -222,10 +222,10 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
                         missing_features.push("[[noreturn]] attribute".to_string());
                     }
                     for param in &func.params {
-                        if let Some(unknown_attr) = &param.unknown_attr {
+                        if let Some(unknown_attr) = param.unknown_attr() {
                             missing_features.push(format!(
                                 "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
-                                param = param.identifier.as_str()
+                                param = param.identifier().as_str()
                             ));
                         }
                     }

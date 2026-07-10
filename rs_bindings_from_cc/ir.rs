@@ -1020,16 +1020,16 @@ impl InstanceMethodMetadata {
 #[serde(deny_unknown_fields)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
-    pub type_: CcType,
-    pub identifier: Identifier,
+    pub(crate) type_: CcType,
+    pub(crate) identifier: Identifier,
     /// A list of parameter indexes attached to this parameter by Clang's lifetime_capture_by.
     /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
     /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
     #[serde(default)]
-    pub clang_lifetime_capture_by: Vec<i32>,
+    pub(crate) clang_lifetime_capture_by: Vec<i32>,
     /// True if this parameter was annotated with Clang's lifetimebound.
     #[serde(default)]
-    pub clang_lifetimebound: bool,
+    pub(crate) clang_lifetimebound: bool,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
     /// Because attributes can change the behavior or semantics of function
@@ -1038,7 +1038,47 @@ pub struct FuncParam {
     ///
     /// One notable example is `lifetimebound`, which we might expect to map
     /// to Rust lifetimes.
-    pub unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<Rc<str>>,
+}
+
+impl FuncParam {
+    pub fn new(
+        type_: CcType,
+        identifier: Identifier,
+        clang_lifetime_capture_by: Vec<i32>,
+        clang_lifetimebound: bool,
+        unknown_attr: Option<Rc<str>>,
+    ) -> Self {
+        Self { type_, identifier, clang_lifetime_capture_by, clang_lifetimebound, unknown_attr }
+    }
+
+    pub fn type_(&self) -> &CcType {
+        &self.type_
+    }
+
+    pub fn type_mut(&mut self) -> &mut CcType {
+        &mut self.type_
+    }
+
+    pub fn set_type(&mut self, type_: CcType) {
+        self.type_ = type_;
+    }
+
+    pub fn identifier(&self) -> &Identifier {
+        &self.identifier
+    }
+
+    pub fn clang_lifetime_capture_by(&self) -> &[i32] {
+        &self.clang_lifetime_capture_by
+    }
+
+    pub fn clang_lifetimebound(&self) -> bool {
+        self.clang_lifetimebound
+    }
+
+    pub fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr.as_deref()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

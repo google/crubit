@@ -107,7 +107,7 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // (As a side effect, this, like return values, means that support is
     // ABI-agnostic.)
     for param in &func.params {
-        if let Ok(param_type) = db.rs_type_kind(param.type_.clone())
+        if let Ok(param_type) = db.rs_type_kind(param.type_().clone())
             && !param_type.is_c_abi_compatible_by_value()
         {
             return false;
@@ -345,10 +345,10 @@ fn generate_function_assertion_for_identifier(
         .iter()
         .map(|p| {
             let mut tt = cpp_type_name::format_cpp_type_with_references(
-                &db.rs_type_kind(p.type_.clone())?,
+                &db.rs_type_kind(p.type_().clone())?,
                 db,
             )?;
-            if p.type_.is_const() {
+            if p.type_().is_const() {
                 tt = quote! { #tt const };
             }
             Ok(tt)
@@ -410,7 +410,7 @@ fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
     let [_, other] = &func.params[..] else {
         return false;
     };
-    let CcTypeVariant::Pointer(ptr) = other.type_.variant() else {
+    let CcTypeVariant::Pointer(ptr) = other.type_().variant() else {
         return false;
     };
     if ptr.kind() != PointerTypeKind::LValueRef {
@@ -479,7 +479,7 @@ pub fn generate_function_thunk_impl(
     let mut param_idents = func
         .params
         .iter()
-        .map(|p| format_nonportable_cc_ident(p.identifier.as_str()))
+        .map(|p| format_nonportable_cc_ident(p.identifier().as_str()))
         .collect::<Result<Vec<_>>>()?;
 
     let mut conversion_stmts = quote! {};
@@ -487,10 +487,10 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let arg_type = db.rs_type_kind(p.type_.clone())?;
+            let arg_type = db.rs_type_kind(p.type_().clone())?;
             let cpp_type = cpp_type_name::format_cpp_type(&arg_type, db)?;
             if arg_type.is_bridge_type() {
-                let ident = format_nonportable_cc_ident(p.identifier.as_str())?;
+                let ident = format_nonportable_cc_ident(p.identifier().as_str())?;
                 let crubit_abi_type = db.crubit_abi_type(arg_type)?;
                 let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
                 let decoder = format_ident!("__{ident}_decoder");
@@ -511,8 +511,8 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let ident = format_nonportable_cc_ident(p.identifier.as_str())?;
-            match p.type_.variant() {
+            let ident = format_nonportable_cc_ident(p.identifier().as_str())?;
+            match p.type_().variant() {
                 CcTypeVariant::Pointer(pointer) => match pointer.kind() {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
                     PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
@@ -528,7 +528,7 @@ pub fn generate_function_thunk_impl(
                     }
                 }
                 _ => {
-                    let rs_type_kind = db.rs_type_kind(p.type_.clone())?;
+                    let rs_type_kind = db.rs_type_kind(p.type_().clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
                     match rs_type_kind.passing_convention() {
                         PassingConvention::ComposablyBridged => {
@@ -602,7 +602,7 @@ pub fn generate_function_thunk_impl(
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
 
-            let this_arg = format_nonportable_cc_ident(this_param.identifier.as_str())?;
+            let this_arg = format_nonportable_cc_ident(this_param.identifier().as_str())?;
             let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
                 quote! {std::move(*#this_arg).}
             } else {

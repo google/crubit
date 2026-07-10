@@ -962,7 +962,7 @@ fn issue_unsafe_constructor_errors(
 
             // We skip the first parameter because it's the implicit `this` parameter.
             // Constructors of unsafe types are not automatically considered unsafe.
-            let param_names = func.params.iter().map(|p| &p.identifier);
+            let param_names = func.params.iter().map(|p| p.identifier());
             let unsafe_params = param_names
                 .zip(param_types)
                 .skip(1)
@@ -1388,7 +1388,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
-            lifetime: new_lifetime_param(func_param.identifier.as_str().to_string()),
+            lifetime: new_lifetime_param(func_param.identifier().as_str().to_string()),
         };
     }
 }
@@ -1702,7 +1702,7 @@ fn rs_type_kinds_for_func(
         .iter()
         .enumerate()
         .filter_map(|(i, param)| {
-            let mut param_type = param.type_.clone();
+            let mut param_type = param.type_().clone();
             let mut infer_param_lifetimes = infer_lifetimes;
             if i == 0 && func.is_instance_method() {
                 if !func.cc_name.is_constructor() && !func.cc_name.is_destructor()
@@ -1877,7 +1877,7 @@ pub fn generate_function(
         errors.consolidate()?;
     }
     let param_idents =
-        func.params.iter().map(|p| make_rs_ident(p.identifier.as_str())).collect_vec();
+        func.params.iter().map(|p| make_rs_ident(p.identifier().as_str())).collect_vec();
 
     // Skip thunk generation if the function is a method on a public base class,
     // as the base class thunk will already have been generated.
@@ -3097,7 +3097,7 @@ fn move_self_from_out_param_to_return_value(
     param_types.remove(0);
     // TODO(b/475407556): The __this lifetime is at least still valid if there are [[lifetimebound]]
     // parameters.
-    if func.params.iter().any(|p| p.identifier != "__this" && p.clang_lifetimebound) {
+    if func.params.iter().any(|p| p.identifier() != "__this" && p.clang_lifetimebound()) {
         return Ok(());
     }
 
@@ -3176,7 +3176,7 @@ fn has_copy_assignment_operator_from_const_reference(
     let [_self, first_param] = &copy_constructor.params[..] else {
         return false;
     };
-    let first_param_type = db.rs_type_kind(first_param.type_.clone());
+    let first_param_type = db.rs_type_kind(first_param.type_().clone());
     if first_param_type.is_err() {
         return false;
     };
@@ -3197,7 +3197,7 @@ fn has_copy_assignment_operator_from_const_reference(
             let operator_equals = matches!(&func.cc_name,
                     UnqualifiedIdentifier::Operator(op) if op.name() == "=");
             let same_as_self = matches!(&func.params[..],
-                    [_self, other] if db.rs_type_kind(other.type_.clone()) == first_param_type);
+                    [_self, other] if db.rs_type_kind(other.type_().clone()) == first_param_type);
             operator_equals && same_as_self
         })
 }

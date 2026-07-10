@@ -283,7 +283,7 @@ fn func_has_bindings(
     }
 
     let mut visibility = Visibility::Public;
-    let sig_types = func.params.iter().map(|p| &p.type_).chain(std::iter::once(&func.return_type));
+    let sig_types = func.params.iter().map(|p| p.type_()).chain(std::iter::once(&func.return_type));
     for sig_type in sig_types {
         let rs_type_kind = db.rs_type_kind(sig_type.clone()).unwrap();
         match type_visibility(db, &func, rs_type_kind) {
