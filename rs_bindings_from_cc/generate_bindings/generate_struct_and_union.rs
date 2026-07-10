@@ -65,7 +65,7 @@ pub fn generate_incomplete_record(
         .unwrap_or_default()
         .visibility;
     let features = db.ir().target_crubit_features(&incomplete_record.owning_target);
-    let cc_type = format_nonportable_cc_type_name(incomplete_record.cc_name.identifier.as_ref())
+    let cc_type = format_nonportable_cc_type_name(incomplete_record.cc_name.as_str())
         .expect("IncompleteRecord has invalid type name");
     let namespace_qualifier = db.namespace_qualifier(&incomplete_record).format_for_cc(features)?;
     Ok(ApiSnippets {
@@ -73,7 +73,7 @@ pub fn generate_incomplete_record(
             incomplete_record.id,
             GeneratedItem::ForwardDeclare {
                 visibility,
-                ident: make_rs_ident(incomplete_record.rs_name.identifier.as_ref()),
+                ident: make_rs_ident(incomplete_record.rs_name.as_str()),
                 symbol: quote! {#namespace_qualifier #cc_type}.to_string(),
             },
         )]),
@@ -84,7 +84,7 @@ pub fn generate_incomplete_record(
 fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
     match field.rust_identifier.as_ref() {
         None => make_rs_ident(&format!("__unnamed_field{}", field_index)),
-        Some(Identifier { identifier }) => make_rs_ident(identifier),
+        Some(ident) => make_rs_ident(ident.as_str()),
     }
 }
 
@@ -409,7 +409,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
 
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
-    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
+    let ident = make_rs_ident(record.rs_name.as_str());
     let namespace_qualifier = db.namespace_qualifier(&record).format_for_rs();
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
@@ -453,7 +453,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
                     }
                 },
                 description: vec![BitfieldComment {
-                    field_name: field.rust_identifier.as_ref().map(|i| i.identifier.clone()),
+                    field_name: field.rust_identifier.as_ref().map(|i| Rc::from(i.as_str())),
                     bits: size,
                 }],
             })
@@ -898,7 +898,7 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
             assert_eq!(field.offset % 8, 0);
             let expected_offset = field.offset / 8;
             let field_ident =
-                format_nonportable_cc_type_name(&field.cpp_identifier.as_ref()?.identifier)
+                format_nonportable_cc_type_name(field.cpp_identifier.as_ref()?.as_str())
                     .expect("field has invalid type name");
             Some((field_ident, expected_offset))
         })
@@ -915,7 +915,7 @@ fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result
     Ok(ThunkImpl::LayoutAssertion {
         tag_kind: if record.is_canonical_alias { None } else { Some(record.record_type) },
         namespace_qualifier,
-        record_ident: record.cc_name.identifier.clone(),
+        record_ident: Rc::from(record.cc_name.as_str()),
         sizeof_impl,
         size: record.size_align.size(),
         alignment: record.size_align.alignment(),
@@ -959,11 +959,11 @@ fn cc_struct_no_unique_address_impl(
                 None
             },
             field: make_rs_ident(
-                &field
+                field
                     .rust_identifier
                     .as_ref()
                     .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
-                    .identifier,
+                    .as_str(),
             ),
             type_: type_ident.to_token_stream(db),
             byte_offset: field.offset / 8,

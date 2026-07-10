@@ -860,7 +860,7 @@ fn api_func_shape_for_identifier(
         SafetyAnnotation::DisableUnsafe => false,
     };
 
-    let func_name = make_rs_ident(&id.identifier);
+    let func_name = make_rs_ident(id.as_str());
     let Some(record) = maybe_record else { return (func_name, ImplKind::None { is_unsafe }) };
     let is_renamed_unpin_constructor = func.cc_name.is_constructor() && record.is_unpin();
     let format_first_param_as_self = if func.is_instance_method() {
@@ -1392,7 +1392,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
-            lifetime: new_lifetime_param(func_param.identifier.identifier.to_string()),
+            lifetime: new_lifetime_param(func_param.identifier.as_str().to_string()),
         };
     }
 }
@@ -1881,7 +1881,7 @@ pub fn generate_function(
         errors.consolidate()?;
     }
     let param_idents =
-        func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
+        func.params.iter().map(|p| make_rs_ident(p.identifier.as_str())).collect_vec();
 
     // Skip thunk generation if the function is a method on a public base class,
     // as the base class thunk will already have been generated.
@@ -2103,7 +2103,7 @@ pub fn generate_function(
                 return Ok(None);
             }
 
-            let record_name = make_rs_ident(target_record.rs_name.identifier.as_ref());
+            let record_name = make_rs_ident(target_record.rs_name.as_str());
             let fn_generic_params =
                 format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
 
@@ -2292,7 +2292,7 @@ pub fn generate_function(
                     trait_record.lifetime_inputs.iter().map(|id| Lifetime::new(id)).collect();
             }
 
-            let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
+            let record_name = make_rs_ident(trait_record.rs_name.as_str());
             let qualified_record_name = if Some(trait_record.id) == func.enclosing_item_id {
                 quote! { #record_name }
             } else {

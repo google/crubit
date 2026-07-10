@@ -1146,7 +1146,7 @@ fn test_doc_comment() -> Result<()> {
     )?;
     let comments: HashMap<_, _> = ir
         .records()
-        .map(|r| (r.rs_name.identifier.as_ref(), r.doc_comment.as_ref().unwrap().as_ref()))
+        .map(|r| (r.rs_name.as_str(), r.doc_comment.as_ref().unwrap().as_ref()))
         .collect();
 
     assert_eq!(comments["DocCommentSlashes"], "Doc comment\n\n * with three slashes");
@@ -1198,7 +1198,7 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
         .functions()
         .map(|f| {
             if let UnqualifiedIdentifier::Identifier(id) = &f.rs_name {
-                (id.identifier.as_ref(), f.doc_comment.as_deref())
+                (id.as_str(), f.doc_comment.as_deref())
             } else {
                 panic!("No constructors/destructors expected in this test.")
             }
@@ -1552,14 +1552,8 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     )?;
 
     // Verify that there is only 1 record for each specialization.
-    assert_eq!(
-        1,
-        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<int>").count()
-    );
-    assert_eq!(
-        1,
-        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<float>").count()
-    );
+    assert_eq!(1, ir.records().filter(|r| r.cc_name.as_str() == "MyStruct<int>").count());
+    assert_eq!(1, ir.records().filter(|r| r.cc_name.as_str() == "MyStruct<float>").count());
     let functions = ir
         .functions()
         .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
@@ -1599,8 +1593,8 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
         .top_level_items()
         .iter()
         .filter_map(|item| match item {
-            ir::Item::Record(r) if r.rs_name.identifier.contains("__CcTemplateInst") => {
-                Some(r.rs_name.identifier.as_ref())
+            ir::Item::Record(r) if r.rs_name.as_str().contains("__CcTemplateInst") => {
+                Some(r.rs_name.as_str())
             }
             _ => None,
         })
@@ -1619,7 +1613,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     let method_mangled_names = ir
         .functions()
         .filter_map(|f| match &f.rs_name {
-            UnqualifiedIdentifier::Identifier(id) if id.identifier.as_ref() == "MyMethod" => {
+            UnqualifiedIdentifier::Identifier(id) if id.as_str() == "MyMethod" => {
                 Some(f.mangled_name.as_ref())
             }
             _ => None,
@@ -1674,14 +1668,14 @@ fn test_templates_inheritance() -> Result<()> {
     assert_eq!(
         1,
         ir.records()
-            .filter(|r| r.cc_name.identifier.contains("ClassTemplateDerivedFromClassTemplate"))
+            .filter(|r| r.cc_name.as_str().contains("ClassTemplateDerivedFromClassTemplate"))
             .count()
     );
 
     // BaseTemplate is *not* instantiated in the generated bindings/IR.  The derived
     // class's bindings work fine without the bindings for the base class (this
     // is also true for non-templated base/derived classes).
-    assert_eq!(0, ir.records().filter(|r| r.cc_name.identifier.contains("BaseTemplate")).count());
+    assert_eq!(0, ir.records().filter(|r| r.cc_name.as_str().contains("BaseTemplate")).count());
     Ok(())
 }
 
@@ -2703,8 +2697,7 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
 #[gtest]
 fn test_dont_import_injected_class_name() {
     let ir = ir_from_cc("struct SomeStruct {};").unwrap();
-    let names =
-        ir.records().map(|r| r.rs_name.identifier.as_ref()).filter(|n| n.contains("SomeStruct"));
+    let names = ir.records().map(|r| r.rs_name.as_str()).filter(|n| n.contains("SomeStruct"));
     // we support nested structs, so we should not emit record for injected class name
     assert_eq!(names.count(), 1);
 }
@@ -2797,7 +2790,7 @@ fn test_class() {
 #[gtest]
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
-    assert!(!ir.records().any(|r| r.rs_name.identifier.as_ref() == "Struct"));
+    assert!(!ir.records().any(|r| r.rs_name.as_str() == "Struct"));
 }
 
 #[gtest]
@@ -2812,7 +2805,7 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
 
     assert_eq!(1, ir.namespaces().count());
     let ns = ir.namespaces().next().unwrap();
-    assert_eq!("MyNamespace", ns.rs_name.identifier.as_ref());
+    assert_eq!("MyNamespace", ns.rs_name.as_str());
     assert_eq!(1, ns.children.len());
 
     let ns_id = ns.id;
@@ -2927,8 +2920,7 @@ fn test_member_function_params() {
         .functions()
         .find(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("Foo")))
         .unwrap();
-    let param_names: Vec<_> =
-        foo_func.params.iter().map(|p| p.identifier.identifier.as_ref()).collect();
+    let param_names: Vec<_> = foo_func.params.iter().map(|p| p.identifier.as_str()).collect();
     assert_eq!(param_names, vec!["__this", "x", "y"]);
 }
 
@@ -2938,10 +2930,8 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     mut func_predicate: F,
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
 ) {
-    let record = ir
-        .records()
-        .find(|r| r.rs_name.identifier.as_ref() == record_name)
-        .expect("Struct not found");
+    let record =
+        ir.records().find(|r| r.rs_name.as_str() == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(f)).expect("Function not found");
     assert_eq!(function.enclosing_item_id, Some(record.id));
     assert_eq!(&function.instance_method_metadata, expected_metadata);
@@ -3129,9 +3119,7 @@ fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {
 fn test_identifier_function_name() {
     assert_eq!(
         get_func_names("void Function();"),
-        vec![ir::UnqualifiedIdentifier::Identifier(ir::Identifier {
-            identifier: "Function".into()
-        })],
+        vec![ir::UnqualifiedIdentifier::Identifier(ir_id("Function"))],
     );
 }
 
@@ -3247,7 +3235,7 @@ fn test_elided_lifetimes() {
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let r = ir.records().next().expect("IR should contain `struct S`");
-    assert_eq!(r.rs_name.identifier.as_ref(), "S");
+    assert_eq!(r.rs_name.as_str(), "S");
     assert!(r.is_trivial_abi);
 
     let f = ir
@@ -3284,7 +3272,7 @@ fn test_operator_names() {
         .filter_map(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
             let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id?).ok()?;
-            if r.rs_name.identifier.as_ref() != "SomeStruct" {
+            if r.rs_name.as_str() != "SomeStruct" {
                 return None;
             }
 
@@ -3758,7 +3746,7 @@ fn test_enclosing_item_ids() {
         .iter()
         .all(|item| item.enclosing_item_id() == Some(inner_namespace.id)));
 
-    let record = ir.records().find(|r| r.rs_name.identifier.as_ref() == "S").unwrap();
+    let record = ir.records().find(|r| r.rs_name.as_str() == "S").unwrap();
     let record_items: Vec<&Item> = record.children.iter().collect_vec();
     for item in record_items.iter() {
         match item {

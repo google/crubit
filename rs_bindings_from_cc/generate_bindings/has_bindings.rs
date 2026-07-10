@@ -136,7 +136,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
                                 db.find_decl::<Rc<Record>>(parent_record_id)
                                     .unwrap()
                                     .rs_name
-                                    .identifier
+                                    .as_str()
                                     .to_string()
                             })
                             .collect(),
@@ -515,43 +515,43 @@ pub fn resolve_names(
             match item {
                 Item::IncompleteRecord(incomplete_record) => {
                     insert(
-                        incomplete_record.rs_name.identifier.clone(),
+                        Rc::from(incomplete_record.rs_name.as_str()),
                         ResolvedName::ExplicitItem(id),
                     );
                 }
                 Item::Record(record) => {
-                    insert(record.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(record.rs_name.as_str()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Enum(enum_) => {
-                    insert(enum_.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id))
+                    insert(Rc::from(enum_.rs_name.as_str()), ResolvedName::ExplicitItem(id))
                 }
                 Item::TypeAlias(type_alias) => {
-                    insert(type_alias.rs_name.identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(type_alias.rs_name.as_str()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Namespace(ns) => {
                     insert(
-                        ns.rs_name.identifier.clone(),
+                        Rc::from(ns.rs_name.as_str()),
                         ResolvedName::Namespace {
                             canonical_namespace_id: ns.canonical_namespace_id,
                         },
                     );
                 }
                 Item::UseMod(use_mod) => {
-                    insert(use_mod.mod_name().identifier.clone(), ResolvedName::ExplicitItem(id));
+                    insert(Rc::from(use_mod.mod_name().as_str()), ResolvedName::ExplicitItem(id));
                 }
                 Item::ExistingRustType(existing_rust_type) => {
                     insert(existing_rust_type.rs_name.clone(), ResolvedName::ExplicitItem(id));
                 }
                 Item::Func(func) => {
                     if let ir::UnqualifiedIdentifier::Identifier(ident) = &func.rs_name {
-                        insert(ident.identifier.clone(), ResolvedName::ValueItem(id));
+                        insert(Rc::from(ident.as_str()), ResolvedName::ValueItem(id));
                     }
                 }
                 Item::Constant(constant) => {
-                    insert(constant.rs_name().identifier.clone(), ResolvedName::ValueItem(id));
+                    insert(Rc::from(constant.rs_name().as_str()), ResolvedName::ValueItem(id));
                 }
                 Item::GlobalVar(global_var) => {
-                    insert(global_var.rs_name().identifier.clone(), ResolvedName::ValueItem(id));
+                    insert(Rc::from(global_var.rs_name().as_str()), ResolvedName::ValueItem(id));
                 }
                 Item::Comment(_) | Item::UnsupportedItem(_) => {}
             }
@@ -567,10 +567,10 @@ pub fn resolve_names(
                 .iter()
                 .any(|child| child.place_in_nested_module_if_nested_in_record());
             if make_module_for_nested_items {
-                let mut name = record.rs_name.identifier.as_ref().to_snake_case();
+                let mut name = record.rs_name.as_str().to_snake_case();
 
                 // Disambiguation logic
-                if name == record.rs_name.identifier.as_ref() {
+                if name == record.rs_name.as_str() {
                     name = format!("{}_items", name);
                 }
 

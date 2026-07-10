@@ -599,7 +599,7 @@ fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
     // const-ref + lifetimes in C++  ===>  shared-ref in Rust
     assert_eq!(foo_func.params.len(), 1);
     let foo_param = &foo_func.params[0];
-    assert_eq!(foo_param.identifier.identifier.as_ref(), "foo_param");
+    assert_eq!(foo_param.identifier.as_str(), "foo_param");
     let foo_type = db.rs_type_kind(foo_param.type_.clone())?;
     assert!(foo_type.is_shared_ref_to(record));
     assert!(matches!(foo_type, RsTypeKind::Reference { mutability: Mutability::Const, .. }));
@@ -607,7 +607,7 @@ fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
     // non-const-ref + lifetimes in C++  ===>  mutable-ref in Rust
     assert_eq!(bar_func.params.len(), 1);
     let bar_param = &bar_func.params[0];
-    assert_eq!(bar_param.identifier.identifier.as_ref(), "bar_param");
+    assert_eq!(bar_param.identifier.as_str(), "bar_param");
     let bar_type = db.rs_type_kind(bar_param.type_.clone())?;
     assert!(!bar_type.is_shared_ref_to(record));
     assert!(matches!(bar_type, RsTypeKind::Reference { mutability: Mutability::Mut, .. }));
@@ -628,7 +628,7 @@ fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
     // const-ref + *no* lifetimes in C++  ===>  const-pointer in Rust
     assert_eq!(foo_func.params.len(), 1);
     let foo_param = &foo_func.params[0];
-    assert_eq!(foo_param.identifier.identifier.as_ref(), "foo_param");
+    assert_eq!(foo_param.identifier.as_str(), "foo_param");
     let foo_type = db.rs_type_kind(foo_param.type_.clone())?;
     assert!(!foo_type.is_shared_ref_to(record));
     assert!(matches!(foo_type, RsTypeKind::Pointer { mutability: Mutability::Const, .. }));

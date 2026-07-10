@@ -23,10 +23,10 @@ use std::rc::Rc;
 pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Type);
     let features = db.ir().target_crubit_features(&enum_.owning_target);
-    let ident = format_nonportable_cc_ident(&enum_.cc_name.identifier)?;
+    let ident = format_nonportable_cc_ident(enum_.cc_name.as_str())?;
     let namespace_qualifier = db.namespace_qualifier(&enum_).format_for_cc(features)?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident };
-    let name = make_rs_ident(&enum_.rs_name.identifier);
+    let name = make_rs_ident(enum_.rs_name.as_str());
     let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
 
     let enumerators: TokenStream = enum_
@@ -37,7 +37,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
             let omitting_bindings_comment = |reason: String| {
                 let comment = format!(
                     "Omitting bindings for {ident}\nreason: {reason}",
-                    ident = &enumerator.identifier.identifier
+                    ident = enumerator.identifier.as_str()
                 );
                 quote! {
                     __COMMENT__ #comment
@@ -46,7 +46,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
             if let Some(unknown_attr) = &enumerator.unknown_attr {
                 return omitting_bindings_comment(format!("unknown attribute(s): {unknown_attr}"));
             }
-            let ident = make_rs_ident(&enumerator.identifier.identifier);
+            let ident = make_rs_ident(enumerator.identifier.as_str());
             let value =
                 match integer_constant_to_token_stream(db, enumerator.value, &underlying_type) {
                     Ok(value) => value,

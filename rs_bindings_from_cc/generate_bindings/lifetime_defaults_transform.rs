@@ -556,7 +556,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     bail!(
                         "lifetimebound: lifetime mismatch in function {:#?} between parameter {:#?} with lifetime {:#?} and return with lifetime {:#?}",
                         &func.cc_name,
-                        &param.identifier.identifier,
+                        param.identifier.as_str(),
                         param.type_.explicit_lifetimes(),
                         &return_lifetime
                     );
@@ -667,12 +667,13 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             // `this` in a constructor is strange. The !is_constructor restriction fixes some
             // situations where we would bind a `'__this` in a constructor and then not use it
             // (because the actual `__this` is a void*).
-            let is_this = ix == 0 && &*param.identifier.identifier == "__this" && !is_constructor;
+            let is_this = ix == 0 && param.identifier.as_str() == "__this" && !is_constructor;
             had_this |= is_this;
+            let name_hint = Rc::from(param.identifier.as_str());
             let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
                 self.add_lifetime_to_input_type(
                     is_this,
-                    Some(&param.identifier.identifier),
+                    Some(&name_hint),
                     &mut new_func.lifetime_inputs,
                     &param.type_,
                 )?;

@@ -180,7 +180,7 @@ fn generate_type_alias(
             db.kythe_annotations(),
         ),
         visibility: db.type_visibility(&type_alias.owning_target, rs_type_kind).unwrap_or_default(),
-        ident: make_rs_ident(&type_alias.rs_name.identifier),
+        ident: make_rs_ident(type_alias.rs_name.as_str()),
         underlying_type: underlying_type.to_token_stream(db),
         underlying_nested_module_path,
         deprecated_attr: type_alias.deprecated.clone().map(DeprecatedAttr),
@@ -1213,8 +1213,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
             })
         }
         RsTypeKind::Enum { ref enum_, .. } => {
-            let cpp_type =
-                make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name.identifier.as_ref(), db)?;
+            let cpp_type = make_cpp_type_from_item(enum_.as_ref(), enum_.cc_name.as_str(), db)?;
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
@@ -1301,7 +1300,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 // Rust message types are exported to crate root, but we need the full namespace for the C++ ABI.
                 let merged_cpp_abi_path = cpp_namespace_qualifier.parts().join("::")
                     + "::"
-                    + original_type.cc_name.identifier.as_ref();
+                    + original_type.cc_name.as_str();
 
                 Ok(CrubitAbiType::ProtoMessage {
                     proto_message_rust_bridge: rust_abi_path,
@@ -1452,10 +1451,10 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
 
             // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
             // except that it creates an Ident instead of a TokenStream.
-            code_gen_utils::check_valid_cc_name(&record.cc_name.identifier)
+            code_gen_utils::check_valid_cc_name(record.cc_name.as_str())
                 .expect("IR should only contain valid C++ types");
 
-            let cpp_type = make_cpp_type_from_item(record, record.cc_name.identifier.as_ref(), db)?;
+            let cpp_type = make_cpp_type_from_item(record, record.cc_name.as_str(), db)?;
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }

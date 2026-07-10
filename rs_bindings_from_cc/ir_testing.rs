@@ -152,7 +152,7 @@ pub fn ir_from_cc_dependency(
 
 /// Creates an identifier
 pub fn ir_id(name: &str) -> Identifier {
-    Identifier { identifier: name.into() }
+    Identifier::new(name)
 }
 
 /// Creates a simple `Item::Record` with a given name.
@@ -161,8 +161,8 @@ pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Recor
     for item in ir.items() {
         if let Item::Record(record) = item {
             let mut record = (**record).clone();
-            record.rs_name = Identifier { identifier: name.into() };
-            record.cc_name = Identifier { identifier: name.into() };
+            record.rs_name = Identifier::new(name);
+            record.cc_name = Identifier::new(name);
             return record;
         }
     }

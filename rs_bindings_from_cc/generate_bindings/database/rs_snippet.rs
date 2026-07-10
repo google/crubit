@@ -810,7 +810,7 @@ impl BridgeRsTypeKind {
                         } else {
                             return Err(anyhow!(
                             "Internal error: template argument arity mismatch for bridge type `{}`",
-                            record.rs_name.identifier.as_ref(),
+                            record.rs_name.as_str(),
                         ));
                         }
                     }
@@ -847,7 +847,7 @@ impl BridgeRsTypeKind {
                         ir::BackingType::AnyInvocable => BackingType::AnyInvocable {
                             invoke_any_invocable_ident: format_ident!(
                                 "__crubit_invoke_any_invocable_{}{target_identifier}",
-                                record.rs_name.identifier.as_ref(),
+                                record.rs_name.as_str(),
                             ),
                         },
                     },
@@ -874,12 +874,12 @@ impl BridgeRsTypeKind {
                         .collect::<Result<_>>()?,
                     invoker_ident: format_ident!(
                         "__crubit_invoker_{}{}",
-                        record.rs_name.identifier.as_ref(),
+                        record.rs_name.as_str(),
                         target_identifier,
                     ),
                     manager_ident: format_ident!(
                         "__crubit_manager_{}{}",
-                        record.rs_name.identifier.as_ref(),
+                        record.rs_name.as_str(),
                         target_identifier,
                     ),
                 }))
@@ -2032,7 +2032,7 @@ impl RsTypeKind {
                 tokens
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
-                let record_ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
+                let record_ident = make_rs_ident(incomplete_record.rs_name.as_str());
                 quote! { #crate_path #record_ident }
             }
             RsTypeKind::Record {
@@ -2054,22 +2054,22 @@ impl RsTypeKind {
                     } else {
                         quote! { <#( #lifetimes ),* > }
                     };
-                    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
+                    let ident = make_rs_ident(record.rs_name.as_str());
                     quote! { #crate_path #ident #lts }
                 } else {
                     // Until we can get unsafe binders, the unsafe projection of a type with
                     // lifetime parameters is that type instantiated at all 'static.
                     let statics = std::iter::repeat_n(make_rs_lifetime_ident("static"), arity);
-                    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
+                    let ident = make_rs_ident(record.rs_name.as_str());
                     quote! { #crate_path #ident <#( #statics ),* > }
                 }
             }
             RsTypeKind::Enum { enum_, crate_path } => {
-                let ident = make_rs_ident(&enum_.rs_name.identifier);
+                let ident = make_rs_ident(enum_.rs_name.as_str());
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
-                let mut ident = make_rs_ident(&type_alias.rs_name.identifier);
+                let mut ident = make_rs_ident(type_alias.rs_name.as_str());
                 let mut crate_path = crate_path.clone();
                 // Check to see if the underlying type is a special template specialization kind
                 // that we need to use an alternate name for if lifetimes are provided.
@@ -2488,8 +2488,8 @@ mod tests {
 
         let enum_ = RsTypeKind::Enum {
             enum_: Rc::new(Enum {
-                cc_name: Identifier { identifier: "MyEnum".into() },
-                rs_name: Identifier { identifier: "MyEnum".into() },
+                cc_name: Identifier::new("MyEnum"),
+                rs_name: Identifier::new("MyEnum"),
                 unique_name: "MyEnum".into(),
                 mangled_cc_name: "6MyEnum".into(),
                 id: ItemId::new_for_testing(0),
@@ -2520,8 +2520,8 @@ mod tests {
     fn make_incomplete_record() -> RsTypeKind {
         RsTypeKind::IncompleteRecord {
             incomplete_record: Rc::new(IncompleteRecord {
-                cc_name: Identifier { identifier: "MyStruct".into() },
-                rs_name: Identifier { identifier: "MyStruct".into() },
+                cc_name: Identifier::new("MyStruct"),
+                rs_name: Identifier::new("MyStruct"),
                 unique_name: "MyStruct".into(),
                 id: ItemId::new_for_testing(0),
                 owning_target: BazelLabel::from("//foo/bar"),
@@ -2545,8 +2545,8 @@ mod tests {
     fn test_alias_incomplete_record_only_allowed_behind_single_element_ptr() {
         let alias_incomplete_record = RsTypeKind::TypeAlias {
             type_alias: Rc::new(TypeAlias {
-                cc_name: Identifier { identifier: "MyAlias".into() },
-                rs_name: Identifier { identifier: "MyAlias".into() },
+                cc_name: Identifier::new("MyAlias"),
+                rs_name: Identifier::new("MyAlias"),
                 unique_name: "MyAlias".into(),
                 id: ItemId::new_for_testing(1),
                 owning_target: BazelLabel::from("//foo/bar"),

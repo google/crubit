@@ -682,10 +682,14 @@ impl TypeWithDeclId for CcType {
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Identifier {
-    pub identifier: Rc<str>,
+    pub(crate) identifier: Rc<str>,
 }
 
 impl Identifier {
+    pub fn new(identifier: impl Into<Rc<str>>) -> Self {
+        Self { identifier: identifier.into() }
+    }
+
     pub fn as_str(&self) -> &str {
         &self.identifier
     }

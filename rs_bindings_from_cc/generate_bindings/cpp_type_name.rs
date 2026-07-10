@@ -41,7 +41,7 @@ pub fn cpp_tagless_type_name_for_record(
     db: &BindingsGenerator<'_>,
 ) -> Result<TokenStream> {
     let features = db.ir().target_crubit_features(&record.owning_target);
-    let ident = format_nonportable_cc_type_name(record.cc_name.identifier.as_ref())?;
+    let ident = format_nonportable_cc_type_name(record.cc_name.as_str())?;
     let namespace_qualifier = db.namespace_qualifier(record).format_for_cc(features)?;
     Ok(quote! { #namespace_qualifier #ident })
 }
@@ -154,20 +154,19 @@ pub fn tagless_cpp_type_name_for_item(
         item.owning_target().map(|t| db.ir().target_crubit_features(&t)).unwrap_or_default();
     match item {
         Item::IncompleteRecord(incomplete_record) => {
-            let ident =
-                format_nonportable_cc_type_name(incomplete_record.cc_name.identifier.as_ref())?;
+            let ident = format_nonportable_cc_type_name(incomplete_record.cc_name.as_str())?;
             let namespace_qualifier =
                 db.namespace_qualifier(incomplete_record).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::Record(record) => cpp_tagless_type_name_for_record(record, db),
         Item::Enum(enum_) => {
-            let ident = format_nonportable_cc_type_name(&enum_.rs_name.identifier)?;
+            let ident = format_nonportable_cc_type_name(enum_.rs_name.as_str())?;
             let namespace_qualifier = db.namespace_qualifier(item).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
-            let ident = format_nonportable_cc_type_name(&type_alias.cc_name.identifier)?;
+            let ident = format_nonportable_cc_type_name(type_alias.cc_name.as_str())?;
             let namespace_qualifier = db.namespace_qualifier(item).format_for_cc(features)?;
             Ok(quote! { #namespace_qualifier #ident })
         }
