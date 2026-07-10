@@ -905,6 +905,63 @@ NestedTupleStruct final {
 
 }  // namespace tuples
 
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "(u64 , u64 ,)") rs_std::Tuple<::std::uint64_t, ::std::uint64_t> {
+ public:
+  // Default::default
+  Tuple();
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Tuple(const Tuple&) = default;
+  Tuple& operator=(const Tuple&) = default;
+  Tuple(Tuple&&) = default;
+  Tuple& operator=(Tuple&&) = default;
+
+  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  Tuple(std::tuple<::std::uint64_t, ::std::uint64_t>&& tuple) noexcept;
+  ~Tuple() = default;
+  operator std::tuple<::std::uint64_t, ::std::uint64_t>() && noexcept;
+
+ private:
+  unsigned char storage_[16];
+};
+#endif
+
+namespace tuples {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TuplesWithU64") alignas(8)
+    [[clang::trivial_abi]] TuplesWithU64 final {
+ public:
+  // `tuples_golden::TuplesWithU64` doesn't implement the `Default` trait
+  TuplesWithU64() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~TuplesWithU64() = default;
+  TuplesWithU64(TuplesWithU64&&) = default;
+  TuplesWithU64& operator=(TuplesWithU64&&) = default;
+
+  // `tuples_golden::TuplesWithU64` doesn't implement the `Clone` trait
+  TuplesWithU64(const TuplesWithU64&) = delete;
+  TuplesWithU64& operator=(const TuplesWithU64&) = delete;
+  TuplesWithU64(::crubit::UnsafeRelocateTag, TuplesWithU64&& value) {
+    ::std::memcpy(this, &value, sizeof(value));
+  }
+  union {
+    rs_std::Tuple<::std::uint64_t, ::std::uint64_t> u64_in_tuple1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace tuples
+
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 template <>
@@ -2024,6 +2081,19 @@ inline void TupleWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(32 == offsetof(TupleWithSizeTypes, ival_in_tuple1));
   static_assert(48 == offsetof(TupleWithSizeTypes, ival_in_tuple2));
 }
+static_assert(
+    sizeof(TuplesWithU64) == 16,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(TuplesWithU64) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<TuplesWithU64>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::tuples::TuplesWithU64>);
+static_assert(::std::is_trivially_move_assignable_v<::tuples::TuplesWithU64>);
+inline void TuplesWithU64::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(TuplesWithU64, u64_in_tuple1));
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_assert_unontrivial_udrop_ucount(::std::uint8_t);
 }
@@ -2938,6 +3008,42 @@ inline rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::operator std::tuple<
   return std::tuple<::std::uint32_t, ::std::uint32_t>(
       std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 0)),
       std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 4)));
+}
+
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020u64_x00000029(
+    rs_std::Tuple<::std::uint64_t, ::std::uint64_t>* __ret_ptr);
+}
+inline ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020u64_x00000029(
+          this);
+}
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>>);
+inline rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple(
+    std::tuple<::std::uint64_t, ::std::uint64_t>&& tuple) noexcept {
+  std::construct_at(reinterpret_cast<::std::uint64_t*>(storage_ + 0),
+                    std::move(std::get<0>(tuple)));
+  std::construct_at(reinterpret_cast<::std::uint64_t*>(storage_ + 8),
+                    std::move(std::get<1>(tuple)));
+}
+inline rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::operator std::tuple<
+    ::std::uint64_t, ::std::uint64_t>() && noexcept {
+  return std::tuple<::std::uint64_t, ::std::uint64_t>(
+      std::move(*reinterpret_cast<::std::uint64_t*>(storage_ + 0)),
+      std::move(*reinterpret_cast<::std::uint64_t*>(storage_ + 8)));
 }
 
 #endif

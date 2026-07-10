@@ -320,3 +320,7 @@ pub struct TupleWithSizeTypes {
     pub ival_in_tuple1: (isize, i8),
     pub ival_in_tuple2: (i8, isize),
 }
+
+pub struct TuplesWithU64 {
+    pub u64_in_tuple1: (u64, u64),
+}

@@ -217,13 +217,7 @@ fn parse_tuple_template_specialization<'tcx>(
     let tcx = db.tcx();
     let element_tys = types
         .iter()
-        .map(|ty| {
-            FormattedTy::try_from_ty(
-                replace_all_regions_with_static(tcx, ty),
-                TypeLocation::Other,
-                db,
-            )
-        })
+        .map(|ty| FormattedTy::try_from_ty(ty, TypeLocation::Field, db))
         .collect::<Result<Vec<_>>>()
         .ok()?;
 
@@ -232,11 +226,11 @@ fn parse_tuple_template_specialization<'tcx>(
         let mut prereqs = CcPrerequisites::default();
         let element_tys_cc = element_tys
             .iter()
-            .map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs))
+            .map(|ty| {
+                prereqs.forward_declare_type(ty.ty);
+                ty.for_cc.clone().into_tokens(&mut prereqs)
+            })
             .collect::<Vec<_>>();
-        for ty in types.iter() {
-            prereqs.forward_declare_type(ty);
-        }
         CcSnippet { tokens: quote! { rs_std::Tuple<#(#element_tys_cc),*> }, prereqs }
     };
     Some(Ok(RsStdTemplateSpecialization {
@@ -682,12 +676,8 @@ fn specialize_tuple<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let layout = rs_std.layout;
     let mut prereqs = CcPrerequisites::default();
-    let element_cc_tys = element_tys
-        .iter()
-        .map(|ty| {
-            db.format_ty_for_cc(ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs)
-        })
-        .collect_vec();
+    let element_cc_tys =
+        element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect_vec();
 
     let tuple_api = TupleApiGenerator {
         db,

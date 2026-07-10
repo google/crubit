@@ -253,6 +253,9 @@ const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleWithSizeTypes, ival_in_tuple1) == 32);
 const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleWithSizeTypes, ival_in_tuple2) == 48);
+const _: () = assert!(::std::mem::size_of::<::tuples_golden::TuplesWithU64>() == 16);
+const _: () = assert!(::std::mem::align_of::<::tuples_golden::TuplesWithU64>() == 8);
+const _: () = assert!(::core::mem::offset_of!(::tuples_golden::TuplesWithU64, u64_in_tuple1) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_assert_unontrivial_udrop_ucount(drop_count: u8) -> () {
     unsafe { ::tuples_golden::assert_nontrivial_drop_count(drop_count) }
@@ -729,6 +732,18 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x0
         let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
         (__ret_ptr_0 as *mut u32).write(__rs_return_value_0);
         (__ret_ptr_1 as *mut u32).write(__rs_return_value_1);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020u64_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <(u64, u64) as ::core::default::Default>::default();
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        (__ret_ptr_0 as *mut u64).write(__rs_return_value_0);
+        (__ret_ptr_1 as *mut u64).write(__rs_return_value_1);
     }
 }
 #[unsafe(no_mangle)]
