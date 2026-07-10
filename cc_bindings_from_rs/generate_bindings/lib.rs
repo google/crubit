@@ -852,6 +852,35 @@ fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&
         .all(|(sym, expected)| sym == expected)
 }
 
+#[rustversion::before(2026-07-09)]
+fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
+    matches!(
+        backend_repr,
+        BackendRepr::ScalarPair(
+            Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+            Scalar::Initialized {
+                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                ..
+            }
+        )
+    )
+}
+
+#[rustversion::since(2026-07-09)]
+fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
+    matches!(
+        backend_repr,
+        BackendRepr::ScalarPair {
+            a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+            b: Scalar::Initialized {
+                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                ..
+            },
+            ..
+        }
+    )
+}
+
 /// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
 fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
@@ -867,16 +896,7 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
 
     assert_eq!(ptr_align, layout.align().abi.bytes());
     assert_eq!(2 * ptr_size, layout.size().bytes());
-    assert!(matches!(
-        layout.backend_repr(),
-        BackendRepr::ScalarPair(
-            Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
-            Scalar::Initialized {
-                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
-                ..
-            }
-        )
-    ));
+    assert!(has_slice_layout_representation(layout.backend_repr()));
 }
 
 #[derive(Debug, Clone, PartialEq)]
