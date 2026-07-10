@@ -13,7 +13,7 @@ use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
     unique_lifetimes, Lifetime, LifetimeOptions, Mutability, PassingConvention, RsTypeKind,
 };
-use database::BindingsGenerator;
+use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
 use flagset::FlagSet;
@@ -573,6 +573,7 @@ fn api_func_shape_for_operator_lt(
 }
 
 fn api_func_shape_for_operator_assign(
+    db: &BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
@@ -597,10 +598,10 @@ fn api_func_shape_for_operator_assign(
             return None;
         }
 
-        trait_name = Rc::from("::ctor::UnpinAssign");
+        trait_name = intern!(db.interner(), "::ctor::UnpinAssign");
         func_name = make_rs_ident("unpin_assign");
     } else {
-        trait_name = Rc::from("::ctor::Assign");
+        trait_name = intern!(db.interner(), "::ctor::Assign");
         func_name = make_rs_ident("assign")
     };
 
@@ -771,7 +772,7 @@ fn api_func_shape_for_operator(
             None
         }
         "<" => api_func_shape_for_operator_lt(db, func, param_types, errors).ok(),
-        "=" => api_func_shape_for_operator_assign(func, maybe_record, param_types, errors),
+        "=" => api_func_shape_for_operator_assign(db, func, maybe_record, param_types, errors),
         "+" if param_types.len() == 1 => {
             api_func_shape_for_operator_unary_plus(db, &param_types[0], errors).ok()
         }
@@ -796,7 +797,7 @@ fn api_func_shape_for_operator(
                 let impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: Rc::from(format!("::core::ops::{trait_name}")),
+                        name: intern!(db.interner(), "::core::ops::{trait_name}"),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
@@ -815,7 +816,7 @@ fn api_func_shape_for_operator(
                 let impl_kind = ImplKind::Trait {
                     record,
                     trait_name: TraitName::Other {
-                        name: Rc::from(format!("::core::ops::{trait_name}")),
+                        name: intern!(db.interner(), "::core::ops::{trait_name}"),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
@@ -900,7 +901,7 @@ fn api_func_shape_for_destructor(
         let impl_kind = ImplKind::Trait {
             record: record.clone(),
             trait_name: TraitName::Other {
-                name: Rc::from("Drop"),
+                name: intern!(db.interner(), "Drop"),
                 params: Rc::from([]),
                 is_unsafe_fn: false,
             },
@@ -919,7 +920,7 @@ fn api_func_shape_for_destructor(
         let impl_kind = ImplKind::Trait {
             record: record.clone(),
             trait_name: TraitName::Other {
-                name: Rc::from("::ctor::PinnedDrop"),
+                name: intern!(db.interner(), "::ctor::PinnedDrop"),
                 params: Rc::from([]),
                 is_unsafe_fn: true,
             },
@@ -1160,7 +1161,7 @@ fn api_func_shape_for_conversion_operator(
                 }
                 // Movable foreign types, e.g. operator FrDst() const -> impl Into<FrDst> for &Src
                 let trait_name = TraitName::Other {
-                    name: Rc::from("::core::convert::Into"),
+                    name: intern!(db.interner(), "::core::convert::Into"),
                     params: Rc::new([return_type.clone()]),
                     is_unsafe_fn: false,
                 };
@@ -1204,7 +1205,7 @@ fn api_func_shape_for_conversion_operator(
                 return None;
             }
             let trait_name = TraitName::Other {
-                name: Rc::from("::core::convert::Into"),
+                name: intern!(db.interner(), "::core::convert::Into"),
                 params: Rc::new([return_type.clone()]),
                 is_unsafe_fn: false,
             };
@@ -2807,7 +2808,7 @@ fn function_signature(
 
     let mut lifetime_inputs_and_parents = func.lifetime_inputs().to_vec();
     for lifetime in parent_lifetimes {
-        lifetime_inputs_and_parents.push(lifetime.into());
+        lifetime_inputs_and_parents.push(intern!(db.interner(), "{lifetime}"));
     }
     let all_lifetimes: Vec<Lifetime> =
         unique_lifetimes(&*param_types, &lifetime_inputs_and_parents)

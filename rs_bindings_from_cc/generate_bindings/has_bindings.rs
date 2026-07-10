@@ -8,7 +8,7 @@ use database::code_snippet::{
     missing_feature_descriptions, BindingsInfo, NoBindingsReason, ResolvedName, Visibility,
 };
 use database::rs_snippet::{LifetimeOptions, RsTypeKind};
-use database::BindingsGenerator;
+use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
 use ir::{BazelLabel, CcType, CcTypeVariant, Func, GenericItem, Item, ItemId, Record};
@@ -586,7 +586,7 @@ pub fn resolve_names(
                     }
                 }
 
-                match names.entry(name.into()) {
+                match names.entry(intern!(db.interner(), "{name}")) {
                     std::collections::hash_map::Entry::Vacant(vacant) => {
                         vacant.insert(ResolvedName::RecordNestedItems {
                             parent_records_that_map_to_this_name: vec![id],

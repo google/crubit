@@ -5,7 +5,7 @@
 //! Generate comments for the bindings.
 
 use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
-use database::BindingsGenerator;
+use database::{intern, BindingsGenerator};
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -177,7 +177,7 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
     ApiSnippets {
         generated_items: HashMap::from([(
             item.id(),
-            GeneratedItem::Comment { message: message.into() },
+            GeneratedItem::Comment { message: intern!(db.interner(), "{message}") },
         )]),
         ..Default::default()
     }

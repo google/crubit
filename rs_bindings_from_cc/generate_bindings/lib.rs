@@ -16,6 +16,7 @@ use database::code_snippet::{
     CppIncludes, DeprecatedAttr, Feature, GeneratedItem,
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
+use database::intern;
 use database::rs_snippet::{
     BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind, FnTrait, LifetimeOptions,
     Mutability, PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
@@ -203,7 +204,7 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
             return Ok(ApiSnippets {
                 generated_items: HashMap::from([(
                     constant.id(),
-                    GeneratedItem::Comment { message: e.to_string().into() },
+                    GeneratedItem::Comment { message: intern!(db.interner(), "{e}") },
                 )]),
                 ..Default::default()
             })
@@ -357,7 +358,8 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
         }
         Item::ExistingRustType(existing_rust_type) => {
             let rs_type_kind = db.rs_type_kind((&**existing_rust_type).into())?;
-            let disable_comment = format!(
+            let disable_comment = intern!(
+                db.interner(),
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type_kind})",
                 cpp_type = db.debug_name(existing_rust_type.id()),
@@ -377,7 +379,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
             ApiSnippets {
                 generated_items: HashMap::from([(
                     existing_rust_type.id(),
-                    GeneratedItem::Comment { message: disable_comment.into() },
+                    GeneratedItem::Comment { message: disable_comment },
                 )]),
                 assertions,
                 ..Default::default()
@@ -526,7 +528,7 @@ pub fn generate_bindings_tokens(
 
                 internal_includes.insert(CcInclude::SupportLibHeader(
                     crubit_support_path_format.clone(),
-                    "rs_std/dyn_callable.h".into(),
+                    intern!(db.interner(), "rs_std/dyn_callable.h"),
                 ));
 
                 Some((cpp_api, rust_api))
@@ -664,10 +666,11 @@ pub fn generate_bindings_tokens(
 /// Implementation of `BindingsGenerator::rs_type_kind_safety`.
 fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Option<UnsafeReason> {
     match rs_type_kind {
-        RsTypeKind::Error { error, .. } => Some(UnsafeReason(
-            format!("Crubit cannot assume unknown types are safe: {error}").into(),
-        )),
-        RsTypeKind::Pointer { .. } => Some(UnsafeReason("raw pointer".into())),
+        RsTypeKind::Error { error, .. } => Some(UnsafeReason(intern!(
+            db.interner(),
+            "Crubit cannot assume unknown types are safe: {error}"
+        ))),
+        RsTypeKind::Pointer { .. } => Some(UnsafeReason(intern!(db.interner(), "raw pointer"))),
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
         | RsTypeKind::TypeAlias { underlying_type: t, .. } => {
@@ -688,10 +691,10 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
             BridgeRsTypeKind::Bridge { .. } => record_safety(db, original_type.clone())
                 // Full unsafe reason is not shown here, it's documented on the type instead.
-                .map(|_reason| UnsafeReason("unsafe bridge type".into())),
+                .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe bridge type"))),
             BridgeRsTypeKind::ProtoMessageBridge { .. } => record_safety(db, original_type.clone())
                 // Full unsafe reason is not shown here, it's documented on the type instead.
-                .map(|_reason| UnsafeReason("unsafe proto message type".into())),
+                .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe proto message type"))),
             BridgeRsTypeKind::StdOptional(t) => db.rs_type_kind_safety(t.as_ref().clone()),
             BridgeRsTypeKind::StdPair(t1, t2) => {
                 let s1 = db.rs_type_kind_safety(t1.as_ref().clone());
@@ -701,9 +704,11 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
                 let r2 = s2.map(|reason| format!("pair's second element is unsafe: {reason}"));
 
                 match (r1, r2) {
-                    (Some(r1), Some(r2)) => Some(UnsafeReason(format!("{r1}; {r2}").into())),
-                    (Some(r1), None) => Some(UnsafeReason(r1.into())),
-                    (None, Some(r2)) => Some(UnsafeReason(r2.into())),
+                    (Some(r1), Some(r2)) => {
+                        Some(UnsafeReason(intern!(db.interner(), "{r1}; {r2}")))
+                    }
+                    (Some(r1), None) => Some(UnsafeReason(intern!(db.interner(), "{r1}"))),
+                    (None, Some(r2)) => Some(UnsafeReason(intern!(db.interner(), "{r2}"))),
                     (None, None) => None,
                 }
             }
@@ -726,24 +731,26 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
                 match (db.codegen_functions().decl_lifetime_arity)(db, record.id()) {
                     Ok(arity) => {
                         if arity != 0 && lifetimes.len() != arity {
-                            return Some(UnsafeReason(format!(
+                            return Some(UnsafeReason(intern!(
+                                db.interner(),
                                 "type {} has {} lifetime parameter{}, but {} {} provided; callers must ensure that arguments have the appropriate lifetime",
                                 record.rs_name(), arity, if arity == 1 { "" } else { "s" }, lifetimes.len(), if lifetimes.len() == 1 { "was" } else { "were" }
-                            ).into()));
+                            )));
                         }
                     }
                     _ => {
-                        return Some(UnsafeReason(format!(
+                        return Some(UnsafeReason(intern!(
+                            db.interner(),
                             "unable to determine lifetime how many lifetime parameters {} accepts; callers must ensure that arguments have the appropriate lifetime",
                             record.rs_name()
-                        ).into()));
+                        )));
                     }
                 }
             }
 
             // Full unsafe reason is not shown here, it's documented on the type instead.
             record_safety(db, record.clone())
-                .map(|_reason| UnsafeReason("unsafe struct or union".into()))
+                .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe struct or union")))
         }
     }
 }
@@ -785,7 +792,7 @@ fn callable_safety(
         }
     }
 
-    Some(UnsafeReason(reasons.into()))
+    Some(UnsafeReason(intern!(db.interner(), "{reasons}")))
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
@@ -797,9 +804,10 @@ fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeRea
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
-            return Some(UnsafeReason(
-                format!("Rust type is unknown; safety requirements cannot be automatically generated: {err}").into(),
-            ));
+            return Some(UnsafeReason(intern!(
+                db.interner(),
+                "Rust type is unknown; safety requirements cannot be automatically generated: {err}"
+            )));
         }
     };
     db.rs_type_kind_safety(field_rs_type_kind)
@@ -859,12 +867,10 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeRea
     // Verify that we didn't generate an empty safety doc.
     assert!(!doc.is_empty());
 
-    Some(UnsafeReason(
-        format!(
-            "To call a function that accepts this type, you must uphold these requirements:\n{doc}"
-        )
-        .into(),
-    ))
+    Some(UnsafeReason(intern!(
+        db.interner(),
+        "To call a function that accepts this type, you must uphold these requirements:\n{doc}"
+    )))
 }
 
 fn generate_rs_api_impl_includes(
@@ -879,12 +885,13 @@ fn generate_rs_api_impl_includes(
         internal_includes.insert(CcInclude::cstddef());
         internal_includes.insert(CcInclude::SupportLibHeader(
             crubit_support_path_format.clone(),
-            "internal/sizeof.h".into(),
+            intern!(db.interner(), "internal/sizeof.h"),
         ));
     };
 
     let crubit_any_invocable_support_header =
-        generate_dyn_callable::CRUBIT_ANY_INVOCABLE_SUPPORT_HEADER.map(Rc::<str>::from);
+        generate_dyn_callable::CRUBIT_ANY_INVOCABLE_SUPPORT_HEADER
+            .map(|header| intern!(db.interner(), "{header}"));
 
     for record in ir.records() {
         // We don't actually use the possible c9::Co, but need to pass in something to `new`.
@@ -899,11 +906,12 @@ fn generate_rs_api_impl_includes(
                 BridgeRsTypeKind::C9Co { .. } => {
                     internal_includes.insert(CcInclude::SupportLibHeader(
                         crubit_support_path_format.clone(),
-                        "bridge.h".into(),
+                        intern!(db.interner(), "bridge.h"),
                     ));
-                    internal_includes.insert(CcInclude::user_header(
-                        "util/c9/internal/rust/co_crubit_abi.h".into(),
-                    ));
+                    internal_includes.insert(CcInclude::user_header(intern!(
+                        db.interner(),
+                        "util/c9/internal/rust/co_crubit_abi.h"
+                    )));
                 }
                 BridgeRsTypeKind::Callable(callable)
                     if matches!(&callable.backing_type, BackingType::AnyInvocable { .. }) =>
@@ -913,7 +921,7 @@ fn generate_rs_api_impl_includes(
                     {
                         internal_includes.insert(CcInclude::SupportLibHeader(
                             crubit_support_path_format.clone(),
-                            "bridge.h".into(),
+                            intern!(db.interner(), "bridge.h"),
                         ));
                         internal_includes.insert(CcInclude::user_header(Rc::clone(
                             crubit_any_invocable_support_header,
@@ -925,11 +933,11 @@ fn generate_rs_api_impl_includes(
                 _ => {
                     internal_includes.insert(CcInclude::SupportLibHeader(
                         crubit_support_path_format.clone(),
-                        "bridge.h".into(),
+                        intern!(db.interner(), "bridge.h"),
                     ));
                     internal_includes.insert(CcInclude::SupportLibHeader(
                         crubit_support_path_format.clone(),
-                        "internal/slot.h".into(),
+                        intern!(db.interner(), "internal/slot.h"),
                     ));
                 }
             }
@@ -938,11 +946,11 @@ fn generate_rs_api_impl_includes(
         if record.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                "rs_std/lossy_formatter_for_bindings.h".into(),
+                intern!(db.interner(), "rs_std/lossy_formatter_for_bindings.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                "internal/fmt.h".into(),
+                intern!(db.interner(), "internal/fmt.h"),
             ));
         }
     }
@@ -951,11 +959,11 @@ fn generate_rs_api_impl_includes(
         if e.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                "rs_std/lossy_formatter_for_bindings.h".into(),
+                intern!(db.interner(), "rs_std/lossy_formatter_for_bindings.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                "internal/fmt.h".into(),
+                intern!(db.interner(), "internal/fmt.h"),
             ));
         }
     }
@@ -968,11 +976,11 @@ fn generate_rs_api_impl_includes(
         if rs_type_kind.is_bridge_type() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                "bridge.h".into(),
+                intern!(db.interner(), "bridge.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                "internal/slot.h".into(),
+                intern!(db.interner(), "internal/slot.h"),
             ));
         }
     }
@@ -980,7 +988,7 @@ fn generate_rs_api_impl_includes(
     for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
         internal_includes.insert(CcInclude::SupportLibHeader(
             crubit_support_path_format.clone(),
-            crubit_header.into(),
+            intern!(db.interner(), "{crubit_header}"),
         ));
     }
     let internal_includes = format_cc_includes(&internal_includes);
@@ -990,8 +998,10 @@ fn generate_rs_api_impl_includes(
     // process these includes via `format_cc_includes` to preserve their
     // original order (some libraries require certain headers to be included
     // first - e.g. `config.h`).
-    let ir_includes =
-        ir.public_headers().map(|hdr| CcInclude::user_header(Rc::from(hdr.name()))).collect_vec();
+    let ir_includes = ir
+        .public_headers()
+        .map(|hdr| CcInclude::user_header(intern!(db.interner(), "{}", hdr.name())))
+        .collect_vec();
 
     CppIncludes { internal_includes, ir_includes }
 }

@@ -4,6 +4,7 @@
 
 use arc_anyhow::{anyhow, ensure, Error, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
+use database::intern;
 use database::rs_snippet::{Lifetime, LifetimeOptions, Mutability, RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
 use ir::GenericItem;
@@ -85,9 +86,11 @@ pub fn rs_type_kind_with_lifetime_elision(
                     None
                 };
                 pointee = RsTypeKind::Error {
-                    symbol: cpp_type_name::cpp_tagless_type_name_for_record(original_type, db)?
-                        .to_string()
-                        .into(),
+                    symbol: intern!(
+                        db.interner(),
+                        "{}",
+                        cpp_type_name::cpp_tagless_type_name_for_record(original_type, db)?
+                    ),
                     error: anyhow!("Bridging types are not supported as pointee/referent types."),
                     visibility_override,
                 };
@@ -232,7 +235,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 // Comprehensive fallbacks: if we can delay reifying the error, delay it.
                 if let Ok(symbol) = cpp_type_name::tagless_cpp_type_name_for_item(item, db) {
                     return Ok(RsTypeKind::Error {
-                        symbol: symbol.to_string().into(),
+                        symbol: intern!(db.interner(), "{symbol}"),
                         error,
                         visibility_override: None,
                     });

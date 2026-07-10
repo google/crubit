@@ -13,7 +13,7 @@ use database::code_snippet::{
     StructOrUnion, Thunk, ThunkImpl, UpcastImpl, UpcastImplBody, Visibility,
 };
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
-use database::BindingsGenerator;
+use database::{intern, BindingsGenerator};
 use error_report::{bail, ensure};
 use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
@@ -698,7 +698,7 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         None
     } else {
         Some(database::code_snippet::CxxExternTypeImpl {
-            id: Rc::from(fully_qualified_cc_name.as_ref()),
+            id: intern!(db.interner(), "{fully_qualified_cc_name}"),
             kind: if record.is_unpin() {
                 database::code_snippet::CxxKind::Trivial
             } else {
@@ -738,9 +738,10 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         },
         // TODO(b/481405536): we should do this unconditionally.
         internally_mutable_unknown_fields: !record.should_derive_copy(),
-        crubit_annotation: DocCommentAttr(
-            format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}").into(),
-        ),
+        crubit_annotation: DocCommentAttr(intern!(
+            db.interner(),
+            "CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}"
+        )),
         visibility: db
             .has_bindings(ir::Item::Record(record.clone()))
             .unwrap_or_default()
