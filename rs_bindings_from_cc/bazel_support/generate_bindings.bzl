@@ -110,7 +110,7 @@ def generate_bindings(
         ctx.file._rustfmt.path,
         "--rustfmt_config_path",
         ctx.file._rustfmt_cfg.path,
-    ] + extra_rs_bindings_from_cc_cli_flags
+    ]
 
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
         error_report_output = ctx.actions.declare_file(crate_name + "_rust_api_error_report.json")
@@ -135,6 +135,15 @@ def generate_bindings(
         return (cc_output, rs_output, namespaces_output, error_report_output)
 
     rs_bindings_from_cc_tool = toolchain.rs_bindings_from_cc_toolchain_info.binary
+
+    if ctx.attr._template_blocklist_path_regex[BuildSettingInfo].value:
+        rs_bindings_from_cc_flags += [
+            "--template_blocklist_path_regex",
+            "|".join(ctx.attr._template_blocklist_path_regex[BuildSettingInfo].value),
+        ]
+
+    # Order any overrides *after* defaults set above.
+    rs_bindings_from_cc_flags += extra_rs_bindings_from_cc_cli_flags
 
     system_include_directories = depset(
        direct = [

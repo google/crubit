@@ -36,6 +36,12 @@ string_list_flag(
 )
 
 string_list_flag(
+    name = "template_blocklist_path_regex",
+    build_setting_default = [],
+    visibility = ["//visibility:public"],
+)
+
+string_list_flag(
     name = "verbose_log_targets",
     build_setting_default = [],
     visibility = ["//:__subpackages__"],
