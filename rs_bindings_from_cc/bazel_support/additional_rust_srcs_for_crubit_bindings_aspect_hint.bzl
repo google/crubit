@@ -67,7 +67,7 @@ visibility([
     # <internal link> end
 ])
 
-def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cc_support_deps = [], unstable_rust_features = []):
+def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cc_support_deps = [], unstable_rust_features = [], proc_macro_deps = [], rustc_env = {}):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         namespace_path = namespace_path,
@@ -77,7 +77,9 @@ def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cc_s
             dep[CcInfo]
             for dep in cc_support_deps
         ],
+        proc_macro_deps = _get_additional_rust_deps_variant_info(proc_macro_deps),
         unstable_rust_features = unstable_rust_features,
+        rustc_env = rustc_env,
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
@@ -88,6 +90,8 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.cc_deps,
         ctx.attr.cc_support_deps,
         ctx.attr.unstable_rust_features,
+        ctx.attr.proc_macro_deps,
+        ctx.attr.rustc_env,
     )]
 
 _additional_rust_srcs_for_crubit_bindings_rule = rule(
@@ -113,9 +117,17 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             mandatory = False,
             default = [],
         ),
+        "proc_macro_deps": attr.label_list(
+            mandatory = False,
+            default = [],
+        ),
         "unstable_rust_features": attr.string_list(
             mandatory = False,
             default = [],
+        ),
+        "rustc_env": attr.string_dict(
+            mandatory = False,
+            default = {},
         ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
@@ -128,7 +140,9 @@ def additional_rust_srcs_for_crubit_bindings(
         deps = [],
         cc_deps = [],
         cc_support_deps = [],
+        proc_macro_deps = [],
         unstable_rust_features = [],
+        rustc_env = {},
         **kwargs):
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
@@ -152,7 +166,9 @@ def additional_rust_srcs_for_crubit_bindings(
             For example, C++ types that have composable bridging should define their supporting
             Crubit ABI types here so they're available to generated code without being exposed to
             Crubit.
+        proc_macro_deps: List of proc macro dependencies.
         unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
+        rustc_env: Dictionary of environment variables to set when running `rustc`.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
 
@@ -163,7 +179,9 @@ def additional_rust_srcs_for_crubit_bindings(
         deps = deps,
         cc_deps = cc_deps,
         cc_support_deps = cc_support_deps,
+        proc_macro_deps = proc_macro_deps,
         unstable_rust_features = unstable_rust_features,
+        rustc_env = rustc_env,
         **kwargs
     )
 
