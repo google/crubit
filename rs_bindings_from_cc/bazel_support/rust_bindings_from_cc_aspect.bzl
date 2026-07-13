@@ -107,6 +107,13 @@ def _get_unstable_rust_features(aspect_ctx):
             features.extend(hint[AdditionalRustSrcsProviderInfo].unstable_rust_features)
     return collections.uniq(features)
 
+def _get_rustc_env(aspect_ctx):
+    rustc_env = {}
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            rustc_env.update(hint[AdditionalRustSrcsProviderInfo].rustc_env)
+    return rustc_env
+
 def _get_additional_rust_deps_from_provider(provider):
     """Returns `deps` and `cc_deps` associated with the `provider`.
     """
@@ -137,6 +144,13 @@ def _get_cc_support_deps(aspect_ctx):
                 hint[AdditionalRustSrcsProviderInfo].cc_support_deps,
             )
     return collections.uniq(cc_support_deps)
+
+def _get_proc_macro_deps(aspect_ctx):
+    proc_macro_deps = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            proc_macro_deps.extend(hint[AdditionalRustSrcsProviderInfo].proc_macro_deps)
+    return collections.uniq(proc_macro_deps)
 
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
@@ -305,6 +319,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     aliases = {}
 
     cc_support_deps = _get_cc_support_deps(ctx)
+    proc_macro_deps = _get_proc_macro_deps(ctx)
 
     # Headers for which we will produce bindings.
     public_hdrs = []
@@ -359,6 +374,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     extra_rs_srcs = collections.uniq(extra_rs_srcs + _get_additional_rust_srcs(ctx))
     unstable_rust_features = _get_unstable_rust_features(ctx)
+    rustc_env = _get_rustc_env(ctx)
     extra_deps = collections.uniq(extra_deps + _get_additional_rust_deps(ctx))
 
     extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx)
@@ -390,6 +406,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             for d in binding_infos
             if d.cc_info
         ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + cc_support_deps,
+        proc_macro_deps = proc_macro_deps,
         deps_for_rs_file = depset(
             direct = [
                 d.dep_variant_info
@@ -407,6 +424,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             has_public_headers or extra_rs_srcs
         ) and not _is_cc_proto_library(target),
         aliases = aliases,
+        rustc_env = rustc_env,
         additional_rust_srcs = depset(
             transitive = [
                 d.additional_rust_srcs

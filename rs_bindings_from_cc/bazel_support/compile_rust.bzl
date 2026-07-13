@@ -44,7 +44,7 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, force_all_deps_direct, allow_lto = True, aliases = {}, remap_path_prefix = {}):
+def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, force_all_deps_direct, proc_macro_deps = depset(), rustc_env = {}, allow_lto = True, aliases = {}, remap_path_prefix = {}):
     """Compiles a Rust source file.
 
     Args:
@@ -56,6 +56,8 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
       crate_name: (string) crate name for naming the output files (.rlib, .rmeta...))
       include_coverage: (bool) Whether or not coverage information should be generated.
       force_all_deps_direct: (bool) Whether or not to force all deps to be direct.
+      proc_macro_deps: depset[DepVariantInfo]: A depset of proc macro dependencies needed.
+      rustc_env: (dict, optional) A dict of environment variables to pass to rustc.
       allow_lto: (bool, optional) Whether to allow LTO
       aliases: (dict, optional) A dict of aliases to be passed to the rustc_compile_action.
       remap_path_prefix: (dict, optional) A dict of {symlink_path: source_path} to be remapped by rustc.
@@ -109,13 +111,13 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             root = src,
             srcs = srcs,
             deps = deps.to_list(),
-            proc_macro_deps = [],
+            proc_macro_deps = proc_macro_deps.to_list(),
             aliases = aliases,
             output = lib,
             metadata = rmeta,
             edition = "2024",
             is_test = False,
-            rustc_env = {},
+            rustc_env = rustc_env,
             compile_data = depset([]),
             compile_data_targets = depset([]),
             owner = ctx.label,

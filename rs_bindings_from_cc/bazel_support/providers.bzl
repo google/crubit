@@ -18,7 +18,9 @@ generated Rust bindings of this C++ target.
         "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
                    "will be linked to this library target.",
         "cc_support_deps": "List of CcInfo of support libraries for generated C++ code.",
+        "proc_macro_deps": "List of DepVariantInfo of proc macros.",
         "unstable_rust_features": "List of unstable rustc features to enable via `#![feature(...)]`.",
+        "rustc_env": "A dict of strings. The rustc environment variables.",
     },
 )
 
