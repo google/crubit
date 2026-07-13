@@ -292,9 +292,11 @@ impl<'tcx> OptionApiGenerator<'tcx> {
         };
 
         let tag_method_main_api = tag_method.main_api.into_tokens(&mut prereqs);
+        let full_self_ty = quote! { rs_std::Option<#arg_ty> };
+
         let main_api = CcSnippet {
             tokens: quote! {
-                using base_type = rs_std::OptionBase<rs_std::Option<#arg_ty>, #arg_ty>;
+                using base_type = rs_std::OptionBase<#full_self_ty, #arg_ty>;
                 constexpr Option() = default;
                 constexpr Option(::std::nullopt_t) noexcept;
                 constexpr Option& operator=(::std::nullopt_t) noexcept;
@@ -369,8 +371,8 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 #drop_details __NEWLINE__
                 #tag_method_cc_details __NEWLINE__
 
-                inline constexpr rs_std::Option<#arg_ty>::Option(::std::nullopt_t) noexcept : base_type(::std::nullopt) {} __NEWLINE__
-                inline constexpr rs_std::Option<#arg_ty>& rs_std::Option<#arg_ty>::operator=(::std::nullopt_t) noexcept {
+                inline constexpr #full_self_ty::Option(::std::nullopt_t) noexcept : base_type(::std::nullopt) {} __NEWLINE__
+                inline constexpr #full_self_ty& #full_self_ty::operator=(::std::nullopt_t) noexcept {
                     base_type::operator=(::std::nullopt);
                     return *this;
                 } __NEWLINE__
@@ -485,7 +487,7 @@ impl<'tcx> ResultApiGenerator<'tcx> {
         let main_api = CcSnippet {
             tokens: quote! {
             public:
-                using base_type = rs_std::ResultBase<rs_std::Result<#ok_ty_cpp, #err_ty_cpp>, #ok_ty_cpp, #err_ty_cpp>;
+                using base_type = rs_std::ResultBase<#full_self_ty, #ok_ty_cpp, #err_ty_cpp>;
 
                 template <typename U>
                   requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
