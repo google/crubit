@@ -11,6 +11,8 @@ In brief, Crubit supports:
     `i32`.
 *   [Pointer types](http://crubit.rs/types/pointer), such as `float*` or `*const
     i32`, including function pointers.
+*   [Rust standard library (`std`) types](../rust/std.md), such as `String`,
+    `Option`, and `Vec`.
 *   User-defined types, with some language-specific rules and restrictions. (See
     [crubit.rs/cpp](http://crubit.rs/cpp) and
     [crubit.rs/rust](http://crubit.rs/rust)).
