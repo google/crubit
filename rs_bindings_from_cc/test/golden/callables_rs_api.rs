@@ -142,13 +142,9 @@ impl LayoutCompatible {
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
         unsafe { self::layout_compatible::Create(x) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn get(__this: *const Self) -> ::ffi_11::c_int {
-        unsafe { self::layout_compatible::get(__this) }
+    pub fn get<'__this>(&'__this self) -> ::ffi_11::c_int {
+        unsafe { self::layout_compatible::get(self) }
     }
 }
 
@@ -164,12 +160,8 @@ pub mod layout_compatible {
             __crubit_return.assume_init()
         }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn get(__this: *const crate::LayoutCompatible) -> ::ffi_11::c_int {
+    pub(crate) fn get<'__this>(__this: &'__this crate::LayoutCompatible) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this) }
     }
 }
@@ -353,8 +345,8 @@ mod detail {
             __return: *mut ::core::ffi::c_void,
             x: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZNK16LayoutCompatible3getEv(
-            __this: *const crate::LayoutCompatible,
+        pub(crate) unsafe fn __rust_thunk___ZNK16LayoutCompatible3getEv<'__this>(
+            __this: &'__this crate::LayoutCompatible,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(
             __return: *mut ::core::ffi::c_void,

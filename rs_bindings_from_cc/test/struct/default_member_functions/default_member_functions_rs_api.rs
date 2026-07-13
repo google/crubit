@@ -63,7 +63,7 @@ unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
 
 impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclD1Ev(self) }
     }
 }
@@ -113,8 +113,8 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10UncopyableC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::UncopyableDespiteDecl>,
+        pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::UncopyableDespiteDecl>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
             __this: *mut ::core::ffi::c_void,

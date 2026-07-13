@@ -35,20 +35,28 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 }
 impl Nontrivial {
     #[inline(always)]
-    pub fn Unqualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Unqualified<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { self::nontrivial::Unqualified(self) }
     }
     #[inline(always)]
-    pub fn ConstQualified<'a>(&'a self) {
+    pub fn ConstQualified<'__this>(&'__this self) {
         unsafe { self::nontrivial::ConstQualified(self) }
     }
     #[inline(always)]
-    pub fn LvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn LvalueRefQualified<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { self::nontrivial::LvalueRefQualified(self) }
     }
     #[inline(always)]
-    pub fn ConstLvalueRefQualified<'a>(&'a self) {
+    pub fn ConstLvalueRefQualified<'__this>(&'__this self) {
         unsafe { self::nontrivial::ConstLvalueRefQualified(self) }
+    }
+    #[inline(always)]
+    pub fn RvalueRefQualified<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+        unsafe { self::nontrivial::RvalueRefQualified(self) }
+    }
+    #[inline(always)]
+    pub fn ConstRvalueRefQualified<'__this>(&'__this self) {
+        unsafe { self::nontrivial::ConstRvalueRefQualified(self) }
     }
 }
 
@@ -112,33 +120,91 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
     }
 }
 
-// error: constructor `Nontrivial::Nontrivial` could not be bound
-//   Unsupported parameter type `const Nontrivial& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `Nontrivial::Nontrivial` could not be bound
-//   Unsupported parameter type `Nontrivial&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// error: function `Nontrivial::operator=` could not be bound
-//   Unsupported parameter type `const Nontrivial& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Nontrivial&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for Nontrivial {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `Nontrivial::operator=` could not be bound
-//   Unsupported parameter type `Nontrivial&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Nontrivial&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Nontrivial {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10NontrivialaSEOS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `Nontrivial::operator=` could not be bound
-//   Unsupported return type `Nontrivial&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ffi_11::c_int> for Nontrivial {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: ::ffi_11::c_int) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10NontrivialaSEi(self, __param_0);
+        }
+    }
+}
 
 impl ::ctor::Assign<f32> for Nontrivial {
     #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: f32) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: f32) {
         unsafe {
             let _ = ::ctor::emplace!(::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialaSEf(
@@ -153,54 +219,86 @@ impl ::ctor::Assign<f32> for Nontrivial {
 
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
     }
 }
 
-// error: function `Nontrivial::RvalueRefQualified` could not be bound
-//   Unsupported parameter type `Nontrivial&& __this`:
-//     references are not yet supported
+impl PartialEq for Nontrivial {
+    #[inline(always)]
+    fn eq<'__this, 'rhs>(&'__this self, rhs: &'rhs Self) -> bool {
+        unsafe { crate::detail::__rust_thunk___ZNK10NontrivialeqERKS_(self, rhs) }
+    }
+}
 
-// error: function `Nontrivial::ConstRvalueRefQualified` could not be bound
-//   Unsupported parameter type `const Nontrivial&& __this`:
-//     references are not yet supported
+impl PartialOrd for Nontrivial {
+    #[inline(always)]
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        if self == other {
+            return Some(core::cmp::Ordering::Equal);
+        }
+        if self < other {
+            return Some(core::cmp::Ordering::Less);
+        }
+        if other < self {
+            return Some(core::cmp::Ordering::Greater);
+        }
+        None
+    }
+    #[inline(always)]
+    fn lt<'__this, 'rhs>(&'__this self, rhs: &'rhs Self) -> bool {
+        unsafe { crate::detail::__rust_thunk___ZNK10NontrivialltERKS_(self, rhs) }
+    }
+}
 
-// error: function `Nontrivial::operator==` could not be bound
-//   Unsupported parameter type `const Nontrivial& rhs`:
-//     references are not yet supported
-
-// error: function `Nontrivial::operator!=` could not be bound
-//   Unsupported parameter type `const Nontrivial& rhs`:
-//     references are not yet supported
-
-// error: function `Nontrivial::operator<` could not be bound
-//   Unsupported parameter type `const Nontrivial& rhs`:
-//     references are not yet supported
-
-// error: function `Nontrivial::operator+` could not be bound
-//   Unsupported parameter type `const Nontrivial& rhs`:
-//     references are not yet supported
+impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::Nontrivial> for &'__this crate::Nontrivial {
+    type Output = impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>
+        + use<'__this, 'rhs>;
+    #[inline(always)]
+    fn add(self, rhs: &'rhs crate::Nontrivial) -> Self::Output {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+                crate::detail::__rust_thunk___ZNK10NontrivialplERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    self,
+                    rhs,
+                );
+            })
+        }
+    }
+}
 
 // error: function `Nontrivial::operator+=` could not be bound
-//   Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'a mut crate::Nontrivial>
+//   Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'__this mut crate::Nontrivial>
 
 pub mod nontrivial {
     #[inline(always)]
-    pub(crate) fn Unqualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
+    pub(crate) fn Unqualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(__this) }
     }
     #[inline(always)]
-    pub(crate) fn ConstQualified<'a>(__this: &'a crate::Nontrivial) {
+    pub(crate) fn ConstQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(__this) }
     }
     #[inline(always)]
-    pub(crate) fn LvalueRefQualified<'a>(__this: ::core::pin::Pin<&'a mut crate::Nontrivial>) {
+    pub(crate) fn LvalueRefQualified<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
+    ) {
         unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(__this) }
     }
     #[inline(always)]
-    pub(crate) fn ConstLvalueRefQualified<'a>(__this: &'a crate::Nontrivial) {
+    pub(crate) fn ConstLvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(__this) }
+    }
+    #[inline(always)]
+    pub(crate) fn RvalueRefQualified<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv(__this) }
+    }
+    #[inline(always)]
+    pub(crate) fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
+        unsafe { crate::detail::__rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv(__this) }
     }
 }
 
@@ -224,7 +322,7 @@ unsafe impl ::cxx::ExternType for NontrivialInline {
 }
 impl NontrivialInline {
     #[inline(always)]
-    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn MemberFunction<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { self::nontrivial_inline::MemberFunction(self) }
     }
 }
@@ -289,40 +387,102 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
     }
 }
 
-// error: constructor `NontrivialInline::NontrivialInline` could not be bound
-//   Unsupported parameter type `const NontrivialInline& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialInline {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN16NontrivialInlineC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NontrivialInline {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `NontrivialInline::NontrivialInline` could not be bound
-//   Unsupported parameter type `NontrivialInline&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for NontrivialInline {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for NontrivialInline
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// error: function `NontrivialInline::operator=` could not be bound
-//   Unsupported parameter type `const NontrivialInline& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialInline&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NontrivialInline {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16NontrivialInlineaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `NontrivialInline::operator=` could not be bound
-//   Unsupported parameter type `NontrivialInline&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialInline&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NontrivialInline {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16NontrivialInlineaSEOS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `NontrivialInline::operator=` could not be bound
-//   Unsupported return type `NontrivialInline&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ffi_11::c_int> for NontrivialInline {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: ::ffi_11::c_int) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16NontrivialInlineaSEi(self, __param_0);
+        }
+    }
+}
 
 impl ::ctor::PinnedDrop for NontrivialInline {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
     }
 }
 
 pub mod nontrivial_inline {
     #[inline(always)]
-    pub(crate) fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::NontrivialInline>) {
+    pub(crate) fn MemberFunction<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>,
+    ) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(__this) }
     }
 }
@@ -364,32 +524,89 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
     }
 }
 
-// error: constructor `NontrivialMembers::NontrivialMembers` could not be bound
-//   Unsupported parameter type `const NontrivialMembers& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialMembers {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN17NontrivialMembersC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NontrivialMembers {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `NontrivialMembers::NontrivialMembers` could not be bound
-//   Unsupported parameter type `NontrivialMembers&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
+    for NontrivialMembers
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for NontrivialMembers
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
 impl ::ctor::PinnedDrop for NontrivialMembers {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
     }
 }
 
-// error: function `NontrivialMembers::operator=` could not be bound
-//   Unsupported parameter type `const NontrivialMembers& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialMembers&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NontrivialMembers {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17NontrivialMembersaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `NontrivialMembers::operator=` could not be bound
-//   Unsupported parameter type `NontrivialMembers&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialMembers&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NontrivialMembers {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17NontrivialMembersaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
 #[cfi_encoding = "15NontrivialUnpin"]
@@ -407,7 +624,7 @@ unsafe impl ::cxx::ExternType for NontrivialUnpin {
 }
 impl NontrivialUnpin {
     #[inline(always)]
-    pub fn MemberFunction<'a>(&'a mut self) {
+    pub fn MemberFunction<'__this>(&'__this mut self) {
         unsafe { self::nontrivial_unpin::MemberFunction(self) }
     }
 }
@@ -467,44 +684,104 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialUnpin {
     }
 }
 
-// error: constructor `NontrivialUnpin::NontrivialUnpin` could not be bound
-//   Unsupported parameter type `const NontrivialUnpin& __param_0`:
-//     references are not yet supported
+impl Clone for NontrivialUnpin {
+    #[inline(always)]
+    fn clone<'__param_0>(&'__param_0 self) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1ERKS_(&raw mut tmp as *mut _, self);
+            tmp.assume_init()
+        }
+    }
+    fn clone_from(&mut self, other: &Self) {
+        use ::ctor::UnpinAssign;
+        self.unpin_assign(other);
+    }
+}
 
-// error: constructor `NontrivialUnpin::NontrivialUnpin` could not be bound
-//   Unsupported parameter type `NontrivialUnpin&& __param_0`:
-//     references are not yet supported
+impl From<::ctor::RvalueReference<'_, Self>> for NontrivialUnpin {
+    #[inline(always)]
+    fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut __param_0 = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1EOS_(
+                &raw mut tmp as *mut _,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for NontrivialUnpin {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// error: constructor `NontrivialUnpin::NontrivialUnpin` could not be bound
-//   Unsupported parameter type `Nontrivial&& __param_0`:
-//     references are not yet supported
+impl From<::ctor::RvalueReference<'_, crate::Nontrivial>> for NontrivialUnpin {
+    #[inline(always)]
+    fn from(args: ::ctor::RvalueReference<'_, crate::Nontrivial>) -> Self {
+        let mut __param_0 = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1EO10Nontrivial(
+                &raw mut tmp as *mut _,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, crate::Nontrivial>> for NontrivialUnpin {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, crate::Nontrivial>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, crate::Nontrivial>>>::from(args)
+    }
+}
 
-// error: function `NontrivialUnpin::operator=` could not be bound
-//   Unsupported parameter type `const NontrivialUnpin& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialUnpin&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for NontrivialUnpin {
+    #[inline(always)]
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `NontrivialUnpin::operator=` could not be bound
-//   Unsupported parameter type `NontrivialUnpin&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialUnpin&`:
-//     references are not yet supported
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NontrivialUnpin {
+    #[inline(always)]
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinaSEOS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `NontrivialUnpin::operator=` could not be bound
-//   Unsupported return type `NontrivialUnpin&`:
-//     references are not yet supported
+impl ::ctor::UnpinAssign<::ffi_11::c_int> for NontrivialUnpin {
+    #[inline(always)]
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: ::ffi_11::c_int) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinaSEi(self, __param_0);
+        }
+    }
+}
 
 impl Drop for NontrivialUnpin {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
+    fn drop<'__this>(&'__this mut self) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpinD1Ev(self) }
     }
 }
 
 pub mod nontrivial_unpin {
     #[inline(always)]
-    pub(crate) fn MemberFunction<'a>(__this: &'a mut crate::NontrivialUnpin) {
+    pub(crate) fn MemberFunction<'__this>(__this: &'__this mut crate::NontrivialUnpin) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(__this) }
     }
 }
@@ -549,53 +826,71 @@ pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::Nontr
     }
 }
 
-// error: function `TakesByReference` could not be bound
-//   Unsupported parameter type `Nontrivial& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `Nontrivial&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesByReference<'nontrivial>(
+    nontrivial: ::core::pin::Pin<&'nontrivial mut crate::Nontrivial>,
+) -> ::cref::CMut<'nontrivial, crate::Nontrivial> {
+    unsafe { crate::detail::__rust_thunk___Z16TakesByReferenceR10Nontrivial(nontrivial) }
+}
 
-// error: function `TakesUnpinByReference` could not be bound
-//   Unsupported parameter type `NontrivialUnpin& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialUnpin&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesUnpinByReference<'nontrivial>(
+    nontrivial: &'nontrivial mut crate::NontrivialUnpin,
+) -> ::cref::CMut<'nontrivial, crate::NontrivialUnpin> {
+    unsafe { crate::detail::__rust_thunk___Z21TakesUnpinByReferenceR15NontrivialUnpin(nontrivial) }
+}
 
-// error: function `TakesByConstReference` could not be bound
-//   Unsupported parameter type `const Nontrivial& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `const Nontrivial&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesByConstReference<'nontrivial>(
+    nontrivial: &'nontrivial crate::Nontrivial,
+) -> ::cref::CRef<'nontrivial, crate::Nontrivial> {
+    unsafe { crate::detail::__rust_thunk___Z21TakesByConstReferenceRK10Nontrivial(nontrivial) }
+}
 
-// error: function `TakesUnpinByConstReference` could not be bound
-//   Unsupported parameter type `const NontrivialUnpin& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `const NontrivialUnpin&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesUnpinByConstReference<'nontrivial>(
+    nontrivial: &'nontrivial crate::NontrivialUnpin,
+) -> ::cref::CRef<'nontrivial, crate::NontrivialUnpin> {
+    unsafe {
+        crate::detail::__rust_thunk___Z26TakesUnpinByConstReferenceRK15NontrivialUnpin(nontrivial)
+    }
+}
 
-// error: function `TakesByRvalueReference` could not be bound
-//   Unsupported parameter type `Nontrivial&& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `Nontrivial&&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesByRvalueReference(
+    nontrivial: ::ctor::RvalueReference<'_, crate::Nontrivial>,
+) -> ::ctor::RvalueReference<'_, crate::Nontrivial> {
+    unsafe { crate::detail::__rust_thunk___Z22TakesByRvalueReferenceO10Nontrivial(nontrivial) }
+}
 
-// error: function `TakesUnpinByRvalueReference` could not be bound
-//   Unsupported parameter type `NontrivialUnpin&& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialUnpin&&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesUnpinByRvalueReference(
+    nontrivial: ::ctor::RvalueReference<'_, crate::NontrivialUnpin>,
+) -> ::ctor::RvalueReference<'_, crate::NontrivialUnpin> {
+    unsafe {
+        crate::detail::__rust_thunk___Z27TakesUnpinByRvalueReferenceO15NontrivialUnpin(nontrivial)
+    }
+}
 
-// error: function `TakesByConstRvalueReference` could not be bound
-//   Unsupported parameter type `const Nontrivial&& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `const Nontrivial&&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesByConstRvalueReference(
+    nontrivial: ::ctor::ConstRvalueReference<'_, crate::Nontrivial>,
+) -> ::ctor::ConstRvalueReference<'_, crate::Nontrivial> {
+    unsafe {
+        crate::detail::__rust_thunk___Z27TakesByConstRvalueReferenceOK10Nontrivial(nontrivial)
+    }
+}
 
-// error: function `TakesUnpinByConstRvalueReference` could not be bound
-//   Unsupported parameter type `const NontrivialUnpin&& nontrivial`:
-//     references are not yet supported
-//   Unsupported return type `const NontrivialUnpin&&`:
-//     references are not yet supported
+#[inline(always)]
+pub fn TakesUnpinByConstRvalueReference(
+    nontrivial: ::ctor::ConstRvalueReference<'_, crate::NontrivialUnpin>,
+) -> ::ctor::ConstRvalueReference<'_, crate::NontrivialUnpin> {
+    unsafe {
+        crate::detail::__rust_thunk___Z32TakesUnpinByConstRvalueReferenceOK15NontrivialUnpin(
+            nontrivial,
+        )
+    }
+}
 
 /// Finally, testing for strange by-value APIs.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -612,31 +907,14 @@ unsafe impl ::cxx::ExternType for NontrivialByValue {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// error: constructor `NontrivialByValue::NontrivialByValue` could not be bound
-//   Unsupported parameter type `const NontrivialByValue& other`:
-//     references are not yet supported
-
-// error: constructor `NontrivialByValue::NontrivialByValue` could not be bound
-//   Unsupported parameter type `NontrivialByValue&& other`:
-//     references are not yet supported
-
-// error: function `NontrivialByValue::operator=` could not be bound
-//   Unsupported parameter type `const NontrivialByValue& other`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialByValue&`:
-//     references are not yet supported
-
-// error: function `NontrivialByValue::operator=` could not be bound
-//   Unsupported parameter type `NontrivialByValue&& other`:
-//     references are not yet supported
-//   Unsupported return type `NontrivialByValue&`:
-//     references are not yet supported
-
 impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivial>>
     for NontrivialByValue
 {
     #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, other: ::ctor::RvalueReference<'other, crate::Nontrivial>) {
+    fn unpin_assign<'__this>(
+        &'__this mut self,
+        other: ::ctor::RvalueReference<'other, crate::Nontrivial>,
+    ) {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN17NontrivialByValueaSE10Nontrivial(
@@ -650,7 +928,7 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nExpected first operator== param reference to be immutable, but found mutable reference: &'a mut crate::NontrivialByValue\ncomparison operator return type must be `bool`, found: crate::NontrivialByValue"
+    message = "binding generation for function failed\nExpected first operator== param reference to be immutable, but found mutable reference: &'__this mut crate::NontrivialByValue\ncomparison operator return type must be `bool`, found: crate::NontrivialByValue"
 )]
 pub trait BindingFailedFor_ZN17NontrivialByValueeqES_ {}
 impl PartialEq for NontrivialByValue
@@ -658,7 +936,7 @@ where
     for<'error> &'error (): BindingFailedFor_ZN17NontrivialByValueeqES_,
 {
     #[inline(always)]
-    fn eq<'a>(&'a self, other: &Self) -> bool {
+    fn eq<'__this>(&'__this self, other: &Self) -> bool {
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
@@ -682,7 +960,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
 }
 impl Nonmovable {
     #[inline(always)]
-    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn MemberFunction<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { self::nonmovable::MemberFunction(self) }
     }
 }
@@ -705,14 +983,16 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 
 impl ::ctor::PinnedDrop for Nonmovable {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self) }
     }
 }
 
 pub mod nonmovable {
     #[inline(always)]
-    pub(crate) fn MemberFunction<'a>(__this: ::core::pin::Pin<&'a mut crate::Nonmovable>) {
+    pub(crate) fn MemberFunction<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::Nonmovable>,
+    ) {
         unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(__this) }
     }
 }
@@ -761,30 +1041,78 @@ mod detail {
             field: ::ffi_11::c_int,
             unused: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEf<'a>(
+        #[link_name = "_ZN10NontrivialC1ERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::Nontrivial,
+        );
+        #[link_name = "_ZN10NontrivialC1EOS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::Nontrivial>,
+        );
+        #[link_name = "_ZN10NontrivialaSERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
+            __param_0: &'__param_0 crate::Nontrivial,
+        ) -> ::core::pin::Pin<&'__this mut crate::Nontrivial>;
+        #[link_name = "_ZN10NontrivialaSEOS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
+            __param_0: ::ctor::RvalueReference<'_, crate::Nontrivial>,
+        ) -> ::core::pin::Pin<&'__this mut crate::Nontrivial>;
+        #[link_name = "_ZN10NontrivialaSEi"]
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEi<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
+            __param_0: ::ffi_11::c_int,
+        ) -> ::core::pin::Pin<&'__this mut crate::Nontrivial>;
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEf<'__this>(
             __return: *mut ::core::ffi::c_void,
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
             __param_0: f32,
         );
         #[link_name = "_ZN10NontrivialD1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
         );
         #[link_name = "_ZN10Nontrivial11UnqualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN10Nontrivial11UnqualifiedEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+        pub(crate) unsafe fn __rust_thunk___ZN10Nontrivial11UnqualifiedEv<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
         );
         #[link_name = "_ZNK10Nontrivial14ConstQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNK10Nontrivial14ConstQualifiedEv<'a>(
-            __this: &'a crate::Nontrivial,
+        pub(crate) unsafe fn __rust_thunk___ZNK10Nontrivial14ConstQualifiedEv<'__this>(
+            __this: &'__this crate::Nontrivial,
         );
         #[link_name = "_ZNR10Nontrivial18LvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+        pub(crate) unsafe fn __rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
         );
         #[link_name = "_ZNKR10Nontrivial23ConstLvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv<'a>(
-            __this: &'a crate::Nontrivial,
+        pub(crate) unsafe fn __rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv<'__this>(
+            __this: &'__this crate::Nontrivial,
+        );
+        #[link_name = "_ZNO10Nontrivial18RvalueRefQualifiedEv"]
+        pub(crate) unsafe fn __rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
+        );
+        #[link_name = "_ZNKO10Nontrivial23ConstRvalueRefQualifiedEv"]
+        pub(crate) unsafe fn __rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv<'__this>(
+            __this: &'__this crate::Nontrivial,
+        );
+        #[link_name = "_ZNK10NontrivialeqERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZNK10NontrivialeqERKS_<'__this, 'rhs>(
+            __this: &'__this crate::Nontrivial,
+            rhs: &'rhs crate::Nontrivial,
+        ) -> bool;
+        #[link_name = "_ZNK10NontrivialltERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZNK10NontrivialltERKS_<'__this, 'rhs>(
+            __this: &'__this crate::Nontrivial,
+            rhs: &'rhs crate::Nontrivial,
+        ) -> bool;
+        pub(crate) unsafe fn __rust_thunk___ZNK10NontrivialplERKS_<'__this, 'rhs>(
+            __return: *mut ::core::ffi::c_void,
+            __this: &'__this crate::Nontrivial,
+            rhs: &'rhs crate::Nontrivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -798,18 +1126,54 @@ mod detail {
             field: ::ffi_11::c_int,
             unused: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::NontrivialInline>,
+        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::NontrivialInline,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::NontrivialInline>,
+        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::NontrivialInline>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>,
+            __param_0: &'__param_0 crate::NontrivialInline,
+        ) -> ::core::pin::Pin<&'__this mut crate::NontrivialInline>;
+        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineaSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>,
+            __param_0: ::ctor::RvalueReference<'_, crate::NontrivialInline>,
+        ) -> ::core::pin::Pin<&'__this mut crate::NontrivialInline>;
+        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineaSEi<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>,
+            __param_0: ::ffi_11::c_int,
+        ) -> ::core::pin::Pin<&'__this mut crate::NontrivialInline>;
+        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::NontrivialMembers>,
+        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::NontrivialMembers,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::NontrivialMembers>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialMembers>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialMembers>,
+            __param_0: &'__param_0 crate::NontrivialMembers,
+        ) -> ::core::pin::Pin<&'__this mut crate::NontrivialMembers>;
+        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersaSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NontrivialMembers>,
+            __param_0: ::ctor::RvalueReference<'_, crate::NontrivialMembers>,
+        ) -> ::core::pin::Pin<&'__this mut crate::NontrivialMembers>;
         #[link_name = "_ZN15NontrivialUnpinC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -825,13 +1189,43 @@ mod detail {
             field: ::ffi_11::c_int,
             unused: ::ffi_11::c_int,
         );
+        #[link_name = "_ZN15NontrivialUnpinC1ERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::NontrivialUnpin,
+        );
+        #[link_name = "_ZN15NontrivialUnpinC1EOS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::NontrivialUnpin>,
+        );
+        #[link_name = "_ZN15NontrivialUnpinC1EO10Nontrivial"]
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1EO10Nontrivial(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::Nontrivial>,
+        );
+        #[link_name = "_ZN15NontrivialUnpinaSERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinaSERKS_<'__param_0, '__this>(
+            __this: &'__this mut crate::NontrivialUnpin,
+            __param_0: &'__param_0 crate::NontrivialUnpin,
+        ) -> &'__this mut crate::NontrivialUnpin;
+        #[link_name = "_ZN15NontrivialUnpinaSEOS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinaSEOS_<'__this>(
+            __this: &'__this mut crate::NontrivialUnpin,
+            __param_0: ::ctor::RvalueReference<'_, crate::NontrivialUnpin>,
+        ) -> &'__this mut crate::NontrivialUnpin;
+        #[link_name = "_ZN15NontrivialUnpinaSEi"]
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinaSEi<'__this>(
+            __this: &'__this mut crate::NontrivialUnpin,
+            __param_0: ::ffi_11::c_int,
+        ) -> &'__this mut crate::NontrivialUnpin;
         #[link_name = "_ZN15NontrivialUnpinD1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(
-            __this: &'a mut crate::NontrivialUnpin,
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'__this>(
+            __this: &'__this mut crate::NontrivialUnpin,
         );
         #[link_name = "_ZN15NontrivialUnpin14MemberFunctionEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv<'a>(
-            __this: &'a mut crate::NontrivialUnpin,
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv<'__this>(
+            __this: &'__this mut crate::NontrivialUnpin,
         );
         pub(crate) unsafe fn __rust_thunk___Z12TakesByValue10Nontrivial(
             __return: *mut ::core::ffi::c_void,
@@ -845,20 +1239,56 @@ mod detail {
             __return: *mut ::core::ffi::c_void,
             nontrivial: &mut crate::NontrivialUnpin,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial<'a, 'other>(
+        #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
+        pub(crate) unsafe fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'nontrivial>(
+            nontrivial: ::core::pin::Pin<&'nontrivial mut crate::Nontrivial>,
+        ) -> ::cref::CMut<'nontrivial, crate::Nontrivial>;
+        #[link_name = "_Z21TakesUnpinByReferenceR15NontrivialUnpin"]
+        pub(crate) unsafe fn __rust_thunk___Z21TakesUnpinByReferenceR15NontrivialUnpin<
+            'nontrivial,
+        >(
+            nontrivial: &'nontrivial mut crate::NontrivialUnpin,
+        ) -> ::cref::CMut<'nontrivial, crate::NontrivialUnpin>;
+        #[link_name = "_Z21TakesByConstReferenceRK10Nontrivial"]
+        pub(crate) unsafe fn __rust_thunk___Z21TakesByConstReferenceRK10Nontrivial<'nontrivial>(
+            nontrivial: &'nontrivial crate::Nontrivial,
+        ) -> ::cref::CRef<'nontrivial, crate::Nontrivial>;
+        #[link_name = "_Z26TakesUnpinByConstReferenceRK15NontrivialUnpin"]
+        pub(crate) unsafe fn __rust_thunk___Z26TakesUnpinByConstReferenceRK15NontrivialUnpin<
+            'nontrivial,
+        >(
+            nontrivial: &'nontrivial crate::NontrivialUnpin,
+        ) -> ::cref::CRef<'nontrivial, crate::NontrivialUnpin>;
+        #[link_name = "_Z22TakesByRvalueReferenceO10Nontrivial"]
+        pub(crate) unsafe fn __rust_thunk___Z22TakesByRvalueReferenceO10Nontrivial(
+            nontrivial: ::ctor::RvalueReference<'_, crate::Nontrivial>,
+        ) -> ::ctor::RvalueReference<'_, crate::Nontrivial>;
+        #[link_name = "_Z27TakesUnpinByRvalueReferenceO15NontrivialUnpin"]
+        pub(crate) unsafe fn __rust_thunk___Z27TakesUnpinByRvalueReferenceO15NontrivialUnpin(
+            nontrivial: ::ctor::RvalueReference<'_, crate::NontrivialUnpin>,
+        ) -> ::ctor::RvalueReference<'_, crate::NontrivialUnpin>;
+        #[link_name = "_Z27TakesByConstRvalueReferenceOK10Nontrivial"]
+        pub(crate) unsafe fn __rust_thunk___Z27TakesByConstRvalueReferenceOK10Nontrivial(
+            nontrivial: ::ctor::ConstRvalueReference<'_, crate::Nontrivial>,
+        ) -> ::ctor::ConstRvalueReference<'_, crate::Nontrivial>;
+        #[link_name = "_Z32TakesUnpinByConstRvalueReferenceOK15NontrivialUnpin"]
+        pub(crate) unsafe fn __rust_thunk___Z32TakesUnpinByConstRvalueReferenceOK15NontrivialUnpin(
+            nontrivial: ::ctor::ConstRvalueReference<'_, crate::NontrivialUnpin>,
+        ) -> ::ctor::ConstRvalueReference<'_, crate::NontrivialUnpin>;
+        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial<'__this, 'other>(
             __return: *mut ::core::ffi::c_void,
-            __this: &'a mut crate::NontrivialByValue,
+            __this: &'__this mut crate::NontrivialByValue,
             other: ::ctor::RvalueReference<'other, crate::Nontrivial>,
         );
         #[link_name = "_ZN10NonmovableC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN10NonmovableD1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN10NonmovableD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nonmovable>,
+        pub(crate) unsafe fn __rust_thunk___ZN10NonmovableD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nonmovable>,
         );
         #[link_name = "_ZN10Nonmovable14MemberFunctionEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN10Nonmovable14MemberFunctionEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nonmovable>,
+        pub(crate) unsafe fn __rust_thunk___ZN10Nonmovable14MemberFunctionEv<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Nonmovable>,
         );
         pub(crate) unsafe fn __rust_thunk___Z24ReturnsNonmovableByValuev(
             __return: *mut ::core::ffi::c_void,

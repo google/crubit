@@ -28,21 +28,13 @@ unsafe impl ::cxx::ExternType for Struct {
     type Kind = ::cxx::kind::Trivial;
 }
 impl Struct {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn AccessNone(__this: *mut Self) {
-        unsafe { self::r#struct::AccessNone(__this) }
+    pub fn AccessNone<'__this>(&'__this mut self) {
+        unsafe { self::r#struct::AccessNone(self) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn AccessPublic(__this: *mut Self) {
-        unsafe { self::r#struct::AccessPublic(__this) }
+    pub fn AccessPublic<'__this>(&'__this mut self) {
+        unsafe { self::r#struct::AccessPublic(self) }
     }
 }
 
@@ -58,20 +50,12 @@ impl Default for Struct {
 }
 
 pub mod r#struct {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn AccessNone(__this: *mut crate::Struct) {
+    pub(crate) fn AccessNone<'__this>(__this: &'__this mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn AccessPublic(__this: *mut crate::Struct) {
+    pub(crate) fn AccessPublic<'__this>(__this: &'__this mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this) }
     }
 }
@@ -90,13 +74,9 @@ unsafe impl ::cxx::ExternType for Class {
     type Kind = ::cxx::kind::Trivial;
 }
 impl Class {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn AccessPublic(__this: *mut Self) {
-        unsafe { self::class::AccessPublic(__this) }
+    pub fn AccessPublic<'__this>(&'__this mut self) {
+        unsafe { self::class::AccessPublic(self) }
     }
 }
 
@@ -112,12 +92,8 @@ impl Default for Class {
 }
 
 pub mod class {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn AccessPublic(__this: *mut crate::Class) {
+    pub(crate) fn AccessPublic<'__this>(__this: &'__this mut crate::Class) {
         unsafe { crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this) }
     }
 }
@@ -128,12 +104,18 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN6Struct10AccessNoneEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN6Struct10AccessNoneEv(__this: *mut crate::Struct);
+        pub(crate) unsafe fn __rust_thunk___ZN6Struct10AccessNoneEv<'__this>(
+            __this: &'__this mut crate::Struct,
+        );
         #[link_name = "_ZN6Struct12AccessPublicEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN6Struct12AccessPublicEv(__this: *mut crate::Struct);
+        pub(crate) unsafe fn __rust_thunk___ZN6Struct12AccessPublicEv<'__this>(
+            __this: &'__this mut crate::Struct,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN5ClassC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN5Class12AccessPublicEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN5Class12AccessPublicEv(__this: *mut crate::Class);
+        pub(crate) unsafe fn __rust_thunk___ZN5Class12AccessPublicEv<'__this>(
+            __this: &'__this mut crate::Class,
+        );
     }
 }
 

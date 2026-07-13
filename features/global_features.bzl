@@ -21,7 +21,8 @@ SUPPORTED_FEATURES = [
 
 # buildifier: keep sorted <internal link>
 NO_ASSUME_LIFETIMES_TARGETS = [
-    "//...",
+    "//rs_bindings_from_cc/test/allowlist_template_instantiation/...",
+    "//rs_bindings_from_cc/test/annotations/...",
     "//rs_bindings_from_cc/test/assume_lifetimes/release/blocklisted_subpackage/...",
     "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage",
     "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:experimental",
@@ -29,4 +30,17 @@ NO_ASSUME_LIFETIMES_TARGETS = [
     "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:opt_in",
     "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:opt_out",
     "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:supported",
+    "//rs_bindings_from_cc/test/consume_absl/...",
+    "//rs_bindings_from_cc/test/display/...",
+    "//rs_bindings_from_cc/test/function/non_extern_c/...",
+    "//rs_bindings_from_cc/test/function/simple/...",
+    "//rs_bindings_from_cc/test/manual_bridge_vocabulary_types/...",
+    "//rs_bindings_from_cc/test/proto/...",
+    "//rs_bindings_from_cc/test/roundtrip/...",
+    "//rs_bindings_from_cc/test/struct/methods/...",
+    "//rs_bindings_from_cc/test/struct/operator_and/...",
+    "//rs_bindings_from_cc/test/templates/allowlist/...",
+    "//rs_bindings_from_cc/test/wrapper/fallback_bridge_types:wrapper_library",
+    "//rs_bindings_from_cc/test/wrapper/fallback_types:wrapper_library",
+    "//support/cc_std_impl/test/string_view/...",
 ]

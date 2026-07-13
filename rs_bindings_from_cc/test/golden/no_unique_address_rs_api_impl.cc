@@ -64,6 +64,19 @@ extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
+    struct FieldInTailPadding_InnerStruct* __this,
+    struct FieldInTailPadding_InnerStruct const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" struct FieldInTailPadding_InnerStruct*
+__rust_thunk___ZN30FieldInTailPadding_InnerStructaSERKS_(
+    struct FieldInTailPadding_InnerStruct* __this,
+    struct FieldInTailPadding_InnerStruct const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
 extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev(
     struct FieldInTailPadding_InnerStruct* __this) {
   std::destroy_at(__this);
@@ -75,9 +88,33 @@ static_assert(CRUBIT_OFFSET_OF(inner_struct, struct FieldInTailPadding) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_in_tail_padding_of_prev_field,
                                struct FieldInTailPadding) == 5);
 
+extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
+    struct FieldInTailPadding* __this,
+    struct FieldInTailPadding const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1EOS_(
+    struct FieldInTailPadding* __this, struct FieldInTailPadding* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
 extern "C" void __rust_thunk___ZN18FieldInTailPaddingD1Ev(
     struct FieldInTailPadding* __this) {
   std::destroy_at(__this);
+}
+
+extern "C" struct FieldInTailPadding*
+__rust_thunk___ZN18FieldInTailPaddingaSERKS_(
+    struct FieldInTailPadding* __this,
+    struct FieldInTailPadding const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" struct FieldInTailPadding*
+__rust_thunk___ZN18FieldInTailPaddingaSEOS_(
+    struct FieldInTailPadding* __this, struct FieldInTailPadding* __param_0) {
+  return std::addressof(__this->operator=(std::move(*__param_0)));
 }
 
 extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1Eicc(

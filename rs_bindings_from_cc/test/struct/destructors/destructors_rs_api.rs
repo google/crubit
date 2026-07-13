@@ -92,7 +92,7 @@ impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for DestructionOrderReco
 
 impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for DestructionOrderRecorder {
     #[inline(always)]
-    fn unpin_assign(&mut self, other: ::ctor::RvalueReference<'_, Self>) {
+    fn unpin_assign<'__this>(&'__this mut self, other: ::ctor::RvalueReference<'_, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorderaSEOS_(self, other);
         }
@@ -101,7 +101,7 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for DestructionOrder
 
 impl Drop for DestructionOrderRecorder {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
+    fn drop<'__this>(&'__this mut self) {
         unsafe { crate::detail::__rust_thunk___ZN24DestructionOrderRecorderD1Ev(self) }
     }
 }
@@ -186,14 +186,14 @@ impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrde
 
 impl Drop for FieldDestructionOrderTester {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
+    fn drop<'__this>(&'__this mut self) {
         unsafe { crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesterD1Ev(self) }
     }
 }
 
 impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrderTester {
     #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesteraSEOS_(self, __param_0);
         }
@@ -280,9 +280,9 @@ unsafe impl ::cxx::ExternType for PrivateOperatorDelete {
     type Kind = ::cxx::kind::Trivial;
 }
 
-impl ::ctor::UnpinAssign<&Self> for PrivateOperatorDelete {
+impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for PrivateOperatorDelete {
     #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN21PrivateOperatorDeleteaSERKS_(self, __param_0);
         }
@@ -314,7 +314,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for PrivateOperatorDelete {
 
 impl Drop for PrivateOperatorDelete {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
+    fn drop<'__this>(&'__this mut self) {
         unsafe { crate::detail::__rust_thunk___ZN21PrivateOperatorDeleteD1Ev(self) }
     }
 }
@@ -331,12 +331,12 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             other: ::ctor::RvalueReference<'_, crate::DestructionOrderRecorder>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderaSEOS_<'__return_lifetime>(
-            __this: &mut crate::DestructionOrderRecorder,
+        pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderaSEOS_<'__this>(
+            __this: &'__this mut crate::DestructionOrderRecorder,
             other: ::ctor::RvalueReference<'_, crate::DestructionOrderRecorder>,
-        ) -> &'__return_lifetime mut crate::DestructionOrderRecorder;
-        pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderD1Ev<'a>(
-            __this: &'a mut crate::DestructionOrderRecorder,
+        ) -> &'__this mut crate::DestructionOrderRecorder;
+        pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderD1Ev<'__this>(
+            __this: &'__this mut crate::DestructionOrderRecorder,
         );
         #[link_name = "_ZN24DestructionOrderRecorder17RecordDestructionEi"]
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
@@ -351,15 +351,13 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'_, crate::FieldDestructionOrderTester>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterD1Ev<'a>(
-            __this: &'a mut crate::FieldDestructionOrderTester,
+        pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterD1Ev<'__this>(
+            __this: &'__this mut crate::FieldDestructionOrderTester,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesteraSEOS_<
-            '__return_lifetime,
-        >(
-            __this: &mut crate::FieldDestructionOrderTester,
+        pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesteraSEOS_<'__this>(
+            __this: &'__this mut crate::FieldDestructionOrderTester,
             __param_0: ::ctor::RvalueReference<'_, crate::FieldDestructionOrderTester>,
-        ) -> &'__return_lifetime mut crate::FieldDestructionOrderTester;
+        ) -> &'__this mut crate::FieldDestructionOrderTester;
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(
             __this: *mut ::core::ffi::c_void,
             field1: &mut crate::DestructionOrderRecorder,
@@ -371,16 +369,16 @@ mod detail {
             field2: ::ffi_11::c_int,
             field3: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteaSERKS_<'__return_lifetime>(
-            __this: &mut crate::PrivateOperatorDelete,
-            __param_0: &crate::PrivateOperatorDelete,
-        ) -> &'__return_lifetime mut crate::PrivateOperatorDelete;
+        pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteaSERKS_<'__param_0, '__this>(
+            __this: &'__this mut crate::PrivateOperatorDelete,
+            __param_0: &'__param_0 crate::PrivateOperatorDelete,
+        ) -> &'__this mut crate::PrivateOperatorDelete;
         pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteC1Ei(
             __this: *mut ::core::ffi::c_void,
             int_field: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteD1Ev<'a>(
-            __this: &'a mut crate::PrivateOperatorDelete,
+        pub(crate) unsafe fn __rust_thunk___ZN21PrivateOperatorDeleteD1Ev<'__this>(
+            __this: &'__this mut crate::PrivateOperatorDelete,
         );
     }
 }

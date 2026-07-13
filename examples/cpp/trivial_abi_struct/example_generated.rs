@@ -42,9 +42,9 @@ impl Default for Position {
     }
 }
 
-impl ::ctor::UnpinAssign<&Self> for Position {
+impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for Position {
     #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
+    fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN8PositionaSERKS_(self, __param_0);
         }
@@ -53,7 +53,7 @@ impl ::ctor::UnpinAssign<&Self> for Position {
 
 impl Drop for Position {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
+    fn drop<'__this>(&'__this mut self) {
         unsafe { crate::detail::__rust_thunk___ZN8PositionD1Ev(self) }
     }
 }
@@ -63,11 +63,13 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN8PositionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN8PositionaSERKS_<'__return_lifetime>(
-            __this: &mut crate::Position,
-            __param_0: &crate::Position,
-        ) -> &'__return_lifetime mut crate::Position;
-        pub(crate) unsafe fn __rust_thunk___ZN8PositionD1Ev<'a>(__this: &'a mut crate::Position);
+        pub(crate) unsafe fn __rust_thunk___ZN8PositionaSERKS_<'__param_0, '__this>(
+            __this: &'__this mut crate::Position,
+            __param_0: &'__param_0 crate::Position,
+        ) -> &'__this mut crate::Position;
+        pub(crate) unsafe fn __rust_thunk___ZN8PositionD1Ev<'__this>(
+            __this: &'__this mut crate::Position,
+        );
     }
 }
 

@@ -41,6 +41,20 @@ static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
 static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
               1);
 
+extern "C" struct TriviallyCopyableButNontriviallyDestructible*
+__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
+    struct TriviallyCopyableButNontriviallyDestructible* __this,
+    struct TriviallyCopyableButNontriviallyDestructible const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" void
+__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
+    struct TriviallyCopyableButNontriviallyDestructible* __this,
+    struct TriviallyCopyableButNontriviallyDestructible const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(
     struct TriviallyCopyableButNontriviallyDestructible* __this) {
@@ -68,6 +82,16 @@ static_assert(sizeof(union NonCopyUnion2) == 1);
 static_assert(alignof(union NonCopyUnion2) == 1);
 static_assert(CRUBIT_OFFSET_OF(trivial_member, union NonCopyUnion2) == 0);
 static_assert(CRUBIT_OFFSET_OF(nontrivial_member, union NonCopyUnion2) == 0);
+
+extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSERKS_(
+    union NonCopyUnion2* __this, union NonCopyUnion2 const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSEOS_(
+    union NonCopyUnion2* __this, union NonCopyUnion2* __param_0) {
+  return std::addressof(__this->operator=(std::move(*__param_0)));
+}
 
 static_assert(sizeof(union UnionWithOpaqueField) == 42);
 static_assert(alignof(union UnionWithOpaqueField) == 1);

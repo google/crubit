@@ -88,6 +88,9 @@ static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
 static_assert(CRUBIT_OFFSET_OF(cyclic_ptr_field, struct FieldTypeTestStruct) ==
               200);
 
+static_assert((void (*)(int const&, int&, int const*, int*)) &
+              ::FunctionTakingPointersAndReferences);
+
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();
 }

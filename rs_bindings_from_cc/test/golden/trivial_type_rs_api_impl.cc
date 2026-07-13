@@ -36,6 +36,11 @@ static_assert((void (::ns::Trivial::*)() &)&::ns::Trivial::LvalueRefQualified);
 static_assert((void (::ns::Trivial::*)()
                    const&)&::ns::Trivial::ConstLvalueRefQualified);
 
+static_assert((void (::ns::Trivial::*)() &&)&::ns::Trivial::RvalueRefQualified);
+
+static_assert((void (::ns::Trivial::*)()
+                   const&&)&::ns::Trivial::ConstRvalueRefQualified);
+
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
     struct ns::Trivial* __return, struct ns::Trivial* trivial) {
   new (__return) auto(ns::TakesByValue(std::move(*trivial)));
@@ -43,5 +48,17 @@ extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
 
 static_assert((struct ns::Trivial (*)(struct ns::Trivial)) &
               ::ns::TakesByValue);
+
+static_assert((struct ns::Trivial & (*)(struct ns::Trivial&)) &
+              ::ns::TakesByReference);
+
+static_assert((struct ns::Trivial const& (*)(struct ns::Trivial const&)) &
+              ::ns::TakesByConstReference);
+
+static_assert((struct ns::Trivial && (*)(struct ns::Trivial&&)) &
+              ::ns::TakesByRvalueReference);
+
+static_assert((struct ns::Trivial const && (*)(struct ns::Trivial const&&)) &
+              ::ns::TakesByConstRvalueReference);
 
 #pragma clang diagnostic pop

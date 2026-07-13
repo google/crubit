@@ -34,7 +34,7 @@ pub mod test_namespace_bindings {
     }
     impl SomeClass {
         #[inline(always)]
-        pub fn public_method<'a>(&'a mut self) {
+        pub fn public_method<'__this>(&'__this mut self) {
             unsafe { self::some_class::public_method(self) }
         }
         #[inline(always)]
@@ -56,29 +56,11 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // error: constructor `test_namespace_bindings::SomeClass::SomeClass` could not be bound
-    //   Unsupported parameter type `const test_namespace_bindings::SomeClass& __param_0`:
-    //     references are not yet supported
-
-    // error: constructor `test_namespace_bindings::SomeClass::SomeClass` could not be bound
-    //   Unsupported parameter type `test_namespace_bindings::SomeClass&& __param_0`:
-    //     references are not yet supported
-
-    // error: function `test_namespace_bindings::SomeClass::operator=` could not be bound
-    //   Unsupported parameter type `const test_namespace_bindings::SomeClass& __param_0`:
-    //     references are not yet supported
-    //   Unsupported return type `test_namespace_bindings::SomeClass&`:
-    //     references are not yet supported
-
-    // error: function `test_namespace_bindings::SomeClass::operator=` could not be bound
-    //   Unsupported parameter type `test_namespace_bindings::SomeClass&& __param_0`:
-    //     references are not yet supported
-    //   Unsupported return type `test_namespace_bindings::SomeClass&`:
-    //     references are not yet supported
-
     pub mod some_class {
         #[inline(always)]
-        pub(crate) fn public_method<'a>(__this: &'a mut crate::test_namespace_bindings::SomeClass) {
+        pub(crate) fn public_method<'__this>(
+            __this: &'__this mut crate::test_namespace_bindings::SomeClass,
+        ) {
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv(
                     __this,
@@ -105,9 +87,9 @@ mod detail {
         );
         #[link_name = "_ZN23test_namespace_bindings9SomeClass13public_methodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv<
-            'a,
+            '__this,
         >(
-            __this: &'a mut crate::test_namespace_bindings::SomeClass,
+            __this: &'__this mut crate::test_namespace_bindings::SomeClass,
         );
         #[link_name = "_ZN23test_namespace_bindings9SomeClass20public_static_methodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv(

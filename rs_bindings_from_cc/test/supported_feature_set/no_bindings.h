@@ -46,10 +46,6 @@ using InstantiatedTemplatedStruct = TemplatedStruct<int>;
 [[deprecated]] inline void crubit_enable_if()
     __attribute__((enable_if(2 + 2 == 4, ""))) {}
 
-inline void* crubit_parameter_lifetimebound(void* x [[clang::lifetimebound]]) {
-  return x;
-}
-
 inline void crubit_invoke_callback(void (*f)(InstantiatedTemplatedStruct* x)) {
   f(nullptr);
 }

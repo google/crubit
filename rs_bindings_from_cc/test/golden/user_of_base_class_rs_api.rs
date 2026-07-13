@@ -50,25 +50,78 @@ impl ::ctor::CtorNew<()> for Derived2 {
     }
 }
 
-// error: constructor `Derived2::Derived2` could not be bound
-//   Unsupported parameter type `const Derived2& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for Derived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN8Derived2C1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for Derived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `Derived2::Derived2` could not be bound
-//   Unsupported parameter type `Derived2&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Derived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN8Derived2C1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)> for Derived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// error: function `Derived2::operator=` could not be bound
-//   Unsupported parameter type `const Derived2& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Derived2&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for Derived2 {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN8Derived2aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `Derived2::operator=` could not be bound
-//   Unsupported parameter type `Derived2&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Derived2&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Derived2 {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN8Derived2aSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "15VirtualDerived2"]
@@ -100,34 +153,121 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
     }
 }
 
-// error: constructor `VirtualDerived2::VirtualDerived2` could not be bound
-//   Unsupported parameter type `const VirtualDerived2& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for VirtualDerived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN15VirtualDerived2C1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for VirtualDerived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `VirtualDerived2::VirtualDerived2` could not be bound
-//   Unsupported parameter type `VirtualDerived2&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for VirtualDerived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN15VirtualDerived2C1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for VirtualDerived2
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// error: function `VirtualDerived2::operator=` could not be bound
-//   Unsupported parameter type `const VirtualDerived2& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualDerived2&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for VirtualDerived2 {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15VirtualDerived2aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `VirtualDerived2::operator=` could not be bound
-//   Unsupported parameter type `VirtualDerived2&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualDerived2&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerived2 {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15VirtualDerived2aSEOS_(self, __param_0);
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::Derived2,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::Derived2>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2aSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Derived2>,
+            __param_0: &'__param_0 crate::Derived2,
+        ) -> ::core::pin::Pin<&'__this mut crate::Derived2>;
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2aSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::Derived2>,
+            __param_0: ::ctor::RvalueReference<'_, crate::Derived2>,
+        ) -> ::core::pin::Pin<&'__this mut crate::Derived2>;
         pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::VirtualDerived2,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::VirtualDerived2>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2aSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualDerived2>,
+            __param_0: &'__param_0 crate::VirtualDerived2,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualDerived2>;
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2aSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualDerived2>,
+            __param_0: ::ctor::RvalueReference<'_, crate::VirtualDerived2>,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualDerived2>;
     }
 }
 

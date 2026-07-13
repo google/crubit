@@ -37,13 +37,9 @@ unsafe impl ::cxx::ExternType for Same {
     type Kind = ::cxx::kind::Trivial;
 }
 impl Same {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn Method(__this: *mut Self) -> ::ffi_11::c_int {
-        unsafe { self::same_items::Method(__this) }
+    pub fn Method<'__this>(&'__this mut self) -> ::ffi_11::c_int {
+        unsafe { self::same_items::Method(self) }
     }
 }
 
@@ -59,12 +55,8 @@ impl Default for Same {
 }
 
 pub mod same_items {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn Method(__this: *mut crate::Same) -> ::ffi_11::c_int {
+    pub(crate) fn Method<'__this>(__this: &'__this mut crate::Same) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN4Same6MethodEv(__this) }
     }
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -81,13 +73,9 @@ pub mod same_items {
         type Kind = ::cxx::kind::Trivial;
     }
     impl NestedItem {
-        /// # Safety
-        ///
-        /// The caller must ensure that the following unsafe arguments are not misused by the function:
-        /// * `__this`: raw pointer
         #[inline(always)]
-        pub unsafe fn NestedItemFunction(__this: *mut Self) -> ::ffi_11::c_int {
-            unsafe { self::nested_item::NestedItemFunction(__this) }
+        pub fn NestedItemFunction<'__this>(&'__this mut self) -> ::ffi_11::c_int {
+            unsafe { self::nested_item::NestedItemFunction(self) }
         }
     }
 
@@ -103,13 +91,9 @@ pub mod same_items {
     }
 
     pub mod nested_item {
-        /// # Safety
-        ///
-        /// The caller must ensure that the following unsafe arguments are not misused by the function:
-        /// * `__this`: raw pointer
         #[inline(always)]
-        pub(crate) unsafe fn NestedItemFunction(
-            __this: *mut crate::same_items::NestedItem,
+        pub(crate) fn NestedItemFunction<'__this>(
+            __this: &'__this mut crate::same_items::NestedItem,
         ) -> ::ffi_11::c_int {
             unsafe {
                 crate::detail::__rust_thunk___ZN4Same10NestedItem18NestedItemFunctionEv(__this)
@@ -294,11 +278,11 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN4Same10NestedItemC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN4Same10NestedItem18NestedItemFunctionEv(
-            __this: *mut crate::same_items::NestedItem,
+        pub(crate) unsafe fn __rust_thunk___ZN4Same10NestedItem18NestedItemFunctionEv<'__this>(
+            __this: &'__this mut crate::same_items::NestedItem,
         ) -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN4Same6MethodEv(
-            __this: *mut crate::Same,
+        pub(crate) unsafe fn __rust_thunk___ZN4Same6MethodEv<'__this>(
+            __this: &'__this mut crate::Same,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN3foo3FooC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN3foo3Foo3fooC1Ev(__this: *mut ::core::ffi::c_void);

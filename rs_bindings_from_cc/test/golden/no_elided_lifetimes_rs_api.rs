@@ -14,12 +14,8 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-/// # Safety
-///
-/// The caller must ensure that the following unsafe arguments are not misused by the function:
-/// * `p1`: raw pointer
 #[inline(always)]
-pub unsafe fn free_function(p1: *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
+pub fn free_function<'p1>(p1: &'p1 mut ::ffi_11::c_int) -> ::cref::CMut<'p1, ::ffi_11::c_int> {
     unsafe { crate::detail::__rust_thunk___Z13free_functionRi(p1) }
 }
 
@@ -37,33 +33,21 @@ unsafe impl ::cxx::ExternType for S {
     type Kind = ::cxx::kind::Trivial;
 }
 impl S {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    /// * `p1`: raw pointer
-    /// * `p2`: raw pointer
     #[inline(always)]
-    pub unsafe fn const_method(
-        __this: *const Self,
-        p1: *mut ::ffi_11::c_int,
-        p2: *mut ::ffi_11::c_int,
-    ) -> *mut ::ffi_11::c_int {
-        unsafe { self::s::const_method(__this, p1, p2) }
+    pub fn const_method<'__this, 'p1, 'p2>(
+        &'__this self,
+        p1: &'p1 mut ::ffi_11::c_int,
+        p2: &'p2 mut ::ffi_11::c_int,
+    ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
+        unsafe { self::s::const_method(self, p1, p2) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    /// * `p1`: raw pointer
-    /// * `p2`: raw pointer
     #[inline(always)]
-    pub unsafe fn method(
-        __this: *mut Self,
-        p1: *mut ::ffi_11::c_int,
-        p2: *mut ::ffi_11::c_int,
-    ) -> *mut ::ffi_11::c_int {
-        unsafe { self::s::method(__this, p1, p2) }
+    pub fn method<'__this, 'p1, 'p2>(
+        &'__this mut self,
+        p1: &'p1 mut ::ffi_11::c_int,
+        p2: &'p2 mut ::ffi_11::c_int,
+    ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
+        unsafe { self::s::method(self, p1, p2) }
     }
 }
 
@@ -79,32 +63,20 @@ impl Default for S {
 }
 
 pub mod s {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    /// * `p1`: raw pointer
-    /// * `p2`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn const_method(
-        __this: *const crate::S,
-        p1: *mut ::ffi_11::c_int,
-        p2: *mut ::ffi_11::c_int,
-    ) -> *mut ::ffi_11::c_int {
+    pub(crate) fn const_method<'__this, 'p1, 'p2>(
+        __this: &'__this crate::S,
+        p1: &'p1 mut ::ffi_11::c_int,
+        p2: &'p2 mut ::ffi_11::c_int,
+    ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    /// * `p1`: raw pointer
-    /// * `p2`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn method(
-        __this: *mut crate::S,
-        p1: *mut ::ffi_11::c_int,
-        p2: *mut ::ffi_11::c_int,
-    ) -> *mut ::ffi_11::c_int {
+    pub(crate) fn method<'__this, 'p1, 'p2>(
+        __this: &'__this mut crate::S,
+        p1: &'p1 mut ::ffi_11::c_int,
+        p2: &'p2 mut ::ffi_11::c_int,
+    ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
     }
 }
@@ -123,9 +95,9 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
     type Kind = ::cxx::kind::Opaque;
 }
 
-impl ::ctor::Assign<&Self> for TriviallyCopyableButNontriviallyDestructible {
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
                 self, __param_0,
@@ -134,13 +106,13 @@ impl ::ctor::Assign<&Self> for TriviallyCopyableButNontriviallyDestructible {
     }
 }
 
-impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
         let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
@@ -149,21 +121,21 @@ impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
         }
     }
 }
-impl<'__unelided> ::ctor::CtorNew<(&'__unelided Self,)>
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: (&'__unelided Self,)) -> Self::CtorType {
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'__unelided Self>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
     }
 }
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
         }
@@ -216,10 +188,10 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for WrappedValue {
     }
 }
 
-impl ::core::ops::Add<&crate::WrappedValue> for &crate::WrappedValue {
+impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::WrappedValue> for &'__this crate::WrappedValue {
     type Output = crate::WrappedValue;
     #[inline(always)]
-    fn add(self, rhs: &crate::WrappedValue) -> Self::Output {
+    fn add(self, rhs: &'rhs crate::WrappedValue) -> Self::Output {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::WrappedValue>::uninit();
             crate::detail::__rust_thunk___ZNK12WrappedValueplERKS_(
@@ -237,41 +209,44 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         #[link_name = "_Z13free_functionRi"]
-        pub(crate) unsafe fn __rust_thunk___Z13free_functionRi(
-            p1: *mut ::ffi_11::c_int,
-        ) -> *mut ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z13free_functionRi<'p1>(
+            p1: &'p1 mut ::ffi_11::c_int,
+        ) -> ::cref::CMut<'p1, ::ffi_11::c_int>;
         pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZNK1S12const_methodERiS0_"]
-        pub(crate) unsafe fn __rust_thunk___ZNK1S12const_methodERiS0_(
-            __this: *const crate::S,
-            p1: *mut ::ffi_11::c_int,
-            p2: *mut ::ffi_11::c_int,
-        ) -> *mut ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZNK1S12const_methodERiS0_<'__this, 'p1, 'p2>(
+            __this: &'__this crate::S,
+            p1: &'p1 mut ::ffi_11::c_int,
+            p2: &'p2 mut ::ffi_11::c_int,
+        ) -> ::cref::CMut<'__this, ::ffi_11::c_int>;
         #[link_name = "_ZN1S6methodERiS0_"]
-        pub(crate) unsafe fn __rust_thunk___ZN1S6methodERiS0_(
-            __this: *mut crate::S,
-            p1: *mut ::ffi_11::c_int,
-            p2: *mut ::ffi_11::c_int,
-        ) -> *mut ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN1S6methodERiS0_<'__this, 'p1, 'p2>(
+            __this: &'__this mut crate::S,
+            p1: &'p1 mut ::ffi_11::c_int,
+            p2: &'p2 mut ::ffi_11::c_int,
+        ) -> ::cref::CMut<'__this, ::ffi_11::c_int>;
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
-            '__return_lifetime,
+            '__param_0,
+            '__this,
         >(
-            __this: ::core::pin::Pin<&mut crate::TriviallyCopyableButNontriviallyDestructible>,
-            __param_0: &crate::TriviallyCopyableButNontriviallyDestructible,
-        ) -> ::core::pin::Pin<
-            &'__return_lifetime mut crate::TriviallyCopyableButNontriviallyDestructible,
-        >;
+            __this: ::core::pin::Pin<
+                &'__this mut crate::TriviallyCopyableButNontriviallyDestructible,
+            >,
+            __param_0: &'__param_0 crate::TriviallyCopyableButNontriviallyDestructible,
+        ) -> ::core::pin::Pin<&'__this mut crate::TriviallyCopyableButNontriviallyDestructible>;
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_<
-            '__unelided,
+            '__param_0,
         >(
             __this: *mut ::core::ffi::c_void,
-            __param_0: &'__unelided crate::TriviallyCopyableButNontriviallyDestructible,
+            __param_0: &'__param_0 crate::TriviallyCopyableButNontriviallyDestructible,
         );
         #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<
-            'a,
+            '__this,
         >(
-            __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
+            __this: ::core::pin::Pin<
+                &'__this mut crate::TriviallyCopyableButNontriviallyDestructible,
+            >,
         );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(p: *mut ::ffi_11::c_int);
@@ -279,10 +254,10 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             value: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZNK12WrappedValueplERKS_(
+        pub(crate) unsafe fn __rust_thunk___ZNK12WrappedValueplERKS_<'__this, 'rhs>(
             __return: *mut ::core::ffi::c_void,
-            __this: &crate::WrappedValue,
-            rhs: &crate::WrappedValue,
+            __this: &'__this crate::WrappedValue,
+            rhs: &'rhs crate::WrappedValue,
         );
     }
 }

@@ -45,6 +45,9 @@ inline void crubit_void_function() {}
 void crubit_non_inline_function();
 inline const void* crubit_void_ptr_identity(const void* x) { return x; }
 inline void crubit_nullability_annotated_function(const void* _Nullable x) {}
+inline void* crubit_parameter_lifetimebound(void* x [[clang::lifetimebound]]) {
+  return x;
+}
 inline int crubit_add(int x, char y) { return x + y; }
 inline Struct crubit_anystruct(Struct x, const StructAlias*) { return x; }
 inline Enum crubit_enum_function(Enum x) { return x; }

@@ -46,6 +46,14 @@ fn test_nullability_annotated_function() {
 }
 
 #[gtest]
+fn test_parameter_lifetimebound() {
+    let mut value = 1;
+    let ptr = &mut value as *mut _ as *mut ffi_11::c_void;
+    let result_ptr = unsafe { has_bindings::crubit_parameter_lifetimebound(ptr) };
+    assert_eq!(ptr, result_ptr);
+}
+
+#[gtest]
 fn test_user_struct() {
     let mut i: ffi_11::c_int = 123;
     let s = has_bindings::Struct { x: &mut i, y: 123i8.into(), z: 0 as *mut _ };

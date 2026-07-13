@@ -21,11 +21,6 @@ fn test_vectorcall() {
 }
 
 #[gtest]
-fn test_parameter_lifetimebound() {
-    assert!(!value_exists!(no_bindings::crubit_parameter_lifetimebound));
-}
-
-#[gtest]
 fn test_noreturn() {
     assert!(!value_exists!(no_bindings::crubit_noreturn));
 }

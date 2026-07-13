@@ -44,19 +44,44 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
     }
 }
 
-// error: constructor `PolymorphicBase::PolymorphicBase` could not be bound
-//   Unsupported parameter type `const PolymorphicBase& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for PolymorphicBase {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN15PolymorphicBaseC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for PolymorphicBase {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: function `PolymorphicBase::operator=` could not be bound
-//   Unsupported parameter type `const PolymorphicBase& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `PolymorphicBase&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for PolymorphicBase {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15PolymorphicBaseaSERKS_(self, __param_0);
+        }
+    }
+}
 
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN15PolymorphicBaseD1Ev(self) }
     }
 }
@@ -85,7 +110,7 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
 }
 impl PolymorphicBase2 {
     #[inline(always)]
-    pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Foo<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { self::polymorphic_base2::Foo(self) }
     }
 }
@@ -106,19 +131,44 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     }
 }
 
-// error: constructor `PolymorphicBase2::PolymorphicBase2` could not be bound
-//   Unsupported parameter type `const PolymorphicBase2& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for PolymorphicBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN16PolymorphicBase2C1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for PolymorphicBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: function `PolymorphicBase2::operator=` could not be bound
-//   Unsupported parameter type `const PolymorphicBase2& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `PolymorphicBase2&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for PolymorphicBase2 {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16PolymorphicBase2aSERKS_(self, __param_0);
+        }
+    }
+}
 
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase2D1Ev(self) }
     }
 }
@@ -134,7 +184,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
 
 pub mod polymorphic_base2 {
     #[inline(always)]
-    pub(crate) fn Foo<'a>(__this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>) {
+    pub(crate) fn Foo<'__this>(__this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(__this) }
     }
 }
@@ -169,32 +219,89 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
     }
 }
 
-// error: constructor `PolymorphicDerived::PolymorphicDerived` could not be bound
-//   Unsupported parameter type `const PolymorphicDerived& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for PolymorphicDerived {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for PolymorphicDerived {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `PolymorphicDerived::PolymorphicDerived` could not be bound
-//   Unsupported parameter type `PolymorphicDerived&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
+    for PolymorphicDerived
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for PolymorphicDerived
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
 impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN18PolymorphicDerivedD1Ev(self) }
     }
 }
 
-// error: function `PolymorphicDerived::operator=` could not be bound
-//   Unsupported parameter type `const PolymorphicDerived& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `PolymorphicDerived&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for PolymorphicDerived {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `PolymorphicDerived::operator=` could not be bound
-//   Unsupported parameter type `PolymorphicDerived&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `PolymorphicDerived&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for PolymorphicDerived {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSEOS_(self, __param_0);
+        }
+    }
+}
 
 unsafe impl ::operator::Delete for crate::PolymorphicDerived {
     #[inline(always)]
@@ -212,8 +319,16 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::PolymorphicBase,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase>,
+            __param_0: &'__param_0 crate::PolymorphicBase,
+        ) -> ::core::pin::Pin<&'__this mut crate::PolymorphicBase>;
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase>,
         );
         pub(crate) unsafe fn __crubit_operator_delete__15PolymorphicBase___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
             ptr: *mut crate::PolymorphicBase,
@@ -221,11 +336,19 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase23FooEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::PolymorphicBase2,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2aSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>,
+            __param_0: &'__param_0 crate::PolymorphicBase2,
+        ) -> ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>;
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase23FooEv<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>,
         );
         pub(crate) unsafe fn __crubit_operator_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
             ptr: *mut crate::PolymorphicBase2,
@@ -233,9 +356,25 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::PolymorphicDerived,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::PolymorphicDerived>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicDerived>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicDerived>,
+            __param_0: &'__param_0 crate::PolymorphicDerived,
+        ) -> ::core::pin::Pin<&'__this mut crate::PolymorphicDerived>;
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedaSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PolymorphicDerived>,
+            __param_0: ::ctor::RvalueReference<'_, crate::PolymorphicDerived>,
+        ) -> ::core::pin::Pin<&'__this mut crate::PolymorphicDerived>;
         pub(crate) unsafe fn __crubit_operator_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
             ptr: *mut crate::PolymorphicDerived,
         );

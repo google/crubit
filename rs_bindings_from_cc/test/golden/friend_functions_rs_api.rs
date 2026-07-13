@@ -45,12 +45,25 @@ pub fn visible_val(mut __param_0: crate::SomeClass) {
     unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(&mut __param_0) }
 }
 
-/// # Safety
-///
-/// The caller must ensure that the following unsafe arguments are not misused by the function:
-/// * `__param_0`: raw pointer
 #[inline(always)]
-pub unsafe fn multiple_declarations(__param_0: *const crate::SomeClass) -> ::ffi_11::c_int {
+pub fn visible_ref<'__param_0>(__param_0: &'__param_0 mut crate::SomeClass) {
+    unsafe { crate::detail::__rust_thunk___Z11visible_refR9SomeClass(__param_0) }
+}
+
+#[inline(always)]
+pub fn visible_cref<'__param_0>(__param_0: &'__param_0 crate::SomeClass) {
+    unsafe { crate::detail::__rust_thunk___Z12visible_crefRK9SomeClass(__param_0) }
+}
+
+#[inline(always)]
+pub fn visible_rref(__param_0: ::ctor::RvalueReference<'_, crate::SomeClass>) {
+    unsafe { crate::detail::__rust_thunk___Z12visible_rrefO9SomeClass(__param_0) }
+}
+
+#[inline(always)]
+pub fn multiple_declarations<'__param_0>(
+    __param_0: &'__param_0 crate::SomeClass,
+) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z21multiple_declarationsRK9SomeClass(__param_0) }
 }
 
@@ -62,8 +75,20 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
             __param_0: &mut crate::SomeClass,
         );
-        pub(crate) unsafe fn __rust_thunk___Z21multiple_declarationsRK9SomeClass(
-            __param_0: *const crate::SomeClass,
+        #[link_name = "_Z11visible_refR9SomeClass"]
+        pub(crate) unsafe fn __rust_thunk___Z11visible_refR9SomeClass<'__param_0>(
+            __param_0: &'__param_0 mut crate::SomeClass,
+        );
+        #[link_name = "_Z12visible_crefRK9SomeClass"]
+        pub(crate) unsafe fn __rust_thunk___Z12visible_crefRK9SomeClass<'__param_0>(
+            __param_0: &'__param_0 crate::SomeClass,
+        );
+        #[link_name = "_Z12visible_rrefO9SomeClass"]
+        pub(crate) unsafe fn __rust_thunk___Z12visible_rrefO9SomeClass(
+            __param_0: ::ctor::RvalueReference<'_, crate::SomeClass>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z21multiple_declarationsRK9SomeClass<'__param_0>(
+            __param_0: &'__param_0 crate::SomeClass,
         ) -> ::ffi_11::c_int;
     }
 }

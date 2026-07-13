@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:unsupported_cc
 
 #![rustfmt::skip]
-#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -39,26 +39,6 @@ impl Default for TrivialCustomType {
     }
 }
 
-// error: constructor `TrivialCustomType::TrivialCustomType` could not be bound
-//   Unsupported parameter type `const TrivialCustomType& __param_0`:
-//     references are not yet supported
-
-// error: constructor `TrivialCustomType::TrivialCustomType` could not be bound
-//   Unsupported parameter type `TrivialCustomType&& __param_0`:
-//     references are not yet supported
-
-// error: function `TrivialCustomType::operator=` could not be bound
-//   Unsupported parameter type `const TrivialCustomType& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `TrivialCustomType&`:
-//     references are not yet supported
-
-// error: function `TrivialCustomType::operator=` could not be bound
-//   Unsupported parameter type `TrivialCustomType&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `TrivialCustomType&`:
-//     references are not yet supported
-
 // error: function `TrivialCustomType::operator||` could not be bound
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
@@ -77,9 +57,35 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// error: constructor `NontrivialCustomType::NontrivialCustomType` could not be bound
-//   Unsupported parameter type `NontrivialCustomType&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
+    for NontrivialCustomType
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for NontrivialCustomType
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
 // error: function `NontrivialCustomType::operator||` could not be bound
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
@@ -107,6 +113,11 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::NontrivialCustomType>,
         );
     }
 }

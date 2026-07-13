@@ -37,6 +37,17 @@ static_assert((void (::Nontrivial::*)() &)&::Nontrivial::LvalueRefQualified);
 static_assert((void (::Nontrivial::*)()
                    const&)&::Nontrivial::ConstLvalueRefQualified);
 
+static_assert((void (::Nontrivial::*)() &&)&::Nontrivial::RvalueRefQualified);
+
+static_assert((void (::Nontrivial::*)()
+                   const&&)&::Nontrivial::ConstRvalueRefQualified);
+
+extern "C" void __rust_thunk___ZNK10NontrivialplERKS_(
+    struct Nontrivial* __return, struct Nontrivial const* __this,
+    struct Nontrivial const* rhs) {
+  new (__return) auto(__this->operator+(*rhs));
+}
+
 static_assert(CRUBIT_SIZEOF(struct NontrivialInline) == 4);
 static_assert(alignof(struct NontrivialInline) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialInline) == 0);
@@ -54,6 +65,31 @@ extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ei(
 extern "C" void __rust_thunk___ZN16NontrivialInlineC1Eii(
     struct NontrivialInline* __this, int field, int unused) {
   crubit::construct_at(__this, field, unused);
+}
+
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1ERKS_(
+    struct NontrivialInline* __this, struct NontrivialInline const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1EOS_(
+    struct NontrivialInline* __this, struct NontrivialInline* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct NontrivialInline* __rust_thunk___ZN16NontrivialInlineaSERKS_(
+    struct NontrivialInline* __this, struct NontrivialInline const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" struct NontrivialInline* __rust_thunk___ZN16NontrivialInlineaSEOS_(
+    struct NontrivialInline* __this, struct NontrivialInline* __param_0) {
+  return std::addressof(__this->operator=(std::move(*__param_0)));
+}
+
+extern "C" struct NontrivialInline* __rust_thunk___ZN16NontrivialInlineaSEi(
+    struct NontrivialInline* __this, int __param_0) {
+  return std::addressof(__this->operator=(__param_0));
 }
 
 extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
@@ -79,9 +115,32 @@ extern "C" void __rust_thunk___ZN17NontrivialMembersC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___ZN17NontrivialMembersC1ERKS_(
+    struct NontrivialMembers* __this,
+    struct NontrivialMembers const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" void __rust_thunk___ZN17NontrivialMembersC1EOS_(
+    struct NontrivialMembers* __this, struct NontrivialMembers* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
 extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
     struct NontrivialMembers* __this) {
   std::destroy_at(__this);
+}
+
+extern "C" struct NontrivialMembers*
+__rust_thunk___ZN17NontrivialMembersaSERKS_(
+    struct NontrivialMembers* __this,
+    struct NontrivialMembers const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" struct NontrivialMembers* __rust_thunk___ZN17NontrivialMembersaSEOS_(
+    struct NontrivialMembers* __this, struct NontrivialMembers* __param_0) {
+  return std::addressof(__this->operator=(std::move(*__param_0)));
 }
 
 static_assert(CRUBIT_SIZEOF(struct NontrivialUnpin) == 4);
@@ -113,6 +172,32 @@ extern "C" void __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
 
 static_assert((struct NontrivialUnpin (*)(struct NontrivialUnpin)) &
               ::TakesByValueUnpin);
+
+static_assert((struct Nontrivial & (*)(struct Nontrivial&)) &
+              ::TakesByReference);
+
+static_assert((struct NontrivialUnpin & (*)(struct NontrivialUnpin&)) &
+              ::TakesUnpinByReference);
+
+static_assert((struct Nontrivial const& (*)(struct Nontrivial const&)) &
+              ::TakesByConstReference);
+
+static_assert(
+    (struct NontrivialUnpin const& (*)(struct NontrivialUnpin const&)) &
+    ::TakesUnpinByConstReference);
+
+static_assert((struct Nontrivial && (*)(struct Nontrivial&&)) &
+              ::TakesByRvalueReference);
+
+static_assert((struct NontrivialUnpin && (*)(struct NontrivialUnpin&&)) &
+              ::TakesUnpinByRvalueReference);
+
+static_assert((struct Nontrivial const && (*)(struct Nontrivial const&&)) &
+              ::TakesByConstRvalueReference);
+
+static_assert((struct NontrivialUnpin const &&
+               (*)(struct NontrivialUnpin const&&)) &
+              ::TakesUnpinByConstRvalueReference);
 
 static_assert(sizeof(struct NontrivialByValue) == 1);
 static_assert(alignof(struct NontrivialByValue) == 1);

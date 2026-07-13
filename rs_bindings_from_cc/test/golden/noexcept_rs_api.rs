@@ -32,29 +32,17 @@ impl SomeClass {
     pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
         unsafe { self::some_class::create(i, c) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn no_except_member(__this: *mut Self) {
-        unsafe { self::some_class::no_except_member(__this) }
+    pub fn no_except_member<'__this>(&'__this mut self) {
+        unsafe { self::some_class::no_except_member(self) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn no_except_true_member(__this: *mut Self) {
-        unsafe { self::some_class::no_except_true_member(__this) }
+    pub fn no_except_true_member<'__this>(&'__this mut self) {
+        unsafe { self::some_class::no_except_true_member(self) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn no_except_false_member(__this: *mut Self) {
-        unsafe { self::some_class::no_except_false_member(__this) }
+    pub fn no_except_false_member<'__this>(&'__this mut self) {
+        unsafe { self::some_class::no_except_false_member(self) }
     }
 }
 
@@ -74,28 +62,16 @@ pub mod some_class {
     pub(crate) fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn no_except_member(__this: *mut crate::SomeClass) {
+    pub(crate) fn no_except_member<'__this>(__this: &'__this mut crate::SomeClass) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn no_except_true_member(__this: *mut crate::SomeClass) {
+    pub(crate) fn no_except_true_member<'__this>(__this: &'__this mut crate::SomeClass) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn no_except_false_member(__this: *mut crate::SomeClass) {
+    pub(crate) fn no_except_false_member<'__this>(__this: &'__this mut crate::SomeClass) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this) }
     }
 }
@@ -126,16 +102,16 @@ mod detail {
             c: ::ffi_11::c_char,
         );
         #[link_name = "_ZN9SomeClass16no_except_memberEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass16no_except_memberEv(
-            __this: *mut crate::SomeClass,
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass16no_except_memberEv<'__this>(
+            __this: &'__this mut crate::SomeClass,
         );
         #[link_name = "_ZN9SomeClass21no_except_true_memberEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass21no_except_true_memberEv(
-            __this: *mut crate::SomeClass,
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass21no_except_true_memberEv<'__this>(
+            __this: &'__this mut crate::SomeClass,
         );
         #[link_name = "_ZN9SomeClass22no_except_false_memberEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass22no_except_false_memberEv(
-            __this: *mut crate::SomeClass,
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass22no_except_false_memberEv<'__this>(
+            __this: &'__this mut crate::SomeClass,
         );
         #[link_name = "_Z9no_exceptv"]
         pub(crate) unsafe fn __rust_thunk___Z9no_exceptv();

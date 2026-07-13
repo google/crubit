@@ -22,12 +22,8 @@
 
 pub type NiIF = crate::__CcTemplateInst2NiIifE;
 
-/// # Safety
-///
-/// The caller must ensure that the following unsafe arguments are not misused by the function:
-/// * `i`: raw pointer
 #[inline(always)]
-pub unsafe fn SomeApi(i: *const crate::NiIF) {
+pub fn SomeApi<'i>(i: &'i crate::NiIF) {
     unsafe { crate::detail::__rust_thunk___Z7SomeApiRK2NiIifE(i) }
 }
 
@@ -66,7 +62,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         #[link_name = "_Z7SomeApiRK2NiIifE"]
-        pub(crate) unsafe fn __rust_thunk___Z7SomeApiRK2NiIifE(i: *const crate::NiIF);
+        pub(crate) unsafe fn __rust_thunk___Z7SomeApiRK2NiIifE<'i>(i: &'i crate::NiIF);
         pub(crate) unsafe fn __rust_thunk__426ccee6__ZN2NiIifEC1Eif(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_int,

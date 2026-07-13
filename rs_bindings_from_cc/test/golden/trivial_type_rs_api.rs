@@ -32,20 +32,28 @@ pub mod ns {
     }
     impl Trivial {
         #[inline(always)]
-        pub fn Unqualified<'a>(&'a mut self) {
+        pub fn Unqualified<'__this>(&'__this mut self) {
             unsafe { self::trivial::Unqualified(self) }
         }
         #[inline(always)]
-        pub fn ConstQualified<'a>(&'a self) {
+        pub fn ConstQualified<'__this>(&'__this self) {
             unsafe { self::trivial::ConstQualified(self) }
         }
         #[inline(always)]
-        pub fn LvalueRefQualified<'a>(&'a mut self) {
+        pub fn LvalueRefQualified<'__this>(&'__this mut self) {
             unsafe { self::trivial::LvalueRefQualified(self) }
         }
         #[inline(always)]
-        pub fn ConstLvalueRefQualified<'a>(&'a self) {
+        pub fn ConstLvalueRefQualified<'__this>(&'__this self) {
             unsafe { self::trivial::ConstLvalueRefQualified(self) }
+        }
+        #[inline(always)]
+        pub fn RvalueRefQualified<'__this>(&'__this mut self) {
+            unsafe { self::trivial::RvalueRefQualified(self) }
+        }
+        #[inline(always)]
+        pub fn ConstRvalueRefQualified<'__this>(&'__this self) {
+            unsafe { self::trivial::ConstRvalueRefQualified(self) }
         }
     }
 
@@ -60,51 +68,33 @@ pub mod ns {
         }
     }
 
-    // error: constructor `ns::Trivial::Trivial` could not be bound
-    //   Unsupported parameter type `const ns::Trivial& __param_0`:
-    //     references are not yet supported
-
-    // error: constructor `ns::Trivial::Trivial` could not be bound
-    //   Unsupported parameter type `ns::Trivial&& __param_0`:
-    //     references are not yet supported
-
-    // error: function `ns::Trivial::operator=` could not be bound
-    //   Unsupported parameter type `const ns::Trivial& __param_0`:
-    //     references are not yet supported
-    //   Unsupported return type `ns::Trivial&`:
-    //     references are not yet supported
-
-    // error: function `ns::Trivial::operator=` could not be bound
-    //   Unsupported parameter type `ns::Trivial&& __param_0`:
-    //     references are not yet supported
-    //   Unsupported return type `ns::Trivial&`:
-    //     references are not yet supported
-
-    // error: function `ns::Trivial::RvalueRefQualified` could not be bound
-    //   Unsupported parameter type `ns::Trivial&& __this`:
-    //     references are not yet supported
-
-    // error: function `ns::Trivial::ConstRvalueRefQualified` could not be bound
-    //   Unsupported parameter type `const ns::Trivial&& __this`:
-    //     references are not yet supported
-
     pub mod trivial {
         #[inline(always)]
-        pub(crate) fn Unqualified<'a>(__this: &'a mut crate::ns::Trivial) {
+        pub(crate) fn Unqualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(__this) }
         }
         #[inline(always)]
-        pub(crate) fn ConstQualified<'a>(__this: &'a crate::ns::Trivial) {
+        pub(crate) fn ConstQualified<'__this>(__this: &'__this crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(__this) }
         }
         #[inline(always)]
-        pub(crate) fn LvalueRefQualified<'a>(__this: &'a mut crate::ns::Trivial) {
+        pub(crate) fn LvalueRefQualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(__this) }
         }
         #[inline(always)]
-        pub(crate) fn ConstLvalueRefQualified<'a>(__this: &'a crate::ns::Trivial) {
+        pub(crate) fn ConstLvalueRefQualified<'__this>(__this: &'__this crate::ns::Trivial) {
             unsafe {
                 crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(__this)
+            }
+        }
+        #[inline(always)]
+        pub(crate) fn RvalueRefQualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
+            unsafe { crate::detail::__rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv(__this) }
+        }
+        #[inline(always)]
+        pub(crate) fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::ns::Trivial) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv(__this)
             }
         }
     }
@@ -121,29 +111,39 @@ pub mod ns {
         }
     }
 
-    // error: function `ns::TakesByReference` could not be bound
-    //   Unsupported parameter type `ns::Trivial& trivial`:
-    //     references are not yet supported
-    //   Unsupported return type `ns::Trivial&`:
-    //     references are not yet supported
+    #[inline(always)]
+    pub fn TakesByReference<'trivial>(
+        trivial: &'trivial mut crate::ns::Trivial,
+    ) -> ::cref::CMut<'trivial, crate::ns::Trivial> {
+        unsafe { crate::detail::__rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE(trivial) }
+    }
 
-    // error: function `ns::TakesByConstReference` could not be bound
-    //   Unsupported parameter type `const ns::Trivial& trivial`:
-    //     references are not yet supported
-    //   Unsupported return type `const ns::Trivial&`:
-    //     references are not yet supported
+    #[inline(always)]
+    pub fn TakesByConstReference<'trivial>(
+        trivial: &'trivial crate::ns::Trivial,
+    ) -> ::cref::CRef<'trivial, crate::ns::Trivial> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE(trivial)
+        }
+    }
 
-    // error: function `ns::TakesByRvalueReference` could not be bound
-    //   Unsupported parameter type `ns::Trivial&& trivial`:
-    //     references are not yet supported
-    //   Unsupported return type `ns::Trivial&&`:
-    //     references are not yet supported
+    #[inline(always)]
+    pub fn TakesByRvalueReference(
+        trivial: ::ctor::RvalueReference<'_, crate::ns::Trivial>,
+    ) -> ::ctor::RvalueReference<'_, crate::ns::Trivial> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE(trivial)
+        }
+    }
 
-    // error: function `ns::TakesByConstRvalueReference` could not be bound
-    //   Unsupported parameter type `const ns::Trivial&& trivial`:
-    //     references are not yet supported
-    //   Unsupported return type `const ns::Trivial&&`:
-    //     references are not yet supported
+    #[inline(always)]
+    pub fn TakesByConstRvalueReference(
+        trivial: ::ctor::ConstRvalueReference<'_, crate::ns::Trivial>,
+    ) -> ::ctor::ConstRvalueReference<'_, crate::ns::Trivial> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE(trivial)
+        }
+    }
 }
 
 // namespace ns
@@ -154,25 +154,49 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN2ns7Trivial11UnqualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7Trivial11UnqualifiedEv<'a>(
-            __this: &'a mut crate::ns::Trivial,
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7Trivial11UnqualifiedEv<'__this>(
+            __this: &'__this mut crate::ns::Trivial,
         );
         #[link_name = "_ZNK2ns7Trivial14ConstQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv<'a>(
-            __this: &'a crate::ns::Trivial,
+        pub(crate) unsafe fn __rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv<'__this>(
+            __this: &'__this crate::ns::Trivial,
         );
         #[link_name = "_ZNR2ns7Trivial18LvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv<'a>(
-            __this: &'a mut crate::ns::Trivial,
+        pub(crate) unsafe fn __rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv<'__this>(
+            __this: &'__this mut crate::ns::Trivial,
         );
         #[link_name = "_ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv<'a>(
-            __this: &'a crate::ns::Trivial,
+        pub(crate) unsafe fn __rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv<'__this>(
+            __this: &'__this crate::ns::Trivial,
+        );
+        #[link_name = "_ZNO2ns7Trivial18RvalueRefQualifiedEv"]
+        pub(crate) unsafe fn __rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv<'__this>(
+            __this: &'__this mut crate::ns::Trivial,
+        );
+        #[link_name = "_ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv"]
+        pub(crate) unsafe fn __rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv<'__this>(
+            __this: &'__this crate::ns::Trivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
             __return: *mut ::core::ffi::c_void,
             trivial: &mut crate::ns::Trivial,
         );
+        #[link_name = "_ZN2ns16TakesByReferenceERNS_7TrivialE"]
+        pub(crate) unsafe fn __rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE<'trivial>(
+            trivial: &'trivial mut crate::ns::Trivial,
+        ) -> ::cref::CMut<'trivial, crate::ns::Trivial>;
+        #[link_name = "_ZN2ns21TakesByConstReferenceERKNS_7TrivialE"]
+        pub(crate) unsafe fn __rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE<'trivial>(
+            trivial: &'trivial crate::ns::Trivial,
+        ) -> ::cref::CRef<'trivial, crate::ns::Trivial>;
+        #[link_name = "_ZN2ns22TakesByRvalueReferenceEONS_7TrivialE"]
+        pub(crate) unsafe fn __rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE(
+            trivial: ::ctor::RvalueReference<'_, crate::ns::Trivial>,
+        ) -> ::ctor::RvalueReference<'_, crate::ns::Trivial>;
+        #[link_name = "_ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE"]
+        pub(crate) unsafe fn __rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE(
+            trivial: ::ctor::ConstRvalueReference<'_, crate::ns::Trivial>,
+        ) -> ::ctor::ConstRvalueReference<'_, crate::ns::Trivial>;
     }
 }
 

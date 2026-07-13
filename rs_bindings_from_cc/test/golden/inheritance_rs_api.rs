@@ -42,26 +42,6 @@ impl Default for Base0 {
     }
 }
 
-// error: constructor `Base0::Base0` could not be bound
-//   Unsupported parameter type `const Base0& __param_0`:
-//     references are not yet supported
-
-// error: constructor `Base0::Base0` could not be bound
-//   Unsupported parameter type `Base0&& __param_0`:
-//     references are not yet supported
-
-// error: function `Base0::operator=` could not be bound
-//   Unsupported parameter type `const Base0& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Base0&`:
-//     references are not yet supported
-
-// error: function `Base0::operator=` could not be bound
-//   Unsupported parameter type `Base0&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Base0&`:
-//     references are not yet supported
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Base1"]
 #[repr(C, align(8))]
@@ -93,26 +73,6 @@ impl Default for Base1 {
     }
 }
 
-// error: constructor `Base1::Base1` could not be bound
-//   Unsupported parameter type `const Base1& __param_0`:
-//     references are not yet supported
-
-// error: constructor `Base1::Base1` could not be bound
-//   Unsupported parameter type `Base1&& __param_0`:
-//     references are not yet supported
-
-// error: function `Base1::operator=` could not be bound
-//   Unsupported parameter type `const Base1& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Base1&`:
-//     references are not yet supported
-
-// error: function `Base1::operator=` could not be bound
-//   Unsupported parameter type `Base1&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Base1&`:
-//     references are not yet supported
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Base2"]
 #[repr(C, align(2))]
@@ -141,26 +101,6 @@ impl Default for Base2 {
     }
 }
 
-// error: constructor `Base2::Base2` could not be bound
-//   Unsupported parameter type `const Base2& __param_0`:
-//     references are not yet supported
-
-// error: constructor `Base2::Base2` could not be bound
-//   Unsupported parameter type `Base2&& __param_0`:
-//     references are not yet supported
-
-// error: function `Base2::operator=` could not be bound
-//   Unsupported parameter type `const Base2& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Base2&`:
-//     references are not yet supported
-
-// error: function `Base2::operator=` could not be bound
-//   Unsupported parameter type `Base2&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Base2&`:
-//     references are not yet supported
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "7Derived"]
 #[repr(C, align(8))]
@@ -186,26 +126,6 @@ impl Default for Derived {
         }
     }
 }
-
-// error: constructor `Derived::Derived` could not be bound
-//   Unsupported parameter type `const Derived& __param_0`:
-//     references are not yet supported
-
-// error: constructor `Derived::Derived` could not be bound
-//   Unsupported parameter type `Derived&& __param_0`:
-//     references are not yet supported
-
-// error: function `Derived::operator=` could not be bound
-//   Unsupported parameter type `const Derived& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Derived&`:
-//     references are not yet supported
-
-// error: function `Derived::operator=` could not be bound
-//   Unsupported parameter type `Derived&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `Derived&`:
-//     references are not yet supported
 
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "12VirtualBase1"]
@@ -237,25 +157,78 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
     }
 }
 
-// error: constructor `VirtualBase1::VirtualBase1` could not be bound
-//   Unsupported parameter type `const VirtualBase1& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for VirtualBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN12VirtualBase1C1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for VirtualBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `VirtualBase1::VirtualBase1` could not be bound
-//   Unsupported parameter type `VirtualBase1&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for VirtualBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN12VirtualBase1C1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)> for VirtualBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// error: function `VirtualBase1::operator=` could not be bound
-//   Unsupported parameter type `const VirtualBase1& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualBase1&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for VirtualBase1 {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase1aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `VirtualBase1::operator=` could not be bound
-//   Unsupported parameter type `VirtualBase1&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualBase1&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase1 {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase1aSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "12VirtualBase2"]
@@ -287,25 +260,78 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
     }
 }
 
-// error: constructor `VirtualBase2::VirtualBase2` could not be bound
-//   Unsupported parameter type `const VirtualBase2& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for VirtualBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN12VirtualBase2C1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for VirtualBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `VirtualBase2::VirtualBase2` could not be bound
-//   Unsupported parameter type `VirtualBase2&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for VirtualBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN12VirtualBase2C1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)> for VirtualBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// error: function `VirtualBase2::operator=` could not be bound
-//   Unsupported parameter type `const VirtualBase2& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualBase2&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for VirtualBase2 {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase2aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `VirtualBase2::operator=` could not be bound
-//   Unsupported parameter type `VirtualBase2&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualBase2&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase2 {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase2aSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "14VirtualDerived"]
@@ -337,25 +363,80 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
     }
 }
 
-// error: constructor `VirtualDerived::VirtualDerived` could not be bound
-//   Unsupported parameter type `const VirtualDerived& __param_0`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for VirtualDerived {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN14VirtualDerivedC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for VirtualDerived {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
 
-// error: constructor `VirtualDerived::VirtualDerived` could not be bound
-//   Unsupported parameter type `VirtualDerived&& __param_0`:
-//     references are not yet supported
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for VirtualDerived {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN14VirtualDerivedC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for VirtualDerived
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// error: function `VirtualDerived::operator=` could not be bound
-//   Unsupported parameter type `const VirtualDerived& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualDerived&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for VirtualDerived {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14VirtualDerivedaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// error: function `VirtualDerived::operator=` could not be bound
-//   Unsupported parameter type `VirtualDerived&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `VirtualDerived&`:
-//     references are not yet supported
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerived {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14VirtualDerivedaSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "15MyAbstractClass"]
@@ -377,11 +458,14 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 // error: constructor `MyAbstractClass::MyAbstractClass` could not be bound
 //   `MyAbstractClass` can't be used by-value because it has a non-public or deleted destructor
 
-// error: function `MyAbstractClass::operator=` could not be bound
-//   Unsupported parameter type `const MyAbstractClass& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `MyAbstractClass&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for MyAbstractClass {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15MyAbstractClassaSERKS_(self, __param_0);
+        }
+    }
+}
 
 /// Method inheritance
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -399,7 +483,7 @@ unsafe impl ::cxx::ExternType for MethodBase1 {
 }
 impl MethodBase1 {
     #[inline(always)]
-    pub fn Public<'a>(&'a mut self) {
+    pub fn Public<'__this>(&'__this mut self) {
         unsafe { self::method_base1::Public(self) }
     }
     /// # Safety
@@ -407,15 +491,15 @@ impl MethodBase1 {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__param_0`: raw pointer
     #[inline(always)]
-    pub unsafe fn Equals<'a>(&'a mut self, __param_0: *const Self) {
+    pub unsafe fn Equals<'__this>(&'__this mut self, __param_0: *const Self) {
         unsafe { self::method_base1::Equals(self, __param_0) }
     }
     #[inline(always)]
-    pub fn Colliding1<'a>(&'a mut self) {
+    pub fn Colliding1<'__this>(&'__this mut self) {
         unsafe { self::method_base1::Colliding1(self) }
     }
     #[inline(always)]
-    pub fn Colliding2<'a>(&'a mut self) {
+    pub fn Colliding2<'__this>(&'__this mut self) {
         unsafe { self::method_base1::Colliding2(self) }
     }
 }
@@ -431,29 +515,9 @@ impl Default for MethodBase1 {
     }
 }
 
-// error: constructor `MethodBase1::MethodBase1` could not be bound
-//   Unsupported parameter type `const MethodBase1& __param_0`:
-//     references are not yet supported
-
-// error: constructor `MethodBase1::MethodBase1` could not be bound
-//   Unsupported parameter type `MethodBase1&& __param_0`:
-//     references are not yet supported
-
-// error: function `MethodBase1::operator=` could not be bound
-//   Unsupported parameter type `const MethodBase1& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `MethodBase1&`:
-//     references are not yet supported
-
-// error: function `MethodBase1::operator=` could not be bound
-//   Unsupported parameter type `MethodBase1&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `MethodBase1&`:
-//     references are not yet supported
-
 pub mod method_base1 {
     #[inline(always)]
-    pub(crate) fn Public<'a>(__this: &'a mut crate::MethodBase1) {
+    pub(crate) fn Public<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(__this) }
     }
     /// # Safety
@@ -461,18 +525,18 @@ pub mod method_base1 {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__param_0`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn Equals<'a>(
-        __this: &'a mut crate::MethodBase1,
+    pub(crate) unsafe fn Equals<'__this>(
+        __this: &'__this mut crate::MethodBase1,
         __param_0: *const crate::MethodBase1,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(__this, __param_0) }
     }
     #[inline(always)]
-    pub(crate) fn Colliding1<'a>(__this: &'a mut crate::MethodBase1) {
+    pub(crate) fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(__this) }
     }
     #[inline(always)]
-    pub(crate) fn Colliding2<'a>(__this: &'a mut crate::MethodBase1) {
+    pub(crate) fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(__this) }
     }
 }
@@ -492,11 +556,11 @@ unsafe impl ::cxx::ExternType for MethodBase2 {
 }
 impl MethodBase2 {
     #[inline(always)]
-    pub fn Colliding1<'a>(&'a mut self) {
+    pub fn Colliding1<'__this>(&'__this mut self) {
         unsafe { self::method_base2::Colliding1(self) }
     }
     #[inline(always)]
-    pub fn Colliding2<'a>(&'a mut self) {
+    pub fn Colliding2<'__this>(&'__this mut self) {
         unsafe { self::method_base2::Colliding2(self) }
     }
 }
@@ -512,33 +576,13 @@ impl Default for MethodBase2 {
     }
 }
 
-// error: constructor `MethodBase2::MethodBase2` could not be bound
-//   Unsupported parameter type `const MethodBase2& __param_0`:
-//     references are not yet supported
-
-// error: constructor `MethodBase2::MethodBase2` could not be bound
-//   Unsupported parameter type `MethodBase2&& __param_0`:
-//     references are not yet supported
-
-// error: function `MethodBase2::operator=` could not be bound
-//   Unsupported parameter type `const MethodBase2& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `MethodBase2&`:
-//     references are not yet supported
-
-// error: function `MethodBase2::operator=` could not be bound
-//   Unsupported parameter type `MethodBase2&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `MethodBase2&`:
-//     references are not yet supported
-
 pub mod method_base2 {
     #[inline(always)]
-    pub(crate) fn Colliding1<'a>(__this: &'a mut crate::MethodBase2) {
+    pub(crate) fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(__this) }
     }
     #[inline(always)]
-    pub(crate) fn Colliding2<'a>(__this: &'a mut crate::MethodBase2) {
+    pub(crate) fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(__this) }
     }
 }
@@ -568,26 +612,6 @@ impl Default for MethodDerived {
     }
 }
 
-// error: constructor `MethodDerived::MethodDerived` could not be bound
-//   Unsupported parameter type `const MethodDerived& __param_0`:
-//     references are not yet supported
-
-// error: constructor `MethodDerived::MethodDerived` could not be bound
-//   Unsupported parameter type `MethodDerived&& __param_0`:
-//     references are not yet supported
-
-// error: function `MethodDerived::operator=` could not be bound
-//   Unsupported parameter type `const MethodDerived& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `MethodDerived&`:
-//     references are not yet supported
-
-// error: function `MethodDerived::operator=` could not be bound
-//   Unsupported parameter type `MethodDerived&& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `MethodDerived&`:
-//     references are not yet supported
-
 // error: function `MethodDerived::Colliding1` could not be bound
 //   Function aliases are not yet supported.
 
@@ -603,36 +627,88 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::VirtualBase1,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::VirtualBase1>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1aSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualBase1>,
+            __param_0: &'__param_0 crate::VirtualBase1,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualBase1>;
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1aSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualBase1>,
+            __param_0: ::ctor::RvalueReference<'_, crate::VirtualBase1>,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualBase1>;
         pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::VirtualBase2,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::VirtualBase2>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2aSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualBase2>,
+            __param_0: &'__param_0 crate::VirtualBase2,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualBase2>;
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2aSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualBase2>,
+            __param_0: ::ctor::RvalueReference<'_, crate::VirtualBase2>,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualBase2>;
         pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::VirtualDerived,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::VirtualDerived>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualDerived>,
+            __param_0: &'__param_0 crate::VirtualDerived,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualDerived>;
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedaSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualDerived>,
+            __param_0: ::ctor::RvalueReference<'_, crate::VirtualDerived>,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualDerived>;
+        pub(crate) unsafe fn __rust_thunk___ZN15MyAbstractClassaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::MyAbstractClass>,
+            __param_0: &'__param_0 crate::MyAbstractClass,
+        ) -> ::core::pin::Pin<&'__this mut crate::MyAbstractClass>;
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN11MethodBase16PublicEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
-            __this: &'a mut crate::MethodBase1,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16PublicEv<'__this>(
+            __this: &'__this mut crate::MethodBase1,
         );
         #[link_name = "_ZN11MethodBase16EqualsEPKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16EqualsEPKS_<'a>(
-            __this: &'a mut crate::MethodBase1,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16EqualsEPKS_<'__this>(
+            __this: &'__this mut crate::MethodBase1,
             __param_0: *const crate::MethodBase1,
         );
         #[link_name = "_ZN11MethodBase110Colliding1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'a>(
-            __this: &'a mut crate::MethodBase1,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'__this>(
+            __this: &'__this mut crate::MethodBase1,
         );
         #[link_name = "_ZN11MethodBase110Colliding2Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
-            __this: &'a mut crate::MethodBase1,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'__this>(
+            __this: &'__this mut crate::MethodBase1,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN11MethodBase210Colliding1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'a>(
-            __this: &'a mut crate::MethodBase2,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'__this>(
+            __this: &'__this mut crate::MethodBase2,
         );
         #[link_name = "_ZN11MethodBase210Colliding2Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
-            __this: &'a mut crate::MethodBase2,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'__this>(
+            __this: &'__this mut crate::MethodBase2,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1Ev(__this: *mut ::core::ffi::c_void);
     }

@@ -33,38 +33,43 @@ unsafe impl ::cxx::ExternType for CompatibleType {
 }
 impl CompatibleType {
     #[inline(always)]
-    pub fn renamed_default_constructor<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { self::compatible_type::renamed_default_constructor(self) }
+    pub fn renamed_default_constructor(__this: *mut Self) {
+        unsafe { self::compatible_type::renamed_default_constructor(__this) }
     }
     #[inline(always)]
-    pub fn renamed_constructor<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ffi_11::c_int,
-    ) {
-        unsafe { self::compatible_type::renamed_constructor(self, __param_0) }
+    pub fn renamed_copy_constructor<'__param_0>(__this: *mut Self, __param_0: &'__param_0 Self) {
+        unsafe { self::compatible_type::renamed_copy_constructor(__this, __param_0) }
+    }
+    #[inline(always)]
+    pub fn renamed_constructor(__this: *mut Self, __param_0: ::ffi_11::c_int) {
+        unsafe { self::compatible_type::renamed_constructor(__this, __param_0) }
     }
 }
 
-// error: constructor `CompatibleType::CompatibleType` could not be bound
-//   Unsupported parameter type `const CompatibleType& __param_0`:
-//     references are not yet supported
-
-// error: function `CompatibleType::operator=` could not be bound
-//   Unsupported parameter type `const CompatibleType& __param_0`:
-//     references are not yet supported
-//   Unsupported return type `CompatibleType&`:
-//     references are not yet supported
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for CompatibleType {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14CompatibleTypeaSERKS_(self, __param_0);
+        }
+    }
+}
 
 pub mod compatible_type {
     #[inline(always)]
-    pub(crate) fn renamed_default_constructor<'a>(
-        __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
-    ) {
+    pub(crate) fn renamed_default_constructor(__this: *mut crate::CompatibleType) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(__this) }
     }
     #[inline(always)]
-    pub(crate) fn renamed_constructor<'a>(
-        __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+    pub(crate) fn renamed_copy_constructor<'__param_0>(
+        __this: *mut crate::CompatibleType,
+        __param_0: &'__param_0 crate::CompatibleType,
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1ERKS_(__this, __param_0) }
+    }
+    #[inline(always)]
+    pub(crate) fn renamed_constructor(
+        __this: *mut crate::CompatibleType,
         __param_0: ::ffi_11::c_int,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(__this, __param_0) }
@@ -76,12 +81,22 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         #[link_name = "_ZN14CompatibleTypeC1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ev(
+            __this: *mut crate::CompatibleType,
         );
+        #[link_name = "_ZN14CompatibleTypeC1ERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1ERKS_<'__param_0>(
+            __this: *mut crate::CompatibleType,
+            __param_0: &'__param_0 crate::CompatibleType,
+        );
+        #[link_name = "_ZN14CompatibleTypeaSERKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::CompatibleType>,
+            __param_0: &'__param_0 crate::CompatibleType,
+        ) -> ::core::pin::Pin<&'__this mut crate::CompatibleType>;
         #[link_name = "_ZN14CompatibleTypeC1Ei"]
-        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ei<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ei(
+            __this: *mut crate::CompatibleType,
             __param_0: ::ffi_11::c_int,
         );
     }
