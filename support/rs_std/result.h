@@ -64,6 +64,18 @@ struct is_unexpected<unexpected<E>> : std::true_type {};
 template <typename T>
 inline constexpr bool is_unexpected_v = is_unexpected<T>::value;
 
+template <typename ResultType, typename OkType, typename U>
+inline constexpr bool ResultForwardConstructible =
+    !std::is_base_of_v<ResultType, std::decay_t<U>> &&
+    !rs_std::is_unexpected_v<std::decay_t<U>> &&
+    !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+    !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+    std::is_constructible_v<OkType, U>;
+
+template <typename ErrType, typename F>
+inline constexpr bool ResultUnexpectedConstructible =
+    std::is_constructible_v<ErrType, F>;
+
 template <typename Derived, typename T, typename E>
 class ResultBase {
  public:
@@ -73,21 +85,14 @@ class ResultBase {
   ResultBase() = default;
 
   template <typename U = T>
-    requires(!std::is_base_of_v<ResultBase, std::decay_t<U>> &&
-             !is_unexpected_v<std::decay_t<U>> &&
-             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
-             !std::is_same_v<std::decay_t<U>, std::in_place_t> &&
-             std::is_constructible_v<T, U>)
+    requires(ResultForwardConstructible<ResultBase, T, U>)
   explicit constexpr ResultBase(U&& ok) noexcept {
     derived().set_ok_tag();
     std::construct_at(derived().ok_ptr(), std::forward<U>(ok));
   }
 
   template <typename U = T>
-    requires(!std::is_base_of_v<ResultBase, std::decay_t<U>> &&
-             !is_unexpected_v<std::decay_t<U>> &&
-             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
-             std::is_constructible_v<T, U>)
+    requires(ResultForwardConstructible<ResultBase, T, U>)
   constexpr ResultBase& operator=(U&& ok) noexcept {
     // If we're moving an Ok value into a Result hat currently holds an Err,
     // we can't move assign the underlying ok_ptr as normal. We need to destroy
@@ -107,14 +112,14 @@ class ResultBase {
   }
 
   template <typename F = E>
-    requires(std::is_constructible_v<E, F>)
+    requires(ResultUnexpectedConstructible<E, F>)
   explicit constexpr ResultBase(rs_std::unexpected<F>&& err) noexcept {
     derived().set_err_tag();
     std::construct_at(derived().err_ptr(), std::move(err.error()));
   }
 
   template <typename F = E>
-    requires(std::is_constructible_v<E, F>)
+    requires(ResultUnexpectedConstructible<E, F>)
   constexpr ResultBase& operator=(rs_std::unexpected<F>&& err) noexcept {
     if (has_value()) {
       std::destroy_at(derived().ok_ptr());
