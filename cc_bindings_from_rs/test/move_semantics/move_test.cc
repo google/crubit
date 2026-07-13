@@ -4,9 +4,12 @@
 
 #include "cc_bindings_from_rs/test/move_semantics/move.h"
 
+#include <type_traits>
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "support/internal/slot.h"
+#include "support/value.h"
 
 namespace {
 
@@ -51,6 +54,41 @@ TEST(MoveTest, CopyableBySelfMethodsDontRequireRvalue) {
   // modifications to `self` are not reflected in the original object.
   EXPECT_EQ(copyable.consume_self(), 42);
   EXPECT_EQ(copyable.consume_self(), 42);
+}
+
+static_assert(!std::is_move_constructible_v<move::UnmovableFoo>);
+static_assert(
+    std::is_move_constructible_v<rs::RelocatableValue<move::UnmovableFoo>>);
+static_assert(!std::is_constructible_v<rs::RelocatableValue<move::UnmovableFoo>,
+                                       move::UnmovableFoo>);
+
+TEST(MoveTest, MoveUnmovableFooViaValue) {
+  rs::RelocatableValue<move::UnmovableFoo> v2;
+  {
+    crubit::Slot<move::UnmovableFoo> slot;
+    move::initialize_unmovable_foo(slot.Get(), 42);
+
+    rs::RelocatableValue<move::UnmovableFoo> v1(std::move(slot));
+    EXPECT_TRUE(v1.has_value());
+    EXPECT_EQ(v1->read_byte(), 42);
+
+    v2 = std::move(v1);
+    EXPECT_TRUE(v2.has_value());
+    EXPECT_FALSE(v1.has_value());
+    EXPECT_EQ(v2->read_byte(), 42);
+  }
+  EXPECT_EQ(v2->read_byte(), 42);
+}
+
+TEST(MoveTest, WrapReturnValueInValue) {
+  rs::RelocatableValue<move::UnmovableFoo> v;
+  {
+    crubit::Slot<move::UnmovableFoo> slot;
+    new (slot.Get()) move::UnmovableFoo(move::new_unmovable_foo(42));
+    v = rs::RelocatableValue<move::UnmovableFoo>(std::move(slot));
+  }
+  EXPECT_TRUE(v.has_value());
+  EXPECT_EQ(v->read_byte(), 42);
 }
 
 }  // namespace

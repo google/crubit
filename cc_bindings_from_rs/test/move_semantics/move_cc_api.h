@@ -91,7 +91,51 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
+struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo") alignas(8)
+    [[clang::trivial_abi]] UnmovableFoo final {
+ public:
+  // `move_golden::UnmovableFoo` doesn't implement the `Default` trait
+  UnmovableFoo() = delete;
+
+  // Drop::drop
+  ~UnmovableFoo();
+
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  UnmovableFoo(UnmovableFoo&&) = delete;
+  ::move::UnmovableFoo& operator=(UnmovableFoo&&) = delete;
+  // `move_golden::UnmovableFoo` doesn't implement the `Clone` trait
+  UnmovableFoo(const UnmovableFoo&) = delete;
+  UnmovableFoo& operator=(const UnmovableFoo&) = delete;
+  UnmovableFoo(::crubit::UnsafeRelocateTag, UnmovableFoo&& value);
+
+  static ::move::UnmovableFoo from_byte(::std::uint8_t byte);
+
+  ::std::uint8_t read_byte() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: Generic types are not
+  // supported yet (b/259749095)
+  ::std::array<unsigned char, 8> buf;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 void consume_foo(::move::Foo _foo);
+
+//  Initializes an `UnmovableFoo` in the given memory location.
+//
+//  # Safety
+//
+//  * `out` must be valid for writes.
+//  * `out` must be properly aligned.
+//  * `out` must point to uninitialized memory (otherwise the previous value
+//  will be leaked).
+void initialize_unmovable_foo(::move::UnmovableFoo* out, ::std::uint8_t byte);
+
+::move::UnmovableFoo new_unmovable_foo(::std::uint8_t byte);
 
 static_assert(
     sizeof(Copyable) == 1,
@@ -203,12 +247,77 @@ inline ::std::uint8_t Foo::into_byte() && {
 inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, buf));
 }
+static_assert(
+    sizeof(UnmovableFoo) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(UnmovableFoo) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aUnmovableFoo(
+    ::move::UnmovableFoo&);
+}
+inline UnmovableFoo::~UnmovableFoo() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aUnmovableFoo(
+          *this);
+}
+inline ::move::UnmovableFoo::UnmovableFoo(::crubit::UnsafeRelocateTag,
+                                          UnmovableFoo&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
+                                          ::move::UnmovableFoo* __ret_ptr);
+}
+inline ::move::UnmovableFoo UnmovableFoo::from_byte(::std::uint8_t byte) {
+  crubit::Slot<::move::UnmovableFoo> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint8_t __crubit_thunk_read_ubyte(
+    ::move::UnmovableFoo const&);
+}
+inline ::std::uint8_t UnmovableFoo::read_byte() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_read_ubyte(self);
+}
+inline void UnmovableFoo::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(UnmovableFoo, buf));
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_consume_ufoo(::move::Foo*);
 }
 inline void consume_foo(::move::Foo _foo) {
   crubit::Slot _foo_slot((::std::move(_foo)));
   return __crubit_internal::__crubit_thunk_consume_ufoo(_foo_slot.Get());
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_initialize_uunmovable_ufoo(::move::UnmovableFoo*,
+                                                          ::std::uint8_t);
+}
+inline void initialize_unmovable_foo(::move::UnmovableFoo* out,
+                                     ::std::uint8_t byte) {
+  return __crubit_internal::__crubit_thunk_initialize_uunmovable_ufoo(out,
+                                                                      byte);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new_uunmovable_ufoo(
+    ::std::uint8_t, ::move::UnmovableFoo* __ret_ptr);
+}
+inline ::move::UnmovableFoo new_unmovable_foo(::std::uint8_t byte) {
+  crubit::Slot<::move::UnmovableFoo> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new_uunmovable_ufoo(byte,
+                                                        __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace move

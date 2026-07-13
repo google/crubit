@@ -292,6 +292,28 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "value",
+    hdrs = ["value.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//support/internal:bindings_support",
+    ],
+)
+
+cc_test(
+    name = "value_test",
+    srcs = ["value_test.cc"],
+    deps = [
+        ":value",
+        "//support/internal:bindings_support",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
 # Used to fix SWIG syntax errors when you see Crubit annotations.
 filegroup(
     name = "annotations_swig",

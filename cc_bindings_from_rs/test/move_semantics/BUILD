@@ -40,6 +40,8 @@ crubit_cc_test(
     platforms = ["android"],
     deps = [
         ":move_cc_api",
+        "//support:value",
+        "//support/internal:bindings_support",
         "//testing/base/public:gunit_main",
     ],
 )
