@@ -195,8 +195,8 @@ fn derive_move_and_assign_via_copy_impl(
 /// `project_pin_type!(foo::T)` is the name of the type returned by
 /// `foo::T::project_pin()`.
 ///
-/// If `foo::T` is not `#[recursively_pinned]`, then this returns the name it
-/// would have used, but is essentially useless.
+/// If `foo::T` is not `#[recursively_pinned]`, or it specifies a custom name using
+/// `project_pin=...` then this returns the name it would have used, but is essentially useless.
 #[proc_macro]
 pub fn project_pin_type(name: TokenStream) -> TokenStream {
     project_type_impl(name, project_pin_ident)
@@ -209,8 +209,8 @@ fn project_pin_ident(ident: &Ident) -> Ident {
 /// `project_ref_type!(foo::T)` is the name of the type returned by
 /// `foo::T::project_ref()`.
 ///
-/// If `foo::T` is not `#[recursively_pinned]`, then this returns the name it
-/// would have used, but is essentially useless.
+/// If `foo::T` is not `#[recursively_pinned]`, or it specifies a custom name using
+/// `project_ref=...`, then this returns the name it would have used, but is essentially useless.
 #[proc_macro]
 pub fn project_ref_type(name: TokenStream) -> TokenStream {
     project_type_impl(name, project_ref_ident)
@@ -259,7 +259,7 @@ fn project_method_impl(
     input: &syn::DeriveInput,
     method_name: proc_macro2::TokenStream,
     mut_: proc_macro2::TokenStream,
-    project_ident: fn(&Ident) -> Ident,
+    type_name: Ident,
 ) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
     let is_fieldless = match &input.data {
         syn::Data::Struct(data) => data.fields.is_empty(),
@@ -272,7 +272,7 @@ fn project_method_impl(
     let mut projected = input.clone();
     // TODO(jeanpierreda): check attributes for repr(packed)
     projected.attrs.clear();
-    projected.ident = project_ident(&projected.ident);
+    projected.ident = type_name;
 
     let lifetime = if is_fieldless {
         quote! {}
@@ -388,6 +388,8 @@ enum RecursivelyPinnedArg {
     PinnedDrop,
     MaybeUnpin,
     RenamedCrate(Ident),
+    ProjectRef(Ident),
+    ProjectPin(Ident),
 }
 
 impl Parse for RecursivelyPinnedArg {
@@ -401,12 +403,23 @@ impl Parse for RecursivelyPinnedArg {
             if ident == "Unpin" {
                 return Ok(RecursivelyPinnedArg::MaybeUnpin);
             }
-        } else if input.parse::<Ident>()? == "PinnedDrop" {
-            return Ok(RecursivelyPinnedArg::PinnedDrop);
+        } else {
+            let ident: Ident = input.parse()?;
+            if ident == "PinnedDrop" {
+                return Ok(RecursivelyPinnedArg::PinnedDrop);
+            } else if ident == "project_ref" {
+                let _: Token![=] = input.parse()?;
+                let new_name: Ident = input.parse()?;
+                return Ok(RecursivelyPinnedArg::ProjectRef(new_name));
+            } else if ident == "project_pin" {
+                let _: Token![=] = input.parse()?;
+                let new_name: Ident = input.parse()?;
+                return Ok(RecursivelyPinnedArg::ProjectPin(new_name));
+            }
         }
         Err(syn::Error::new(
             input.span(),
-            format!("unexpected argument: expected PinnedDrop, `?Unpin`, or crate=..., but got: {input}"),
+            format!("unexpected argument: expected PinnedDrop, `?Unpin`, `project_ref=...`, `project_pin=...`, or crate=..., but got: {input}"),
         ))
     }
 }
@@ -416,6 +429,8 @@ struct RecursivelyPinnedArgs {
     is_pinned_drop: bool,
     is_maybe_unpin: bool,
     renamed_crate: Option<Ident>,
+    project_ref: Option<Ident>,
+    project_pin: Option<Ident>,
 }
 
 impl Parse for RecursivelyPinnedArgs {
@@ -435,6 +450,12 @@ impl Parse for RecursivelyPinnedArgs {
                 }
                 RecursivelyPinnedArg::RenamedCrate(ident) => {
                     result.renamed_crate = Some(ident);
+                }
+                RecursivelyPinnedArg::ProjectRef(ident) => {
+                    result.project_ref = Some(ident);
+                }
+                RecursivelyPinnedArg::ProjectPin(ident) => {
+                    result.project_pin = Some(ident);
                 }
             }
         }
@@ -620,6 +641,24 @@ fn forbid_initialization_fields(fields: &mut syn::Fields, ctor: &Ident) {
 /// }
 /// ```
 ///
+/// ### `project_ref=<ident>` and `project_pin=<ident>`
+///
+/// By default, the projection types are named `__CrubitProjectRef<StructName>` and
+/// `__CrubitProjectPin<StructName>`. You can customize these names by passing
+/// `project_ref=...` and/or `project_pin=...` to `#[recursively_pinned]`.
+///
+/// For example:
+///
+/// ```
+/// #[recursively_pinned(project_ref=MyRef, project_pin=MyPin)]
+/// struct S {
+///   field: i32,
+/// }
+/// ```
+///
+/// This is analogous to `#[pin_project(project=MyPin, project_ref=MyRef)]` (or
+/// `#[pin_project(project=MyPin)]` if only customizing one).
+///
 /// ## Direct initialization
 ///
 /// Use the `ctor!` macro to instantiate recursively pinned types. For example:
@@ -694,10 +733,18 @@ fn recursively_pinned_impl(
     let ctor = args.renamed_crate.unwrap_or(Ident::new("ctor", Span::call_site()));
     let mut input = syn::parse2::<syn::DeriveInput>(item)?;
 
-    let (project_pin_type, project_pin_method) =
-        project_method_impl(&input, quote! {project_pin}, quote! {mut}, project_pin_ident)?;
-    let (project_ref_type, project_ref_method) =
-        project_method_impl(&input, quote! {project_ref}, quote! {}, project_ref_ident)?;
+    let (project_pin_type, project_pin_method) = project_method_impl(
+        &input,
+        quote! {project_pin},
+        quote! {mut},
+        args.project_pin.unwrap_or_else(|| project_pin_ident(&input.ident)),
+    )?;
+    let (project_ref_type, project_ref_method) = project_method_impl(
+        &input,
+        quote! {project_ref},
+        quote! {},
+        args.project_ref.unwrap_or_else(|| project_ref_ident(&input.ident)),
+    )?;
     let name = input.ident.clone();
 
     // Create two copies of input: one (public) has a private field that can't be
