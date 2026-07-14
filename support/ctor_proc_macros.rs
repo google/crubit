@@ -349,11 +349,50 @@ fn project_method_impl(
         }
     }
 
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+    enum ProjectVis {
+        Private,
+        Crate,
+        Public,
+    }
+
+    let classify_vis = |vis: &syn::Visibility| -> ProjectVis {
+        match vis {
+            syn::Visibility::Public(_) => ProjectVis::Public,
+            syn::Visibility::Inherited => ProjectVis::Private,
+            syn::Visibility::Restricted(r) if r.path.is_ident("self") => ProjectVis::Private,
+            syn::Visibility::Restricted(_) => ProjectVis::Crate,
+        }
+    };
+
+    let mut max_vis = ProjectVis::Private;
+    match &input.data {
+        syn::Data::Struct(data) => {
+            for field in &data.fields {
+                max_vis = max_vis.max(classify_vis(&field.vis));
+            }
+        }
+        syn::Data::Enum(e) => {
+            for variant in &e.variants {
+                for field in &variant.fields {
+                    max_vis = max_vis.max(classify_vis(&field.vis));
+                }
+            }
+        }
+        syn::Data::Union(_) => {}
+    }
+
+    let vis_tokens = match max_vis {
+        ProjectVis::Private => quote! {},
+        ProjectVis::Crate => quote! { pub(crate) },
+        ProjectVis::Public => quote! { pub },
+    };
+
     let (_, projected_generics, _) = projected.generics.split_for_impl();
 
     let method = quote! {
         #[must_use]
-        pub fn #method_name<#lifetime>(self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
+        #vis_tokens fn #method_name<#lifetime>(self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
             unsafe {
                 let from = ::core::pin::Pin::into_inner_unchecked(self);
                 #project_body
@@ -831,7 +870,7 @@ fn recursively_pinned_impl(
 mod test {
     use super::*;
     use googletest::gtest;
-    use token_stream_matchers::assert_rs_matches;
+    use token_stream_matchers::{assert_rs_matches, assert_rs_not_matches};
 
     /// Essentially a change detector, but handy for debugging.
     ///
@@ -936,5 +975,78 @@ mod test {
 
         // The remaining features of the generated output are better tested via
         // real tests that exercise the code.
+    }
+
+    mod project_pin_visibility {
+        use super::*;
+        #[gtest]
+        fn test_fieldless() {
+            let definition = recursively_pinned_impl(quote! {}, quote! { struct S; }).unwrap();
+            assert_rs_matches!(definition, quote! { fn project_pin });
+            assert_rs_matches!(definition, quote! { fn project_ref });
+        }
+
+        #[gtest]
+        fn test_private() {
+            let definition =
+                recursively_pinned_impl(quote! {}, quote! { struct S { x: i32, y: i32 } }).unwrap();
+            assert_rs_matches!(definition, quote! { fn project_pin });
+        }
+
+        #[gtest]
+        fn test_public() {
+            let definition =
+                recursively_pinned_impl(quote! {}, quote! { struct S { pub x: i32, pub y: i32 } })
+                    .unwrap();
+            assert_rs_matches!(definition, quote! { pub fn project_pin });
+        }
+
+        #[gtest]
+        fn test_mixed_private() {
+            let definition =
+                recursively_pinned_impl(quote! {}, quote! { struct S { pub x: i32, y: i32 } })
+                    .unwrap();
+            assert_rs_matches!(definition, quote! { pub fn project_pin });
+        }
+
+        #[gtest]
+        fn test_mixed_pub_self() {
+            let definition = recursively_pinned_impl(
+                quote! {},
+                quote! { struct S { pub x: i32, pub(self) y: i32 } },
+            )
+            .unwrap();
+            assert_rs_matches!(definition, quote! { pub fn project_pin });
+        }
+
+        #[gtest]
+        fn test_mixed_pub_super() {
+            let definition = recursively_pinned_impl(
+                quote! {},
+                quote! { struct S { pub x: i32, pub(super) y: i32 } },
+            )
+            .unwrap();
+            assert_rs_matches!(definition, quote! { pub fn project_pin });
+        }
+
+        #[gtest]
+        fn test_mixed_pub_crate() {
+            let definition = recursively_pinned_impl(
+                quote! {},
+                quote! { struct S { pub x: i32, pub(crate) y: i32 } },
+            )
+            .unwrap();
+            assert_rs_matches!(definition, quote! { pub fn project_pin });
+        }
+
+        #[gtest]
+        fn test_mixed_pub_crate_private() {
+            let definition = recursively_pinned_impl(
+                quote! {},
+                quote! { struct S { pub(crate) x: i32, y: i32 } },
+            )
+            .unwrap();
+            assert_rs_matches!(definition, quote! { pub(crate) fn project_pin });
+        }
     }
 }

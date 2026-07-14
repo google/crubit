@@ -156,12 +156,14 @@ fn test_recursively_pinned_fieldless_tuple_struct() {
 fn test_recursively_pinned_in_module() {
     mod submodule {
         #[::ctor::recursively_pinned]
-        pub struct S;
+        pub struct S {
+            pub x: i32,
+        }
     }
     let _: ::ctor::project_pin_type!(submodule::S) =
-        ::ctor::emplace!(::ctor::ctor!(submodule::S)).as_mut().project_pin();
+        ::ctor::emplace!(::ctor::ctor!(submodule::S { x: 0 })).as_mut().project_pin();
     let _: ::ctor::project_ref_type!(submodule::S) =
-        ::ctor::emplace!(::ctor::ctor!(submodule::S)).as_ref().project_ref();
+        ::ctor::emplace!(::ctor::ctor!(submodule::S { x: 0 })).as_ref().project_ref();
 }
 
 #[gtest]
