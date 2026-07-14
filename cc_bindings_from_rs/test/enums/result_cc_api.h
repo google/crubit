@@ -710,7 +710,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   friend base_type;
-  bool has_value_impl() const noexcept { return tag() != UINT32_C(4294967295); }
+  bool has_value_impl() const noexcept { return tag() != 2; }
   rs_std::Result<::std::uint32_t, ::std::uint32_t>* ok_ptr() noexcept {
     return reinterpret_cast<rs_std::Result<::std::uint32_t, ::std::uint32_t>*>(
         __storage);
@@ -727,7 +727,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
   }
   void set_ok_tag() noexcept {}
-  void set_err_tag() noexcept { set_tag(UINT32_C(4294967295)); }
+  void set_err_tag() noexcept { set_tag(2); }
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
 
@@ -796,7 +796,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   friend base_type;
-  bool has_value_impl() const noexcept { return tag() == UINT32_C(4294967295); }
+  bool has_value_impl() const noexcept { return tag() == 2; }
   ::std::uint32_t* ok_ptr() noexcept {
     return reinterpret_cast<::std::uint32_t*>(__storage + 4);
   }
@@ -812,7 +812,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     return reinterpret_cast<
         rs_std::Result<::std::uint32_t, ::std::uint32_t> const*>(__storage);
   }
-  void set_ok_tag() noexcept { set_tag(UINT32_C(4294967295)); }
+  void set_ok_tag() noexcept { set_tag(2); }
   void set_err_tag() noexcept {}
   constexpr ::std::uint32_t tag() const& noexcept;
   constexpr void set_tag(::std::uint32_t tag) noexcept;
