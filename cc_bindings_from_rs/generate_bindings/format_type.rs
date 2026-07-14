@@ -639,14 +639,14 @@ pub fn format_ty_for_cc<'tcx>(
                     None => bail!("Generic function pointers are not supported yet (b/259749023)"),
                     Some(sig_tys) => sig_tys,
                 };
-                #[rustversion::before(2026-04-19)]
+                #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
                 let sig = rustc_middle::ty::FnSig {
                     inputs_and_output: sig_tys.inputs_and_output,
                     c_variadic: fn_header.c_variadic,
                     safety: fn_header.safety,
                     abi: fn_header.abi,
                 };
-                #[rustversion::since(2026-04-19)]
+                #[rustversion::any(since(2026-04-19), stable(1.97))]
                 let sig = {
                     // Trait was replaced with inherent methods in nightly-2026-05-01.
                     #[cfg_accessible(rustc_type_ir::inherent::FSigKind)]
@@ -669,9 +669,9 @@ pub fn format_ty_for_cc<'tcx>(
             // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
             // This assertion reinforces that the generated C++ code doesn't need
             // to use calling convention attributes like `_stdcall`, etc.
-            #[rustversion::before(2026-04-19)]
+            #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
             let abi = sig.abi;
-            #[rustversion::since(2026-04-19)]
+            #[rustversion::any(since(2026-04-19), stable(1.97))]
             let abi = sig.abi();
             assert!(matches!(abi, rustc_abi::ExternAbi::C { .. }));
 
@@ -719,11 +719,11 @@ pub fn format_ty_for_cc<'tcx>(
 
 /// Returns the `AliasTy` if `ty` is a type alias, or `None` otherwise.
 pub(crate) fn ty_as_alias_ty<'tcx>(ty: Ty<'tcx>) -> Option<&'tcx ty::AliasTy<'tcx>> {
-    #[rustversion::any(all(nightly, since(2026-06-25)), stable(1.95))]
+    #[rustversion::since(2026-06-25)]
     let ty::TyKind::Alias(_, alias_ty) = ty.kind() else {
         return None;
     };
-    #[rustversion::any(all(nightly, before(2026-06-25)), stable(1.96))]
+    #[rustversion::before(2026-06-25)]
     let ty::TyKind::Alias(alias_ty) = ty.kind() else {
         return None;
     };
@@ -737,11 +737,9 @@ pub(crate) fn alias_ty_as_opaque_def_id<'tcx>(
     tcx: TyCtxt<'tcx>,
     alias_ty: &ty::AliasTy<'tcx>,
 ) -> Option<DefId> {
-    #[rustversion::stable(1.95)]
-    let def_id = alias_ty.def_id;
-    #[rustversion::any(all(nightly, before(2026-06-23)), stable(1.96))]
+    #[rustversion::before(2026-06-23)]
     let def_id = alias_ty.kind.def_id();
-    #[rustversion::all(nightly, since(2026-06-23))]
+    #[rustversion::since(2026-06-23)]
     let def_id: DefId = alias_ty.kind.try_to_opaque()?;
 
     (tcx.def_kind(def_id) == rustc_hir::def::DefKind::OpaqueTy).then_some(def_id)
@@ -926,10 +924,6 @@ fn format_transparent_pointee<'tcx>(
 fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
     substs.iter().any(|subst| subst.as_region().is_none())
 }
-#[rustversion::all(before(1.94), before(2026-01-19))]
-type BinderWithFnSigTys<'tcx> = ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>;
-
-#[rustversion::any(since(1.94), since(2026-01-19))]
 type BinderWithFnSigTys<'tcx> = ty::Binder<'tcx, ty::FnSigTys<TyCtxt<'tcx>>>;
 
 fn format_fn_ptr_for_rs<'tcx>(
@@ -938,9 +932,9 @@ fn format_fn_ptr_for_rs<'tcx>(
     fn_header: ty::FnHeader<TyCtxt<'tcx>>,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
-    #[rustversion::before(2026-04-19)]
+    #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
     let (c_variadic, safety, abi) = (fn_header.c_variadic, fn_header.safety, fn_header.abi);
-    #[rustversion::since(2026-04-19)]
+    #[rustversion::any(since(2026-04-19), stable(1.97))]
     let (c_variadic, safety, abi) = (fn_header.c_variadic(), fn_header.safety(), fn_header.abi());
     if c_variadic {
         bail!("Variadic functions are not yet supported.");
@@ -1658,9 +1652,9 @@ pub fn is_bridged_type<'tcx>(
 // Evaluates a constant (such as the length of an array type).
 pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) -> Result<u64> {
     // It would be nice if we knew that these types were already fully normalized.
-    #[rustversion::before(2026-04-19)]
+    #[rustversion::stable(1.96)]
     let unnorm_cst = cst;
-    #[rustversion::since(2026-04-19)]
+    #[rustversion::any(nightly, stable(1.97))]
     let unnorm_cst = ty::Unnormalized::new_wip(cst);
     let normalized = tcx
         .try_normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_cst)

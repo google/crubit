@@ -481,9 +481,6 @@ fn function_kind<'tcx>(
 }
 
 fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
-    #[rustversion::all(before(1.94), before(2025-07-29))]
-    let impl_id = tcx.impl_of_method(def_id);
-    #[rustversion::any(since(1.94), since(2025-07-29))]
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
@@ -857,7 +854,7 @@ pub fn generate_function<'tcx>(
             .map_err(|_| anyhow!("Failed to normalize fn sig for {}", tcx.def_path_str(def_id)))?;
             // We need this to line up the types going into `liberate_and_deanonymize_late_bound_regions`
             // which expects a `ty::Unnormalized` input.
-            #[rustversion::since(2026-04-19)]
+            #[rustversion::any(since(2026-04-19), stable(1.97))]
             let fn_sig = ty::Unnormalized::new(fn_sig);
             fn_sig
         } else {
@@ -1230,9 +1227,9 @@ pub fn generate_function<'tcx>(
 }
 
 pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
-    #[rustversion::before(2026-04-19)]
+    #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
     let is_c_variadic = sig.c_variadic;
-    #[rustversion::since(2026-04-19)]
+    #[rustversion::any(since(2026-04-19), stable(1.97))]
     let is_c_variadic = sig.c_variadic();
     if is_c_variadic {
         // TODO(b/254097223): Add support for variadic functions.

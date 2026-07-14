@@ -21,12 +21,6 @@ use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 
-#[rustversion::all(before(1.94), before(2025-05-26))]
-use rustc_span::symbol::kw;
-
-#[rustversion::any(since(1.94), since(2025-05-26))]
-use rustc_span::symbol::sym;
-
 /// A collection of attributes applied via `#[crubit_annotate::...]`.
 ///
 /// Note that these attributes are procedural macros that generate doc comment attributes of the

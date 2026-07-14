@@ -82,9 +82,6 @@ fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcIn
 pub(crate) fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> bool {
     let def_span = db.tcx().def_span(def_id);
     let filepath = db.tcx().sess.source_map().span_to_filename(def_span);
-    #[rustversion::all(before(1.94), before(2025-12-14))]
-    let file_name = filepath.prefer_local().to_string();
-    #[rustversion::any(since(1.94), since(2025-12-14))]
     let file_name = filepath.prefer_local_unconditionally().to_string();
     let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
     !db.ignore_symbols_from_files().contains(&PathBuf::from(file_name))
@@ -942,10 +939,6 @@ fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
         return None;
     }
 
-    #[rustversion::all(before(1.95), before(2026-02-25))]
-    #[allow(deprecated)]
-    let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecation{deprecation, span} => (*deprecation, *span));
-    #[rustversion::any(since(1.95), since(2026-02-25))]
     #[allow(deprecated)]
     let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecated{deprecation, span} => (*deprecation, *span));
 
@@ -1723,9 +1716,6 @@ fn generate_kythe_doc_comment(
             sf.relative_position(def_span.hi()).0.to_string(),
         )
     };
-    #[rustversion::all(before(1.94), before(2025-12-14))]
-    let file_name = tcx.sess().source_map().span_to_filename(def_span).prefer_local().to_string();
-    #[rustversion::any(since(1.94), since(2025-12-14))]
     let file_name =
         tcx.sess.source_map().span_to_filename(def_span).prefer_local_unconditionally().to_string();
     quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
@@ -1739,9 +1729,6 @@ fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
         Ok(filelines) => filelines,
         Err(_) => return "unknown location".to_string(),
     };
-    #[rustversion::all(before(1.94), before(2025-12-14))]
-    let file_name = file.name.prefer_local().to_string();
-    #[rustversion::any(since(1.94), since(2025-12-14))]
     let file_name = file.name.prefer_local_unconditionally().to_string();
     // Virtual paths will have a "./" prefix that we don't want to display.
     let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
@@ -2157,9 +2144,9 @@ impl NodeSortKey {
                 let hash = tcx.with_stable_hashing_context(|mut hcx| {
                     let mut hasher = stable_hash::StableHasher::new();
 
-                    #[rustversion::before(2026-05-03)]
+                    #[rustversion::stable(1.96)]
                     stable_hash::HashStable::hash_stable(&ty, &mut hcx, &mut hasher);
-                    #[rustversion::since(2026-05-03)]
+                    #[rustversion::stable(1.97)]
                     stable_hash::StableHash::stable_hash(&ty, &mut hcx, &mut hasher);
 
                     hasher
@@ -2490,12 +2477,12 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     Ok(BindingsTokens { cc_api, cc_api_impl })
 }
 
-#[rustversion::before(2026-04-19)]
+#[rustversion::any(all(before(2026-04-19), nightly), before(1.97))]
 pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
     val
 }
 
-#[rustversion::since(2026-04-19)]
+#[rustversion::any(all(since(2026-04-19), nightly), not(before(1.97)))]
 pub fn normalize_ty<'tcx, T>(
     tcx: TyCtxt<'tcx>,
     param_env: ty::ParamEnv<'tcx>,

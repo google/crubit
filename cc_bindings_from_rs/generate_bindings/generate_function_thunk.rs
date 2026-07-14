@@ -21,7 +21,7 @@ use proc_macro2::{Ident, TokenStream};
 use query_compiler::{post_analysis_typing_env, try_normalize};
 use quote::format_ident;
 use quote::quote;
-#[rustversion::since(2026-04-22)]
+#[rustversion::any(since(2026-04-22), not(nightly))]
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
@@ -398,12 +398,6 @@ fn c_abi_for_param_type<'tcx>(
     }
 }
 
-#[rustversion::all(before(1.94), before(2025-03-19))]
-pub(crate) fn ident_or_opt_ident(i: &rustc_span::Ident) -> Option<&rustc_span::Ident> {
-    Some(i)
-}
-
-#[rustversion::any(since(1.94), since(2025-03-19))]
 pub(crate) fn ident_or_opt_ident(i: &Option<rustc_span::Ident>) -> Option<&rustc_span::Ident> {
     i.as_ref()
 }
@@ -693,9 +687,9 @@ pub fn generate_thunk_impl<'tcx>(
 /// Returns `Ok(())` if no thunk is required.
 /// Otherwise returns an error the describes why the thunk is needed.
 pub fn is_thunk_required<'tcx>(tcx: TyCtxt<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
-    #[rustversion::before(2026-04-19)]
+    #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
     let abi = sig.abi;
-    #[rustversion::since(2026-04-19)]
+    #[rustversion::any(since(2026-04-19), stable(1.97))]
     let abi = sig.abi();
     match abi {
         // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
@@ -828,7 +822,7 @@ pub fn generate_trait_thunks<'tcx>(
             },
         )
         .expect("Normalization should succeed since this code typechecked");
-        #[rustversion::since(2026-04-19)]
+        #[rustversion::any(since(2026-04-19), stable(1.97))]
         let sig_mid = ty::Unnormalized::new(sig_mid);
         let sig_mid = liberate_and_deanonymize_late_bound_regions(tcx, sig_mid, method.def_id);
 
@@ -940,10 +934,7 @@ pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKin
                 let args = substs.iter().map(|arg| arg.to_string()).collect_vec();
                 format!("{}_{}_{}", trait_name, method_name, args.join("_"))
             } else {
-                #[rustversion::any(since(1.94), since(2025-05-06))]
                 let instance = ty::Instance::new_raw(method.def_id, substs);
-                #[rustversion::all(before(1.94), before(2025-05-06))]
-                let instance = ty::Instance::new(method.def_id, substs);
 
                 let symbol = tcx.symbol_name(instance);
                 symbol.name.to_string()
