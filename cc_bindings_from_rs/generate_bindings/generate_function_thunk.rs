@@ -21,7 +21,7 @@ use proc_macro2::{Ident, TokenStream};
 use query_compiler::{post_analysis_typing_env, try_normalize};
 use quote::format_ident;
 use quote::quote;
-#[rustversion::since(2026-04-22)]
+#[rustversion::any(since(2026-04-22), since(1.97))]
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
@@ -693,9 +693,9 @@ pub fn generate_thunk_impl<'tcx>(
 /// Returns `Ok(())` if no thunk is required.
 /// Otherwise returns an error the describes why the thunk is needed.
 pub fn is_thunk_required<'tcx>(tcx: TyCtxt<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
-    #[rustversion::before(2026-04-19)]
+    #[rustversion::all(before(2026-04-19), before(1.97))]
     let abi = sig.abi;
-    #[rustversion::since(2026-04-19)]
+    #[rustversion::any(since(2026-04-19), since(1.97))]
     let abi = sig.abi();
     match abi {
         // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
@@ -828,7 +828,7 @@ pub fn generate_trait_thunks<'tcx>(
             },
         )
         .expect("Normalization should succeed since this code typechecked");
-        #[rustversion::since(2026-04-19)]
+        #[rustversion::any(since(2026-04-19), since(1.97))]
         let sig_mid = ty::Unnormalized::new(sig_mid);
         let sig_mid = liberate_and_deanonymize_late_bound_regions(tcx, sig_mid, method.def_id);
 

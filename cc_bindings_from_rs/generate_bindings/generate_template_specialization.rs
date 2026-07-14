@@ -28,9 +28,9 @@ use rustc_abi::{Layout, VariantIdx};
 use rustc_hir::def::DefKind;
 use rustc_middle::ty::fast_reject::SimplifiedType;
 use rustc_middle::ty::layout::PrimitiveExt;
-#[rustversion::since(2026-04-22)]
+#[rustversion::any(since(2026-04-22), since(1.97))]
 use rustc_middle::ty::Flags;
-#[rustversion::since(2026-04-20)]
+#[rustversion::any(since(2026-04-20), since(1.97))]
 use rustc_middle::ty::Unnormalized;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
@@ -42,9 +42,9 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     self_ty: Ty<'tcx>,
 ) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
-    #[rustversion::before(2026-04-20)]
+    #[rustversion::all(before(2026-04-20), before(1.97))]
     let unnorm_ty = self_ty;
-    #[rustversion::since(2026-04-20)]
+    #[rustversion::any(since(2026-04-20), since(1.97))]
     let unnorm_ty = Unnormalized::new(self_ty);
     let self_ty = replace_all_regions_with_static(
         tcx,
@@ -1145,10 +1145,10 @@ fn specialize_result<'tcx>(
                 // Our tag is implicitly ok when it is not the err discriminant value.
                 (quote! {}, quote! { __storage })
             } else {
-                #[rustversion::before(2026-05-30)]
+                #[rustversion::all(before(2026-05-30), before(1.97))]
                 let ok_relative_idx =
                     ok_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                #[rustversion::since(2026-05-30)]
+                #[rustversion::any(since(2026-05-30), since(1.97))]
                 let ok_relative_idx =
                     ok_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let ok_relative_val =
@@ -1164,10 +1164,10 @@ fn specialize_result<'tcx>(
             let (write_err_to_tag, err_ptr_val) = if *untagged_variant == err_idx {
                 (quote! {}, quote! { __storage })
             } else {
-                #[rustversion::before(2026-05-30)]
+                #[rustversion::all(before(2026-05-30), before(1.97))]
                 let err_relative_idx =
                     err_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                #[rustversion::since(2026-05-30)]
+                #[rustversion::any(since(2026-05-30), since(1.97))]
                 let err_relative_idx =
                     err_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let err_relative_val =
@@ -1378,10 +1378,10 @@ fn specialize_option<'tcx>(
             }
         }
         rustc_abi::TagEncoding::Niche { niche_start, niche_variants, .. } => {
-            #[rustversion::before(2026-05-30)]
+            #[rustversion::all(before(2026-05-30), before(1.97))]
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-            #[rustversion::since(2026-05-30)]
+            #[rustversion::any(since(2026-05-30), since(1.97))]
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
             let none_relative_val =

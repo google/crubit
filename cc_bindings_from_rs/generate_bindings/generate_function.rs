@@ -857,7 +857,7 @@ pub fn generate_function<'tcx>(
             .map_err(|_| anyhow!("Failed to normalize fn sig for {}", tcx.def_path_str(def_id)))?;
             // We need this to line up the types going into `liberate_and_deanonymize_late_bound_regions`
             // which expects a `ty::Unnormalized` input.
-            #[rustversion::since(2026-04-19)]
+            #[rustversion::any(since(2026-04-19), since(1.97))]
             let fn_sig = ty::Unnormalized::new(fn_sig);
             fn_sig
         } else {
@@ -1230,9 +1230,9 @@ pub fn generate_function<'tcx>(
 }
 
 pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
-    #[rustversion::before(2026-04-19)]
+    #[rustversion::all(before(2026-04-19), before(1.97))]
     let is_c_variadic = sig.c_variadic;
-    #[rustversion::since(2026-04-19)]
+    #[rustversion::any(since(2026-04-19), since(1.97))]
     let is_c_variadic = sig.c_variadic();
     if is_c_variadic {
         // TODO(b/254097223): Add support for variadic functions.

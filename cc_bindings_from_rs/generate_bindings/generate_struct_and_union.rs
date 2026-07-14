@@ -40,13 +40,13 @@ use query_compiler::{
     post_analysis_typing_env, try_normalize,
 };
 use quote::{format_ident, quote};
-#[rustversion::since(2026-05-18)]
+#[rustversion::any(since(2026-05-18), since(1.97))]
 use rustc_abi::VariantLayout;
 use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants};
 
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
-#[rustversion::since(2026-04-22)]
+#[rustversion::any(since(2026-04-22), since(1.97))]
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
@@ -369,9 +369,9 @@ pub(crate) fn generate_associated_item<'tcx>(
                 .zip(tcx.trait_impl_of_assoc(def_id))
                 .ok_or(anyhow!("Associated types with no name are not supported."))
                 .and_then(|(name, impl_id)| {
-                    #[rustversion::before(2026-04-19)]
+                    #[rustversion::all(before(2026-04-19), before(1.97))]
                     let trait_ref = tcx.impl_trait_header(impl_id).trait_ref.instantiate_identity();
-                    #[rustversion::since(2026-04-19)]
+                    #[rustversion::any(since(2026-04-19), since(1.97))]
                     let trait_ref = crate::normalize_ty(
                         tcx,
                         tcx.param_env(impl_id),
@@ -1713,9 +1713,9 @@ pub fn generate_adt_core<'tcx>(
     // Note: we erase regions in order to get bindings regardless of what lifetime parameters are
     // present. We want to generate bindings for functions regardless of their lifetime bounds, as
     // C++ cannot special-case the availability of a function based on lifetimes.
-    #[rustversion::before(2026-04-19)]
+    #[rustversion::all(before(2026-04-19), before(1.97))]
     let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
-    #[rustversion::since(2026-04-19)]
+    #[rustversion::any(since(2026-04-19), since(1.97))]
     let self_ty = erase_regions(
         tcx,
         crate::normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
@@ -1894,7 +1894,7 @@ fn generate_variant_ctor<'tcx>(
                 bail!("Field `{}` is {private_or_unstable}", field_def.name)
             }
             let ty = field_def.ty(tcx, adt_generic_args);
-            #[rustversion::since(2026-05-13)]
+            #[rustversion::any(since(2026-05-13), since(1.97))]
             let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
 
             let is_default =
@@ -2174,10 +2174,10 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         let layout = &self.layout;
         let layout_variants = layout.variants();
 
-        #[rustversion::before(2026-05-18)]
+        #[rustversion::all(before(2026-05-18), before(1.97))]
         let get_fields =
             |(_, variant): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| variant.fields.clone();
-        #[rustversion::since(2026-05-18)]
+        #[rustversion::any(since(2026-05-18), since(1.97))]
         let get_fields = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
             LayoutData::for_variant(layout, i).fields
         };
@@ -2300,7 +2300,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
     fn prepare_field_type(&self, field_def: &ty::FieldDef) -> Result<FieldTypeInfo<'tcx>> {
         let tcx = self.db.tcx();
         let ty = field_def.ty(tcx, self.adt_generic_args);
-        #[rustversion::since(2026-05-13)]
+        #[rustversion::any(since(2026-05-13), since(1.97))]
         let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
         let size = get_layout(tcx, ty).map(|layout| layout.size().bytes())?;
 
@@ -2790,12 +2790,12 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
             let layout = &self.layout;
             let variant_alignments = match layout_variants {
                 Variants::Multiple { variants: layout_vars, .. } => {
-                    #[rustversion::before(2026-05-18)]
+                    #[rustversion::all(before(2026-05-18), before(1.97))]
                     let get_align =
                         |(_, layout): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
                             layout.align.abi.bytes() - tag_size_with_padding
                         };
-                    #[rustversion::since(2026-05-18)]
+                    #[rustversion::any(since(2026-05-18), since(1.97))]
                     let get_align = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
                         LayoutData::for_variant(layout, i).align.abi.bytes() - tag_size_with_padding
                     };
@@ -3012,9 +3012,9 @@ fn get_into_iter_ty<'tcx>(
         })
         .expect("IntoIter to be a required associated item of IntoIterator");
 
-    #[rustversion::before(2026-06-25)]
+    #[rustversion::all(before(2026-06-25), before(1.97))]
     let projection_ty = Ty::new_projection(tcx, into_iter_assoc_item.def_id, [self_ty]);
-    #[rustversion::since(2026-06-25)]
+    #[rustversion::any(since(2026-06-25), since(1.97))]
     let projection_ty =
         Ty::new_projection(tcx, ty::IsRigid::No, into_iter_assoc_item.def_id, [self_ty]);
 
@@ -3041,9 +3041,9 @@ fn get_into_iter_item_ty<'tcx>(
         })
         .expect("Item to be a required associated item of IntoIterator");
 
-    #[rustversion::before(2026-06-25)]
+    #[rustversion::all(before(2026-06-25), before(1.97))]
     let projection_ty = Ty::new_projection(tcx, item_assoc_item.def_id, [self_ty]);
-    #[rustversion::since(2026-06-25)]
+    #[rustversion::any(since(2026-06-25), since(1.97))]
     let projection_ty = Ty::new_projection(tcx, ty::IsRigid::No, item_assoc_item.def_id, [self_ty]);
 
     query_compiler::try_normalize(

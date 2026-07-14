@@ -2157,9 +2157,9 @@ impl NodeSortKey {
                 let hash = tcx.with_stable_hashing_context(|mut hcx| {
                     let mut hasher = stable_hash::StableHasher::new();
 
-                    #[rustversion::before(2026-05-03)]
+                    #[rustversion::all(before(2026-05-03), before(1.97))]
                     stable_hash::HashStable::hash_stable(&ty, &mut hcx, &mut hasher);
-                    #[rustversion::since(2026-05-03)]
+                    #[rustversion::any(since(2026-05-03), since(1.97))]
                     stable_hash::StableHash::stable_hash(&ty, &mut hcx, &mut hasher);
 
                     hasher
@@ -2490,12 +2490,12 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     Ok(BindingsTokens { cc_api, cc_api_impl })
 }
 
-#[rustversion::before(2026-04-19)]
+#[rustversion::all(before(2026-04-19), before(1.97))]
 pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
     val
 }
 
-#[rustversion::since(2026-04-19)]
+#[rustversion::any(since(2026-04-19), since(1.97))]
 pub fn normalize_ty<'tcx, T>(
     tcx: TyCtxt<'tcx>,
     param_env: ty::ParamEnv<'tcx>,
