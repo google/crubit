@@ -34,6 +34,10 @@ pub fn generate_bindings(
         .crubit_support_path_format()
         .to_str()
         .expect("crubit_support_path_format is not valid UTF-8");
+    let crubit_support_versioned_path_format: &str = request_view
+        .crubit_support_versioned_path_format()
+        .to_str()
+        .expect("crubit_support_versioned_path_format is not valid UTF-8");
     let clang_format_exe_path: OsString = request_view
         .clang_format_exe_path()
         .to_str()
@@ -70,6 +74,7 @@ pub fn generate_bindings(
         let Bindings { rs_api, rs_api_impl } = inner_generate_bindings(
             &ir,
             crubit_support_path_format,
+            crubit_support_versioned_path_format,
             &clang_format_exe_path,
             &rustfmt_exe_path,
             &rustfmt_config_path,

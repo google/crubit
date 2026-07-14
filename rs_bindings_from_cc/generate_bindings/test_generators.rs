@@ -17,6 +17,8 @@ pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
     let tokens = generate_bindings_tokens(
         &ir,
         dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
+        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support/internal", &["unused"])
+            .unwrap(),
         &error_report::IgnoreErrors,
         &fatal_errors,
         false,
@@ -34,6 +36,8 @@ pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<Bind
     let tokens = generate_bindings_tokens(
         &ir,
         dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
+        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support/internal", &["unused"])
+            .unwrap(),
         &error_report::IgnoreErrors,
         &fatal_errors,
         false,

@@ -22,6 +22,7 @@ using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
 
 absl::StatusOr<Bindings> GenerateBindings(
     const IR& ir, absl::string_view crubit_support_path_format,
+    absl::string_view crubit_support_versioned_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
     bool is_golden_test, bool kythe_annotations,
@@ -40,6 +41,8 @@ absl::StatusOr<Bindings> GenerateBindings(
     request.set_json(llvm::formatv("{0}", ir.ToJson()));
   }
   request.set_crubit_support_path_format(crubit_support_path_format);
+  request.set_crubit_support_versioned_path_format(
+      crubit_support_versioned_path_format);
   request.set_clang_format_exe_path(clang_format_exe_path);
   request.set_rustfmt_exe_path(rustfmt_exe_path);
   request.set_rustfmt_config_path(rustfmt_config_path);

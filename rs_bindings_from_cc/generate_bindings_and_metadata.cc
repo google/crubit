@@ -123,6 +123,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
   CRUBIT_ASSIGN_OR_RETURN(
       Bindings bindings,
       GenerateBindings(ir, args.crubit_support_path_format,
+                       args.crubit_support_versioned_path_format,
                        args.clang_format_exe_path, args.rustfmt_exe_path,
                        args.rustfmt_config_path, generate_error_report,
                        args.is_golden_test, args.kythe_annotations,

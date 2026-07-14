@@ -21,6 +21,7 @@ message GenerateBindingsRequest {
   crubit.rs_bindings_from_cc.ir_proto.flat.IRProto ir_proto = 10;
   // Format string for the path to the Crubit support libraries.
   string crubit_support_path_format = 2;
+  string crubit_support_versioned_path_format = 11;
   // Path to the clang-format executable.
   string clang_format_exe_path = 3;
   // Path to the rustfmt executable.

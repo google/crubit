@@ -78,6 +78,8 @@ TEST(CmdlineTest, BasicCorrectInput) {
   absl::SetFlag(&FLAGS_ir_out, "ir_out");
   absl::SetFlag(&FLAGS_crubit_support_path_format,
                 "<crubit/support/path/{header}>");
+  absl::SetFlag(&FLAGS_crubit_support_versioned_path_format,
+                "<crubit/support/internal/{header}>");
   absl::SetFlag(&FLAGS_clang_format_exe_path, "clang_format_exe_path");
   absl::SetFlag(&FLAGS_rustfmt_exe_path, "rustfmt_exe_path");
   absl::SetFlag(&FLAGS_rustfmt_config_path, "rustfmt_config_path");
@@ -100,6 +102,8 @@ TEST(CmdlineTest, BasicCorrectInput) {
   EXPECT_EQ(args.ir_out, "ir_out");
   EXPECT_EQ(args.namespaces_out, "namespaces_out");
   EXPECT_EQ(args.crubit_support_path_format, "<crubit/support/path/{header}>");
+  EXPECT_EQ(args.crubit_support_versioned_path_format,
+            "<crubit/support/internal/{header}>");
   EXPECT_EQ(args.clang_format_exe_path, "clang_format_exe_path");
   EXPECT_EQ(args.rustfmt_exe_path, "rustfmt_exe_path");
   EXPECT_EQ(args.rustfmt_config_path, "rustfmt_config_path");

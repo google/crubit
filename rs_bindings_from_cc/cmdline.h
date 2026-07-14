@@ -30,6 +30,7 @@ struct CmdlineArgs {
   std::string ir_out;
   std::string namespaces_out;
   std::string crubit_support_path_format;
+  std::string crubit_support_versioned_path_format;
   std::string clang_format_exe_path;
   std::string rustfmt_exe_path;
   std::string rustfmt_config_path;

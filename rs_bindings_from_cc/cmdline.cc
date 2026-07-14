@@ -45,13 +45,19 @@ ABSL_FLAG(std::string, ir_out, "",
 ABSL_FLAG(std::string, crubit_support_path_format, "",
           "the format of `#include` for including Crubit C++ support library "
           "headers in the "
-          "generated .cc files, in the format specifier, use `{header}` as the "
+          "generated .cc files. in the format specifier, use `{header}` as the "
           "placeholder. For "
           "example, to include `support_header.h` as "
-          "`#include <crubit/support/support_header.h>, specify "
-          "`<crubit/support/{header}>`; for "
-          "`#include \"crubit/support/support_header.h\", specify "
-          "`\"crubit/support/{header}`,");
+          "`#include \"support/support_header.h\", specify "
+          "`\"support/{header}\";");
+ABSL_FLAG(std::string, crubit_support_versioned_path_format, "",
+          "the format of `#include` for including Crubit's versioned `internal`"
+          "support library headers in the generated .cc files. "
+          "In the format specifier, use `{header}` as the "
+          "placeholder. For "
+          "example, to include `support_header.h` as "
+          "`#include <crubit/support/internal/support_header.h>, specify "
+          "`<crubit/support/internal/{header}>`;");
 ABSL_FLAG(std::string, clang_format_exe_path, "",
           "(optional) Path to a clang-format executable that will be used to "
           "format the "
@@ -222,6 +228,8 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .namespaces_out = absl::GetFlag(FLAGS_namespaces_out),
       .crubit_support_path_format =
           absl::GetFlag(FLAGS_crubit_support_path_format),
+      .crubit_support_versioned_path_format =
+          absl::GetFlag(FLAGS_crubit_support_versioned_path_format),
       .clang_format_exe_path = absl::GetFlag(FLAGS_clang_format_exe_path),
       .rustfmt_exe_path = absl::GetFlag(FLAGS_rustfmt_exe_path),
       .rustfmt_config_path = absl::GetFlag(FLAGS_rustfmt_config_path),

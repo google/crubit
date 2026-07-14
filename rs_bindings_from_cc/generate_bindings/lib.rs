@@ -50,6 +50,7 @@ mod generate_dyn_callable;
 pub fn generate_bindings(
     ir: &IR,
     crubit_support_path_format: &str,
+    crubit_support_versioned_path_format: &str,
     clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
@@ -61,10 +62,20 @@ pub fn generate_bindings(
 ) -> Result<Bindings> {
     let crubit_support_path_format =
         Format::parse_with_metavars(crubit_support_path_format, &["header"])?;
+    let owned_support_format;
+    let mut crubit_support_versioned_path_format = crubit_support_versioned_path_format;
+    if crubit_support_versioned_path_format.is_empty() {
+        // Default to the `internal` directory inside `crubit_support_path_format`
+        owned_support_format = crubit_support_path_format.format(&["internal/{header}"]);
+        crubit_support_versioned_path_format = &owned_support_format;
+    }
+    let crubit_support_versioned_path_format =
+        Format::parse_with_metavars(crubit_support_versioned_path_format, &["header"])?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
         &ir,
         crubit_support_path_format,
+        crubit_support_versioned_path_format,
         errors,
         fatal_errors,
         is_golden_test,
@@ -439,6 +450,7 @@ pub fn new_database<'db>(
 pub fn generate_bindings_tokens(
     ir: &IR,
     crubit_support_path_format: Format<1>,
+    crubit_support_versioned_path_format: Format<1>,
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
     is_golden_test: bool,
@@ -565,7 +577,12 @@ pub fn generate_bindings_tokens(
         code_snippet::generated_items_to_token_stream(&generated_items, &db, &top_level_ids);
 
     let cc_details = CppDetails {
-        includes: generate_rs_api_impl_includes(&db, crubit_support_path_format, internal_includes),
+        includes: generate_rs_api_impl_includes(
+            &db,
+            crubit_support_path_format,
+            crubit_support_versioned_path_format,
+            internal_includes,
+        ),
         dyn_callable_cpp_decls: callables_rs_api_impl,
         thunks: cc_details,
     };
@@ -876,6 +893,7 @@ fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeRea
 fn generate_rs_api_impl_includes(
     db: &BindingsGenerator,
     crubit_support_path_format: Format<1>,
+    crubit_support_versioned_path_format: Format<1>,
     mut internal_includes: BTreeSet<CcInclude>,
 ) -> CppIncludes {
     let ir = db.ir();
@@ -884,8 +902,8 @@ fn generate_rs_api_impl_includes(
     if ir.records().next().is_some() {
         internal_includes.insert(CcInclude::cstddef());
         internal_includes.insert(CcInclude::SupportLibHeader(
-            crubit_support_path_format.clone(),
-            intern!(db.interner(), "internal/sizeof.h"),
+            crubit_support_versioned_path_format.clone(),
+            intern!(db.interner(), "sizeof.h"),
         ));
     };
 
@@ -936,8 +954,8 @@ fn generate_rs_api_impl_includes(
                         intern!(db.interner(), "bridge.h"),
                     ));
                     internal_includes.insert(CcInclude::SupportLibHeader(
-                        crubit_support_path_format.clone(),
-                        intern!(db.interner(), "internal/slot.h"),
+                        crubit_support_versioned_path_format.clone(),
+                        intern!(db.interner(), "slot.h"),
                     ));
                 }
             }
@@ -949,8 +967,8 @@ fn generate_rs_api_impl_includes(
                 intern!(db.interner(), "rs_std/lossy_formatter_for_bindings.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
-                crubit_support_path_format.clone(),
-                intern!(db.interner(), "internal/fmt.h"),
+                crubit_support_versioned_path_format.clone(),
+                intern!(db.interner(), "fmt.h"),
             ));
         }
     }
@@ -962,8 +980,8 @@ fn generate_rs_api_impl_includes(
                 intern!(db.interner(), "rs_std/lossy_formatter_for_bindings.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
-                crubit_support_path_format.clone(),
-                intern!(db.interner(), "internal/fmt.h"),
+                crubit_support_versioned_path_format.clone(),
+                intern!(db.interner(), "fmt.h"),
             ));
         }
     }
@@ -979,15 +997,15 @@ fn generate_rs_api_impl_includes(
                 intern!(db.interner(), "bridge.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
-                crubit_support_path_format.clone(),
-                intern!(db.interner(), "internal/slot.h"),
+                crubit_support_versioned_path_format.clone(),
+                intern!(db.interner(), "slot.h"),
             ));
         }
     }
 
-    for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
+    for crubit_header in ["cxx20_backports.h", "offsetof.h"] {
         internal_includes.insert(CcInclude::SupportLibHeader(
-            crubit_support_path_format.clone(),
+            crubit_support_versioned_path_format.clone(),
             intern!(db.interner(), "{crubit_header}"),
         ));
     }

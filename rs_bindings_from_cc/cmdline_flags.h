@@ -14,6 +14,7 @@ ABSL_DECLARE_FLAG(std::string, rs_out);
 ABSL_DECLARE_FLAG(std::string, cc_out);
 ABSL_DECLARE_FLAG(std::string, ir_out);
 ABSL_DECLARE_FLAG(std::string, crubit_support_path_format);
+ABSL_DECLARE_FLAG(std::string, crubit_support_versioned_path_format);
 ABSL_DECLARE_FLAG(std::string, clang_format_exe_path);
 ABSL_DECLARE_FLAG(std::string, rustfmt_exe_path);
 ABSL_DECLARE_FLAG(std::string, rustfmt_config_path);
