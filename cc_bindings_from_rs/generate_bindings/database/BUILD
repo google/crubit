@@ -17,7 +17,6 @@ rust_library(
     srcs = [
         "adt_core_bindings.rs",
         "code_snippet.rs",
-        "cpp_type.rs",
         "db.rs",
         "fine_grained_feature.rs",
         "fully_qualified_name.rs",
