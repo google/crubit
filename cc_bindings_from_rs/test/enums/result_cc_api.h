@@ -238,13 +238,15 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>,
       ::result::CloneNoDefault, ::std::uint8_t>;
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::CloneNoDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>,
+             ::result::CloneNoDefault, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::CloneNoDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>,
+             ::result::CloneNoDefault, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -318,13 +320,15 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>,
       ::result::CopyNoDefault, ::std::uint8_t>;
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::CopyNoDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>,
+             ::result::CopyNoDefault, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::CopyNoDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>,
+             ::result::CopyNoDefault, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -400,13 +404,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::ResultBase<rs_std::Result<::result::HasDefault, ::std::uint8_t>,
                          ::result::HasDefault, ::std::uint8_t>;
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::HasDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::HasDefault, ::std::uint8_t>,
+             ::result::HasDefault, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::HasDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::HasDefault, ::std::uint8_t>,
+             ::result::HasDefault, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -484,13 +490,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::ResultBase<rs_std::Result<::result::HasNoDefault, ::std::uint8_t>,
                          ::result::HasNoDefault, ::std::uint8_t>;
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::HasNoDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::HasNoDefault, ::std::uint8_t>,
+             ::result::HasNoDefault, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::result::HasNoDefault, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::result::HasNoDefault, ::std::uint8_t>,
+             ::result::HasNoDefault, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -566,11 +574,15 @@ struct alignas(4)
       rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                          ::std::uint32_t, ::std::uint32_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t,
+             U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t,
+             U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -680,12 +692,16 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t>;
   template <typename U>
     requires(rs_std::ResultForwardConstructible<
-             Result, rs_std::Result<::std::uint32_t, ::std::uint32_t>, U>)
+             rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+                            ::std::uint32_t>,
+             rs_std::Result<::std::uint32_t, ::std::uint32_t>, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
     requires(rs_std::ResultForwardConstructible<
-             Result, rs_std::Result<::std::uint32_t, ::std::uint32_t>, U>)
+             rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+                            ::std::uint32_t>,
+             rs_std::Result<::std::uint32_t, ::std::uint32_t>, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -765,11 +781,17 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
                      rs_std::Result<::std::uint32_t, ::std::uint32_t>>,
       ::std::uint32_t, rs_std::Result<::std::uint32_t, ::std::uint32_t>>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint32_t,
+                            rs_std::Result<::std::uint32_t, ::std::uint32_t>>,
+             ::std::uint32_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint32_t,
+                            rs_std::Result<::std::uint32_t, ::std::uint32_t>>,
+             ::std::uint32_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -890,11 +912,15 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>, ::std::uint8_t,
       ::result::CloneNoDefault>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>,
+             ::std::uint8_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>,
+             ::std::uint8_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -1005,11 +1031,15 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>, ::std::uint8_t,
       ::result::CopyNoDefault>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>,
+             ::std::uint8_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>,
+             ::std::uint8_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -1122,11 +1152,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::result::HasDefault>,
                          ::std::uint8_t, ::result::HasDefault>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::HasDefault>,
+             ::std::uint8_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::HasDefault>,
+             ::std::uint8_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -1243,11 +1277,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::result::HasNoDefault>,
                          ::std::uint8_t, ::result::HasNoDefault>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::HasNoDefault>,
+             ::std::uint8_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::result::HasNoDefault>,
+             ::std::uint8_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -1361,11 +1399,13 @@ struct alignas(1)
       rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::std::uint8_t>,
                          ::std::uint8_t, ::std::uint8_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::std::uint8_t>, ::std::uint8_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::uint8_t, ::std::uint8_t>, ::std::uint8_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -1447,12 +1487,16 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       crubit::type_identity_t<void(void*, void*)>*>;
   template <typename U>
     requires(rs_std::ResultForwardConstructible<
-             Result, crubit::type_identity_t<void(void*, void*)>*, U>)
+             rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                            crubit::type_identity_t<void(void*, void*)>*>,
+             crubit::type_identity_t<void(void*, void*)>*, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
     requires(rs_std::ResultForwardConstructible<
-             Result, crubit::type_identity_t<void(void*, void*)>*, U>)
+             rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
+                            crubit::type_identity_t<void(void*, void*)>*>,
+             crubit::type_identity_t<void(void*, void*)>*, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;

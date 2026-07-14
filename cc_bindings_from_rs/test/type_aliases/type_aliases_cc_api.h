@@ -83,11 +83,13 @@ struct alignas(4)
       rs_std::ResultBase<rs_std::Result<::std::int32_t, ::std::int32_t>,
                          ::std::int32_t, ::std::int32_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::int32_t, ::std::int32_t>, ::std::int32_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::int32_t, ::std::int32_t>, ::std::int32_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
@@ -160,11 +162,15 @@ struct alignas(4)
       rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::int8_t>,
                          ::std::uint32_t, ::std::int8_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(
+        rs_std::ResultForwardConstructible<
+            rs_std::Result<::std::uint32_t, ::std::int8_t>, ::std::uint32_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(
+        rs_std::ResultForwardConstructible<
+            rs_std::Result<::std::uint32_t, ::std::int8_t>, ::std::uint32_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;

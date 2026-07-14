@@ -1357,10 +1357,12 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                                ::std::int32_t, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                                ::std::int32_t, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
@@ -1454,11 +1456,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
       ::std::int32_t, ::rs::alloc::string::String>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
+             ::std::int32_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
+             ::std::int32_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;

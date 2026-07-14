@@ -137,10 +137,12 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                                ::std::int32_t, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                                ::std::int32_t, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;

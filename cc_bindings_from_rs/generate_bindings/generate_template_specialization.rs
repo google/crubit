@@ -302,11 +302,11 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 constexpr Option& operator=(::std::nullopt_t) noexcept;
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires(rs_std::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
                 Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires(rs_std::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
                 Option& operator=(U&& value) noexcept {
                     base_type::operator=(::std::forward<U>(value));
                     return *this;
@@ -482,11 +482,11 @@ impl<'tcx> ResultApiGenerator<'tcx> {
                 using base_type = rs_std::ResultBase<#full_self_ty, #ok_ty_cpp, #err_ty_cpp>;
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
+                  requires(rs_std::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
                 explicit constexpr Result(U&& ok) noexcept : base_type(::std::forward<U>(ok)) {}
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
+                  requires(rs_std::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
                 constexpr Result& operator=(U&& ok) noexcept {
                     base_type::operator=(::std::forward<U>(ok));
                     return *this;

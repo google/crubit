@@ -65,13 +65,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::struct_with_const_field, ::std::uint8_t>,
       ::struct_with_const_field, ::std::uint8_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result,
-                                                ::struct_with_const_field, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::struct_with_const_field, ::std::uint8_t>,
+             ::struct_with_const_field, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result,
-                                                ::struct_with_const_field, U>)
+    requires(rs_std::ResultForwardConstructible<
+             rs_std::Result<::struct_with_const_field, ::std::uint8_t>,
+             ::struct_with_const_field, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
