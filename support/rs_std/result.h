@@ -64,13 +64,13 @@ struct is_unexpected<unexpected<E>> : std::true_type {};
 template <typename T>
 inline constexpr bool is_unexpected_v = is_unexpected<T>::value;
 
-template <typename ResultType, typename OkType, typename U>
-inline constexpr bool ResultForwardConstructible =
-    !std::is_base_of_v<ResultType, std::decay_t<U>> &&
-    !rs_std::is_unexpected_v<std::decay_t<U>> &&
-    !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
-    !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
-    std::is_constructible_v<OkType, U>;
+template <typename ResultType, typename T, typename U>
+inline constexpr bool ResultForwardConstructible = std::negation_v<
+    std::disjunction<std::is_base_of<ResultType, std::decay_t<U>>,
+                     rs_std::is_unexpected<std::decay_t<U>>,
+                     std::is_same<std::decay_t<U>, rs_std::unexpect_t>,
+                     std::is_same<std::decay_t<U>, std::in_place_t>,
+                     std::negation<std::is_constructible<T, U>>>>;
 
 template <typename ErrType, typename F>
 inline constexpr bool ResultUnexpectedConstructible =

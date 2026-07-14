@@ -17,17 +17,17 @@
 
 namespace rs_std {
 
-template <typename OptionType, typename ArgType, typename U>
-inline constexpr bool OptionForwardConstructible =
-    !std::is_base_of_v<OptionType, std::decay_t<U>> &&
-    !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
-    !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
-    std::is_constructible_v<ArgType, U>;
+template <typename OptionType, typename T, typename U>
+inline constexpr bool OptionForwardConstructible = std::negation_v<
+    std::disjunction<std::is_base_of<OptionType, std::decay_t<U>>,
+                     std::is_same<std::decay_t<U>, std::nullopt_t>,
+                     std::is_same<std::decay_t<U>, std::in_place_t>,
+                     std::negation<std::is_constructible<T, U>>>>;
 
 template <typename ArgType, typename Opt>
-inline constexpr bool OptionFromStdOptional =
-    std::is_same_v<std::decay_t<Opt>, ::std::optional<ArgType>> &&
-    !std::is_lvalue_reference_v<Opt>;
+inline constexpr bool OptionFromStdOptional = std::conjunction_v<
+    std::is_same<std::decay_t<Opt>, ::std::optional<ArgType>>,
+    std::negation<std::is_lvalue_reference<Opt>>>;
 
 template <typename Derived, typename T>
 class OptionBase {
