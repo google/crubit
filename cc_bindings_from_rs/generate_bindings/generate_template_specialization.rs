@@ -302,22 +302,30 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 constexpr Option& operator=(::std::nullopt_t) noexcept;
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+                           std::is_constructible_v<#arg_ty, U>)
                 Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+                           std::is_constructible_v<#arg_ty, U>)
                 Option& operator=(U&& value) noexcept {
                     base_type::operator=(::std::forward<U>(value));
                     return *this;
                 }
 
                 template <typename Opt>
-                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires(std::is_same_v<std::decay_t<Opt>, ::std::optional<#arg_ty>> &&
+                           !std::is_lvalue_reference_v<Opt>)
                 Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
 
                 template <typename Opt>
-                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires(std::is_same_v<std::decay_t<Opt>, ::std::optional<#arg_ty>> &&
+                           !std::is_lvalue_reference_v<Opt>)
                 Option& operator=(Opt&& value) noexcept {
                     base_type::operator=(::std::forward<Opt>(value));
                     return *this;
@@ -482,22 +490,29 @@ impl<'tcx> ResultApiGenerator<'tcx> {
                 using base_type = rs_std::ResultBase<#full_self_ty, #ok_ty_cpp, #err_ty_cpp>;
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
+                  requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+                           !rs_std::is_unexpected_v<std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+                           !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+                           std::is_constructible_v<#ok_ty_cpp, U>)
                 explicit constexpr Result(U&& ok) noexcept : base_type(::std::forward<U>(ok)) {}
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
+                  requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+                           !rs_std::is_unexpected_v<std::decay_t<U>> &&
+                           !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+                           std::is_constructible_v<#ok_ty_cpp, U>)
                 constexpr Result& operator=(U&& ok) noexcept {
                     base_type::operator=(::std::forward<U>(ok));
                     return *this;
                 }
 
                 template <typename F>
-                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                  requires(std::is_constructible_v<#err_ty_cpp, F>)
                 explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept : base_type(::std::move(err)) {}
 
                 template <typename F>
-                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                  requires(std::is_constructible_v<#err_ty_cpp, F>)
                 constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
                     base_type::operator=(::std::move(err));
                     return *this;

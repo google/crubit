@@ -65,23 +65,28 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::struct_with_const_field, ::std::uint8_t>,
       ::struct_with_const_field, ::std::uint8_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result,
-                                                ::struct_with_const_field, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::struct_with_const_field, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result,
-                                                ::struct_with_const_field, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::struct_with_const_field, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
   }
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+    requires(std::is_constructible_v<::std::uint8_t, F>)
   explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
       : base_type(::std::move(err)) {}
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+    requires(std::is_constructible_v<::std::uint8_t, F>)
   constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
     base_type::operator=(::std::move(err));
     return *this;

@@ -396,21 +396,29 @@ struct alignas(8)
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::std::int32_t const*, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t const*, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::std::int32_t const*, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t const*, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t const*, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::std::int32_t const*>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t const*, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::std::int32_t const*>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -465,19 +473,29 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::int32_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::int32_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -535,21 +553,29 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::CloneNoDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::CloneNoDefault, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::CloneNoDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::CloneNoDefault, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::CloneNoDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::CloneNoDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::CloneNoDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::CloneNoDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -643,21 +669,29 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::CopyNoDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::CopyNoDefault, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::CopyNoDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::CopyNoDefault, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::CopyNoDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::CopyNoDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::CopyNoDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::CopyNoDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -747,21 +781,29 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::HasDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::HasDefault, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::HasDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::HasDefault, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::HasDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::HasDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::HasDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::HasDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -853,21 +895,29 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::HasNoDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::HasNoDefault, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::HasNoDefault, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::HasNoDefault, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::HasNoDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::HasNoDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::HasNoDefault, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::HasNoDefault>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -965,21 +1015,29 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::HasOptions, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::HasOptions, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::HasOptions, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::HasOptions, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::HasOptions, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::HasOptions>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::HasOptions, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::HasOptions>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1069,21 +1127,29 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::LessThan20U8, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::LessThan20U8, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<Option, ::option::LessThan20U8, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::LessThan20U8, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::LessThan20U8, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::LessThan20U8>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::option::LessThan20U8, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>,
+                            ::std::optional<::option::LessThan20U8>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1142,23 +1208,31 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option, rs_std::Option<::option::LessThan20U8>, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<rs_std::Option<::option::LessThan20U8>, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option, rs_std::Option<::option::LessThan20U8>, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<rs_std::Option<::option::LessThan20U8>, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Option<::option::LessThan20U8>, Opt>)
+    requires(std::is_same_v<
+                 std::decay_t<Opt>,
+                 ::std::optional<rs_std::Option<::option::LessThan20U8>>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Option<::option::LessThan20U8>, Opt>)
+    requires(std::is_same_v<
+                 std::decay_t<Opt>,
+                 ::std::optional<rs_std::Option<::option::LessThan20U8>>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1215,19 +1289,29 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::uint32_t, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::uint32_t, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::uint32_t, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::uint32_t, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::uint32_t, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::uint32_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::uint32_t, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::uint32_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1282,19 +1366,29 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::uint8_t, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::uint8_t, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::uint8_t, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::uint8_t, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::uint8_t, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::uint8_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::uint8_t, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>, ::std::optional<::std::uint8_t>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1403,23 +1497,35 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option, crubit::type_identity_t<void(void*, void*)>*, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<
+                 crubit::type_identity_t<void(void*, void*)>*, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option, crubit::type_identity_t<void(void*, void*)>*, U>)
+    requires(!std::is_base_of_v<Option, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<
+                 crubit::type_identity_t<void(void*, void*)>*, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             crubit::type_identity_t<void(void*, void*)>*, Opt>)
+    requires(
+        std::is_same_v<
+            std::decay_t<Opt>,
+            ::std::optional<crubit::type_identity_t<void(void*, void*)>*>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             crubit::type_identity_t<void(void*, void*)>*, Opt>)
+    requires(
+        std::is_same_v<
+            std::decay_t<Opt>,
+            ::std::optional<crubit::type_identity_t<void(void*, void*)>*>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1508,23 +1614,28 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
       ::std::int32_t, ::rs::alloc::string::String>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
   }
   template <typename F>
-    requires(
-        rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+    requires(std::is_constructible_v<::rs::alloc::string::String, F>)
   explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
       : base_type(::std::move(err)) {}
   template <typename F>
-    requires(
-        rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+    requires(std::is_constructible_v<::rs::alloc::string::String, F>)
   constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
     base_type::operator=(::std::move(err));
     return *this;
@@ -1597,25 +1708,37 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
+    requires(
+        !std::is_base_of_v<Option, std::decay_t<U>> &&
+        !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+        !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+        std::is_constructible_v<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
+    requires(
+        !std::is_base_of_v<Option, std::decay_t<U>> &&
+        !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+        !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+        std::is_constructible_v<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>,
+                       ::std::optional<rs_std::Result<
+                           ::std::int32_t, ::rs::alloc::string::String>>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>,
+                       ::std::optional<rs_std::Result<
+                           ::std::int32_t, ::rs::alloc::string::String>>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1680,25 +1803,28 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
       ::option::HasNoDefault, ::rs::alloc::string::String>;
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::option::HasNoDefault, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::option::HasNoDefault, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::option::HasNoDefault, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::option::HasNoDefault, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
   }
   template <typename F>
-    requires(
-        rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+    requires(std::is_constructible_v<::rs::alloc::string::String, F>)
   explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
       : base_type(::std::move(err)) {}
   template <typename F>
-    requires(
-        rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+    requires(std::is_constructible_v<::rs::alloc::string::String, F>)
   constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
     base_type::operator=(::std::move(err));
     return *this;
@@ -1769,15 +1895,19 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
     requires(
-        rs_std::OptionForwardConstructible<
-            Option,
+        !std::is_base_of_v<Option, std::decay_t<U>> &&
+        !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+        !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+        std::is_constructible_v<
             rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
             U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
     requires(
-        rs_std::OptionForwardConstructible<
-            Option,
+        !std::is_base_of_v<Option, std::decay_t<U>> &&
+        !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+        !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+        std::is_constructible_v<
             rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
             U>)
   Option& operator=(U&& value) noexcept {
@@ -1785,16 +1915,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     return *this;
   }
   template <typename Opt>
-    requires(
-        rs_std::OptionFromStdOptional<
-            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
-            Opt>)
+    requires(std::is_same_v<
+                 std::decay_t<Opt>,
+                 ::std::optional<rs_std::Result<
+                     ::option::HasNoDefault, ::rs::alloc::string::String>>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(
-        rs_std::OptionFromStdOptional<
-            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
-            Opt>)
+    requires(std::is_same_v<
+                 std::decay_t<Opt>,
+                 ::std::optional<rs_std::Result<
+                     ::option::HasNoDefault, ::rs::alloc::string::String>>> &&
+             !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;
@@ -1862,25 +1994,28 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
                          rs_std::Option<::std::int32_t>,
                          rs_std::Option<::std::int32_t>>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<
-             Result, rs_std::Option<::std::int32_t>, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<rs_std::Option<::std::int32_t>, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<
-             Result, rs_std::Option<::std::int32_t>, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<rs_std::Option<::std::int32_t>, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
   }
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<
-             rs_std::Option<::std::int32_t>, F>)
+    requires(std::is_constructible_v<rs_std::Option<::std::int32_t>, F>)
   explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
       : base_type(::std::move(err)) {}
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<
-             rs_std::Option<::std::int32_t>, F>)
+    requires(std::is_constructible_v<rs_std::Option<::std::int32_t>, F>)
   constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
     base_type::operator=(::std::move(err));
     return *this;
@@ -1967,35 +2102,40 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Result<rs_std::Option<::std::int32_t>,
                      rs_std::Option<::std::int32_t>>>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<
-             Result,
-             rs_std::Option<
-                 rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
-             U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<
+                 rs_std::Option<rs_std::Result<::std::int32_t,
+                                               ::rs::alloc::string::String>>,
+                 U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<
-             Result,
-             rs_std::Option<
-                 rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
-             U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<
+                 rs_std::Option<rs_std::Result<::std::int32_t,
+                                               ::rs::alloc::string::String>>,
+                 U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
   }
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<
-             rs_std::Result<rs_std::Option<::std::int32_t>,
-                            rs_std::Option<::std::int32_t>>,
-             F>)
+    requires(
+        std::is_constructible_v<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                               rs_std::Option<::std::int32_t>>,
+                                F>)
   explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
       : base_type(::std::move(err)) {}
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<
-             rs_std::Result<rs_std::Option<::std::int32_t>,
-                            rs_std::Option<::std::int32_t>>,
-             F>)
+    requires(
+        std::is_constructible_v<rs_std::Result<rs_std::Option<::std::int32_t>,
+                                               rs_std::Option<::std::int32_t>>,
+                                F>)
   constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
     base_type::operator=(::std::move(err));
     return *this;
@@ -2108,41 +2248,51 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             U>)
+    requires(
+        !std::is_base_of_v<Option, std::decay_t<U>> &&
+        !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+        !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+        std::is_constructible_v<
+            rs_std::Result<rs_std::Option<rs_std::Result<
+                               ::std::int32_t, ::rs::alloc::string::String>>,
+                           rs_std::Result<rs_std::Option<::std::int32_t>,
+                                          rs_std::Option<::std::int32_t>>>,
+            U>)
   Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             U>)
+    requires(
+        !std::is_base_of_v<Option, std::decay_t<U>> &&
+        !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+        !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+        std::is_constructible_v<
+            rs_std::Result<rs_std::Option<rs_std::Result<
+                               ::std::int32_t, ::rs::alloc::string::String>>,
+                           rs_std::Result<rs_std::Option<::std::int32_t>,
+                                          rs_std::Option<::std::int32_t>>>,
+            U>)
   Option& operator=(U&& value) noexcept {
     base_type::operator=(::std::forward<U>(value));
     return *this;
   }
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>,
+                       ::std::optional<rs_std::Result<
+                           rs_std::Option<rs_std::Result<
+                               ::std::int32_t, ::rs::alloc::string::String>>,
+                           rs_std::Result<rs_std::Option<::std::int32_t>,
+                                          rs_std::Option<::std::int32_t>>>>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             Opt>)
+    requires(
+        std::is_same_v<std::decay_t<Opt>,
+                       ::std::optional<rs_std::Result<
+                           rs_std::Option<rs_std::Result<
+                               ::std::int32_t, ::rs::alloc::string::String>>,
+                           rs_std::Result<rs_std::Option<::std::int32_t>,
+                                          rs_std::Option<::std::int32_t>>>>> &&
+        !std::is_lvalue_reference_v<Opt>)
   Option& operator=(Opt&& value) noexcept {
     base_type::operator=(::std::forward<Opt>(value));
     return *this;

@@ -17,18 +17,6 @@
 
 namespace rs_std {
 
-template <typename OptionType, typename ArgType, typename U>
-inline constexpr bool OptionForwardConstructible =
-    !std::is_base_of_v<OptionType, std::decay_t<U>> &&
-    !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
-    !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
-    std::is_constructible_v<ArgType, U>;
-
-template <typename ArgType, typename Opt>
-inline constexpr bool OptionFromStdOptional =
-    std::is_same_v<std::decay_t<Opt>, ::std::optional<ArgType>> &&
-    !std::is_lvalue_reference_v<Opt>;
-
 template <typename Derived, typename T>
 class OptionBase {
  private:
@@ -56,7 +44,10 @@ class OptionBase {
   }
 
   template <typename U>
-    requires(OptionForwardConstructible<OptionBase, T, U>)
+    requires(!std::is_base_of_v<OptionBase, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<T, U>)
   // Intentionally implicit to support seamless copy-initialization and
   // conversion from the wrapped value type T, mirroring std::optional<T>.
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -66,7 +57,10 @@ class OptionBase {
   }
 
   template <typename U>
-    requires(OptionForwardConstructible<OptionBase, T, U>)
+    requires(!std::is_base_of_v<OptionBase, std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<T, U>)
   OptionBase& operator=(U&& value) noexcept {
     if (has_value()) {
       ::crubit::MoveAssignOrDestroyAndConstruct(derived().some_ptr(),
@@ -79,7 +73,8 @@ class OptionBase {
   }
 
   template <typename Opt>
-    requires(OptionFromStdOptional<T, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>, ::std::optional<T>> &&
+             !std::is_lvalue_reference_v<Opt>)
   // Intentionally implicit to support conversion from std::optional<T>.
   // NOLINTNEXTLINE(google-explicit-constructor)
   OptionBase(Opt&& value) noexcept {
@@ -103,7 +98,8 @@ class OptionBase {
   }
 
   template <typename Opt>
-    requires(OptionFromStdOptional<T, Opt>)
+    requires(std::is_same_v<std::decay_t<Opt>, ::std::optional<T>> &&
+             !std::is_lvalue_reference_v<Opt>)
   OptionBase& operator=(Opt&& value) noexcept {
     reset();
     if (!value.has_value()) {

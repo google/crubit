@@ -83,21 +83,28 @@ struct alignas(4)
       rs_std::ResultBase<rs_std::Result<::std::int32_t, ::std::int32_t>,
                          ::std::int32_t, ::std::int32_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::std::int32_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
   }
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::int32_t, F>)
+    requires(std::is_constructible_v<::std::int32_t, F>)
   explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
       : base_type(::std::move(err)) {}
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::int32_t, F>)
+    requires(std::is_constructible_v<::std::int32_t, F>)
   constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
     base_type::operator=(::std::move(err));
     return *this;
@@ -160,21 +167,28 @@ struct alignas(4)
       rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::int8_t>,
                          ::std::uint32_t, ::std::int8_t>;
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             !std::is_same_v<std::decay_t<U>, ::std::in_place_t> &&
+             std::is_constructible_v<::std::uint32_t, U>)
   explicit constexpr Result(U&& ok) noexcept
       : base_type(::std::forward<U>(ok)) {}
   template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+    requires(!std::is_base_of_v<Result, std::decay_t<U>> &&
+             !rs_std::is_unexpected_v<std::decay_t<U>> &&
+             !std::is_same_v<std::decay_t<U>, rs_std::unexpect_t> &&
+             std::is_constructible_v<::std::uint32_t, U>)
   constexpr Result& operator=(U&& ok) noexcept {
     base_type::operator=(::std::forward<U>(ok));
     return *this;
   }
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::int8_t, F>)
+    requires(std::is_constructible_v<::std::int8_t, F>)
   explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
       : base_type(::std::move(err)) {}
   template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::int8_t, F>)
+    requires(std::is_constructible_v<::std::int8_t, F>)
   constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
     base_type::operator=(::std::move(err));
     return *this;
