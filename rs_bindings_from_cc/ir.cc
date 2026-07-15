@@ -1411,6 +1411,8 @@ flat_proto::Enum Enum::ToFlatProto() const {
     for (const auto& e : *enumerators) {
       *proto.add_enumerators() = e.ToFlatProto();
     }
+  } else {
+    proto.set_is_incomplete(true);
   }
   if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
   if (enclosing_item_id)
