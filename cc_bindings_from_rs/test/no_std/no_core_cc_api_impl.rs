@@ -15,9 +15,9 @@ const _: () = assert!(::std::mem::size_of::<::no_core_golden::Test>() == 24);
 const _: () = assert!(::std::mem::align_of::<::no_core_golden::Test>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
-    __self: &'static mut ::core::mem::MaybeUninit<::no_core_golden::Test>,
+    __self: *mut ::no_core_golden::Test,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {

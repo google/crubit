@@ -99,9 +99,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasDefault>,
+    __self: *mut ::tuples_golden::HasDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
@@ -124,9 +124,9 @@ const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefaultTuple>() 
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasDefaultTuple>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefaultTuple(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasDefaultTuple>,
+    __self: *mut ::tuples_golden::HasDefaultTuple,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
@@ -144,9 +144,9 @@ const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefault>() == 
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefault>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasNoDefault>,
+    __self: *mut ::tuples_golden::HasNoDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
@@ -159,9 +159,9 @@ const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefaultTuple>(
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefaultTuple>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefaultTuple(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::HasNoDefaultTuple>,
+    __self: *mut ::tuples_golden::HasNoDefaultTuple,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
@@ -198,9 +198,9 @@ const _: () = assert!(::std::mem::size_of::<::tuples_golden::NonCppMovable>() ==
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::NonCppMovable>() == 1);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNonCppMovable(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::NonCppMovable>,
+    __self: *mut ::tuples_golden::NonCppMovable,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NonCppMovable, value) == 0);
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::NontrivialDrop>() == 1);
@@ -217,17 +217,17 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNontrivialDrop(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>,
+    __self: *mut ::tuples_golden::NontrivialDrop,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::StructWithOptionTuple>() == 32);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::StructWithOptionTuple>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aStructWithOptionTuple(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::StructWithOptionTuple>,
+    __self: *mut ::tuples_golden::StructWithOptionTuple,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: i32, __ret_ptr: *mut core::ffi::c_void) -> () {

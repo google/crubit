@@ -130,11 +130,9 @@ const _: () =
     assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::lifetimes_golden::StructWithLifetimeAndDropGlue,
-    >,
+    __self: *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_make_ustatic_u42(__ret_ptr: *mut core::ffi::c_void) -> () {

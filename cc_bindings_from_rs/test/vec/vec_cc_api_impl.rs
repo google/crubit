@@ -15,9 +15,9 @@ const _: () = assert!(::std::mem::size_of::<::vec_golden::StructWithVec>() == 24
 const _: () = assert!(::std::mem::align_of::<::vec_golden::StructWithVec>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWithVec(
-    __self: &'static mut ::core::mem::MaybeUninit<::vec_golden::StructWithVec>,
+    __self: *mut ::vec_golden::StructWithVec,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: i32, __ret_ptr: *mut core::ffi::c_void) -> () {

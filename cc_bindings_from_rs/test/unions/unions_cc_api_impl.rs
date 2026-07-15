@@ -66,9 +66,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
-    __self: &'static mut ::core::mem::MaybeUninit<::unions_golden::repr_c_drop::U>,
+    __self: *mut ::unions_golden::repr_c_drop::U,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_c_drop::U, x) == 0);
 const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_c_packed::U>() == 4);
@@ -172,9 +172,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
-    __self: &'static mut ::core::mem::MaybeUninit<::unions_golden::repr_rust_drop::U>,
+    __self: *mut ::unions_golden::repr_rust_drop::U,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_set_ux(

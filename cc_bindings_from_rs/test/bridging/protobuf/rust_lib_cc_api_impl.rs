@@ -26,9 +26,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
-    __self: &'static mut ::core::mem::MaybeUninit<::rust_lib_golden::FooService>,
+    __self: *mut ::rust_lib_golden::FooService,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_handle_urequest(

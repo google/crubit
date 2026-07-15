@@ -25,9 +25,9 @@ const _: () = assert!(::std::mem::size_of::<::trait_impl_golden::NotImplemented>
 const _: () = assert!(::std::mem::align_of::<::trait_impl_golden::NotImplemented>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
-    __self: &'static mut ::core::mem::MaybeUninit<::trait_impl_golden::NotImplemented>,
+    __self: *mut ::trait_impl_golden::NotImplemented,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::NotImplemented, foo) == 0);
 #[unsafe(no_mangle)]

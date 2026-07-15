@@ -29,11 +29,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_unon_utrivially_udestructib
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::non_trivially_destructible_golden::NonTriviallyDestructable,
-    >,
+    __self: *mut ::non_trivially_destructible_golden::NonTriviallyDestructable,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(

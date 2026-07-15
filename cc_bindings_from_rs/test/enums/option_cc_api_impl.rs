@@ -49,9 +49,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::option_golden::HasDefault>,
+    __self: *mut ::option_golden::HasDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
@@ -81,9 +81,9 @@ const _: () = assert!(::std::mem::size_of::<::option_golden::HasNoDefault>() == 
 const _: () = assert!(::std::mem::align_of::<::option_golden::HasNoDefault>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasNoDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::option_golden::HasNoDefault>,
+    __self: *mut ::option_golden::HasNoDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
@@ -203,9 +203,9 @@ const _: () = assert!(::std::mem::size_of::<::option_golden::OptDefaultWithDrop>
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptDefaultWithDrop>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptDefaultWithDrop(
-    __self: &'static mut ::core::mem::MaybeUninit<::option_golden::OptDefaultWithDrop>,
+    __self: *mut ::option_golden::OptDefaultWithDrop,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
@@ -219,9 +219,9 @@ const _: () = assert!(::std::mem::size_of::<::option_golden::OptNoDefaultWithDro
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptNoDefaultWithDrop>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptNoDefaultWithDrop(
-    __self: &'static mut ::core::mem::MaybeUninit<::option_golden::OptNoDefaultWithDrop>,
+    __self: *mut ::option_golden::OptNoDefaultWithDrop,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {

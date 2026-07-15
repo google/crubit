@@ -81,9 +81,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uresult_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::result_golden::HasDefault>,
+    __self: *mut ::result_golden::HasDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
@@ -106,9 +106,9 @@ const _: () = assert!(::std::mem::size_of::<::result_golden::HasDefaultResult>()
 const _: () = assert!(::std::mem::align_of::<::result_golden::HasDefaultResult>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasDefaultResult(
-    __self: &'static mut ::core::mem::MaybeUninit<::result_golden::HasDefaultResult>,
+    __self: *mut ::result_golden::HasDefaultResult,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
@@ -126,9 +126,9 @@ const _: () = assert!(::std::mem::size_of::<::result_golden::HasNoDefault>() == 
 const _: () = assert!(::std::mem::align_of::<::result_golden::HasNoDefault>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNoDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::result_golden::HasNoDefault>,
+    __self: *mut ::result_golden::HasNoDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
@@ -141,9 +141,9 @@ const _: () = assert!(::std::mem::size_of::<::result_golden::HasNoDefaultResult>
 const _: () = assert!(::std::mem::align_of::<::result_golden::HasNoDefaultResult>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNoDefaultResult(
-    __self: &'static mut ::core::mem::MaybeUninit<::result_golden::HasNoDefaultResult>,
+    __self: *mut ::result_golden::HasNoDefaultResult,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(

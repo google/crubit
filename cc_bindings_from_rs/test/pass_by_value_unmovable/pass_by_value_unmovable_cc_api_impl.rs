@@ -20,9 +20,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_upass_uby_uvalue_uunmovable
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
-    __self: &'static mut ::core::mem::MaybeUninit<::pass_by_value_unmovable_golden::CppMovable>,
+    __self: *mut ::pass_by_value_unmovable_golden::CppMovable,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () =
     assert!(::core::mem::offset_of!(::pass_by_value_unmovable_golden::CppMovable, 0) == 0);
@@ -32,9 +32,9 @@ const _: () =
     assert!(::std::mem::align_of::<::pass_by_value_unmovable_golden::NotCppMovable>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aNotCppMovable(
-    __self: &'static mut ::core::mem::MaybeUninit<::pass_by_value_unmovable_golden::NotCppMovable>,
+    __self: *mut ::pass_by_value_unmovable_golden::NotCppMovable,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () =
     assert!(::core::mem::offset_of!(::pass_by_value_unmovable_golden::NotCppMovable, 0) == 0);

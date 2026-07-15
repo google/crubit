@@ -28,9 +28,9 @@ const _: () = assert!(::std::mem::size_of::<::arrays_golden::HasDrop>() == 4);
 const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDrop>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDrop(
-    __self: &'static mut ::core::mem::MaybeUninit<::arrays_golden::HasDrop>,
+    __self: *mut ::arrays_golden::HasDrop,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
@@ -54,9 +54,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::arrays_golden::HasDropAndDefault>,
+    __self: *mut ::arrays_golden::HasDropAndDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDropAndDefault, x) == 0);
 #[unsafe(no_mangle)]

@@ -25,9 +25,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
-    __self: &'static mut ::core::mem::MaybeUninit<::traits_golden::AssociatedTypeStruct>,
+    __self: *mut ::traits_golden::AssociatedTypeStruct,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(

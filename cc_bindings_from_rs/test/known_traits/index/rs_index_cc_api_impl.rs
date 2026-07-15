@@ -84,9 +84,9 @@ const _: () = assert!(::std::mem::size_of::<::rs_index_golden::Map>() == 32);
 const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Map>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_urs_uindex_ugolden_x0000003a_x0000003aMap(
-    __self: &'static mut ::core::mem::MaybeUninit<::rs_index_golden::Map>,
+    __self: *mut ::rs_index_golden::Map,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(

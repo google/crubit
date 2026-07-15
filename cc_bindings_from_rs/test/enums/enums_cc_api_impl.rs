@@ -169,9 +169,9 @@ unsafe extern "C" fn __crubit_thunk_A(
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
-    __self: &'static mut ::core::mem::MaybeUninit<::enums_golden::repr_c::MyEnum>,
+    __self: *mut ::enums_golden::repr_c::MyEnum,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () =
     assert!(::std::mem::size_of::<::enums_golden::repr_c::ReprCWithExtremeDiscriminants>() == 4);
@@ -361,9 +361,9 @@ unsafe extern "C" fn __crubit_thunk_B(__param_0: i64, __ret_ptr: *mut core::ffi:
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
-    __self: &'static mut ::core::mem::MaybeUninit<::enums_golden::repr_c_drop::DropMe>,
+    __self: *mut ::enums_golden::repr_c_drop::DropMe,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () =
     assert!(::std::mem::size_of::<::enums_golden::repr_int::IntReprEnumWithNoPayload>() == 4);

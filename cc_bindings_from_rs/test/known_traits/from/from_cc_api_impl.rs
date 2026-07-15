@@ -15,9 +15,9 @@ const _: () = assert!(::std::mem::size_of::<::from_golden::CloneAllocSource>() =
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneAllocSource>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-    __self: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneAllocSource>,
+    __self: *mut ::from_golden::CloneAllocSource,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
@@ -71,9 +71,9 @@ const _: () = assert!(::std::mem::size_of::<::from_golden::CloneAllocType>() == 
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneAllocType>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
-    __self: &'static mut ::core::mem::MaybeUninit<::from_golden::CloneAllocType>,
+    __self: *mut ::from_golden::CloneAllocType,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(

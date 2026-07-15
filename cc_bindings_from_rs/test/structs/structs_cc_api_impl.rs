@@ -226,9 +226,9 @@ const _: () = assert!(::std::mem::size_of::<::structs_golden::non_cpp_movable::P
 const _: () = assert!(::std::mem::align_of::<::structs_golden::non_cpp_movable::Point>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003anon_ucpp_umovable_x0000003a_x0000003aPoint(
-    __self: &'static mut ::core::mem::MaybeUninit<::structs_golden::non_cpp_movable::Point>,
+    __self: *mut ::structs_golden::non_cpp_movable::Point,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::non_cpp_movable::Point, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::non_cpp_movable::Point, y) == 4);

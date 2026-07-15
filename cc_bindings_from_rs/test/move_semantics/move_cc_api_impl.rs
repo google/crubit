@@ -52,9 +52,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x00
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(
-    __self: &'static mut ::core::mem::MaybeUninit<::move_golden::Foo>,
+    __self: *mut ::move_golden::Foo,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {

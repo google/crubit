@@ -847,10 +847,8 @@ pub fn generate_trait_thunks<'tcx>(
                 let thunk_name = make_rs_ident(&thunk_name);
                 RsSnippet::new(quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn #thunk_name(
-                        __self: &'static mut ::core::mem::MaybeUninit<#struct_name>
-                    ) {
-                        unsafe { __self.assume_init_drop() };
+                    extern "C" fn #thunk_name(__self: *mut #struct_name) {
+                        unsafe { ::core::ptr::drop_in_place(__self) };
                     }
                 })
             } else {

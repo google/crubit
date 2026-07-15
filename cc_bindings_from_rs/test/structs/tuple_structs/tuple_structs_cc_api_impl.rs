@@ -15,9 +15,9 @@ const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::CloneNoDefau
 const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::CloneNoDefault>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::CloneNoDefault>,
+    __self: *mut ::tuple_structs_golden::CloneNoDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
@@ -107,9 +107,9 @@ const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::DontMoveMe>(
 const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::DontMoveMe>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aDontMoveMe(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::DontMoveMe>,
+    __self: *mut ::tuple_structs_golden::DontMoveMe,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::tuple_structs_golden::DontMoveMe, value) == 0);
 const _: () =
@@ -275,11 +275,9 @@ const _: () =
     assert!(::std::mem::align_of::<::tuple_structs_golden::TupleStructWithCloneNoDefault>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::tuple_structs_golden::TupleStructWithCloneNoDefault,
-    >,
+    __self: *mut ::tuple_structs_golden::TupleStructWithCloneNoDefault,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
@@ -304,11 +302,9 @@ const _: () =
     assert!(::std::mem::align_of::<::tuple_structs_golden::TupleStructWithCppImmovableType>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCppImmovableType(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::tuple_structs_golden::TupleStructWithCppImmovableType,
-    >,
+    __self: *mut ::tuple_structs_golden::TupleStructWithCppImmovableType,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(

@@ -24,9 +24,9 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustdlib_ugolden_x0000003a_x
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
-    __self: &'static mut ::core::mem::MaybeUninit<::stdlib_golden::MyStruct>,
+    __self: *mut ::stdlib_golden::MyStruct,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustdlib_ugolden_x0000003a_x0000003aMyStruct(

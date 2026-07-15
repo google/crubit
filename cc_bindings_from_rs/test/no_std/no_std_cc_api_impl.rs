@@ -15,9 +15,9 @@ const _: () = assert!(::std::mem::size_of::<::no_std_golden::NoStdStruct>() == 2
 const _: () = assert!(::std::mem::align_of::<::no_std_golden::NoStdStruct>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uno_ustd_ugolden_x0000003a_x0000003aNoStdStruct(
-    __self: &'static mut ::core::mem::MaybeUninit<::no_std_golden::NoStdStruct>,
+    __self: *mut ::no_std_golden::NoStdStruct,
 ) {
-    unsafe { __self.assume_init_drop() };
+    unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(x: i32, y: f32, __ret_ptr: *mut core::ffi::c_void) -> () {

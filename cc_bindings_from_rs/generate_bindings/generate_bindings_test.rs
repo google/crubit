@@ -1308,10 +1308,8 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
             quote! {
                 ...
                 #[unsafe(no_mangle)]
-                extern "C" fn ...(
-                    __self: &'static mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
-                ) {
-                    unsafe { __self.assume_init_drop() };
+                extern "C" fn ...(__self: *mut ::rust_out::TypeUnderTest) {
+                    unsafe { ::core::ptr::drop_in_place(__self) };
                 }
                 ...
                 #[unsafe(no_mangle)]
