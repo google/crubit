@@ -7,7 +7,6 @@ use database::code_snippet::Bindings;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
 use generate_bindings::generate_bindings as inner_generate_bindings;
 use generate_bindings_rust_proto::{GenerateBindingsRequest, GenerateBindingsResponseMut};
-use ir::deserialize_ir;
 use std::ffi::OsString;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::process;
@@ -17,19 +16,10 @@ pub fn generate_bindings(
     mut response: GenerateBindingsResponseMut<'_>,
 ) {
     let request_view = request.as_view();
-    let ir = if request_view.has_ir_proto() {
-        ir::proto_to_ir(request_view.ir_proto())
-            .with_context(|| "Failed to deserialize IRProto".to_string())
-            .unwrap()
-    } else {
-        let json: &[u8] = request_view.json().as_bytes();
-        deserialize_ir(json)
-            .with_context(|| {
-                let ir_string = String::from_utf8_lossy(json);
-                format!("Failed to deserialize IR:\n{}", ir_string)
-            })
-            .unwrap()
-    };
+    assert!(request_view.has_ir_proto(), "Request should have provided a valid IR protobuf.");
+    let ir = ir::proto_to_ir(request_view.ir_proto())
+        .with_context(|| "Failed to deserialize IRProto".to_string())
+        .unwrap();
     let crubit_support_path_format: &str = request_view
         .crubit_support_path_format()
         .to_str()

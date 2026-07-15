@@ -13,9 +13,13 @@ use ir::{
     self, make_ir_from_parts, Func, Identifier, Item, LifetimeId, LifetimeName, Record,
     TypeWithDeclId, IR,
 };
+use ir_rust_proto::{IRProto, IRProtoView};
 
 /// Generates `IR` from a header containing `header_source`.
-pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str) -> Result<IR> {
+pub fn ir_from_cc(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+) -> Result<IR<'static>> {
     ir_from_cc_dependency(platform, header_source, "// empty header", None, false)
 }
 
@@ -23,7 +27,7 @@ pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str
 pub fn ir_from_cc_annotated(
     platform: multiplatform_testing::Platform,
     header_source: &str,
-) -> Result<IR> {
+) -> Result<IR<'static>> {
     ir_from_cc_dependency(platform, header_source, "// empty header", None, true)
 }
 
@@ -87,7 +91,7 @@ fn update_test_ir(ir: &mut IR, extra_feature: Option<&str>) {
 
 /// Create a testing `IR` instance from given items, using mock values for other
 /// fields.
-pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
+pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR<'static> {
     let mut ir = make_ir_from_parts(
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
@@ -116,38 +120,14 @@ pub fn ir_from_cc_dependency(
     dependency_header_source: &str,
     extra_feature: Option<&str>,
     kythe_annotations: bool,
-) -> Result<IR> {
-    const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
-
-    unsafe extern "C" {
-        fn json_from_cc_dependency(
-            target_triple: FfiU8Slice,
-            header_source: FfiU8Slice,
-            dependency_header_source: FfiU8Slice,
-            extra_feature: FfiU8Slice,
-            kythe_annotations: bool,
-        ) -> FfiU8SliceBox;
-    }
-
-    let header_source_with_include =
-        format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
-    let header_source_with_include_u8 = header_source_with_include.as_bytes();
-    let dependency_header_source_u8 = dependency_header_source.as_bytes();
-    let json_utf8 = unsafe {
-        json_from_cc_dependency(
-            FfiU8Slice::from_slice(platform.target_triple().as_ref()),
-            FfiU8Slice::from_slice(header_source_with_include_u8),
-            FfiU8Slice::from_slice(dependency_header_source_u8),
-            extra_feature
-                .map(|s| FfiU8Slice::from_slice(s.as_bytes()))
-                .unwrap_or(FfiU8Slice::from_slice(&[])),
-            kythe_annotations,
-        )
-        .into_boxed_slice()
-    };
-    let mut ir = ir::deserialize_ir(&json_utf8)?;
-    update_test_ir(&mut ir, extra_feature);
-    Ok(ir)
+) -> Result<IR<'static>> {
+    ir_proto_from_cc_dependency(
+        platform,
+        header_source,
+        dependency_header_source,
+        extra_feature,
+        kythe_annotations,
+    )
 }
 
 /// Creates an identifier

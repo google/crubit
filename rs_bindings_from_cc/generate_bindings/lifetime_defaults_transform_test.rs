@@ -18,12 +18,16 @@ use multiplatform_ir_testing::ir_from_assumed_lifetimes_cc;
 use quote::quote;
 use std::rc::Rc;
 
-fn lifetime_defaults_transform_ir(ir: &ir::IR) -> Result<ir::IR> {
-    let errors = ErrorReport::new(SourceLanguage::Cpp);
-    let fatal_errors = FatalErrors::new();
-    let interner = Interner::new();
-    let db = new_database(ir, &errors, &fatal_errors, false, false, &interner);
-    lifetime_defaults_transform(&db)
+use test_generators::TestDbFactory;
+
+fn lifetime_defaults_transform_ir(mut ir: ir::IR<'static>) -> Result<ir::IR<'static>> {
+    let test_proto = ir.test_proto.take();
+    let factory = TestDbFactory::from_ir(ir);
+    let db = factory.make_db();
+    let mut dir = lifetime_defaults_transform(&db)?;
+    dir.test_proto = test_proto;
+    // We can safely transmute `dir` to `'static` because `dir.test_proto` owns the boxed `proto` memory.
+    Ok(unsafe { std::mem::transmute::<ir::IR<'_>, ir::IR<'static>>(dir) })
 }
 
 #[gtest]
@@ -35,7 +39,7 @@ fn test_fn_with_no_unbound_lifetimes_is_unchanged() -> Result<()> {
       int& $a f(int& $a i1, int& $a i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -70,7 +74,7 @@ fn test_no_change_if_binder_is_already_added_to_function() -> Result<()> {
       int& $a f(int& $a i1, int& $a i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -105,7 +109,7 @@ fn test_unique_lifetime_ascribed_to_single_ref() -> Result<()> {
       void f(int& i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -135,7 +139,7 @@ fn test_distinct_lifetime_returned_for_annotated_ref() -> Result<()> {
       int& $b f(int& $a i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -166,7 +170,7 @@ fn test_unique_lifetime_returned_for_single_ref() -> Result<()> {
       int& f(int& i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -197,7 +201,7 @@ fn test_unknown_lifetime_inhibits_default_lifetimes() -> Result<()> {
       int& f(int& $unknown i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -228,7 +232,7 @@ fn test_no_lifetime_returned_for_distinct_ref_parameters() -> Result<()> {
       int& f(int& i1, int& i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -263,7 +267,7 @@ fn test_no_lifetime_assigned_for_nullary_fn() -> Result<()> {
       int& f();
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -289,7 +293,7 @@ fn test_lifetimebound_param_with_decl_type() -> Result<()> {
       S f(S i1 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -324,7 +328,7 @@ fn test_lifetimebound_param_with_fnptr_type() -> Result<()> {
       void (*f (void (*i1 [[clang::lifetimebound]])())) ();
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir);
+    let dir = lifetime_defaults_transform_ir(ir);
     assert!(dir.is_err());
     Ok(())
 }
@@ -337,7 +341,7 @@ fn test_lifetimebound_param_is_returned_with_lifetime() -> Result<()> {
       int& f(int& i1 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -372,7 +376,7 @@ fn test_lifetimebound_param_is_returned_with_lifetime_and_other_param() -> Resul
       int& f(int& i1 [[clang::lifetimebound]], int& i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -414,7 +418,7 @@ fn test_lifetimebound_param_is_returned_with_rv_unified_lifetime() -> Result<()>
       int& $a f(int& i1 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -449,7 +453,7 @@ fn test_lifetimebound_param_is_returned_with_param_unified_lifetime() -> Result<
       int& f(int& i1 [[clang::lifetimebound]], int& $a i2 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -491,7 +495,7 @@ fn test_lifetimebound_param_is_returned_with_param_fresh_unified_lifetime() -> R
       int& f(int& i1 [[clang::lifetimebound]], int& i2 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -533,7 +537,7 @@ fn test_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
       struct S { int& f() const; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -565,7 +569,7 @@ fn test_explicit_this_lifetime_returned_for_nullary_member_function() -> Result<
       struct S { int& f() const $a; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -597,7 +601,7 @@ fn test_very_explicit_this_lifetime_returned_for_nullary_member_function() -> Re
       struct S { int& $a f() $a; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -629,7 +633,7 @@ fn test_this_lifetime_returned_for_member_function_with_reference_param() -> Res
       struct S { int& f(int& i1) const; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -665,7 +669,7 @@ fn test_this_lifetime_applied_for_constructor() -> Result<()> {
       struct S { S(); S(const S& o) = delete; S(const S&& o) = delete; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -697,7 +701,7 @@ fn test_this_lifetime_annotation_applied_for_constructor() -> Result<()> {
       struct S { S() $a; S(const S& o) = delete; S(const S&& o) = delete; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -731,7 +735,7 @@ fn test_param_lifetime_inferred_for_constructor() -> Result<()> {
       struct S { S(int& i1); S(const S& o) = delete; S(const S&& o) = delete; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -773,7 +777,7 @@ fn test_param_lifetimebound_to_this_in_constructor() -> Result<()> {
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -828,7 +832,7 @@ fn test_param_lifetimebound_to_this_in_constructor_explicit_lifetime() -> Result
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -928,7 +932,7 @@ fn test_struct_binds_lifetime_param() -> Result<()> {
       struct LIFETIME_PARAMS("a") S { int& $a f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -966,7 +970,7 @@ fn test_struct_shadows_unknown_lifetime_param() -> Result<()> {
       struct LIFETIME_PARAMS("unknown") S { int& $unknown f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1004,7 +1008,7 @@ fn test_struct_does_not_shadow_unrelated_lifetime_param() -> Result<()> {
       struct LIFETIME_PARAMS("b") S { int& $a f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1042,7 +1046,7 @@ fn test_struct_renames_shadowed_lifetime_param_in_function() -> Result<()> {
       struct LIFETIME_PARAMS("a") S { LIFETIME_PARAMS("a") int& $a f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1082,7 +1086,7 @@ fn test_struct_renames_multiple_shadowed_lifetime_param_in_function() -> Result<
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1134,7 +1138,7 @@ fn test_function_uses_top_of_renamed_lifetime_stack() -> Result<()> {
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1189,7 +1193,7 @@ fn test_string_view_alias_detected() -> Result<()> {
       void f(std::string_view sv);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1224,7 +1228,7 @@ fn test_string_view_annotated_alias_detected() -> Result<()> {
       void f(std::string_view $a sv);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1259,7 +1263,7 @@ fn test_string_view_assumed_output_lifetime_matches_input() -> Result<()> {
       std::string_view f(std::string_view sv);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1300,7 +1304,7 @@ fn test_arity_of_noparam_struct_is_zero() -> Result<()> {
       "#),
     )?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(0));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(0));
     Ok(())
 }
@@ -1314,7 +1318,7 @@ fn test_arity_of_explicit_param_struct() -> Result<()> {
       "#),
     )?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(2));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(2));
     Ok(())
 }
@@ -1329,7 +1333,7 @@ fn test_arity_of_simple_lifetimebound_constructor() -> Result<()> {
       "#),
     )?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(2));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(2));
     Ok(())
 }
@@ -1344,7 +1348,7 @@ fn test_arity_of_simple_lifetimebound_return() -> Result<()> {
       "#),
     )?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(2));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(2));
     Ok(())
 }
@@ -1363,7 +1367,7 @@ fn test_spurious_lifetimebound_on_return() -> Result<()> {
         };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     // Check that the return type doesn't incorrectly get the __implicit lifetime applied.
     assert_ir_matches!(
         dir,
@@ -1397,7 +1401,7 @@ fn test_lifetimebound_cycle() -> Result<()> {
       "#),
     )?;
     let error_message =
-        lifetime_defaults_transform_ir(&ir).expect_err("Expected an error").to_string();
+        lifetime_defaults_transform_ir(ir).expect_err("Expected an error").to_string();
     assert_that!(error_message, contains_substring("Cycle detected: decl_lifetime_arity"));
     Ok(())
 }
@@ -1410,7 +1414,7 @@ fn test_static_lifetime_is_not_abstracted() -> Result<()> {
         int& $static f(int& $static a) { return a; }
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let dir = lifetime_defaults_transform_ir(ir)?;
     assert_ir_matches!(
         dir,
         quote! {

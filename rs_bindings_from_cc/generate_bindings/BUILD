@@ -486,6 +486,7 @@ multiplatform_rust_test(
         ":generate_bindings",
         ":lifetime_defaults_transform",
         ":multiplatform_ir_testing",
+        ":test_generators",
         "//common:arc_anyhow",
         "//common:error_report",
         "//common:multiplatform_testing",

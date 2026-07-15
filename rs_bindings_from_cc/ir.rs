@@ -75,22 +75,16 @@ where
     }
 }
 
-/// Deserialize `IR` from JSON bytes.
-pub fn deserialize_ir(bytes: &[u8]) -> Result<IR> {
-    let tree_ir = serde_json::from_slice(bytes)?;
-    Ok(make_ir(tree_ir))
-}
-
 /// Create a testing `IR` instance from given parts. This function does not use
 /// any mock values.
-pub fn make_ir_from_parts<CrubitFeatures>(
+pub fn make_ir_from_parts<'a, CrubitFeatures>(
     items: Vec<Item>,
     public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
     crate_root_path: Option<Rc<str>>,
     crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
     reexported_namespaces: Vec<Rc<str>>,
-) -> IR
+) -> IR<'a>
 where
     CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
 {
@@ -104,21 +98,30 @@ where
         }
     }
 
-    make_ir(TreeIR {
-        public_headers,
-        current_target,
-        crate_root_path,
-        crubit_features: crubit_features
-            .into_iter()
-            .map(|(label, features)| {
-                (label, crubit_feature::SerializedCrubitFeatures(features.into()))
-            })
-            .collect(),
-        reexported_namespaces,
-        crate_names: BTreeMap::new(),
-        unstable_rust_features: vec![],
-        top_level_items,
-    })
+    let empty_proto = Box::new(IRProto::new());
+    // We can safely transmute the view to `'a` because `ir.test_proto` owns the boxed `proto` memory.
+    let tree_ir_protoview =
+        unsafe { std::mem::transmute::<IRProtoView<'_>, IRProtoView<'a>>(empty_proto.as_view()) };
+    let mut ir = make_ir(
+        TreeIR {
+            public_headers,
+            current_target,
+            crate_root_path,
+            crubit_features: crubit_features
+                .into_iter()
+                .map(|(label, features)| {
+                    (label, crubit_feature::SerializedCrubitFeatures(features.into()))
+                })
+                .collect(),
+            reexported_namespaces,
+            crate_names: BTreeMap::new(),
+            unstable_rust_features: vec![],
+            top_level_items,
+        },
+        tree_ir_protoview,
+    );
+    ir.test_proto = Some(empty_proto);
+    ir
 }
 
 /// A pre-order depth-first search iterator over the nested IR tree.
@@ -188,7 +191,7 @@ fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, I
     }
 }
 
-pub fn make_ir(tree_ir: TreeIR) -> IR {
+pub fn make_ir<'a>(tree_ir: TreeIR, tree_ir_protoview: IRProtoView<'a>) -> IR<'a> {
     let mut item_id_to_item = HashMap::new();
 
     for items in tree_ir.top_level_items.values() {
@@ -250,6 +253,7 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
         namespace_id_to_number_of_reopened_namespaces,
         reopened_namespace_id_to_idx,
         function_name_to_functions,
+        tree_ir_protoview,
     }
 }
 
@@ -3791,17 +3795,22 @@ impl Debug for TreeIR {
 /// Struct providing the necessary information about the API of a C++ target to
 /// enable generation of Rust bindings source code (both `rs_api.rs` and
 /// `rs_api_impl.cc` files).
-#[derive(PartialEq, Debug)]
-pub struct IR {
+#[derive(Debug)]
+pub struct IR<'a> {
     tree_ir: TreeIR,
     item_id_to_item: HashMap<ItemId, Item>,
     lifetimes: HashMap<LifetimeId, LifetimeName>,
     namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize>,
     reopened_namespace_id_to_idx: HashMap<ItemId, usize>,
     function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>>,
+    // Read-only view into the underlying IR protobuf instance.
+    // TODO(b/532184844): Should replace tree_ir usage with this once all types have been migrated.
+    pub tree_ir_protoview: IRProtoView<'a>,
+    // This is only populated during test runs, which do not explicitly pass ownership of an
+    // IR protobuf to the GenerateBindings call. This field is empty in production builds.
 }
 
-impl IR {
+impl<'a> IR<'a> {
     pub fn tree_ir(&self) -> &TreeIR {
         &self.tree_ir
     }
@@ -3995,6 +4004,18 @@ impl IR {
     }
 }
 
+impl<'a> PartialEq for IR<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.tree_ir == other.tree_ir
+            && self.item_id_to_item == other.item_id_to_item
+            && self.lifetimes == other.lifetimes
+            && self.namespace_id_to_number_of_reopened_namespaces
+                == other.namespace_id_to_number_of_reopened_namespaces
+            && self.reopened_namespace_id_to_idx == other.reopened_namespace_id_to_idx
+            && self.function_name_to_functions == other.function_name_to_functions
+    }
+}
+
 // TODO(jeanpierreda): This should probably be a method on IR accepting a GenericItem,
 // and returning the crate name, or similar.
 
@@ -4037,13 +4058,11 @@ mod tests {
 
     #[gtest]
     fn test_used_headers() {
-        let input = r#"
-        {
-            "public_headers": [{ "name": "foo/bar.h" }],
-            "current_target": "//foo:bar"
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+            public_headers: [__ { name: "foo/bar.h" }],
+            current_target: "//foo:bar",
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         let expected = TreeIR {
             public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
@@ -4059,20 +4078,18 @@ mod tests {
 
     #[gtest]
     fn test_empty_crate_root_path() {
-        let input = "{ \"current_target\": \"//foo:bar\" }";
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(ir_rust_proto::IRProto { current_target: "//foo:bar" });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         assert_eq!(ir.crate_root_path(), None);
     }
 
     #[gtest]
     fn test_crate_root_path() {
-        let input = r#"
-        {
-            "crate_root_path": "__cc_template_instantiations_rs_api",
-            "current_target": "//foo:bar"
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+            crate_root_path: "__cc_template_instantiations_rs_api",
+            current_target: "//foo:bar",
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         assert_eq!(ir.crate_root_path().as_deref(), Some("__cc_template_instantiations_rs_api"));
     }
 
@@ -4303,51 +4320,20 @@ mod tests {
     }
 
     #[gtest]
-    fn test_crate_names_deserialization_invalid_ident() {
-        let input = r#"
-        {
-            "public_headers": [],
-            "current_target": "//foo:bar",
-            "crate_names": {
-                "//dep:target": "invalid*crate"
-            }
-        }
-        "#;
-        let result = deserialize_ir(input.as_bytes());
-        assert!(result.is_err());
-        let err_msg = result.unwrap_err().to_string();
-        assert!(
-            err_msg.contains("Invalid crate name identifier \"invalid*crate\""),
-            "error: {}",
-            err_msg
-        );
-    }
-
-    #[gtest]
     fn test_rs_imported_crate_name_with_custom_name() {
-        let input = r#"
-        {
-            "public_headers": [],
-            "current_target": "//foo:bar",
-            "crate_names": {
-                "//dep:target": "custom_crate"
-            }
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+            current_target: "//foo:bar",
+            crate_names: [("//dep:target", "custom_crate")],
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "custom_crate");
     }
 
     #[gtest]
     fn test_rs_imported_crate_name_without_custom_name() {
-        let input = r#"
-        {
-            "public_headers": [],
-            "current_target": "//foo:bar"
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(ir_rust_proto::IRProto { current_target: "//foo:bar" });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "target");
     }

@@ -35,6 +35,7 @@ unicode-ident.workspace = true
 generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
 lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform", package = "rs_bindings_from_cc_lifetime_defaults_transform"}
 multiplatform_ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing", package = "rs_bindings_from_cc_multiplatform_ir_testing"}
+test_generators = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/test_generators", package = "rs_bindings_from_cc_test_generators"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}
 multiplatform_testing = { path = "../../../../cargo/common/multiplatform_testing"}
