@@ -2,9 +2,24 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+# Automatically @generated Cargo.toml for the Rust crate item_exists.
+
 [package]
 name = "item_exists"
-edition = "2024"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
 
 [lib]
-path = "../../item_exists.rs"
+proc-macro = true
+
+path = "../../../common/item_exists.rs"
+
+doctest = false
+
+[dependencies]
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true
